@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Globalization;
 using System.Net.Security;
+using System.Collections.ObjectModel;
+using System.Xml.Serialization;
+using System.Diagnostics;
 
 namespace MICore
 {
@@ -23,39 +26,46 @@ namespace MICore
         Mips
     };
 
+    public enum LaunchCompleteCommand
+    {
+        /// <summary>
+        /// Execute the 'exec-run' MI command which will spawn a new process and begin executing it.
+        /// This is the default value.
+        /// </summary>
+        ExecRun,
+
+        /// <summary>
+        /// Execute the 'exec-continue' MI command which will resume from stopped state. This is useful if
+        /// the result of setting up the debugger is that the debuggee is in break state.
+        /// </summary>
+        ExecContinue,
+
+        /// <summary>
+        /// No command should be executed. This is useful if the target is already ready to go.
+        /// </summary>
+        None
+    };
+
     /// <summary>
     /// Launch options when connecting to an instance of an MI Debugger through a serial port
     /// </summary>
     public sealed class SerialLaunchOptions : LaunchOptions
     {
-        public SerialLaunchOptions(string Port, IEnumerable<string> Commands)
+        public SerialLaunchOptions(string Port)
         {
             if (string.IsNullOrEmpty(Port))
                 throw new ArgumentNullException("Port");
-            if (Commands == null)
-                throw new ArgumentNullException("Commands");
 
             this.Port = Port;
-            this.Commands = Commands;
         }
 
-        static internal SerialLaunchOptions CreateFromXml(XmlReader reader)
+        static internal SerialLaunchOptions CreateFromXml(Xml.LaunchOptions.SerialPortLaunchOptions source)
         {
-            string port = GetRequiredAttribute(reader, "Port");
-
-            var options = new SerialLaunchOptions(port, Enumerable.Empty<string>());
-            options.ReadCommonAttributes(reader);
-
-            // NOTE: This needs to happen after all attributes are read
-            options.Commands = GetChildCommandElements(reader);
+            var options = new SerialLaunchOptions(RequireAttribute(source.Port, "Port"));
+            options.InitializeCommonOptions(source);
 
             return options;
         }
-
-        /// <summary>
-        /// Initial MI commands to execute in Pipe or Serial mode
-        /// </summary>
-        public IEnumerable<string> Commands { get; private set; }
 
         /// <summary>
         /// [Required] Serial port to connect to
@@ -68,32 +78,23 @@ namespace MICore
     /// </summary>
     public sealed class PipeLaunchOptions : LaunchOptions
     {
-        public PipeLaunchOptions(string PipePath, string PipeArguments, IEnumerable<string> Commands)
+        public PipeLaunchOptions(string PipePath, string PipeArguments)
         {
             if (string.IsNullOrEmpty(PipePath))
                 throw new ArgumentNullException("PipePath");
-            if (Commands == null)
-                throw new ArgumentNullException("Commands");
 
             this.PipePath = PipePath;
             this.PipeArguments = PipeArguments;
-            this.Commands = Commands;
         }
 
-        static internal PipeLaunchOptions CreateFromXml(XmlReader reader)
+        static internal PipeLaunchOptions CreateFromXml(Xml.LaunchOptions.PipeLaunchOptions source)
         {
-            string pipePath = GetRequiredAttribute(reader, "PipePath");
-            string pipeArguments = reader.GetAttribute("PipeArguments");
-
-            var options = new PipeLaunchOptions(pipePath, pipeArguments, Enumerable.Empty<string>());
-            options.ReadCommonAttributes(reader);
-
-            // NOTE: This needs to happen after all attributes are read
-            options.Commands = GetChildCommandElements(reader);
+            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments);
+            options.InitializeCommonOptions(source);
 
             return options;
         }
-
+        
         /// <summary>
         /// [Required] Path to the pipe executable.
         /// </summary>
@@ -103,11 +104,6 @@ namespace MICore
         /// [Optional] Arguments to pass to the pipe executable.
         /// </summary>
         public string PipeArguments { get; private set; }
-
-        /// <summary>
-        /// Initial MI commands to execute in Pipe or Serial mode
-        /// </summary>
-        public IEnumerable<string> Commands { get; private set; }
     }
 
     public sealed class TcpLaunchOptions : LaunchOptions
@@ -129,19 +125,15 @@ namespace MICore
             this.ServerCertificateValidationCallback = null;
         }
 
-        static internal TcpLaunchOptions CreateFromXml(XmlReader reader)
+        static internal TcpLaunchOptions CreateFromXml(Xml.LaunchOptions.TcpLaunchOptions source)
         {
-            string hostname = GetRequiredAttribute(reader, "Hostname");
-            int port = int.Parse(GetRequiredAttribute(reader, "Port"), CultureInfo.InvariantCulture);
-            bool secure = false;
-            string secureString = reader.GetAttribute("Secure");
-            if (!string.IsNullOrEmpty(secureString))
+            if (source.Port <= 0)
             {
-                bool.TryParse(secureString, out secure);
+                throw GetLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "Port"));
             }
 
-            var options = new TcpLaunchOptions(hostname, port, secure);
-            options.ReadCommonAttributes(reader);
+            var options = new TcpLaunchOptions(RequireAttribute(source.Hostname, "Hostname"), source.Port, source.Secure);
+            options.InitializeCommonOptions(source);
 
             return options;
         }
@@ -166,13 +158,10 @@ namespace MICore
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
         }
 
-        static internal LocalLaunchOptions CreateFromXml(XmlReader reader)
+        static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
-            string miDebuggerPath = GetRequiredAttribute(reader, "MIDebuggerPath");
-            string miDebuggerServerAddress = reader.GetAttribute("MIDebuggerServerAddress");
-
-            var options = new LocalLaunchOptions(miDebuggerPath, miDebuggerServerAddress);
-            options.ReadCommonAttributes(reader);
+            var options = new LocalLaunchOptions(RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"), source.MIDebuggerServerAddress);
+            options.InitializeCommonOptions(source);
 
             return options;
         }
@@ -212,6 +201,8 @@ namespace MICore
     /// </summary>
     public abstract class LaunchOptions
     {
+        const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
+
         private bool _initializationComplete;
 
         /// <summary>
@@ -319,6 +310,54 @@ namespace MICore
             }
         }
 
+        private ReadOnlyCollection<LaunchCommand> _setupCommands;
+
+        /// <summary>
+        /// [Required] Additional commands used to setup debugging. May be an empty collection
+        /// </summary>
+        public ReadOnlyCollection<LaunchCommand> SetupCommands
+        {
+            get { return _setupCommands; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("SetupCommands");
+
+                VerifyCanModifyProperty("SetupCommands");
+                _setupCommands = value;
+            }
+        }
+
+
+        private ReadOnlyCollection<LaunchCommand> _customLaunchSetupCommands;
+
+        /// <summary>
+        /// [Optional] If provided, this replaces the default commands used to launch a target with some other commands. For example,
+        /// this can be '-target-attach' in order to attach to a target process.An empty command list replaces the launch commands with nothing,
+        /// which can be useful if the debugger is being provided launch options as command line options.
+        /// </summary>
+        public ReadOnlyCollection<LaunchCommand> CustomLaunchSetupCommands
+        {
+            get { return _customLaunchSetupCommands; }
+            set
+            {
+                VerifyCanModifyProperty("CustomLaunchSetupCommands");
+                _customLaunchSetupCommands = value;
+            }
+        }
+
+        private LaunchCompleteCommand _launchCompleteCommand;
+
+        public LaunchCompleteCommand LaunchCompleteCommand
+        {
+            get { return _launchCompleteCommand; }
+            set
+            {
+                VerifyCanModifyProperty("LaunchCompleteCommand");
+                _launchCompleteCommand = value;
+            }
+        }
+
         public static LaunchOptions GetInstance(string registryRoot, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback)
         {
             if (string.IsNullOrWhiteSpace(exePath))
@@ -340,18 +379,25 @@ namespace MICore
             settings.IgnoreComments = true;
             settings.IgnoreProcessingInstructions = true;
             settings.IgnoreWhitespace = true;
+            settings.NameTable = new NameTable();
+
+            // Create our own namespace manager so that we can set the default namespace
+            // We need this because the XML serializer requires correct namespaces,
+            // but project systems may not provide it.
+            XmlNamespaceManager namespaceManager = new XmlNamespaceManager(settings.NameTable);
+            namespaceManager.AddNamespace(string.Empty, XmlNamespace);
+            XmlParserContext context = new XmlParserContext(settings.NameTable, namespaceManager, string.Empty, XmlSpace.None);
 
             try
             {
                 using (StringReader stringReader = new StringReader(options))
-                using (XmlReader reader = XmlReader.Create(stringReader, settings))
+                using (XmlReader reader = XmlReader.Create(stringReader, settings, context))
                 {
                     // Read to the top level element
                     while (reader.NodeType != XmlNodeType.Element)
                         reader.Read();
 
-                    // Allow either no namespace, or the correct namespace
-                    if (!string.IsNullOrEmpty(reader.NamespaceURI) && reader.NamespaceURI != "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")
+                    if (reader.NamespaceURI != XmlNamespace)
                     {
                         throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.Name));
                     }
@@ -359,26 +405,44 @@ namespace MICore
                     switch (reader.LocalName)
                     {
                         case "LocalLaunchOptions":
-                            launchOptions = LocalLaunchOptions.CreateFromXml(reader);
+                            {
+                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.LocalLaunchOptionsSerializer();
+                                var xmlLaunchOptions = (Xml.LaunchOptions.LocalLaunchOptions)Deserialize(serializer, reader);
+                                launchOptions = LocalLaunchOptions.CreateFromXml(xmlLaunchOptions);
+                            }
                             break;
 
                         case "SerialPortLaunchOptions":
-                            launchOptions = SerialLaunchOptions.CreateFromXml(reader);
+                            {
+                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.SerialPortLaunchOptionsSerializer();
+                                var xmlLaunchOptions = (Xml.LaunchOptions.SerialPortLaunchOptions)Deserialize(serializer, reader);
+                                launchOptions = SerialLaunchOptions.CreateFromXml(xmlLaunchOptions);
+                            }
                             break;
 
                         case "PipeLaunchOptions":
-                            launchOptions = PipeLaunchOptions.CreateFromXml(reader);
+                            {
+                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.PipeLaunchOptionsSerializer();
+                                var xmlLaunchOptions = (Xml.LaunchOptions.PipeLaunchOptions)Deserialize(serializer, reader);
+                                launchOptions = PipeLaunchOptions.CreateFromXml(xmlLaunchOptions);
+                            }
                             break;
 
                         case "TcpLaunchOptions":
-                            launchOptions = TcpLaunchOptions.CreateFromXml(reader);
+                            {
+                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.TcpLaunchOptionsSerializer();
+                                var xmlLaunchOptions = (Xml.LaunchOptions.TcpLaunchOptions)Deserialize(serializer, reader);
+                                launchOptions = TcpLaunchOptions.CreateFromXml(xmlLaunchOptions);
+                            }
                             break;
 
                         case "IOSLaunchOptions":
+                            // TODO*TODO: fix
                             clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
                             break;
 
                         case "AndroidLaunchOptions":
+                            // TODO*TODO: fix
                             clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
                             break;
 
@@ -412,10 +476,28 @@ namespace MICore
             if (string.IsNullOrEmpty(launchOptions.WorkingDirectory))
                 launchOptions.WorkingDirectory = dir;
 
+            if (launchOptions._setupCommands == null)
+                launchOptions._setupCommands = new List<LaunchCommand>(capacity:0).AsReadOnly();
+
             launchOptions._initializationComplete = true;
             return launchOptions;
         }
 
+        private static object Deserialize(XmlSerializer serializer, XmlReader reader)
+        {
+            try
+            {
+                return serializer.Deserialize(reader);
+            }
+            catch (InvalidOperationException outerException)
+            {
+                // In all the cases I have seen thus far, the InvalidOperationException has a fairly useless message
+                // and the inner exception message is better.
+                Exception e = outerException.InnerException ?? outerException;
+
+                throw GetLaunchOptionsException(e.Message);
+            }
+        }
 
         public IEnumerable<string> GetSOLibSearchPath()
         {
@@ -463,11 +545,11 @@ namespace MICore
             }
         }
 
-        protected void ReadCommonAttributes(XmlReader reader)
+        protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
         {
             if (this.ExePath == null)
             {
-                string exePath = reader.GetAttribute("ExePath");
+                string exePath = source.ExePath;
                 if (!string.IsNullOrWhiteSpace(exePath))
                 {
                     this.ExePath = exePath;
@@ -476,30 +558,36 @@ namespace MICore
 
             if (this.TargetArchitecture == TargetArchitecture.Unknown)
             {
-                this.TargetArchitecture = GetTargetArchitectureAttribute(reader);
+                this.TargetArchitecture = ConvertTargetArchitectureAttribute(source.TargetArchitecture);
             }
 
-            string debuggerType = reader.GetAttribute("MIMode");
-            this.DebuggerMIMode = MIMode.Gdb;
-            if (String.Equals(debuggerType, "lldb", StringComparison.OrdinalIgnoreCase))
-            {
-                this.DebuggerMIMode = MIMode.Lldb;
-            }
-            else if (String.Equals(debuggerType, "clrdbg", StringComparison.OrdinalIgnoreCase))
-            {
-                this.DebuggerMIMode = MIMode.Clrdbg;
-            }
+            Debug.Assert((uint)MIMode.Gdb == (uint)Xml.LaunchOptions.MIMode.gdb, "Enum values don't line up!");
+            Debug.Assert((uint)MIMode.Lldb == (uint)Xml.LaunchOptions.MIMode.lldb, "Enum values don't line up!");
+            Debug.Assert((uint)MIMode.Clrdbg == (uint)Xml.LaunchOptions.MIMode.clrdbg, "Enum values don't line up!");
+            this.DebuggerMIMode = (MIMode)source.MIMode;
 
             if (string.IsNullOrEmpty(this.ExeArguments))
-                this.ExeArguments = reader.GetAttribute("ExeArguments");
+                this.ExeArguments = source.ExeArguments;
 
             if (string.IsNullOrEmpty(this.WorkingDirectory))
-                this.WorkingDirectory = reader.GetAttribute("WorkingDirectory");
+                this.WorkingDirectory = source.WorkingDirectory;
 
             if (string.IsNullOrEmpty(this.VisualizerFile))
-                this.VisualizerFile = reader.GetAttribute("VisualizerFile");
+                this.VisualizerFile = source.VisualizerFile;
 
-            string additionalSOLibSearchPath = reader.GetAttribute("AdditionalSOLibSearchPath");
+            this.SetupCommands = LaunchCommand.CreateCollectionFromXml(source.SetupCommands);
+
+            if (source.CustomLaunchSetupCommands != null)
+            {
+                this.CustomLaunchSetupCommands = LaunchCommand.CreateCollectionFromXml(source.CustomLaunchSetupCommands);
+            }
+
+            Debug.Assert((uint)LaunchCompleteCommand.ExecRun == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.execrun);
+            Debug.Assert((uint)LaunchCompleteCommand.ExecContinue == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.execcontinue);
+            Debug.Assert((uint)LaunchCompleteCommand.None == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.None);
+            this.LaunchCompleteCommand = (LaunchCompleteCommand)source.LaunchCompleteCommand;
+
+            string additionalSOLibSearchPath = source.AdditionalSOLibSearchPath;
             if (!string.IsNullOrEmpty(additionalSOLibSearchPath))
             {
                 if (string.IsNullOrEmpty(this.AdditionalSOLibSearchPath))
@@ -514,55 +602,19 @@ namespace MICore
             return new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLaunchOptions, message));
         }
 
-        public static string GetRequiredAttribute(XmlReader reader, string attributeName)
+        public static string RequireAttribute(string attributeValue, string attributeName)
         {
-            string value = reader.GetAttribute(attributeName);
-            if (string.IsNullOrWhiteSpace(value))
+            if (string.IsNullOrWhiteSpace(attributeValue))
                 throw GetLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MissingAttribute, attributeName));
-            return value;
+
+            return attributeValue;
         }
 
-        protected static IEnumerable<string> GetChildCommandElements(XmlReader reader)
+        public static string GetRequiredAttribute(XmlReader reader, string attributeName)
         {
-            // Read past the main node to the children
-            if (!reader.ReadToDescendant("Command"))
-            {
-                return Enumerable.Empty<string>();
-            }
-
-            List<string> commands = new List<string>();
-
-            do
-            {
-                reader.Read();
-
-                while (reader.NodeType == XmlNodeType.Attribute)
-                    reader.Read();
-
-                bool hasValue;
-                if (reader.NodeType != XmlNodeType.Text)
-                    hasValue = false;
-                else if (string.IsNullOrWhiteSpace(reader.Value))
-                    hasValue = false;
-                else
-                    hasValue = true;
-
-                if (!hasValue)
-                {
-                    throw GetLaunchOptionsException(MICoreResources.Error_ExpectedCommandBody);
-                }
-
-                commands.Add(reader.Value);
-                reader.Read();
-
-                if (reader.NodeType != XmlNodeType.EndElement)
-                {
-                    throw GetLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
-                }
-            }
-            while (reader.ReadToNextSibling("Command"));
-
-            return commands;
+            // TODO*TODO: remove
+            string value = reader.GetAttribute(attributeName);
+            return RequireAttribute(value, attributeName);
         }
 
         private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string launchOptions, IDeviceAppLauncherEventCallback eventCallback)
@@ -609,8 +661,38 @@ namespace MICore
                 throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_PropertyCannotBeModifiedAfterInitialization, propertyName));
         }
 
+        public static TargetArchitecture ConvertTargetArchitectureAttribute(Xml.LaunchOptions.TargetArchitecture source)
+        {
+            switch (source)
+            {
+                case Xml.LaunchOptions.TargetArchitecture.X86:
+                case Xml.LaunchOptions.TargetArchitecture.x86:
+                    return TargetArchitecture.X86;
+
+                case Xml.LaunchOptions.TargetArchitecture.arm:
+                case Xml.LaunchOptions.TargetArchitecture.ARM:
+                    return TargetArchitecture.ARM;
+
+                case Xml.LaunchOptions.TargetArchitecture.mips:
+                case Xml.LaunchOptions.TargetArchitecture.MIPS:
+                    return TargetArchitecture.Mips;
+
+                case Xml.LaunchOptions.TargetArchitecture.x64:
+                case Xml.LaunchOptions.TargetArchitecture.amd64:
+                case Xml.LaunchOptions.TargetArchitecture.x86_64:
+                case Xml.LaunchOptions.TargetArchitecture.X64:
+                case Xml.LaunchOptions.TargetArchitecture.AMD64:
+                case Xml.LaunchOptions.TargetArchitecture.X86_64:
+                    return TargetArchitecture.X64;
+
+                default:
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownTargetArchitecture, source.ToString()));
+            }
+        }
+
         public static TargetArchitecture GetTargetArchitectureAttribute(XmlReader reader)
         {
+            // TODO*TODO: Remove
             string targetArchitecture = GetRequiredAttribute(reader, "TargetArchitecture");
             switch (targetArchitecture.ToLowerInvariant())
             {

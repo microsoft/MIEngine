@@ -66,12 +66,6 @@ namespace MICore
             proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(pipeOptions.PipePath);
 
             InitProcess(proc, out reader, out writer);
-
-            // send each line separately
-            foreach (var c in pipeOptions.Commands)
-            {
-                writer.WriteLine(c);
-            }
         }
 
         public override void Close()

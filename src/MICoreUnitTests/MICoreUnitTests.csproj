@@ -92,6 +92,7 @@
   <ItemGroup>
     <Compile Include="AndroidLauncherTests.cs" />
     <Compile Include="CommandLockTests.cs" />
+    <Compile Include="BasicLaunchOptionsTests.cs" />
     <Compile Include="MIResultsTests.cs" />
     <Compile Include="NdkVersionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
