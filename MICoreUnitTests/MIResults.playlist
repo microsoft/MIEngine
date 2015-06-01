@@ -1,0 +1,1 @@
+<Playlist Version="1.0"><Add Test="MICoreUnitTests.MIResultsTests.TestParseCStringEmpty" /><Add Test="MICoreUnitTests.MIResultsTests.TestParseCStringNull" /><Add Test="MICoreUnitTests.MIResultsTests.TestParseCString" /><Add Test="MICoreUnitTests.MIResultsTests.TestParseResultList" /><Add Test="MICoreUnitTests.MIResultsTests.TestParseResultListConstValues" /></Playlist>

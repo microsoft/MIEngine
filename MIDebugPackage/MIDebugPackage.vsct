@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!--  This is the file that defines the actual layout and type of the commands.
+        It is divided in different sections (e.g. command definition, command
+        placement, ...), with each defining a specific set of properties.
+        See the comment before each section for more details about how to
+        use it. -->
+
+  <!--  The VSCT compiler (the tool that translates this file into the binary 
+        format that VisualStudio will consume) has the ability to run a preprocessor 
+        on the vsct file; this preprocessor is (usually) the C++ preprocessor, so 
+        it is possible to define includes and macros with the same syntax used 
+        in C++ files. Using this ability of the compiler here, we include some files 
+        defining some of the constants that we will use inside the file. -->
+
+  <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
+  <Extern href="stdidcmd.h"/>
+
+  <!--This header contains the command ids for the menus provided by the shell. -->
+  <Extern href="vsshlids.h"/>
+
+
+
+
+  <!--The Commands section is where we the commands, menus and menu groups are defined.
+      This section uses a Guid to identify the package that provides the command defined inside it. -->
+  <Commands package="guidMIDebugPackagePkg">
+    <!-- Inside this section we have different sub-sections: one for the menus, another  
+    for the menu groups, one for the buttons (the actual commands), one for the combos 
+    and the last one for the bitmaps used. Each element is identified by a command id that  
+    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually  
+    called "command set" and is used to group different command inside a logically related  
+    group; your package should define its own command set in order to avoid collisions  
+    with command ids defined by other packages. -->
+
+    
+    <!--Buttons section. -->
+    <!--This section defines the elements the user can interact with, like a menu command or a button 
+        or combo box in a toolbar. -->
+    <Buttons>
+      <!--NOTE: This is patterned after cmdidDiffFiles from \\cpvsbuild\drops\dev12\Rel\raw\21005.01\sources\env\Diff\Pkg\DiffCommands.vsct -->
+      <Button guid="guidMIDebugPackageCmdSet" id="cmdidLaunchMIDebug" priority="0x0100" type="Button">
+        <CommandFlag>AllowParams</CommandFlag>
+        <Strings>
+          <ButtonText>MIDebug Launch</ButtonText>
+          <!--NOTE: 'Debug.' (or some other prefix) is required - the command window doesn't like commands which aren't prefixed.
+            If we wind up keeping this code, we might want to switch to things like 'MIDebug.launch <foo>'-->
+          <CanonicalName>Debug.MIDebugLaunch</CanonicalName>
+          <LocCanonicalName>Debug.MIDebugLaunch</LocCanonicalName>
+        </Strings>
+      </Button>
+      <Button guid="guidMIDebugPackageCmdSet" id="cmdidMIDebugExec" priority="0x0100" type="Button">
+        <CommandFlag>AllowParams</CommandFlag>
+        <Strings>
+          <ButtonText>MIDebug Execute Command</ButtonText>
+          <!--NOTE: 'Debug.' (or some other prefix) is required - the command window doesn't like commands which aren't prefixed.
+            If we wind up keeping this code, we might want to switch to things like 'MIDebug.launch <foo>'-->
+          <CanonicalName>Debug.MIDebugExec</CanonicalName>
+          <LocCanonicalName>Debug.MIDebugExec</LocCanonicalName>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <Symbols>
+    <!-- This is the package guid. -->
+    <GuidSymbol name="guidMIDebugPackagePkg" value="{7a28ceda-da3e-4172-b19a-bb9c810046a6}" />
+    
+    <!-- This is the guid used to group the menu commands together -->
+    <GuidSymbol name="guidMIDebugPackageCmdSet" value="{eb4e4965-e07f-46d0-afcc-aa4dd43a5336}">
+
+      <IDSymbol name="MyMenuGroup" value="0x1020" />
+      <IDSymbol name="cmdidLaunchMIDebug" value="0x0100" />
+      <IDSymbol name="cmdidMIDebugExec" value="0x0101" />
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>

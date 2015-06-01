@@ -1,0 +1,76 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--NOTE: this code was borrowed from Roslyn. See http://index/#MSBuildItem=AssemblyVersionAttribute or C\R\Main\Open\Tools\Microsoft.CodeAnalysis.Toolset.Open\Targets\GenerateAssemblyInfo.targets -->
+  <PropertyGroup>
+    <GeneratedAssemblyInfoFile>$(IntermediateOutputPath)GeneratedAssemblyInfo$(DefaultLanguageSourceExtension)</GeneratedAssemblyInfoFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CoreCompileDependsOn>GenerateAssemblies;GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+  </PropertyGroup>
+
+  <Target Name="GenerateAssemblies"
+          Condition="'@(GenerateAssembly)' != ''"
+          Inputs="@(GenerateAssembly)"
+          Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')"
+          BeforeTargets="ResolveAssemblyReferences">
+    <PropertyGroup>
+        <IlAsmCommand Condition="'$(IlAsmCommand)'==''">"$(FrameworkDir)$(FrameworkVersion)\ilasm.exe"</IlAsmCommand>
+        <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
+    </PropertyGroup>
+    <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
+    <Exec Command="$(IlAsmCommand) $(IlAsmFlags) /out=$(GeneratedAssembliesDir)%(FileName).dll @(GenerateAssembly)" />
+  </Target>
+  
+  <PropertyGroup>
+    <CleanDependsOn>
+        $(CleanDependsOn);
+        CleanGenerateAssemblies;
+    </CleanDependsOn>
+  </PropertyGroup>
+  
+  <Target Name="CleanGenerateAssemblies">
+    <RemoveDir Directories="$(GeneratedAssembliesDir)" />
+  </Target>
+
+  <!-- Depends on PrepareForBuild because the latter is responsible for calling MakeDir(IntermediateOutputPath). 
+  Without it, if we do a design-time build of a project (e.g. in Workspace.LoadSolution) immediately following
+  a tfpt treeclean, WriteCodeFragment may fail because the obj folder doesn't even exist at that time.  -->
+  <Target Name="GenerateAssemblyInfoFile"
+          Inputs="$(MSBuildThisFileFullPath)"
+          Outputs="$(GeneratedAssemblyInfoFile)"
+          DependsOnTargets="PrepareForBuild"
+          Condition="'$(Language)' == 'C#' or '$(Language)' == 'VB'">
+
+    <Error Condition="'$(BuildVersion)'==''" Text="'BuildVersion' is not defined. Try rebuilding clean. If the problem presists, make sure gdb.settings.targets is included in this project."/>
+    <Error Condition="'$(AssemblyVersion)'==''" Text="'AssemblyVersion' is not defined. Try rebuilding clean. If the problem presists, make sure gdb.settings.targets is included in this project."/>
+
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyCompanyAttribute">
+        <_Parameter1>Microsoft Corporation</_Parameter1>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyProductAttribute">
+        <_Parameter1>Microsoft ® Visual Studio ®</_Parameter1>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyCopyrightAttribute">
+        <_Parameter1>© Microsoft Corporation. All rights reserved.</_Parameter1>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyVersionAttribute">
+        <_Parameter1>$(AssemblyVersion)</_Parameter1>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyFileVersionAttribute">
+        <_Parameter1>$(BuildVersion)</_Parameter1>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyInformationalVersionAttribute">
+        <_Parameter1>$(BuildVersion)</_Parameter1>
+      </AssemblyAttribute>
+    </ItemGroup>
+
+    <WriteCodeFragment AssemblyAttributes="@(AssemblyAttribute)"
+                       Language="$(Language)"
+                       OutputFile="$(GeneratedAssemblyInfoFile)">
+      <Output TaskParameter="OutputFile" ItemName="Compile" />
+      <Output TaskParameter="OutputFile" ItemName="FileWrites" />
+    </WriteCodeFragment>
+  </Target>
+</Project>

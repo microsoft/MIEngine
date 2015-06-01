@@ -1,0 +1,4 @@
+﻿[$RootKey$\CLSID\{316783D1-1824-4847-B3D3-FB048960EDCF}]
+"Assembly"="Microsoft.IOSDebugLauncher"
+"Class"="IOSDebugLauncher.Launcher"
+"CodeBase"="$PackageFolder$\Microsoft.IOSDebugLauncher.dll"

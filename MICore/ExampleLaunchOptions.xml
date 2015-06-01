@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Examples> 
+<!--Here are examples of the three built in types of launch options-->
+
+  <LocalLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    MIDebuggerPath="c:\gdb\gdb.exe" 
+    MIDebuggerServerAddress="myserverbox:345" 
+    ExePath="c:\proj\myproj\bin\debug\myproj" 
+    TargetArchitecture="arm"
+    />
+
+  <SerialPortLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    Port="COM1" TargetArchitecture="arm">
+    <Command>Some MI command goes here</Command>
+    <Command>And another one here</Command>
+  </SerialPortLaunchOptions>
+
+  <PipeLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    PipePath="c:\foo\example.exe" PipeArguments="mylinuxbox:345" 
+    ExePath="/home/user/myname/foo" ExeArguments="arg1 arg2"
+    TargetArchitecture="arm"
+    WorkingDirectory="/home/user/myname"
+    AdditionalSOLibSearchPath="c:\example\bin\debug;c:\someotherdir\bin\debug">
+    <Command>Some MI command goes here</Command>
+    <Command>And another one here</Command>
+  </PipeLaunchOptions>
+
+  <!--NOTES:
+    1. IntermediateDirectory is where the debugger will save .so files that it has copied down from the device/
+        emulator. It is also one of the places where the debugger will look for .so files.
+    2. We may eventually want an additional attribute to indicate if we should attach to a running instance of the app
+    3. NDK/SDKRoot are optional - VS will use a default value if not specified
+    -->
+  <!-- Android Launch -->
+  <AndroidLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    Package="com.example.hellojni"
+    LaunchActivity=".HelloJni"
+    SDKRoot="c:\android-bundle\sdk"
+    NDKRoot="c:\android-ndk"
+    TargetArchitecture="arm"
+    IntermediateDirectory="c:\android-ndk\samples\hello-jni\obj\local\armeabi-v7a"
+    AdditionalSOLibSearchPath=""
+    DeviceId="emulator-5554"/>
+  
+  <!-- Android Attach -->
+  <AndroidLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    Package="com.example.hellojni"
+    Attach="true"
+    SDKRoot="c:\android-bundle\sdk"
+    NDKRoot="c:\android-ndk"
+    TargetArchitecture="arm"
+    IntermediateDirectory="c:\android-ndk\samples\hello-jni\obj\local\armeabi-v7a"
+    AdditionalSOLibSearchPath=""
+    DeviceId="emulator-5554"/>
+
+  <IOSLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    RemoteMachineName="Chucks-mac-mini"
+    PackageId="riesco.Sample"
+    vcremotePort="3000"
+    IOSDebugTarget="device"
+    TargetArchitecture="x86"
+    AdditionalSOLibSearchPath=""/>
+</Examples>

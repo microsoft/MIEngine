@@ -1,0 +1,239 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Error_64BitNDKNotSupportedForX86" xml:space="preserve">
+    <value>The current Android NDK root is set to an NDK for platform 'Windows 64-bit'. Platform 'Windows 64-bit' NDKs do not support x86 debugging. Specify a 32-bit NDK for platform 'Windows 32-bit' instead. This can be obtained from developer.android.com.</value>
+  </data>
+  <data name="Error_AdbShellFailure" xml:space="preserve">
+    <value>The Android command '{0}' failed to execute.</value>
+  </data>
+  <data name="Error_BadDeviceAbi" xml:space="preserve">
+    <value>Incompatible device CPU architecture detected. The debugger is configured for {0} debugging. But the configured device/emulator '{1}' is using {2} ABI.</value>
+    <comment>{0} = target architecture (ex: ARM). {1} = device id. {2} = device abi (ex: armv7abi).</comment>
+  </data>
+  <data name="Error_DeviceNotResponding" xml:space="preserve">
+    <value>Unable to connect to the device/emulator through the Android Debug Bridge (adb). If the problem continues, try restarting the device/emulator or resetting adb.</value>
+  </data>
+  <data name="Error_DeviceOffline" xml:space="preserve">
+    <value>The target device or emulator is offline.</value>
+  </data>
+  <data name="Error_ExternalFileNotFound" xml:space="preserve">
+    <value>{0} file '{1}', could not be found in the expected location of '{2}'. Ensure that a compatible {0} is installed.</value>
+  </data>
+  <data name="Error_GDBServerFailed" xml:space="preserve">
+    <value>GDBServer failed to start or attach to the target application.</value>
+  </data>
+  <data name="Error_InvalidAndroidSDK" xml:space="preserve">
+    <value>Required Android SDK file, adb.exe, could not be found under the specified Android SDK root '{0}'.</value>
+  </data>
+  <data name="Error_InvalidAttribute" xml:space="preserve">
+    <value>The format of AndroidLaunchOptions attribute '{0}' is invalid.</value>
+  </data>
+  <data name="Error_InvalidDirectoryAttribute" xml:space="preserve">
+    <value>AndroidLaunchOptions attribute '{0}' has an invalid value '{1}'. Directory does not exist or is not rooted.</value>
+  </data>
+  <data name="Error_MDDRegValueNotFound" xml:space="preserve">
+    <value>A required Visual Studio registry value could not be found. Ensure that support for multi-device C++ development is enabled in Visual Studio setup.
+
+Registry key: {0}
+Value name: {1}</value>
+  </data>
+  <data name="Error_MissingAttribute" xml:space="preserve">
+    <value>Required AndroidLaunchOptions attribute '{0}' is missing.</value>
+  </data>
+  <data name="Error_MulltipleApplicationProcesses" xml:space="preserve">
+    <value>Multiple application processes were found for package '{0}'. Debugging multi-process packages is not currently supported. If the package is not expected to have multiple processes, try restarting the device or emulator.</value>
+  </data>
+  <data name="Error_NoGdbServer" xml:space="preserve">
+    <value>Non-debuggable application installed on the target device. Required file '{0}' could not be found on the device. Please reinstall the debuggable version.</value>
+  </data>
+  <data name="Error_PackageDidNotStart" xml:space="preserve">
+    <value>The package '{0}' did not start on the device or emulator.</value>
+  </data>
+  <data name="Error_PackageIsNotRunning" xml:space="preserve">
+    <value>Cannot Attach. The package '{0}' is not running on the device or emulator.</value>
+  </data>
+  <data name="Error_RunAsUnknownPackage" xml:space="preserve">
+    <value>Troubleshooting steps:
+- Try launching the app from the app list. If the app is not in the app list, or cannot be started, this may indicate a problem with the app deployment.
+- Make sure that you have installed all updates available for your device.
+- Install the latest firmware or flash the device using the latest available image. This can be helpful even if you are already on the latest version of Android as the over-the-air Android upgrade process may corrupt file permissions needed for native debugging. For many Samsung devices, this can be done using Samsung Kies.
+- Report the problem to your manufacturer. The Android Compatibility Test Suite 'testRunAsHasCorrectCapabilities' tests for this condition and is likely failing.</value>
+  </data>
+  <data name="Error_ShellCommandBadResults" xml:space="preserve">
+    <value>Unexpected results from running the Android command '{0}'.</value>
+  </data>
+  <data name="Error_ShellCommandFailed" xml:space="preserve">
+    <value>Android command '{0}' failed. {1}</value>
+  </data>
+  <data name="Error_UnsupportedAPILevel" xml:space="preserve">
+    <value>The Visual Studio C++ Android debugger requires that the target emulator/device be running Android API level 17 (version 4.2) or newer, but the target emulator/device is running API level {0}. Please update your emulator/device.</value>
+  </data>
+  <data name="ProductName_JDK" xml:space="preserve">
+    <value>Java Development Kit</value>
+  </data>
+  <data name="ProductName_NDK" xml:space="preserve">
+    <value>Android NDK</value>
+  </data>
+  <data name="ProductName_SDK" xml:space="preserve">
+    <value>Android SDK</value>
+  </data>
+  <data name="Step_ConnectToDevice" xml:space="preserve">
+    <value>Connecting to the Android device or emulator.</value>
+  </data>
+  <data name="Step_DownloadingFiles" xml:space="preserve">
+    <value>Downloading files from the device or emulator.</value>
+  </data>
+  <data name="Step_GettingAppProcessId" xml:space="preserve">
+    <value>Getting the Android application Process ID.</value>
+  </data>
+  <data name="Step_InspectingDevice" xml:space="preserve">
+    <value>Inspecting properties of the device or emulator.</value>
+  </data>
+  <data name="Step_PortForwarding" xml:space="preserve">
+    <value>Setting up the debugger connection to the device or emulator.</value>
+  </data>
+  <data name="Step_ResolveInstallPaths" xml:space="preserve">
+    <value>Resolving paths to external dependencies.</value>
+  </data>
+  <data name="Step_StartGDBServer" xml:space="preserve">
+    <value>Starting the GDBServer process on the Android device or emulator.</value>
+  </data>
+  <data name="Step_StartingApp" xml:space="preserve">
+    <value>Starting the Android application.</value>
+  </data>
+  <data name="Step_WaitingForDeviceToComeOnline" xml:space="preserve">
+    <value>Waiting for the device or emulator to come online.</value>
+  </data>
+  <data name="UnsupportedTargetArchitecture" xml:space="preserve">
+    <value>Target architecture '{0}' is not supported.</value>
+  </data>
+  <data name="WaitDialogText" xml:space="preserve">
+    <value>Setting up Android debugging.</value>
+  </data>
+  <data name="Warning_ArmEmulator" xml:space="preserve">
+    <value>C++ debugging can be unreliable in ARM emulators.  Functionality such as stepping and breakpoints might not work as expected.</value>
+  </data>
+  <data name="Warning_JDbgResumeFailure" xml:space="preserve">
+    <value>Failed to connect to and resume the Android Java Virtual Machine.</value>
+  </data>
+  <data name="Warning_JdbgVMUnavailable" xml:space="preserve">
+    <value>This may be because a Java debugger, such as Eclipse, is already connected. Resume the Java debugger or close it.</value>
+  </data>
+</root>

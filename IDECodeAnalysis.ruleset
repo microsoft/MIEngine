@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Rules for MICore" Description="Code analysis rules for MICore.csproj." ToolsVersion="14.0">
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA1304" Action="Error" />
+    <Rule Id="CA1305" Action="Error" />
+    <Rule Id="CA1306" Action="Error" />
+    <Rule Id="CA1307" Action="Error" />
+    <Rule Id="CA1309" Action="Error" />
+    <Rule Id="CA2100" Action="Error" />
+    <Rule Id="CA2102" Action="Error" />
+    <Rule Id="CA2103" Action="Error" />
+    <Rule Id="CA2104" Action="Error" />
+    <Rule Id="CA2105" Action="Error" />
+    <Rule Id="CA2106" Action="Error" />
+    <Rule Id="CA2107" Action="Error" />
+    <Rule Id="CA2108" Action="Error" />
+    <Rule Id="CA2109" Action="Error" />
+    <Rule Id="CA2111" Action="Error" />
+    <Rule Id="CA2112" Action="Error" />
+    <Rule Id="CA2114" Action="Error" />
+    <Rule Id="CA2115" Action="Error" />
+    <Rule Id="CA2116" Action="Error" />
+    <Rule Id="CA2117" Action="Error" />
+    <Rule Id="CA2118" Action="Error" />
+    <Rule Id="CA2119" Action="Error" />
+    <Rule Id="CA2120" Action="Error" />
+    <Rule Id="CA2121" Action="Error" />
+    <Rule Id="CA2122" Action="Error" />
+    <Rule Id="CA2123" Action="Error" />
+    <Rule Id="CA2124" Action="Error" />
+    <Rule Id="CA2126" Action="Error" />
+    <Rule Id="CA2130" Action="Error" />
+    <Rule Id="CA2131" Action="Error" />
+    <Rule Id="CA2132" Action="Error" />
+    <Rule Id="CA2133" Action="Error" />
+    <Rule Id="CA2134" Action="Error" />
+    <Rule Id="CA2135" Action="Error" />
+    <Rule Id="CA2136" Action="Error" />
+    <Rule Id="CA2137" Action="Error" />
+    <Rule Id="CA2138" Action="Error" />
+    <Rule Id="CA2139" Action="Error" />
+    <Rule Id="CA2140" Action="Error" />
+    <Rule Id="CA2141" Action="Error" />
+    <Rule Id="CA2142" Action="Error" />
+    <Rule Id="CA2143" Action="Error" />
+    <Rule Id="CA2144" Action="Error" />
+    <Rule Id="CA2145" Action="Error" />
+    <Rule Id="CA2146" Action="Error" />
+    <Rule Id="CA2147" Action="Error" />
+    <Rule Id="CA2149" Action="Error" />
+  </Rules>
+</RuleSet>
