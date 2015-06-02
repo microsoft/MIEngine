@@ -79,29 +79,34 @@
     <xs:complexType>
       <xs:attribute name="RemoteMachineName" type="xs:string" use="required">
         <xs:annotation>
-          <xs:documentation>TODO</xs:documentation>
+          <xs:documentation>The name of the target machine</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="PackageId" type="xs:string" use="required">
         <xs:annotation>
-          <xs:documentation>TODO</xs:documentation>
+          <xs:documentation>The package id of the package to debug</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="vcremotePort" type="xs:int" use="required">
         <xs:annotation>
-          <xs:documentation>TODO</xs:documentation>
+          <xs:documentation>The port number of the VC remote endpoint to connect to</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="IOSDebugTarget" use="required">
         <xs:simpleType>
           <xs:annotation>
-            <xs:documentation>TODO</xs:documentation>
+            <xs:documentation>Indicates if the debugger should debug to the simulator or a device.</xs:documentation>
           </xs:annotation>
           <xs:restriction base="xs:string">
             <xs:enumeration value="device" />
             <xs:enumeration value="simulator" />
           </xs:restriction>
         </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="Secure" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>If true, use TSL security</xs:documentation>
+        </xs:annotation>
       </xs:attribute>
       <xs:attributeGroup ref="CommonAttributes"/>
     </xs:complexType>

@@ -15,57 +15,28 @@ namespace AndroidDebugLauncher
 {
     internal class AndroidLaunchOptions
     {
-        private AndroidLaunchOptions(XmlReader reader)
+        public AndroidLaunchOptions(MICore.Xml.LaunchOptions.AndroidLaunchOptions xmlOptions)
         {
-            this.Package = LaunchOptions.GetRequiredAttribute(reader, "Package");
-            this.IsAttach = GetIsAttachAttribute(reader);
+            this.Package = LaunchOptions.RequireAttribute(xmlOptions.Package, "Package");
+            this.IsAttach = xmlOptions.Attach;
             if (!IsAttach)
             {
                 // LaunchActivity is only required when we're launching
-                this.LaunchActivity = LaunchOptions.GetRequiredAttribute(reader, "LaunchActivity");
+                this.LaunchActivity = LaunchOptions.RequireAttribute(xmlOptions.LaunchActivity, "LaunchActivity");
             }
-            this.SDKRoot = GetOptionalDirectoryAttribute(reader, "SDKRoot");
-            this.NDKRoot = GetOptionalDirectoryAttribute(reader, "NDKRoot");
-            this.TargetArchitecture = LaunchOptions.GetTargetArchitectureAttribute(reader);
-            this.IntermediateDirectory = GetRequiredDirectoryAttribute(reader, "IntermediateDirectory");
-            this.AdditionalSOLibSearchPath = reader.GetAttribute("AdditionalSOLibSearchPath");
-            this.DeviceId = LaunchOptions.GetRequiredAttribute(reader, "DeviceId");
-            this.LogcatServiceId = GetLogcatServiceIdAttribute(reader);
+            this.SDKRoot = GetOptionalDirectoryAttribute(xmlOptions.SDKRoot, "SDKRoot");
+            this.NDKRoot = GetOptionalDirectoryAttribute(xmlOptions.NDKRoot, "NDKRoot");
+            this.TargetArchitecture = LaunchOptions.ConvertTargetArchitectureAttribute(xmlOptions.TargetArchitecture);
+            this.IntermediateDirectory = RequireValidDirectoryAttribute(xmlOptions.IntermediateDirectory, "IntermediateDirectory");
+            this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
+            this.DeviceId = LaunchOptions.RequireAttribute(xmlOptions.DeviceId, "DeviceId");
+            this.LogcatServiceId = GetLogcatServiceIdAttribute(xmlOptions.LogcatServiceId);
 
             CheckTargetArchitectureSupported();
         }
 
-        public static AndroidLaunchOptions CreateFromXml(string content)
+        private string GetOptionalDirectoryAttribute(string value, string attributeName)
         {
-            if (string.IsNullOrWhiteSpace(content))
-                throw new ArgumentNullException("content");
-
-            var settings = new XmlReaderSettings();
-            settings.CloseInput = false;
-            settings.IgnoreComments = true;
-            settings.IgnoreProcessingInstructions = true;
-            settings.IgnoreWhitespace = true;
-
-            using (StringReader stringReader = new StringReader(content))
-            using (XmlReader reader = XmlReader.Create(stringReader, settings))
-            {
-                // Read to the top level element
-                while (reader.NodeType != XmlNodeType.Element)
-                    reader.Read();
-
-                // Allow either no namespace, or the correct namespace
-                if (reader.LocalName != "AndroidLaunchOptions")
-                {
-                    throw new ArgumentOutOfRangeException("content");
-                }
-
-                return new AndroidLaunchOptions(reader);
-            }
-        }
-
-        private string GetOptionalDirectoryAttribute(XmlReader reader, string attributeName)
-        {
-            string value = reader.GetAttribute(attributeName);
             if (value == null)
                 return null;
 
@@ -73,9 +44,9 @@ namespace AndroidDebugLauncher
             return value;
         }
 
-        private string GetRequiredDirectoryAttribute(XmlReader reader, string attributeName)
+        private string RequireValidDirectoryAttribute(string value, string attributeName)
         {
-            string value = LaunchOptions.GetRequiredAttribute(reader, attributeName);
+            LaunchOptions.RequireAttribute(value, attributeName);
 
             EnsureValidDirectory(value, attributeName);
 
@@ -92,11 +63,10 @@ namespace AndroidDebugLauncher
             }
         }
 
-        private Guid GetLogcatServiceIdAttribute(XmlReader reader)
+        private Guid GetLogcatServiceIdAttribute(string attributeValue)
         {
             const string attributeName = "LogcatServiceId";
 
-            string attributeValue = reader.GetAttribute(attributeName);
             if (!string.IsNullOrEmpty(attributeValue))
             {
                 Guid value;
@@ -111,26 +81,6 @@ namespace AndroidDebugLauncher
             {
                 return Guid.Empty;
             }
-        }
-
-        private bool GetIsAttachAttribute(XmlReader reader)
-        {
-            const string attributeName = "Attach";
-
-            string attributeValue = reader.GetAttribute(attributeName);
-            if (string.IsNullOrWhiteSpace(attributeValue))
-            {
-                // LaunchOptions.xsd specifies false as default
-                return false;
-            }
-
-            bool isAttach;
-            if (!Boolean.TryParse(attributeValue, out isAttach))
-            {
-                throw new LauncherException(Telemetry.LaunchFailureCode.NoReport, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_InvalidAttribute, attributeName));
-            }
-
-            return isAttach;
         }
 
         /// <summary>

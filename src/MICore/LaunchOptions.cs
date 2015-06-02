@@ -127,12 +127,7 @@ namespace MICore
 
         static internal TcpLaunchOptions CreateFromXml(Xml.LaunchOptions.TcpLaunchOptions source)
         {
-            if (source.Port <= 0)
-            {
-                throw GetLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "Port"));
-            }
-
-            var options = new TcpLaunchOptions(RequireAttribute(source.Hostname, "Hostname"), source.Port, source.Secure);
+            var options = new TcpLaunchOptions(RequireAttribute(source.Hostname, "Hostname"), LaunchOptions.RequirePortAttribute(source.Port, "Port"), source.Secure);
             options.InitializeCommonOptions(source);
 
             return options;
@@ -373,35 +368,12 @@ namespace MICore
 
             LaunchOptions launchOptions = null;
             Guid clsidLauncher = Guid.Empty;
-
-            var settings = new XmlReaderSettings();
-            settings.CloseInput = false;
-            settings.IgnoreComments = true;
-            settings.IgnoreProcessingInstructions = true;
-            settings.IgnoreWhitespace = true;
-            settings.NameTable = new NameTable();
-
-            // Create our own namespace manager so that we can set the default namespace
-            // We need this because the XML serializer requires correct namespaces,
-            // but project systems may not provide it.
-            XmlNamespaceManager namespaceManager = new XmlNamespaceManager(settings.NameTable);
-            namespaceManager.AddNamespace(string.Empty, XmlNamespace);
-            XmlParserContext context = new XmlParserContext(settings.NameTable, namespaceManager, string.Empty, XmlSpace.None);
+            object launcherXmlOptions = null;
 
             try
             {
-                using (StringReader stringReader = new StringReader(options))
-                using (XmlReader reader = XmlReader.Create(stringReader, settings, context))
+                using (XmlReader reader = OpenXml(options))
                 {
-                    // Read to the top level element
-                    while (reader.NodeType != XmlNodeType.Element)
-                        reader.Read();
-
-                    if (reader.NamespaceURI != XmlNamespace)
-                    {
-                        throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.Name));
-                    }
-
                     switch (reader.LocalName)
                     {
                         case "LocalLaunchOptions":
@@ -437,13 +409,19 @@ namespace MICore
                             break;
 
                         case "IOSLaunchOptions":
-                            // TODO*TODO: fix
-                            clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
+                            {
+                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.IOSLaunchOptionsSerializer();
+                                launcherXmlOptions = Deserialize(serializer, reader);
+                                clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
+                            }
                             break;
 
                         case "AndroidLaunchOptions":
-                            // TODO*TODO: fix
-                            clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
+                            {
+                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.AndroidLaunchOptionsSerializer();
+                                launcherXmlOptions = Deserialize(serializer, reader);
+                                clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
+                            }
                             break;
 
                         default:
@@ -464,7 +442,7 @@ namespace MICore
 
             if (clsidLauncher != Guid.Empty)
             {
-                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, options, eventCallback);
+                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, launcherXmlOptions, eventCallback);
             }
 
             if (launchOptions.ExePath == null)
@@ -483,7 +461,62 @@ namespace MICore
             return launchOptions;
         }
 
-        private static object Deserialize(XmlSerializer serializer, XmlReader reader)
+        public static XmlReader OpenXml(string content)
+        {
+            var settings = new XmlReaderSettings();
+            settings.CloseInput = true;
+            settings.IgnoreComments = true;
+            settings.IgnoreProcessingInstructions = true;
+            settings.IgnoreWhitespace = true;
+            settings.NameTable = new NameTable();
+
+            // Create our own namespace manager so that we can set the default namespace
+            // We need this because the XML serializer requires correct namespaces,
+            // but project systems may not provide it.
+            XmlNamespaceManager namespaceManager = new XmlNamespaceManager(settings.NameTable);
+            namespaceManager.AddNamespace(string.Empty, XmlNamespace);
+            XmlParserContext context = new XmlParserContext(settings.NameTable, namespaceManager, string.Empty, XmlSpace.None);
+
+            StringReader stringReader = null;
+            XmlReader reader = null;
+            bool success = false;
+
+            try
+            {
+                stringReader = new StringReader(content);
+                reader = XmlReader.Create(stringReader, settings, context);
+
+                // Read to the top level element
+                while (reader.NodeType != XmlNodeType.Element)
+                    reader.Read();
+
+                if (reader.NamespaceURI != XmlNamespace)
+                {
+                    throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.Name));
+                }
+
+                success = true;
+                return reader;
+            }
+            finally
+            {
+                if (!success)
+                {
+                    if (reader != null)
+                    {
+                        reader.Close();
+                    }
+                    else if (stringReader != null)
+                    {
+                        // NOTE: the reader will close the input, so we only want to do this
+                        // if we failed to create the reader.
+                        stringReader.Close();
+                    }
+                }
+            }
+        }
+
+        public static object Deserialize(XmlSerializer serializer, XmlReader reader)
         {
             try
             {
@@ -610,14 +643,17 @@ namespace MICore
             return attributeValue;
         }
 
-        public static string GetRequiredAttribute(XmlReader reader, string attributeName)
+        public static int RequirePortAttribute(int attributeValue, string attributeName)
         {
-            // TODO*TODO: remove
-            string value = reader.GetAttribute(attributeName);
-            return RequireAttribute(value, attributeName);
+            if (attributeValue <= 0 || attributeValue >= 0xffff)
+            {
+                throw GetLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "Port"));
+            }
+
+            return attributeValue;
         }
 
-        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string launchOptions, IDeviceAppLauncherEventCallback eventCallback)
+        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
         {
             var deviceAppLauncher = (IPlatformAppLauncher)VSLoader.VsCoCreateManagedObject(registryRoot, clsidLauncher);
             if (deviceAppLauncher == null)
@@ -632,7 +668,7 @@ namespace MICore
                 try
                 {
                     deviceAppLauncher.Initialize(registryRoot, eventCallback);
-                    deviceAppLauncher.ParseLaunchOptions(launchOptions);
+                    deviceAppLauncher.SetLaunchOptions(launcherXmlOptions);
                 }
                 catch (Exception e)
                 {
@@ -689,34 +725,6 @@ namespace MICore
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownTargetArchitecture, source.ToString()));
             }
         }
-
-        public static TargetArchitecture GetTargetArchitectureAttribute(XmlReader reader)
-        {
-            // TODO*TODO: Remove
-            string targetArchitecture = GetRequiredAttribute(reader, "TargetArchitecture");
-            switch (targetArchitecture.ToLowerInvariant())
-            {
-                case "x86":
-                    return TargetArchitecture.X86;
-
-                case "arm":
-                    return MICore.TargetArchitecture.ARM;
-
-                case "mips":
-                    return MICore.TargetArchitecture.Mips;
-
-                //case "arm64":
-                //    return MICore.TargetArchitecture.ARM64;
-
-                case "x64":
-                case "amd64":
-                case "x86_64":
-                    return TargetArchitecture.X64;
-
-                default:
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownTargetArchitecture, targetArchitecture));
-            }
-        }
     }
 
     /// <summary>
@@ -739,8 +747,8 @@ namespace MICore
         /// <summary>
         /// Initializes the launcher from the launch settings
         /// </summary>
-        /// <param name="launchOptions">Launch options string</param>
-        void ParseLaunchOptions(string launchOptions);
+        /// <param name="launcherXmlOptions">Deserialized XML options structure</param>
+        void SetLaunchOptions(object launcherXmlOptions);
 
         /// <summary>
         /// Does whatever steps are necessary to setup for debugging. On Android this will include launching

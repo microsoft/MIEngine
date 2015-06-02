@@ -50,10 +50,12 @@ namespace AndroidDebugLauncher
             RegistryRoot.Set(registryRoot);
         }
 
-        void IPlatformAppLauncher.ParseLaunchOptions(string launchOptions)
+        void IPlatformAppLauncher.SetLaunchOptions(object launcherXmlOptions)
         {
-            if (string.IsNullOrEmpty(launchOptions))
-                throw new ArgumentNullException("launchOptions");
+            if (launcherXmlOptions == null)
+                throw new ArgumentNullException("launcherXmlOptions");
+
+            var androidXmlOptions = (MICore.Xml.LaunchOptions.AndroidLaunchOptions)launcherXmlOptions;
 
             if (_eventCallback == null)
             {
@@ -67,7 +69,7 @@ namespace AndroidDebugLauncher
                 throw new InvalidOperationException();
             }
 
-            _launchOptions = AndroidLaunchOptions.CreateFromXml(launchOptions);
+            _launchOptions = new AndroidLaunchOptions(androidXmlOptions);
         }
 
         void IPlatformAppLauncher.SetupForDebugging(out LaunchOptions result)

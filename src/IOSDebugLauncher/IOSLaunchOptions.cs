@@ -12,6 +12,7 @@ using MICore;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace IOSDebugLauncher
 {
@@ -23,67 +24,17 @@ namespace IOSDebugLauncher
 
     internal class IOSLaunchOptions
     {
-        private IOSLaunchOptions(XmlReader reader)
+        public IOSLaunchOptions(MICore.Xml.LaunchOptions.IOSLaunchOptions xmlOptions)
         {
-            this.RemoteMachineName = LaunchOptions.GetRequiredAttribute(reader, "RemoteMachineName");
-            this.PackageId = LaunchOptions.GetRequiredAttribute(reader, "PackageId");
-            this.VcRemotePort = int.Parse(LaunchOptions.GetRequiredAttribute(reader, "vcremotePort"), CultureInfo.InvariantCulture);
-            this.IOSDebugTarget = GetIOSTargetArchitectureAttribute(reader);
-            this.TargetArchitecture = LaunchOptions.GetTargetArchitectureAttribute(reader);
-            this.AdditionalSOLibSearchPath = reader.GetAttribute("AdditionalSOLibSearchPath");
-
-            this.Secure = false;
-            string secureString = reader.GetAttribute("Secure");
-            if (!string.IsNullOrEmpty(secureString))
-            {
-                bool secure;
-                if (bool.TryParse(secureString, out secure))
-                {
-                    this.Secure = secure;
-                }
-            }
-        }
-
-        internal static IOSLaunchOptions CreateFromXml(string content)
-        {
-            if (string.IsNullOrWhiteSpace(content))
-                throw new ArgumentException("content");
-
-            var settings = new XmlReaderSettings();
-            settings.CloseInput = false;
-            settings.IgnoreComments = true;
-            settings.IgnoreProcessingInstructions = true;
-            settings.IgnoreWhitespace = true;
-
-            using (StringReader stringReader = new StringReader(content))
-            using (XmlReader reader = XmlReader.Create(stringReader, settings))
-            {
-                while (reader.NodeType != XmlNodeType.Element)
-                    reader.Read();
-
-                if (reader.LocalName != "IOSLaunchOptions")
-                {
-                    throw new ArgumentException("content");
-                }
-
-                return new IOSLaunchOptions(reader);
-            }
-        }
-
-        private IOSDebugTarget GetIOSTargetArchitectureAttribute(XmlReader reader)
-        {
-            string iosDebugTarget = LaunchOptions.GetRequiredAttribute(reader, "IOSDebugTarget");
-            switch (iosDebugTarget.ToLowerInvariant())
-            {
-                case "simulator":
-                    return IOSDebugTarget.Simulator;
-
-                case "device":
-                    return IOSDebugTarget.Device;
-
-                default:
-                    throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, LauncherResources.Error_UnknownDebugTarget, iosDebugTarget));
-            }
+            this.RemoteMachineName = LaunchOptions.RequireAttribute(xmlOptions.RemoteMachineName, "RemoteMachineName");
+            this.PackageId = LaunchOptions.RequireAttribute(xmlOptions.PackageId, "PackageId");
+            this.VcRemotePort = LaunchOptions.RequirePortAttribute(xmlOptions.vcremotePort, "vcremotePort");
+            Debug.Assert((uint)IOSDebugTarget.Device == (uint)MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.device);
+            Debug.Assert((uint)IOSDebugTarget.Simulator == (uint)MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.simulator);
+            this.IOSDebugTarget = (IOSDebugTarget)xmlOptions.IOSDebugTarget;
+            this.TargetArchitecture = LaunchOptions.ConvertTargetArchitectureAttribute(xmlOptions.TargetArchitecture);
+            this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
+            this.Secure = xmlOptions.Secure;
         }
 
         public string RemoteMachineName { get; private set; }

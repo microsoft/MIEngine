@@ -451,10 +451,15 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             WriteAttribute(@"PackageId", @"", ((global::System.String)o.@PackageId));
             WriteAttribute(@"vcremotePort", @"", System.Xml.XmlConvert.ToString((global::System.Int32)((global::System.Int32)o.@vcremotePort)));
             WriteAttribute(@"IOSDebugTarget", @"", Write9_IOSLaunchOptionsIOSDebugTarget(((global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget)o.@IOSDebugTarget)));
+            if (o.@SecureSpecified) {
+                WriteAttribute(@"Secure", @"", System.Xml.XmlConvert.ToString((global::System.Boolean)((global::System.Boolean)o.@Secure)));
+            }
             WriteAttribute(@"TargetArchitecture", @"", Write1_TargetArchitecture(((global::MICore.Xml.LaunchOptions.TargetArchitecture)o.@TargetArchitecture)));
             WriteAttribute(@"AdditionalSOLibSearchPath", @"", ((global::System.String)o.@AdditionalSOLibSearchPath));
             if (o.@MIModeSpecified) {
                 WriteAttribute(@"MIMode", @"", Write2_MIMode(((global::MICore.Xml.LaunchOptions.MIMode)o.@MIMode)));
+            }
+            if (o.@SecureSpecified) {
             }
             if (o.@MIModeSpecified) {
             }
@@ -1528,7 +1533,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             if (isNull) return null;
             global::MICore.Xml.LaunchOptions.IOSLaunchOptions o;
             o = new global::MICore.Xml.LaunchOptions.IOSLaunchOptions();
-            bool[] paramsRead = new bool[7];
+            bool[] paramsRead = new bool[8];
             while (Reader.MoveToNextAttribute()) {
                 if (!paramsRead[0] && ((object) Reader.LocalName == (object)id32_RemoteMachineName && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@RemoteMachineName = Reader.Value;
@@ -1546,21 +1551,26 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@IOSDebugTarget = Read9_IOSLaunchOptionsIOSDebugTarget(Reader.Value);
                     paramsRead[3] = true;
                 }
-                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id3_TargetArchitecture && (object) Reader.NamespaceURI == (object)id4_Item)) {
-                    o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
+                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id22_Secure && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    o.@Secure = System.Xml.XmlConvert.ToBoolean(Reader.Value);
+                    o.@SecureSpecified = true;
                     paramsRead[4] = true;
                 }
-                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
-                    o.@AdditionalSOLibSearchPath = Reader.Value;
+                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id3_TargetArchitecture && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
                     paramsRead[5] = true;
                 }
-                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id5_MIMode && (object) Reader.NamespaceURI == (object)id4_Item)) {
-                    o.@MIMode = Read2_MIMode(Reader.Value);
-                    o.@MIModeSpecified = true;
+                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    o.@AdditionalSOLibSearchPath = Reader.Value;
                     paramsRead[6] = true;
                 }
+                else if (!paramsRead[7] && ((object) Reader.LocalName == (object)id5_MIMode && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    o.@MIMode = Read2_MIMode(Reader.Value);
+                    o.@MIModeSpecified = true;
+                    paramsRead[7] = true;
+                }
                 else if (!IsXmlnsAttribute(Reader.Name)) {
-                    UnknownNode((object)o, @":RemoteMachineName, :PackageId, :vcremotePort, :IOSDebugTarget, :TargetArchitecture, :AdditionalSOLibSearchPath, :MIMode");
+                    UnknownNode((object)o, @":RemoteMachineName, :PackageId, :vcremotePort, :IOSDebugTarget, :Secure, :TargetArchitecture, :AdditionalSOLibSearchPath, :MIMode");
                 }
             }
             Reader.MoveToElement();

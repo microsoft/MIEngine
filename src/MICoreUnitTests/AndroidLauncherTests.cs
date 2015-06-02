@@ -5,6 +5,10 @@ using AndroidDebugLauncher;
 using System;
 using System.Collections.Generic;
 using Xunit;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml;
 
 namespace MICoreUnitTests
 {
@@ -21,9 +25,9 @@ namespace MICoreUnitTests
                 "TargetArchitecture=\"arm\"\n",
                 "IntermediateDirectory=\"", temp, "\"\n",
                 "AdditionalSOLibSearchPath=\"c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug\"\n",
-                "DeviceId=\"default\">");
+                "DeviceId=\"default\"/>");
 
-            var options = AndroidDebugLauncher.AndroidLaunchOptions.CreateFromXml(content);
+            var options = CreateFromXml(content);
             Assert.Equal(options.Package, "com.example.hellojni");
             Assert.Equal(options.LaunchActivity, ".HelloJni");
             Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
@@ -44,11 +48,11 @@ namespace MICoreUnitTests
                 "TargetArchitecture=\"arm\"\n",
                 "IntermediateDirectory=\"", temp, "\"\n",
                 "AdditionalSOLibSearchPath=\"c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug\"\n",
-                "DeviceId=\"default\">");
+                "DeviceId=\"default\"/>");
 
             try
             {
-                var options = AndroidDebugLauncher.AndroidLaunchOptions.CreateFromXml(content);
+                var options = CreateFromXml(content);
 
                 Assert.True(false, "Exception was not thrown");
             }
@@ -69,9 +73,9 @@ namespace MICoreUnitTests
                 "IntermediateDirectory=\"", temp, "\"\n",
                 "AdditionalSOLibSearchPath=\"c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug\"\n",
                 "DeviceId=\"default\"\n",
-                "Attach=\"true\">");
+                "Attach=\"true\"/>");
 
-            var options = AndroidDebugLauncher.AndroidLaunchOptions.CreateFromXml(content);
+            var options = CreateFromXml(content);
             Assert.Equal(options.Package, "com.example.hellojni");
             Assert.Equal(null, options.LaunchActivity);
             Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
@@ -97,13 +101,23 @@ namespace MICoreUnitTests
 
             try
             {
-                var options = AndroidDebugLauncher.AndroidLaunchOptions.CreateFromXml(content);
+                var options = CreateFromXml(content);
 
                 Assert.True(false, "Exception was not thrown");
             }
-            catch (LauncherException e)
+            catch (ArgumentException e)
             {
-                Assert.True(e.Message.Contains("Attach"));
+                Assert.True(e.Message.Contains("BadValue"));
+            }
+        }
+
+        AndroidDebugLauncher.AndroidLaunchOptions CreateFromXml(string content)
+        {
+            using (XmlReader reader = MICore.LaunchOptions.OpenXml(content))
+            {
+                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.AndroidLaunchOptionsSerializer();
+                var xmlOptions = (MICore.Xml.LaunchOptions.AndroidLaunchOptions)MICore.LaunchOptions.Deserialize(serializer, reader);
+                return new AndroidLaunchOptions(xmlOptions);
             }
         }
 

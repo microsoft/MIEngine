@@ -46,10 +46,12 @@ namespace IOSDebugLauncher
             _callback = eventCallback;
         }
 
-        public void ParseLaunchOptions(string launchOptions)
+        void IPlatformAppLauncher.SetLaunchOptions(object launcherXmlOptions)
         {
-            if (string.IsNullOrEmpty(launchOptions))
-                throw new ArgumentNullException("launchOptions");
+            if (launcherXmlOptions == null)
+                throw new ArgumentNullException("launcherXmlOptions");
+
+            var iosXmlOptions = (MICore.Xml.LaunchOptions.IOSLaunchOptions)launcherXmlOptions;
 
             if (_callback == null)
             {
@@ -63,7 +65,7 @@ namespace IOSDebugLauncher
                 throw new InvalidOperationException();
             }
 
-            _launchOptions = IOSLaunchOptions.CreateFromXml(launchOptions);
+            _launchOptions = new IOSLaunchOptions(iosXmlOptions);
         }
 
         void IPlatformAppLauncher.SetupForDebugging(out LaunchOptions debuggerLaunchOptions)
