@@ -1,10 +1,23 @@
 ## Welcome to the Visual Studio MI Debug Engine ("MIEngine")
 
-The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with MI enabled debuggers such as gdb, lldb, and clrdbg.
+||Debug|Release|
+|:--:|:--:|:--:|
+|**master**|[![Build Status](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_debug/badge/icon)](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_debug)|[![Build Status](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_release/badge/icon)](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_release)|
+
+The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with debuggers that suport the gdb Machine Interface ("MI")
+specification such as gdb, lldb, and clrdbg.
+
+### What is MIEngine?
+
+MIEngine is a Visual Studio **Debug Engine** that understands **Machine Interface** ("MI"). A Debug Engine is an implementation of the [Core Debug Interfaces](https://msdn.microsoft.com/en-us/library/bb146305.aspx), 
+enabling the VS UI to drive debugging. Machine Interface is a text based protocol developed by gdb that allows a debugger to be used as a seperate component of a larger system. 
+Additional information:
+ - [Visual Studio Debugger Extensibility](https://msdn.microsoft.com/en-us/library/bb161718.aspx)
+ - [gdb's Machine Interface](https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI.html)
 
 ### Debug Multiple Platforms
 
-* First class support for debugging C/C++ on [Android](http://blogs.msdn.com/b/vcblog/archive/2014/12/12/debug-jni-android-applications-using-visual-c-cross-platform-mobile.aspx) and [iOS](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debugging-c-code-on-ios-with-visual-studio-2015.aspx).
+* Support for debugging C/C++ on [Android](http://blogs.msdn.com/b/vcblog/archive/2014/12/12/debug-jni-android-applications-using-visual-c-cross-platform-mobile.aspx) and [iOS](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debugging-c-code-on-ios-with-visual-studio-2015.aspx).
 * Debug on any platform that supports gdb, such as linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
 
 ### Prerequisites
@@ -14,7 +27,7 @@ The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual St
 ### Get Started
 * Clone the sources: `git clone https://github.com/Microsoft/MIEngine.git`
 * Open [MIDebugEngine.sln](https://github.com/Microsoft/MIEngine/blob/master/MIDebugEngine.sln) in Visual Studio.
-* Debug -> Start Debugging (or F5) to to build, deploy, and start debugging the Experimental Instance of Visaul Studio.
+* Debug -> Start Debugging (or F5) to to build, deploy, and start debugging the [Experimental Instance of Visaul Studio](https://msdn.microsoft.com/en-us/library/bb166560.aspx).
 * See the [wiki](https://github.com/Microsoft/MIEngine/wiki) for more info.
 
 
