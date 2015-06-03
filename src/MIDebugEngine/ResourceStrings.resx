@@ -120,6 +120,9 @@
   <data name="BreakpointAtInvalidAddress" xml:space="preserve">
     <value>Module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</value>
   </data>
+  <data name="ConnectingMessage" xml:space="preserve">
+    <value>Connecting debugger to '{0}'</value>
+  </data>
   <data name="EngineName" xml:space="preserve">
     <value>Sample Engine</value>
   </data>
@@ -149,6 +152,9 @@
   </data>
   <data name="RawView" xml:space="preserve">
     <value>[Raw View]</value>
+  </data>
+  <data name="SettingSymbolSearchPath" xml:space="preserve">
+    <value>Setting symbol search path</value>
   </data>
   <data name="ThreadExited" xml:space="preserve">
     <value>Thread has exited</value>

@@ -442,7 +442,7 @@ namespace MICore
 
             if (clsidLauncher != Guid.Empty)
             {
-                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, launcherXmlOptions, eventCallback);
+                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback);
             }
 
             if (launchOptions.ExePath == null)
@@ -653,7 +653,7 @@ namespace MICore
             return attributeValue;
         }
 
-        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
+        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
         {
             var deviceAppLauncher = (IPlatformAppLauncher)VSLoader.VsCoCreateManagedObject(registryRoot, clsidLauncher);
             if (deviceAppLauncher == null)
@@ -668,7 +668,7 @@ namespace MICore
                 try
                 {
                     deviceAppLauncher.Initialize(registryRoot, eventCallback);
-                    deviceAppLauncher.SetLaunchOptions(launcherXmlOptions);
+                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions);
                 }
                 catch (Exception e)
                 {
@@ -747,8 +747,11 @@ namespace MICore
         /// <summary>
         /// Initializes the launcher from the launch settings
         /// </summary>
-        /// <param name="launcherXmlOptions">Deserialized XML options structure</param>
-        void SetLaunchOptions(object launcherXmlOptions);
+        /// <param name="exePath">[Required] Path to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
+        /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
+        /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
+        /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
+        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions);
 
         /// <summary>
         /// Does whatever steps are necessary to setup for debugging. On Android this will include launching
@@ -756,9 +759,6 @@ namespace MICore
         /// </summary>
         /// <param name="debuggerLaunchOptions">[Required] settings to use when launching the debugger</param>
         void SetupForDebugging(out LaunchOptions debuggerLaunchOptions);
-
-        void InitializeDebuggedProcess(LaunchOptions launchOptions, out IEnumerable<Tuple<string, MICore.ResultClass, string>> intializationCommands);
-        void ResumeDebuggedProcess(LaunchOptions launchOptions, out IEnumerable<Tuple<string, MICore.ResultClass>> intializationCommands);
 
         /// <summary>
         /// Allows the device app launcher to preform any final tasks after the debugger has connected. On Android

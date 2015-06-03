@@ -50,7 +50,7 @@ namespace AndroidDebugLauncher
             RegistryRoot.Set(registryRoot);
         }
 
-        void IPlatformAppLauncher.SetLaunchOptions(object launcherXmlOptions)
+        void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions)
         {
             if (launcherXmlOptions == null)
                 throw new ArgumentNullException("launcherXmlOptions");
@@ -801,16 +801,6 @@ namespace AndroidDebugLauncher
             {
                 // If anything fails here, no reason to tell the user
             }
-        }
-
-        public void InitializeDebuggedProcess(LaunchOptions launchOptions, out IEnumerable<Tuple<string, ResultClass, string>> intializationCommands)
-        {
-            intializationCommands = null;
-        }
-
-        public void ResumeDebuggedProcess(LaunchOptions launchOptions, out IEnumerable<Tuple<string, ResultClass>> intializationCommands)
-        {
-            intializationCommands = null;
         }
 
         public void Terminate()

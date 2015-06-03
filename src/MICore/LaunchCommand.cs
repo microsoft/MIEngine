@@ -22,7 +22,7 @@ namespace MICore
         public readonly bool IgnoreFailures;
         public readonly bool IsMICommand;
 
-        public LaunchCommand(string commandText, string description, bool ignoreFailures)
+        public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false)
         {
             if (commandText == null)
                 throw new ArgumentNullException("commandText");
@@ -30,18 +30,7 @@ namespace MICore
             if (commandText.Length == 0)
                 throw new ArgumentOutOfRangeException("commandText");
             this.IsMICommand = commandText[0] == '-';
-            if (this.IsMICommand)
-            {
-                if (commandText.Length == 1 || !char.IsLetter(commandText[1]))
-                {
-                    throw new ArgumentOutOfRangeException("commandText");
-                }
-                this.CommandText = commandText.Substring(1);
-            }
-            else
-            {
-                this.CommandText = commandText;
-            }
+            this.CommandText = commandText;
             this.Description = description;
             if (string.IsNullOrWhiteSpace(description))
                 this.Description = this.CommandText;

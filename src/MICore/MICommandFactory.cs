@@ -208,9 +208,21 @@ namespace MICore
             await ThreadCmdAsync(command, resultClass, threadId);
         }
 
+        /// <summary>
+        /// Tells GDB to spawn a target process previous setup with -file-exec-and-symbols or similar
+        /// </summary>
         public async Task ExecRun()
         {
             string command = "-exec-run";
+            await _debugger.CmdAsync(command, ResultClass.running);
+        }
+
+        /// <summary>
+        /// Continues running the target process
+        /// </summary>
+        public async Task ExecContinue()
+        {
+            string command = "-exec-continue";
             await _debugger.CmdAsync(command, ResultClass.running);
         }
 
@@ -398,6 +410,12 @@ namespace MICore
 
         abstract public Task<List<ulong>> StartAddressesForLine(string file, uint line);
 
+        /// <summary>
+        /// Sets the gdb 'target-async' option to 'on'.
+        /// </summary>
+        /// <returns>[Required] Task to track when this is complete</returns>
+        abstract public Task EnableTargetAsyncOption();
+
         #endregion
     }
 
@@ -559,6 +577,13 @@ namespace MICore
             }
             return addresses;
         }
+
+        public override Task EnableTargetAsyncOption()
+        {
+            // Linux attach TODO: GDB will fail this command when attaching. We need to handle this failure,
+            // and find a way to work arround the problem.
+            return _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
+        }
     }
 
     internal class LlldbMICommandFactory : MICommandFactory
@@ -605,6 +630,12 @@ namespace MICore
         {
             return null;
         }
+
+        public override Task EnableTargetAsyncOption()
+        {
+            // lldb-mi doesn't support target-async mode, and doesn't seem to need to
+            return Task.FromResult((object)null);
+        }
     }
 
 
@@ -647,6 +678,12 @@ namespace MICore
         public override Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
             return null;
+        }
+
+        public override Task EnableTargetAsyncOption()
+        {
+            // clrdbg is always in target-async mode
+            return Task.FromResult((object)null);
         }
     }
 }

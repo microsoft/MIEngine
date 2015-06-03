@@ -127,7 +127,7 @@ namespace MICoreUnitTests
             Assert.IsTrue(options.CustomLaunchSetupCommands == null);
             Assert.IsTrue(options.SetupCommands != null && options.SetupCommands.Count == 1);
             Assert.IsTrue(options.SetupCommands[0].IsMICommand);
-            Assert.AreEqual(options.SetupCommands[0].CommandText, "gdb-set my-example-setting on");
+            Assert.AreEqual(options.SetupCommands[0].CommandText, "-gdb-set my-example-setting on");
             Assert.IsTrue(options.SetupCommands[0].Description.Contains("gdb-set"));
             Assert.IsFalse(options.SetupCommands[0].IgnoreFailures);
         }
@@ -203,7 +203,7 @@ namespace MICoreUnitTests
             Assert.IsTrue(options.CustomLaunchSetupCommands != null && options.CustomLaunchSetupCommands.Count == 1);
             var command = options.CustomLaunchSetupCommands[0];
             Assert.IsTrue(command.IsMICommand);
-            Assert.AreEqual(command.CommandText, "target-attach 1234");
+            Assert.AreEqual(command.CommandText, "-target-attach 1234");
             Assert.AreEqual(command.Description, "Attaching to the 'foo' process");
             Assert.AreEqual(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecContinue);
         }

@@ -24,8 +24,14 @@ namespace IOSDebugLauncher
 
     internal class IOSLaunchOptions
     {
-        public IOSLaunchOptions(MICore.Xml.LaunchOptions.IOSLaunchOptions xmlOptions)
+        public IOSLaunchOptions(string exePath, MICore.Xml.LaunchOptions.IOSLaunchOptions xmlOptions)
         {
+            if (string.IsNullOrEmpty(exePath))
+                throw new ArgumentNullException("exePath");
+            if (xmlOptions == null)
+                throw new ArgumentNullException("xmlOptions");
+
+            this.ExePath = exePath;
             this.RemoteMachineName = LaunchOptions.RequireAttribute(xmlOptions.RemoteMachineName, "RemoteMachineName");
             this.PackageId = LaunchOptions.RequireAttribute(xmlOptions.PackageId, "PackageId");
             this.VcRemotePort = LaunchOptions.RequirePortAttribute(xmlOptions.vcremotePort, "vcremotePort");
@@ -37,6 +43,7 @@ namespace IOSDebugLauncher
             this.Secure = xmlOptions.Secure;
         }
 
+        public string ExePath { get; private set; }
         public string RemoteMachineName { get; private set; }
         public string PackageId { get; private set; }
         public int VcRemotePort { get; private set; }

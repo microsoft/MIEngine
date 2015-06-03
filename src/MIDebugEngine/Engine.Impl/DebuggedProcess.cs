@@ -376,76 +376,32 @@ namespace Microsoft.MIDebugEngine
 
             await this.WaitForConsoleDebuggerInitialize(token);
 
-            IEnumerable<Tuple<string, ResultClass, string>> commands = null;
-            if (_launchOptions.DeviceAppLauncher != null)
-            {
-                _launchOptions.DeviceAppLauncher.InitializeDebuggedProcess(_launchOptions, out commands);
-            }
-
             try
             {
-                if (commands != null)
+                List<LaunchCommand> commands = GetInitializeCommands();
+
+                total = commands.Count();
+                var i = 0;
+                foreach (var command in commands)
                 {
-                    total = commands.Count();
-                    var i = 0;
-                    foreach (var command in commands)
+                    token.ThrowIfCancellationRequested();
+                    waitLoop.SetProgress(total, i++, command.Description);
+                    if (command.IsMICommand)
                     {
-                        token.ThrowIfCancellationRequested();
-                        waitLoop.SetProgress(total, i++, command.Item3);
-                        await CmdAsync(command.Item1, command.Item2);
-                    }
-                }
-                else
-                {
-                    // We are on the right thread to issue Async commands and wait directly
-                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
-                    {
-                        await CmdAsync("-exec-arguments " + _launchOptions.ExeArguments, ResultClass.done);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
-                    {
-                        string escappedDir = EscapePath(_launchOptions.WorkingDirectory);
-
-                        await CmdAsync("-environment-cd " + escappedDir, ResultClass.done);
-                    }
-
-                    // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
-                    string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
-                    string escappedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
-                    if (!string.IsNullOrWhiteSpace(escappedSearchPath))
-                    {
-                        await CmdAsync("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResultClass.done);
-                    }
-
-                    if (this.MICommandFactory.SupportsStopOnDynamicLibLoad())
-                    {
-                        await CmdAsync("-gdb-set stop-on-solib-events 1", ResultClass.done);
-                    }
-
-                    if (_launchOptions.DebuggerMIMode != MIMode.Clrdbg)
-                    {
-                        string exe = EscapePath(_launchOptions.ExePath);
-                        await CmdAsync("-file-exec-and-symbols " + exe, ResultClass.done);
-
-                        await CmdAsync("-gdb-set target-async on", ResultClass.done);
-                    }
-
-                    if (_initialBreakArgs == null)
-                    {
-                        await CmdAsync("-break-insert main", ResultClass.None);
-                    }
-
-
-                    if (_launchOptions is LocalLaunchOptions)
-                    {
-                        string destination = ((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress;
-                        if (!string.IsNullOrEmpty(destination))
+                        Results results = await CmdAsync(command.CommandText, ResultClass.None);
+                        if (results.ResultClass == ResultClass.error && !command.IgnoreFailures)
                         {
-                            await CmdAsync("-target-select remote " + destination, ResultClass.connected);
+                            string miError = results.FindString("msg");
+                            throw new UnexpectedMIResultException(command.CommandText, miError);
                         }
                     }
+                    else
+                    {
+                        await ConsoleCmdAsync(command.CommandText);
+                    }
                 }
+
+                await this.MICommandFactory.EnableTargetAsyncOption();
 
                 success = true;
             }
@@ -458,6 +414,64 @@ namespace Microsoft.MIDebugEngine
             }
             waitLoop.SetProgress(total, total, String.Empty);
             token.ThrowIfCancellationRequested();
+        }
+
+        private List<LaunchCommand> GetInitializeCommands()
+        {
+            List<LaunchCommand> commands = new List<LaunchCommand>();
+
+            commands.AddRange(_launchOptions.SetupCommands);
+
+            // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
+            string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
+            string escappedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
+            if (!string.IsNullOrWhiteSpace(escappedSearchPath))
+            {
+                commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
+            }
+
+            if (this.MICommandFactory.SupportsStopOnDynamicLibLoad())
+            {
+                commands.Add(new LaunchCommand("-gdb-set stop-on-solib-events 1"));
+            }
+
+            // Custom launch options replace the built in launch steps. This is used on iOS
+            // and Linux attach scenarios.
+            if (_launchOptions.CustomLaunchSetupCommands != null)
+            {
+                commands.AddRange(_launchOptions.CustomLaunchSetupCommands);
+            }
+            else
+            {
+                // The default launch is to start a new process
+
+                if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
+                {
+                    commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
+                }
+
+                if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
+                {
+                    string escappedDir = EscapePath(_launchOptions.WorkingDirectory);
+                    commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
+                }
+
+                string exe = EscapePath(_launchOptions.ExePath);
+                commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath)));
+
+                commands.Add(new LaunchCommand("-break-insert main", ignoreFailures:true));
+
+                if (_launchOptions is LocalLaunchOptions)
+                {
+                    string destination = ((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress;
+                    if (!string.IsNullOrEmpty(destination))
+                    {
+                        commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
+                    }
+                }
+            }
+
+            return commands;
         }
 
         public override void FlushBreakStateData()
@@ -776,22 +790,19 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                IEnumerable<Tuple<string, ResultClass>> commands = null;
-                if (_launchOptions.DeviceAppLauncher != null)
+                switch (_launchOptions.LaunchCompleteCommand)
                 {
-                    _launchOptions.DeviceAppLauncher.ResumeDebuggedProcess(_launchOptions, out commands);
-                }
-                if (commands != null)
-                {
-                    foreach (var command in commands)
-                    {
-                        await CmdAsync(command.Item1, command.Item2);
-                    }
-                }
-                // CLRDBG TODO: This needs to be dependant on if this is an attach or a launch
-                else if (this.MICommandFactory.Mode != MIMode.Clrdbg)
-                {
-                    await MICommandFactory.ExecRun();
+                    case LaunchCompleteCommand.ExecRun:
+                        await MICommandFactory.ExecRun();
+                        break;
+                    case LaunchCompleteCommand.ExecContinue:
+                        await MICommandFactory.ExecContinue();
+                        break;
+                    case LaunchCompleteCommand.None:
+                        break;
+                    default:
+                        Debug.Fail("Not implemented enum code for LaunchCompleteCommand??");
+                        throw new NotImplementedException();
                 }
 
                 FireDeviceAppLauncherResume();
