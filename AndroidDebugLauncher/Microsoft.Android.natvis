@@ -362,6 +362,7 @@
   </Type>
 
   <!-- llvm stl -->
+
   <Type Name="std::__1::vector&lt;*&gt;">
       <DisplayString>{{size={__end_ - __begin_}}}</DisplayString>
       <Expand>
@@ -375,7 +376,6 @@
       </Expand>
   </Type>
 
-  <!-- llvm stl -->
   <Type Name="std::__1::map&lt;*&gt;">
     <DisplayString>{{size={__tree_.__pair3_.__first_}}}</DisplayString>
     <Expand>
@@ -390,13 +390,328 @@
     </Expand>
   </Type>
 
-  <!-- llvm stl -->
+  <Type Name="std::__1::__value_type&lt;*,*&gt;">
+	<DisplayString>{__nc}</DisplayString>
+	<Expand>
+		<Item Name="[Key]">__nc.first</Item>
+		<Item Name="[Value]">__nc.second</Item>
+	</Expand>
+  </Type>
+
+  <Alias Name="std::__1::__tree_node&lt;*&gt;::value_type">
+	<Value>$T1</Value>
+  </Alias>
+
   <Type Name="std::__1::shared_ptr&lt;*&gt;">
 	<DisplayString>shared_ptr {{{__ptr_}}}</DisplayString>
 	<Expand>
 		<Item Condition="__ptr_ != 0" Name="[ptr]">($T1*)__ptr_</Item>
 		<Item Condition="__cntrl_ != 0" Name="[control block]">*__cntrl_</Item>
 	</Expand>
+  </Type>
+
+  <Type Name="std::__1::string">
+      <AlternativeType Name="std::__1::basic_string&lt;char,*&gt;" />
+      <DisplayString Condition="(bool)(__r_.__first_.__s.__size_ &amp; 0x01)">{(char*)(__r_.__first_.__l.__data_)}</DisplayString>
+      <DisplayString>{(char*)(__r_.__first_.__s.__data_)}</DisplayString>
+      <Expand>
+          <Item Name="[string]" Condition="(bool)(__r_.__first_.__s.__size_ &amp; 0x01)">(char*)(__r_.__first_.__l.__data_)</Item>
+          <Item Name="[string]" Condition="!(__r_.__first_.__s.__size_ &amp; 0x01)">(char*)(__r_.__first_.__s.__data_)</Item>
+	  <Item Name="[size]" Condition="(bool)(__r_.__first_.__s.__size_ &amp; 0x01)">__r_.__first_.__l.__size_</Item>
+	  <Item Name="[size]" Condition="!(__r_.__first_.__s.__size_ &amp; 0x01)">__r_.__first_.__s.__size_ >> 1</Item>
+      </Expand>
+  </Type>
+
+  <Type Name="std::__1::set&lt;*&gt;">
+    <DisplayString>{{size={__tree_.__pair3_.__first_}}}</DisplayString>
+    <Expand>
+        <Item Name="[size]">__tree_.__pair3_.__first_</Item>
+        <TreeItems>
+            <Size>__tree_.__pair3_.__first_</Size>
+            <HeadPointer>(std::__1::__tree&lt;$T1,$T2,$T3&gt;::__node_pointer)__tree_.__pair1_.__first_-&gt;__left_</HeadPointer>
+            <LeftPointer>__left_</LeftPointer>
+            <RightPointer>__right_</RightPointer>
+            <ValueNode>__value_</ValueNode>
+        </TreeItems>
+    </Expand>
+  </Type>
+
+  <Type Name="std::__1::list&lt;*&gt;">
+      <DisplayString>{{size={__size_alloc_.__first_}}}</DisplayString>
+      <Expand>
+	  <Item Name="[size]">__size_alloc_.__first_</Item>
+          <LinkedListItems Condition="__size_alloc_.__first_ != 0">
+	      <Size>__size_alloc_.__first_</Size>
+              <HeadPointer>__end_.__next_</HeadPointer>
+              <NextPointer>__next_</NextPointer>
+	      <ValueNode>__value_</ValueNode>
+          </LinkedListItems>
+      </Expand>
+  </Type> 
+
+  <Type Name="std::__1::bitset&lt;*&gt;">
+      <DisplayString>{{ size={$T1} }}</DisplayString>
+      <Expand>
+          <IndexListItems Condition="$T1&lt;=__bits_per_word">
+              <Size>$T1</Size>
+              <ValueNode>(__first_ &gt;&gt; $i) &amp; 1</ValueNode>
+          </IndexListItems>
+          <IndexListItems Condition="$T1&gt;__bits_per_word">
+              <Size>$T1</Size>
+              <ValueNode>(__first_[$i / __bits_per_word] &gt;&gt; ($i % __bits_per_word)) &amp; 1</ValueNode>
+          </IndexListItems>
+      </Expand>
+  </Type>
+
+  <Type Name="std::__1::unique_ptr&lt;*&gt;">
+      <DisplayString Condition="__ptr_.__first_ == 0">empty</DisplayString>
+      <DisplayString Condition="__ptr_.__first_ != 0">unique_ptr {*__ptr_.__first_}</DisplayString>
+      <Expand>
+          <ExpandedItem Condition="__ptr_.__first_ != 0">__ptr_.__first_</ExpandedItem>
+      </Expand>
+  </Type>
+
+  <Type Name="std::__1::weak_ptr&lt;*&gt;">
+      <DisplayString Condition="__ptr_ == 0">empty</DisplayString>
+      <DisplayString Condition="__ptr_ != 0">weak_ptr {*($T1*)__ptr_}</DisplayString>
+      <Expand>
+          <ExpandedItem Condition="__ptr_ != 0">($T1*)__ptr_</ExpandedItem>
+      </Expand>
+  </Type>
+
+  <Type Name="std::__1::plus&lt;void&gt;"><DisplayString>plus&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::minus&lt;void&gt;"><DisplayString>minus&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::multiplies&lt;void&gt;"><DisplayString>multiplies&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::divides&lt;void&gt;"><DisplayString>divides&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::modulus&lt;void&gt;"><DisplayString>modulus&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::negate&lt;void&gt;"><DisplayString>negate&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::equal_to&lt;void&gt;"><DisplayString>equal_to&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::not_equal_to&lt;void&gt;"><DisplayString>not_equal_to&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::greater&lt;void&gt;"><DisplayString>greater&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::less&lt;void&gt;"><DisplayString>less&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::greater_equal&lt;void&gt;"><DisplayString>greater_equal&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::less_equal&lt;void&gt;"><DisplayString>less_equal&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::logical_and&lt;void&gt;"><DisplayString>logical_and&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::logical_or&lt;void&gt;"><DisplayString>logical_or&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::logical_not&lt;void&gt;"><DisplayString>logical_not&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::bit_and&lt;void&gt;"><DisplayString>bit_and&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::bit_or&lt;void&gt;"><DisplayString>bit_or&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::bit_xor&lt;void&gt;"><DisplayString>bit_xor&lt;&gt;</DisplayString><Expand/></Type>
+  <Type Name="std::__1::bit_not&lt;void&gt;"><DisplayString>bit_not&lt;&gt;</DisplayString><Expand/></Type>
+
+  <Type Name="std::__1::plus&lt;*&gt;">
+      <DisplayString>plus</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::minus&lt;*&gt;">
+      <DisplayString>minus</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::multiplies&lt;*&gt;">
+      <DisplayString>multiplies</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::divides&lt;*&gt;">
+      <DisplayString>divides</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::modulus&lt;*&gt;">
+      <DisplayString>modulus</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::negate&lt;*&gt;">
+      <DisplayString>negate</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::equal_to&lt;*&gt;">
+      <DisplayString>equal_to</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::not_equal_to&lt;*&gt;">
+      <DisplayString>not_equal_to</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::greater&lt;*&gt;">
+      <DisplayString>greater</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::less&lt;*&gt;">
+      <DisplayString>less</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::greater_equal&lt;*&gt;">
+      <DisplayString>greater_equal</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::less_equal&lt;*&gt;">
+      <DisplayString>less_equal</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::logical_and&lt;*&gt;">
+      <DisplayString>logical_and</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::logical_or&lt;*&gt;">
+      <DisplayString>logical_or</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::logical_not&lt;*&gt;">
+      <DisplayString>logical_not</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::bit_and&lt;*&gt;">
+      <DisplayString>bit_and</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::bit_or&lt;*&gt;">
+      <DisplayString>bit_or</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::bit_xor&lt;*&gt;">
+      <DisplayString>bit_xor</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::bit_not&lt;*&gt;">
+      <DisplayString>bit_not</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::unary_negate&lt;*&gt;">
+      <DisplayString>not1({_M_pred})</DisplayString>
+      <Expand>
+          <Item Name="[pred]">_M_pred</Item>
+      </Expand>
+  </Type>
+
+  <Type Name="std::__1::binary_negate&lt;*&gt;">
+      <DisplayString>not2({_M_pred})</DisplayString>
+      <Expand>
+          <Item Name="[pred]">_M_pred</Item>
+      </Expand>
+  </Type>
+
+  <Type Name="std::__1::function&lt;*&gt;">
+      <DisplayString Condition="__f_ == 0">empty</DisplayString>
+      <DisplayString Condition="__f_ != 0">{*__f_}</DisplayString>
+      <Expand>
+          <ExpandedItem Condition="__f_ != 0">*__f_</ExpandedItem>
+      </Expand>
+  </Type>
+
+  <Type Name="std::__1::chrono::duration&lt;*,std::__1::ratio&lt;1,1000000000&gt; &gt;">
+      <DisplayString>{__rep_} nanoseconds</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::chrono::duration&lt;*,std::__1::ratio&lt;1,1000000&gt; &gt;">
+      <DisplayString>{__rep_} microseconds</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::chrono::duration&lt;*,std::__1::ratio&lt;1,1000&gt; &gt;">
+      <DisplayString>{__rep_} milliseconds</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::chrono::duration&lt;*,std::__1::ratio&lt;1,1&gt; &gt;">
+      <DisplayString>{__rep_} seconds</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::chrono::duration&lt;*,std::__1::ratio&lt;60,1&gt; &gt;">
+      <DisplayString>{__rep_} minutes</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::chrono::duration&lt;*,std::__1::ratio&lt;3600,1&gt; &gt;">
+      <DisplayString>{__rep_} hours</DisplayString>
+      <Expand/>
+  </Type>
+
+  <Type Name="std::__1::array&lt;*,*&gt;">
+      <DisplayString>{{ size={$T2} }}</DisplayString>
+      <Expand>
+          <ExpandedItem>__elems_</ExpandedItem>
+      </Expand>
+  </Type>
+
+  <Alias Name="std::__1::array&lt;*&gt;::value_type">
+	<Value>$T1</Value>
+  </Alias>
+
+  <Type Name="std::__1::deque&lt;*&gt;">
+      <DisplayString>{{size={__size_.__first_}}}</DisplayString>
+<!--  GDB fails to eval the ValueNode indexing correctly <Expand>
+          <IndexListItems>
+              <Size>__size_.__first_</Size>
+              <ValueNode>*(__map_.__first_+((__start_+$i)/__block_size) % (__map_.__end_cap_.__first_-__map_.__first_)))+(__start_+$i)%__block_size</ValueNode>
+          </IndexListItems>
+      </Expand> -->
+  </Type>
+
+  <Type Name="std::__1::forward_list&lt;*&gt;">
+      <DisplayString Condition="__before_begin_.__first_.__next_ == 0">empty</DisplayString>
+      <DisplayString>non-empty</DisplayString>
+      <Expand>
+          <LinkedListItems>
+              <HeadPointer>__before_begin_.__first_.__next_</HeadPointer>
+              <NextPointer>__next_</NextPointer>
+              <ValueNode>__value_</ValueNode>10:55 AM 6/4/2015
+          </LinkedListItems>
+      </Expand>
+  </Type>
+
+  <Alias Name="std::__1::__forward_list_node&lt;*&gt;::value_type">
+	<Value>$T1</Value>
+  </Alias>
+
+  <Type Name="std::__1::queue&lt;*&gt;">
+      <AlternativeType Name="std::__1::stack&lt;*&gt;" />
+      <DisplayString>{c}</DisplayString>
+      <Expand>
+          <Item Name="c">c</Item>
+      </Expand>
+  </Type>
+
+  <Alias Name="std::__1::queue&lt;*&gt;::container_type">
+	<Value>$T2</Value>
+  </Alias>
+
+  <Type Name="std::__1::priority_queue&lt;*&gt;">
+      <DisplayString>{c}</DisplayString>
+      <Expand>
+          <Item Name="c [heap]">c</Item>
+          <Item Name="comp">comp</Item>
+      </Expand>
+  </Type>
+
+  <Alias Name="std::__1::priority_queue&lt;*&gt;::container_type">
+	<Value>$T2</Value>
+  </Alias>
+
+ <Type Name="std::__1::atomic&lt;*&gt;">
+      <DisplayString>atomic {__a_}</DisplayString>
+      <Expand>
+          <Item Name="[value]">__a_</Item>
+      </Expand>
   </Type>
 
 

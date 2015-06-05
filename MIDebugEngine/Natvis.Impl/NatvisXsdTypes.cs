@@ -82,6 +82,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("HResult", typeof(HResultType))]
         [System.Xml.Serialization.XmlElementAttribute("Type", typeof(VisualizerType))]
+        [System.Xml.Serialization.XmlElementAttribute("Alias", typeof(AliasType))]
         public object[] Items
         {
             get
@@ -2155,4 +2156,46 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
     }
+
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
+    public partial class AliasType
+    {
+
+        private string _valueField;
+
+        private string _nameField;
+
+        /// <remarks/>
+        public string Value
+        {
+            get
+            {
+                return _valueField;
+            }
+            set
+            {
+                _valueField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Name
+        {
+            get
+            {
+                return _nameField;
+            }
+            set
+            {
+                _nameField = value;
+            }
+        }
+    }
+
 }
