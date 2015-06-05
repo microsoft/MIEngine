@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0"
+         DefaultTargets="Build"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)'=='' ">Debug</Configuration>
+    <OutDir Condition=" '$(OutDir)'=='' ">$(MSBuildThisFileDirectory)bin\$(Configuration)</OutDir>
+    <SourceHome Condition=" '$(SourceHome)'=='' ">$(MSBuildThisFileDirectory)</SourceHome>
+    <ToolsHome Condition=" '$(ToolsHome)'=='' ">$(MSBuildThisFileDirectory)tools\</ToolsHome>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Solution Include="$(SourceHome)*.sln">
+      <AdditionalProperties>OutDir=$(OutDir);Configuration=$(Configuration)</AdditionalProperties>
+    </Solution>
+  </ItemGroup>
+
+  <Target Name="RestorePackages">
+    <Exec Command="&quot;$(ToolsHome)NuGet\NuGet.exe&quot; restore &quot;%(Solution.Identity)&quot;" />
+  </Target>
+
+  <Target Name="Clean">
+    <MSBuild Targets="Clean"
+             Projects="@(Solution)" />
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="RestorePackages">
+    <MSBuild Targets="Build"
+             Projects="@(Solution)" />
+  </Target>
+
+  <Target Name="Rebuild" DependsOnTargets="RestorePackages">
+    <MSBuild Targets="Rebuild"
+             Projects="@(Solution)" />
+  </Target>
+
+</Project>
