@@ -415,7 +415,7 @@ namespace Microsoft.MIDebugEngine
                     string escappedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
                     if (!string.IsNullOrWhiteSpace(escappedSearchPath))
                     {
-                        await CmdAsync("-gdb-set solib-search-path \"" + escappedSearchPath + "\"", ResultClass.done);
+                        await CmdAsync("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResultClass.done);
                     }
 
                     if (this.MICommandFactory.SupportsStopOnDynamicLibLoad())

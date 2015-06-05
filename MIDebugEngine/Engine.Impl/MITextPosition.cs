@@ -28,15 +28,15 @@ namespace Microsoft.MIDebugEngine
         public static MITextPosition TryParse(TupleValue miTuple)
         {
             string filename = miTuple.TryFindString("fullname");
-            if (filename != null)
-            {
-                filename = DebuggedProcess.UnixPathToWindowsPath(filename);
-            }
-            else
+            if (string.IsNullOrEmpty(filename))
             {
                 filename = miTuple.TryFindString("file");
             }
-
+            if (!string.IsNullOrEmpty(filename))
+            { 
+                filename = DebuggedProcess.UnixPathToWindowsPath(filename);
+            }
+       
             if (string.IsNullOrWhiteSpace(filename))
                 return null;
 
