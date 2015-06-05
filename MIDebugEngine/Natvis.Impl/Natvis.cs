@@ -83,6 +83,17 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     public class Natvis
     {
+        private class AliasInfo
+        {
+            public TypeName ParsedName { get; private set; }
+            public AliasType Alias { get; private set; }
+            public AliasInfo(TypeName name, AliasType alias)
+            {
+                ParsedName = name;
+                Alias = alias;
+            }
+        }
+
         private class TypeInfo
         {
             public TypeName ParsedName { get; private set; }
@@ -97,12 +108,14 @@ namespace Microsoft.MIDebugEngine.Natvis
         private class FileInfo
         {
             public List<TypeInfo> Visualizers { get; private set; }
+            public List<AliasInfo> Aliases { get; private set; }
             public readonly AutoVisualizer Environment;
 
             public FileInfo(AutoVisualizer env)
             {
                 Environment = env;
                 Visualizers = new List<TypeInfo>();
+                Aliases = new List<AliasInfo>();
             }
         }
 
@@ -136,6 +149,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         private const uint MAX_EXPAND = 50;
         private const int MAX_FORMAT_DEPTH = 10;
+        private const int MAX_ALIAS_CHAIN = 10;
 
         public enum DisplayStringsState
         {
@@ -234,6 +248,18 @@ namespace Microsoft.MIDebugEngine.Natvis
                                                 f.Visualizers.Add(new TypeInfo(t, v));
                                             }
                                         }
+                                    }
+                                }
+                            }
+                            else if (o is AliasType)
+                            {
+                                AliasType a = (AliasType)o;
+                                TypeName t = TypeName.Parse(a.Name);
+                                if (t != null)
+                                {
+                                    lock (_typeVisualizers)
+                                    {
+                                        f.Aliases.Add(new AliasInfo(t, a));
                                     }
                                 }
                             }
@@ -379,6 +405,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                 if (i is ItemType)
                 {
                     ItemType item = (ItemType)i;
+                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                    {
+                        continue;
+                    }
                     IVariableInformation expr = GetExpression(item.Value, variable, visualizer.ScopedNames, item.Name);
                     children.Add(expr);
                 }
@@ -774,6 +804,8 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         private VisualizerInfo Scan(TypeName name, IVariableInformation variable)
         {
+            int aliasChain = 0;
+            tryAgain:
             foreach (var autoVis in _typeVisualizers)
             {
                 var visualizer = autoVis.Visualizers.Find((v) => v.ParsedName.Match(name));   // TODO: match on View, version, etc
@@ -781,6 +813,34 @@ namespace Microsoft.MIDebugEngine.Natvis
                 {
                     _vizCache[variable.TypeName] = new VisualizerInfo(visualizer.Visualizer, name);
                     return _vizCache[variable.TypeName];
+                }
+            }
+            // failed to find a visualizer for the type, try looking for a typedef
+            foreach (var autoVis in _typeVisualizers)
+            {
+                var alias = autoVis.Aliases.Find((v) => v.ParsedName.Match(name));   // TODO: match on View, version, etc
+                if (alias != null)
+                {
+                    // add the template parameter macro values
+                    var scopedNames = new Dictionary<string, string>();
+                    int t = 1;
+                    for (int i = 0; i < name.Qualifiers.Count; ++i)
+                    {
+                        for (int j = 0; j < name.Qualifiers[i].Args.Count; ++j)
+                        {
+                            scopedNames["$T" + t] = name.Qualifiers[i].Args[j].FullyQualifiedName;
+                            t++;
+                        }
+                    }
+
+                    string newName = ReplaceNamesInExpression(alias.Alias.Value, null, scopedNames);
+                    name = TypeName.Parse(newName);
+                    aliasChain++;
+                    if (aliasChain > MAX_ALIAS_CHAIN)
+                    {
+                        break;
+                    }
+                    goto tryAgain;
                 }
             }
             return null;

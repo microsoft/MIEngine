@@ -11,6 +11,7 @@ using System.Threading;
 using MICore;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -105,11 +106,20 @@ namespace Microsoft.MIDebugEngine
                         //});
                         //evalTask.Wait();
                         string op = ".";
+                        string parentName = _parent.FullName();
                         if (IsPointer(_parent.TypeName))
                         {
                             op = "->";
+                            // Underlying debugger sometimes has trouble with long expressions (parent-expression can be arbitrarily long),
+                            // so attempt to simplify the expression by using ((parent-type)0xabc)->field instead of (parent-expression)->field 
+                            ulong addr;
+                            if (_parent.Value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) 
+                                    && ulong.TryParse(_parent.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out addr))
+                            {
+                                parentName = '(' + _parent.TypeName + ')' + _parent.Value;
+                            }
                         }
-                        _fullname = '(' + _parent.FullName() + ')' + op + _strippedName;
+                        _fullname = '(' + parentName + ')' + op + _strippedName;
                         break;
                     case NodeType.BaseClass:
                     case NodeType.AccessQualifier:
@@ -206,9 +216,10 @@ namespace Microsoft.MIDebugEngine
             CountChildren = results.FindUint("numchild");
             int index;
 
-            if (!results.Contains("value") && Name == TypeName)
+            if (!results.Contains("value") && (Name == TypeName || Name.Contains("::")))
             {
-                // base classes show up with no value and exp==type
+                // base classes show up with no value and exp==type 
+                // (sometimes underlying debugger does not follow this convention, when using typedefs in templated types so look for "::" in the field name too)
                 Name = "base";
                 Value = TypeName;
                 VariableNodeType = NodeType.BaseClass;
@@ -227,7 +238,7 @@ namespace Microsoft.MIDebugEngine
             _internalName = results.FindString("name");
             IsChild = true;
             _format = parent._format; // inherit formatting
-            _parent = parent;
+            _parent = parent.VariableNodeType == NodeType.AccessQualifier ? parent._parent : parent;
         }
 
         private VariableInformation(TupleValue results, VariableInformation parent, bool ro)
