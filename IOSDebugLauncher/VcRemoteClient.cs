@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -55,21 +54,21 @@ namespace IOSDebugLauncher
             return client;
         }
 
-        public Launcher.RemotePorts StartDebugListener()
-        {
-            string remotePortsJsonString;
-            CallVcRemote(new Uri("debug/setupForDebugging?target=" + _launchOptions.IOSDebugTarget.ToString(), UriKind.Relative), LauncherResources.Info_StartingDebugListener, out remotePortsJsonString);
+        //public Launcher.RemotePorts StartDebugListener()
+        //{
+        //    string remotePortsJsonString;
+        //    CallVcRemote(new Uri("debug/setupForDebugging?target=" + _launchOptions.IOSDebugTarget.ToString(), UriKind.Relative), LauncherResources.Info_StartingDebugListener, out remotePortsJsonString);
 
-            try
-            {
-                return JsonConvert.DeserializeObject<Launcher.RemotePorts>(remotePortsJsonString);
-            }
-            catch (JsonException)
-            {
-                Telemetry.SendLaunchError(Telemetry.LaunchFailureCode.BadJson.ToString(), _launchOptions.IOSDebugTarget);
-                throw new LauncherException(LauncherResources.Error_BadJSon);
-            }
-        }
+        //    try
+        //    {
+        //        return JsonConvert.DeserializeObject<Launcher.RemotePorts>(remotePortsJsonString);
+        //    }
+        //    catch (JsonException)
+        //    {
+        //        Telemetry.SendLaunchError(Telemetry.LaunchFailureCode.BadJson.ToString(), _launchOptions.IOSDebugTarget);
+        //        throw new LauncherException(LauncherResources.Error_BadJSon);
+        //    }
+        //}
 
         public string GetRemoteAppPath()
         {

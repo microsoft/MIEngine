@@ -17,7 +17,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Diagnostics;
 using System.Threading;
 using System.Runtime.ExceptionServices;
-using Newtonsoft.Json;
 
 namespace IOSDebugLauncher
 {
@@ -32,14 +31,14 @@ namespace IOSDebugLauncher
 
         private bool _onResumeCalled = false;
 
-        internal class RemotePorts
-        {
-            [JsonProperty(PropertyName = "idevicedebugserverproxyport")]
-            public int IDeviceDebugServerProxyPort { get; set; }
-            [JsonProperty(PropertyName = "debugListenerPort")]
-            public int DebugListenerPort { get; set; }
-        }
-        private RemotePorts _remotePorts;
+        //internal class RemotePorts
+        //{
+        //    [JsonProperty(PropertyName = "idevicedebugserverproxyport")]
+        //    public int IDeviceDebugServerProxyPort { get; set; }
+        //    [JsonProperty(PropertyName = "debugListenerPort")]
+        //    public int DebugListenerPort { get; set; }
+        //}
+        //private RemotePorts _remotePorts;
 
         void IPlatformAppLauncher.Initialize(string registryRoot, IDeviceAppLauncherEventCallback eventCallback)
         {
@@ -76,14 +75,14 @@ namespace IOSDebugLauncher
 
             _client = VcRemoteClient.GetInstance(_launchOptions);
 
-            _remotePorts = _client.StartDebugListener();
+            //_remotePorts = _client.StartDebugListener();
 
             if (_launchOptions.IOSDebugTarget == IOSDebugTarget.Device)
             {
                 _appRemotePath = _client.GetRemoteAppPath();
             }
 
-            debuggerLaunchOptions = new TcpLaunchOptions(_launchOptions.RemoteMachineName, _remotePorts.DebugListenerPort, _launchOptions.Secure);
+            debuggerLaunchOptions = new TcpLaunchOptions(_launchOptions.RemoteMachineName, /*_remotePorts.DebugListenerPort*/ 0, _launchOptions.Secure);
             (debuggerLaunchOptions as TcpLaunchOptions).ServerCertificateValidationCallback = _client.ServerCertificateValidationCallback;
             debuggerLaunchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
             debuggerLaunchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
@@ -106,11 +105,11 @@ namespace IOSDebugLauncher
                 fileCommand = string.Format(CultureInfo.InvariantCulture, "-file-exec-and-symbols \"{0}\" -p ios-simulator", launchOptions.ExePath);
             }
 
-            string targetCommand = string.Format(CultureInfo.InvariantCulture, "-target-select remote localhost:{0}", _remotePorts.IDeviceDebugServerProxyPort.ToString(CultureInfo.InvariantCulture));
+            //string targetCommand = string.Format(CultureInfo.InvariantCulture, "-target-select remote localhost:{0}", _remotePorts.IDeviceDebugServerProxyPort.ToString(CultureInfo.InvariantCulture));
             string breakInMainCommand = string.Format(CultureInfo.InvariantCulture, "-break-insert main");
 
             commands.Add(new Tuple<string, ResultClass, string>(fileCommand, ResultClass.done, LauncherResources.DefinePlatform));
-            commands.Add(new Tuple<string, ResultClass, string>(targetCommand, ResultClass.connected, LauncherResources.Connecting));
+            //commands.Add(new Tuple<string, ResultClass, string>(targetCommand, ResultClass.connected, LauncherResources.Connecting));
             commands.Add(new Tuple<string, ResultClass, string>(breakInMainCommand, ResultClass.done, LauncherResources.SettingBreakpoint));
 
             if (_launchOptions.IOSDebugTarget == IOSDebugTarget.Simulator)
