@@ -16,7 +16,7 @@
   </Choose>
   
   <PropertyGroup>
-    <ILDir>$(MSBuildThisFileDirectory0)..\IL\</ILDir>
+    <ILDir>$(MSBuildThisFileDirectory)..\IL\</ILDir>
     <GeneratedAssembliesDir>$(ILDir)GeneratedAssemblies\</GeneratedAssembliesDir>
   </PropertyGroup>
   

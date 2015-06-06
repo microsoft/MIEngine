@@ -18,7 +18,7 @@
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
     <TargetFrameworkProfile />
-    <AssemblyOriginatorKeyFile>..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>True</SignAssembly>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>

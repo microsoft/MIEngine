@@ -6,7 +6,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)'=='' ">Debug</Configuration>
     <OutDir Condition=" '$(OutDir)'=='' ">$(MSBuildThisFileDirectory)bin\$(Configuration)</OutDir>
-    <SourceHome Condition=" '$(SourceHome)'=='' ">$(MSBuildThisFileDirectory)</SourceHome>
+    <SourceHome Condition=" '$(SourceHome)'=='' ">$(MSBuildThisFileDirectory)src\</SourceHome>
     <ToolsHome Condition=" '$(ToolsHome)'=='' ">$(MSBuildThisFileDirectory)tools\</ToolsHome>
   </PropertyGroup>
 
