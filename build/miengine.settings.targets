@@ -3,20 +3,20 @@
     <When Condition="'$(Configuration)' == 'Debug.Lab' Or '$(Configuration)' == 'Release.Lab'">
         <PropertyGroup>
             <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
-            <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
+            <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
             <DelaySign>true</DelaySign>
         </PropertyGroup>
     </When>
     <Otherwise>
         <PropertyGroup>
-            <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
+            <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
             <DelaySign>false</DelaySign>
         </PropertyGroup>
     </Otherwise>
   </Choose>
   
   <PropertyGroup>
-    <ILDir>$(MSBuildThisFileDirectory)IL\</ILDir>
+    <ILDir>$(MSBuildThisFileDirectory0)..\IL\</ILDir>
     <GeneratedAssembliesDir>$(ILDir)GeneratedAssemblies\</GeneratedAssembliesDir>
   </PropertyGroup>
   
