@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
 
+SYNTAX ERROR
+
 namespace MICore
 {
     public enum ProcessState
