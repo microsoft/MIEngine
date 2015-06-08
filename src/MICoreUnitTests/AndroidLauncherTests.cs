@@ -2,19 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AndroidDebugLauncher;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Xunit;
 
 namespace MICoreUnitTests
 {
-    [TestClass]
     public class AndroidLauncherTests
     {
-        [TestMethod]
+        [Fact]
         public void TestAndroidLaunchOptions1()
         {
             string temp = Environment.GetEnvironmentVariable("TMP");
@@ -28,16 +24,16 @@ namespace MICoreUnitTests
                 "DeviceId=\"default\">");
 
             var options = AndroidDebugLauncher.AndroidLaunchOptions.CreateFromXml(content);
-            Assert.AreEqual(options.Package, "com.example.hellojni");
-            Assert.AreEqual(options.LaunchActivity, ".HelloJni");
-            Assert.AreEqual(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
-            Assert.AreEqual(options.IntermediateDirectory, temp);
-            Assert.AreEqual(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
-            Assert.AreEqual(options.DeviceId, "default");
-            Assert.AreEqual(options.IsAttach, false);
+            Assert.Equal(options.Package, "com.example.hellojni");
+            Assert.Equal(options.LaunchActivity, ".HelloJni");
+            Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
+            Assert.Equal(options.IntermediateDirectory, temp);
+            Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
+            Assert.Equal(options.DeviceId, "default");
+            Assert.Equal(options.IsAttach, false);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAndroidLaunchOptions2()
         {
             // NOTE: 'LaunchActivity' is missing
@@ -54,15 +50,15 @@ namespace MICoreUnitTests
             {
                 var options = AndroidDebugLauncher.AndroidLaunchOptions.CreateFromXml(content);
 
-                Assert.Fail("Exception was not thrown");
+                Assert.True(false, "Exception was not thrown");
             }
             catch (ArgumentException e)
             {
-                Assert.IsTrue(e.Message.Contains("LaunchActivity"));
+                Assert.True(e.Message.Contains("LaunchActivity"));
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAndroidLaunchOptionsAttach()
         {
             string temp = Environment.GetEnvironmentVariable("TMP");
@@ -76,16 +72,16 @@ namespace MICoreUnitTests
                 "Attach=\"true\">");
 
             var options = AndroidDebugLauncher.AndroidLaunchOptions.CreateFromXml(content);
-            Assert.AreEqual(options.Package, "com.example.hellojni");
-            Assert.AreEqual(null, options.LaunchActivity);
-            Assert.AreEqual(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
-            Assert.AreEqual(options.IntermediateDirectory, temp);
-            Assert.AreEqual(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
-            Assert.AreEqual(options.DeviceId, "default");
-            Assert.AreEqual(options.IsAttach, true);
+            Assert.Equal(options.Package, "com.example.hellojni");
+            Assert.Equal(null, options.LaunchActivity);
+            Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
+            Assert.Equal(options.IntermediateDirectory, temp);
+            Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
+            Assert.Equal(options.DeviceId, "default");
+            Assert.Equal(options.IsAttach, true);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAndroidLaunchOptionsAttachBadAttribute()
         {
             // NOTE: Attach is not 'true' or 'false'
@@ -103,76 +99,76 @@ namespace MICoreUnitTests
             {
                 var options = AndroidDebugLauncher.AndroidLaunchOptions.CreateFromXml(content);
 
-                Assert.Fail("Exception was not thrown");
+                Assert.True(false, "Exception was not thrown");
             }
             catch (LauncherException e)
             {
-                Assert.IsTrue(e.Message.Contains("Attach"));
+                Assert.True(e.Message.Contains("Attach"));
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestTextColumn()
         {
             string[] lines = GetFakeProcessListText1();
             TextColumn[] columns = TextColumn.TryParseHeader(lines[0]);
-            Assert.IsTrue(columns != null && columns.Length == 8);
-            Assert.AreEqual(columns[0].Name, "USER");
-            Assert.AreEqual(columns[1].Name, "PID");
-            Assert.AreEqual(columns[2].Name, "PPID");
-            Assert.AreEqual(columns[3].Name, "VSIZE");
-            Assert.AreEqual(columns[4].Name, "RSS");
-            Assert.AreEqual(columns[5].Name, "WCHAN");
-            Assert.AreEqual(columns[6].Name, "PC");
-            Assert.AreEqual(columns[7].Name, "NAME");
+            Assert.True(columns != null && columns.Length == 8);
+            Assert.Equal(columns[0].Name, "USER");
+            Assert.Equal(columns[1].Name, "PID");
+            Assert.Equal(columns[2].Name, "PPID");
+            Assert.Equal(columns[3].Name, "VSIZE");
+            Assert.Equal(columns[4].Name, "RSS");
+            Assert.Equal(columns[5].Name, "WCHAN");
+            Assert.Equal(columns[6].Name, "PC");
+            Assert.Equal(columns[7].Name, "NAME");
 
-            Assert.AreEqual(columns[0].ExtractCell(lines[1]), "root");
-            Assert.AreEqual(columns[1].ExtractCell(lines[1]), "1");
-            Assert.AreEqual(columns[2].ExtractCell(lines[1]), "0");
-            Assert.AreEqual(columns[3].ExtractCell(lines[1]), "640");
-            Assert.AreEqual(columns[4].ExtractCell(lines[1]), "496");
-            Assert.AreEqual(columns[5].ExtractCell(lines[1]), "c00bd520");
-            Assert.AreEqual(columns[6].ExtractCell(lines[1]), "00019fb8 S");
-            Assert.AreEqual(columns[7].ExtractCell(lines[1]), "/init");
+            Assert.Equal(columns[0].ExtractCell(lines[1]), "root");
+            Assert.Equal(columns[1].ExtractCell(lines[1]), "1");
+            Assert.Equal(columns[2].ExtractCell(lines[1]), "0");
+            Assert.Equal(columns[3].ExtractCell(lines[1]), "640");
+            Assert.Equal(columns[4].ExtractCell(lines[1]), "496");
+            Assert.Equal(columns[5].ExtractCell(lines[1]), "c00bd520");
+            Assert.Equal(columns[6].ExtractCell(lines[1]), "00019fb8 S");
+            Assert.Equal(columns[7].ExtractCell(lines[1]), "/init");
 
-            Assert.AreEqual(columns[0].ExtractCell(lines[2]), "root");
-            Assert.AreEqual(columns[1].ExtractCell(lines[2]), "2");
-            Assert.AreEqual(columns[2].ExtractCell(lines[2]), "0");
-            Assert.AreEqual(columns[3].ExtractCell(lines[2]), "0");
-            Assert.AreEqual(columns[4].ExtractCell(lines[2]), "0");
-            Assert.AreEqual(columns[5].ExtractCell(lines[2]), "c00335a0");
-            Assert.AreEqual(columns[6].ExtractCell(lines[2]), "00000000 S");
-            Assert.AreEqual(columns[7].ExtractCell(lines[2]), "fake_name");
+            Assert.Equal(columns[0].ExtractCell(lines[2]), "root");
+            Assert.Equal(columns[1].ExtractCell(lines[2]), "2");
+            Assert.Equal(columns[2].ExtractCell(lines[2]), "0");
+            Assert.Equal(columns[3].ExtractCell(lines[2]), "0");
+            Assert.Equal(columns[4].ExtractCell(lines[2]), "0");
+            Assert.Equal(columns[5].ExtractCell(lines[2]), "c00335a0");
+            Assert.Equal(columns[6].ExtractCell(lines[2]), "00000000 S");
+            Assert.Equal(columns[7].ExtractCell(lines[2]), "fake_name");
 
-            Assert.AreEqual(columns[0].ExtractCell(lines[3]), "root");
-            Assert.AreEqual(columns[1].ExtractCell(lines[3]), "3");
-            Assert.AreEqual(columns[2].ExtractCell(lines[3]), "2");
-            Assert.AreEqual(columns[3].ExtractCell(lines[3]), "0");
-            Assert.AreEqual(columns[4].ExtractCell(lines[3]), "0");
-            Assert.AreEqual(columns[5].ExtractCell(lines[3]), "c001e39c");
-            Assert.AreEqual(columns[6].ExtractCell(lines[3]), "00000000 S");
-            Assert.AreEqual(columns[7].ExtractCell(lines[3]), "fake_name");
+            Assert.Equal(columns[0].ExtractCell(lines[3]), "root");
+            Assert.Equal(columns[1].ExtractCell(lines[3]), "3");
+            Assert.Equal(columns[2].ExtractCell(lines[3]), "2");
+            Assert.Equal(columns[3].ExtractCell(lines[3]), "0");
+            Assert.Equal(columns[4].ExtractCell(lines[3]), "0");
+            Assert.Equal(columns[5].ExtractCell(lines[3]), "c001e39c");
+            Assert.Equal(columns[6].ExtractCell(lines[3]), "00000000 S");
+            Assert.Equal(columns[7].ExtractCell(lines[3]), "fake_name");
 
-            Assert.AreEqual(columns[0].ExtractCell(lines[4]), "u0_a56");
-            Assert.AreEqual(columns[1].ExtractCell(lines[4]), "1165");
-            Assert.AreEqual(columns[2].ExtractCell(lines[4]), "50");
-            Assert.AreEqual(columns[3].ExtractCell(lines[4]), "211416");
-            Assert.AreEqual(columns[4].ExtractCell(lines[4]), "16040");
-            Assert.AreEqual(columns[5].ExtractCell(lines[4]), "ffffffff");
-            Assert.AreEqual(columns[6].ExtractCell(lines[4]), "b6f46798 S");
-            Assert.AreEqual(columns[7].ExtractCell(lines[4]), "com.example.hellojni");
+            Assert.Equal(columns[0].ExtractCell(lines[4]), "u0_a56");
+            Assert.Equal(columns[1].ExtractCell(lines[4]), "1165");
+            Assert.Equal(columns[2].ExtractCell(lines[4]), "50");
+            Assert.Equal(columns[3].ExtractCell(lines[4]), "211416");
+            Assert.Equal(columns[4].ExtractCell(lines[4]), "16040");
+            Assert.Equal(columns[5].ExtractCell(lines[4]), "ffffffff");
+            Assert.Equal(columns[6].ExtractCell(lines[4]), "b6f46798 S");
+            Assert.Equal(columns[7].ExtractCell(lines[4]), "com.example.hellojni");
 
-            Assert.AreEqual(columns[0].ExtractCell(lines[5]), "root");
-            Assert.AreEqual(columns[1].ExtractCell(lines[5]), "1181");
-            Assert.AreEqual(columns[2].ExtractCell(lines[5]), "59");
-            Assert.AreEqual(columns[3].ExtractCell(lines[5]), "1236");
-            Assert.AreEqual(columns[4].ExtractCell(lines[5]), "460");
-            Assert.AreEqual(columns[5].ExtractCell(lines[5]), "00000000");
-            Assert.AreEqual(columns[6].ExtractCell(lines[5]), "b6f11158 R");
-            Assert.AreEqual(columns[7].ExtractCell(lines[5]), "ps");
+            Assert.Equal(columns[0].ExtractCell(lines[5]), "root");
+            Assert.Equal(columns[1].ExtractCell(lines[5]), "1181");
+            Assert.Equal(columns[2].ExtractCell(lines[5]), "59");
+            Assert.Equal(columns[3].ExtractCell(lines[5]), "1236");
+            Assert.Equal(columns[4].ExtractCell(lines[5]), "460");
+            Assert.Equal(columns[5].ExtractCell(lines[5]), "00000000");
+            Assert.Equal(columns[6].ExtractCell(lines[5]), "b6f11158 R");
+            Assert.Equal(columns[7].ExtractCell(lines[5]), "ps");
         }
 
-        [TestMethod]
+        [Fact]
         public void TestProcessListParser1()
         {
             List<int> result;
@@ -180,19 +176,19 @@ namespace MICoreUnitTests
             var processListParer = new ProcessListParser(GetFakeProcessListText1());
 
             result = processListParer.FindProcesses("hellojni");
-            Assert.AreEqual(result.Count, 0);
+            Assert.Equal(result.Count, 0);
 
             result = processListParer.FindProcesses("com.example.hellojni");
-            Assert.AreEqual(result.Count, 1);
-            Assert.AreEqual(result[0], 1165);
+            Assert.Equal(result.Count, 1);
+            Assert.Equal(result[0], 1165);
 
             result = processListParer.FindProcesses("fake_name");
-            Assert.AreEqual(result.Count, 2);
-            Assert.AreEqual(result[0], 2);
-            Assert.AreEqual(result[1], 3);
+            Assert.Equal(result.Count, 2);
+            Assert.Equal(result[0], 2);
+            Assert.Equal(result[1], 3);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestProcessListParser2()
         {
             List<int> result;
@@ -200,15 +196,15 @@ namespace MICoreUnitTests
             var processListParer = new ProcessListParser(GetFakeProcessListText2());
 
             result = processListParer.FindProcesses("hellojni");
-            Assert.AreEqual(result.Count, 0);
+            Assert.Equal(result.Count, 0);
 
             result = processListParer.FindProcesses("com.example.hellojni");
-            Assert.AreEqual(result.Count, 1);
-            Assert.AreEqual(result[0], 7848);
+            Assert.Equal(result.Count, 1);
+            Assert.Equal(result[0], 7848);
 
             result = processListParer.FindProcesses("com.example.memory_hog");
-            Assert.AreEqual(result.Count, 1);
-            Assert.AreEqual(result[0], 7915);
+            Assert.Equal(result.Count, 1);
+            Assert.Equal(result[0], 7915);
         }
 
         private string[] GetFakeProcessListText1()

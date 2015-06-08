@@ -19,7 +19,7 @@ if not defined VisualStudioVersion (
 :EnvSet
 
 :: Log build command line
-set _buildproj=%~dp0MIDebugEngine.sln
+set _buildproj=%~dp0BuildAndTest.proj
 set _buildlog=%~dp0msbuild.log
 set _buildprefix=echo
 set _buildpostfix=^> "%_buildlog%"
