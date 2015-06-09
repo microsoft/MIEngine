@@ -17,6 +17,11 @@ namespace AndroidDebugLauncher
     {
         public AndroidLaunchOptions(MICore.Xml.LaunchOptions.AndroidLaunchOptions xmlOptions)
         {
+            if (xmlOptions == null)
+            {
+                throw new ArgumentNullException("xmlOptions");
+            }
+
             this.Package = LaunchOptions.RequireAttribute(xmlOptions.Package, "Package");
             this.IsAttach = xmlOptions.Attach;
             if (!IsAttach)

@@ -11,7 +11,7 @@ goto Run
 echo syntax: ValidateDesignerFile.cmd ^<path_to_designer_file^> ^<path_to_candidate_file^> ^<intermediate_directory^>
 echo.
 echo ValidateDesignerFile.cmd will determine if the designer file and the candidate 
-echo file are echo the same (excluding full line c-style comments and whitespace). 
+echo file are the same (excluding full line c-style comments and whitespace). 
 echo If they are different the designer file will be updated.
 echo.
 exit /b -1
