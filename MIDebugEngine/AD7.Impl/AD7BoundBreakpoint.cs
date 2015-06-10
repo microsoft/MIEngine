@@ -107,18 +107,11 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // The sample engine does not support conditions on breakpoints.
         // A real-world debugger will use this to specify when a breakpoint will be hit
         // and when it should be ignored.
         int IDebugBoundBreakpoint2.SetCondition(BP_CONDITION bpCondition)
         {
-            if (bpCondition.styleCondition != enum_BP_COND_STYLE.BP_COND_NONE)
-            {
-                Delete();
-                _engine.Callback.OnBreakpointUnbound(this, enum_BP_UNBOUND_REASON.BPUR_BREAKPOINT_ERROR);
-                return Constants.E_FAIL;
-            }
-            return Constants.S_OK;
+            return ((IDebugPendingBreakpoint2)_pendingBreakpoint).SetCondition(bpCondition);  // setting on the pending break will set the condition
         }
 
         // The sample engine does not support hit counts on breakpoints. A real-world debugger will want to keep track 
