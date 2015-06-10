@@ -62,6 +62,19 @@ namespace Microsoft.MIDebugEngine
             _BPError = null;
         }
 
+        private bool VerifyCondition(BP_CONDITION request)
+        {
+            switch (request.styleCondition)
+            {
+                case enum_BP_COND_STYLE.BP_COND_NONE:
+                    return true;
+                case enum_BP_COND_STYLE.BP_COND_WHEN_TRUE:
+                    return request.bstrCondition != null;
+                default:
+                    return false;
+            }
+        }
+
         private bool CanBind()
         {
             // The sample engine only supports breakpoints on a file and line number. No other types of breakpoints are supported.
@@ -72,8 +85,11 @@ namespace Microsoft.MIDebugEngine
             }
             if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0)
             {
-                _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
-                return false;
+                if (!VerifyCondition(_bpRequestInfo.bpCondition))
+                {
+                    _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
+                    return false;
+                }
             }
             if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
             {
@@ -167,39 +183,49 @@ namespace Microsoft.MIDebugEngine
         {
             if (CanBind())
             {
-                if (_bp != null)   // already bound
-                {
-                    Debug.Fail("Breakpoint already bound");
-                    return;
-                }
-                IDebugDocumentPosition2 docPosition = (IDebugDocumentPosition2)(Marshal.GetObjectForIUnknown(_bpRequestInfo.bpLocation.unionmember2));
-
-                // Get the name of the document that the breakpoint was put in
-                string documentName;
-                EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
-
-                // Get the location in the document that the breakpoint is in.
+                string documentName = null;
                 TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
                 TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
-                EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                string condition = null;
+
+                lock (_boundBreakpoints)
+                {
+                    if (_bp != null)   // already bound
+                    {
+                        Debug.Fail("Breakpoint already bound");
+                        return;
+                    }
+                    IDebugDocumentPosition2 docPosition = (IDebugDocumentPosition2)(Marshal.GetObjectForIUnknown(_bpRequestInfo.bpLocation.unionmember2));
+
+                    // Get the name of the document that the breakpoint was put in
+                    EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
+
+                    // Get the location in the document that the breakpoint is in.
+                    EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                    if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0
+                        && _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE)
+                    {
+                        condition = _bpRequestInfo.bpCondition.bstrCondition;
+                    }
+                }
 
                 // Bind all breakpoints that match this source and line number.
-                PendingBreakpoint.BindResult bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, this);
+                PendingBreakpoint.BindResult bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, this);
 
-                if (bindResult.PendingBreakpoint != null)
+                lock (_boundBreakpoints)
                 {
-                    _bp = bindResult.PendingBreakpoint;    // an MI breakpoint object exists: TODO: lock?
-                }
-                if (bindResult.BoundBreakpoints == null || bindResult.BoundBreakpoints.Count == 0)
-                {
-                    _BPError = new AD7ErrorBreakpoint(this, bindResult.ErrorMessage);
-                    _engine.Callback.OnBreakpointError(_BPError);
-                }
-                else
-                {
-                    Debug.Assert(_bp != null);
-                    lock (_boundBreakpoints)
+                    if (bindResult.PendingBreakpoint != null)
                     {
+                        _bp = bindResult.PendingBreakpoint;    // an MI breakpoint object exists: TODO: lock?
+                    }
+                    if (bindResult.BoundBreakpoints == null || bindResult.BoundBreakpoints.Count == 0)
+                    {
+                        _BPError = new AD7ErrorBreakpoint(this, bindResult.ErrorMessage);
+                        _engine.Callback.OnBreakpointError(_BPError);
+                    }
+                    else
+                    {
+                        Debug.Assert(_bp != null);
                         foreach (BoundBreakpoint bp in bindResult.BoundBreakpoints)
                         {
                             AddBoundBreakpoint(bp);
@@ -375,14 +401,38 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // The sample engine does not support conditions on breakpoints.
         int IDebugPendingBreakpoint2.SetCondition(BP_CONDITION bpCondition)
         {
-            if (bpCondition.styleCondition != enum_BP_COND_STYLE.BP_COND_NONE)
+            PendingBreakpoint bp = null;
+            lock (_boundBreakpoints)
             {
-                _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
-                _engine.Callback.OnBreakpointError(_BPError);
-                return Constants.E_FAIL;
+                if (!VerifyCondition(bpCondition))
+                {
+                    _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
+                    _engine.Callback.OnBreakpointError(_BPError);
+                    return Constants.E_FAIL;
+                }
+                if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0 
+                    && _bpRequestInfo.bpCondition.styleCondition == bpCondition.styleCondition 
+                    && _bpRequestInfo.bpCondition.bstrCondition == bpCondition.bstrCondition)
+                {
+                    return Constants.S_OK;  // this condition was already set
+                }
+                _bpRequestInfo.bpCondition = bpCondition;
+                _bpRequestInfo.dwFields |= enum_BPREQI_FIELDS.BPREQI_CONDITION;
+                if (_bp != null)
+                {
+                    bp = _bp;
+                }
+            }
+            if (bp != null)
+            {
+                _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+                {
+                _engine.DebuggedProcess.AddInternalBreakAction(
+                    ()=>bp.SetConditionAsync(bpCondition.bstrCondition, _engine.DebuggedProcess)
+                        );
+                });
             }
             return Constants.S_OK;
         }

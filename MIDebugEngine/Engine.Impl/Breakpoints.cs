@@ -84,10 +84,10 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, AD7PendingBreakpoint pbreak)
+        internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
         {
             string basename = System.IO.Path.GetFileName(documentName);     // get basename from Windows path
-            Results bindResult = await process.MICommandFactory.BreakInsert(process.EscapePath(basename), line, ResultClass.None);
+            Results bindResult = await process.MICommandFactory.BreakInsert(process.EscapePath(basename), line, condition, ResultClass.None);
             string errormsg = "Unknown error";
             if (bindResult.ResultClass == ResultClass.error)
             {
@@ -258,6 +258,14 @@ namespace Microsoft.MIDebugEngine
             if (process.ProcessState != MICore.ProcessState.Exited)
             {
                 await process.MICommandFactory.BreakDelete(Number);
+            }
+        }
+
+        internal async Task SetConditionAsync(string expr, DebuggedProcess process)
+        {
+            if (process.ProcessState != MICore.ProcessState.Exited)
+            {
+                await process.MICommandFactory.BreakCondition(Number, expr);
             }
         }
     }

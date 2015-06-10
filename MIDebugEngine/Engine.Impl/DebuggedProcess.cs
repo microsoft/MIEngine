@@ -431,12 +431,6 @@ namespace Microsoft.MIDebugEngine
                         await CmdAsync("-gdb-set target-async on", ResultClass.done);
                     }
 
-                    if (_initialBreakArgs == null)
-                    {
-                        await CmdAsync("-break-insert main", ResultClass.None);
-                    }
-
-
                     if (_launchOptions is LocalLaunchOptions)
                     {
                         string destination = ((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress;
@@ -444,6 +438,11 @@ namespace Microsoft.MIDebugEngine
                         {
                             await CmdAsync("-target-select remote " + destination, ResultClass.connected);
                         }
+                    }
+
+                    if (_initialBreakArgs == null)
+                    {
+                        await CmdAsync("-break-insert main", ResultClass.None);
                     }
                 }
 
@@ -483,7 +482,16 @@ namespace Microsoft.MIDebugEngine
         private async Task HandleBreakModeEvent(ResultEventArgs results)
         {
             string reason = results.Results.TryFindString("reason");
-            int tid = results.Results.FindInt("thread-id");
+            int tid;
+            if (!results.Results.Contains("thread-id"))
+            {
+                Results res = await MICommandFactory.ThreadInfo();
+                tid = res.FindInt("id");
+            }
+            else
+            {
+                tid = results.Results.FindInt("thread-id");
+            }
 
             ThreadCache.MarkDirty();
             MICommandFactory.DefineCurrentThread(tid);
@@ -704,6 +712,11 @@ namespace Microsoft.MIDebugEngine
         protected override void ScheduleStdOutProcessing(string line)
         {
             _worker.PostOperation(() => { ProcessStdOutLine(line); });
+        }
+
+        protected override void ScheduleResultProcessing(Action func)
+        {
+            _worker.PostOperation(() => { func(); });
         }
 
         public void Execute(DebuggedThread thread)
