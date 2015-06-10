@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.IO;
-
+using System.Text;
 
 namespace MICore
 {
@@ -344,10 +344,19 @@ namespace MICore
 
         #region Breakpoints
 
-        public virtual async Task<Results> BreakInsert(string filename, uint line, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, ResultClass resultClass = ResultClass.done)
         {
-            string cmd = "-break-insert -f " + filename + ":" + line.ToString();
-            return await _debugger.CmdAsync(cmd, resultClass);
+            StringBuilder cmd = new StringBuilder("-break-insert -f ");
+            if (condition != null)
+            {
+                cmd.Append("-c \"");
+                cmd.Append(condition);
+                cmd.Append("\" ");
+            }
+            cmd.Append(filename);
+            cmd.Append(":");
+            cmd.Append(line.ToString());
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
         public virtual async Task<TupleValue> BreakInfo(string bkptno)
@@ -376,6 +385,16 @@ namespace MICore
         public virtual async Task BreakDelete(string bkptno)
         {
             await _debugger.CmdAsync("-break-delete " + bkptno, ResultClass.done);
+        }
+
+        public virtual async Task BreakCondition(string bkptno, string expr)
+        {
+            if (string.IsNullOrWhiteSpace(expr))
+            {
+                expr = string.Empty;
+            }
+            string command = string.Format("-break-condition {0} {1}", bkptno, expr);
+            await _debugger.CmdAsync(command, ResultClass.done);
         }
 
         #endregion
@@ -628,7 +647,7 @@ namespace MICore
         }
         public override Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
-            return null;
+            return Task.FromResult<List<ulong>>(null);
         }
 
         public override Task EnableTargetAsyncOption()
@@ -677,7 +696,7 @@ namespace MICore
         }
         public override Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
-            return null;
+            return Task.FromResult<List<ulong>>(null);
         }
 
         public override Task EnableTargetAsyncOption()
