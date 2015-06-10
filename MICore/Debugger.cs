@@ -93,6 +93,31 @@ namespace MICore
         private StringBuilder _consoleCommandOutput;
 
         private bool _pendingInternalBreak;
+        private Timer _breakTimer = null;
+        private int _retryCount;
+        private const int BREAK_DELTA = 3000;   // millisec before trying to break again
+        private const int BREAK_RETRY_MAX = 3;  // maximum times to retry
+
+        private void RetryBreak(object o)
+        {
+            lock (_internalBreakActions)
+            {
+                if (_pendingInternalBreak && _retryCount < BREAK_RETRY_MAX)
+                {
+                    Debug.WriteLine("Debugger failed to break. Trying again.");
+                    CmdBreakInternal();
+                    _retryCount++;
+                }
+                else
+                {
+                    if (_breakTimer != null)
+                    {
+                        _breakTimer.Dispose();
+                        _breakTimer = null;
+                    }
+                }
+            }
+        }
 
         public Task AddInternalBreakAction(Func<Task> func)
         {
@@ -114,9 +139,62 @@ namespace MICore
                     {
                         _pendingInternalBreak = true;
                         CmdBreakInternal();
+                        _retryCount = 0;
+                        _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
                     }
                     return _internalBreakActionCompletionSource.Task;
                 }
+            }
+        }
+
+        private async void OnStopped(Results results)
+        {
+            string reason = results.TryFindString("reason");
+
+            if (reason.StartsWith("exited"))
+            {
+                this.ProcessState = ProcessState.Exited;
+                if (ProcessExitEvent != null)
+                {
+                    ProcessExitEvent(this, new ResultEventArgs(results));
+                }
+                return;
+            }
+
+            //if this is an exception reported from LLDB, it will not currently contain a frame object in the MI
+            //if we don't have a frame, check if this is an excpetion and retrieve the frame
+            if (!results.Contains("frame") &&
+                string.Compare(reason, "exception-received", StringComparison.OrdinalIgnoreCase) == 0
+                )
+            {
+                //get the info for the current frame
+                Results frameResult = await MICommandFactory.StackInfoFrame();
+
+                //add the frame to the stopping results
+                results.Add("frame", frameResult.Find("frame"));
+            }
+
+            bool fIsAsyncBreak = MICommandFactory.IsAsyncBreakSignal(results);
+
+            if (await DoInternalBreakActions(fIsAsyncBreak))
+            {
+                return;
+            }
+
+            this.ProcessState = ProcessState.Stopped;
+            FlushBreakStateData();
+
+            if (!results.Contains("frame"))
+            {
+                if (ModuleLoadEvent != null)
+                {
+                    ModuleLoadEvent(this, new ResultEventArgs(results));
+                }
+            }
+            else if (BreakModeEvent != null)
+            {
+                if (fIsAsyncBreak) { _requestingRealAsyncBreak = false; }
+                BreakModeEvent(this, new ResultEventArgs(results));
             }
         }
 
@@ -128,53 +206,7 @@ namespace MICore
 
             if (mode == "stopped")
             {
-                string reason = results.TryFindString("reason");
-
-                if (reason.StartsWith("exited"))
-                {
-                    this.ProcessState = ProcessState.Exited;
-                    if (ProcessExitEvent != null)
-                    {
-                        ProcessExitEvent(this, new ResultEventArgs(results));
-                    }
-                    return;
-                }
-
-                //if this is an exception reported from LLDB, it will not currently contain a frame object in the MI
-                //if we don't have a frame, check if this is an excpetion and retrieve the frame
-                if (!results.Contains("frame") &&
-                    string.Compare(reason, "exception-received", StringComparison.OrdinalIgnoreCase) == 0
-                    )
-                {
-                    //get the info for the current frame
-                    Results frameResult = await MICommandFactory.StackInfoFrame();
-
-                    //add the frame to the stopping results
-                    results.Add("frame", frameResult.Find("frame"));
-                }
-
-                bool fIsAsyncBreak = MICommandFactory.IsAsyncBreakSignal(results);
-
-                if (await DoInternalBreakActions(fIsAsyncBreak))
-                {
-                    return;
-                }
-
-                this.ProcessState = ProcessState.Stopped;
-                FlushBreakStateData();
-
-                if (!results.Contains("frame"))
-                {
-                    if (ModuleLoadEvent != null)
-                    {
-                        ModuleLoadEvent(this, new ResultEventArgs(results));
-                    }
-                }
-                else if (BreakModeEvent != null)
-                {
-                    if (fIsAsyncBreak) { _requestingRealAsyncBreak = false; }
-                    BreakModeEvent(this, new ResultEventArgs(results));
-                }
+                OnStopped(results);
             }
             else if (mode == "running")
             {
@@ -377,7 +409,6 @@ namespace MICore
             return CmdAsync("-exec-run", ResultClass.running);
         }
 
-
         protected bool _requestingRealAsyncBreak = false;
         public Task CmdBreak()
         {
@@ -392,7 +423,14 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
-            return CmdAsync("-exec-interrupt", ResultClass.done);
+            var res = CmdAsync("-exec-interrupt", ResultClass.done);
+            return res.ContinueWith((t) =>
+            {
+                if (t.Result.Contains("reason"))    // interrupt finished synchronously
+                {
+                    ScheduleResultProcessing(()=>OnStopped(t.Result));
+                }
+            });
         }
 
         public void CmdContinueAsync()
@@ -618,6 +656,11 @@ namespace MICore
         protected virtual void ScheduleStdOutProcessing(string line)
         {
             ProcessStdOutLine(line);
+        }
+
+        protected virtual void ScheduleResultProcessing(Action func)
+        {
+            func();
         }
 
         // a Token is a sequence of decimal digits followed by something else
