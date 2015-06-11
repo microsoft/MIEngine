@@ -654,7 +654,7 @@ namespace Microsoft.MIDebugEngine
             AD7Module[] moduleObjects = new AD7Module[modules.Length];
             for (int i = 0; i < modules.Length; i++)
             {
-                moduleObjects[i] = new AD7Module(modules[i]);
+                moduleObjects[i] = new AD7Module(modules[i], _debuggedProcess);
             }
 
             ppEnum = new Microsoft.MIDebugEngine.AD7ModuleEnum(moduleObjects);

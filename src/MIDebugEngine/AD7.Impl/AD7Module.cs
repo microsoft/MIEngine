@@ -15,11 +15,16 @@ namespace Microsoft.MIDebugEngine
     // this class represents a module loaded in the debuggee process to the debugger. 
     internal class AD7Module : IDebugModule2, IDebugModule3
     {
+        public readonly DebuggedProcess Process;
         public readonly DebuggedModule DebuggedModule;
 
-        public AD7Module(DebuggedModule debuggedModule)
+        public AD7Module(DebuggedModule debuggedModule, DebuggedProcess process)
         {
+            Debug.Assert(debuggedModule != null, "No module provided?");
+            Debug.Assert(process != null, "No process provided?");
+
             this.DebuggedModule = debuggedModule;
+            this.Process = process;
         }
 
         #region IDebugModule2 Members
@@ -79,6 +84,12 @@ namespace Microsoft.MIDebugEngine
                     {
                         info.m_dwModuleFlags |= (enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS);
                     }
+
+                    if (this.Process.Is64BitArch)
+                    {
+                        info.m_dwModuleFlags |= enum_MODULE_FLAGS.MODULE_FLAG_64BIT;
+                    }
+
                     info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_FLAGS;
                 }
 
