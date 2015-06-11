@@ -93,6 +93,7 @@ namespace MICore
         private StringBuilder _consoleCommandOutput;
 
         private bool _pendingInternalBreak;
+        private bool _waitingToStop;
         private Timer _breakTimer = null;
         private int _retryCount;
         private const int BREAK_DELTA = 3000;   // millisec before trying to break again
@@ -102,9 +103,9 @@ namespace MICore
         {
             lock (_internalBreakActions)
             {
-                if (_pendingInternalBreak && _retryCount < BREAK_RETRY_MAX)
+                if (_waitingToStop && _retryCount < BREAK_RETRY_MAX)
                 {
-                    Debug.WriteLine("Debugger failed to break. Trying again.");
+                    Logger.WriteLine("Debugger failed to break. Trying again.");
                     CmdBreakInternal();
                     _retryCount++;
                 }
@@ -140,6 +141,7 @@ namespace MICore
                         _pendingInternalBreak = true;
                         CmdBreakInternal();
                         _retryCount = 0;
+                        _waitingToStop = true;
                         _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
                     }
                     return _internalBreakActionCompletionSource.Task;
@@ -259,6 +261,7 @@ namespace MICore
             {
                 lock (_internalBreakActions)
                 {
+                    _waitingToStop = false;
                     if (_internalBreakActions.Count == 0)
                     {
                         _pendingInternalBreak = false;

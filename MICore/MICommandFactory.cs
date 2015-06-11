@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.IO;
-
+using System.Text;
 
 namespace MICore
 {
@@ -334,13 +334,17 @@ namespace MICore
 
         public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, ResultClass resultClass = ResultClass.done)
         {
-            string cmd = "-break-insert -f ";
+            StringBuilder cmd = new StringBuilder("-break-insert -f ");
             if (condition != null)
             {
-                cmd += "-c \"" + condition + "\" ";
+                cmd.Append("-c \"");
+                cmd.Append(condition);
+                cmd.Append("\" ");
             }
-            cmd += filename + ":" + line.ToString();
-            return await _debugger.CmdAsync(cmd, resultClass);
+            cmd.Append(filename);
+            cmd.Append(":");
+            cmd.Append(line.ToString());
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
         public virtual async Task<TupleValue> BreakInfo(string bkptno)

@@ -431,6 +431,11 @@ namespace Microsoft.MIDebugEngine
                         await CmdAsync("-gdb-set target-async on", ResultClass.done);
                     }
 
+                    if (_initialBreakArgs == null)
+                    {
+                        await CmdAsync("-break-insert main", ResultClass.None);
+                    }
+
                     if (_launchOptions is LocalLaunchOptions)
                     {
                         string destination = ((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress;
@@ -438,11 +443,6 @@ namespace Microsoft.MIDebugEngine
                         {
                             await CmdAsync("-target-select remote " + destination, ResultClass.connected);
                         }
-                    }
-
-                    if (_initialBreakArgs == null)
-                    {
-                        await CmdAsync("-break-insert main", ResultClass.None);
                     }
                 }
 
