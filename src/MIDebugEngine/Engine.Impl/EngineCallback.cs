@@ -164,7 +164,7 @@ namespace Microsoft.MIDebugEngine
                 Debug.Assert(_engine.DebuggedProcess.WorkerThread.IsPollThread());
             }
 
-            AD7Module ad7Module = new AD7Module(debuggedModule);
+            AD7Module ad7Module = new AD7Module(debuggedModule, _engine.DebuggedProcess);
             AD7ModuleLoadEvent eventObject = new AD7ModuleLoadEvent(ad7Module, true /* this is a module load */);
 
             debuggedModule.Client = ad7Module;
@@ -337,7 +337,7 @@ namespace Microsoft.MIDebugEngine
 
             string statusString = ((statusFlags & enum_MODULE_INFO_FLAGS.MIF_SYMBOLS_LOADED) != 0 ? "Symbols Loaded - " : "No symbols loaded") + status;
 
-            AD7Module ad7Module = new AD7Module(module);
+            AD7Module ad7Module = new AD7Module(module, _engine.DebuggedProcess);
             AD7SymbolSearchEvent eventObject = new AD7SymbolSearchEvent(ad7Module, statusString, statusFlags);
             Send(eventObject, AD7SymbolSearchEvent.IID, null);
         }
