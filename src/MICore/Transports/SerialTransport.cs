@@ -63,12 +63,6 @@ namespace MICore
                 }
             }
 
-            // send each line separately
-            foreach (var c in serialOptions.Commands)
-            {
-                EchoAndWait(c);
-            }
-
             Debug.WriteLine("DBG:GDB is starting");
             _thread.Start();
         }

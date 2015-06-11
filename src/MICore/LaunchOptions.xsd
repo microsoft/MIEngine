@@ -79,23 +79,23 @@
     <xs:complexType>
       <xs:attribute name="RemoteMachineName" type="xs:string" use="required">
         <xs:annotation>
-          <xs:documentation>TODO</xs:documentation>
+          <xs:documentation>The name of the target machine</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="PackageId" type="xs:string" use="required">
         <xs:annotation>
-          <xs:documentation>TODO</xs:documentation>
+          <xs:documentation>The package id of the package to debug</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="vcremotePort" type="xs:int" use="required">
         <xs:annotation>
-          <xs:documentation>TODO</xs:documentation>
+          <xs:documentation>The port number of the VC remote endpoint to connect to</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name="IOSDebugTarget" use="required">
         <xs:simpleType>
           <xs:annotation>
-            <xs:documentation>TODO</xs:documentation>
+            <xs:documentation>Indicates if the debugger should debug to the simulator or a device.</xs:documentation>
           </xs:annotation>
           <xs:restriction base="xs:string">
             <xs:enumeration value="device" />
@@ -103,43 +103,56 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>
+      <xs:attribute name="Secure" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>If true, use TSL security</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attributeGroup ref="CommonAttributes"/>
     </xs:complexType>
   </xs:element>
 
+  <xs:simpleType name="TargetArchitecture">
+    <xs:annotation>
+      <xs:documentation>Architecture of the target application. Examples: arm, x86</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="x86"/>
+      <xs:enumeration value="arm"/>
+      <xs:enumeration value="mips"/>
+      <xs:enumeration value="x64"/>
+      <xs:enumeration value="amd64"/>
+      <xs:enumeration value="x86_64"/>
+
+      <!--Allow them in upper case also-->
+      <xs:enumeration value="X86"/>
+      <xs:enumeration value="ARM"/>
+      <xs:enumeration value="MIPS"/>
+      <xs:enumeration value="X64"/>
+      <xs:enumeration value="AMD64"/>
+      <xs:enumeration value="X86_64"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="MIMode">
+    <xs:annotation>
+      <xs:documentation>Indicates the console debugger that the MIDebugEngine will connect to</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="gdb"/>
+      <xs:enumeration value="lldb"/>
+      <xs:enumeration value="clrdbg"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
   <xs:attributeGroup name="CommonAttributes">
-    <xs:attribute name="TargetArchitecture" use="required">
-      <xs:simpleType>
-        <xs:annotation>
-          <xs:documentation>Architecture of the target application. Examples: arm, x86</xs:documentation>
-        </xs:annotation>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="x86"/>
-          <xs:enumeration value="arm"/>
-          <xs:enumeration value="mips"/>
-          <xs:enumeration value="x64"/>
-          <xs:enumeration value="amd64"/>
-          <xs:enumeration value="x86_64"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
+    <xs:attribute name="TargetArchitecture" use="required" type="TargetArchitecture"/>
     <xs:attribute name="AdditionalSOLibSearchPath" type="xs:string" use="optional">
       <xs:annotation>
         <xs:documentation>Semicolon separated list of directories to use to search for .so files. Example: 'c:\dir1;c:\dir2'</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="MIMode" use="optional">
-      <xs:simpleType>
-        <xs:annotation>
-          <xs:documentation>TODO</xs:documentation>
-        </xs:annotation>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="gdb"/>
-          <xs:enumeration value="lldb"/>
-          <xs:enumeration value="clrdbg"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
+    <xs:attribute name="MIMode" type="MIMode" use="optional"/>
   </xs:attributeGroup>
 
   <xs:element name="LocalLaunchOptions">
@@ -170,9 +183,6 @@
     <xs:complexType>
       <xs:complexContent>
         <xs:extension base="BaseLaunchOptions">
-          <xs:sequence>
-            <xs:element ref="Command" minOccurs="0" maxOccurs="unbounded" />
-          </xs:sequence>
           <xs:attribute name="Port" type="xs:string" use="required">
             <xs:annotation>
               <xs:documentation>Serial port to connect to (ex:com1).</xs:documentation>
@@ -189,9 +199,6 @@
     <xs:complexType>
       <xs:complexContent>
         <xs:extension base="BaseLaunchOptions">
-          <xs:sequence>
-            <xs:element ref="Command" minOccurs="0" maxOccurs="unbounded" />
-          </xs:sequence>
           <xs:attribute name="PipePath" type="xs:string" use="required">
             <xs:annotation>
               <xs:documentation>Path on the VS computer to an executable to run to establish a standard input/output pipe to the target computer.</xs:documentation>
@@ -232,8 +239,48 @@
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
-  <!--base type for LocalLaunchOptions, PipeLaunchOptions, SerialPortLaunchOptions-->
+  <!--base type for LocalLaunchOptions, PipeLaunchOptions, SerialPortLaunchOptions, and TcpLaunchOptions -->
   <xs:complexType name="BaseLaunchOptions">
+    <xs:sequence>
+      <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
+        <xs:annotation>
+          <xs:documentation>One or more GDB/LLDB/CLRDBG commands to execute in order to setup the underlying debugger. These are not required.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CustomLaunchSetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
+        <xs:annotation>
+          <xs:documentation>If provided, this replaces the default commands used to launch a target with some other commands. For example,
+          this can be '-target-attach' in order to attach to a target process. An empty command list replaces the launch commands with nothing,
+          which can be useful if the debugger is being provided launch options as command line options.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LaunchCompleteCommand" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation>The command to execute after the debugger is fully setup in order to cause the target process to run. 
+          The default value is 'exec-run'.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="exec-run">
+              <xs:annotation>
+                <xs:documentation>Execute the 'exec-run' MI command which will spawn a new process and begin executing it.</xs:documentation>
+              </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="exec-continue">
+              <xs:annotation>
+                <xs:documentation>Execute the 'exec-continue' MI command which will resume from stopped state. This is useful if
+                the result of setting up the debugger is that the debuggee is in break state.</xs:documentation>
+              </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="None">
+              <xs:annotation>
+                <xs:documentation>No command should be executed. This is useful if the target is already ready to go.</xs:documentation>
+              </xs:annotation>
+            </xs:enumeration>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
     <xs:attribute name="ExePath" type="xs:string" use="optional">
       <xs:annotation>
         <xs:documentation>
@@ -253,17 +300,35 @@
         <xs:documentation>Working directory on the remote device to use in launch scenarios</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="VisualizerFile" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>.natvis file to be used when debugging this platform</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attributeGroup ref="CommonAttributes"/>
   </xs:complexType>
-  <xs:element name="Command">
+  <xs:complexType name="Command">
     <xs:annotation>
-      <xs:documentation>Command to execute after connecting</xs:documentation>
+      <xs:documentation>The GDB/LLDB/clrdbg command to execute</xs:documentation>
     </xs:annotation>
-    <xs:complexType>
-      <xs:simpleContent>
-        <xs:extension base="xs:string">
-        </xs:extension>
-      </xs:simpleContent>
-    </xs:complexType>
-  </xs:element>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="IgnoreFailures" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>If true, failures from the command should be ignored. Default value is false.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Description" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>Optional description for the command. This may be shown in a progress dialog if the command takes a long time.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="CommandList">
+    <xs:sequence>
+      <xs:element name="Command" minOccurs="0" maxOccurs="unbounded" type="Command"/>
+    </xs:sequence>
+  </xs:complexType>
 </xs:schema>

@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Runtime.ExceptionServices;
 using Newtonsoft.Json;
+using System.Collections.ObjectModel;
 
 namespace IOSDebugLauncher
 {
@@ -46,10 +47,12 @@ namespace IOSDebugLauncher
             _callback = eventCallback;
         }
 
-        public void ParseLaunchOptions(string launchOptions)
+        void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions)
         {
-            if (string.IsNullOrEmpty(launchOptions))
-                throw new ArgumentNullException("launchOptions");
+            if (launcherXmlOptions == null)
+                throw new ArgumentNullException("launcherXmlOptions");
+
+            var iosXmlOptions = (MICore.Xml.LaunchOptions.IOSLaunchOptions)launcherXmlOptions;
 
             if (_callback == null)
             {
@@ -63,7 +66,7 @@ namespace IOSDebugLauncher
                 throw new InvalidOperationException();
             }
 
-            _launchOptions = IOSLaunchOptions.CreateFromXml(launchOptions);
+            _launchOptions = new IOSLaunchOptions(exePath, iosXmlOptions);
         }
 
         void IPlatformAppLauncher.SetupForDebugging(out LaunchOptions debuggerLaunchOptions)
@@ -88,34 +91,35 @@ namespace IOSDebugLauncher
             debuggerLaunchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
             debuggerLaunchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
             debuggerLaunchOptions.DebuggerMIMode = MIMode.Lldb;
+            debuggerLaunchOptions.CustomLaunchSetupCommands = GetCustomLaunchSetupCommands();
+            debuggerLaunchOptions.LaunchCompleteCommand = GetLaunchCompleteCommand();
         }
 
-
-        void IPlatformAppLauncher.InitializeDebuggedProcess(LaunchOptions launchOptions, out IEnumerable<Tuple<string, MICore.ResultClass, string>> initializationCommands)
+        ReadOnlyCollection<LaunchCommand> GetCustomLaunchSetupCommands()
         {
-            var commands = new List<Tuple<string, MICore.ResultClass, string>>();
+            var commands = new List<LaunchCommand>();
 
             string fileCommand = String.Empty;
 
             if (_launchOptions.IOSDebugTarget == IOSDebugTarget.Device)
             {
-                fileCommand = string.Format(CultureInfo.InvariantCulture, "-file-exec-and-symbols \"{0}\" -p remote-ios -r \"{1}\"", launchOptions.ExePath, _appRemotePath);
+                fileCommand = string.Format(CultureInfo.InvariantCulture, "-file-exec-and-symbols \"{0}\" -p remote-ios -r \"{1}\"", _launchOptions.ExePath, _appRemotePath);
             }
             else
             {
-                fileCommand = string.Format(CultureInfo.InvariantCulture, "-file-exec-and-symbols \"{0}\" -p ios-simulator", launchOptions.ExePath);
+                fileCommand = string.Format(CultureInfo.InvariantCulture, "-file-exec-and-symbols \"{0}\" -p ios-simulator", _launchOptions.ExePath);
             }
 
             string targetCommand = string.Format(CultureInfo.InvariantCulture, "-target-select remote localhost:{0}", _remotePorts.IDeviceDebugServerProxyPort.ToString(CultureInfo.InvariantCulture));
             string breakInMainCommand = string.Format(CultureInfo.InvariantCulture, "-break-insert main");
 
-            commands.Add(new Tuple<string, ResultClass, string>(fileCommand, ResultClass.done, LauncherResources.DefinePlatform));
-            commands.Add(new Tuple<string, ResultClass, string>(targetCommand, ResultClass.connected, LauncherResources.Connecting));
-            commands.Add(new Tuple<string, ResultClass, string>(breakInMainCommand, ResultClass.done, LauncherResources.SettingBreakpoint));
+            commands.Add(new LaunchCommand(fileCommand, LauncherResources.DefinePlatform));
+            commands.Add(new LaunchCommand(targetCommand, LauncherResources.Connecting));
+            commands.Add(new LaunchCommand(breakInMainCommand, LauncherResources.SettingBreakpoint));
 
             if (_launchOptions.IOSDebugTarget == IOSDebugTarget.Simulator)
             {
-                string file = Path.GetFileName(launchOptions.ExePath);
+                string file = Path.GetFileName(_launchOptions.ExePath);
                 if (!String.IsNullOrWhiteSpace(file) && file.EndsWith(".app", StringComparison.Ordinal))
                 {
                     file = file.Substring(0, file.Length - 4);
@@ -124,28 +128,26 @@ namespace IOSDebugLauncher
                 {
                     string targetAttachCommand = string.Format(CultureInfo.InvariantCulture, "-target-attach -n {0}  --waitfor", file);
                     string launchMessage = string.Format(CultureInfo.InstalledUICulture, LauncherResources.WaitingForApp, file);
-                    commands.Add(new Tuple<string, ResultClass, string>(targetAttachCommand, ResultClass.done, launchMessage));
+                    commands.Add(new LaunchCommand(targetAttachCommand, launchMessage));
                 }
                 else
                 {
-                    throw new Exception(String.Format(CultureInfo.InvariantCulture, LauncherResources.BadNameFormat, launchOptions.ExePath));
+                    throw new Exception(String.Format(CultureInfo.InvariantCulture, LauncherResources.BadNameFormat, _launchOptions.ExePath));
                 }
             }
-            initializationCommands = commands;
+            return commands.AsReadOnly();
         }
 
-        void IPlatformAppLauncher.ResumeDebuggedProcess(LaunchOptions launchOptions, out IEnumerable<Tuple<string, MICore.ResultClass>> initializationCommands)
+        private LaunchCompleteCommand GetLaunchCompleteCommand()
         {
-            var commands = new List<Tuple<string, MICore.ResultClass>>();
             if (_launchOptions.IOSDebugTarget == IOSDebugTarget.Simulator)
             {
-                commands.Add(new Tuple<string, ResultClass>("-exec-continue", ResultClass.running));
+                return LaunchCompleteCommand.ExecContinue;
             }
             else
             {
-                commands.Add(new Tuple<string, ResultClass>("-exec-run", ResultClass.running));
+                return LaunchCompleteCommand.ExecRun;
             }
-            initializationCommands = commands;
         }
 
         void IPlatformAppLauncher.OnResume()

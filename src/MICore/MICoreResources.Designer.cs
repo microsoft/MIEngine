@@ -61,6 +61,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Required attribute &apos;{0}&apos; is missing or has an invalid value..
+        /// </summary>
+        public static string Error_BadRequiredAttribute {
+            get {
+                return ResourceManager.GetString("Error_BadRequiredAttribute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal error in the GDB engine. Exception of type &apos;{0}&apos; was thrown.
         ///
         ///{1}.

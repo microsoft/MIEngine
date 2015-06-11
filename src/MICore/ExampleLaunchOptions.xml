@@ -10,10 +10,7 @@
     />
 
   <SerialPortLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
-    Port="COM1" TargetArchitecture="arm">
-    <Command>Some MI command goes here</Command>
-    <Command>And another one here</Command>
-  </SerialPortLaunchOptions>
+    Port="COM1" TargetArchitecture="arm"/>
 
   <PipeLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
     PipePath="c:\foo\example.exe" PipeArguments="mylinuxbox:345" 
@@ -21,10 +18,18 @@
     TargetArchitecture="arm"
     WorkingDirectory="/home/user/myname"
     AdditionalSOLibSearchPath="c:\example\bin\debug;c:\someotherdir\bin\debug">
-    <Command>Some MI command goes here</Command>
-    <Command>And another one here</Command>
   </PipeLaunchOptions>
 
+  <!--Example of what attach on Linux can look like-->
+  <PipeLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    PipePath="c:\mytools\plink.exe" ExePath="-i c:\Users\myaccount\Documents\ssh-key.ppk myaccount@169.254.2.2 -batch -t gdb"
+    TargetArchitecture="x64">
+    <CustomLaunchSetupCommands>
+      <Command IgnoreFailures="false" Description="Attaching to the 'foo' process">-target-attach 1234</Command>
+    </CustomLaunchSetupCommands>
+    <LaunchCompleteCommand>exec-continue</LaunchCompleteCommand>
+  </PipeLaunchOptions>
+  
   <!--NOTES:
     1. IntermediateDirectory is where the debugger will save .so files that it has copied down from the device/
         emulator. It is also one of the places where the debugger will look for .so files.
