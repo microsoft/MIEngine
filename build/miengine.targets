@@ -1,4 +1,4 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!--NOTE: this code was borrowed from Roslyn. See http://index/#MSBuildItem=AssemblyVersionAttribute or C\R\Main\Open\Tools\Microsoft.CodeAnalysis.Toolset.Open\Targets\GenerateAssemblyInfo.targets -->
   <PropertyGroup>
@@ -19,7 +19,7 @@
         <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
     </PropertyGroup>
     <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
-    <Exec Command="$(IlAsmCommand) $(IlAsmFlags) /out=$(GeneratedAssembliesDir)%(FileName).dll @(GenerateAssembly)" />
+    <Exec Command="$(IlAsmCommand) $(IlAsmFlags) /out=&quot;$(GeneratedAssembliesDir)%(FileName).dll&quot; @(GenerateAssembly->'&quot;%(Identity)&quot;')" />
   </Target>
   
   <PropertyGroup>

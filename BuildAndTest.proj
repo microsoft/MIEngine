@@ -45,7 +45,7 @@
       <TestAssemblies Include="bin\$(Configuration)\**\*UnitTests.dll" />
     </ItemGroup>
     
-    <Exec Command="src\packages\xunit.runner.console.2.0.0\tools\xunit.console.exe @(TestAssemblies, ' ') -xml $(OutDir)TestResults.xml" />
+    <Exec Command="src\packages\xunit.runner.console.2.0.0\tools\xunit.console.exe @(TestAssemblies, ' ') -xml &quot;$(OutDir)TestResults.xml&quot;" />
     
   </Target>
   
