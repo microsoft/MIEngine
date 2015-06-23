@@ -134,6 +134,11 @@
       <Visible>false</Visible>
     </GenerateAssembly>
   </ItemGroup>
+  
+  <ItemGroup>
+	<GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
+  </ItemGroup>
+  
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
 

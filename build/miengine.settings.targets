@@ -16,6 +16,10 @@
   </Choose>
   
   <PropertyGroup>
+	<GlassDir>$(MSBuildThisFileDirectory)..\glass\</GlassDir>
+  </PropertyGroup>
+  
+  <PropertyGroup>
     <ILDir>$(MSBuildThisFileDirectory)..\IL\</ILDir>
     <GeneratedAssembliesDir>$(ILDir)GeneratedAssemblies\</GeneratedAssembliesDir>
   </PropertyGroup>

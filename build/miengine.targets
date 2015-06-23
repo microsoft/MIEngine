@@ -32,6 +32,10 @@
   <Target Name="CleanGenerateAssemblies">
     <RemoveDir Directories="$(GeneratedAssembliesDir)" />
   </Target>
+  
+  <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != '' AND Exists($(GlassDir))" AfterTargets="Build">
+	<Copy SourceFiles="@(GlassDirCopy)" DestinationFolder="$(GlassDir)" />
+  </Target>
 
   <!-- Depends on PrepareForBuild because the latter is responsible for calling MakeDir(IntermediateOutputPath). 
   Without it, if we do a design-time build of a project (e.g. in Workspace.LoadSolution) immediately following
