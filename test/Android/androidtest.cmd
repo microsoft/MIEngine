@@ -12,11 +12,17 @@ if not defined VisualStudioVersion (
 )
 :EnvSet
 
+set _GlassDir=%~dp0\..\..\glass\
+if NOT exist "%_GlassDir%" echo ERROR: Glass no present at %_GlassDir%& exit /b -1
+
+if NOT exist "%_GlassDir%Microsoft.MIDebugEngine.dll" echo ERROR: The project has not been built. Please run build.cmd from the project root or build the project inside of Visual Studio.& exit /b -1
+
 if "%~1"=="" goto Help
 if "%~1"=="-?" goto Help
 if "%~1"=="/?" goto Help
 
-set _GlassDir=%~dp0\..\..\glass\
+call :EnsureGlassRegisterd
+call :EnsureLaunchOptionsGenBuilt
 
 set _DeviceId=%~1& shift
 set _Platform=%~1& shift
@@ -30,6 +36,10 @@ if NOT exist "%_SdkRoot%" echo ERROR: Android SDK does not exist in default loca
 if "%_NdkRoot%"=="" set _NdkRoot=C:\ProgramData\Microsoft\AndroidNDK\android-ndk-r10d
 if NOT exist "%_SdkRoot%" echo ERROR: Android NDK does not exist in default location and was not specified on command line.& exit /b -1
 
+:: Copy libadb.dll to the glass directory
+copy /y "%VSINSTALLDIR%Common7\IDE\PrivateAssemblies\libadb.dll" "%_GlassDir%"
+if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy libadb.dll from Visual Studio installation.& exit /b -1
+
 if "%~1"=="" goto RunAll
 
 set _TestsToRun=
@@ -37,6 +47,15 @@ set _TestsToRun=
 set _TestsToRun="%~1" %_TestsToRun%& shift
 if NOT "%~1"=="" goto BuildTestList
 goto RunArgs
+
+:EnsureGlassRegisterd
+reg query HKLM\SOFTWARE\Microsoft\glass\14.0 1>NUL 2>NUL
+if errorlevel 1 reg query HKLM\SOFTWARE\Wow6432Node\Microsoft\glass\14.0 1>NUL 2>NUL & if errorlevel 1 echo Running RegisterGlass.cmd... & "%_GlassDir%RegisterGlass.cmd"
+exit /b -1
+
+:EnsureLaunchOptionsGenBuilt
+if not exist %_GlassDir%LaunchOptionsGen.exe echo Building LaunchOptionsGen.exe& msbuild /p:Configuration=Release;OutDir=%_GlassDir% /v:quiet %~dp0..\LaunchOptionsGen\LaunchOptionsGen.csproj
+exit /b 0
 
 :RunAll
 	set FAILED_TESTS=
