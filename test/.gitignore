@@ -1,0 +1,7 @@
+ErrorLog.xml
+SessionLog.xml
+adb.log
+build.log
+temp
+LaunchOptions.xml
+*.vcxproj.filters
