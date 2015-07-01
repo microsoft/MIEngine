@@ -24,16 +24,16 @@ if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy libadb.dll from Visual Stu
 call :EnsureGlassRegisterd
 call :EnsureLaunchOptionsGenBuilt
 
+set _DeviceId=
+set _Platform=
+set _SdkRoot=C:\Program Files (x86)\Android\android-sdk
+set _NdkRoot=C:\ProgramData\Microsoft\AndroidNDK\android-ndk-r10e
+set _Verbose=
+set _TestsToRun=
+
 if "%~1"=="" goto Help
 if "%~1"=="-?" goto Help
 if "%~1"=="/?" goto Help
-
-set _DeviceId=
-set _Platform=
-set _SdkRoot=
-set _NdkRoot=
-set _Verbose=
-set _TestsToRun=
 
 :ArgLoopStart
 if "%~1"=="" goto ArgLoopEnd
@@ -79,15 +79,10 @@ goto ArgLoopEnd
 
 :ArgLoopEnd
 
-if "%_SdkRoot%"=="" set _SdkRoot=C:\Program Files (x86)\Android\android-sdk
-if NOT exist "%_SdkRoot%" echo ERROR: Android SDK does not exist in default location and was not specified on command line.& exit /b -1
-echo using %_SdkRoot%
+if NOT exist "%_SdkRoot%" echo ERROR: Android SDK does not exist at "%_SdkRoot%".& exit /b -1
+if NOT exist "%_NdkRoot%" echo ERROR: Android NDK does not exist at "%_NdkRoot%".& exit /b -1
 
-if "%_NdkRoot%"=="" set _NdkRoot=C:\ProgramData\Microsoft\AndroidNDK\android-ndk-r10e
-if NOT exist "%_NdkRoot%" echo ERROR: Android NDK does not exist in default location and was not specified on command line.& exit /b -1
-echo using %_NdkRoot%
-
-if "%_DeviceId%"=="" echo ERROR: DeviceId must be specified.& goto Help
+if "%_DeviceId%"=="" echo ERROR: DeviceId must be specified. Possible devices are:& "%_AdbExe%" devices &goto Help
 if "%_Platform%"=="" echo ERROR: Platform must be specified.& goto Help
 
 if "%_Verbose%"=="1" (
@@ -177,5 +172,8 @@ exit /b 0
 
 :Help
 echo testandroid.cmd /DeviceId ^<id^> /Platform ^<platform^> [/SdkRoot ^<path^>] [/NdkRoot ^<path^>] [/v] [^<test 1^> [^<test 2^> [...]]]
+echo.
+
+if exist "%_SdkRoot%" "%_SdkRoot%\platform-tools\adb.exe" devices -l
 
 :EOF
