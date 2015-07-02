@@ -12,6 +12,17 @@ if not defined VisualStudioVersion (
 )
 :EnvSet
 
+set _DeviceId=
+set _Platform=
+set _SdkRoot=%ProgramFiles(x86)%\Android\android-sdk
+set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+set _Verbose=
+set _TestsToRun=
+
+if "%~1"=="" goto Help
+if "%~1"=="-?" goto Help
+if "%~1"=="/?" goto Help
+
 set _ProjectRoot=%~dp0..\..\
 
 set _GlassPackageName=MIEngine.Glass
@@ -21,7 +32,7 @@ set _GlassPackageSource=\\chuckr-machine\public\
 set _GlassDir=%_ProjectRoot%%_GlassPackageName%\
 
 :: Get Glass from NuGet
-if NOT exist "%_GlassDir%" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install MIEngine.Glass -Version %_GlassPackageVersion% -ExcludeVersion -Source %_GlassPackageSource% -OutputDirectory %_ProjectRoot%
+if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install MIEngine.Glass -Version %_GlassPackageVersion% -ExcludeVersion -Source %_GlassPackageSource% -OutputDirectory %_ProjectRoot%
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to get Glass from NuGet.& exit /b -1
 
 :: Ensure the project has been built
@@ -35,16 +46,6 @@ if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy libadb.dll from Visual Stu
 call :EnsureGlassRegisterd
 call :EnsureLaunchOptionsGenBuilt
 
-set _DeviceId=
-set _Platform=
-set _SdkRoot=C:\Program Files (x86)\Android\android-sdk
-set _NdkRoot=C:\ProgramData\Microsoft\AndroidNDK\android-ndk-r10e
-set _Verbose=
-set _TestsToRun=
-
-if "%~1"=="" goto Help
-if "%~1"=="-?" goto Help
-if "%~1"=="/?" goto Help
 
 :ArgLoopStart
 if "%~1"=="" goto ArgLoopEnd
@@ -189,7 +190,8 @@ if not exist %_GlassDir%LaunchOptionsGen.exe echo Building LaunchOptionsGen.exe&
 exit /b 0
 
 :Help
-echo testandroid.cmd /DeviceId ^<id^> /Platform ^<platform^> [/SdkRoot ^<path^>] [/NdkRoot ^<path^>] [/v] [^<test 1^> [^<test 2^> [...]]]
+echo --- MIEngine Android Test Script ---
+echo Usage: androidtest.cmd /DeviceId ^<id^> /Platform ^<platform^> [/SdkRoot ^<path^>] [/NdkRoot ^<path^>] [/v] [^<test 1^> [^<test 2^> [...]]]
 echo.
 
 if exist "%_SdkRoot%" "%_SdkRoot%\platform-tools\adb.exe" devices -l

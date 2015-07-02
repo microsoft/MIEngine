@@ -33,7 +33,8 @@
     <RemoveDir Directories="$(GeneratedAssembliesDir)" />
   </Target>
   
-  <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != '' AND Exists($(GlassDir))" AfterTargets="Build">
+  <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != ''" AfterTargets="Build">
+	<MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />
 	<Copy SourceFiles="@(GlassDirCopy)" DestinationFolder="$(GlassDir)" />
   </Target>
 
