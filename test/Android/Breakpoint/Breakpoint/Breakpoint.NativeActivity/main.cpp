@@ -18,6 +18,36 @@
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
 
+void break_test_1()
+{
+    for (int i = 0; i < 2; i++)
+    {
+        int j = 0; // set bp here, line 25
+        j++;
+    }
+
+    int i = 0; i++; //set bp here, line 29
+}
+
+void loop_while_true()
+{
+    bool flag = true;
+
+    while (flag)
+    {
+        int i = 0; // set bp here, line 38
+    }
+}
+
+void break_test_2()
+{
+    loop_while_true();
+    int i = 0; // set bp here, line 45
+
+    loop_while_true();
+    int j = 0; // set bp here, line 48
+}
+
 /**
 * This is the main entry point of a native application that is using
 * android_native_app_glue.  It runs in its own thread, with its own
@@ -25,8 +55,6 @@
 */
 void android_main(struct android_app* state) {
 
-	for (;;)
-	{
-		LOGI("Hello\n");
-	}
+    break_test_1();
+    break_test_2();
 }
