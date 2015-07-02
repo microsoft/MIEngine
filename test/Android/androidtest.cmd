@@ -85,12 +85,19 @@ if NOT exist "%_NdkRoot%" echo ERROR: Android NDK does not exist at "%_NdkRoot%"
 if "%_DeviceId%"=="" echo ERROR: DeviceId must be specified. Possible devices are:& "%_AdbExe%" devices &goto Help
 if "%_Platform%"=="" echo ERROR: Platform must be specified.& goto Help
 
+set _GlassFlags=-f TestScript.xml -e ErrorLog.xml -s SessionLog.xml -err -nodefaultsetup
+if not "%_Verbose%"=="1" set _GlassFlags=%_GlassFlags% -q
+
+set _GlassLog=
+if NOT "%_Verbose%"=="1" set _GlassLog=^> glass.log
+
 if "%_Verbose%"=="1" (
-    echo DeviceId:  %_DeviceId%
-    echo Platform:  %_Platform%
-    echo SdkRoot:   "%_SdkRoot%"
-    echo NdkRoot:   "%_NdkRoot%"
-    echo Tests:     %_TestsToRun%
+    echo DeviceId:    %_DeviceId%
+    echo Platform:    %_Platform%
+    echo SdkRoot:     "%_SdkRoot%"
+    echo NdkRoot:     "%_NdkRoot%"
+    echo Tests:       %_TestsToRun%
+	echo Glass Flags: %_GlassFlags%
 )
 
 if "%_TestsToRun%"=="" goto RunAll
@@ -152,7 +159,7 @@ goto RunArgs
     call %_GlassDir%LaunchOptionsGen.exe LaunchOptions.xml.template "SdkRoot=%_SdkRoot%\ " "NdkRoot=%_NdkRoot%\ " "TargetArchitecture=%_Platform%" "IntermediateDirectory=%~dp1temp\ " "AdditionalSOLibSearchPath=%~dp1%_Platform%\Debug\ " "DeviceId=%_DeviceId%"
 
     ::Run Glass
-    call "%_GlassDir%glass2.exe" -f TestScript.xml -e ErrorLog.xml -s SessionLog.xml -q -err -nodefaultsetup > glass2.log
+    call "%_GlassDir%glass2.exe" %_GlassFlags% %_GlassLog%
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: Test failed. See ErrorLog.xml for more information.& set FAILED_TESTS="%~1" %FAILED_TESTS%
     
     :RunSingleTestDone
