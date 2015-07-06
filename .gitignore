@@ -18,4 +18,4 @@ intermediate
 *.metaproj
 *.tmp
 packages/
-MIEngine.Glass
+Microsoft.VisualStudio.Glass

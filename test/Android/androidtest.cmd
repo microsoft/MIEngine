@@ -25,22 +25,22 @@ if "%~1"=="/?" goto Help
 
 set _ProjectRoot=%~dp0..\..\
 
-set _GlassPackageName=MIEngine.Glass
+set _GlassPackageName=Microsoft.VisualStudio.Glass
 set _GlassPackageVersion=1.0.0
 set _GlassPackageSource=\\chuckr-machine\public\
 
 set _GlassDir=%_ProjectRoot%%_GlassPackageName%\
 
 :: Get Glass from NuGet
-if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install MIEngine.Glass -Version %_GlassPackageVersion% -ExcludeVersion -Source %_GlassPackageSource% -OutputDirectory %_ProjectRoot%
+if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install %_GlassPackageName% -Version %_GlassPackageVersion% -ExcludeVersion -Source %_GlassPackageSource% -OutputDirectory %_ProjectRoot%
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to get Glass from NuGet.& exit /b -1
 
 :: Ensure the project has been built
 if NOT exist "%_GlassDir%Microsoft.MIDebugEngine.dll" echo The project has not been built. Building now with default settings.& call %_ProjectRoot%build.cmd
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to build MIEngine project.& exit /b -1
 
-:: Copy libadb.dll to the glass directory
-if not exist "%_GlassDir%libadb.dll " copy /y "%VSINSTALLDIR%Common7\IDE\PrivateAssemblies\libadb.dll" "%_GlassDir%"
+:: Copy libadb.dll to the glass directory 
+xcopy /Y /D "%VSINSTALLDIR%Common7\IDE\PrivateAssemblies\libadb.dll" "%_GlassDir%"
 if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy libadb.dll from Visual Studio installation.& exit /b -1
 
 call :EnsureGlassRegisterd

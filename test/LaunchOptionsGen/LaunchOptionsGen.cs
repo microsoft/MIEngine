@@ -30,13 +30,13 @@ namespace LaunchOptionsGen
 
             string[] lines = File.ReadAllLines(templatePath);
 
-            string pattern = @"\$(.*)\$";
+            string pattern = @"\$([a-zA-Z0-9]+)\$";
             Regex regex = new Regex(pattern);
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
                 Match m = regex.Match(line);
-                if (m.Success)
+                while (m.Success)
                 {
                     string key = m.Groups[1].Captures[0].Value;
                     string value;
@@ -49,6 +49,8 @@ namespace LaunchOptionsGen
                         Console.WriteLine("Error: LaunchOptions template file contains properties that were not specified on the command line to LaunchOptionsGen.exe");
                         return -1;
                     }
+
+                    m = m.NextMatch();
                 }
                 lines[i] = line;
             }

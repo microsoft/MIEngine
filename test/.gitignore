@@ -4,4 +4,3 @@ adb.log
 build.log
 temp
 LaunchOptions.xml
-*.vcxproj.filters

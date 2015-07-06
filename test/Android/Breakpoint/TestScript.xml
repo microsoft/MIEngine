@@ -203,6 +203,7 @@ Type "apropos word" to search for commands related to "word".
     <Event name="IDebugProcessContinueEvent100" expected="False" />
     <Duration Volatile="True">00:00:00.2031384</Duration>
   </Command>
+  <!-- Sleep to guarantee that we are in the infinite loop when we set the next breakpoint -->
   <Command name="sleep 1000">
     <Duration Volatile="True">00:00:01.0005157</Duration>
   </Command>

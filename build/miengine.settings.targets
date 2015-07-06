@@ -16,7 +16,7 @@
   </Choose>
   
   <PropertyGroup>
-	<GlassDir>$(MSBuildThisFileDirectory)..\MIEngine.Glass\</GlassDir>
+	<GlassDir>$(MSBuildThisFileDirectory)..\Microsoft.VisualStudio.Glass\</GlassDir>
   </PropertyGroup>
   
   <PropertyGroup>
