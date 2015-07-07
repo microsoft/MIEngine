@@ -378,6 +378,8 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
+                await this.MICommandFactory.EnableTargetAsyncOption();
+
                 List<LaunchCommand> commands = GetInitializeCommands();
 
                 total = commands.Count();
@@ -401,7 +403,6 @@ namespace Microsoft.MIDebugEngine
                     }
                 }
 
-                await this.MICommandFactory.EnableTargetAsyncOption();
 
                 success = true;
             }
