@@ -1,0 +1,9 @@
+  <AndroidLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    Package="com.Sanity"
+    LaunchActivity="android.app.NativeActivity"
+    SDKRoot="$SdkRoot$"
+    NDKRoot="$NdkRoot$"
+    TargetArchitecture="$TargetArchitecture$"
+    IntermediateDirectory="$IntermediateDirectory$"
+    AdditionalSOLibSearchPath="$AdditionalSOLibSearchPath$"
+    DeviceId="$DeviceId$"/>
