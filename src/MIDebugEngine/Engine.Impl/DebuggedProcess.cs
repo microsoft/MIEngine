@@ -395,10 +395,6 @@ namespace Microsoft.MIDebugEngine
                             throw new UnexpectedMIResultException(command.CommandText, miError);
                         }
                     }
-                    else
-                    {
-                        await ConsoleCmdAsync(command.CommandText);
-                    }
                 }
 
                 await this.MICommandFactory.EnableTargetAsyncOption();
@@ -497,7 +493,16 @@ namespace Microsoft.MIDebugEngine
         private async Task HandleBreakModeEvent(ResultEventArgs results)
         {
             string reason = results.Results.TryFindString("reason");
-            int tid = results.Results.FindInt("thread-id");
+            int tid;
+            if (!results.Results.Contains("thread-id"))
+            {
+                Results res = await MICommandFactory.ThreadInfo();
+                tid = res.FindInt("id");
+            }
+            else
+            {
+                tid = results.Results.FindInt("thread-id");
+            }
 
             ThreadCache.MarkDirty();
             MICommandFactory.DefineCurrentThread(tid);
@@ -718,6 +723,11 @@ namespace Microsoft.MIDebugEngine
         protected override void ScheduleStdOutProcessing(string line)
         {
             _worker.PostOperation(() => { ProcessStdOutLine(line); });
+        }
+
+        protected override void ScheduleResultProcessing(Action func)
+        {
+            _worker.PostOperation(() => { func(); });
         }
 
         public void Execute(DebuggedThread thread)
