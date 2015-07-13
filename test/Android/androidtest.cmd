@@ -182,8 +182,8 @@ goto RunArgs
 	
 :EnsureGlassRegisterd
 reg query HKLM\SOFTWARE\Microsoft\glass\14.0 1>NUL 2>NUL
-if errorlevel 1 reg query HKLM\SOFTWARE\Wow6432Node\Microsoft\glass\14.0 1>NUL 2>NUL & if errorlevel 1 echo Running RegisterGlass.cmd... & "%_GlassDir%RegisterGlass.cmd"
-exit /b -1
+if errorlevel 1 reg query HKLM\SOFTWARE\Wow6432Node\Microsoft\glass\14.0 1>NUL 2>NUL & if errorlevel 1 echo Running RegisterGlass.cmd... & call "%_GlassDir%RegisterGlass.cmd" & call "%~dp0..\RegisterMIEngine.cmd"
+exit /b 0
 
 :EnsureLaunchOptionsGenBuilt
 if not exist %_GlassDir%LaunchOptionsGen.exe echo Building LaunchOptionsGen.exe& msbuild /p:Configuration=Release;OutDir=%_GlassDir% /v:quiet %~dp0..\LaunchOptionsGen\LaunchOptionsGen.csproj
