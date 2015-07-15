@@ -137,7 +137,7 @@ goto RunArgs
     goto ReportSuccess
     
 :ReportFailure
-    echo ERROR: Failures detected 'RunTests.cmd %FAILED_TESTS%' to rerun.
+    echo ERROR: Failures detected 'RunTests.cmd /DeviceId %_DeviceId% /Platform %_Platform% /Tests %FAILED_TESTS%' to rerun.
     echo.
     exit /b -1
     
