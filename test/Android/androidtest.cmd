@@ -27,12 +27,11 @@ set _ProjectRoot=%~dp0..\..\
 
 set _GlassPackageName=Microsoft.VisualStudio.Glass
 set _GlassPackageVersion=1.0.0
-set _GlassPackageSource=\\chuckr-machine\public\
 
 set _GlassDir=%_ProjectRoot%%_GlassPackageName%\
 
 :: Get Glass from NuGet
-if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install %_GlassPackageName% -Version %_GlassPackageVersion% -ExcludeVersion -Source %_GlassPackageSource% -OutputDirectory %_ProjectRoot%
+if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install %_GlassPackageName% -Version %_GlassPackageVersion% -ExcludeVersion -OutputDirectory %_ProjectRoot%
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to get Glass from NuGet.& exit /b -1
 
 :: Ensure the project has been built
