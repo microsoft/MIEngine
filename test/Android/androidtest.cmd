@@ -27,12 +27,11 @@ set _ProjectRoot=%~dp0..\..\
 
 set _GlassPackageName=Microsoft.VisualStudio.Glass
 set _GlassPackageVersion=1.0.0
-set _GlassPackageSource=\\chuckr-machine\public\
 
 set _GlassDir=%_ProjectRoot%%_GlassPackageName%\
 
 :: Get Glass from NuGet
-if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install %_GlassPackageName% -Version %_GlassPackageVersion% -ExcludeVersion -Source %_GlassPackageSource% -OutputDirectory %_ProjectRoot%
+if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install %_GlassPackageName% -Version %_GlassPackageVersion% -ExcludeVersion -OutputDirectory %_ProjectRoot%
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to get Glass from NuGet.& exit /b -1
 
 :: Ensure the project has been built
@@ -97,7 +96,7 @@ if NOT exist "%_NdkRoot%" echo ERROR: Android NDK does not exist at "%_NdkRoot%"
 if "%_DeviceId%"=="" echo ERROR: DeviceId must be specified. Possible devices are:& "%_AdbExe%" devices &goto Help
 if "%_Platform%"=="" echo ERROR: Platform must be specified.& goto Help
 
-set _GlassFlags=-f TestScript.xml -e ErrorLog.xml -s SessionLog.xml -err -nodefaultsetup
+set _GlassFlags=-f TestScript.xml -e ErrorLog.xml -s SessionLog.xml -err -nodefaultsetup -nodvt
 if not "%_Verbose%"=="1" set _GlassFlags=%_GlassFlags% -q
 
 set _GlassLog=
@@ -138,7 +137,7 @@ goto RunArgs
     goto ReportSuccess
     
 :ReportFailure
-    echo ERROR: Failures detected 'RunTests.cmd %FAILED_TESTS%' to rerun.
+    echo ERROR: Failures detected 'RunTests.cmd /DeviceId %_DeviceId% /Platform %_Platform% /Tests %FAILED_TESTS%' to rerun.
     echo.
     exit /b -1
     

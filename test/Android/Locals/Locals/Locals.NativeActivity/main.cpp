@@ -18,26 +18,72 @@
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
 
-
-class MyClass
+class SimpleClass 
 {
-private:
+private: 
 	int _a;
 	int _b;
+
 public:
-	MyClass(int a, int b) : _a(a), _b(b) {}
+	SimpleClass(int a, int b) : _a(a), _b(b) { }
 
-	void MyClassFunc()
+	void TestMe()
 	{
-		_a += 0;
+		_a += 0; // bp here
 	}
-
-	int GetSum()
-	{
-		return _a + _b;
-	}
-	
 };
+
+class BaseClass
+{
+protected:
+	int _a;
+
+public:
+	BaseClass(int a) : _a(a) 
+	{
+
+	}
+
+	void TestMe()
+	{
+		_a += 0; // bp here;
+	}
+};
+
+class DerivedClass : public BaseClass
+{
+protected:
+	int _b;
+
+public:
+	DerivedClass(int a, int b) : BaseClass(a), _b(b)
+	{
+
+	}
+
+	void TestMe()
+	{
+		_b += 0; // bp here
+	}
+};
+
+void x_2()
+{
+	int x = 0xBEEF;
+
+	x += 0; // bp here
+}
+
+void x_1()
+{
+	int x = 0xDEAD;
+
+	x += 0; // bp here 
+
+	x_2();
+
+	x += 0; // bp here
+}
 
 /**
 * This is the main entry point of a native application that is using
@@ -54,9 +100,29 @@ void android_main(struct android_app* state) {
 	float f = 0.2;
 
 	char* name = "TEST NAME";
+	const char* const_name = "TEST NAME";
+	char name_array[10] = "TEST NAME";
 
-	MyClass myClassVar(7, 8);
+	int numbers[4] = { 10, 20, 30, 40 };
+	int* numbers_points[4] = { &i, &j, &k, p };
 
-	i += 0; // breakpoint here, line 60
+	SimpleClass simpleClass(0xDEAD, 0xBEEF);
+	SimpleClass* pSimpleClass = new SimpleClass(0xDEAD, 0xBEEF);
+	DerivedClass derivedClass(0xDEAD, 0xBEEF);
+	DerivedClass* pDerivedClass = new DerivedClass(0xDEAD, 0xBEEF);
 
+	char* escaped = "Hello\n\tWorld!\n";
+	const char* const_escaped = "Hello\n\tWorld!\n";
+
+	i += 0; // breakpoint here
+
+	simpleClass.TestMe();
+	pSimpleClass->TestMe();
+	derivedClass.TestMe();
+	pDerivedClass->TestMe();
+
+	delete pSimpleClass;
+	delete pDerivedClass;
+
+	x_1();
 }

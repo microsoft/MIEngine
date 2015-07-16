@@ -1,18 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GlassEventLog>
   <Command name="setmode ShowParameterValues off">
-    <Duration Volatile="True">00:00:00.0065234</Duration>
+    <Duration Volatile="True">00:00:00.0056256</Duration>
   </Command>
   <Command name="SetLaunchOptionsString @LaunchOptions.xml">
-    <Duration Volatile="True">00:00:00.0002118</Duration>
+    <Duration Volatile="True">00:00:00.0001086</Duration>
   </Command>
-  <Command name="bp main.cpp 60">
-    <Duration Volatile="True">00:00:00.0001006</Duration>
+  <Command name="bp main.cpp 32">
+    <Duration Volatile="True">00:00:00.0024543</Duration>
+  </Command>
+  <Command name="bp main.cpp 49">
+    <Duration Volatile="True">00:00:00.0000325</Duration>
+  </Command>
+  <Command name="bp main.cpp 66">
+    <Duration Volatile="True">00:00:00.0000273</Duration>
+  </Command>
+  <Command name="bp main.cpp 117">
+    <Duration Volatile="True">00:00:00.0000256</Duration>
+  </Command>
+  <Command name="bp main.cpp 74">
+    <Duration Volatile="True">00:00:00.0000230</Duration>
+  </Command>
+  <Command name="bp main.cpp 81">
+    <Duration Volatile="True">00:00:00.0000208</Duration>
+  </Command>
+  <Command name="bp main.cpp 85">
+    <Duration Volatile="True">00:00:00.0000230</Duration>
   </Command>
   <Command name="launch MIEngine app_process">
     <Event name="IDebugSessionCreateEvent2" expected="False" />
     <Event name="IDebugProcessCreateEvent2" expected="False" />
     <Event name="IDebugProgramCreateEvent2" expected="False" />
+    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+      <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
+    </Event>
+    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+      <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
+    </Event>
+    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+      <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
+    </Event>
+    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+      <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
+    </Event>
+    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+      <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
+    </Event>
+    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+      <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
+    </Event>
     <Event name="IDebugBreakpointErrorEvent2" expected="False">
       <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
     </Event>
@@ -115,7 +151,25 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>59,0 to 59,0 in [Unknown]!android_main(android_app*)</BoundBreakpoint>
+      <BoundBreakpoint>31,0 to 31,0 in [Unknown]!SimpleClass::TestMe()</BoundBreakpoint>
+    </Event>
+    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint>48,0 to 48,0 in [Unknown]!DerivedClass::DerivedClass(int, int)</BoundBreakpoint>
+    </Event>
+    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint>65,0 to 65,0 in [Unknown]!DerivedClass::TestMe()</BoundBreakpoint>
+    </Event>
+    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint>116,0 to 116,0 in [Unknown]!android_main(android_app*)</BoundBreakpoint>
+    </Event>
+    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint>73,0 to 73,0 in [Unknown]!x_2()</BoundBreakpoint>
+    </Event>
+    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint>80,0 to 80,0 in [Unknown]!x_1()</BoundBreakpoint>
+    </Event>
+    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint>84,0 to 84,0 in [Unknown]!x_1()</BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -123,13 +177,35 @@
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>DerivedClass::DerivedClass</functionName>
+      <function>DerivedClass::DerivedClass(DerivedClass * this, int a, int b)</function>
+      <file>main.cpp</file>
+      <line>59</line>
+      <col>0</col>
+    </Event>
+    <Duration Volatile="True">00:00:03.5241031</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>DerivedClass::DerivedClass</functionName>
+      <function>DerivedClass::DerivedClass(DerivedClass * this, int a, int b)</function>
+      <file>main.cpp</file>
+      <line>59</line>
+      <col>0</col>
+    </Event>
+    <Duration Volatile="True">00:00:00.3147095</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Event name="IDebugBreakpointEvent2" expected="True">
       <functionName>android_main</functionName>
       <function>android_main(android_app * state)</function>
       <file>main.cpp</file>
-      <line>60</line>
+      <line>117</line>
       <col>0</col>
     </Event>
-    <Duration Volatile="True">00:00:00.3023717</Duration>
+    <Duration Volatile="True">00:00:00.3292742</Duration>
   </Command>
   <Command name="list locals">
     <Local>i</Local>
@@ -145,7 +221,7 @@
     <LocalType>int</LocalType>
     <LocalIsExpandable>False</LocalIsExpandable>
     <Local>p</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8}"></LocalValue>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xa1b63ccc</LocalValue>
     <LocalType>int *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>f</Local>
@@ -153,30 +229,295 @@
     <LocalType>float</LocalType>
     <LocalIsExpandable>False</LocalIsExpandable>
     <Local>name</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str&gt; &quot;TEST NAME&quot;"></LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L_ZZ12android_mainE10name_array&gt; &quot;TEST NAME&quot;">0xa1b7fc1c &lt;.L_ZZ12android_mainE10name_array&gt; "TEST NAME"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
-    <Local>myClassVar</Local>
+    <Local>const_name</Local>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L_ZZ12android_mainE10name_array&gt; &quot;TEST NAME&quot;">0xa1b7fc1c &lt;.L_ZZ12android_mainE10name_array&gt; "TEST NAME"</LocalValue>
+    <LocalType>const char *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>name_array</Local>
+    <LocalValue>[10]</LocalValue>
+    <LocalType>char [10]</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>numbers</Local>
+    <LocalValue>[4]</LocalValue>
+    <LocalType>int [4]</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>numbers_points</Local>
+    <LocalValue>[4]</LocalValue>
+    <LocalType>int *[4]</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>simpleClass</Local>
     <LocalValue>{...}</LocalValue>
-    <LocalType>MyClass</LocalType>
+    <LocalType>SimpleClass</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>pSimpleClass</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xb7f810d0</LocalValue>
+    <LocalType>SimpleClass *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>derivedClass</Local>
+    <LocalValue>{...}</LocalValue>
+    <LocalType>DerivedClass</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>pDerivedClass</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xb80d6360</LocalValue>
+    <LocalType>DerivedClass *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>escaped</Local>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalType>char *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>const_escaped</Local>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>state</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8}"></LocalValue>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xb80d0fa0</LocalValue>
     <LocalType>android_app *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
-    <Duration Volatile="True">00:00:00.0379909</Duration>
+    <Duration Volatile="True">00:00:00.1285117</Duration>
+  </Command>
+  <Command name="setRadix hex">
+    <Duration Volatile="True">00:00:00.0003224</Duration>
+  </Command>
+  <Command name="list locals">
+    <Local>i</Local>
+    <LocalValue>0x0</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Local>j</Local>
+    <LocalValue>0x1</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Local>k</Local>
+    <LocalValue>0xdeadbeef</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Local>p</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xa1b63ccc</LocalValue>
+    <LocalType>int *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>f</Local>
+    <LocalValue>0.200000003</LocalValue>
+    <LocalType>float</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Local>name</Local>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L_ZZ12android_mainE10name_array&gt; &quot;TEST NAME&quot;">0xa1b7fc1c &lt;.L_ZZ12android_mainE10name_array&gt; "TEST NAME"</LocalValue>
+    <LocalType>char *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>const_name</Local>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L_ZZ12android_mainE10name_array&gt; &quot;TEST NAME&quot;">0xa1b7fc1c &lt;.L_ZZ12android_mainE10name_array&gt; "TEST NAME"</LocalValue>
+    <LocalType>const char *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>name_array</Local>
+    <LocalValue>[10]</LocalValue>
+    <LocalType>char [10]</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>numbers</Local>
+    <LocalValue>[4]</LocalValue>
+    <LocalType>int [4]</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>numbers_points</Local>
+    <LocalValue>[4]</LocalValue>
+    <LocalType>int *[4]</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>simpleClass</Local>
+    <LocalValue>{...}</LocalValue>
+    <LocalType>SimpleClass</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>pSimpleClass</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xb7f810d0</LocalValue>
+    <LocalType>SimpleClass *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>derivedClass</Local>
+    <LocalValue>{...}</LocalValue>
+    <LocalType>DerivedClass</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>pDerivedClass</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xb80d6360</LocalValue>
+    <LocalType>DerivedClass *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>escaped</Local>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalType>char *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>const_escaped</Local>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalType>const char *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Local>state</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xb80d0fa0</LocalValue>
+    <LocalType>android_app *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0729114</Duration>
   </Command>
   <Command name="go">
     <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.2032387</Duration>
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>SimpleClass::TestMe</functionName>
+      <function>SimpleClass::TestMe(SimpleClass * this)</function>
+      <file>main.cpp</file>
+      <line>32</line>
+      <col>0</col>
+    </Event>
+    <Duration Volatile="True">00:00:00.3007247</Duration>
+  </Command>
+  <Command name="list locals">
+    <Local>this</Local>
+    <LocalValue RegEx="0x[a-f0-9]{8}">0xa1b63c90</LocalValue>
+    <LocalType>SimpleClass *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0151569</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>SimpleClass::TestMe</functionName>
+      <function>SimpleClass::TestMe(SimpleClass * this)</function>
+      <file>main.cpp</file>
+      <line>32</line>
+      <col>0</col>
+    </Event>
+    <Duration Volatile="True">00:00:00.3098169</Duration>
+  </Command>
+  <Command name="list locals">
+    <Local>this</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xb7f810d0</LocalValue>
+    <LocalType>SimpleClass *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0085761</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>DerivedClass::TestMe</functionName>
+      <function>DerivedClass::TestMe(DerivedClass * this)</function>
+      <file>main.cpp</file>
+      <line>66</line>
+      <col>0</col>
+    </Event>
+    <Duration Volatile="True">00:00:00.3324229</Duration>
+  </Command>
+  <Command name="list locals">
+    <Local>this</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xa1b63c80</LocalValue>
+    <LocalType>DerivedClass *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0145641</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>DerivedClass::TestMe</functionName>
+      <function>DerivedClass::TestMe(DerivedClass * this)</function>
+      <file>main.cpp</file>
+      <line>66</line>
+      <col>0</col>
+    </Event>
+    <Duration Volatile="True">00:00:00.3006851</Duration>
+  </Command>
+  <Command name="list locals">
+    <Local>this</Local>
+    <LocalValue RegEx="^0x[a-f0-9]{8}$">0xb80d6360</LocalValue>
+    <LocalType>DerivedClass *</LocalType>
+    <LocalIsExpandable>True</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0149311</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+	<Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>x_1</functionName>
+      <function>x_1()</function>
+      <file>main.cpp</file>
+      <line>81</line>
+      <col>0</col>
+    </Event>
+    <Duration Volatile="True">00:00:00.2034050</Duration>
+  </Command>
+  <Command name="list locals">
+    <Local>x</Local>
+    <LocalValue>0xdead</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0163533</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Duration Volatile="True">00:00:00.2028972</Duration>
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>x_2</functionName>
+      <function>x_2()</function>
+      <file>main.cpp</file>
+      <line>74</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="list locals">
+    <Local>x</Local>
+    <LocalValue>0xbeef</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0177536</Duration>
+  </Command>
+  <Command name="down">
+    <functionName>x_1</functionName>
+    <file>main.cpp</file>
+    <line>83</line>
+    <col>0</col>
+    <Duration Volatile="True">00:00:00.0140862</Duration>
+  </Command>
+  <Command name="list locals">
+    <Local>x</Local>
+    <LocalValue>0xdead</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0089359</Duration>
+  </Command>
+  <Command name="up">
+    <functionName>x_2</functionName>
+    <file>main.cpp</file>
+    <line>74</line>
+    <col>0</col>
+    <Duration Volatile="True">00:00:00.0176994</Duration>
+  </Command>
+  <Command name="list locals">
+    <Local>x</Local>
+    <LocalValue>0xbeef</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0212869</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Duration Volatile="True">00:00:00.2029659</Duration>
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>x_1</functionName>
+      <function>x_1()</function>
+      <file>main.cpp</file>
+      <line>85</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="list locals">
+    <Local>x</Local>
+    <LocalValue>0xdead</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Duration Volatile="True">00:00:00.0115899</Duration>
+  </Command>
+  <Command name="go">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Duration Volatile="True">00:00:00.2020153</Duration>
   </Command>
   <Command name="stopdebugging">
+    <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugProgramDestroyEvent2" expected="False" />
     <Event name="IDebugProcessDestroyEvent2" expected="False" />
     <Event name="IDebugSessionDestroyEvent2" expected="True" />
-    <Duration Volatile="True">00:00:00.8264914</Duration>
+    <Duration Volatile="True">00:00:00.8422273</Duration>
   </Command>
   <Command name="quit">
-    <Duration Volatile="True">00:00:00.0085011</Duration>
+    <Duration Volatile="True">00:00:00.0086189</Duration>
   </Command>
 </GlassEventLog>
