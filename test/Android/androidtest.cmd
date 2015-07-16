@@ -96,7 +96,7 @@ if NOT exist "%_NdkRoot%" echo ERROR: Android NDK does not exist at "%_NdkRoot%"
 if "%_DeviceId%"=="" echo ERROR: DeviceId must be specified. Possible devices are:& "%_AdbExe%" devices &goto Help
 if "%_Platform%"=="" echo ERROR: Platform must be specified.& goto Help
 
-set _GlassFlags=-f TestScript.xml -e ErrorLog.xml -s SessionLog.xml -err -nodefaultsetup
+set _GlassFlags=-f TestScript.xml -e ErrorLog.xml -s SessionLog.xml -err -nodefaultsetup -nodvt
 if not "%_Verbose%"=="1" set _GlassFlags=%_GlassFlags% -q
 
 set _GlassLog=
