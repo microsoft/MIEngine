@@ -574,7 +574,7 @@ namespace Microsoft.MIDebugEngine
                                                 out string pbstrError,
                                                 out uint pichError)
         {
-            pbstrError = "";
+            pbstrError = null;
             pichError = 0;
             ppExpr = null;
 
