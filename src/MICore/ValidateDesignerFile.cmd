@@ -19,8 +19,8 @@ exit /b -1
 :Run
 if not exist "%2" echo ERROR: %2 does not exist & exit /b -1
 if not exist "%1" goto :UpdateFile
-findstr /v /r /c:"^ *//" %1 > "%~3\%~nx1-nocomments"
-findstr /v /r /c:"^ *//" %2 > "%~3\%~nx2-nocomments"
+findstr /v /r /c:"^ *//" %1 | findstr /v /c:"[System.CodeDom.Compiler.GeneratedCodeAttribute(" > "%~3\%~nx1-nocomments"
+findstr /v /r /c:"^ *//" %2 | findstr /v /c:"[System.CodeDom.Compiler.GeneratedCodeAttribute(" > "%~3\%~nx2-nocomments"
 
 fc /W "%~3\%~nx1-nocomments" "%~3\%~nx2-nocomments"
 if not "%ERRORLEVEL%"=="0" goto UpdateFile
