@@ -21,8 +21,11 @@ Additional information:
 * Debug on any platform that supports gdb, such as linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
 
 ### Prerequisites
-* [Visual Studio 2015 RC](https://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs.aspx)
-* [Visual Studio 2015 RC SDK](http://go.microsoft.com/?linkid=9877247)
+MIEngine requires Visual Studio 2015 with the following features installed:
+* Programming Languages -> Visual C++ -> Common Tools for Visual C++
+* Cross Platform Mobile Development -> Visual C++ Mobile Development
+* Cross Platform Mobile Development -> Microsoft Visual Studio Emulator for Android
+* Common Tools -> Visual Studio Extensibility Tools
 
 ### Get Started
 * Clone the sources: `git clone https://github.com/Microsoft/MIEngine.git`
