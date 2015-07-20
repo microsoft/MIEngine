@@ -158,13 +158,10 @@ Type "apropos word" to search for commands related to "word".
 [Switching to Thread 14671]
 }</OutputString>
   </Command>
-  <Command name="callstack">
+  <Command name="callstack 3">
     <Frame> break_test_1() ***</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__thread_entry</Frame>
-    <Frame> libc.so!__pthread_clone</Frame>
-    <Frame> [Unknown/Just-In-Time compiled code]</Frame>
     <Duration Volatile="True">00:00:00.0167567</Duration>
   </Command>
   <Command name="delbps">
@@ -187,13 +184,10 @@ Type "apropos word" to search for commands related to "word".
     </Event>
     <Duration Volatile="True">00:00:00.2926825</Duration>
   </Command>
-  <Command name="callstack">
+  <Command name="callstack 3">
     <Frame> break_test_1() ***</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__thread_entry</Frame>
-    <Frame> libc.so!__pthread_clone</Frame>
-    <Frame> [Unknown/Just-In-Time compiled code]</Frame>
     <Duration Volatile="True">00:00:00.0154052</Duration>
   </Command>
   <Command name="delbps">
@@ -225,14 +219,11 @@ Type "apropos word" to search for commands related to "word".
 [Switching to Thread 14671]
 }</OutputString>
   </Command>
-  <Command name="callstack">
+  <Command name="callstack 4">
     <Frame> loop_while_true() ***</Frame>
     <Frame> break_test_2()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__thread_entry</Frame>
-    <Frame> libc.so!__pthread_clone</Frame>
-    <Frame> [Unknown/Just-In-Time compiled code]</Frame>
     <Duration Volatile="True">00:00:00.0154155</Duration>
   </Command>
   <Command name="delbps">
