@@ -270,7 +270,7 @@ namespace MICore
 
         #region Variable Objects
 
-        public async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, ResultClass resultClass = ResultClass.done)
         {
             string command = string.Format("-var-create - * \"{0}\"", expression);
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
@@ -296,14 +296,14 @@ namespace MICore
 
         public async Task<string> VarAssign(string variableName, string expression)
         {
-            string command = string.Format("-var-assign \"{0}\" \"{1}\"", variableName, expression);
+            string command = string.Format("-var-assign {0} \"{1}\"", variableName, expression);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
             return results.FindString("value");
         }
 
         public async Task<string> VarShowAttributes(string variableName)
         {
-            string command = string.Format("-var-show-attributes \"{0}\"", variableName);
+            string command = string.Format("-var-show-attributes {0}", variableName);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
 
             string attribute = string.Empty;
@@ -323,13 +323,13 @@ namespace MICore
 
         public async Task VarDelete(string variableName)
         {
-            string command = string.Format("-var-delete \"{0}\"", variableName);
+            string command = string.Format("-var-delete {0}", variableName);
             await _debugger.CmdAsync(command, ResultClass.None);
         }
 
         public async Task<string> VarInfoPathExpression(string variableName)
         {
-            string command = string.Format("-var-info-path-expression \"{0}\"", variableName);
+            string command = string.Format("-var-info-path-expression {0}", variableName);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
             return results.FindString("path_expr");
         }
@@ -630,6 +630,14 @@ namespace MICore
         public override bool AllowCommandsWhileRunning()
         {
             return false;
+        }
+
+        public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, ResultClass resultClass = ResultClass.done)
+        {
+            string command = string.Format("-var-create - - \"{0}\"", expression);  // use '-' to indicate that "--frame" should be used to determine the frame number
+            Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
+
+            return results;
         }
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel)
