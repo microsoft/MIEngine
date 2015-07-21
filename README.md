@@ -4,21 +4,21 @@
 |:--:|:--:|:--:|
 |**master**|[![Build Status](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_debug/badge/icon)](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_debug)|[![Build Status](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_release/badge/icon)](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_release)|
 
-The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with debuggers that suport the gdb Machine Interface ("MI")
-specification such as gdb, lldb, and clrdbg.
+The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with debuggers that support the gdb Machine Interface ("MI")
+specification such as GDB, LLDB, and CLRDBG.
 
 ### What is MIEngine?
 
 MIEngine is a Visual Studio **Debug Engine** that understands **Machine Interface** ("MI"). A Debug Engine is an implementation of the [Core Debug Interfaces](https://msdn.microsoft.com/en-us/library/bb146305.aspx), 
-enabling the VS UI to drive debugging. Machine Interface is a text based protocol developed by gdb that allows a debugger to be used as a seperate component of a larger system. 
+enabling the VS UI to drive debugging. Machine Interface is a text-based protocol developed by GDB that allows a debugger to be used as a separate component of a larger system. 
 Additional information:
  - [Visual Studio Debugger Extensibility](https://msdn.microsoft.com/en-us/library/bb161718.aspx)
- - [gdb's Machine Interface](https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI.html)
+ - [GDB's Machine Interface](https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI.html)
 
 ### Debug Multiple Platforms
 
 * Support for debugging C/C++ on [Android](http://blogs.msdn.com/b/vcblog/archive/2014/12/12/debug-jni-android-applications-using-visual-c-cross-platform-mobile.aspx) and [iOS](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debugging-c-code-on-ios-with-visual-studio-2015.aspx).
-* Debug on any platform that supports gdb, such as linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
+* Debug on any platform that supports GDB, such as Linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
 
 ### Prerequisites
 MIEngine requires [Visual Studio 2015](https://www.visualstudio.com/downloads/download-visual-studio-vs) with the following features installed:
