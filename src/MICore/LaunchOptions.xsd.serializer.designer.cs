@@ -17,7 +17,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
 
     public class XmlSerializationWriter1 : System.Xml.Serialization.XmlSerializationWriter {
 
-        public void Write16_AndroidLaunchOptions(object o) {
+        public void Write18_AndroidLaunchOptions(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"AndroidLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
@@ -27,7 +27,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             Write4_AndroidLaunchOptions(@"AndroidLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.AndroidLaunchOptions)o), false, false);
         }
 
-        public void Write17_TargetArchitecture(object o) {
+        public void Write19_TargetArchitecture(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"TargetArchitecture", @"");
@@ -36,7 +36,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             WriteElementString(@"TargetArchitecture", @"", Write1_TargetArchitecture(((global::MICore.Xml.LaunchOptions.TargetArchitecture)o)));
         }
 
-        public void Write18_MIMode(object o) {
+        public void Write20_MIMode(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"MIMode", @"");
@@ -45,7 +45,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             WriteElementString(@"MIMode", @"", Write2_MIMode(((global::MICore.Xml.LaunchOptions.MIMode)o)));
         }
 
-        public void Write19_Command(object o) {
+        public void Write21_Command(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteNullTagLiteral(@"Command", @"");
@@ -55,7 +55,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             Write5_Command(@"Command", @"", ((global::MICore.Xml.LaunchOptions.Command)o), true, false);
         }
 
-        public void Write20_BaseLaunchOptions(object o) {
+        public void Write22_BaseLaunchOptions(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteNullTagLiteral(@"BaseLaunchOptions", @"");
@@ -65,7 +65,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             Write7_BaseLaunchOptions(@"BaseLaunchOptions", @"", ((global::MICore.Xml.LaunchOptions.BaseLaunchOptions)o), true, false);
         }
 
-        public void Write21_Item(object o) {
+        public void Write23_Item(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"BaseLaunchOptionsLaunchCompleteCommand", @"");
@@ -74,66 +74,75 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             WriteElementString(@"BaseLaunchOptionsLaunchCompleteCommand", @"", Write8_Item(((global::MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand)o)));
         }
 
-        public void Write22_IOSLaunchOptions(object o) {
+        public void Write24_IOSLaunchOptions(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"IOSLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
                 return;
             }
             TopLevelElement();
-            Write10_IOSLaunchOptions(@"IOSLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.IOSLaunchOptions)o), false, false);
+            Write11_IOSLaunchOptions(@"IOSLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.IOSLaunchOptions)o), false, false);
         }
 
-        public void Write23_IOSLaunchOptionsIOSDebugTarget(object o) {
+        public void Write25_IOSLaunchOptionsIOSDebugTarget(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"IOSLaunchOptionsIOSDebugTarget", @"");
                 return;
             }
-            WriteElementString(@"IOSLaunchOptionsIOSDebugTarget", @"", Write11_IOSLaunchOptionsIOSDebugTarget(((global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget)o)));
+            WriteElementString(@"IOSLaunchOptionsIOSDebugTarget", @"", Write12_IOSLaunchOptionsIOSDebugTarget(((global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget)o)));
         }
 
-        public void Write24_LocalLaunchOptions(object o) {
+        public void Write26_IOSLaunchOptionsSecure(object o) {
+            WriteStartDocument();
+            if (o == null) {
+                WriteEmptyTag(@"IOSLaunchOptionsSecure", @"");
+                return;
+            }
+            WriteElementString(@"IOSLaunchOptionsSecure", @"", Write13_IOSLaunchOptionsSecure(((global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure)o)));
+        }
+
+        public void Write27_LocalLaunchOptions(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"LocalLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
                 return;
             }
             TopLevelElement();
-            Write12_LocalLaunchOptions(@"LocalLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.LocalLaunchOptions)o), false, false);
+            Write14_LocalLaunchOptions(@"LocalLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.LocalLaunchOptions)o), false, false);
         }
 
-        public void Write25_SerialPortLaunchOptions(object o) {
+        public void Write28_SerialPortLaunchOptions(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"SerialPortLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
                 return;
             }
             TopLevelElement();
-            Write13_SerialPortLaunchOptions(@"SerialPortLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.SerialPortLaunchOptions)o), false, false);
+            Write15_SerialPortLaunchOptions(@"SerialPortLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.SerialPortLaunchOptions)o), false, false);
         }
 
-        public void Write26_PipeLaunchOptions(object o) {
+        public void Write29_PipeLaunchOptions(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"PipeLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
                 return;
             }
             TopLevelElement();
-            Write14_PipeLaunchOptions(@"PipeLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.PipeLaunchOptions)o), false, false);
+            Write16_PipeLaunchOptions(@"PipeLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.PipeLaunchOptions)o), false, false);
         }
 
-        public void Write27_TcpLaunchOptions(object o) {
+        public void Write30_TcpLaunchOptions(object o) {
             WriteStartDocument();
             if (o == null) {
                 WriteEmptyTag(@"TcpLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
                 return;
             }
             TopLevelElement();
-            Write15_TcpLaunchOptions(@"TcpLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.TcpLaunchOptions)o), false, false);
+            Write17_TcpLaunchOptions(@"TcpLaunchOptions", @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", ((global::MICore.Xml.LaunchOptions.TcpLaunchOptions)o), false, false);
         }
 
-        void Write15_TcpLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.TcpLaunchOptions o, bool isNullable, bool needType) {
+        void Write17_TcpLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.TcpLaunchOptions o, bool isNullable, bool needType) {
             if ((object)o == null) {
                 if (isNullable) WriteNullTagLiteral(n, ns);
                 return;
@@ -261,7 +270,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return s;
         }
 
-        void Write14_PipeLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.PipeLaunchOptions o, bool isNullable, bool needType) {
+        void Write16_PipeLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.PipeLaunchOptions o, bool isNullable, bool needType) {
             if ((object)o == null) {
                 if (isNullable) WriteNullTagLiteral(n, ns);
                 return;
@@ -315,7 +324,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             WriteEndElement(o);
         }
 
-        void Write13_SerialPortLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.SerialPortLaunchOptions o, bool isNullable, bool needType) {
+        void Write15_SerialPortLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.SerialPortLaunchOptions o, bool isNullable, bool needType) {
             if ((object)o == null) {
                 if (isNullable) WriteNullTagLiteral(n, ns);
                 return;
@@ -368,7 +377,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             WriteEndElement(o);
         }
 
-        void Write12_LocalLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.LocalLaunchOptions o, bool isNullable, bool needType) {
+        void Write14_LocalLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.LocalLaunchOptions o, bool isNullable, bool needType) {
             if ((object)o == null) {
                 if (isNullable) WriteNullTagLiteral(n, ns);
                 return;
@@ -422,17 +431,27 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             WriteEndElement(o);
         }
 
-        string Write11_IOSLaunchOptionsIOSDebugTarget(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget v) {
+        string Write13_IOSLaunchOptionsSecure(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure v) {
             string s = null;
             switch (v) {
-                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@device: s = @"device"; break;
-                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@simulator: s = @"simulator"; break;
+                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.@True: s = @"True"; break;
+                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.@False: s = @"False"; break;
+                default: throw CreateInvalidEnumValueException(((System.Int64)v).ToString(System.Globalization.CultureInfo.InvariantCulture), @"MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure");
+            }
+            return s;
+        }
+
+        string Write12_IOSLaunchOptionsIOSDebugTarget(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget v) {
+            string s = null;
+            switch (v) {
+                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@Device: s = @"Device"; break;
+                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@Simulator: s = @"Simulator"; break;
                 default: throw CreateInvalidEnumValueException(((System.Int64)v).ToString(System.Globalization.CultureInfo.InvariantCulture), @"MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget");
             }
             return s;
         }
 
-        void Write10_IOSLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.IOSLaunchOptions o, bool isNullable, bool needType) {
+        void Write11_IOSLaunchOptions(string n, string ns, global::MICore.Xml.LaunchOptions.IOSLaunchOptions o, bool isNullable, bool needType) {
             if ((object)o == null) {
                 if (isNullable) WriteNullTagLiteral(n, ns);
                 return;
@@ -451,26 +470,32 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             WriteAttribute(@"PackageId", @"", ((global::System.String)o.@PackageId));
             WriteAttribute(@"vcremotePort", @"", System.Xml.XmlConvert.ToString((global::System.Int32)((global::System.Int32)o.@vcremotePort)));
             WriteAttribute(@"IOSDebugTarget", @"", Write9_IOSLaunchOptionsIOSDebugTarget(((global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget)o.@IOSDebugTarget)));
-            if (o.@SecureSpecified) {
-                WriteAttribute(@"Secure", @"", System.Xml.XmlConvert.ToString((global::System.Boolean)((global::System.Boolean)o.@Secure)));
-            }
+            WriteAttribute(@"Secure", @"", Write10_IOSLaunchOptionsSecure(((global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure)o.@Secure)));
             WriteAttribute(@"TargetArchitecture", @"", Write1_TargetArchitecture(((global::MICore.Xml.LaunchOptions.TargetArchitecture)o.@TargetArchitecture)));
             WriteAttribute(@"AdditionalSOLibSearchPath", @"", ((global::System.String)o.@AdditionalSOLibSearchPath));
             if (o.@MIModeSpecified) {
                 WriteAttribute(@"MIMode", @"", Write2_MIMode(((global::MICore.Xml.LaunchOptions.MIMode)o.@MIMode)));
-            }
-            if (o.@SecureSpecified) {
             }
             if (o.@MIModeSpecified) {
             }
             WriteEndElement(o);
         }
 
+        string Write10_IOSLaunchOptionsSecure(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure v) {
+            string s = null;
+            switch (v) {
+                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.@True: s = @"True"; break;
+                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.@False: s = @"False"; break;
+                default: throw CreateInvalidEnumValueException(((System.Int64)v).ToString(System.Globalization.CultureInfo.InvariantCulture), @"MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure");
+            }
+            return s;
+        }
+
         string Write9_IOSLaunchOptionsIOSDebugTarget(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget v) {
             string s = null;
             switch (v) {
-                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@device: s = @"device"; break;
-                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@simulator: s = @"simulator"; break;
+                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@Device: s = @"Device"; break;
+                case global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@Simulator: s = @"Simulator"; break;
                 default: throw CreateInvalidEnumValueException(((System.Int64)v).ToString(System.Globalization.CultureInfo.InvariantCulture), @"MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget");
             }
             return s;
@@ -580,7 +605,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
 
     public class XmlSerializationReader1 : System.Xml.Serialization.XmlSerializationReader {
 
-        public object Read16_AndroidLaunchOptions() {
+        public object Read18_AndroidLaunchOptions() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
@@ -597,7 +622,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read17_TargetArchitecture() {
+        public object Read19_TargetArchitecture() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
@@ -616,7 +641,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read18_MIMode() {
+        public object Read20_MIMode() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
@@ -635,7 +660,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read19_Command() {
+        public object Read21_Command() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
@@ -652,7 +677,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read20_BaseLaunchOptions() {
+        public object Read22_BaseLaunchOptions() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
@@ -669,7 +694,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read21_Item() {
+        public object Read23_Item() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
@@ -688,12 +713,12 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read22_IOSLaunchOptions() {
+        public object Read24_IOSLaunchOptions() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
                 if (((object) Reader.LocalName == (object)id9_IOSLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
-                    o = Read10_IOSLaunchOptions(false, true);
+                    o = Read11_IOSLaunchOptions(false, true);
                 }
                 else {
                     throw CreateUnknownNodeException();
@@ -705,13 +730,13 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read23_IOSLaunchOptionsIOSDebugTarget() {
+        public object Read25_IOSLaunchOptionsIOSDebugTarget() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
                 if (((object) Reader.LocalName == (object)id10_IOSLaunchOptionsIOSDebugTarget && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     {
-                        o = Read11_IOSLaunchOptionsIOSDebugTarget(Reader.ReadElementString());
+                        o = Read12_IOSLaunchOptionsIOSDebugTarget(Reader.ReadElementString());
                     }
                 }
                 else {
@@ -724,12 +749,31 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read24_LocalLaunchOptions() {
+        public object Read26_IOSLaunchOptionsSecure() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                if (((object) Reader.LocalName == (object)id11_LocalLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
-                    o = Read12_LocalLaunchOptions(false, true);
+                if (((object) Reader.LocalName == (object)id11_IOSLaunchOptionsSecure && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    {
+                        o = Read13_IOSLaunchOptionsSecure(Reader.ReadElementString());
+                    }
+                }
+                else {
+                    throw CreateUnknownNodeException();
+                }
+            }
+            else {
+                UnknownNode(null, @":IOSLaunchOptionsSecure");
+            }
+            return (object)o;
+        }
+
+        public object Read27_LocalLaunchOptions() {
+            object o = null;
+            Reader.MoveToContent();
+            if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
+                if (((object) Reader.LocalName == (object)id12_LocalLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    o = Read14_LocalLaunchOptions(false, true);
                 }
                 else {
                     throw CreateUnknownNodeException();
@@ -741,12 +785,12 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read25_SerialPortLaunchOptions() {
+        public object Read28_SerialPortLaunchOptions() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                if (((object) Reader.LocalName == (object)id12_SerialPortLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
-                    o = Read13_SerialPortLaunchOptions(false, true);
+                if (((object) Reader.LocalName == (object)id13_SerialPortLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    o = Read15_SerialPortLaunchOptions(false, true);
                 }
                 else {
                     throw CreateUnknownNodeException();
@@ -758,12 +802,12 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read26_PipeLaunchOptions() {
+        public object Read29_PipeLaunchOptions() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                if (((object) Reader.LocalName == (object)id13_PipeLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
-                    o = Read14_PipeLaunchOptions(false, true);
+                if (((object) Reader.LocalName == (object)id14_PipeLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    o = Read16_PipeLaunchOptions(false, true);
                 }
                 else {
                     throw CreateUnknownNodeException();
@@ -775,12 +819,12 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        public object Read27_TcpLaunchOptions() {
+        public object Read30_TcpLaunchOptions() {
             object o = null;
             Reader.MoveToContent();
             if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                if (((object) Reader.LocalName == (object)id14_TcpLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
-                    o = Read15_TcpLaunchOptions(false, true);
+                if (((object) Reader.LocalName == (object)id15_TcpLaunchOptions && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    o = Read17_TcpLaunchOptions(false, true);
                 }
                 else {
                     throw CreateUnknownNodeException();
@@ -792,7 +836,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return (object)o;
         }
 
-        global::MICore.Xml.LaunchOptions.TcpLaunchOptions Read15_TcpLaunchOptions(bool isNullable, bool checkType) {
+        global::MICore.Xml.LaunchOptions.TcpLaunchOptions Read17_TcpLaunchOptions(bool isNullable, bool checkType) {
             System.Xml.XmlQualifiedName xsiType = checkType ? GetXsiType() : null;
             bool isNull = false;
             if (isNullable) isNull = ReadNull();
@@ -811,19 +855,19 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int ca_1 = 0;
             bool[] paramsRead = new bool[13];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id15_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id16_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExePath = Reader.Value;
                     paramsRead[3] = true;
                 }
-                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id16_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id17_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExeArguments = Reader.Value;
                     paramsRead[4] = true;
                 }
-                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id17_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id18_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@WorkingDirectory = Reader.Value;
                     paramsRead[5] = true;
                 }
-                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id18_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id19_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@VisualizerFile = Reader.Value;
                     paramsRead[6] = true;
                 }
@@ -831,7 +875,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
                     paramsRead[7] = true;
                 }
-                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id20_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@AdditionalSOLibSearchPath = Reader.Value;
                     paramsRead[8] = true;
                 }
@@ -840,15 +884,15 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@MIModeSpecified = true;
                     paramsRead[9] = true;
                 }
-                else if (!paramsRead[10] && ((object) Reader.LocalName == (object)id20_Hostname && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[10] && ((object) Reader.LocalName == (object)id21_Hostname && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@Hostname = Reader.Value;
                     paramsRead[10] = true;
                 }
-                else if (!paramsRead[11] && ((object) Reader.LocalName == (object)id21_Port && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[11] && ((object) Reader.LocalName == (object)id22_Port && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@Port = System.Xml.XmlConvert.ToInt32(Reader.Value);
                     paramsRead[11] = true;
                 }
-                else if (!paramsRead[12] && ((object) Reader.LocalName == (object)id22_Secure && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[12] && ((object) Reader.LocalName == (object)id23_Secure && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@Secure = System.Xml.XmlConvert.ToBoolean(Reader.Value);
                     o.@SecureSpecified = true;
                     paramsRead[12] = true;
@@ -868,7 +912,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int readerCount0 = ReaderCount;
             while (Reader.NodeType != System.Xml.XmlNodeType.EndElement && Reader.NodeType != System.Xml.XmlNodeType.None) {
                 if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                    if (((object) Reader.LocalName == (object)id23_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    if (((object) Reader.LocalName == (object)id24_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_0_0 = null;
                             int ca_0_0 = 0;
@@ -900,7 +944,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@SetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_0_0, ca_0_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (((object) Reader.LocalName == (object)id24_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (((object) Reader.LocalName == (object)id25_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_1_0 = null;
                             int ca_1_0 = 0;
@@ -932,7 +976,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@CustomLaunchSetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_1_0, ca_1_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id25_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id26_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         o.@LaunchCompleteCommandSpecified = true;
                         {
                             o.@LaunchCompleteCommand = Read6_Item(Reader.ReadElementString());
@@ -977,12 +1021,12 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             o = new global::MICore.Xml.LaunchOptions.Command();
             bool[] paramsRead = new bool[3];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[0] && ((object) Reader.LocalName == (object)id26_IgnoreFailures && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                if (!paramsRead[0] && ((object) Reader.LocalName == (object)id27_IgnoreFailures && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@IgnoreFailures = System.Xml.XmlConvert.ToBoolean(Reader.Value);
                     o.@IgnoreFailuresSpecified = true;
                     paramsRead[0] = true;
                 }
-                else if (!paramsRead[1] && ((object) Reader.LocalName == (object)id27_Description && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[1] && ((object) Reader.LocalName == (object)id28_Description && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@Description = Reader.Value;
                     paramsRead[1] = true;
                 }
@@ -1048,7 +1092,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             }
         }
 
-        global::MICore.Xml.LaunchOptions.PipeLaunchOptions Read14_PipeLaunchOptions(bool isNullable, bool checkType) {
+        global::MICore.Xml.LaunchOptions.PipeLaunchOptions Read16_PipeLaunchOptions(bool isNullable, bool checkType) {
             System.Xml.XmlQualifiedName xsiType = checkType ? GetXsiType() : null;
             bool isNull = false;
             if (isNullable) isNull = ReadNull();
@@ -1067,19 +1111,19 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int ca_1 = 0;
             bool[] paramsRead = new bool[12];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id15_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id16_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExePath = Reader.Value;
                     paramsRead[3] = true;
                 }
-                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id16_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id17_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExeArguments = Reader.Value;
                     paramsRead[4] = true;
                 }
-                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id17_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id18_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@WorkingDirectory = Reader.Value;
                     paramsRead[5] = true;
                 }
-                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id18_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id19_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@VisualizerFile = Reader.Value;
                     paramsRead[6] = true;
                 }
@@ -1087,7 +1131,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
                     paramsRead[7] = true;
                 }
-                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id20_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@AdditionalSOLibSearchPath = Reader.Value;
                     paramsRead[8] = true;
                 }
@@ -1096,11 +1140,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@MIModeSpecified = true;
                     paramsRead[9] = true;
                 }
-                else if (!paramsRead[10] && ((object) Reader.LocalName == (object)id28_PipePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[10] && ((object) Reader.LocalName == (object)id29_PipePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@PipePath = Reader.Value;
                     paramsRead[10] = true;
                 }
-                else if (!paramsRead[11] && ((object) Reader.LocalName == (object)id29_PipeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[11] && ((object) Reader.LocalName == (object)id30_PipeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@PipeArguments = Reader.Value;
                     paramsRead[11] = true;
                 }
@@ -1119,7 +1163,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int readerCount4 = ReaderCount;
             while (Reader.NodeType != System.Xml.XmlNodeType.EndElement && Reader.NodeType != System.Xml.XmlNodeType.None) {
                 if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                    if (((object) Reader.LocalName == (object)id23_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    if (((object) Reader.LocalName == (object)id24_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_0_0 = null;
                             int ca_0_0 = 0;
@@ -1151,7 +1195,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@SetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_0_0, ca_0_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (((object) Reader.LocalName == (object)id24_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (((object) Reader.LocalName == (object)id25_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_1_0 = null;
                             int ca_1_0 = 0;
@@ -1183,7 +1227,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@CustomLaunchSetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_1_0, ca_1_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id25_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id26_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         o.@LaunchCompleteCommandSpecified = true;
                         {
                             o.@LaunchCompleteCommand = Read6_Item(Reader.ReadElementString());
@@ -1204,7 +1248,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return o;
         }
 
-        global::MICore.Xml.LaunchOptions.SerialPortLaunchOptions Read13_SerialPortLaunchOptions(bool isNullable, bool checkType) {
+        global::MICore.Xml.LaunchOptions.SerialPortLaunchOptions Read15_SerialPortLaunchOptions(bool isNullable, bool checkType) {
             System.Xml.XmlQualifiedName xsiType = checkType ? GetXsiType() : null;
             bool isNull = false;
             if (isNullable) isNull = ReadNull();
@@ -1223,19 +1267,19 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int ca_1 = 0;
             bool[] paramsRead = new bool[11];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id15_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id16_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExePath = Reader.Value;
                     paramsRead[3] = true;
                 }
-                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id16_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id17_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExeArguments = Reader.Value;
                     paramsRead[4] = true;
                 }
-                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id17_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id18_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@WorkingDirectory = Reader.Value;
                     paramsRead[5] = true;
                 }
-                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id18_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id19_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@VisualizerFile = Reader.Value;
                     paramsRead[6] = true;
                 }
@@ -1243,7 +1287,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
                     paramsRead[7] = true;
                 }
-                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id20_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@AdditionalSOLibSearchPath = Reader.Value;
                     paramsRead[8] = true;
                 }
@@ -1252,7 +1296,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@MIModeSpecified = true;
                     paramsRead[9] = true;
                 }
-                else if (!paramsRead[10] && ((object) Reader.LocalName == (object)id21_Port && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[10] && ((object) Reader.LocalName == (object)id22_Port && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@Port = Reader.Value;
                     paramsRead[10] = true;
                 }
@@ -1271,7 +1315,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int readerCount7 = ReaderCount;
             while (Reader.NodeType != System.Xml.XmlNodeType.EndElement && Reader.NodeType != System.Xml.XmlNodeType.None) {
                 if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                    if (((object) Reader.LocalName == (object)id23_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    if (((object) Reader.LocalName == (object)id24_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_0_0 = null;
                             int ca_0_0 = 0;
@@ -1303,7 +1347,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@SetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_0_0, ca_0_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (((object) Reader.LocalName == (object)id24_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (((object) Reader.LocalName == (object)id25_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_1_0 = null;
                             int ca_1_0 = 0;
@@ -1335,7 +1379,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@CustomLaunchSetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_1_0, ca_1_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id25_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id26_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         o.@LaunchCompleteCommandSpecified = true;
                         {
                             o.@LaunchCompleteCommand = Read6_Item(Reader.ReadElementString());
@@ -1356,7 +1400,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return o;
         }
 
-        global::MICore.Xml.LaunchOptions.LocalLaunchOptions Read12_LocalLaunchOptions(bool isNullable, bool checkType) {
+        global::MICore.Xml.LaunchOptions.LocalLaunchOptions Read14_LocalLaunchOptions(bool isNullable, bool checkType) {
             System.Xml.XmlQualifiedName xsiType = checkType ? GetXsiType() : null;
             bool isNull = false;
             if (isNullable) isNull = ReadNull();
@@ -1375,19 +1419,19 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int ca_1 = 0;
             bool[] paramsRead = new bool[12];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id15_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id16_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExePath = Reader.Value;
                     paramsRead[3] = true;
                 }
-                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id16_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id17_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExeArguments = Reader.Value;
                     paramsRead[4] = true;
                 }
-                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id17_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id18_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@WorkingDirectory = Reader.Value;
                     paramsRead[5] = true;
                 }
-                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id18_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id19_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@VisualizerFile = Reader.Value;
                     paramsRead[6] = true;
                 }
@@ -1395,7 +1439,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
                     paramsRead[7] = true;
                 }
-                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id20_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@AdditionalSOLibSearchPath = Reader.Value;
                     paramsRead[8] = true;
                 }
@@ -1404,11 +1448,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@MIModeSpecified = true;
                     paramsRead[9] = true;
                 }
-                else if (!paramsRead[10] && ((object) Reader.LocalName == (object)id30_MIDebuggerPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[10] && ((object) Reader.LocalName == (object)id31_MIDebuggerPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@MIDebuggerPath = Reader.Value;
                     paramsRead[10] = true;
                 }
-                else if (!paramsRead[11] && ((object) Reader.LocalName == (object)id31_MIDebuggerServerAddress && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[11] && ((object) Reader.LocalName == (object)id32_MIDebuggerServerAddress && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@MIDebuggerServerAddress = Reader.Value;
                     paramsRead[11] = true;
                 }
@@ -1427,7 +1471,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int readerCount10 = ReaderCount;
             while (Reader.NodeType != System.Xml.XmlNodeType.EndElement && Reader.NodeType != System.Xml.XmlNodeType.None) {
                 if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                    if (((object) Reader.LocalName == (object)id23_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    if (((object) Reader.LocalName == (object)id24_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_0_0 = null;
                             int ca_0_0 = 0;
@@ -1459,7 +1503,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@SetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_0_0, ca_0_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (((object) Reader.LocalName == (object)id24_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (((object) Reader.LocalName == (object)id25_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_1_0 = null;
                             int ca_1_0 = 0;
@@ -1491,7 +1535,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@CustomLaunchSetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_1_0, ca_1_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id25_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id26_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         o.@LaunchCompleteCommandSpecified = true;
                         {
                             o.@LaunchCompleteCommand = Read6_Item(Reader.ReadElementString());
@@ -1512,15 +1556,23 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return o;
         }
 
-        global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget Read11_IOSLaunchOptionsIOSDebugTarget(string s) {
+        global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure Read13_IOSLaunchOptionsSecure(string s) {
             switch (s) {
-                case @"device": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@device;
-                case @"simulator": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@simulator;
+                case @"True": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.@True;
+                case @"False": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.@False;
+                default: throw CreateUnknownConstantException(s, typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure));
+            }
+        }
+
+        global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget Read12_IOSLaunchOptionsIOSDebugTarget(string s) {
+            switch (s) {
+                case @"Device": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@Device;
+                case @"Simulator": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@Simulator;
                 default: throw CreateUnknownConstantException(s, typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget));
             }
         }
 
-        global::MICore.Xml.LaunchOptions.IOSLaunchOptions Read10_IOSLaunchOptions(bool isNullable, bool checkType) {
+        global::MICore.Xml.LaunchOptions.IOSLaunchOptions Read11_IOSLaunchOptions(bool isNullable, bool checkType) {
             System.Xml.XmlQualifiedName xsiType = checkType ? GetXsiType() : null;
             bool isNull = false;
             if (isNullable) isNull = ReadNull();
@@ -1535,32 +1587,31 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             o = new global::MICore.Xml.LaunchOptions.IOSLaunchOptions();
             bool[] paramsRead = new bool[8];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[0] && ((object) Reader.LocalName == (object)id32_RemoteMachineName && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                if (!paramsRead[0] && ((object) Reader.LocalName == (object)id33_RemoteMachineName && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@RemoteMachineName = Reader.Value;
                     paramsRead[0] = true;
                 }
-                else if (!paramsRead[1] && ((object) Reader.LocalName == (object)id33_PackageId && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[1] && ((object) Reader.LocalName == (object)id34_PackageId && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@PackageId = Reader.Value;
                     paramsRead[1] = true;
                 }
-                else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id34_vcremotePort && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id35_vcremotePort && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@vcremotePort = System.Xml.XmlConvert.ToInt32(Reader.Value);
                     paramsRead[2] = true;
                 }
-                else if (!paramsRead[3] && ((object) Reader.LocalName == (object)id35_IOSDebugTarget && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[3] && ((object) Reader.LocalName == (object)id36_IOSDebugTarget && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@IOSDebugTarget = Read9_IOSLaunchOptionsIOSDebugTarget(Reader.Value);
                     paramsRead[3] = true;
                 }
-                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id22_Secure && (object) Reader.NamespaceURI == (object)id4_Item)) {
-                    o.@Secure = System.Xml.XmlConvert.ToBoolean(Reader.Value);
-                    o.@SecureSpecified = true;
+                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id23_Secure && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    o.@Secure = Read10_IOSLaunchOptionsSecure(Reader.Value);
                     paramsRead[4] = true;
                 }
                 else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id3_TargetArchitecture && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
                     paramsRead[5] = true;
                 }
-                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id20_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@AdditionalSOLibSearchPath = Reader.Value;
                     paramsRead[6] = true;
                 }
@@ -1596,10 +1647,18 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             return o;
         }
 
+        global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure Read10_IOSLaunchOptionsSecure(string s) {
+            switch (s) {
+                case @"True": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.@True;
+                case @"False": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.@False;
+                default: throw CreateUnknownConstantException(s, typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure));
+            }
+        }
+
         global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget Read9_IOSLaunchOptionsIOSDebugTarget(string s) {
             switch (s) {
-                case @"device": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@device;
-                case @"simulator": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@simulator;
+                case @"Device": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@Device;
+                case @"Simulator": return global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.@Simulator;
                 default: throw CreateUnknownConstantException(s, typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget));
             }
         }
@@ -1632,19 +1691,19 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int ca_1 = 0;
             bool[] paramsRead = new bool[10];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id15_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                if (!paramsRead[3] && ((object) Reader.LocalName == (object)id16_ExePath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExePath = Reader.Value;
                     paramsRead[3] = true;
                 }
-                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id16_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id17_ExeArguments && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@ExeArguments = Reader.Value;
                     paramsRead[4] = true;
                 }
-                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id17_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id18_WorkingDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@WorkingDirectory = Reader.Value;
                     paramsRead[5] = true;
                 }
-                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id18_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id19_VisualizerFile && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@VisualizerFile = Reader.Value;
                     paramsRead[6] = true;
                 }
@@ -1652,7 +1711,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
                     paramsRead[7] = true;
                 }
-                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[8] && ((object) Reader.LocalName == (object)id20_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@AdditionalSOLibSearchPath = Reader.Value;
                     paramsRead[8] = true;
                 }
@@ -1676,7 +1735,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             int readerCount14 = ReaderCount;
             while (Reader.NodeType != System.Xml.XmlNodeType.EndElement && Reader.NodeType != System.Xml.XmlNodeType.None) {
                 if (Reader.NodeType == System.Xml.XmlNodeType.Element) {
-                    if (((object) Reader.LocalName == (object)id23_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    if (((object) Reader.LocalName == (object)id24_SetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_0_0 = null;
                             int ca_0_0 = 0;
@@ -1708,7 +1767,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@SetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_0_0, ca_0_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (((object) Reader.LocalName == (object)id24_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (((object) Reader.LocalName == (object)id25_CustomLaunchSetupCommands && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         if (!ReadNull()) {
                             global::MICore.Xml.LaunchOptions.Command[] a_1_0 = null;
                             int ca_1_0 = 0;
@@ -1740,7 +1799,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                             o.@CustomLaunchSetupCommands = (global::MICore.Xml.LaunchOptions.Command[])ShrinkArray(a_1_0, ca_1_0, typeof(global::MICore.Xml.LaunchOptions.Command), false);
                         }
                     }
-                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id25_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
+                    else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id26_LaunchCompleteCommand && (object) Reader.NamespaceURI == (object)id2_Item)) {
                         o.@LaunchCompleteCommandSpecified = true;
                         {
                             o.@LaunchCompleteCommand = Read6_Item(Reader.ReadElementString());
@@ -1776,35 +1835,35 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             o = new global::MICore.Xml.LaunchOptions.AndroidLaunchOptions();
             bool[] paramsRead = new bool[11];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[0] && ((object) Reader.LocalName == (object)id36_Package && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                if (!paramsRead[0] && ((object) Reader.LocalName == (object)id37_Package && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@Package = Reader.Value;
                     paramsRead[0] = true;
                 }
-                else if (!paramsRead[1] && ((object) Reader.LocalName == (object)id37_LaunchActivity && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[1] && ((object) Reader.LocalName == (object)id38_LaunchActivity && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@LaunchActivity = Reader.Value;
                     paramsRead[1] = true;
                 }
-                else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id38_SDKRoot && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id39_SDKRoot && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@SDKRoot = Reader.Value;
                     paramsRead[2] = true;
                 }
-                else if (!paramsRead[3] && ((object) Reader.LocalName == (object)id39_NDKRoot && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[3] && ((object) Reader.LocalName == (object)id40_NDKRoot && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@NDKRoot = Reader.Value;
                     paramsRead[3] = true;
                 }
-                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id40_IntermediateDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[4] && ((object) Reader.LocalName == (object)id41_IntermediateDirectory && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@IntermediateDirectory = Reader.Value;
                     paramsRead[4] = true;
                 }
-                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id41_DeviceId && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[5] && ((object) Reader.LocalName == (object)id42_DeviceId && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@DeviceId = Reader.Value;
                     paramsRead[5] = true;
                 }
-                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id42_LogcatServiceId && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[6] && ((object) Reader.LocalName == (object)id43_LogcatServiceId && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@LogcatServiceId = Reader.Value;
                     paramsRead[6] = true;
                 }
-                else if (!paramsRead[7] && ((object) Reader.LocalName == (object)id43_Attach && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[7] && ((object) Reader.LocalName == (object)id44_Attach && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@Attach = System.Xml.XmlConvert.ToBoolean(Reader.Value);
                     paramsRead[7] = true;
                 }
@@ -1812,7 +1871,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     o.@TargetArchitecture = Read1_TargetArchitecture(Reader.Value);
                     paramsRead[8] = true;
                 }
-                else if (!paramsRead[9] && ((object) Reader.LocalName == (object)id19_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                else if (!paramsRead[9] && ((object) Reader.LocalName == (object)id20_AdditionalSOLibSearchPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
                     o.@AdditionalSOLibSearchPath = Reader.Value;
                     paramsRead[9] = true;
                 }
@@ -1851,94 +1910,96 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         protected override void InitCallbacks() {
         }
 
-        string id29_PipeArguments;
-        string id15_ExePath;
-        string id34_vcremotePort;
-        string id31_MIDebuggerServerAddress;
-        string id1_AndroidLaunchOptions;
-        string id23_SetupCommands;
-        string id27_Description;
+        string id30_PipeArguments;
+        string id41_IntermediateDirectory;
+        string id35_vcremotePort;
+        string id32_MIDebuggerServerAddress;
+        string id26_LaunchCompleteCommand;
+        string id24_SetupCommands;
+        string id27_IgnoreFailures;
         string id10_IOSLaunchOptionsIOSDebugTarget;
-        string id24_CustomLaunchSetupCommands;
-        string id17_WorkingDirectory;
+        string id25_CustomLaunchSetupCommands;
+        string id18_WorkingDirectory;
         string id3_TargetArchitecture;
-        string id21_Port;
-        string id32_RemoteMachineName;
-        string id19_AdditionalSOLibSearchPath;
+        string id37_Package;
+        string id22_Port;
+        string id33_RemoteMachineName;
+        string id20_AdditionalSOLibSearchPath;
         string id6_Command;
-        string id37_LaunchActivity;
+        string id38_LaunchActivity;
         string id9_IOSLaunchOptions;
-        string id13_PipeLaunchOptions;
-        string id41_DeviceId;
-        string id18_VisualizerFile;
-        string id22_Secure;
+        string id14_PipeLaunchOptions;
+        string id42_DeviceId;
+        string id19_VisualizerFile;
+        string id23_Secure;
         string id4_Item;
-        string id38_SDKRoot;
-        string id28_PipePath;
-        string id40_IntermediateDirectory;
-        string id16_ExeArguments;
+        string id39_SDKRoot;
+        string id29_PipePath;
+        string id17_ExeArguments;
         string id7_BaseLaunchOptions;
         string id5_MIMode;
-        string id30_MIDebuggerPath;
-        string id39_NDKRoot;
-        string id25_LaunchCompleteCommand;
+        string id11_IOSLaunchOptionsSecure;
+        string id40_NDKRoot;
         string id2_Item;
-        string id14_TcpLaunchOptions;
-        string id36_Package;
+        string id15_TcpLaunchOptions;
+        string id31_MIDebuggerPath;
+        string id34_PackageId;
         string id8_Item;
-        string id42_LogcatServiceId;
-        string id20_Hostname;
-        string id12_SerialPortLaunchOptions;
-        string id33_PackageId;
-        string id35_IOSDebugTarget;
-        string id43_Attach;
-        string id11_LocalLaunchOptions;
-        string id26_IgnoreFailures;
+        string id43_LogcatServiceId;
+        string id28_Description;
+        string id21_Hostname;
+        string id13_SerialPortLaunchOptions;
+        string id1_AndroidLaunchOptions;
+        string id36_IOSDebugTarget;
+        string id44_Attach;
+        string id12_LocalLaunchOptions;
+        string id16_ExePath;
 
         protected override void InitIDs() {
-            id29_PipeArguments = Reader.NameTable.Add(@"PipeArguments");
-            id15_ExePath = Reader.NameTable.Add(@"ExePath");
-            id34_vcremotePort = Reader.NameTable.Add(@"vcremotePort");
-            id31_MIDebuggerServerAddress = Reader.NameTable.Add(@"MIDebuggerServerAddress");
-            id1_AndroidLaunchOptions = Reader.NameTable.Add(@"AndroidLaunchOptions");
-            id23_SetupCommands = Reader.NameTable.Add(@"SetupCommands");
-            id27_Description = Reader.NameTable.Add(@"Description");
+            id30_PipeArguments = Reader.NameTable.Add(@"PipeArguments");
+            id41_IntermediateDirectory = Reader.NameTable.Add(@"IntermediateDirectory");
+            id35_vcremotePort = Reader.NameTable.Add(@"vcremotePort");
+            id32_MIDebuggerServerAddress = Reader.NameTable.Add(@"MIDebuggerServerAddress");
+            id26_LaunchCompleteCommand = Reader.NameTable.Add(@"LaunchCompleteCommand");
+            id24_SetupCommands = Reader.NameTable.Add(@"SetupCommands");
+            id27_IgnoreFailures = Reader.NameTable.Add(@"IgnoreFailures");
             id10_IOSLaunchOptionsIOSDebugTarget = Reader.NameTable.Add(@"IOSLaunchOptionsIOSDebugTarget");
-            id24_CustomLaunchSetupCommands = Reader.NameTable.Add(@"CustomLaunchSetupCommands");
-            id17_WorkingDirectory = Reader.NameTable.Add(@"WorkingDirectory");
+            id25_CustomLaunchSetupCommands = Reader.NameTable.Add(@"CustomLaunchSetupCommands");
+            id18_WorkingDirectory = Reader.NameTable.Add(@"WorkingDirectory");
             id3_TargetArchitecture = Reader.NameTable.Add(@"TargetArchitecture");
-            id21_Port = Reader.NameTable.Add(@"Port");
-            id32_RemoteMachineName = Reader.NameTable.Add(@"RemoteMachineName");
-            id19_AdditionalSOLibSearchPath = Reader.NameTable.Add(@"AdditionalSOLibSearchPath");
+            id37_Package = Reader.NameTable.Add(@"Package");
+            id22_Port = Reader.NameTable.Add(@"Port");
+            id33_RemoteMachineName = Reader.NameTable.Add(@"RemoteMachineName");
+            id20_AdditionalSOLibSearchPath = Reader.NameTable.Add(@"AdditionalSOLibSearchPath");
             id6_Command = Reader.NameTable.Add(@"Command");
-            id37_LaunchActivity = Reader.NameTable.Add(@"LaunchActivity");
+            id38_LaunchActivity = Reader.NameTable.Add(@"LaunchActivity");
             id9_IOSLaunchOptions = Reader.NameTable.Add(@"IOSLaunchOptions");
-            id13_PipeLaunchOptions = Reader.NameTable.Add(@"PipeLaunchOptions");
-            id41_DeviceId = Reader.NameTable.Add(@"DeviceId");
-            id18_VisualizerFile = Reader.NameTable.Add(@"VisualizerFile");
-            id22_Secure = Reader.NameTable.Add(@"Secure");
+            id14_PipeLaunchOptions = Reader.NameTable.Add(@"PipeLaunchOptions");
+            id42_DeviceId = Reader.NameTable.Add(@"DeviceId");
+            id19_VisualizerFile = Reader.NameTable.Add(@"VisualizerFile");
+            id23_Secure = Reader.NameTable.Add(@"Secure");
             id4_Item = Reader.NameTable.Add(@"");
-            id38_SDKRoot = Reader.NameTable.Add(@"SDKRoot");
-            id28_PipePath = Reader.NameTable.Add(@"PipePath");
-            id40_IntermediateDirectory = Reader.NameTable.Add(@"IntermediateDirectory");
-            id16_ExeArguments = Reader.NameTable.Add(@"ExeArguments");
+            id39_SDKRoot = Reader.NameTable.Add(@"SDKRoot");
+            id29_PipePath = Reader.NameTable.Add(@"PipePath");
+            id17_ExeArguments = Reader.NameTable.Add(@"ExeArguments");
             id7_BaseLaunchOptions = Reader.NameTable.Add(@"BaseLaunchOptions");
             id5_MIMode = Reader.NameTable.Add(@"MIMode");
-            id30_MIDebuggerPath = Reader.NameTable.Add(@"MIDebuggerPath");
-            id39_NDKRoot = Reader.NameTable.Add(@"NDKRoot");
-            id25_LaunchCompleteCommand = Reader.NameTable.Add(@"LaunchCompleteCommand");
+            id11_IOSLaunchOptionsSecure = Reader.NameTable.Add(@"IOSLaunchOptionsSecure");
+            id40_NDKRoot = Reader.NameTable.Add(@"NDKRoot");
             id2_Item = Reader.NameTable.Add(@"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
-            id14_TcpLaunchOptions = Reader.NameTable.Add(@"TcpLaunchOptions");
-            id36_Package = Reader.NameTable.Add(@"Package");
+            id15_TcpLaunchOptions = Reader.NameTable.Add(@"TcpLaunchOptions");
+            id31_MIDebuggerPath = Reader.NameTable.Add(@"MIDebuggerPath");
+            id34_PackageId = Reader.NameTable.Add(@"PackageId");
             id8_Item = Reader.NameTable.Add(@"BaseLaunchOptionsLaunchCompleteCommand");
-            id42_LogcatServiceId = Reader.NameTable.Add(@"LogcatServiceId");
-            id20_Hostname = Reader.NameTable.Add(@"Hostname");
-            id12_SerialPortLaunchOptions = Reader.NameTable.Add(@"SerialPortLaunchOptions");
-            id33_PackageId = Reader.NameTable.Add(@"PackageId");
-            id35_IOSDebugTarget = Reader.NameTable.Add(@"IOSDebugTarget");
-            id43_Attach = Reader.NameTable.Add(@"Attach");
-            id11_LocalLaunchOptions = Reader.NameTable.Add(@"LocalLaunchOptions");
-            id26_IgnoreFailures = Reader.NameTable.Add(@"IgnoreFailures");
+            id43_LogcatServiceId = Reader.NameTable.Add(@"LogcatServiceId");
+            id28_Description = Reader.NameTable.Add(@"Description");
+            id21_Hostname = Reader.NameTable.Add(@"Hostname");
+            id13_SerialPortLaunchOptions = Reader.NameTable.Add(@"SerialPortLaunchOptions");
+            id1_AndroidLaunchOptions = Reader.NameTable.Add(@"AndroidLaunchOptions");
+            id36_IOSDebugTarget = Reader.NameTable.Add(@"IOSDebugTarget");
+            id44_Attach = Reader.NameTable.Add(@"Attach");
+            id12_LocalLaunchOptions = Reader.NameTable.Add(@"LocalLaunchOptions");
+            id16_ExePath = Reader.NameTable.Add(@"ExePath");
         }
     }
 
@@ -1958,11 +2019,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write16_AndroidLaunchOptions(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write18_AndroidLaunchOptions(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read16_AndroidLaunchOptions();
+            return ((XmlSerializationReader1)reader).Read18_AndroidLaunchOptions();
         }
     }
 
@@ -1973,11 +2034,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write17_TargetArchitecture(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write19_TargetArchitecture(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read17_TargetArchitecture();
+            return ((XmlSerializationReader1)reader).Read19_TargetArchitecture();
         }
     }
 
@@ -1988,11 +2049,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write18_MIMode(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write20_MIMode(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read18_MIMode();
+            return ((XmlSerializationReader1)reader).Read20_MIMode();
         }
     }
 
@@ -2003,11 +2064,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write19_Command(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write21_Command(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read19_Command();
+            return ((XmlSerializationReader1)reader).Read21_Command();
         }
     }
 
@@ -2018,11 +2079,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write20_BaseLaunchOptions(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write22_BaseLaunchOptions(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read20_BaseLaunchOptions();
+            return ((XmlSerializationReader1)reader).Read22_BaseLaunchOptions();
         }
     }
 
@@ -2033,11 +2094,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write21_Item(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write23_Item(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read21_Item();
+            return ((XmlSerializationReader1)reader).Read23_Item();
         }
     }
 
@@ -2048,11 +2109,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write22_IOSLaunchOptions(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write24_IOSLaunchOptions(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read22_IOSLaunchOptions();
+            return ((XmlSerializationReader1)reader).Read24_IOSLaunchOptions();
         }
     }
 
@@ -2063,11 +2124,26 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write23_IOSLaunchOptionsIOSDebugTarget(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write25_IOSLaunchOptionsIOSDebugTarget(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read23_IOSLaunchOptionsIOSDebugTarget();
+            return ((XmlSerializationReader1)reader).Read25_IOSLaunchOptionsIOSDebugTarget();
+        }
+    }
+
+    public sealed class IOSLaunchOptionsSecureSerializer : XmlSerializer1 {
+
+        public override System.Boolean CanDeserialize(System.Xml.XmlReader xmlReader) {
+            return xmlReader.IsStartElement(@"IOSLaunchOptionsSecure", @"");
+        }
+
+        protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
+            ((XmlSerializationWriter1)writer).Write26_IOSLaunchOptionsSecure(objectToSerialize);
+        }
+
+        protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
+            return ((XmlSerializationReader1)reader).Read26_IOSLaunchOptionsSecure();
         }
     }
 
@@ -2078,11 +2154,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write24_LocalLaunchOptions(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write27_LocalLaunchOptions(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read24_LocalLaunchOptions();
+            return ((XmlSerializationReader1)reader).Read27_LocalLaunchOptions();
         }
     }
 
@@ -2093,11 +2169,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write25_SerialPortLaunchOptions(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write28_SerialPortLaunchOptions(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read25_SerialPortLaunchOptions();
+            return ((XmlSerializationReader1)reader).Read28_SerialPortLaunchOptions();
         }
     }
 
@@ -2108,11 +2184,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write26_PipeLaunchOptions(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write29_PipeLaunchOptions(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read26_PipeLaunchOptions();
+            return ((XmlSerializationReader1)reader).Read29_PipeLaunchOptions();
         }
     }
 
@@ -2123,11 +2199,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         protected override void Serialize(object objectToSerialize, System.Xml.Serialization.XmlSerializationWriter writer) {
-            ((XmlSerializationWriter1)writer).Write27_TcpLaunchOptions(objectToSerialize);
+            ((XmlSerializationWriter1)writer).Write30_TcpLaunchOptions(objectToSerialize);
         }
 
         protected override object Deserialize(System.Xml.Serialization.XmlSerializationReader reader) {
-            return ((XmlSerializationReader1)reader).Read27_TcpLaunchOptions();
+            return ((XmlSerializationReader1)reader).Read30_TcpLaunchOptions();
         }
     }
 
@@ -2139,18 +2215,19 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             get {
                 if (readMethods == null) {
                     System.Collections.Hashtable _tmp = new System.Collections.Hashtable();
-                    _tmp[@"MICore.Xml.LaunchOptions.AndroidLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read16_AndroidLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.TargetArchitecture::"] = @"Read17_TargetArchitecture";
-                    _tmp[@"MICore.Xml.LaunchOptions.MIMode::"] = @"Read18_MIMode";
-                    _tmp[@"MICore.Xml.LaunchOptions.Command::"] = @"Read19_Command";
-                    _tmp[@"MICore.Xml.LaunchOptions.BaseLaunchOptions::"] = @"Read20_BaseLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand::"] = @"Read21_Item";
-                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read22_IOSLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget::"] = @"Read23_IOSLaunchOptionsIOSDebugTarget";
-                    _tmp[@"MICore.Xml.LaunchOptions.LocalLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read24_LocalLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.SerialPortLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read25_SerialPortLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.PipeLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read26_PipeLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.TcpLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read27_TcpLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.AndroidLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read18_AndroidLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.TargetArchitecture::"] = @"Read19_TargetArchitecture";
+                    _tmp[@"MICore.Xml.LaunchOptions.MIMode::"] = @"Read20_MIMode";
+                    _tmp[@"MICore.Xml.LaunchOptions.Command::"] = @"Read21_Command";
+                    _tmp[@"MICore.Xml.LaunchOptions.BaseLaunchOptions::"] = @"Read22_BaseLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand::"] = @"Read23_Item";
+                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read24_IOSLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget::"] = @"Read25_IOSLaunchOptionsIOSDebugTarget";
+                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure::"] = @"Read26_IOSLaunchOptionsSecure";
+                    _tmp[@"MICore.Xml.LaunchOptions.LocalLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read27_LocalLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.SerialPortLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read28_SerialPortLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.PipeLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read29_PipeLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.TcpLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Read30_TcpLaunchOptions";
                     if (readMethods == null) readMethods = _tmp;
                 }
                 return readMethods;
@@ -2161,18 +2238,19 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             get {
                 if (writeMethods == null) {
                     System.Collections.Hashtable _tmp = new System.Collections.Hashtable();
-                    _tmp[@"MICore.Xml.LaunchOptions.AndroidLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write16_AndroidLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.TargetArchitecture::"] = @"Write17_TargetArchitecture";
-                    _tmp[@"MICore.Xml.LaunchOptions.MIMode::"] = @"Write18_MIMode";
-                    _tmp[@"MICore.Xml.LaunchOptions.Command::"] = @"Write19_Command";
-                    _tmp[@"MICore.Xml.LaunchOptions.BaseLaunchOptions::"] = @"Write20_BaseLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand::"] = @"Write21_Item";
-                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write22_IOSLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget::"] = @"Write23_IOSLaunchOptionsIOSDebugTarget";
-                    _tmp[@"MICore.Xml.LaunchOptions.LocalLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write24_LocalLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.SerialPortLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write25_SerialPortLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.PipeLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write26_PipeLaunchOptions";
-                    _tmp[@"MICore.Xml.LaunchOptions.TcpLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write27_TcpLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.AndroidLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write18_AndroidLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.TargetArchitecture::"] = @"Write19_TargetArchitecture";
+                    _tmp[@"MICore.Xml.LaunchOptions.MIMode::"] = @"Write20_MIMode";
+                    _tmp[@"MICore.Xml.LaunchOptions.Command::"] = @"Write21_Command";
+                    _tmp[@"MICore.Xml.LaunchOptions.BaseLaunchOptions::"] = @"Write22_BaseLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand::"] = @"Write23_Item";
+                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write24_IOSLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget::"] = @"Write25_IOSLaunchOptionsIOSDebugTarget";
+                    _tmp[@"MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure::"] = @"Write26_IOSLaunchOptionsSecure";
+                    _tmp[@"MICore.Xml.LaunchOptions.LocalLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write27_LocalLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.SerialPortLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write28_SerialPortLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.PipeLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write29_PipeLaunchOptions";
+                    _tmp[@"MICore.Xml.LaunchOptions.TcpLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:"] = @"Write30_TcpLaunchOptions";
                     if (writeMethods == null) writeMethods = _tmp;
                 }
                 return writeMethods;
@@ -2183,18 +2261,19 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             get {
                 if (typedSerializers == null) {
                     System.Collections.Hashtable _tmp = new System.Collections.Hashtable();
-                    _tmp.Add(@"MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget::", new IOSLaunchOptionsIOSDebugTargetSerializer());
-                    _tmp.Add(@"MICore.Xml.LaunchOptions.SerialPortLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new SerialPortLaunchOptionsSerializer());
-                    _tmp.Add(@"MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand::", new BaseLaunchOptionsLaunchCompleteCommandSerializer());
-                    _tmp.Add(@"MICore.Xml.LaunchOptions.AndroidLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new AndroidLaunchOptionsSerializer());
-                    _tmp.Add(@"MICore.Xml.LaunchOptions.MIMode::", new MIModeSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.TargetArchitecture::", new TargetArchitectureSerializer());
                     _tmp.Add(@"MICore.Xml.LaunchOptions.Command::", new CommandSerializer());
-                    _tmp.Add(@"MICore.Xml.LaunchOptions.PipeLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new PipeLaunchOptionsSerializer());
                     _tmp.Add(@"MICore.Xml.LaunchOptions.BaseLaunchOptions::", new BaseLaunchOptionsSerializer());
                     _tmp.Add(@"MICore.Xml.LaunchOptions.IOSLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new IOSLaunchOptionsSerializer());
-                    _tmp.Add(@"MICore.Xml.LaunchOptions.TargetArchitecture::", new TargetArchitectureSerializer());
-                    _tmp.Add(@"MICore.Xml.LaunchOptions.LocalLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new LocalLaunchOptionsSerializer());
                     _tmp.Add(@"MICore.Xml.LaunchOptions.TcpLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new TcpLaunchOptionsSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure::", new IOSLaunchOptionsSecureSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.SerialPortLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new SerialPortLaunchOptionsSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget::", new IOSLaunchOptionsIOSDebugTargetSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.MIMode::", new MIModeSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand::", new BaseLaunchOptionsLaunchCompleteCommandSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.LocalLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new LocalLaunchOptionsSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.PipeLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new PipeLaunchOptionsSerializer());
+                    _tmp.Add(@"MICore.Xml.LaunchOptions.AndroidLaunchOptions:http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014::False:", new AndroidLaunchOptionsSerializer());
                     if (typedSerializers == null) typedSerializers = _tmp;
                 }
                 return typedSerializers;
@@ -2209,6 +2288,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             if (type == typeof(global::MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand)) return true;
             if (type == typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptions)) return true;
             if (type == typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget)) return true;
+            if (type == typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure)) return true;
             if (type == typeof(global::MICore.Xml.LaunchOptions.LocalLaunchOptions)) return true;
             if (type == typeof(global::MICore.Xml.LaunchOptions.SerialPortLaunchOptions)) return true;
             if (type == typeof(global::MICore.Xml.LaunchOptions.PipeLaunchOptions)) return true;
@@ -2224,6 +2304,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             if (type == typeof(global::MICore.Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand)) return new BaseLaunchOptionsLaunchCompleteCommandSerializer();
             if (type == typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptions)) return new IOSLaunchOptionsSerializer();
             if (type == typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget)) return new IOSLaunchOptionsIOSDebugTargetSerializer();
+            if (type == typeof(global::MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure)) return new IOSLaunchOptionsSecureSerializer();
             if (type == typeof(global::MICore.Xml.LaunchOptions.LocalLaunchOptions)) return new LocalLaunchOptionsSerializer();
             if (type == typeof(global::MICore.Xml.LaunchOptions.SerialPortLaunchOptions)) return new SerialPortLaunchOptionsSerializer();
             if (type == typeof(global::MICore.Xml.LaunchOptions.PipeLaunchOptions)) return new PipeLaunchOptionsSerializer();
