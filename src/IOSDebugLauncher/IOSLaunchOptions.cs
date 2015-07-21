@@ -35,12 +35,12 @@ namespace IOSDebugLauncher
             this.RemoteMachineName = LaunchOptions.RequireAttribute(xmlOptions.RemoteMachineName, "RemoteMachineName");
             this.PackageId = LaunchOptions.RequireAttribute(xmlOptions.PackageId, "PackageId");
             this.VcRemotePort = LaunchOptions.RequirePortAttribute(xmlOptions.vcremotePort, "vcremotePort");
-            Debug.Assert((uint)IOSDebugTarget.Device == (uint)MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.device);
-            Debug.Assert((uint)IOSDebugTarget.Simulator == (uint)MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.simulator);
+            Debug.Assert((uint)IOSDebugTarget.Device == (uint)MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.Device);
+            Debug.Assert((uint)IOSDebugTarget.Simulator == (uint)MICore.Xml.LaunchOptions.IOSLaunchOptionsIOSDebugTarget.Simulator);
             this.IOSDebugTarget = (IOSDebugTarget)xmlOptions.IOSDebugTarget;
             this.TargetArchitecture = LaunchOptions.ConvertTargetArchitectureAttribute(xmlOptions.TargetArchitecture);
             this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
-            this.Secure = xmlOptions.Secure;
+            this.Secure = (xmlOptions.Secure == MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.True);
         }
 
         public string ExePath { get; private set; }

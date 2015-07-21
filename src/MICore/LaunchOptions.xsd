@@ -98,15 +98,21 @@
             <xs:documentation>Indicates if the debugger should debug to the simulator or a device.</xs:documentation>
           </xs:annotation>
           <xs:restriction base="xs:string">
-            <xs:enumeration value="device" />
-            <xs:enumeration value="simulator" />
+            <xs:enumeration value="Device" />
+            <xs:enumeration value="Simulator" />
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>
-      <xs:attribute name="Secure" type="xs:boolean">
-        <xs:annotation>
-          <xs:documentation>If true, use TSL security</xs:documentation>
-        </xs:annotation>
+      <xs:attribute name="Secure" use="required">
+        <xs:simpleType>
+          <xs:annotation>
+            <xs:documentation>If true, use TSL security.</xs:documentation>
+          </xs:annotation>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="True" />
+            <xs:enumeration value="False" />
+          </xs:restriction>
+        </xs:simpleType>
       </xs:attribute>
       <xs:attributeGroup ref="CommonAttributes"/>
     </xs:complexType>
