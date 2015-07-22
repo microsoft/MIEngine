@@ -101,49 +101,6 @@ namespace Microsoft.MIDebugEngine
                         _waitDialog.ShowWaitDialog(file);
                     }
                 }
-                else if (results.Results.Contains("shlib-info")) //lldb
-                {
-                    ResultListValue r = results.Results.Find<ResultListValue>("shlib-info");
-                    string addr = r.TryFindString("dyld-addr");
-                    if (string.IsNullOrEmpty(addr) || addr == "-")
-                    {
-                        return; // identifies the exe, not a real load
-                    }
-                    // generate module 
-                    int num = r.FindInt("num");
-                    string id = r.TryFindString("name");
-                    file = r.FindString("path");
-                    bool symsLoaded = true;
-                    string symPath = null;
-                    if (r.Contains("dsym-objpath"))
-                    {
-                        symPath = r.FindString("dsym-objpath");
-                        if (string.IsNullOrEmpty(symPath))
-                        {
-                            symsLoaded = false;
-                        }
-                    }
-                    else
-                    {
-                        symPath = file;
-                    }
-                    ulong loadAddr = r.FindAddr("dyld-addr");
-                    uint size = r.FindUint("size");
-                    if (String.IsNullOrEmpty(id))
-                    {
-                        id = file;
-                    }
-                    var module = FindModule(id);
-                    if (module == null)
-                    {
-                        module = new DebuggedModule(id, file, loadAddr, size, symsLoaded, symPath, (uint)num);
-                        lock (_moduleList)
-                        {
-                            _moduleList.Add(module);
-                        }
-                        _callback.OnModuleLoad(module);
-                    }
-                }
                 else if (this.MICommandFactory.Mode == MIMode.Clrdbg)
                 {
                     string id = results.Results.FindString("id");
@@ -156,6 +113,46 @@ namespace Microsoft.MIDebugEngine
                         _moduleList.Add(module);
                     }
                     _callback.OnModuleLoad(module);
+                }
+                else if (!string.IsNullOrEmpty(file))
+                {
+                    string addr = results.Results.TryFindString("loaded_addr");
+                    if (string.IsNullOrEmpty(addr) || addr == "-")
+                    {
+                        return; // identifies the exe, not a real load
+                    }
+                    // generate module 
+                    string id = results.Results.TryFindString("name");
+                    bool symsLoaded = true;
+                    string symPath = null;
+                    if (results.Results.Contains("symbols-path"))
+                    {
+                        symPath = results.Results.FindString("symbols-path");
+                        if (string.IsNullOrEmpty(symPath))
+                        {
+                            symsLoaded = false;
+                        }
+                    }
+                    else
+                    {
+                        symPath = file;
+                    }
+                    ulong loadAddr = results.Results.FindAddr("loaded_addr");
+                    uint size = results.Results.FindUint("size");
+                    if (String.IsNullOrEmpty(id))
+                    {
+                        id = file;
+                    }
+                    var module = FindModule(id);
+                    if (module == null)
+                    {
+                        module = new DebuggedModule(id, file, loadAddr, size, symsLoaded, symPath, _loadOrder++);
+                        lock (_moduleList)
+                        {
+                            _moduleList.Add(module);
+                        }
+                        _callback.OnModuleLoad(module);
+                    }
                 }
             };
 

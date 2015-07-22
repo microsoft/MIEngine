@@ -415,7 +415,7 @@ namespace MICore
             return (results.TryFindString("reason") == "signal-received" && results.TryFindString("signal-name") == "SIGINT");
         }
 
-        public virtual Results IsModuleLoad(string cmd)
+        public Results IsModuleLoad(string cmd)
         {
             Results results = null;
             if (cmd.StartsWith("library-loaded,", StringComparison.Ordinal))
@@ -615,16 +615,6 @@ namespace MICore
         public override bool SupportsStopOnDynamicLibLoad()
         {
             return false;
-        }
-
-        public override Results IsModuleLoad(string cmd)
-        {
-            Results results = null;
-            if (cmd.StartsWith("shlibs-added,", StringComparison.Ordinal))
-            {
-                results = MIResults.ParseResultList(cmd.Substring(13));
-            }
-            return results;
         }
 
         public override bool AllowCommandsWhileRunning()
