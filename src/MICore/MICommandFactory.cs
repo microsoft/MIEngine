@@ -617,16 +617,6 @@ namespace MICore
             return false;
         }
 
-        public override Results IsModuleLoad(string cmd)
-        {
-            Results results = null;
-            if (cmd.StartsWith("shlibs-added,", StringComparison.Ordinal))
-            {
-                results = MIResults.ParseResultList(cmd.Substring(13));
-            }
-            return results;
-        }
-
         public override bool AllowCommandsWhileRunning()
         {
             return false;
