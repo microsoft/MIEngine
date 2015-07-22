@@ -415,7 +415,7 @@ namespace MICore
             return (results.TryFindString("reason") == "signal-received" && results.TryFindString("signal-name") == "SIGINT");
         }
 
-        public virtual Results IsModuleLoad(string cmd)
+        public Results IsModuleLoad(string cmd)
         {
             Results results = null;
             if (cmd.StartsWith("library-loaded,", StringComparison.Ordinal))
