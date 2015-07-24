@@ -96,11 +96,19 @@ namespace MICore
         {
             DecrementReaders();
 
-            if (_process.WaitForExit(50))
+            try
             {
-                // If the pipe process has already exited, or is just about to exit, we want to send the abort event from OnProcessExit
-                // instead of from here since that will have access to stderr
-                return;
+                if (_process.WaitForExit(50))
+                {
+                    // If the pipe process has already exited, or is just about to exit, we want to send the abort event from OnProcessExit
+                    // instead of from here since that will have access to stderr
+                    return;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                Debug.Assert(IsClosed);
+                return; // already closed
             }
 
             base.OnReadStreamAborted();
