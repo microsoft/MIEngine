@@ -256,5 +256,50 @@ namespace MICoreUnitTests
 
             return lines;
         }
+
+        [Fact]
+        public void TestPwdOutputParser()
+        {
+            string result = PwdOutputParser.ExtractWorkingDirectory("/example/directory", "does-not-matter");
+            Assert.Equal(result, "/example/directory");
+
+            string outputWithDebugSpew = string.Concat(
+                "Function: selinux_compare_spd_ram , priority [2] , priority version is VE=SEPF_SM-G920I_5.0.2_0011\n",
+                "[DEBUG] get_category: variable seinfo: default sensitivity: NULL, cateogry: NULL\n",
+                "/data/data/com.Android53");
+            result = PwdOutputParser.ExtractWorkingDirectory(outputWithDebugSpew, "com.Android53");
+            Assert.Equal(result, "/data/data/com.Android53");
+
+            try
+            {
+                PwdOutputParser.ExtractWorkingDirectory("/bogus-directory-with-a-*", "com.Android53");
+                Assert.True(false, "Code should not be reached");
+            }
+            catch (LauncherException e)
+            {
+                Assert.True(e.TelemetryCode == Telemetry.LaunchFailureCode.BadPwdOutput);
+            }
+
+            try
+            {
+                PwdOutputParser.ExtractWorkingDirectory("/directory1\n/directory2", "com.Android53");
+                Assert.True(false, "Code should not be reached");
+            }
+            catch (LauncherException e)
+            {
+                Assert.True(e.TelemetryCode == Telemetry.LaunchFailureCode.BadPwdOutput);
+            }
+
+            try
+            {
+                PwdOutputParser.ExtractWorkingDirectory("run-as: Package 'com.bogus.hellojni' is unknown", "com.bogus.hellojni");
+                Assert.True(false, "Code should not be reached");
+            }
+            catch (LauncherException e)
+            {
+                Assert.True(e.TelemetryCode == Telemetry.LaunchFailureCode.RunAsPackageUnknown);
+            }
+        }
+
     }
 }
