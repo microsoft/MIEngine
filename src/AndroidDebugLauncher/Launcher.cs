@@ -161,6 +161,7 @@ namespace AndroidDebugLauncher
                 string workingDirectory = null;
                 string gdbServerRemotePath = null;
                 string gdbServerSocketDescription = null;
+                string exePath = null;
                 Task taskGdbServer = null;
                 int gdbPortNumber = 0;
                 int progressCurrentIndex = 0;
@@ -236,29 +237,25 @@ namespace AndroidDebugLauncher
                 {
                     try
                     {
-                        DeviceAbi deviceAbi = device.Abi;
-                        if (deviceAbi == DeviceAbi.unknown)
-                            deviceAbi = device.Abi2;
-
+                        DeviceAbi[] allowedAbis;
                         switch (_launchOptions.TargetArchitecture)
                         {
                             case TargetArchitecture.ARM:
-                                if (deviceAbi != DeviceAbi.armeabi && deviceAbi != DeviceAbi.armeabiv7a)
-                                {
-                                    throw GetBadDeviceAbiException(deviceAbi);
-                                }
+                                allowedAbis = new DeviceAbi[] { DeviceAbi.armeabi, DeviceAbi.armeabiv7a };
                                 break;
 
                             case TargetArchitecture.X86:
-                                if (deviceAbi != DeviceAbi.x86)
-                                {
-                                    throw GetBadDeviceAbiException(deviceAbi);
-                                }
+                                allowedAbis = new DeviceAbi[] { DeviceAbi.x86 };
                                 break;
 
                             default:
                                 Debug.Fail("New target architucture support added without updating this code???");
                                 throw new InvalidOperationException();
+                        }
+
+                        if (!DoesDeviceSupportAnyAbi(device, allowedAbis))
+                        {
+                            throw GetBadDeviceAbiException(device.Abi);
                         }
 
                         if (_launchOptions.TargetArchitecture == TargetArchitecture.ARM && device.IsEmulator)
@@ -277,7 +274,7 @@ namespace AndroidDebugLauncher
 
                     string pwdCommand = string.Concat("run-as ", _launchOptions.Package, " /system/bin/sh -c pwd");
                     ExecCommand(pwdCommand);
-                    workingDirectory = ParsePwdOutput(_shell.Out);
+                    workingDirectory = PwdOutputParser.ExtractWorkingDirectory(_shell.Out, _launchOptions.Package);
 
                     // Kill old processes to make sure we aren't confused and think an old process is still arround
                     gdbServerRemotePath = workingDirectory + "/lib/gdbserver";
@@ -333,7 +330,32 @@ namespace AndroidDebugLauncher
                     //pull binaries from the emulator/device
                     var fileSystem = device.FileSystem;
 
-                    fileSystem.Download(@"/system/bin/app_process", Path.Combine(_launchOptions.IntermediateDirectory, "app_process"), true);
+                    // 64-bit TODO: Give the names of the files we download a '64' suffix and update
+                    // the catch block below.
+
+                    string app_process = "app_process32";
+                    exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
+
+                    bool retry = false;
+                    try
+                    {
+                        fileSystem.Download(@"/system/bin/" + app_process, exePath, true);
+                    }
+                    catch (AdbException) // 64-bit TODO: add 'when (is32BitTarget)'
+                    {
+                        // Older devices don't have an 'app_process32', only an 'app_process', so retry
+                        // NOTE: libadb doesn't have an error code property to verify that this is caused
+                        // by the file not being found.
+                        retry = true;
+                    }
+
+                    if (retry)
+                    {
+                        app_process = "app_process";
+                        exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
+                        fileSystem.Download(@"/system/bin/app_process", exePath, true);
+                    }
+
                     fileSystem.Download(@"/system/bin/linker", Path.Combine(_launchOptions.IntermediateDirectory, "linker"), true);
                     fileSystem.Download(@"/system/lib/libc.so", Path.Combine(_launchOptions.IntermediateDirectory, "libc.so"), true);
                 }));
@@ -366,7 +388,7 @@ namespace AndroidDebugLauncher
                 launchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
                 launchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
                 launchOptions.WorkingDirectory = _launchOptions.IntermediateDirectory;
-                launchOptions.ExePath = Path.Combine(_launchOptions.IntermediateDirectory, "app_process");
+                launchOptions.ExePath = exePath;
                 launchOptions.DebuggerMIMode = MIMode.Gdb;
                 launchOptions.VisualizerFile = "Microsoft.Android.natvis";
 
@@ -472,6 +494,33 @@ namespace AndroidDebugLauncher
             {
                 throw new LauncherException(Telemetry.LaunchFailureCode.UnsupportedAndroidVersion, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_UnsupportedAPILevel, sdkVersion));
             }
+        }
+
+        private static bool DoesDeviceSupportAnyAbi(Device device, DeviceAbi[] allowedAbis)
+        {
+            if (allowedAbis.Contains(device.Abi))
+                return true;
+
+            if (allowedAbis.Contains(device.Abi2))
+                return true;
+
+            string abiListValue;
+            if (device.Properties.TryGetPropertyByName("ro.product.cpu.abilist", out abiListValue))
+            {
+                string[] deviceAbis = abiListValue.Split(',');
+                foreach (DeviceAbi allowedAbi in allowedAbis)
+                {
+                    string allowedAbiString = allowedAbi.ToString();
+
+                    foreach (string deviceAbi in deviceAbis)
+                    {
+                        if (deviceAbi.Equals(allowedAbiString, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private void KillOldInstances(string gdbServerProcessName)
@@ -645,48 +694,6 @@ namespace AndroidDebugLauncher
             }
 
             return _shell.Out.Trim();
-        }
-
-        private string ParsePwdOutput(string commandOutput)
-        {
-            commandOutput = commandOutput.Trim();
-            if (commandOutput.EndsWith("/", StringComparison.Ordinal))
-                commandOutput = commandOutput.TrimEnd('/');
-
-            if (commandOutput.Length == 0 ||
-                commandOutput[0] != '/' ||
-                commandOutput.IndexOfAny(Path.GetInvalidPathChars()) >= 0 ||
-                commandOutput.IndexOf(':') >= 0)
-            {
-                // Handle run-as errors. We will get into this code path if the supplied package name is wrong.
-                // Example commandOutput: "run-as: Package 'com.bogus.hellojni' is unknown"
-                char[] newLines = { '\r', '\n' };
-                if (commandOutput.StartsWith("run-as:", StringComparison.Ordinal) && commandOutput.IndexOfAny(newLines) < 0)
-                {
-                    string errorMessage = commandOutput.Substring("run-as:".Length).Trim();
-                    if (errorMessage.Length > 0)
-                    {
-                        if (!char.IsPunctuation(errorMessage[errorMessage.Length - 1]))
-                        {
-                            errorMessage = string.Concat(errorMessage, ".");
-                        }
-
-                        Telemetry.LaunchFailureCode telemetryCode = Telemetry.LaunchFailureCode.RunAsFailure;
-
-                        if (errorMessage == string.Format(CultureInfo.InvariantCulture, "Package '{0}' is unknown.", _launchOptions.Package))
-                        {
-                            telemetryCode = Telemetry.LaunchFailureCode.RunAsPackageUnknown;
-                            errorMessage = string.Concat(errorMessage, "\r\n\r\n", LauncherResources.Error_RunAsUnknownPackage);
-                        }
-
-                        throw new LauncherException(telemetryCode, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_ShellCommandFailed, "run-as", errorMessage));
-                    }
-                }
-
-                throw new LauncherException(Telemetry.LaunchFailureCode.BadPwdOutput, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_ShellCommandBadResults, "pwd"));
-            }
-
-            return commandOutput;
         }
 
         private LauncherException GetBadDeviceAbiException(DeviceAbi deviceAbi)
