@@ -783,7 +783,7 @@ namespace AndroidDebugLauncher
             }
 
             // Do not kill the app on detach
-            if (!_launchOptions.IsAttach)
+            if (_launchOptions != null && !_launchOptions.IsAttach)
             {
                 // Kill the app if it has been launched
                 int appProcessId = Interlocked.Exchange(ref _appProcessId, 0);
