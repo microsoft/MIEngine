@@ -359,7 +359,7 @@ namespace MICore
                 throw new ArgumentNullException("exePath");
 
             if (string.IsNullOrWhiteSpace(options))
-                throw GetLaunchOptionsException(MICoreResources.Error_StringIsNullOrEmpty);
+                throw new InvalidLaunchOptionsException(MICoreResources.Error_StringIsNullOrEmpty);
 
             if (string.IsNullOrEmpty(registryRoot))
                 throw new ArgumentNullException("registryRoot");
@@ -437,7 +437,7 @@ namespace MICore
             }
             catch (XmlException e)
             {
-                throw GetLaunchOptionsException(e.Message);
+                throw new InvalidLaunchOptionsException(e.Message);
             }
 
             if (clsidLauncher != Guid.Empty)
@@ -528,7 +528,7 @@ namespace MICore
                 // and the inner exception message is better.
                 Exception e = outerException.InnerException ?? outerException;
 
-                throw GetLaunchOptionsException(e.Message);
+                throw new InvalidLaunchOptionsException(e.Message);
             }
         }
 
@@ -630,15 +630,10 @@ namespace MICore
             }
         }
 
-        protected static Exception GetLaunchOptionsException(string message)
-        {
-            return new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLaunchOptions, message));
-        }
-
         public static string RequireAttribute(string attributeValue, string attributeName)
         {
             if (string.IsNullOrWhiteSpace(attributeValue))
-                throw GetLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MissingAttribute, attributeName));
+                throw new InvalidLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MissingAttribute, attributeName));
 
             return attributeValue;
         }
@@ -647,7 +642,7 @@ namespace MICore
         {
             if (attributeValue <= 0 || attributeValue >= 0xffff)
             {
-                throw GetLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "Port"));
+                throw new InvalidLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "Port"));
             }
 
             return attributeValue;
@@ -670,9 +665,9 @@ namespace MICore
                     deviceAppLauncher.Initialize(registryRoot, eventCallback);
                     deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions);
                 }
-                catch (Exception e)
+                catch (Exception e) when (!(e is InvalidLaunchOptionsException))
                 {
-                    throw GetLaunchOptionsException(e.Message);
+                    throw new InvalidLaunchOptionsException(e.Message);
                 }
 
                 LaunchOptions debuggerLaunchOptions;
