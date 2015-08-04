@@ -200,10 +200,8 @@ namespace MICore
             }
         }
 
-        protected async virtual void OnStateChanged(string mode, string strresult)
+        protected virtual void OnStateChanged(string mode, string strresult)
         {
-            // NOTE: This is an async void method, so any exception leaked from here may crash Visual Studio. Be very careful.
-
             Results results = MIResults.ParseResultList(strresult);
 
             if (mode == "stopped")
@@ -222,7 +220,7 @@ namespace MICore
             {
                 OnDebuggerProcessExit();
             }
-            else if (mode.StartsWith("done,bkpt="))
+            else if (mode.StartsWith("done,bkpt=", StringComparison.Ordinal))
             {
                 // TODO handle breakpoint binding
             }

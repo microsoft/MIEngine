@@ -90,7 +90,7 @@ namespace MICoreUnitTests
                 var baseOptions = GetLaunchOptions(content);
                 Assert.True(false, "Code path should be unreachable");
             }
-            catch (ArgumentException e)
+            catch (InvalidLaunchOptionsException e)
             {
                 Assert.True(e.Message.Contains("MIDebuggerPath"));
             }
@@ -221,7 +221,7 @@ namespace MICoreUnitTests
                 GetLaunchOptions(content);
                 Assert.True(false, "Should be unreachable");
             }
-            catch (ArgumentException e)
+            catch (InvalidLaunchOptionsException e)
             {
                 Assert.True(e.Message.Contains("Port"));
             }
@@ -238,7 +238,7 @@ namespace MICoreUnitTests
                 GetLaunchOptions(content);
                 Assert.True(false, "Should be unreachable");
             }
-            catch (ArgumentException e)
+            catch (InvalidLaunchOptionsException e)
             {
                 Assert.True(e.Message.StartsWith("Launch options", StringComparison.Ordinal));
             }
@@ -255,7 +255,7 @@ namespace MICoreUnitTests
                 GetLaunchOptions(content);
                 Assert.True(false, "Should be unreachable");
             }
-            catch (ArgumentException e)
+            catch (InvalidLaunchOptionsException e)
             {
                 Assert.True(e.Message.StartsWith("Launch options", StringComparison.Ordinal));
             }
@@ -279,7 +279,7 @@ namespace MICoreUnitTests
                 GetLaunchOptions(content);
                 Assert.True(false, "Should be unreachable");
             }
-            catch (ArgumentException e)
+            catch (InvalidLaunchOptionsException e)
             {
                 Assert.True(e.Message.StartsWith("Launch options", StringComparison.Ordinal));
             }

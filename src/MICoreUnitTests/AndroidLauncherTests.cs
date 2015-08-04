@@ -56,7 +56,7 @@ namespace MICoreUnitTests
 
                 Assert.True(false, "Exception was not thrown");
             }
-            catch (ArgumentException e)
+            catch (MICore.InvalidLaunchOptionsException e)
             {
                 Assert.True(e.Message.Contains("LaunchActivity"));
             }
@@ -105,7 +105,7 @@ namespace MICoreUnitTests
 
                 Assert.True(false, "Exception was not thrown");
             }
-            catch (ArgumentException e)
+            catch (MICore.InvalidLaunchOptionsException e)
             {
                 Assert.True(e.Message.Contains("BadValue"));
             }
