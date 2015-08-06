@@ -113,7 +113,7 @@ namespace Microsoft.MIDebugEngine
                             // Underlying debugger sometimes has trouble with long expressions (parent-expression can be arbitrarily long),
                             // so attempt to simplify the expression by using ((parent-type)0xabc)->field instead of (parent-expression)->field 
                             ulong addr;
-                            if (_parent.Value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) 
+                            if (_parent.Value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
                                     && ulong.TryParse(_parent.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out addr))
                             {
                                 parentName = '(' + _parent.TypeName + ')' + _parent.Value;

@@ -95,7 +95,7 @@ namespace IOSDebugLauncher
             debuggerLaunchOptions.LaunchCompleteCommand = GetLaunchCompleteCommand();
         }
 
-        ReadOnlyCollection<LaunchCommand> GetCustomLaunchSetupCommands()
+        private ReadOnlyCollection<LaunchCommand> GetCustomLaunchSetupCommands()
         {
             var commands = new List<LaunchCommand>();
 

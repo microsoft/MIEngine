@@ -44,7 +44,7 @@ namespace MICore
 
             Echo("");
 
-            for (; ;)
+            for (;;)
             {
                 line = GetLine();
                 if (line != null)
@@ -71,7 +71,7 @@ namespace MICore
         {
             Echo(cmd);
             Thread.Sleep(333);             // give it 1/3 of a second to do something
-            for (; ;)
+            for (;;)
             {
                 string line = GetLine();
                 if (line != null && line.EndsWith(cmd, StringComparison.Ordinal))
@@ -127,7 +127,7 @@ namespace MICore
         {
             // read chars until we get a Newline, or until we get a long delay
             StringBuilder sb = new StringBuilder(300);
-            for (; ;)
+            for (;;)
             {
                 try
                 {

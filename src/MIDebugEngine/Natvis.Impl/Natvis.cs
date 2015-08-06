@@ -805,7 +805,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         private VisualizerInfo Scan(TypeName name, IVariableInformation variable)
         {
             int aliasChain = 0;
-            tryAgain:
+        tryAgain:
             foreach (var autoVis in _typeVisualizers)
             {
                 var visualizer = autoVis.Visualizers.Find((v) => v.ParsedName.Match(name));   // TODO: match on View, version, etc

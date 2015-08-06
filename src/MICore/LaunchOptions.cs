@@ -94,7 +94,7 @@ namespace MICore
 
             return options;
         }
-        
+
         /// <summary>
         /// [Required] Path to the pipe executable.
         /// </summary>
@@ -196,7 +196,7 @@ namespace MICore
     /// </summary>
     public abstract class LaunchOptions
     {
-        const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
+        private const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
 
         private bool _initializationComplete;
 
@@ -455,7 +455,7 @@ namespace MICore
                 launchOptions.WorkingDirectory = dir;
 
             if (launchOptions._setupCommands == null)
-                launchOptions._setupCommands = new List<LaunchCommand>(capacity:0).AsReadOnly();
+                launchOptions._setupCommands = new List<LaunchCommand>(capacity: 0).AsReadOnly();
 
             launchOptions._initializationComplete = true;
             return launchOptions;

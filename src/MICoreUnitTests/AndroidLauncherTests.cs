@@ -111,7 +111,7 @@ namespace MICoreUnitTests
             }
         }
 
-        AndroidDebugLauncher.AndroidLaunchOptions CreateFromXml(string content)
+        private AndroidDebugLauncher.AndroidLaunchOptions CreateFromXml(string content)
         {
             using (XmlReader reader = MICore.LaunchOptions.OpenXml(content))
             {
@@ -300,6 +300,5 @@ namespace MICoreUnitTests
                 Assert.True(e.TelemetryCode == Telemetry.LaunchFailureCode.RunAsPackageUnknown);
             }
         }
-
     }
 }

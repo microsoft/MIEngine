@@ -429,7 +429,7 @@ namespace MICore
             {
                 if (t.Result.Contains("reason"))    // interrupt finished synchronously
                 {
-                    ScheduleResultProcessing(()=>OnStopped(t.Result));
+                    ScheduleResultProcessing(() => OnStopped(t.Result));
                 }
             });
         }
