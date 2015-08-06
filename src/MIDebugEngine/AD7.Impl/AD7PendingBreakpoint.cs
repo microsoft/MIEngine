@@ -412,8 +412,8 @@ namespace Microsoft.MIDebugEngine
                     _engine.Callback.OnBreakpointError(_BPError);
                     return Constants.E_FAIL;
                 }
-                if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0 
-                    && _bpRequestInfo.bpCondition.styleCondition == bpCondition.styleCondition 
+                if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0
+                    && _bpRequestInfo.bpCondition.styleCondition == bpCondition.styleCondition
                     && _bpRequestInfo.bpCondition.bstrCondition == bpCondition.bstrCondition)
                 {
                     return Constants.S_OK;  // this condition was already set
@@ -429,9 +429,9 @@ namespace Microsoft.MIDebugEngine
             {
                 _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
                 {
-                _engine.DebuggedProcess.AddInternalBreakAction(
-                    ()=>bp.SetConditionAsync(bpCondition.bstrCondition, _engine.DebuggedProcess)
-                        );
+                    _engine.DebuggedProcess.AddInternalBreakAction(
+                        () => bp.SetConditionAsync(bpCondition.bstrCondition, _engine.DebuggedProcess)
+                            );
                 });
             }
             return Constants.S_OK;

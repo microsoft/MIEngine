@@ -33,10 +33,10 @@ namespace Microsoft.MIDebugEngine
                 filename = miTuple.TryFindString("file");
             }
             if (!string.IsNullOrEmpty(filename))
-            { 
+            {
                 filename = DebuggedProcess.UnixPathToWindowsPath(filename);
             }
-       
+
             if (string.IsNullOrWhiteSpace(filename))
                 return null;
 

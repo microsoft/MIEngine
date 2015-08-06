@@ -46,7 +46,6 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             catch (Exception)
             {
-
             }
             paths.ForEach((s) => loader(s));
         }
@@ -133,7 +132,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                     return Constants.S_OK == proj.GetFilesWithItemType("natvis", celt, rgitemids, out cActual);
                 }
             }
-
         }
     }
 }

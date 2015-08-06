@@ -2165,7 +2165,6 @@ namespace Microsoft.MIDebugEngine.Natvis
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class AliasType
     {
-
         private string _valueField;
 
         private string _nameField;
@@ -2197,5 +2196,4 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
     }
-
 }

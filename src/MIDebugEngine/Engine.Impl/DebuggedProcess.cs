@@ -453,7 +453,7 @@ namespace Microsoft.MIDebugEngine
                 string exe = EscapePath(_launchOptions.ExePath);
                 commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath)));
 
-                commands.Add(new LaunchCommand("-break-insert main", ignoreFailures:true));
+                commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
 
                 if (_launchOptions is LocalLaunchOptions)
                 {
