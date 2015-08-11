@@ -424,6 +424,14 @@ namespace MICore
                             }
                             break;
 
+                        case "BlackBerryLaunchOptions":
+                            {
+                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.BlackBerryLaunchOptionsSerializer();
+                                launcherXmlOptions = Deserialize(serializer, reader);
+                                clsidLauncher = new Guid("43BC8C7F-5184-4FE8-9ECF-F33A498375EE");
+                            }
+                            break;
+
                         default:
                             {
                                 throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
