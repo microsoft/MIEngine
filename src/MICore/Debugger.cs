@@ -63,6 +63,7 @@ namespace MICore
         private LinkedList<string> _initialErrors = new LinkedList<string>();
 
         protected bool _connected;
+        private IBreakHandler _breakHandler;
 
         public class ResultEventArgs : EventArgs
         {
@@ -319,6 +320,7 @@ namespace MICore
             FlushBreakStateData();
 
             _transport.Init(this, options);
+            _breakHandler = options.DeviceAppLauncher as IBreakHandler;
 
             switch (options.TargetArchitecture)
             {
@@ -424,6 +426,11 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
+            if (_breakHandler != null)
+            {
+                _breakHandler.Break();
+            }
+
             var res = CmdAsync("-exec-interrupt", ResultClass.done);
             return res.ContinueWith((t) =>
             {
