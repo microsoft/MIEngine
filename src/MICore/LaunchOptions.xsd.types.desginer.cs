@@ -319,15 +319,15 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <uwagi/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string GdbPath;
+        
+        /// <uwagi/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string GdbHostPath;
         
         /// <uwagi/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TargetId;
-        
-        /// <uwagi/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string TargetName;
+        public string TargetAddress;
         
         /// <uwagi/>
         [System.Xml.Serialization.XmlAttributeAttribute()]

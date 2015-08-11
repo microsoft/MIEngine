@@ -124,21 +124,21 @@
     </xs:annotation>
 
     <xs:complexType>
+      <xs:attribute name="GdbPath" type="xs:string" use="required">
+        <xs:annotation>
+          <xs:documentation>Path to the local GDB used to communicate with the device. It is responsible for sending and receiving MI/MI2 commands.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      
       <xs:attribute name="GdbHostPath" type="xs:string" use="required">
         <xs:annotation>
           <xs:documentation>Path to the local executable that will start GDB work as a pipe to for communication and CTRL+C signal generator.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
 
-      <xs:attribute name="TargetId" type="xs:string" use="required">
+      <xs:attribute name="TargetAddress" type="xs:string" use="required">
         <xs:annotation>
-          <xs:documentation>Device id of the simulator/device on the BlackBerry Native Plugin side.</xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-
-      <xs:attribute name="TargetName" type="xs:string" use="required">
-        <xs:annotation>
-          <xs:documentation>The name or IP of the target device to connect to.</xs:documentation>
+          <xs:documentation>The network name or IP of the target device to connect to.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
 

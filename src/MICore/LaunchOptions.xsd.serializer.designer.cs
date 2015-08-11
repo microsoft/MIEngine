@@ -476,9 +476,9 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             }
             WriteStartElement(n, ns, o, false, null);
             if (needType) WriteXsiType(null, @"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
+            WriteAttribute(@"GdbPath", @"", ((global::System.String)o.@GdbPath));
             WriteAttribute(@"GdbHostPath", @"", ((global::System.String)o.@GdbHostPath));
-            WriteAttribute(@"TargetId", @"", ((global::System.String)o.@TargetId));
-            WriteAttribute(@"TargetName", @"", ((global::System.String)o.@TargetName));
+            WriteAttribute(@"TargetAddress", @"", ((global::System.String)o.@TargetAddress));
             if (((global::System.UInt32)o.@TargetPort) != (System.UInt32)(8000)) {
                 WriteAttribute(@"TargetPort", @"", System.Xml.XmlConvert.ToString((global::System.UInt32)((global::System.UInt32)o.@TargetPort)));
             }
@@ -1695,16 +1695,16 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             o = new global::MICore.Xml.LaunchOptions.BlackBerryLaunchOptions();
             bool[] paramsRead = new bool[12];
             while (Reader.MoveToNextAttribute()) {
-                if (!paramsRead[0] && ((object) Reader.LocalName == (object)id35_GdbHostPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
-                    o.@GdbHostPath = Reader.Value;
+                if (!paramsRead[0] && ((object) Reader.LocalName == (object)id35_GdbPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    o.@GdbPath = Reader.Value;
                     paramsRead[0] = true;
                 }
-                else if (!paramsRead[1] && ((object) Reader.LocalName == (object)id36_TargetId && (object) Reader.NamespaceURI == (object)id4_Item)) {
-                    o.@TargetId = Reader.Value;
+                else if (!paramsRead[1] && ((object) Reader.LocalName == (object)id36_GdbHostPath && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    o.@GdbHostPath = Reader.Value;
                     paramsRead[1] = true;
                 }
-                else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id37_TargetName && (object) Reader.NamespaceURI == (object)id4_Item)) {
-                    o.@TargetName = Reader.Value;
+                else if (!paramsRead[2] && ((object) Reader.LocalName == (object)id37_TargetAddress && (object) Reader.NamespaceURI == (object)id4_Item)) {
+                    o.@TargetAddress = Reader.Value;
                     paramsRead[2] = true;
                 }
                 else if (!paramsRead[3] && ((object) Reader.LocalName == (object)id38_TargetPort && (object) Reader.NamespaceURI == (object)id4_Item)) {
@@ -1745,7 +1745,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
                     paramsRead[11] = true;
                 }
                 else if (!IsXmlnsAttribute(Reader.Name)) {
-                    UnknownNode((object)o, @":GdbHostPath, :TargetId, :TargetName, :TargetPort, :TargetType, :Attach, :PID, :NdkHostPath, :NdkTargetPath, :TargetArchitecture, :AdditionalSOLibSearchPath, :MIMode");
+                    UnknownNode((object)o, @":GdbPath, :GdbHostPath, :TargetAddress, :TargetPort, :TargetType, :Attach, :PID, :NdkHostPath, :NdkTargetPath, :TargetArchitecture, :AdditionalSOLibSearchPath, :MIMode");
                 }
             }
             Reader.MoveToElement();
@@ -2135,8 +2135,9 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         }
 
         string id32_PipeArguments;
-        string id35_GdbHostPath;
+        string id36_GdbHostPath;
         string id52_IntermediateDirectory;
+        string id37_TargetAddress;
         string id34_MIDebuggerServerAddress;
         string id2_Item;
         string id26_SetupCommands;
@@ -2153,7 +2154,6 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         string id41_PID;
         string id38_TargetPort;
         string id9_IOSLaunchOptions;
-        string id36_TargetId;
         string id16_PipeLaunchOptions;
         string id53_DeviceId;
         string id21_VisualizerFile;
@@ -2169,12 +2169,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         string id49_LaunchActivity;
         string id5_MIMode;
         string id11_IOSLaunchOptionsSecure;
-        string id37_TargetName;
+        string id42_NdkHostPath;
         string id28_LaunchCompleteCommand;
         string id17_TcpLaunchOptions;
         string id33_MIDebuggerPath;
         string id45_PackageId;
-        string id42_NdkHostPath;
         string id39_TargetType;
         string id8_Item;
         string id54_LogcatServiceId;
@@ -2186,13 +2185,15 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
         string id1_AndroidLaunchOptions;
         string id47_IOSDebugTarget;
         string id23_Hostname;
+        string id35_GdbPath;
         string id44_RemoteMachineName;
         string id18_ExePath;
 
         protected override void InitIDs() {
             id32_PipeArguments = Reader.NameTable.Add(@"PipeArguments");
-            id35_GdbHostPath = Reader.NameTable.Add(@"GdbHostPath");
+            id36_GdbHostPath = Reader.NameTable.Add(@"GdbHostPath");
             id52_IntermediateDirectory = Reader.NameTable.Add(@"IntermediateDirectory");
+            id37_TargetAddress = Reader.NameTable.Add(@"TargetAddress");
             id34_MIDebuggerServerAddress = Reader.NameTable.Add(@"MIDebuggerServerAddress");
             id2_Item = Reader.NameTable.Add(@"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014");
             id26_SetupCommands = Reader.NameTable.Add(@"SetupCommands");
@@ -2209,7 +2210,6 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             id41_PID = Reader.NameTable.Add(@"PID");
             id38_TargetPort = Reader.NameTable.Add(@"TargetPort");
             id9_IOSLaunchOptions = Reader.NameTable.Add(@"IOSLaunchOptions");
-            id36_TargetId = Reader.NameTable.Add(@"TargetId");
             id16_PipeLaunchOptions = Reader.NameTable.Add(@"PipeLaunchOptions");
             id53_DeviceId = Reader.NameTable.Add(@"DeviceId");
             id21_VisualizerFile = Reader.NameTable.Add(@"VisualizerFile");
@@ -2225,12 +2225,11 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             id49_LaunchActivity = Reader.NameTable.Add(@"LaunchActivity");
             id5_MIMode = Reader.NameTable.Add(@"MIMode");
             id11_IOSLaunchOptionsSecure = Reader.NameTable.Add(@"IOSLaunchOptionsSecure");
-            id37_TargetName = Reader.NameTable.Add(@"TargetName");
+            id42_NdkHostPath = Reader.NameTable.Add(@"NdkHostPath");
             id28_LaunchCompleteCommand = Reader.NameTable.Add(@"LaunchCompleteCommand");
             id17_TcpLaunchOptions = Reader.NameTable.Add(@"TcpLaunchOptions");
             id33_MIDebuggerPath = Reader.NameTable.Add(@"MIDebuggerPath");
             id45_PackageId = Reader.NameTable.Add(@"PackageId");
-            id42_NdkHostPath = Reader.NameTable.Add(@"NdkHostPath");
             id39_TargetType = Reader.NameTable.Add(@"TargetType");
             id8_Item = Reader.NameTable.Add(@"BaseLaunchOptionsLaunchCompleteCommand");
             id54_LogcatServiceId = Reader.NameTable.Add(@"LogcatServiceId");
@@ -2242,6 +2241,7 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             id1_AndroidLaunchOptions = Reader.NameTable.Add(@"AndroidLaunchOptions");
             id47_IOSDebugTarget = Reader.NameTable.Add(@"IOSDebugTarget");
             id23_Hostname = Reader.NameTable.Add(@"Hostname");
+            id35_GdbPath = Reader.NameTable.Add(@"GdbPath");
             id44_RemoteMachineName = Reader.NameTable.Add(@"RemoteMachineName");
             id18_ExePath = Reader.NameTable.Add(@"ExePath");
         }
