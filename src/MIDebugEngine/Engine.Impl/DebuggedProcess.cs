@@ -394,6 +394,10 @@ namespace Microsoft.MIDebugEngine
                             throw new UnexpectedMIResultException(command.CommandText, miError);
                         }
                     }
+                    else
+                    {
+                        await ConsoleCmdAsync(command.CommandText);
+                    }
                 }
 
 
