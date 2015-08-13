@@ -15,7 +15,7 @@ namespace AndroidDebugLauncher
 {
     internal class AndroidLaunchOptions
     {
-        public AndroidLaunchOptions(MICore.Xml.LaunchOptions.AndroidLaunchOptions xmlOptions)
+        public AndroidLaunchOptions(MICore.Xml.LaunchOptions.AndroidLaunchOptions xmlOptions, TargetEngine targetEngine)
         {
             if (xmlOptions == null)
             {
@@ -32,7 +32,13 @@ namespace AndroidDebugLauncher
             this.SDKRoot = GetOptionalDirectoryAttribute(xmlOptions.SDKRoot, "SDKRoot");
             this.NDKRoot = GetOptionalDirectoryAttribute(xmlOptions.NDKRoot, "NDKRoot");
             this.TargetArchitecture = LaunchOptions.ConvertTargetArchitectureAttribute(xmlOptions.TargetArchitecture);
-            this.IntermediateDirectory = RequireValidDirectoryAttribute(xmlOptions.IntermediateDirectory, "IntermediateDirectory");
+
+            if (targetEngine == TargetEngine.Native)
+                this.IntermediateDirectory = RequireValidDirectoryAttribute(xmlOptions.IntermediateDirectory, "IntermediateDirectory");
+            else
+                this.IntermediateDirectory = GetOptionalDirectoryAttribute(xmlOptions.IntermediateDirectory, "IntermediateDirectory");
+
+
             this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
             this.DeviceId = LaunchOptions.RequireAttribute(xmlOptions.DeviceId, "DeviceId");
             this.LogcatServiceId = GetLogcatServiceIdAttribute(xmlOptions.LogcatServiceId);

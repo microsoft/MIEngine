@@ -29,7 +29,7 @@
           <xs:documentation>Full path to the root of the Android NDK.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="IntermediateDirectory" type="xs:string" use="required">
+      <xs:attribute name="IntermediateDirectory" type="xs:string" use="optional">
         <xs:annotation>
           <xs:documentation>Full path to the directory where files from the device/emulator will be downloaded to. This directory is added to the SO Lib search path automatically.</xs:documentation>
         </xs:annotation>
