@@ -23,56 +23,56 @@ b. Included Microsoft Programs. The software contains other Microsoft programs. 
 4. DOCUMENTATION. Any person that has valid access to your computer or internal network may copy and use the documentation for your internal, reference purposes.
 5. TRANSFER TO ANOTHER DEVICE. You may uninstall the software and install it on another device for your use. You may not do so to share this license between devices.
 6. EXPORT RESTRICTIONS. The software is subject to United States export laws and regulations. You must comply with all domestic and international export laws and regulations that apply to the software. These laws include restrictions on destinations, end users and end use. For additional information, see www.microsoft.com/exporting.
-7. SUPPORT SERVICES. Because this software is ìas is,î we may not provide support services for it.
+7. SUPPORT SERVICES. Because this software is ‚Äúas is,‚Äù we may not provide support services for it.
 8. ENTIRE AGREEMENT. This agreement, and the terms for supplements, updates, Internet-based services and support services that you use, are the entire agreement for the software and support services.
 9. APPLICABLE LAW.
 a. United States. If you acquired the software in the United States, Washington state law governs the interpretation of this agreement and applies to claims for breach of it, regardless of conflict of laws principles. The laws of the state where you live govern all other claims, including claims under state consumer protection laws, unfair competition laws, and in tort.
 b. Outside the United States. If you acquired the software in any other country, the laws of that country apply.
 10. LEGAL EFFECT. This agreement describes certain legal rights. You may have other rights under the laws of your country. You may also have rights with respect to the party from whom you acquired the software. This agreement does not change your rights under the laws of your country if the laws of your country do not permit it to do so.
-11. DISCLAIMER OF WARRANTY. THE SOFTWARE IS LICENSED ìAS-IS.î YOU BEAR THE RISK OF USING IT. MICROSOFT GIVES NO EXPRESS WARRANTIES, GUARANTEES OR CONDITIONS. YOU MAY HAVE ADDITIONAL CONSUMER RIGHTS OR STATUTORY GUARANTEES UNDER YOUR LOCAL LAWS WHICH THIS AGREEMENT CANNOT CHANGE. TO THE EXTENT PERMITTED UNDER YOUR LOCAL LAWS, MICROSOFT EXCLUDES THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-FOR AUSTRALIA ñ YOU HAVE STATUTORY GUARANTEES UNDER THE AUSTRALIAN CONSUMER LAW AND NOTHING IN THESE TERMS IS INTENDED TO AFFECT THOSE RIGHTS.
+11. DISCLAIMER OF WARRANTY. THE SOFTWARE IS LICENSED ‚ÄúAS-IS.‚Äù YOU BEAR THE RISK OF USING IT. MICROSOFT GIVES NO EXPRESS WARRANTIES, GUARANTEES OR CONDITIONS. YOU MAY HAVE ADDITIONAL CONSUMER RIGHTS OR STATUTORY GUARANTEES UNDER YOUR LOCAL LAWS WHICH THIS AGREEMENT CANNOT CHANGE. TO THE EXTENT PERMITTED UNDER YOUR LOCAL LAWS, MICROSOFT EXCLUDES THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+FOR AUSTRALIA ‚Äì YOU HAVE STATUTORY GUARANTEES UNDER THE AUSTRALIAN CONSUMER LAW AND NOTHING IN THESE TERMS IS INTENDED TO AFFECT THOSE RIGHTS.
 12. LIMITATION ON AND EXCLUSION OF REMEDIES AND DAMAGES. YOU CAN RECOVER FROM MICROSOFT AND ITS SUPPLIERS ONLY DIRECT DAMAGES UP TO U.S. $5.00. YOU CANNOT RECOVER ANY OTHER DAMAGES, INCLUDING CONSEQUENTIAL, LOST PROFITS, SPECIAL, INDIRECT OR INCIDENTAL DAMAGES.
 This limitation applies to
 * anything related to the software, services, content (including code) on third party Internet sites, or third party programs; and
 * claims for breach of contract, breach of warranty, guarantee or condition, strict liability, negligence, or other tort to the extent permitted by applicable law.
 It also applies even if Microsoft knew or should have known about the possibility of the damages. The above limitation or exclusion may not apply to you because your country may not allow the exclusion or limitation of incidental, consequential or other damages.
 Please note: As this software is distributed in Quebec, Canada, these license terms are provided below in French.
-Remarque†: Ce logiciel Ètant distribuÈ au QuÈbec, Canada, les termes de cette licence sont fournis ci-dessous en franÁais.
-TERMES DU CONTRAT DE LICENCE DíUN LOGICIEL MICROSOFT
+Remarque¬†: Ce logiciel √©tant distribu√© au Qu√©bec, Canada, les termes de cette licence sont fournis ci-dessous en fran√ßais.
+TERMES DU CONTRAT DE LICENCE D‚ÄôUN LOGICIEL MICROSOFT
 MICROSOFT GLASS TEST PACKAGE 
-Les prÈsents termes ont valeur de contrat entre Microsoft Corporation (ou en fonction du lieu o˘ vous vivez, líun de ses affiliÈs) et vous. Lisez-les attentivement. Ils portent sur le logiciel nommÈ ci-dessus, y compris le support sur lequel vous líavez reÁu le cas ÈchÈant. Ce contrat porte Ègalement sur les produits Microsoft suivants†:
-* les mises ‡ jour,
-* les supplÈments,
+Les pr√©sents termes ont valeur de contrat entre Microsoft Corporation (ou en fonction du lieu o√π vous vivez, l‚Äôun de ses affili√©s) et vous. Lisez-les attentivement. Ils portent sur le logiciel nomm√© ci-dessus, y compris le support sur lequel vous l‚Äôavez re√ßu le cas √©ch√©ant. Ce contrat porte √©galement sur les produits Microsoft suivants¬†:
+* les mises √† jour,
+* les suppl√©ments,
 * les services Internet et
-* les services díassistance technique
-de ce logiciel ‡ moins que díautres termes níaccompagnent ces produits, auquel cas, ces derniers prÈvalent.
-EN UTILISANT LE LOGICIEL, VOUS ACCEPTEZ CES TERMES. SI VOUS NE LES ACCEPTEZ PAS, NíUTILISEZ PAS LE LOGICIEL.
+* les services d‚Äôassistance technique
+de ce logiciel √† moins que d‚Äôautres termes n‚Äôaccompagnent ces produits, auquel cas, ces derniers pr√©valent.
+EN UTILISANT LE LOGICIEL, VOUS ACCEPTEZ CES TERMES. SI VOUS NE LES ACCEPTEZ PAS, N‚ÄôUTILISEZ PAS LE LOGICIEL.
 SI VOUS RESPECTEZ LES PRESENTES CONDITIONS DE LICENCE, VOUS DISPOSEZ DES DROITS SUIVANTS POUR LA DUREE DES DROITS DE PROPRIETE INTELLECTUELLE.
-1. INSTALLATION ET DROITS DíUTILISATION. 
-a. Installation et utilisation. Vous Ítes autorisÈ ‡†: installer et utiliser un nombre quelconque de copies du logiciel sur vos dispositifs.
-b. Programmes Logiciels Microsoft Fournis. Le logiciel contient díautres programmes Microsoft. Les termes du contrat de licence qui accompagne ces programmes síappliquent ‡ leur utilisation.
-2. PORTEE DE LA LICENCE. Le logiciel est concÈdÈ sous licence, pas vendu. Ce contrat vous octroie uniquement certains droits díutilisation du logiciel. Microsoft se rÈserve tous les autres droits. ¿ moins que la loi en vigueur vous confËre davantage de droits nonobstant cette limitation, vous pouvez utiliser le logiciel uniquement tel quíexplicitement autorisÈ dans le prÈsent accord. ¿ cette fin, vous devez respecter les restrictions techniques du logiciel qui autorisent uniquement son utilisation de certaines faÁons. Vous níÍtes pas autorisÈ ‡†:
+1. INSTALLATION ET DROITS D‚ÄôUTILISATION. 
+a. Installation et utilisation. Vous √™tes autoris√© √†¬†: installer et utiliser un nombre quelconque de copies du logiciel sur vos dispositifs.
+b. Programmes Logiciels Microsoft Fournis. Le logiciel contient d‚Äôautres programmes Microsoft. Les termes du contrat de licence qui accompagne ces programmes s‚Äôappliquent √† leur utilisation.
+2. PORTEE DE LA LICENCE. Le logiciel est conc√©d√© sous licence, pas vendu. Ce contrat vous octroie uniquement certains droits d‚Äôutilisation du logiciel. Microsoft se r√©serve tous les autres droits. √Ä moins que la loi en vigueur vous conf√®re davantage de droits nonobstant cette limitation, vous pouvez utiliser le logiciel uniquement tel qu‚Äôexplicitement autoris√© dans le pr√©sent accord. √Ä cette fin, vous devez respecter les restrictions techniques du logiciel qui autorisent uniquement son utilisation de certaines fa√ßons. Vous n‚Äô√™tes pas autoris√© √†¬†:
 * contourner les limitations techniques du logiciel ;
-* reconstituer la logique du logiciel, le dÈcompiler ou le dÈsassembler, sauf dans la mesure o˘ ces opÈrations seraient expressÈment autorisÈes par la rÈglementation applicable nonobstant la prÈsente limitation ;
-* faire plus de copies du logiciel que spÈcifiÈ dans ce contrat ou par la rÈglementation applicable, nonobstant la prÈsente limitation ;
-* publier le logiciel pour que díautres le copient ;
-* louer ou prÍter le logiciel ;
-* transfÈrer le logiciel ou le prÈsent contrat ‡ un tiers ; ou
-* utiliser le logiciel pour des services díhÈbergement commercial.
-3. COPIE DE SAUVEGARDE. Vous Ítes autorisÈ ‡ effectuer une copie de sauvegarde du logiciel. Vous ne pouvez líutiliser que dans le but de rÈinstaller le logiciel.
-4. DOCUMENTATION. Tout utilisateur disposant díun accËs valide ‡ votre ordinateur ou ‡ votre rÈseau interne peut copier et utiliser la documentation ‡ des fins de rÈfÈrence interne.
-5. TRANSFERT ¿ UN AUTRE DISPOSITIF. Vous pouvez dÈsinstaller le logiciel puis líinstaller sur un autre dispositif pour votre propre usage. Vous níÍtes pas autorisÈ ‡ procÈder ainsi pour partager cette licence.
-6. RESTRICTIONS ¿ LíEXPORTATION. Le logiciel est soumis ‡ la rÈglementation amÈricaine relative ‡ líexportation. Vous devez vous conformer ‡ toutes les rÈglementations nationales et internationales relatives aux exportations concernant le logiciel. Ces rÈglementations comprennent les restrictions sur les destinations, les utilisateurs finaux et líutilisation finale. Pour plus díinformations, consultez le site www.microsoft.com/exporting.
-7. SERVICES DíASSISTANCE TECHNIQUE. Comme ce logiciel est fourni ´ en l'Ètat ª, nous ne fourniront aucun service díassistance.
-8. INT…GRALIT… DES ACCORDS. Le prÈsent contrat ainsi que les termes concernant les supplÈments, les mises ‡ jour, les services Internet et díassistance technique constituent líintÈgralitÈ des accords en ce qui concerne le logiciel et les services díassistance technique.
+* reconstituer la logique du logiciel, le d√©compiler ou le d√©sassembler, sauf dans la mesure o√π ces op√©rations seraient express√©ment autoris√©es par la r√©glementation applicable nonobstant la pr√©sente limitation ;
+* faire plus de copies du logiciel que sp√©cifi√© dans ce contrat ou par la r√©glementation applicable, nonobstant la pr√©sente limitation ;
+* publier le logiciel pour que d‚Äôautres le copient ;
+* louer ou pr√™ter le logiciel ;
+* transf√©rer le logiciel ou le pr√©sent contrat √† un tiers ; ou
+* utiliser le logiciel pour des services d‚Äôh√©bergement commercial.
+3. COPIE DE SAUVEGARDE. Vous √™tes autoris√© √† effectuer une copie de sauvegarde du logiciel. Vous ne pouvez l‚Äôutiliser que dans le but de r√©installer le logiciel.
+4. DOCUMENTATION. Tout utilisateur disposant d‚Äôun acc√®s valide √† votre ordinateur ou √† votre r√©seau interne peut copier et utiliser la documentation √† des fins de r√©f√©rence interne.
+5. TRANSFERT √Ä UN AUTRE DISPOSITIF. Vous pouvez d√©sinstaller le logiciel puis l‚Äôinstaller sur un autre dispositif pour votre propre usage. Vous n‚Äô√™tes pas autoris√© √† proc√©der ainsi pour partager cette licence.
+6. RESTRICTIONS √Ä L‚ÄôEXPORTATION. Le logiciel est soumis √† la r√©glementation am√©ricaine relative √† l‚Äôexportation. Vous devez vous conformer √† toutes les r√©glementations nationales et internationales relatives aux exportations concernant le logiciel. Ces r√©glementations comprennent les restrictions sur les destinations, les utilisateurs finaux et l‚Äôutilisation finale. Pour plus d‚Äôinformations, consultez le site www.microsoft.com/exporting.
+7. SERVICES D‚ÄôASSISTANCE TECHNIQUE. Comme ce logiciel est fourni ¬´ en l'√©tat ¬ª, nous ne fourniront aucun service d‚Äôassistance.
+8. INT√âGRALIT√â DES ACCORDS. Le pr√©sent contrat ainsi que les termes concernant les suppl√©ments, les mises √† jour, les services Internet et d‚Äôassistance technique constituent l‚Äôint√©gralit√© des accords en ce qui concerne le logiciel et les services d‚Äôassistance technique.
 9. DROIT APPLICABLE.
-a. …tats-Unis. Si vous avez acquis le logiciel aux …tats-Unis, les lois de lí…tat de Washington, …tats-Unis díAmÈrique, rÈgissent líinterprÈtation de ce contrat et síappliquent en cas de rÈclamation pour violation dudit contrat, nonobstant les conflits de principes juridiques. La rÈglementation du pays dans lequel vous vivez rÈgit toutes les autres rÈclamations, notamment, et sans limitation, les rÈclamations dans le cadre des lois en faveur de la protection des consommateurs, relatives ‡ la concurrence et aux dÈlits.
-b. En dehors des …tats-Unis. Si vous avez acquis le logiciel dans un autre pays, les lois de ce pays síappliquent.
-10. EFFET JURIDIQUE. Le prÈsent contrat dÈcrit certains droits juridiques. Vous pourriez avoir díautres droits prÈvus par les lois de votre pays. Vous pourriez Ègalement avoir des droits ‡ líÈgard de la partie de qui vous avez acquis le logiciel. Le prÈsent contrat ne modifie pas les droits que vous confËrent les lois de votre ou pays si celles-ci ne le permettent pas.
-11. EXCLUSIONS DE GARANTIE. LE LOGICIEL EST CONC…D… SOUS LICENCE ´ EN Lí…TAT ª. VOUS ASSUMEZ TOUS LES RISQUES LI…S ¿ SON UTILISATION. MICROSOFT NíACCORDE AUCUNE GARANTIE OU CONDITION EXPRESSE. VOUS POUVEZ BENEFICIER DE DROITS DES CONSOMMATEURS SUPPLEMENTAIRES OU DE GARANTIES STATUTAIRES DANS LE CADRE DU DROIT LOCAL, QUE CE CONTRAT NE PEUT MODIFIER. LORSQUE CELA EST AUTORIS… PAR LE DROIT LOCAL, MICROSOFT EXCLUT LES GARANTIES IMPLICITES DE QUALIT…, DíAD…QUATION ¿ UN USAGE PARTICULIER ET DíABSENCE DE CONTREFA«ON.
-POUR LíAUSTRALIE ñ LA LOI AUSTRALIENNE SUR LA CONSOMMATION (AUSTRALIAN CONSUMER LAW) VOUS ACCORDE DES GARANTIES STATUTAIRES QUíAUCUN ELEMENT DU PRESENT ACCORD NE PEUT AFFECTER.
-12. LIMITATION ET EXCLUSION DE RECOURS ET DE DOMMAGES. VOUS POUVEZ OBTENIR DE MICROSFOT ET DE SES FOURNISSEURS UNE INDEMNISATION EN CAS DE DOMMAGES DIRECTS LIMIT…E UNIQUEMENT A HAUTEUR DE 5,00 $ US. VOUS NE POUVEZ PR…TENDRE ¿ AUCUNE INDEMNISATION POUR LES AUTRES DOMMAGES, Y COMPRIS LES DOMMAGES SP…CIAUX, INDIRECTS OU ACCESSOIRES ET PERTES DE B…N…FICES.
-Cette limitation concerne†:
-* toute affaire liÈe au logiciel, aux services ou au contenu (y compris le code) figurant sur des sites Internet tiers ou dans des programmes tiers et
-* les rÈclamations au titre de violation de contrat ou de garantie, ou au titre de responsabilitÈ stricte, de nÈgligence ou díune autre faute dans la limite autorisÈe par la loi en vigueur.
-Elle síapplique Ègalement mÍme si Microsoft connaissait l'ÈventualitÈ d'un tel dommage. La limitation ou exclusion ci-dessus peut Ègalement ne pas vous Ítre applicable, car votre pays níautorise pas líexclusion ou la limitation de responsabilitÈ pour les dommages indirects, accessoires ou de quelque nature que ce soit.
+a. √âtats-Unis. Si vous avez acquis le logiciel aux √âtats-Unis, les lois de l‚Äô√âtat de Washington, √âtats-Unis d‚ÄôAm√©rique, r√©gissent l‚Äôinterpr√©tation de ce contrat et s‚Äôappliquent en cas de r√©clamation pour violation dudit contrat, nonobstant les conflits de principes juridiques. La r√©glementation du pays dans lequel vous vivez r√©git toutes les autres r√©clamations, notamment, et sans limitation, les r√©clamations dans le cadre des lois en faveur de la protection des consommateurs, relatives √† la concurrence et aux d√©lits.
+b. En dehors des √âtats-Unis. Si vous avez acquis le logiciel dans un autre pays, les lois de ce pays s‚Äôappliquent.
+10. EFFET JURIDIQUE. Le pr√©sent contrat d√©crit certains droits juridiques. Vous pourriez avoir d‚Äôautres droits pr√©vus par les lois de votre pays. Vous pourriez √©galement avoir des droits √† l‚Äô√©gard de la partie de qui vous avez acquis le logiciel. Le pr√©sent contrat ne modifie pas les droits que vous conf√®rent les lois de votre ou pays si celles-ci ne le permettent pas.
+11. EXCLUSIONS DE GARANTIE. LE LOGICIEL EST CONC√âD√â SOUS LICENCE ¬´ EN L‚Äô√âTAT ¬ª. VOUS ASSUMEZ TOUS LES RISQUES LI√âS √Ä SON UTILISATION. MICROSOFT N‚ÄôACCORDE AUCUNE GARANTIE OU CONDITION EXPRESSE. VOUS POUVEZ BENEFICIER DE DROITS DES CONSOMMATEURS SUPPLEMENTAIRES OU DE GARANTIES STATUTAIRES DANS LE CADRE DU DROIT LOCAL, QUE CE CONTRAT NE PEUT MODIFIER. LORSQUE CELA EST AUTORIS√â PAR LE DROIT LOCAL, MICROSOFT EXCLUT LES GARANTIES IMPLICITES DE QUALIT√â, D‚ÄôAD√âQUATION √Ä UN USAGE PARTICULIER ET D‚ÄôABSENCE DE CONTREFA√áON.
+POUR L‚ÄôAUSTRALIE ‚Äì LA LOI AUSTRALIENNE SUR LA CONSOMMATION (AUSTRALIAN CONSUMER LAW) VOUS ACCORDE DES GARANTIES STATUTAIRES QU‚ÄôAUCUN ELEMENT DU PRESENT ACCORD NE PEUT AFFECTER.
+12. LIMITATION ET EXCLUSION DE RECOURS ET DE DOMMAGES. VOUS POUVEZ OBTENIR DE MICROSFOT ET DE SES FOURNISSEURS UNE INDEMNISATION EN CAS DE DOMMAGES DIRECTS LIMIT√âE UNIQUEMENT A HAUTEUR DE 5,00 $ US. VOUS NE POUVEZ PR√âTENDRE √Ä AUCUNE INDEMNISATION POUR LES AUTRES DOMMAGES, Y COMPRIS LES DOMMAGES SP√âCIAUX, INDIRECTS OU ACCESSOIRES ET PERTES DE B√âN√âFICES.
+Cette limitation concerne¬†:
+* toute affaire li√©e au logiciel, aux services ou au contenu (y compris le code) figurant sur des sites Internet tiers ou dans des programmes tiers et
+* les r√©clamations au titre de violation de contrat ou de garantie, ou au titre de responsabilit√© stricte, de n√©gligence ou d‚Äôune autre faute dans la limite autoris√©e par la loi en vigueur.
+Elle s‚Äôapplique √©galement m√™me si Microsoft connaissait l'√©ventualit√© d'un tel dommage. La limitation ou exclusion ci-dessus peut √©galement ne pas vous √™tre applicable, car votre pays n‚Äôautorise pas l‚Äôexclusion ou la limitation de responsabilit√© pour les dommages indirects, accessoires ou de quelque nature que ce soit.
