@@ -469,6 +469,7 @@ namespace MICore
             settings.IgnoreProcessingInstructions = true;
             settings.IgnoreWhitespace = true;
             settings.NameTable = new NameTable();
+            settings.XmlResolver = null;
 
             // Create our own namespace manager so that we can set the default namespace
             // We need this because the XML serializer requires correct namespaces,
