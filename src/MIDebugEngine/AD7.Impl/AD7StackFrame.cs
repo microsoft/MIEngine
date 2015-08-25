@@ -60,7 +60,7 @@ namespace Microsoft.MIDebugEngine
         public void SetFrameInfo(enum_FRAMEINFO_FLAGS dwFieldSpec, out FRAMEINFO frameInfo)
         {
             List<SimpleVariableInformation> parameters = null;
-            if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0)
+            if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0 && !this.Engine.DebuggedProcess.MICommandFactory.SupportsFrameFormatting)
             {
                 Engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
                 {
@@ -94,7 +94,7 @@ namespace Microsoft.MIDebugEngine
 
                     frameInfo.m_bstrFuncName += _functionName;
 
-                    if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0)
+                    if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0 && !Engine.DebuggedProcess.MICommandFactory.SupportsFrameFormatting)
                     {
                         frameInfo.m_bstrFuncName += "(";
                         if (parameters != null && parameters.Count > 0)

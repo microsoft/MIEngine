@@ -410,6 +410,14 @@ namespace MICore
 
         abstract public bool SupportsStopOnDynamicLibLoad();
 
+        /// <summary>
+        /// True if the underlying debugger can format frames itself
+        /// </summary>
+        public virtual bool SupportsFrameFormatting
+        {
+            get { return true; }
+        }
+
         public virtual bool IsAsyncBreakSignal(Results results)
         {
             return (results.TryFindString("reason") == "signal-received" && results.TryFindString("signal-name") == "SIGINT");
@@ -668,6 +676,12 @@ namespace MICore
             return false;
         }
 
+        // CLRDBG supports frame formatting itself
+        override public bool SupportsFrameFormatting
+        {
+            get { return true; }
+        }
+
         public override bool AllowCommandsWhileRunning()
         {
             return true;
@@ -675,8 +689,8 @@ namespace MICore
 
         public override Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
-            // TODO: for clrdbg, we should get this from the original stack walk instead
-            return Task<TupleValue[]>.FromResult(new TupleValue[0]);
+            // CLRDBG supports stack frame formatting, so this should not be used
+            throw new NotImplementedException();
         }
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel)
