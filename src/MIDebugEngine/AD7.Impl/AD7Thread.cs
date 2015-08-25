@@ -133,7 +133,7 @@ namespace Microsoft.MIDebugEngine
                     frameInfoArray = new FRAMEINFO[numStackFrames];
                     List<ArgumentList> parameters = null;
 
-                    if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0)
+                    if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0 && !_engine.DebuggedProcess.MICommandFactory.SupportsFrameFormatting)
                     {
                         _engine.DebuggedProcess.WorkerThread.RunOperation(async () => parameters = await _engine.DebuggedProcess.GetParameterInfoOnly(this, (dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES) != 0,
                             (dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES) != 0, low, high));
