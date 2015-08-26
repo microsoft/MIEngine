@@ -21,11 +21,18 @@ namespace MICore
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
             LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
+            string miDebuggerDir = System.IO.Path.GetDirectoryName(localOptions.MIDebuggerPath);
 
             Process proc = new Process();
             proc.StartInfo.FileName = localOptions.MIDebuggerPath;
             proc.StartInfo.Arguments = "--interpreter=mi";
-            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(localOptions.MIDebuggerPath);
+            proc.StartInfo.WorkingDirectory = miDebuggerDir;
+
+            //GDB locally requires that the directory be on the PATH, being the working directory isn't good enough
+            if (proc.StartInfo.EnvironmentVariables.ContainsKey("PATH"))
+            {
+                proc.StartInfo.EnvironmentVariables["PATH"] = proc.StartInfo.EnvironmentVariables["PATH"] + ";" + miDebuggerDir;
+            }
 
             InitProcess(proc, out reader, out writer);
         }
