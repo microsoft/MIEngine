@@ -59,6 +59,21 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string SourceRoots;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(65534)]
+        public int JVMPort;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("localhost")]
+        public string JVMHost;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public TargetArchitecture TargetArchitecture;
         
         /// <remarks/>
@@ -75,6 +90,9 @@ namespace MICore.Xml.LaunchOptions {
         
         public AndroidLaunchOptions() {
             this.Attach = false;
+            this.SourceRoots = "";
+            this.JVMPort = 65534;
+            this.JVMHost = "localhost";
         }
     }
     

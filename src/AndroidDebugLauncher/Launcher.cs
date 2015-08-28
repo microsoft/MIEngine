@@ -85,7 +85,7 @@ namespace AndroidDebugLauncher
             ManualResetEvent doneEvent = new ManualResetEvent(false);
             var cancellationTokenSource = new CancellationTokenSource();
             ExceptionDispatchInfo exceptionDispatchInfo = null;
-            LocalLaunchOptions localLaunchOptions = null;
+            LaunchOptions localLaunchOptions = null;
 
             _waitLoop = new MICore.WaitLoop(LauncherResources.WaitDialogText);
 
@@ -145,7 +145,7 @@ namespace AndroidDebugLauncher
             }
         }
 
-        private LocalLaunchOptions SetupForDebuggingWorker(CancellationToken token)
+        private LaunchOptions SetupForDebuggingWorker(CancellationToken token)
         {
             CancellationTokenRegistration onCancelRegistration = token.Register(() =>
             {
@@ -423,20 +423,23 @@ namespace AndroidDebugLauncher
                     _eventCallback.OnCustomDebugEvent(_launchOptions.LogcatServiceId, new Guid(LogcatServiceMessage_SourceId), LogcatServiceMessage_NewProcess, _appProcessId, null);
                 }
 
-                var launchOptions = new LocalLaunchOptions(_installPaths.GDBPath, string.Format(CultureInfo.InvariantCulture, ":{0}", gdbPortNumber));
+                LaunchOptions launchOptions = null;
+                if (_targetEngine == TargetEngine.Native)
+                {
+                    launchOptions = new LocalLaunchOptions(_installPaths.GDBPath, string.Format(CultureInfo.InvariantCulture, ":{0}", gdbPortNumber));
+                    launchOptions.ExePath = exePath;
+                }
+                else
+                {
+                    launchOptions = new JavaLaunchOptions(_launchOptions.JVMHost, _launchOptions.JVMPort, _launchOptions.SourceRoots);
+                }
+
                 launchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
                 launchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
                 launchOptions.WorkingDirectory = _launchOptions.IntermediateDirectory;
 
-                if (_targetEngine == TargetEngine.Native)
-                {
-                    launchOptions.ExePath = exePath;
-                }
-
-
                 launchOptions.DebuggerMIMode = MIMode.Gdb;
-
-
+                
                 launchOptions.VisualizerFile = "Microsoft.Android.natvis";
 
                 return launchOptions;

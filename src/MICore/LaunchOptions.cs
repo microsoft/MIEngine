@@ -197,6 +197,22 @@ namespace MICore
         }
     }
 
+    public sealed class JavaLaunchOptions : LaunchOptions
+    {
+        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots)
+        {
+            JVMHost = jvmHost;
+            JVMPort = jvmPort;
+            SourceRoots = sourceRoots;
+        }
+
+        public string JVMHost { get; private set; }
+
+        public int JVMPort { get; private set; }
+
+        public string[] SourceRoots { get; private set; }
+    }
+
 
     /// <summary>
     /// Base launch options class

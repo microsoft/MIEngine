@@ -38,6 +38,16 @@ namespace AndroidDebugLauncher
             else
                 this.IntermediateDirectory = GetOptionalDirectoryAttribute(xmlOptions.IntermediateDirectory, "IntermediateDirectory");
 
+            if (targetEngine == TargetEngine.Java)
+            {
+                this.JVMHost = LaunchOptions.RequireAttribute(xmlOptions.JVMHost, "JVMHost");
+                this.JVMPort = xmlOptions.JVMPort;
+                this.SourceRoots = LaunchOptions.RequireAttribute(xmlOptions.SourceRoots, "SourceRoots").Split(new char[] { ';' });
+                foreach (string root in SourceRoots)
+                {
+                    EnsureValidDirectory(root, "SourceRoots");
+                }
+            }
 
             this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
             this.DeviceId = LaunchOptions.RequireAttribute(xmlOptions.DeviceId, "DeviceId");
@@ -162,5 +172,11 @@ namespace AndroidDebugLauncher
         /// [Optional] Set to true if we are performing an attach instead of a launch. Default is false.
         /// </summary>
         public bool IsAttach { get; private set; }
+
+        public string JVMHost { get; private set; }
+
+        public int JVMPort { get; private set; }
+
+        public string[] SourceRoots { get; private set; }
     }
 }
