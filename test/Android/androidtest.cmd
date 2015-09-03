@@ -190,7 +190,14 @@ exit /b 0
 
 :Help
 echo --- MIEngine Android Test Script ---
-echo Usage: androidtest.cmd /DeviceId ^<id^> /Platform ^<platform^> [/SdkRoot ^<path^>] [/NdkRoot ^<path^>] [/v] [^<test 1^> [^<test 2^> [...]]]
+echo Usage: androidtest.cmd /DeviceId ^<id^> /Platform ^<platform^> [/SdkRoot ^<path^>] [/NdkRoot ^<path^>] [/v] [/Tests ^<test 1^> [^<test 2^> [...]]]
+echo. 
+echo --- Examples --- 
+echo Run All Tests:
+echo androidtest.cmd /DeviceId emulator-5554 /Platform x86 
+echo.
+echo Run two specific tests:
+echo androidtest.cmd /DeviceId emulator-5554 /Platform x86 /Tests Stepping Exceptions
 echo.
 
 if exist "%_SdkRoot%" "%_SdkRoot%\platform-tools\adb.exe" devices -l
