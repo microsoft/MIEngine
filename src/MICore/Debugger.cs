@@ -327,6 +327,11 @@ namespace MICore
                     Is64BitArch = false;
                     break;
 
+                case TargetArchitecture.ARM64:
+                    MaxInstructionSize = 8;
+                    Is64BitArch = true;
+                    break;
+
                 case TargetArchitecture.X86:
                     MaxInstructionSize = 20;
                     Is64BitArch = false;

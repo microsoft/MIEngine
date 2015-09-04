@@ -121,10 +121,13 @@ namespace AndroidDebugLauncher
             switch (this.TargetArchitecture)
             {
                 case MICore.TargetArchitecture.X86:
+                case MICore.TargetArchitecture.X64:
                 case MICore.TargetArchitecture.ARM:
+                case MICore.TargetArchitecture.ARM64:
                     return;
 
                 default:
+
                     throw new LauncherException(Telemetry.LaunchFailureCode.NoReport, string.Format(CultureInfo.CurrentCulture, LauncherResources.UnsupportedTargetArchitecture, this.TargetArchitecture));
             }
         }
