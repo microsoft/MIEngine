@@ -415,7 +415,7 @@ namespace MICore
         /// </summary>
         public virtual bool SupportsFrameFormatting
         {
-            get { return true; }
+            get { return false; }
         }
 
         public virtual bool IsAsyncBreakSignal(Results results)
