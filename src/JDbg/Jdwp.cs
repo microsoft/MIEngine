@@ -168,12 +168,12 @@ namespace JDbg
 
             internal void Abort()
             {
-                _completionSource.SetException(new OperationCanceledException());
+                _completionSource.TrySetException(new OperationCanceledException());
             }
 
             internal void OnSocketError(SocketException socketException)
             {
-                _completionSource.SetException(new JdwpException(ErrorCode.SocketError, "Socket error reading the result", socketException));
+                _completionSource.TrySetException(new JdwpException(ErrorCode.SocketError, "Socket error reading the result", socketException));
             }
 
             internal void OnJdwpException(JdwpException jdwpException)
