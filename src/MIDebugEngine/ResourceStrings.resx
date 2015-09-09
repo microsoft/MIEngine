@@ -129,6 +129,9 @@
   <data name="ErrorReadingFile" xml:space="preserve">
     <value>Error "{0}" while reading file: {1}</value>
   </data>
+  <data name="ExceptionSettingsError" xml:space="preserve">
+    <value>Error while updating exception settings. {0}</value>
+  </data>
   <data name="FileNotFound" xml:space="preserve">
     <value>File not found: {0}</value>
   </data>

@@ -26,6 +26,7 @@ namespace Microsoft.MIDebugEngine
         public SourceLineCache SourceLineCache { get; private set; }
         public ThreadCache ThreadCache { get; private set; }
         public Disassembly Disassembly { get; private set; }
+        public ExceptionManager ExceptionManager { get; private set; }
 
         private List<DebuggedModule> _moduleList;
         private ISampleEngineCallback _callback;
@@ -44,7 +45,7 @@ namespace Microsoft.MIDebugEngine
         private ReadOnlyCollection<RegisterDescription> _registers;
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, string registryRoot)
         {
             uint processExitCode = 0;
             g_Process = this;
@@ -72,6 +73,7 @@ namespace Microsoft.MIDebugEngine
             _moduleList = new List<DebuggedModule>();
             ThreadCache = new ThreadCache(callback, this);
             Disassembly = new Disassembly(this);
+            ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, registryRoot);
 
             VariablesToDelete = new List<string>();
 
@@ -618,8 +620,16 @@ namespace Microsoft.MIDebugEngine
             }
             else if (reason == "exception-received")
             {
-                string exception = results.Results.FindString("exception");
-                _callback.OnException(thread, "Exception", exception, 0);
+                string exceptionName = results.Results.TryFindString("exception-name");
+                if (string.IsNullOrEmpty(exceptionName))
+                    exceptionName = "Exception";
+
+                string description = results.Results.FindString("exception");
+                Guid? exceptionCategory;
+                ExceptionBreakpointState state;
+                MICommandFactory.DecodeExceptionReceivedProperties(results.Results, out exceptionCategory, out state);
+
+                _callback.OnException(thread, exceptionName, description, 0, exceptionCategory, state);
             }
             else
             {
@@ -732,20 +742,24 @@ namespace Microsoft.MIDebugEngine
             _worker.PostOperation(() => { func(); });
         }
 
-        public void Execute(DebuggedThread thread)
+        public async Task Execute(DebuggedThread thread)
         {
+            await ExceptionManager.EnsureSettingsUpdated();
+
             // Should clear stepping state
             _worker.PostOperation(CmdContinueAsync);
         }
 
-        public void Continue(DebuggedThread thread)
+        public Task Continue(DebuggedThread thread)
         {
             // Called after Stopping event
-            Execute(thread);
+            return Execute(thread);
         }
 
         public async Task Step(int threadId, enum_STEPKIND kind, enum_STEPUNIT unit)
         {
+            await ExceptionManager.EnsureSettingsUpdated();
+
             if ((unit == enum_STEPUNIT.STEP_LINE) || (unit == enum_STEPUNIT.STEP_STATEMENT))
             {
                 switch (kind)
@@ -793,6 +807,8 @@ namespace Microsoft.MIDebugEngine
         public async Task ResumeFromLaunch()
         {
             _connected = true;
+            await this.ExceptionManager.EnsureSettingsUpdated();
+
             if (_initialBreakArgs != null)
             {
                 await CheckModules();
