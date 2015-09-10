@@ -91,6 +91,9 @@ namespace MICore.Xml.LaunchOptions {
         arm,
         
         /// <remarks/>
+        arm64,
+        
+        /// <remarks/>
         mips,
         
         /// <remarks/>
@@ -107,6 +110,9 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         ARM,
+        
+        /// <remarks/>
+        ARM64,
         
         /// <remarks/>
         MIPS,

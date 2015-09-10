@@ -125,6 +125,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="x86"/>
       <xs:enumeration value="arm"/>
+      <xs:enumeration value="arm64"/>
       <xs:enumeration value="mips"/>
       <xs:enumeration value="x64"/>
       <xs:enumeration value="amd64"/>
@@ -133,6 +134,7 @@
       <!--Allow them in upper case also-->
       <xs:enumeration value="X86"/>
       <xs:enumeration value="ARM"/>
+      <xs:enumeration value="ARM64"/>
       <xs:enumeration value="MIPS"/>
       <xs:enumeration value="X64"/>
       <xs:enumeration value="AMD64"/>

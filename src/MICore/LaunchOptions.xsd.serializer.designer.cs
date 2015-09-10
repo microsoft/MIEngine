@@ -255,12 +255,14 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             switch (v) {
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@x86: s = @"x86"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@arm: s = @"arm"; break;
+                case global::MICore.Xml.LaunchOptions.TargetArchitecture.@arm64: s = @"arm64"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@mips: s = @"mips"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@x64: s = @"x64"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@amd64: s = @"amd64"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@x86_64: s = @"x86_64"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@X86: s = @"X86"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@ARM: s = @"ARM"; break;
+                case global::MICore.Xml.LaunchOptions.TargetArchitecture.@ARM64: s = @"ARM64"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@MIPS: s = @"MIPS"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@X64: s = @"X64"; break;
                 case global::MICore.Xml.LaunchOptions.TargetArchitecture.@AMD64: s = @"AMD64"; break;
@@ -1078,12 +1080,14 @@ namespace Microsoft.Xml.Serialization.GeneratedAssembly {
             switch (s) {
                 case @"x86": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@x86;
                 case @"arm": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@arm;
+                case @"arm64": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@arm64;
                 case @"mips": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@mips;
                 case @"x64": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@x64;
                 case @"amd64": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@amd64;
                 case @"x86_64": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@x86_64;
                 case @"X86": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@X86;
                 case @"ARM": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@ARM;
+                case @"ARM64": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@ARM64;
                 case @"MIPS": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@MIPS;
                 case @"X64": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@X64;
                 case @"AMD64": return global::MICore.Xml.LaunchOptions.TargetArchitecture.@AMD64;

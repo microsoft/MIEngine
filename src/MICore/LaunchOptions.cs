@@ -21,6 +21,7 @@ namespace MICore
     {
         Unknown,
         ARM,
+        ARM64,
         X86,
         X64,
         Mips
@@ -716,6 +717,10 @@ namespace MICore
                 case Xml.LaunchOptions.TargetArchitecture.AMD64:
                 case Xml.LaunchOptions.TargetArchitecture.X86_64:
                     return TargetArchitecture.X64;
+
+                case Xml.LaunchOptions.TargetArchitecture.arm64:
+                case Xml.LaunchOptions.TargetArchitecture.ARM64:
+                    return TargetArchitecture.ARM64;
 
                 default:
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownTargetArchitecture, source.ToString()));

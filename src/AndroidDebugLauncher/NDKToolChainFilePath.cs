@@ -39,12 +39,29 @@ namespace AndroidDebugLauncher
             };
         }
 
+        public static NDKToolChainFilePath[] x64_GDBPaths()
+        {
+            return new NDKToolChainFilePath[]
+            {
+                new NDKToolChainFilePath(@"x86_64", "4.9", @"prebuilt\windows\bin\x86_64-linux-android-gdb.exe"),
+                new NDKToolChainFilePath(@"x86_64", "4.9", @"prebuilt\windows-x86_64\bin\x86_64-linux-android-gdb.exe")
+            };
+        }
+
         public static NDKToolChainFilePath[] ARM_GDBPaths()
         {
             return new NDKToolChainFilePath[] {
                 new NDKToolChainFilePath("arm-linux-androideabi", "4.8", @"prebuilt\windows\bin\arm-linux-androideabi-gdb.exe"),
                 // NOTE: The 4.8 GDB from the windows-x86_64 NDK doesn't work (Symbol format `elf32-littlearm' unknown)
                 new NDKToolChainFilePath("arm-linux-androideabi", "4.6", @"prebuilt\windows-x86_64\bin\arm-linux-androideabi-gdb.exe")
+            };
+        }
+
+        public static NDKToolChainFilePath[] ARM64_GDBPaths()
+        {
+            return new NDKToolChainFilePath[] {
+                new NDKToolChainFilePath("aarch64-linux-android", "4.9", @"prebuilt\windows\bin\aarch64-linux-android-gdb.exe"),
+                new NDKToolChainFilePath("aarch64-linux-android", "4.9", @"prebuilt\windows-x86_64\bin\aarch64-linux-android-gdb.exe")
             };
         }
 
