@@ -133,6 +133,7 @@
     <Compile Include="Engine.Impl\BreakpointManager.cs" />
     <Compile Include="Engine.Impl\Breakpoints.cs" />
     <Compile Include="Engine.Impl\Disassembly.cs" />
+    <Compile Include="Engine.Impl\ExceptionManager.cs" />
     <Compile Include="Engine.Impl\MITextPosition.cs" />
     <Compile Include="Engine.Impl\SourceLine.cs" />
     <Compile Include="Engine.Impl\Structures.cs" />
@@ -179,7 +180,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-	<GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
+    <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />

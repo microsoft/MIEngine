@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using Microsoft.VisualStudio.OLE.Interop;
 using System.Runtime.InteropServices;
 using System.Threading;
+using MICore;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -282,9 +283,9 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Exception events are sent when an exception occurs in the debuggee that the debugger was not expecting.
-        public void OnException(DebuggedThread thread, string name, string description, uint code)
+        public void OnException(DebuggedThread thread, string name, string description, uint code, Guid? exceptionCategory = null, ExceptionBreakpointState state = ExceptionBreakpointState.None)
         {
-            AD7ExceptionEvent eventObject = new AD7ExceptionEvent(name, description, code);
+            AD7ExceptionEvent eventObject = new AD7ExceptionEvent(name, description, code, exceptionCategory, state);
 
             AD7Thread ad7Thread = (AD7Thread)thread.Client;
             Send(eventObject, AD7ExceptionEvent.IID, ad7Thread);

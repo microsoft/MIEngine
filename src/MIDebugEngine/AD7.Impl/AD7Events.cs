@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
+using MICore;
+using System.Diagnostics;
 
 // This file contains the various event objects that are sent to the debugger from the sample engine via IDebugEventCallback2::Event.
 // These are used in EngineCallback.cs.
@@ -349,17 +351,32 @@ namespace Microsoft.MIDebugEngine
     {
         public const string IID = "51A94113-8788-4A54-AE15-08B74FF922D0";
 
-        public AD7ExceptionEvent(string name, uint code)
-        {
-            _name = name;
-            _code = code;
-            _description = name;
-        }
-        public AD7ExceptionEvent(string name, string description, uint code)
+        public AD7ExceptionEvent(string name, string description, uint code, Guid? exceptionCategory, ExceptionBreakpointState state)
         {
             _name = name;
             _code = code;
             _description = description ?? name;
+            _category = exceptionCategory ?? new Guid(EngineConstants.EngineId);
+
+            switch (state)
+            {
+                case ExceptionBreakpointState.None:
+                    _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE;
+                    break;
+
+                case ExceptionBreakpointState.BreakThrown:
+                    _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE;
+                    break;
+
+                case ExceptionBreakpointState.BreakUserHandled:
+                    _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
+                    break;
+
+                default:
+                    Debug.Fail("Unexpected state value");
+                    _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE;
+                    break;
+            }
         }
 
         #region IDebugExceptionEvent2 Members
@@ -375,8 +392,8 @@ namespace Microsoft.MIDebugEngine
             EXCEPTION_INFO ex = new EXCEPTION_INFO();
             ex.bstrExceptionName = _name;
             ex.dwCode = _code;
-            ex.dwState = enum_EXCEPTION_STATE.EXCEPTION_STOP_ALL;
-            ex.guidType = new Guid(EngineConstants.EngineId);   // use the engine guid - should we be using a shared guid for POSIX signals?
+            ex.dwState = _state;
+            ex.guidType = _category;
             pExceptionInfo[0] = ex;
             return Constants.S_OK;
         }
@@ -395,6 +412,8 @@ namespace Microsoft.MIDebugEngine
         private string _name;
         private uint _code;
         private string _description;
+        private Guid _category;
+        private enum_EXCEPTION_STATE _state;
         #endregion
     }
 

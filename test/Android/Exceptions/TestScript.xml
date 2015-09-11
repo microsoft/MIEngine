@@ -145,7 +145,7 @@
       <col>0</col>
       <Code>0x8</Code>
       <Name>SIGFPE</Name>
-      <Stage>Thrown,UserCodeSearch,UserUnhandled,Unhandled</Stage>
+      <Stage>Unhandled</Stage>
       <Description Volatile="True">Arithmetic exception</Description>
     </Event>
   </Command>
@@ -291,7 +291,7 @@
       <col>0</col>
       <Code>0xB</Code>
       <Name>SIGSEGV</Name>
-      <Stage>Thrown,UserCodeSearch,UserUnhandled,Unhandled</Stage>
+      <Stage>Unhandled</Stage>
       <Description Volatile="True">Segmentation fault</Description>
     </Event>
   </Command>
