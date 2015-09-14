@@ -52,6 +52,32 @@ namespace Microsoft.MIDebugEngine
         }
     }
 
+    public class OutputMessage
+    {
+        public enum Severity
+        {
+            Error,
+            Warning
+        };
+
+        public readonly string Message;
+        public readonly enum_MESSAGETYPE MessageType;
+        public readonly Severity SeverityValue;
+
+        /// <summary>
+        /// Error HRESULT to send to the debug package. 0 (S_OK) if there is no associated error code.
+        /// </summary>
+        public readonly uint ErrorCode;
+
+        public OutputMessage(string message, enum_MESSAGETYPE messageType, Severity severity, uint errorCode = 0)
+        {
+            this.Message = message;
+            this.MessageType = messageType;
+            this.SeverityValue = severity;
+            this.ErrorCode = errorCode;
+        }
+    }
+
     public interface ISampleEngineCallback
     {
         void OnModuleLoad(DebuggedModule module);
@@ -60,7 +86,7 @@ namespace Microsoft.MIDebugEngine
         void OnThreadExit(DebuggedThread thread, uint exitCode);
         void OnProcessExit(uint exitCode);
         void OnOutputString(string outputString);
-        void OnOutputMessage(string message, enum_MESSAGETYPE messageType);
+        void OnOutputMessage(OutputMessage outputMessage);
 
         /// <summary>
         /// Raises an error event to Visual Studio, which will show a message box. Note that this function should never throw.

@@ -77,7 +77,7 @@ namespace Microsoft.MIDebugEngine
 
             VariablesToDelete = new List<string>();
 
-            MessageEvent += delegate (object o, string message)
+            OutputStringEvent += delegate (object o, string message)
             {
                 // We can get messages before we have started the process
                 // but we can't send them on until it is
@@ -270,7 +270,7 @@ namespace Microsoft.MIDebugEngine
                         }
                         else
                         {
-                            _callback.OnOutputMessage(message, enum_MESSAGETYPE.MT_OUTPUTSTRING);
+                            _callback.OnOutputMessage(new OutputMessage(message, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
                         }
                     }
                 }
@@ -364,9 +364,18 @@ namespace Microsoft.MIDebugEngine
                 ThreadCache.ThreadEvent(result.Results.FindInt("id"), /*deleted*/true);
             };
 
+            MessageEvent += (object o, ResultEventArgs args) =>
+            {
+                OutputMessage outputMessage = DecodeOutputEvent(args.Results);
+                if (outputMessage != null)
+                {
+                    _callback.OnOutputMessage(outputMessage);
+                }
+            };
+
             BreakChangeEvent += _breakpointManager.BreakpointModified;
         }
-
+        
         public async Task Initialize(MICore.WaitLoop waitLoop, CancellationToken token)
         {
             bool success = false;
@@ -1016,6 +1025,71 @@ namespace Microsoft.MIDebugEngine
                 bytes[pos] = Convert.ToByte(strByte, 16);
             }
             return toRead;
+        }
+
+        private OutputMessage DecodeOutputEvent(Results results)
+        {
+            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
+            string text = results.TryFindString("text");
+            if (string.IsNullOrEmpty(text))
+            {
+                Debug.Fail("Bogus message event. Missing 'text' property.");
+                return null;
+            }
+
+            string sendTo = results.TryFindString("send-to");
+            if (string.IsNullOrEmpty(sendTo))
+            {
+                Debug.Fail("Bogus message event, missing 'send-to' property");
+                return null;
+            }
+
+            enum_MESSAGETYPE messageType;
+            switch (sendTo)
+            {
+                case "message-box":
+                    messageType = enum_MESSAGETYPE.MT_MESSAGEBOX;
+                    break;
+
+                case "output-window":
+                    messageType = enum_MESSAGETYPE.MT_OUTPUTSTRING;
+                    break;
+
+                default:
+                    Debug.Fail("Bogus message event. Unexpected 'send-to' property. Ignoring.");
+                    return null;
+            }
+
+            OutputMessage.Severity severity = OutputMessage.Severity.Warning;
+            switch (results.TryFindString("severity"))
+            {
+                case "error":
+                    severity = OutputMessage.Severity.Error;
+                    break;
+
+                case "warning":
+                    severity = OutputMessage.Severity.Warning;
+                    break;
+            }
+
+            switch (results.TryFindString("source"))
+            {
+                case "target-exception":
+                    messageType |= enum_MESSAGETYPE.MT_REASON_EXCEPTION;
+                    break;
+                case "jmc-prompt":
+                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE90.MT_REASON_JMC_PROMPT;
+                    break;
+                case "step-filter":
+                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE90.MT_REASON_STEP_FILTER;
+                    break;
+                case "fatal-error":
+                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE120.MT_FATAL_ERROR;
+                    break;
+            }
+
+            uint errorCode = results.TryFindUint("error-code") ?? 0;
+            return new OutputMessage(text, messageType, severity, errorCode);
         }
 
         private static RegisterGroup GetGroupForRegister(List<RegisterGroup> registerGroups, string name, EngineUtils.RegisterNameMap nameMap)

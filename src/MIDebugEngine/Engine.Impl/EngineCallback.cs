@@ -139,7 +139,7 @@ namespace Microsoft.MIDebugEngine
 
         public void OnError(string message)
         {
-            SendMessage(message, AD7MessageEvent.Severity.Error, isAsync: true);
+            SendMessage(message, OutputMessage.Severity.Error, isAsync: true);
         }
 
         /// <summary>
@@ -148,12 +148,12 @@ namespace Microsoft.MIDebugEngine
         /// <param name="message">string to display to the user</param>
         public void OnErrorImmediate(string message)
         {
-            SendMessage(message, AD7MessageEvent.Severity.Error, isAsync: false);
+            SendMessage(message, OutputMessage.Severity.Error, isAsync: false);
         }
 
         public void OnWarning(string message)
         {
-            SendMessage(message, AD7MessageEvent.Severity.Warning, isAsync: true);
+            SendMessage(message, OutputMessage.Severity.Warning, isAsync: true);
         }
 
         public void OnModuleLoad(DebuggedModule debuggedModule)
@@ -197,12 +197,20 @@ namespace Microsoft.MIDebugEngine
             Send(eventObject, AD7OutputDebugStringEvent.IID, null);
         }
 
-        public void OnOutputMessage(string outputMessage, enum_MESSAGETYPE messageType)
+        public void OnOutputMessage(OutputMessage outputMessage)
         {
             try
             {
-                var eventObject = new AD7MessageEvent(outputMessage, messageType, isAsync: false, severity: AD7MessageEvent.Severity.Warning);
-                Send(eventObject, AD7MessageEvent.IID, null);
+                if (outputMessage.ErrorCode == 0)
+                {
+                    var eventObject = new AD7MessageEvent(outputMessage, isAsync:true);
+                    Send(eventObject, AD7MessageEvent.IID, null);
+                }
+                else
+                {
+                    var eventObject = new AD7ErrorEvent(outputMessage, isAsync:true);
+                    Send(eventObject, AD7ErrorEvent.IID, null);
+                }
             }
             catch
             {
@@ -374,14 +382,14 @@ namespace Microsoft.MIDebugEngine
             Send(eventObject, AD7CustomDebugEvent.IID, null);
         }
 
-        private void SendMessage(string message, AD7MessageEvent.Severity severity, bool isAsync)
+        private void SendMessage(string message, OutputMessage.Severity severity, bool isAsync)
         {
             try
             {
                 // IDebugErrorEvent2 is used to report error messages to the user when something goes wrong in the debug engine.
                 // The sample engine doesn't take advantage of this.
 
-                AD7MessageEvent eventObject = new AD7MessageEvent(message, enum_MESSAGETYPE.MT_MESSAGEBOX, isAsync, severity);
+                AD7MessageEvent eventObject = new AD7MessageEvent(new OutputMessage(message, enum_MESSAGETYPE.MT_MESSAGEBOX, severity), isAsync);
                 Send(eventObject, AD7MessageEvent.IID, null);
             }
             catch

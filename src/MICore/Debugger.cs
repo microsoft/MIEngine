@@ -28,7 +28,7 @@ namespace MICore
         public event EventHandler ProcessExitEvent;
         public event EventHandler DebuggerExitEvent;
         public event EventHandler DebuggerAbortedEvent;
-        public event EventHandler<string> MessageEvent;
+        public event EventHandler<string> OutputStringEvent;
         public event EventHandler EvaluationEvent;
         public event EventHandler ErrorEvent;
         public event EventHandler ModuleLoadEvent;  // occurs when stopped after a libraryLoadEvent
@@ -36,6 +36,7 @@ namespace MICore
         public event EventHandler BreakChangeEvent; // a breakpoint was changed
         public event EventHandler ThreadCreatedEvent;
         public event EventHandler ThreadExitedEvent;
+        public event EventHandler<ResultEventArgs> MessageEvent;
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
 
@@ -846,13 +847,23 @@ namespace MICore
                 Results results = MIResults.ParseResultList(cmd.Substring(15));
                 ThreadExitedEvent(this, new ResultEventArgs(results, 0));
             }
+            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
+            else if (cmd.StartsWith("=message,", StringComparison.Ordinal))
+            {
+                Results results = MIResults.ParseResultList(cmd.Substring("=message,".Length));
+                if (this.MessageEvent != null)
+                {
+                    this.MessageEvent(this, new ResultEventArgs(results));
+                }
+            }
+
             string decodedOutput = MIResults.ParseCString(cmd);
 
             if (_consoleCommandOutput == null)
             {
-                if (MessageEvent != null)
+                if (OutputStringEvent != null)
                 {
-                    MessageEvent(this, decodedOutput);
+                    OutputStringEvent(this, decodedOutput);
                 }
             }
             else
@@ -863,9 +874,9 @@ namespace MICore
 
         public void WriteOutput(string message)
         {
-            if (MessageEvent != null)
+            if (OutputStringEvent != null)
             {
-                MessageEvent(this, message + '\n');
+                OutputStringEvent(this, message + '\n');
             }
         }
 
