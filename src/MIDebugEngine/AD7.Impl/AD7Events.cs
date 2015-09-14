@@ -165,23 +165,13 @@ namespace Microsoft.MIDebugEngine
     {
         public const string IID = "3BDB28CF-DBD2-4D24-AF03-01072B67EB9E";
 
-        private readonly string _message;
-        private readonly enum_MESSAGETYPE _messageType;
+        private readonly OutputMessage _outputMessage;
         private readonly bool _isAsync;
-        private readonly Severity _severity;
-
-        internal enum Severity
+        
+        public AD7MessageEvent(OutputMessage outputMessage, bool isAsync)
         {
-            Error,
-            Warning
-        };
-
-        public AD7MessageEvent(string msg, enum_MESSAGETYPE messageType, bool isAsync, Severity severity)
-        {
-            _message = msg;
-            _messageType = messageType;
+            _outputMessage = outputMessage;
             _isAsync = isAsync;
-            _severity = severity;
         }
 
         int IDebugEvent2.GetAttributes(out uint eventAttributes)
@@ -196,21 +186,26 @@ namespace Microsoft.MIDebugEngine
 
         int IDebugMessageEvent2.GetMessage(enum_MESSAGETYPE[] pMessageType, out string pbstrMessage, out uint pdwType, out string pbstrHelpFileName, out uint pdwHelpId)
         {
+            return ConvertMessageToAD7(_outputMessage, pMessageType, out pbstrMessage, out pdwType, out pbstrHelpFileName, out pdwHelpId);
+        }
+
+        internal static int ConvertMessageToAD7(OutputMessage outputMessage, enum_MESSAGETYPE[] pMessageType, out string pbstrMessage, out uint pdwType, out string pbstrHelpFileName, out uint pdwHelpId)
+        {
             const uint MB_ICONERROR = 0x00000010;
             const uint MB_ICONWARNING = 0x00000030;
 
-            pMessageType[0] = _messageType;
-            pbstrMessage = _message;
+            pMessageType[0] = outputMessage.MessageType;
+            pbstrMessage = outputMessage.Message;
             pdwType = 0;
-            if (_messageType == enum_MESSAGETYPE.MT_MESSAGEBOX)
+            if ((outputMessage.MessageType & enum_MESSAGETYPE.MT_TYPE_MASK) == enum_MESSAGETYPE.MT_MESSAGEBOX)
             {
-                switch (_severity)
+                switch (outputMessage.SeverityValue)
                 {
-                    case Severity.Error:
+                    case OutputMessage.Severity.Error:
                         pdwType |= MB_ICONERROR;
                         break;
 
-                    case Severity.Warning:
+                    case OutputMessage.Severity.Warning:
                         pdwType |= MB_ICONWARNING;
                         break;
                 }
@@ -225,6 +220,36 @@ namespace Microsoft.MIDebugEngine
         int IDebugMessageEvent2.SetResponse(uint dwResponse)
         {
             return Constants.S_OK;
+        }
+    }
+
+    internal sealed class AD7ErrorEvent : IDebugEvent2, IDebugErrorEvent2
+    {
+        public const string IID = "FDB7A36C-8C53-41DA-A337-8BD86B14D5CB";
+
+        private readonly OutputMessage _outputMessage;
+        private readonly bool _isAsync;
+
+        public AD7ErrorEvent(OutputMessage outputMessage, bool isAsync)
+        {
+            _outputMessage = outputMessage;
+            _isAsync = isAsync;
+        }
+
+        int IDebugEvent2.GetAttributes(out uint eventAttributes)
+        {
+            if (_isAsync)
+                eventAttributes = (uint)enum_EVENTATTRIBUTES.EVENT_ASYNCHRONOUS;
+            else
+                eventAttributes = (uint)enum_EVENTATTRIBUTES.EVENT_IMMEDIATE;
+
+            return Constants.S_OK;
+        }
+
+        int IDebugErrorEvent2.GetErrorMessage(enum_MESSAGETYPE[] pMessageType, out string errorFormat, out int hrErrorReason, out uint pdwType, out string helpFilename, out uint pdwHelpId)
+        {
+            hrErrorReason = unchecked((int)_outputMessage.ErrorCode);
+            return AD7MessageEvent.ConvertMessageToAD7(_outputMessage, pMessageType, out errorFormat, out pdwType, out helpFilename, out pdwHelpId);
         }
     }
 
