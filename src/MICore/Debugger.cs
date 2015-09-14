@@ -694,14 +694,22 @@ namespace MICore
 
         private class WaitingOperationDescriptor
         {
-            private readonly string _command;
+            /// <summary>
+            /// Text of the command that we sent to the debugger (ex: '-target-attach 72')
+            /// </summary>
+            public readonly string Command;
             private readonly ResultClass _expectedResultClass;
             private readonly TaskCompletionSource<Results> _completionSource = new TaskCompletionSource<Results>();
             public DateTime StartTime { get; private set; }
 
+            /// <summary>
+            /// True if the transport has echoed back text which is the same as this command
+            /// </summary>
+            public bool EchoReceived { get; set; }
+
             public WaitingOperationDescriptor(string command, ResultClass expectedResultClass)
             {
-                _command = command;
+                this.Command = command;
                 _expectedResultClass = expectedResultClass;
                 StartTime = DateTime.Now;
             }
@@ -716,7 +724,7 @@ namespace MICore
                         miError = results.FindString("msg");
                     }
 
-                    _completionSource.SetException(new UnexpectedMIResultException(_command, miError));
+                    _completionSource.SetException(new UnexpectedMIResultException(this.Command, miError));
                 }
                 else
                 {
@@ -759,24 +767,44 @@ namespace MICore
                 char c = line[0];
                 string noprefix = line.Substring(1).Trim();
 
-                // Look for event handlers registered on a specific Result id
-                if ((token != null) && (c == '^'))
+                if (token != null)
                 {
-                    uint id = uint.Parse(token, CultureInfo.InvariantCulture);
-                    WaitingOperationDescriptor waitingOperation = null;
-                    lock (_waitingOperations)
+                    // Look for event handlers registered on a specific Result id
+                    if (c == '^')
                     {
-                        if (_waitingOperations.TryGetValue(id, out waitingOperation))
+                        uint id = uint.Parse(token, CultureInfo.InvariantCulture);
+                        WaitingOperationDescriptor waitingOperation = null;
+                        lock (_waitingOperations)
                         {
-                            _waitingOperations.Remove(id);
+                            if (_waitingOperations.TryGetValue(id, out waitingOperation))
+                            {
+                                _waitingOperations.Remove(id);
+                            }
+                        }
+                        if (waitingOperation != null)
+                        {
+                            Results results = MIResults.ParseCommandOutput(noprefix);
+                            Logger.WriteLine(id + ": elapsed time " + (int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds);
+                            waitingOperation.OnComplete(results);
+                            return;
                         }
                     }
-                    if (waitingOperation != null)
+                    // Check to see if we are just getting the echo of the command we sent
+                    else if (c == '-')
                     {
-                        Results results = MIResults.ParseCommandOutput(noprefix);
-                        Logger.WriteLine(id + ": elapsed time " + (int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds);
-                        waitingOperation.OnComplete(results);
-                        return;
+                        uint id = uint.Parse(token, CultureInfo.InvariantCulture);
+                        lock (_waitingOperations)
+                        {
+                            WaitingOperationDescriptor waitingOperation;
+                            if (_waitingOperations.TryGetValue(id, out waitingOperation) &&
+                                !waitingOperation.EchoReceived &&
+                                line == waitingOperation.Command)
+                            {
+                                // This is just the echo. Ignore.
+                                waitingOperation.EchoReceived = true;
+                                return;
+                            }
+                        }
                     }
                 }
 
@@ -837,26 +865,6 @@ namespace MICore
 
         private void OnDebuggeeOutput(string cmd)
         {
-            if (cmd.StartsWith("=thread-created,", StringComparison.Ordinal))
-            {
-                Results results = MIResults.ParseResultList(cmd.Substring(16));
-                ThreadCreatedEvent(this, new ResultEventArgs(results, 0));
-            }
-            else if (cmd.StartsWith("=thread-exited,", StringComparison.Ordinal))
-            {
-                Results results = MIResults.ParseResultList(cmd.Substring(15));
-                ThreadExitedEvent(this, new ResultEventArgs(results, 0));
-            }
-            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
-            else if (cmd.StartsWith("=message,", StringComparison.Ordinal))
-            {
-                Results results = MIResults.ParseResultList(cmd.Substring("=message,".Length));
-                if (this.MessageEvent != null)
-                {
-                    this.MessageEvent(this, new ResultEventArgs(results));
-                }
-            }
-
             string decodedOutput = MIResults.ParseCString(cmd);
 
             if (_consoleCommandOutput == null)
@@ -927,6 +935,25 @@ namespace MICore
                 if (BreakChangeEvent != null)
                 {
                     BreakChangeEvent(this, new ResultEventArgs(results));
+                }
+            }
+            else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
+            {
+                results = MIResults.ParseResultList(cmd.Substring("thread-created,".Length));
+                ThreadCreatedEvent(this, new ResultEventArgs(results, 0));
+            }
+            else if (cmd.StartsWith("thread-exited,", StringComparison.Ordinal))
+            {
+                results = MIResults.ParseResultList(cmd.Substring("thread-exited,".Length));
+                ThreadExitedEvent(this, new ResultEventArgs(results, 0));
+            }
+            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
+            else if (cmd.StartsWith("message,", StringComparison.Ordinal))
+            {
+                results = MIResults.ParseResultList(cmd.Substring("message,".Length));
+                if (this.MessageEvent != null)
+                {
+                    this.MessageEvent(this, new ResultEventArgs(results));
                 }
             }
             else

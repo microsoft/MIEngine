@@ -221,8 +221,6 @@ namespace Microsoft.MIDebugEngine
 
         public void OnProcessExit(uint exitCode)
         {
-            Debug.Assert(_engine.DebuggedProcess.WorkerThread.IsPollThread());
-
             AD7ProgramDestroyEvent eventObject = new AD7ProgramDestroyEvent(exitCode);
 
             try

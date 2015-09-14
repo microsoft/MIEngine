@@ -30,7 +30,6 @@ namespace Microsoft.MIDebugEngine
 
         private List<DebuggedModule> _moduleList;
         private ISampleEngineCallback _callback;
-        private bool _bStarted;
         private bool _bLastModuleLoadFailed;
         private StringBuilder _pendingMessages;
         private WorkerThread _worker;
@@ -49,7 +48,6 @@ namespace Microsoft.MIDebugEngine
         {
             uint processExitCode = 0;
             g_Process = this;
-            _bStarted = false;
             _pendingMessages = new StringBuilder(400);
             _worker = worker;
             _launchOptions = launchOptions;
@@ -81,7 +79,7 @@ namespace Microsoft.MIDebugEngine
             {
                 // We can get messages before we have started the process
                 // but we can't send them on until it is
-                if (_bStarted)
+                if (_connected)
                 {
                     _callback.OnOutputString(message);
                 }
@@ -317,30 +315,6 @@ namespace Microsoft.MIDebugEngine
                     _callback.OnError(message);
 
                     Terminate();
-                }
-            };
-
-            RunModeEvent += delegate (object o, EventArgs args)
-            {
-                // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
-
-                if (!_bStarted)
-                {
-                    _bStarted = true;
-
-                    // Send any strings we got before the process came up
-                    if (_pendingMessages.Length != 0)
-                    {
-                        try
-                        {
-                            _callback.OnOutputString(_pendingMessages.ToString());
-                        }
-                        catch
-                        {
-                            // If something goes wrong sending the output, lets not crash VS
-                        }
-                    }
-                    _pendingMessages = null;
                 }
             };
 
@@ -816,6 +790,14 @@ namespace Microsoft.MIDebugEngine
         public async Task ResumeFromLaunch()
         {
             _connected = true;
+
+            // Send any strings we got before the process came up
+            if (_pendingMessages?.Length != 0)
+            {
+                _callback.OnOutputString(_pendingMessages.ToString());
+                _pendingMessages = null;
+            }
+
             await this.ExceptionManager.EnsureSettingsUpdated();
 
             if (_initialBreakArgs != null)
