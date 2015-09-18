@@ -8,12 +8,13 @@ using System.Threading;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
     public delegate void Operation();
     public delegate Task AsyncOperation();
-    public delegate Task AsyncProgressOperation(MICore.WaitLoop waitLoop);
+    public delegate Task AsyncProgressOperation(HostWaitLoop waitLoop);
 
 
     /// <summary>
@@ -237,7 +238,7 @@ namespace Microsoft.MIDebugEngine
 
         private bool TrySetOperationInternalWithProgress(AsyncProgressOperation op, string text, CancellationTokenSource canTokenSource)
         {
-            var waitLoop = new MICore.WaitLoop(text);
+            var waitLoop = new HostWaitLoop(text);
 
             lock (_runningOpCompleteEvent)
             {

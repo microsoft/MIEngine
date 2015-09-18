@@ -14,6 +14,7 @@ using System.Net.Security;
 using System.Collections.ObjectModel;
 using System.Xml.Serialization;
 using System.Diagnostics;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -652,7 +653,7 @@ namespace MICore
 
         private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
         {
-            var deviceAppLauncher = (IPlatformAppLauncher)VSLoader.VsCoCreateManagedObject(registryRoot, clsidLauncher);
+            var deviceAppLauncher = (IPlatformAppLauncher)HostLoader.VsCoCreateManagedObject(registryRoot, clsidLauncher);
             if (deviceAppLauncher == null)
             {
                 throw new ApplicationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, clsidLauncher.ToString("B")));
