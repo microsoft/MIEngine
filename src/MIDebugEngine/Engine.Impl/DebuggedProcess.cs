@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -39,7 +40,7 @@ namespace Microsoft.MIDebugEngine
         private ResultEventArgs _initialBreakArgs;
         private List<string> _libraryLoaded;   // unprocessed library loaded messages
         private uint _loadOrder;
-        private WaitDialog _waitDialog;
+        private HostWaitDialog _waitDialog;
         public readonly Natvis.Natvis Natvis;
         private ReadOnlyCollection<RegisterDescription> _registers;
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
@@ -56,7 +57,7 @@ namespace Microsoft.MIDebugEngine
             _libraryLoaded = new List<string>();
             _loadOrder = 0;
             MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
-            _waitDialog = MICommandFactory.SupportsStopOnDynamicLibLoad() ? new WaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
+            _waitDialog = MICommandFactory.SupportsStopOnDynamicLibLoad() ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
             Natvis = new Natvis.Natvis(this);
 
             // we do NOT have real Win32 process IDs, so we use a guid

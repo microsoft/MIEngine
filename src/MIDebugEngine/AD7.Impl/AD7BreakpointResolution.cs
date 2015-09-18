@@ -48,7 +48,7 @@ namespace Microsoft.MIDebugEngine
                 // to IDebugCodeContex2 and not IUnknown.
                 AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, Addr, _functionName);
                 codeContext.SetDocumentContext(_documentContext);
-                location.unionmember1 = VSMarshal.RegisterCodeContext(codeContext);
+                location.unionmember1 = HostMarshal.RegisterCodeContext(codeContext);
                 pBPResolutionInfo[0].bpResLocation = location;
                 pBPResolutionInfo[0].dwFields |= enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION;
             }

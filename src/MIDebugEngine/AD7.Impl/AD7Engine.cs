@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using MICore;
 using System.Globalization;
 using Microsoft.Win32;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -56,9 +57,7 @@ namespace Microsoft.MIDebugEngine
 
         public AD7Engine()
         {
-            //This call is to initialize the global service provider while we are still on the main thread.
-            //Do not remove this this, even though the return value goes unused.
-            var globalProvider = Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider;
+            Host.EnsureMainThreadInitialized();
 
             _breakpointManager = new BreakpointManager(this);
         }
@@ -463,7 +462,7 @@ namespace Microsoft.MIDebugEngine
                 string outputMessage = string.Join("\r\n", initializationException.OutputLines) + "\r\n";
 
                 // NOTE: We can't write to the output window by sending an AD7 event because this may be called before the session create event
-                VsOutputWindow.WriteLaunchError(outputMessage);
+                HostOutputWindow.WriteLaunchError(outputMessage);
             }
 
             _engineCallback.OnErrorImmediate(message);

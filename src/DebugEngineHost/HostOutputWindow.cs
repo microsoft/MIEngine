@@ -10,9 +10,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.MIDebugEngine
+namespace Microsoft.DebugEngineHost
 {
-    internal static class VsOutputWindow
+    /// <summary>
+    /// Provides direct access to the underlying output window without going through debug events
+    /// </summary>
+    public static class HostOutputWindow
     {
         // Use an extra class so that we have a seperate class which depends on VS interfaces
         private static class VsImpl

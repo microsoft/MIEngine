@@ -16,6 +16,7 @@ using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
 using Microsoft.Win32;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine.Natvis
 {
@@ -143,7 +144,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         private DebuggedProcess _process;
         private Dictionary<string, VisualizerInfo> _vizCache;
         private uint _depth;
-        public WaitDialog WaitDialog { get; private set; }
+        public HostWaitDialog WaitDialog { get; private set; }
 
         public VisualizationCache Cache { get; private set; }
 
@@ -171,7 +172,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             _typeVisualizers = new List<FileInfo>();
             _process = process;
             _vizCache = new Dictionary<string, VisualizerInfo>();
-            WaitDialog = new WaitDialog(ResourceStrings.VisualizingExpressionMessage, ResourceStrings.VisualizingExpressionCaption);
+            WaitDialog = new HostWaitDialog(ResourceStrings.VisualizingExpressionMessage, ResourceStrings.VisualizingExpressionCaption);
             ShowDisplayStrings = DisplayStringsState.ForVisualizedItems;  // don't compute display strings unless explicitly requested
             _depth = 0;
             Cache = new VisualizationCache();
@@ -181,7 +182,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             try
             {
-                VsNatvisProject.FindNatvisInSolution((s) => LoadFile(s));
+                HostNatvisProject.FindNatvisInSolution((s) => LoadFile(s));
             }
             catch (FileNotFoundException)
             {

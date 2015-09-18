@@ -9,17 +9,20 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.MIDebugEngine
+namespace Microsoft.DebugEngineHost
 {
-    // Wrapper class for VSWaitDialog
-    public class WaitDialog
+    /// <summary>
+    /// Provides an optional wait dialog to allow long running operations to be canceled. Some hosts
+    /// may not implement the dialog, in which case these methods will be a nop.
+    /// </summary>
+    public class HostWaitDialog : IDisposable
     {
-        private VSWaitDialog _theDialog;
-        public WaitDialog(string format, string caption)
+        private VSImpl.VSWaitDialog _theDialog;
+        public HostWaitDialog(string format, string caption)
         {
             try
             {
-                _theDialog = new VSWaitDialog(format, caption);
+                _theDialog = new VSImpl.VSWaitDialog(format, caption);
             }
             catch (FileNotFoundException)
             {
