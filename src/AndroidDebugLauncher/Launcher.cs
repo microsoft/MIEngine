@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using Microsoft.DebugEngineHost;
 
 namespace AndroidDebugLauncher
 {
@@ -26,7 +27,7 @@ namespace AndroidDebugLauncher
         private readonly CancellationTokenSource _gdbServerExecCancellationSource = new CancellationTokenSource();
         private AndroidLaunchOptions _launchOptions;
         private InstallPaths _installPaths;
-        private MICore.WaitLoop _waitLoop;
+        private HostWaitLoop _waitLoop;
         private int _jdbPortNumber;
         private AdbShell _shell;
         private int _appProcessId;
@@ -87,7 +88,7 @@ namespace AndroidDebugLauncher
             ExceptionDispatchInfo exceptionDispatchInfo = null;
             LaunchOptions localLaunchOptions = null;
 
-            _waitLoop = new MICore.WaitLoop(LauncherResources.WaitDialogText);
+            _waitLoop = new HostWaitLoop(LauncherResources.WaitDialogText);
 
             // Do the work on a worker thread to avoid blocking the UI. Use ThreadPool.QueueUserWorkItem instead
             // of Task.Run to avoid needing to unwrap the AggregateException.

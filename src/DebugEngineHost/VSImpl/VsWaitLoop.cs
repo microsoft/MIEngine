@@ -14,7 +14,7 @@ using Microsoft.VisualStudio;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace MICore
+namespace Microsoft.DebugEngineHost.VSImpl
 {
     // Seperate class for waiting using VS interfaces
     // ************************************************************

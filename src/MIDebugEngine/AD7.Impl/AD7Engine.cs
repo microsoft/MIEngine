@@ -404,7 +404,7 @@ namespace Microsoft.MIDebugEngine
 
                 using (cancellationTokenSource)
                 {
-                    _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (MICore.WaitLoop waitLoop) =>
+                    _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (HostWaitLoop waitLoop) =>
                     {
                         try
                         {

@@ -358,7 +358,7 @@ namespace Microsoft.MIDebugEngine
             BreakChangeEvent += _breakpointManager.BreakpointModified;
         }
         
-        public async Task Initialize(MICore.WaitLoop waitLoop, CancellationToken token)
+        public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
         {
             bool success = false;
             Natvis.Initialize(_launchOptions.VisualizerFile);
