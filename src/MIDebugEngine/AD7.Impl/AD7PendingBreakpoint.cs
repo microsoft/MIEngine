@@ -104,7 +104,7 @@ namespace Microsoft.MIDebugEngine
         // location.
         public AD7DocumentContext GetDocumentContext(ulong address, string functionName)
         {
-            IDebugDocumentPosition2 docPosition = VSMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+            IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
             string documentName;
             EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
 
@@ -195,7 +195,7 @@ namespace Microsoft.MIDebugEngine
                         Debug.Fail("Breakpoint already bound");
                         return;
                     }
-                    IDebugDocumentPosition2 docPosition = VSMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                    IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
 
                     // Get the name of the document that the breakpoint was put in
                     EngineUtils.CheckOk(docPosition.GetFileName(out documentName));

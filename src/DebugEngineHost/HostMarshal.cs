@@ -15,7 +15,7 @@ namespace Microsoft.DebugEngineHost
     /// 
     /// When run in Visual Studio code, these methods are stubs to allow the AD7 API to function without COM.
     /// </summary>
-    public static class VSMarshal
+    public static class HostMarshal
     {
         /// <summary>
         /// Registers the specified code context if it isn't already registered and returns an IntPtr that can be

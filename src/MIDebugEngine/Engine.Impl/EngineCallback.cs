@@ -21,7 +21,7 @@ namespace Microsoft.MIDebugEngine
         public EngineCallback(AD7Engine engine, IDebugEventCallback2 ad7Callback)
         {
             _engine = engine;
-            _eventCallback = VSMarshal.GetThreadSafeEventCallback(ad7Callback);
+            _eventCallback = HostMarshal.GetThreadSafeEventCallback(ad7Callback);
         }
 
         public void Send(IDebugEvent2 eventObject, string iidEvent, IDebugProgram2 program, IDebugThread2 thread)

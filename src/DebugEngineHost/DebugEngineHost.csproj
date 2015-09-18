@@ -76,9 +76,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Host.cs" />
     <Compile Include="VSImpl\VSEventCallbackWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VSMarshal.cs" />
+    <Compile Include="HostMarshal.cs" />
+    <Compile Include="HostNatvisProject.cs" />
+    <Compile Include="HostOutputWindow.cs" />
+    <Compile Include="VSImpl\VsWaitDialog.cs" />
+    <Compile Include="HostWaitDialog.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
