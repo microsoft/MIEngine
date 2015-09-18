@@ -170,6 +170,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DebugEngineHost\DebugEngineHost.csproj">
+      <Project>{e659fee3-7773-4a73-880a-83ce5c9634cc}</Project>
+      <Name>DebugEngineHost</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{12CC862D-95B7-4224-8E16-B928C6333677}</Project>
       <Name>MICore</Name>

@@ -10,7 +10,6 @@ using System.Globalization;
 using MICore;
 using System.Threading.Tasks;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -285,7 +284,7 @@ namespace Microsoft.MIDebugEngine
                     return true;
                 if (exception is StackOverflowException)
                     return true;
-                if (exception is SEHException)
+                if (exception is System.Runtime.InteropServices.SEHException)
                     return true;
             }
 

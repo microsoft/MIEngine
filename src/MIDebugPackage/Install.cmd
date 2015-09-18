@@ -17,7 +17,7 @@ set VSVersion=14.0
 set BackupDir=%LOCALAPPDATA%\Microsoft\VisualStudio\%VSVersion%\MDDDebuggerBackup\
 set MDDDebuggerDir=%ProgramFiles%\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger\
 
-set FilesToInstall=Microsoft.MICore.dll Microsoft.MIDebugEngine.dll Microsoft.MIDebugEngine.pkgdef Microsoft.MIDebugPackage.dll Microsoft.MIDebugPackage.pkgdef Microsoft.AndroidDebugLauncher.dll Microsoft.AndroidDebugLauncher.pkgdef Microsoft.IOSDebugLauncher.dll Microsoft.IOSDebugLauncher.pkgdef Microsoft.JDbg.dll
+set FilesToInstall=Microsoft.MICore.dll Microsoft.MIDebugEngine.dll Microsoft.MIDebugEngine.pkgdef Microsoft.MIDebugPackage.dll Microsoft.MIDebugPackage.pkgdef Microsoft.AndroidDebugLauncher.dll Microsoft.AndroidDebugLauncher.pkgdef Microsoft.IOSDebugLauncher.dll Microsoft.IOSDebugLauncher.pkgdef Microsoft.JDbg.dll Microsoft.DebugEngineHost.dll
 
 if "%~1"=="/restore" goto RestoreBackup
 
