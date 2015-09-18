@@ -28,6 +28,8 @@ namespace Microsoft.MIDebugEngine
         {
             processArray[0] = new PROVIDER_PROCESS_DATA();
 
+            Debug.Fail("Will this be called?");
+
             if ((Flags & enum_PROVIDER_FLAGS.PFLAG_GET_PROGRAM_NODES) != 0)
             {
                 // The debugger is asking the engine to return the program nodes it can debug. The 
