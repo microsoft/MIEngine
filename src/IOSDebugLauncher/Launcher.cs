@@ -19,6 +19,7 @@ using System.Threading;
 using System.Runtime.ExceptionServices;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
+using Microsoft.DebugEngineHost;
 
 namespace IOSDebugLauncher
 {
@@ -42,7 +43,7 @@ namespace IOSDebugLauncher
         }
         private RemotePorts _remotePorts;
 
-        void IPlatformAppLauncher.Initialize(string registryRoot, IDeviceAppLauncherEventCallback eventCallback)
+        void IPlatformAppLauncher.Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback)
         {
             _callback = eventCallback;
         }

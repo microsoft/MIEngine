@@ -77,6 +77,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Host.cs" />
+    <Compile Include="HostConfigurationSection.cs" />
+    <Compile Include="HostConfigurationStore.cs" />
+    <Compile Include="HostConfirigurationException.cs" />
     <Compile Include="VSImpl\VSEventCallbackWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HostMarshal.cs" />

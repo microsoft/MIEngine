@@ -15,7 +15,7 @@ namespace Microsoft.DebugEngineHost
     /// Provides an optional wait dialog to allow long running operations to be canceled. Some hosts
     /// may not implement the dialog, in which case these methods will be a nop.
     /// </summary>
-    public class HostWaitDialog : IDisposable
+    public sealed class HostWaitDialog : IDisposable
     {
         private VSImpl.VSWaitDialog _theDialog;
         public HostWaitDialog(string format, string caption)

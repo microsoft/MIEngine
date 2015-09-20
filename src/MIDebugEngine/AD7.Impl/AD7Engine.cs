@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MICore;
 using System.Globalization;
-using Microsoft.Win32;
 using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
@@ -51,7 +50,7 @@ namespace Microsoft.MIDebugEngine
         // A unique identifier for the program being debugged.
         private Guid _ad7ProgramId;
 
-        private string _registryRoot;
+        private HostConfigurationStore _configStore;
 
         private IDebugSettingsCallback110 _settingsCallback;
 
@@ -109,15 +108,8 @@ namespace Microsoft.MIDebugEngine
 
         public object GetMetric(string metric)
         {
-            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(_registryRoot + @"\AD7Metrics\Engine\" + EngineConstants.EngineId.ToUpper(CultureInfo.InvariantCulture)))
-            {
-                if (key == null)
-                {
-                    return null;
-                }
-
-                return key.GetValue(metric);
-            }
+            return _configStore.GetEngineMetric(metric);
+            
         }
 
         #region IDebugEngine2 Members
@@ -335,8 +327,8 @@ namespace Microsoft.MIDebugEngine
         // This allows the debugger to tell the engine where that location is.
         int IDebugEngine2.SetRegistryRoot(string registryRoot)
         {
-            _registryRoot = registryRoot;
-            Logger.EnsureInitialized(registryRoot);
+            _configStore = new HostConfigurationStore(registryRoot, EngineConstants.EngineId);
+            Logger.EnsureInitialized(_configStore);
             return Constants.S_OK;
         }
 
@@ -396,7 +388,7 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 // Note: LaunchOptions.GetInstance can be an expensive operation and may push a wait message loop
-                LaunchOptions launchOptions = LaunchOptions.GetInstance(_registryRoot, exe, args, dir, options, _engineCallback, TargetEngine.Native);
+                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, _engineCallback, TargetEngine.Native);
 
                 // We are being asked to debug a process when we currently aren't debugging anything
                 _pollThread = new WorkerThread();
@@ -408,7 +400,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         try
                         {
-                            _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _registryRoot);
+                            _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore);
                         }
                         finally
                         {
