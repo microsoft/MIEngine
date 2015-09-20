@@ -45,7 +45,7 @@ namespace Microsoft.MIDebugEngine
         private ReadOnlyCollection<RegisterDescription> _registers;
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, string registryRoot)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore)
         {
             uint processExitCode = 0;
             g_Process = this;
@@ -72,7 +72,7 @@ namespace Microsoft.MIDebugEngine
             _moduleList = new List<DebuggedModule>();
             ThreadCache = new ThreadCache(callback, this);
             Disassembly = new Disassembly(this);
-            ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, registryRoot);
+            ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, configStore);
 
             VariablesToDelete = new List<string>();
 

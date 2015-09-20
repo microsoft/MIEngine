@@ -355,16 +355,13 @@ namespace MICore
             }
         }
 
-        public static LaunchOptions GetInstance(string registryRoot, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback)
+        public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback)
         {
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
 
             if (string.IsNullOrWhiteSpace(options))
                 throw new InvalidLaunchOptionsException(MICoreResources.Error_StringIsNullOrEmpty);
-
-            if (string.IsNullOrEmpty(registryRoot))
-                throw new ArgumentNullException("registryRoot");
 
             Logger.WriteTextBlock("LaunchOptions", options);
 
@@ -444,7 +441,7 @@ namespace MICore
 
             if (clsidLauncher != Guid.Empty)
             {
-                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback);
+                launchOptions = ExecuteLauncher(configStore, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback);
             }
 
             if (launchOptions.ExePath == null)
@@ -651,9 +648,9 @@ namespace MICore
             return attributeValue;
         }
 
-        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
+        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
         {
-            var deviceAppLauncher = (IPlatformAppLauncher)HostLoader.VsCoCreateManagedObject(registryRoot, clsidLauncher);
+            var deviceAppLauncher = (IPlatformAppLauncher)HostLoader.VsCoCreateManagedObject(configStore, clsidLauncher);
             if (deviceAppLauncher == null)
             {
                 throw new ApplicationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, clsidLauncher.ToString("B")));
@@ -665,7 +662,7 @@ namespace MICore
             {
                 try
                 {
-                    deviceAppLauncher.Initialize(registryRoot, eventCallback);
+                    deviceAppLauncher.Initialize(configStore, eventCallback);
                     deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions);
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException))
@@ -742,9 +739,9 @@ namespace MICore
         /// <summary>
         /// Initialized the device app launcher
         /// </summary>
-        /// <param name="registryRoot">Current VS registry root</param>
+        /// <param name="configStore">Current VS registry root</param>
         /// <param name="eventCallback">[Required] Callback object used to send events to the rest of Visual Studio</param>
-        void Initialize(string registryRoot, IDeviceAppLauncherEventCallback eventCallback);
+        void Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback);
 
         /// <summary>
         /// Initializes the launcher from the launch settings

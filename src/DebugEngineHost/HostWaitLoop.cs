@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DebugEngineHost
 {
-    public class HostWaitLoop
+    public sealed class HostWaitLoop
     {
         private readonly object _progressLock = new object();
         private VSImpl.VsWaitLoop _vsWaitLoop;
