@@ -284,7 +284,7 @@ namespace AndroidDebugLauncher
                     ExecCommand(pwdCommand);
                     workingDirectory = PwdOutputParser.ExtractWorkingDirectory(_shell.Out, _launchOptions.Package);
 
-                    gdbServerRemotePath = VerifyGdbServerPath(workingDirectory);
+                    gdbServerRemotePath = GetGdbServerPath(workingDirectory);
 
                     KillOldInstances(gdbServerRemotePath);
 
@@ -356,7 +356,7 @@ namespace AndroidDebugLauncher
                     {
                         fileSystem.Download(@"/system/bin/" + app_process, exePath, true);
                     }
-                    catch (AdbException)
+                    catch (AdbException) when (String.Compare(app_process_suffix, "32", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         // Older devices don't have an 'app_process32', only an 'app_process', so retry
                         // NOTE: libadb doesn't have an error code property to verify that this is caused
@@ -521,12 +521,14 @@ namespace AndroidDebugLauncher
             }
         }
 
-        private string VerifyGdbServerPath(string workingDirectory)
+        private string GetGdbServerPath(string workingDirectory)
         {
             // On the android device, the gdbserver and native shared objects of an ndk app can be out /data/data/<appname>/lib/*
             // The lib directory symlinks to somewhere else on the file system, for example /data/data/<appname>/lib/ -> /data/app-lib/<appname>-1/lib
             // On 64 bit, this symlink is broken (I think this is a bug in 64 bit android).
             // We must attempt to find the gdbserver path manually then. 
+
+            // Android issue: https://code.google.com/p/android/issues/detail?id=186010&thanks=186010&ts=1441922626
 
             //check the correct location for x86/arm/arm64
             string gdbServerPath = workingDirectory + "/lib/gdbserver";
