@@ -287,7 +287,7 @@ namespace MICoreUnitTests
 
         private LaunchOptions GetLaunchOptions(string content)
         {
-            return LaunchOptions.GetInstance("bogus-registry-root", "bogus-exe-path", null, null, content, null);
+            return LaunchOptions.GetInstance("bogus-registry-root", "bogus-exe-path", null, null, content, null, TargetEngine.Native);
         }
     }
 }

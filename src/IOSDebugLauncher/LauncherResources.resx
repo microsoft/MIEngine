@@ -129,6 +129,9 @@
   <data name="Error_BadJSon" xml:space="preserve">
     <value>An incorrect response was received from vcremote. Make sure that a compatible vcremote is installed on the remote machine.</value>
   </data>
+  <data name="Error_BadTargetEngine" xml:space="preserve">
+    <value>Cannot launch iOS debugging for target engine '{0}'.</value>
+  </data>
   <data name="Error_UnableToReachServer" xml:space="preserve">
     <value>Unable to reach the vcremote server. Make sure that the vcremote server is running and is configured with the same security setting as Visual Studio.</value>
   </data>

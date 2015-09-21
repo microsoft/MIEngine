@@ -398,7 +398,7 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 // Note: LaunchOptions.GetInstance can be an expensive operation and may push a wait message loop
-                LaunchOptions launchOptions = LaunchOptions.GetInstance(_registryRoot, exe, args, dir, options, _engineCallback);
+                LaunchOptions launchOptions = LaunchOptions.GetInstance(_registryRoot, exe, args, dir, options, _engineCallback, TargetEngine.Native);
 
                 // We are being asked to debug a process when we currently aren't debugging anything
                 _pollThread = new WorkerThread();

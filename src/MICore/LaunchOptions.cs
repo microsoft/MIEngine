@@ -27,6 +27,12 @@ namespace MICore
         Mips
     };
 
+    public enum TargetEngine
+    {
+        Native,
+        Java
+    }
+
     public enum LaunchCompleteCommand
     {
         /// <summary>
@@ -189,6 +195,22 @@ namespace MICore
                 base.ExePath = value;
             }
         }
+    }
+
+    public sealed class JavaLaunchOptions : LaunchOptions
+    {
+        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots)
+        {
+            JVMHost = jvmHost;
+            JVMPort = jvmPort;
+            SourceRoots = sourceRoots;
+        }
+
+        public string JVMHost { get; private set; }
+
+        public int JVMPort { get; private set; }
+
+        public string[] SourceRoots { get; private set; }
     }
 
 
@@ -354,7 +376,7 @@ namespace MICore
             }
         }
 
-        public static LaunchOptions GetInstance(string registryRoot, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback)
+        public static LaunchOptions GetInstance(string registryRoot, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
@@ -443,11 +465,14 @@ namespace MICore
 
             if (clsidLauncher != Guid.Empty)
             {
-                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback);
+                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine);
             }
 
-            if (launchOptions.ExePath == null)
-                launchOptions.ExePath = exePath;
+            if (targetEngine == TargetEngine.Native)
+            {
+                if (launchOptions.ExePath == null)
+                    launchOptions.ExePath = exePath;
+            }
 
             if (string.IsNullOrEmpty(launchOptions.ExeArguments))
                 launchOptions.ExeArguments = args;
@@ -650,7 +675,7 @@ namespace MICore
             return attributeValue;
         }
 
-        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
+        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
             var deviceAppLauncher = (IPlatformAppLauncher)VSLoader.VsCoCreateManagedObject(registryRoot, clsidLauncher);
             if (deviceAppLauncher == null)
@@ -665,7 +690,7 @@ namespace MICore
                 try
                 {
                     deviceAppLauncher.Initialize(registryRoot, eventCallback);
-                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions);
+                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException))
                 {
@@ -752,7 +777,7 @@ namespace MICore
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
-        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions);
+        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
 
         /// <summary>
         /// Does whatever steps are necessary to setup for debugging. On Android this will include launching

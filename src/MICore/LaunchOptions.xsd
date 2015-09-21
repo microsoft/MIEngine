@@ -29,7 +29,7 @@
           <xs:documentation>Full path to the root of the Android NDK.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="IntermediateDirectory" type="xs:string" use="required">
+      <xs:attribute name="IntermediateDirectory" type="xs:string" use="optional">
         <xs:annotation>
           <xs:documentation>Full path to the directory where files from the device/emulator will be downloaded to. This directory is added to the SO Lib search path automatically.</xs:documentation>
         </xs:annotation>
@@ -66,6 +66,12 @@
             If true, attach to a running process of this Package rather than launching.
           </xs:documentation>
         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="SourceRoots" type="xs:string" use="optional" default="">
+      </xs:attribute>
+      <xs:attribute name="JVMPort" type="xs:int" use="optional" default="65534">
+      </xs:attribute>
+      <xs:attribute name="JVMHost" type="xs:string" use="optional" default="localhost">
       </xs:attribute>
       <xs:attributeGroup ref="CommonAttributes"/>
     </xs:complexType>
