@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DebugEngineHost;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -90,7 +91,7 @@ namespace IOSDebugLauncher
         {
             ManualResetEvent doneEvent = new ManualResetEvent(false);
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-            var waitLoop = new MICore.WaitLoop(waitLoopMessage);
+            var waitLoop = new HostWaitLoop(waitLoopMessage);
             ExceptionDispatchInfo exceptionDispatchInfo = null;
 
             HttpResponseMessage response = null;

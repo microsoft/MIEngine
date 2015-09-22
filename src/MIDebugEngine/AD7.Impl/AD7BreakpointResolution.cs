@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
-using System.Runtime.InteropServices;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -48,7 +48,7 @@ namespace Microsoft.MIDebugEngine
                 // to IDebugCodeContex2 and not IUnknown.
                 AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, Addr, _functionName);
                 codeContext.SetDocumentContext(_documentContext);
-                location.unionmember1 = Marshal.GetComInterfaceForObject(codeContext, typeof(IDebugCodeContext2));
+                location.unionmember1 = HostMarshal.RegisterCodeContext(codeContext);
                 pBPResolutionInfo[0].bpResLocation = location;
                 pBPResolutionInfo[0].dwFields |= enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION;
             }

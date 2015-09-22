@@ -172,6 +172,8 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll"/>
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb"/>
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef"/>
+    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll"/>
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb"/>
     <DropUnsignedFile Include="Install.cmd"/>
   </ItemGroup>
   <ItemGroup>

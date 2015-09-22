@@ -10,9 +10,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MICore
+namespace Microsoft.DebugEngineHost
 {
-    internal static class VSLoader
+    /// <summary>
+    /// Provides support for loading dependant assemblies using information from the configuration store.
+    /// </summary>
+    public static class HostLoader
     {
         /// <summary>
         /// Looks up the specified CLSID in the VS registry and loads it

@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Runtime.InteropServices;
 using System.Runtime.ExceptionServices;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
@@ -13,6 +12,7 @@ using System.Threading.Tasks;
 using MICore;
 using System.Globalization;
 using Microsoft.Win32;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -30,8 +30,8 @@ namespace Microsoft.MIDebugEngine
     //
     // IDebugEngineProgram2: This interface provides simultanious debugging of multiple threads in a debuggee.
 
-    [ComVisible(true)]
-    [Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
+    [System.Runtime.InteropServices.ComVisible(true)]
+    [System.Runtime.InteropServices.Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
     sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110
     {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
@@ -57,9 +57,7 @@ namespace Microsoft.MIDebugEngine
 
         public AD7Engine()
         {
-            //This call is to initialize the global service provider while we are still on the main thread.
-            //Do not remove this this, even though the return value goes unused.
-            var globalProvider = Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider;
+            Host.EnsureMainThreadInitialized();
 
             _breakpointManager = new BreakpointManager(this);
         }
@@ -406,7 +404,7 @@ namespace Microsoft.MIDebugEngine
 
                 using (cancellationTokenSource)
                 {
-                    _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (MICore.WaitLoop waitLoop) =>
+                    _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (HostWaitLoop waitLoop) =>
                     {
                         try
                         {
@@ -464,7 +462,7 @@ namespace Microsoft.MIDebugEngine
                 string outputMessage = string.Join("\r\n", initializationException.OutputLines) + "\r\n";
 
                 // NOTE: We can't write to the output window by sending an AD7 event because this may be called before the session create event
-                VsOutputWindow.WriteLaunchError(outputMessage);
+                HostOutputWindow.WriteLaunchError(outputMessage);
             }
 
             _engineCallback.OnErrorImmediate(message);
