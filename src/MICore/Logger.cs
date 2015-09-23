@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -27,21 +27,14 @@ namespace MICore
         // NOTE: We never clean this up
         private static StreamWriter s_streamWriter;
 
-        public static void EnsureInitialized(string registryRoot)
+        public static void EnsureInitialized(HostConfigurationStore configStore)
         {
             if (!s_isInitialized)
             {
                 s_isInitialized = true;
                 s_initTime = DateTime.Now;
 
-                RegistryKey key = Registry.LocalMachine.OpenSubKey(registryRoot + @"\Debugger");
-                if (key == null)
-                {
-                    Debug.Fail("Why is Debugger key missing?");
-                    return;
-                }
-
-                object enableMILoggerValue = key.GetValue("EnableMIDebugLogger");
+                object enableMILoggerValue = configStore.GetOptionalValue("Debugger", "EnableMIDebugLogger");
                 if (IsRegValueTrue(enableMILoggerValue))
                 {
                     string tempDirectory = Environment.GetEnvironmentVariable("TMP");

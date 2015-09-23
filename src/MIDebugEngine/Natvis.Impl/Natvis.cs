@@ -15,7 +15,6 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
-using Microsoft.Win32;
 using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine.Natvis

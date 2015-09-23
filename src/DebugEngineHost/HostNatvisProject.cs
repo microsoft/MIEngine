@@ -16,7 +16,7 @@ namespace Microsoft.DebugEngineHost
     /// Provides interactions with the host's source workspace to locate and load any natvis files
     /// in the project.
     /// </summary>
-    public class HostNatvisProject
+    public static class HostNatvisProject
     {
         public delegate void NatvisLoader(string path);
 

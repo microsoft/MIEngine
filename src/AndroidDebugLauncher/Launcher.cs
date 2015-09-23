@@ -40,15 +40,15 @@ namespace AndroidDebugLauncher
         private const string LogcatServiceMessage_SourceId = "1CED0608-638C-4B00-A1D2-CE56B1B672FA";
         private const int LogcatServiceMessage_NewProcess = 0;
 
-        void IPlatformAppLauncher.Initialize(string registryRoot, IDeviceAppLauncherEventCallback eventCallback)
+        void IPlatformAppLauncher.Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback)
         {
-            if (string.IsNullOrEmpty(registryRoot))
-                throw new ArgumentNullException("registryRoot");
+            if (configStore == null)
+                throw new ArgumentNullException("configStore");
             if (eventCallback == null)
                 throw new ArgumentNullException("eventCallback");
 
             _eventCallback = eventCallback;
-            RegistryRoot.Set(registryRoot);
+            RegistryRoot.Set(configStore.RegistryRoot);
         }
 
         void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions)
