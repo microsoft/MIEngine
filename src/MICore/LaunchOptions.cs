@@ -56,33 +56,6 @@ namespace MICore
     };
 
     /// <summary>
-    /// Launch options when connecting to an instance of an MI Debugger through a serial port
-    /// </summary>
-    public sealed class SerialLaunchOptions : LaunchOptions
-    {
-        public SerialLaunchOptions(string Port)
-        {
-            if (string.IsNullOrEmpty(Port))
-                throw new ArgumentNullException("Port");
-
-            this.Port = Port;
-        }
-
-        static internal SerialLaunchOptions CreateFromXml(Xml.LaunchOptions.SerialPortLaunchOptions source)
-        {
-            var options = new SerialLaunchOptions(RequireAttribute(source.Port, "Port"));
-            options.InitializeCommonOptions(source);
-
-            return options;
-        }
-
-        /// <summary>
-        /// [Required] Serial port to connect to
-        /// </summary>
-        public string Port { get; private set; }
-    }
-
-    /// <summary>
     /// Launch options when connecting to an instance of an MI Debugger running on a remote device through a shell
     /// </summary>
     public sealed class PipeLaunchOptions : LaunchOptions
@@ -244,7 +217,7 @@ namespace MICore
 
         private string _exePath;
         /// <summary>
-        /// [Required] Path to the executable file. This could be a path on the remote machine (for Pipe/Serial transports)
+        /// [Required] Path to the executable file. This could be a path on the remote machine (for Pipe transport)
         /// or the local machine (Local transport).
         /// </summary>
         public virtual string ExePath
@@ -413,14 +386,6 @@ namespace MICore
                                 var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.LocalLaunchOptionsSerializer();
                                 var xmlLaunchOptions = (Xml.LaunchOptions.LocalLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = LocalLaunchOptions.CreateFromXml(xmlLaunchOptions);
-                            }
-                            break;
-
-                        case "SerialPortLaunchOptions":
-                            {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.SerialPortLaunchOptionsSerializer();
-                                var xmlLaunchOptions = (Xml.LaunchOptions.SerialPortLaunchOptions)Deserialize(serializer, reader);
-                                launchOptions = SerialLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
                             break;
 
