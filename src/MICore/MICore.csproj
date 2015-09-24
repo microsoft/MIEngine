@@ -79,7 +79,6 @@
     <Compile Include="Transports\PipeTransport.cs" />
     <Compile Include="MIResults.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Transports\SerialTransport.cs" />
     <Compile Include="Transports\StreamTransport.cs" />
     <Compile Include="Transports\TcpTransport.cs" />
   </ItemGroup>

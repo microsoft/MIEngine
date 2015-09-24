@@ -184,22 +184,6 @@
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
-  <xs:element name="SerialPortLaunchOptions">
-    <xs:annotation>
-      <xs:documentation>Instructions the debugger to connect to an instance of an MI Debugger running on the target computer over serial port</xs:documentation>
-    </xs:annotation>
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="BaseLaunchOptions">
-          <xs:attribute name="Port" type="xs:string" use="required">
-            <xs:annotation>
-              <xs:documentation>Serial port to connect to (ex:com1).</xs:documentation>
-            </xs:annotation>
-          </xs:attribute>
-        </xs:extension>
-      </xs:complexContent>
-    </xs:complexType>
-  </xs:element>
   <xs:element name="PipeLaunchOptions">
     <xs:annotation>
       <xs:documentation>Instructions the debugger to connect to an instance of an MI Debugger running on the target computer through some sort of standard input/output pipe (ex: telnet).</xs:documentation>
@@ -247,7 +231,7 @@
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
-  <!--base type for LocalLaunchOptions, PipeLaunchOptions, SerialPortLaunchOptions, and TcpLaunchOptions -->
+  <!--base type for LocalLaunchOptions, PipeLaunchOptions, and TcpLaunchOptions -->
   <xs:complexType name="BaseLaunchOptions">
     <xs:sequence>
       <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
@@ -293,7 +277,7 @@
       <xs:annotation>
         <xs:documentation>
           Path to the executable file. For LocalLaunchOptions, this is a path on the Windows machine,
-          for Pipe/Serial, this is a path on the remote machine. This path is not required if the project system provides
+          for Pipe, this is a path on the remote machine. This path is not required if the project system provides
           it through the LaunchDebugTargets structure.
         </xs:documentation>
       </xs:annotation>

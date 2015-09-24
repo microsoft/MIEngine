@@ -169,11 +169,6 @@ namespace Microsoft.MIDebugEngine
             {
                 this.Init(new MICore.TcpTransport(), _launchOptions);
             }
-            else if (_launchOptions is SerialLaunchOptions)
-            {
-                string port = ((SerialLaunchOptions)_launchOptions).Port;
-                this.Init(new MICore.SerialTransport(port), _launchOptions);
-            }
             else
             {
                 throw new ArgumentOutOfRangeException("LaunchInfo.options");
