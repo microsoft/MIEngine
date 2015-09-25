@@ -214,7 +214,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                 settings.IgnoreComments = true;
                 settings.IgnoreProcessingInstructions = true;
                 settings.IgnoreWhitespace = true;
-                settings.XmlResolver = null;
 
                 using (var stream = new System.IO.FileStream(path, FileMode.Open, FileAccess.Read))
                 using (var reader = XmlReader.Create(stream, settings))
@@ -361,7 +360,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
                 List<IVariableInformation> children = new List<IVariableInformation>();
                 children.Add(visView);
-                Array.ForEach(variable.Children, (c) => children.Add(c));
+                children.AddRange(variable.Children);
                 return children.ToArray();
             }
             catch (Exception e)
@@ -453,7 +452,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
-                                Array.ForEach(arrayExpr.Children, (c) => children.Add(c));
+                                children.AddRange(arrayExpr.Children);
                             }
                             break;
                         }
@@ -643,7 +642,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     var eChildren = Expand(expand);
                     if (eChildren != null)
                     {
-                        Array.ForEach(eChildren, (c) => children.Add(c));
+                        children.AddRange(eChildren);
                     }
                 }
             }
