@@ -264,29 +264,22 @@ namespace Microsoft.MIDebugEngine
 
         private static bool IsCorruptingException(Exception exception)
         {
-            if (exception is SystemException)
-            {
-                if (exception is NullReferenceException)
-                    return true;
-                if (exception is AccessViolationException)
-                    return true;
-                if (exception is ArgumentNullException)
-                    return true;
-                if (exception is ArithmeticException)
-                    return true;
-                if (exception is ArrayTypeMismatchException)
-                    return true;
-                if (exception is DivideByZeroException)
-                    return true;
-                if (exception is IndexOutOfRangeException)
-                    return true;
-                if (exception is InvalidCastException)
-                    return true;
-                if (exception is StackOverflowException)
-                    return true;
-                if (exception is System.Runtime.InteropServices.SEHException)
-                    return true;
-            }
+            if (exception is NullReferenceException)
+                return true;
+            if (exception is ArgumentNullException)
+                return true;
+            if (exception is ArithmeticException)
+                return true;
+            if (exception is ArrayTypeMismatchException)
+                return true;
+            if (exception is DivideByZeroException)
+                return true;
+            if (exception is IndexOutOfRangeException)
+                return true;
+            if (exception is InvalidCastException)
+                return true;
+            if (exception is System.Runtime.InteropServices.SEHException)
+                return true;
 
             return false;
         }
