@@ -38,7 +38,7 @@ namespace MICore
             _bQuit = false;
             _callback = transportCallback;
             _commandEvent = new AutoResetEvent(false);
-            _reader = new StreamReader(_filename);
+            _reader = new StreamReader(File.OpenRead(_filename));
             _thread = new Thread(TransportLoop);
             _nextCommand = null;
             _thread.Start();
@@ -77,7 +77,7 @@ namespace MICore
                 }
                 line = line.TrimEnd();
                 _lineNumber++;
-                Debug.Print("#{0}:{1}", _lineNumber, line);
+                Debug.WriteLine("#{0}:{1}", _lineNumber, line);
 
                 if (line[0] == '-')
                 {

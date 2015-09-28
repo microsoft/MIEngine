@@ -79,7 +79,7 @@ namespace MICore
 
             if (_stdErrReader != null)
             {
-                _stdErrReader.Close();
+                _stdErrReader.Dispose();
             }
 
             _allReadersDone.Set();
@@ -88,7 +88,7 @@ namespace MICore
             {
                 _process.EnableRaisingEvents = false;
                 _process.Exited -= OnProcessExit;
-                _process.Close();
+                _process.Dispose();
             }
         }
 
