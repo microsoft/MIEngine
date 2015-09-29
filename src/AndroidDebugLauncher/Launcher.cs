@@ -282,14 +282,13 @@ namespace AndroidDebugLauncher
 
                     VerifySdkVersion();
 
-                    string pwdCommand = string.Concat("run-as ", _launchOptions.Package, " /system/bin/sh -c pwd");
-                    ExecCommand(pwdCommand);
-                    workingDirectory = PwdOutputParser.ExtractWorkingDirectory(_shell.Out, _launchOptions.Package);
-
                     if (_targetEngine == TargetEngine.Native)
                     {
+                        string pwdCommand = string.Concat("run-as ", _launchOptions.Package, " /system/bin/sh -c pwd");
+                        ExecCommand(pwdCommand);
+                        workingDirectory = PwdOutputParser.ExtractWorkingDirectory(_shell.Out, _launchOptions.Package);
                         gdbServerRemotePath = GetGdbServerPath(workingDirectory);
-    
+
                         KillOldInstances(gdbServerRemotePath);
                     }
                 }));
@@ -332,10 +331,8 @@ namespace AndroidDebugLauncher
                         device.Forward(string.Format(CultureInfo.InvariantCulture, "tcp:{0}", gdbPortNumber), gdbServerSocketDescription);
                     }
 
-                    if (!_launchOptions.IsAttach)
-                    {
-                        device.Forward(string.Format(CultureInfo.InvariantCulture, "tcp:{0}", _jdbPortNumber), string.Format(CultureInfo.InvariantCulture, "jdwp:{0}", _appProcessId));
-                    }
+
+                    device.Forward(string.Format(CultureInfo.InvariantCulture, "tcp:{0}", _jdbPortNumber), string.Format(CultureInfo.InvariantCulture, "jdwp:{0}", _appProcessId));
                 }));
 
                 if (_targetEngine == TargetEngine.Native)
