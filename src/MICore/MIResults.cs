@@ -293,11 +293,8 @@ namespace MICore
                     else if (_value is ResultListValue)
                     {
                         var resultListValue = (ResultListValue)_value;
-                        values = new List<NamedResultValue>(resultListValue.Length);
-                        Array.ForEach(resultListValue.Content, (namedresultValue) =>
-                        {
-                            values.Add(new NamedResultValue(namedresultValue));
-                        });
+                        var namedResultValues = resultListValue.Content.Select(value => new NamedResultValue(value));
+                        values = new List<NamedResultValue>(namedResultValues);
                     }
                     else if (_value is TupleValue)
                     {
@@ -429,12 +426,12 @@ namespace MICore
         }
         public T[] AsArray<T>() where T : ResultValue
         {
-            return Array.ConvertAll(Content, (c) => (T)c);
+            return Content.Cast<T>().ToArray();
         }
 
         public string[] AsStrings
         {
-            get { return Array.ConvertAll(Content, (c) => ((ConstValue)c).AsString); }
+            get { return Content.Cast<ConstValue>().Select(c => c.AsString).ToArray(); }
         }
 
         public override string ToString()
@@ -497,9 +494,7 @@ namespace MICore
 
         public int CountOf(string name)
         {
-            int i = 0;
-            Array.ForEach(Content, (c) => { if (c.Name == name) i++; });
-            return i;
+            return Content.Count(c => c.Name == name);
         }
 
         public override string ToString()

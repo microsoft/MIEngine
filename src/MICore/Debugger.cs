@@ -834,7 +834,9 @@ namespace MICore
 
         private void OnUnknown(string cmd)
         {
-            Debug.Print("DBG:Unknown command: {0}", cmd);
+            // TODO string.Format unnecessary on Core; remove after converting project to PCL
+            var message = string.Format(CultureInfo.CurrentCulture, "DBG:Unknown command: {0}", cmd);
+            Debug.WriteLine(message);
         }
 
         private void OnResult(string cmd, string token)

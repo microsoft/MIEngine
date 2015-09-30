@@ -351,7 +351,7 @@ namespace Microsoft.MIDebugEngine
             if (fetched < bytes.Length)
             {
                 _bytes = new byte[fetched];
-                Array.Copy(bytes, _bytes, fetched);
+                Array.Copy(bytes, _bytes, (int)fetched);
             }
             else
             {

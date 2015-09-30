@@ -469,13 +469,13 @@ namespace MICore
                 {
                     if (reader != null)
                     {
-                        reader.Close();
+                        reader.Dispose();
                     }
                     else if (stringReader != null)
                     {
                         // NOTE: the reader will close the input, so we only want to do this
                         // if we failed to create the reader.
-                        stringReader.Close();
+                        stringReader.Dispose();
                     }
                 }
             }
@@ -618,7 +618,7 @@ namespace MICore
             var deviceAppLauncher = (IPlatformAppLauncher)HostLoader.VsCoCreateManagedObject(configStore, clsidLauncher);
             if (deviceAppLauncher == null)
             {
-                throw new ApplicationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, clsidLauncher.ToString("B")));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, clsidLauncher.ToString("B")));
             }
 
             bool success = false;
