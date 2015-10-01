@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Serialization;
 
 namespace MICoreUnitTests
 {
@@ -115,7 +116,7 @@ namespace MICoreUnitTests
         {
             using (XmlReader reader = MICore.LaunchOptions.OpenXml(content))
             {
-                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.AndroidLaunchOptionsSerializer();
+                var serializer = new XmlSerializer(typeof(MICore.Xml.LaunchOptions.AndroidLaunchOptions));
                 var xmlOptions = (MICore.Xml.LaunchOptions.AndroidLaunchOptions)MICore.LaunchOptions.Deserialize(serializer, reader);
                 return new AndroidLaunchOptions(xmlOptions);
             }

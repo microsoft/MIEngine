@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MICoreUnitTests</RootNamespace>
     <AssemblyName>MICoreUnitTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -103,17 +103,13 @@
       <Project>{e0844bff-2d67-4cb0-8e2a-e9cd888f2eb0}</Project>
       <Name>AndroidDebugLauncher</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DebugEngineHost\DebugEngineHost.csproj">
-      <Project>{e659fee3-7773-4a73-880a-83ce5c9634cc}</Project>
-      <Name>DebugEngineHost</Name>
+    <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
+      <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
+      <Name>DebugEngineHost.Stub</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MICore\MICore.csproj">
-      <Project>{12cc862d-95b7-4224-8e16-b928c6333677}</Project>
-      <Name>MICore</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MIDebugEngine\MIDebugEngine.csproj">
-      <Project>{6d2688fe-6fd8-44a8-b96a-6037457f72a7}</Project>
-      <Name>MIDebugEngine</Name>
+    <ProjectReference Include="..\MICore.PCL\MICore.PCL.csproj">
+      <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
+      <Name>MICore.PCL</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
