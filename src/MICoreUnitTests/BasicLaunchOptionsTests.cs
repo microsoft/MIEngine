@@ -173,6 +173,10 @@ namespace MICoreUnitTests
             Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.None);
         }
 
+        // TODO this test is broken by a bug: the assembly binder only searches the unit test
+        // project's output directory for dependencies and thus won't find assemblies in the
+        // package cache. This can be worked around by moving the missing assembly
+        // (System.Net.Security) to that directory.
         [Fact]
         public void TestLaunchOptions_Tcp1()
         {

@@ -6,11 +6,11 @@
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EA876A2D-AB0F-4204-97DD-DFB3B5568978}</ProjectGuid>
+    <ProjectGuid>{54C33AFA-438D-4932-A2F0-D0F2BB2FADC9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.DebugEngineHost</RootNamespace>
-    <AssemblyName>Microsoft.DebugEngineHost</AssemblyName>
+    <RootNamespace>MICore</RootNamespace>
+    <AssemblyName>Microsoft.MICore</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -36,20 +36,54 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="LaunchOptions.xsd" />
     <None Include="project.json" />
+    <None Include="SetMIDebugLogging.cmd" />
+    <None Include="ValidateDesignerFile.cmd" />
+    <None Include="ValidateSerializer.cmd" />
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Host.cs" />
-    <Compile Include="HostConfigurationSection.cs" />
-    <Compile Include="HostConfigurationStore.cs" />
-    <Compile Include="HostLoader.cs" />
-    <Compile Include="HostMarshal.cs" />
-    <Compile Include="HostNatvisProject.cs" />
-    <Compile Include="HostOutputWindow.cs" />
-    <Compile Include="HostWaitDialog.cs" />
-    <Compile Include="HostWaitLoop.cs" />
+    <Compile Include="CommandLock.cs" />
+    <Compile Include="Debugger.cs" />
+    <Compile Include="InvalidLaunchOptionsException.cs" />
+    <Compile Include="LaunchCommand.cs" />
+    <Compile Include="LaunchOptions.cs" />
+    <Compile Include="LaunchOptions.xsd.cs">
+      <DependentUpon>LaunchOptions.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Logger.cs" />
+    <Compile Include="MICommandFactory.cs" />
+    <Compile Include="MICoreResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MICoreResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="MIException.cs" />
+    <Compile Include="MIResults.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Transports\ITransport.cs" />
+    <Compile Include="Transports\LocalTransport.cs" />
+    <Compile Include="Transports\MockTransport.cs" />
+    <Compile Include="Transports\PipeTransport.cs" />
+    <Compile Include="Transports\StreamTransport.cs" />
+    <Compile Include="Transports\TcpTransport.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ExampleLaunchOptions.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MICoreResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>MICoreResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
+      <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
+      <Name>DebugEngineHost.Stub</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

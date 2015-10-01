@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AndroidDebugLauncher</RootNamespace>
     <AssemblyName>Microsoft.AndroidDebugLauncher</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -137,17 +137,17 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DebugEngineHost\DebugEngineHost.csproj">
-      <Project>{e659fee3-7773-4a73-880a-83ce5c9634cc}</Project>
-      <Name>DebugEngineHost</Name>
+    <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
+      <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
+      <Name>DebugEngineHost.Stub</Name>
     </ProjectReference>
     <ProjectReference Include="..\JDbg\JDbg.csproj">
       <Project>{78728205-db3e-4b7b-a7d2-5cbe38e9c607}</Project>
       <Name>JDbg</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MICore\MICore.csproj">
-      <Project>{12cc862d-95b7-4224-8e16-b928c6333677}</Project>
-      <Name>MICore</Name>
+    <ProjectReference Include="..\MICore.PCL\MICore.PCL.csproj">
+      <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
+      <Name>MICore.PCL</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
