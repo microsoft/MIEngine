@@ -6,6 +6,7 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug.Lab|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -36,7 +37,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.MIDebugPackage</RootNamespace>
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Because the MIEngine ships in Visual Studio, it is recommended NOT to install the .vsix
@@ -155,26 +156,26 @@
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb"/>
-    <DropUnsignedFile Include="Install.cmd"/>
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
+    <DropUnsignedFile Include="Install.cmd" />
   </ItemGroup>
   <ItemGroup>
     <FilesToSign Include="@(DropSignedFile)">
@@ -188,19 +189,17 @@
       <Name>AndroidDebugLauncher</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\MICore\MICore.csproj">
-      <Project>{12cc862d-95b7-4224-8e16-b928c6333677}</Project>
-      <Name>MICore</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
-    </ProjectReference>
     <ProjectReference Include="..\IOSDebugLauncher\IOSDebugLauncher.csproj">
       <Project>{d2a11674-f677-4b11-9989-2f6099a6f0a2}</Project>
       <Name>IOSDebugLauncher</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MIDebugEngine\MIDebugEngine.csproj">
-      <Project>{6d2688fe-6fd8-44a8-b96a-6037457f72a7}</Project>
-      <Name>MIDebugEngine</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
+    <ProjectReference Include="..\MICore.PCL\MICore.PCL.csproj">
+      <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
+      <Name>MICore.PCL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MIDebugEngine.PCL\MIDebugEngine.PCL.csproj">
+      <Project>{a8b0230c-7806-407c-af18-54b2ce21275e}</Project>
+      <Name>MIDebugEngine.PCL</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
@@ -211,7 +210,6 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
-  
   <!--
   Target to drop the built files into a directory.
   For the official build, we need to drop files to the build share
@@ -226,7 +224,7 @@
       <DropLocation Condition="'$(DropLocation)'==''">$(MSBuildThisFileDirectory)..\..\bin\$(DropConfigurationName)\drop</DropLocation>
     </PropertyGroup>
     <MakeDir Condition="!Exists($(DropLocation))" Directories="$(DropLocation)" />
-    <Copy DestinationFolder="$(DropLocation)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)"/>
+    <Copy DestinationFolder="$(DropLocation)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
