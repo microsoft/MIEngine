@@ -128,7 +128,7 @@ namespace IOSDebugLauncher
                 if (!String.IsNullOrWhiteSpace(file))
                 {
                     string targetAttachCommand = string.Format(CultureInfo.InvariantCulture, "-target-attach -n {0}  --waitfor", file);
-                    string launchMessage = string.Format(CultureInfo.InstalledUICulture, LauncherResources.WaitingForApp, file);
+                    string launchMessage = string.Format(CultureInfo.CurrentCulture, LauncherResources.WaitingForApp, file);
                     commands.Add(new LaunchCommand(targetAttachCommand, launchMessage));
                 }
                 else
