@@ -15,6 +15,7 @@ using System.Collections.ObjectModel;
 using System.Xml.Serialization;
 using System.Diagnostics;
 using Microsoft.DebugEngineHost;
+using MICore.Xml.LaunchOptions;
 
 namespace MICore
 {
@@ -377,13 +378,14 @@ namespace MICore
 
             try
             {
+                XmlSerializer serializer;
                 using (XmlReader reader = OpenXml(options))
                 {
                     switch (reader.LocalName)
                     {
                         case "LocalLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.LocalLaunchOptionsSerializer();
+                                serializer = new XmlSerializer(typeof(Xml.LaunchOptions.LocalLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.LocalLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = LocalLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
@@ -391,7 +393,7 @@ namespace MICore
 
                         case "PipeLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.PipeLaunchOptionsSerializer();
+                                serializer = new XmlSerializer(typeof(Xml.LaunchOptions.PipeLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.PipeLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = PipeLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
@@ -399,7 +401,7 @@ namespace MICore
 
                         case "TcpLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.TcpLaunchOptionsSerializer();
+                                serializer = new XmlSerializer(typeof(Xml.LaunchOptions.TcpLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.TcpLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = TcpLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
@@ -407,7 +409,7 @@ namespace MICore
 
                         case "IOSLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.IOSLaunchOptionsSerializer();
+                                serializer = new XmlSerializer(typeof(IOSLaunchOptions));
                                 launcherXmlOptions = Deserialize(serializer, reader);
                                 clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
                             }
@@ -415,7 +417,7 @@ namespace MICore
 
                         case "AndroidLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.AndroidLaunchOptionsSerializer();
+                                serializer = new XmlSerializer(typeof(AndroidLaunchOptions));
                                 launcherXmlOptions = Deserialize(serializer, reader);
                                 clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
                             }
@@ -469,7 +471,6 @@ namespace MICore
             settings.IgnoreProcessingInstructions = true;
             settings.IgnoreWhitespace = true;
             settings.NameTable = new NameTable();
-            settings.XmlResolver = null;
 
             // Create our own namespace manager so that we can set the default namespace
             // We need this because the XML serializer requires correct namespaces,

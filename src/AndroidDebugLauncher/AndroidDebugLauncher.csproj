@@ -145,9 +145,9 @@
       <Project>{78728205-db3e-4b7b-a7d2-5cbe38e9c607}</Project>
       <Name>JDbg</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MICore.PCL\MICore.PCL.csproj">
+    <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
-      <Name>MICore.PCL</Name>
+      <Name>MICore</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
