@@ -199,11 +199,12 @@ namespace MICore
 
     public sealed class JavaLaunchOptions : LaunchOptions
     {
-        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots)
+        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots, string processName)
         {
             JVMHost = jvmHost;
             JVMPort = jvmPort;
             SourceRoots = sourceRoots;
+            ProcessName = processName;
         }
 
         public string JVMHost { get; private set; }
@@ -211,6 +212,8 @@ namespace MICore
         public int JVMPort { get; private set; }
 
         public string[] SourceRoots { get; private set; }
+
+        public string ProcessName { get; private set; }
     }
 
 
