@@ -109,6 +109,11 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>
+      <xs:attribute name="DeviceUdid" type="xs:string" use="optional">
+        <xs:annotation>
+          <xs:documentation>The 40 digit UDID of the iOS device to be targeted in the case that IOSDebugTarget is set to "Device"</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attribute name="Secure" use="required">
         <xs:simpleType>
           <xs:annotation>
