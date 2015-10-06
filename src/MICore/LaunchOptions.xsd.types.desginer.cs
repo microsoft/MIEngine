@@ -287,6 +287,10 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string DeviceUdid;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public IOSLaunchOptionsSecure Secure;
         
         /// <remarks/>
