@@ -58,7 +58,7 @@ namespace IOSDebugLauncher
         public Launcher.RemotePorts StartDebugListener()
         {
             string remotePortsJsonString;
-            CallVcRemote(new Uri("debug/setupForDebugging?target=" + _launchOptions.IOSDebugTarget.ToString(), UriKind.Relative), LauncherResources.Info_StartingDebugListener, out remotePortsJsonString);
+            CallVcRemote(new Uri("debug/setupForDebugging?target=" + _launchOptions.IOSDebugTarget.ToString() + "?deviceUdid=" + _launchOptions.DeviceUdid, UriKind.Relative), LauncherResources.Info_StartingDebugListener, out remotePortsJsonString);
 
             try
             {
