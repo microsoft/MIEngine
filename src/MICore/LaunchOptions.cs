@@ -199,11 +199,19 @@ namespace MICore
 
     public sealed class JavaLaunchOptions : LaunchOptions
     {
-        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots)
+        /// <summary>
+        /// Creates an instance of JavaLaunchOptions. This is used to send information to the Java Debugger.
+        /// </summary>
+        /// <param name="jvmHost">Java Virtual Machine host.</param>
+        /// <param name="jvmPort">Java Virtual Machine port.</param>
+        /// <param name="sourceRoots">Source roots.</param>
+        /// <param name="processName">Logical name of the process. Usually indicates the name of the activity.</param>
+        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots, string processName)
         {
             JVMHost = jvmHost;
             JVMPort = jvmPort;
             SourceRoots = sourceRoots;
+            ProcessName = processName;
         }
 
         public string JVMHost { get; private set; }
@@ -211,6 +219,8 @@ namespace MICore
         public int JVMPort { get; private set; }
 
         public string[] SourceRoots { get; private set; }
+
+        public string ProcessName { get; private set; }
     }
 
 
