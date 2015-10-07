@@ -86,6 +86,7 @@ namespace AndroidDebugLauncher
             var cancellationTokenSource = new CancellationTokenSource();
             ExceptionDispatchInfo exceptionDispatchInfo = null;
             LaunchOptions localLaunchOptions = null;
+            TargetEngine targetEngine = TargetEngine.Unknown;
 
             _waitLoop = new MICore.WaitLoop(LauncherResources.WaitDialogText);
 
@@ -97,7 +98,7 @@ namespace AndroidDebugLauncher
 
                     try
                     {
-                        localLaunchOptions = SetupForDebuggingWorker(cancellationTokenSource.Token);
+                        localLaunchOptions = SetupForDebuggingWorker(cancellationTokenSource.Token, out targetEngine);
                         launchErrorTelemetryResult = "None";
                     }
                     catch (Exception e)
@@ -113,7 +114,7 @@ namespace AndroidDebugLauncher
 
                     if (launchErrorTelemetryResult != null)
                     {
-                        Telemetry.SendLaunchError(launchErrorTelemetryResult);
+                        Telemetry.SendLaunchError(launchErrorTelemetryResult, targetEngine.ToString());
                     }
                 }
             );
@@ -145,7 +146,7 @@ namespace AndroidDebugLauncher
             }
         }
 
-        private LaunchOptions SetupForDebuggingWorker(CancellationToken token)
+        private LaunchOptions SetupForDebuggingWorker(CancellationToken token, out TargetEngine targetEngine)
         {
             CancellationTokenRegistration onCancelRegistration = token.Register(() =>
             {
@@ -439,6 +440,7 @@ namespace AndroidDebugLauncher
                 
                 launchOptions.VisualizerFile = "Microsoft.Android.natvis";
 
+                targetEngine = _targetEngine;
                 return launchOptions;
             }
         }
