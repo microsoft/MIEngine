@@ -29,8 +29,9 @@ namespace MICore
 
     public enum TargetEngine
     {
+        Unknown,
         Native,
-        Java
+        Java,
     }
 
     public enum LaunchCompleteCommand
