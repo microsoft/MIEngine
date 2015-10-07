@@ -15,7 +15,7 @@
           Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')"
           BeforeTargets="ResolveAssemblyReferences">
     <PropertyGroup>
-        <IlAsmCommand Condition="'$(IlAsmCommand)'==''">"$(FrameworkDir)$(FrameworkVersion)\ilasm.exe"</IlAsmCommand>
+        <IlAsmCommand Condition="'$(IlAsmCommand)'==''">"$(FrameworkPathOverride)\ilasm.exe"</IlAsmCommand>
         <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
     </PropertyGroup>
     <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
