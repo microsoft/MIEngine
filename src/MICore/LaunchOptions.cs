@@ -16,6 +16,7 @@ using System.Xml.Serialization;
 using System.Diagnostics;
 using Microsoft.DebugEngineHost;
 using MICore.Xml.LaunchOptions;
+using System.Reflection;
 
 namespace MICore
 {
@@ -435,6 +436,10 @@ namespace MICore
             settings.IgnoreProcessingInstructions = true;
             settings.IgnoreWhitespace = true;
             settings.NameTable = new NameTable();
+
+            // set XmlResolver via reflection, if it exists, to satisfy FxCop
+            var xmlResolverProperty = settings.GetType().GetProperty("XmlResolver", BindingFlags.Public | BindingFlags.Instance);
+            xmlResolverProperty?.SetValue(settings, null);
 
             // Create our own namespace manager so that we can set the default namespace
             // We need this because the XML serializer requires correct namespaces,
