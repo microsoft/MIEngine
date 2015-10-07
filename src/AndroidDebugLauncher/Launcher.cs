@@ -113,7 +113,7 @@ namespace AndroidDebugLauncher
 
                     if (launchErrorTelemetryResult != null)
                     {
-                        Telemetry.SendLaunchError(launchErrorTelemetryResult);
+                        Telemetry.SendLaunchError(launchErrorTelemetryResult, _targetEngine.ToString());
                     }
                 }
             );

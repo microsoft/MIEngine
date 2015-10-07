@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MICore;
 using Microsoft.Internal.VisualStudio.Shell;
 using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -21,6 +22,7 @@ namespace AndroidDebugLauncher
 
         private const string Event_LaunchError = @"VS/Diagnostics/Debugger/Android/LaunchFailure";
         private const string Property_LaunchErrorResult = @"VS.Diagnostics.Debugger.Android.FailureResult";
+        private const string Property_LaunchTargetEngine = @"VS.Diagnostics.Debugger.Android.TargetEngine";
 
         #region LaunchFailure support
 
@@ -101,9 +103,11 @@ namespace AndroidDebugLauncher
                 return exception.GetType().FullName;
             }
         }
-        public static void SendLaunchError(string launchErrorTelemetryResult)
+        public static void SendLaunchError(string launchErrorTelemetryResult, string targetEngine)
         {
-            SendEvent(Event_LaunchError, new KeyValuePair<string, object>(Property_LaunchErrorResult, launchErrorTelemetryResult));
+            SendEvent(Event_LaunchError, 
+                new KeyValuePair<string, object>(Property_LaunchErrorResult, launchErrorTelemetryResult),
+                new KeyValuePair<string, object>(Property_LaunchTargetEngine, targetEngine));
         }
 
         #endregion
