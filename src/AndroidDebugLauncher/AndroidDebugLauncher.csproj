@@ -140,6 +140,7 @@
     <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
       <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
       <Name>DebugEngineHost.Stub</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\JDbg\JDbg.csproj">
       <Project>{78728205-db3e-4b7b-a7d2-5cbe38e9c607}</Project>

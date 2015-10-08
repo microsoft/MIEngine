@@ -126,6 +126,7 @@
     <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
       <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
       <Name>DebugEngineHost.Stub</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
