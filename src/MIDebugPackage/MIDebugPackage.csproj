@@ -156,26 +156,26 @@
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb"/>
-    <DropUnsignedFile Include="Install.cmd"/>
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
+    <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
     <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
@@ -209,9 +209,15 @@
       <Name>AndroidDebugLauncher</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
+    <ProjectReference Include="..\DebugEngineHost\DebugEngineHost.csproj">
+      <Project>{e659fee3-7773-4a73-880a-83ce5c9634cc}</Project>
+      <Name>DebugEngineHost</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
+    </ProjectReference>
     <ProjectReference Include="..\IOSDebugLauncher\IOSDebugLauncher.csproj">
       <Project>{d2a11674-f677-4b11-9989-2f6099a6f0a2}</Project>
       <Name>IOSDebugLauncher</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
