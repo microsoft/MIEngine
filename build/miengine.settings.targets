@@ -47,7 +47,7 @@
     <BuildNumberMinor>0</BuildNumberMinor>
     <BuildNumberMinor Condition="$(BuildDateRevision.Length) &gt; 9">$(BuildDateRevision.Substring(9))</BuildNumberMinor>
 
-    <AssemblyVersion>$(MajorVersion).$(MinorVersion).0</AssemblyVersion>
+    <AssemblyVersion Condition="'$(AssemblyVersion)'==''">$(MajorVersion).$(MinorVersion).0</AssemblyVersion>
     <BuildVersion>$(MajorVersion).$(MinorVersion).$(BuildNumberMajor).$(BuildNumberMinor)</BuildVersion>
     <BuildVersionExtended>$(BuildVersion)</BuildVersionExtended>
     <BuildVersionExtended Condition="'$(TF_BUILD_SOURCEGETVERSION)'!=''">$(BuildVersionExtended) commit:$(TF_BUILD_SOURCEGETVERSION)</BuildVersionExtended>

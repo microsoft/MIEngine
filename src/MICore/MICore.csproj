@@ -114,6 +114,7 @@
     <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
       <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
       <Name>DebugEngineHost.Stub</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
