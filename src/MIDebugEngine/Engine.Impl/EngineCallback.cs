@@ -111,12 +111,12 @@ namespace Microsoft.MIDebugEngine
             {
                 if (outputMessage.ErrorCode == 0)
                 {
-                    var eventObject = new AD7MessageEvent(outputMessage, isAsync:true);
+                    var eventObject = new AD7MessageEvent(outputMessage, isAsync: true);
                     Send(eventObject, AD7MessageEvent.IID, null);
                 }
                 else
                 {
-                    var eventObject = new AD7ErrorEvent(outputMessage, isAsync:true);
+                    var eventObject = new AD7ErrorEvent(outputMessage, isAsync: true);
                     Send(eventObject, AD7ErrorEvent.IID, null);
                 }
             }

@@ -167,7 +167,7 @@ namespace Microsoft.MIDebugEngine
 
         private readonly OutputMessage _outputMessage;
         private readonly bool _isAsync;
-        
+
         public AD7MessageEvent(OutputMessage outputMessage, bool isAsync)
         {
             _outputMessage = outputMessage;

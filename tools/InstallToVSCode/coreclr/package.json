@@ -1,0 +1,15 @@
+{
+  "name": "coreclr-debug",
+  "version": "0.1.0",
+  "publisher": "vscode",
+  "engines": { "vscode": "*" },
+  "contributes": {
+    "debugAdapter": [
+      {
+        "type": "coreclr",
+        "enableBreakpointsFor": { "languageIds": [ "csharp", "fsharp" ] },
+        "program": "./debugAdapter/OpenDebugAD7.exe"
+      }
+    ]
+  }
+}

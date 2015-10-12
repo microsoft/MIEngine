@@ -17,7 +17,7 @@ using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
-    class ExceptionManager
+    internal class ExceptionManager
     {
         // ***************** DESIGN NOTES *************************
         // At least at the time of the creation (VS 2015 RTM), the exception settings dialog pushes
@@ -29,18 +29,18 @@ namespace Microsoft.MIDebugEngine
         // back into the exception manager (EnsureSettingsUpdated) to wait for the settings to be flushed.
         //
 
-        readonly MICommandFactory _commandFactory;
-        readonly WorkerThread _worker;
-        readonly ReadOnlyDictionary<Guid, ExceptionCategorySettings> _categoryMap;
-        readonly ISampleEngineCallback _callback;
-        bool _initialSettingssSent;
+        private readonly MICommandFactory _commandFactory;
+        private readonly WorkerThread _worker;
+        private readonly ReadOnlyDictionary<Guid, ExceptionCategorySettings> _categoryMap;
+        private readonly ISampleEngineCallback _callback;
+        private bool _initialSettingssSent;
 
-        readonly object _updateLock = new object();
-        int? _lastUpdateTime;
-        Task _updateTask;
-        CancellationTokenSource _updateDelayCancelSource;
+        private readonly object _updateLock = new object();
+        private int? _lastUpdateTime;
+        private Task _updateTask;
+        private CancellationTokenSource _updateDelayCancelSource;
 
-        class SettingsUpdates
+        private class SettingsUpdates
         {
             // Threading note: these are only modified on the main thread
             public ExceptionBreakpointState? NewCategoryState;
@@ -64,7 +64,7 @@ namespace Microsoft.MIDebugEngine
         /// the holder is disposed, we will drop the lock and ensure that we have
         /// queued the processing of updates.
         /// </summary>
-        class SettingsUpdateHolder : IDisposable
+        private class SettingsUpdateHolder : IDisposable
         {
             /// <summary>
             /// [Required] The SettingsUpdates being held by the holder
@@ -76,19 +76,19 @@ namespace Microsoft.MIDebugEngine
             public SettingsUpdateHolder(SettingsUpdates value, ExceptionManager parent, object updateLock)
             {
                 this.Value = value;
-                this._parent = parent;
-                this._updateLock = updateLock;
-                Monitor.Enter(this._updateLock);
+                _parent = parent;
+                _updateLock = updateLock;
+                Monitor.Enter(_updateLock);
             }
 
             public void Dispose()
             {
-                Monitor.Exit(this._updateLock);
-                this._parent.EnsureUpdateTaskStarted();
+                Monitor.Exit(_updateLock);
+                _parent.EnsureUpdateTaskStarted();
             }
         }
 
-        class ExceptionCategorySettings
+        private class ExceptionCategorySettings
         {
             private readonly ExceptionManager _parent;
             public readonly string CategoryName;
@@ -100,8 +100,9 @@ namespace Microsoft.MIDebugEngine
             public ExceptionBreakpointState CategoryState;
             public readonly Dictionary<string, ulong> CurrentRules = new Dictionary<string, ulong>();
 
-            readonly object _updateLock = new object();
-            /*OPTIONAL*/ SettingsUpdates _settingsUpdate;
+            private readonly object _updateLock = new object();
+            /*OPTIONAL*/
+            private SettingsUpdates _settingsUpdate;
 
             public ExceptionCategorySettings(ExceptionManager parent, HostConfigurationSection categoryKey, string categoryName)
             {
@@ -124,7 +125,7 @@ namespace Microsoft.MIDebugEngine
                     exceptionSettings.Add(valueName, value);
                 }
                 this.DefaultRules = new ReadOnlyDictionary<string, ExceptionBreakpointState>(exceptionSettings);
-                this._settingsUpdate = new SettingsUpdates(this.DefaultCategoryState, this.DefaultRules);
+                _settingsUpdate = new SettingsUpdates(this.DefaultCategoryState, this.DefaultRules);
             }
 
             public SettingsUpdateHolder GetSettingsUpdate()
@@ -309,7 +310,7 @@ namespace Microsoft.MIDebugEngine
 
                     return _updateTask;
                 }
-                else if (!_initialSettingssSent && this._categoryMap.Count > 0)
+                else if (!_initialSettingssSent && _categoryMap.Count > 0)
                 {
                     // The initial resume is special in how we schedule it -- we wait until the first call to
                     // EnsureSettingsUpdated to run it, and we kick it off from this thread.
@@ -487,7 +488,7 @@ namespace Microsoft.MIDebugEngine
                 return "0x" + dwCode.ToString("X", CultureInfo.InvariantCulture);
         }
 
-        private ReadOnlyDictionary<Guid, ExceptionCategorySettings>  ReadDefaultSettings(HostConfigurationStore configStore)
+        private ReadOnlyDictionary<Guid, ExceptionCategorySettings> ReadDefaultSettings(HostConfigurationStore configStore)
         {
             Dictionary<Guid, ExceptionCategorySettings> categoryMap = new Dictionary<Guid, ExceptionCategorySettings>();
 
