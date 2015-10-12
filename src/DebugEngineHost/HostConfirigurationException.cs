@@ -1,10 +1,13 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 
 namespace Microsoft.DebugEngineHost
 {
     internal sealed class HostConfirigurationException : Exception
     {
-        const int E_DEBUG_ENGINE_NOT_REGISTERED = unchecked((int)0x80040019);
+        private const int E_DEBUG_ENGINE_NOT_REGISTERED = unchecked((int)0x80040019);
 
         public HostConfirigurationException(string missingLocation) : base(string.Format("Missing configuration section '{0}'", missingLocation))
         {
