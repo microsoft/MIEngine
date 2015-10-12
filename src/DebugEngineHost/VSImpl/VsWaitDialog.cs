@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace Microsoft.DebugEngineHost.VSImpl
 {
-    class VSWaitDialog
+    internal class VSWaitDialog
     {
         private readonly IVsThreadedWaitDialog2 _waitDialog;
         private const int m_delayShowDialogTimeInSeconds = 2;

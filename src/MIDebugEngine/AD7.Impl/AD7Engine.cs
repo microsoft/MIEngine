@@ -109,7 +109,6 @@ namespace Microsoft.MIDebugEngine
         public object GetMetric(string metric)
         {
             return _configStore.GetEngineMetric(metric);
-            
         }
 
         #region IDebugEngine2 Members

@@ -1,4 +1,7 @@
-﻿using Microsoft.VisualStudio.Debugger.Interop;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using System;
 using System.Collections.Generic;
@@ -14,7 +17,7 @@ namespace Microsoft.DebugEngineHost.VSImpl
     /// <summary>
     /// This class is VS only (_NOT_ VS Code)
     /// </summary>
-    class VSEventCallbackWrapper : IDebugEventCallback2
+    internal class VSEventCallbackWrapper : IDebugEventCallback2
     {
         // If we store the event callback in a normal IDebugEventCallback2 member, COM interop will attempt to call back to the main UI
         // thread the first time that we invoke the call back. To work around this, we will instead store the event call back in the 

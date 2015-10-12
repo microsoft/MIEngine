@@ -345,7 +345,7 @@ namespace Microsoft.MIDebugEngine
 
             BreakChangeEvent += _breakpointManager.BreakpointModified;
         }
-        
+
         public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
         {
             bool success = false;
