@@ -1,0 +1,17 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--This targets file is used to add additional dlls to the built in list of dlls which should be excluded
+  from a VSIX.
+  
+  These files are included by default due to MSBuild's dependency include logic, but we don't ship them with 
+  the MIEngine so therefore we want to make sure they don't wind up in the output directory either so we are
+  testing the same way we will ship.
+  
+  You can test for any other dlls on the list by looking at the files in this directory:
+  C:\Users\greggm\AppData\Local\Microsoft\VisualStudio\14.0Exp\Extensions\Microsoft\Microsoft MI-based Debugger\1.0.6
+  -->
+  <ItemGroup>
+    <SuppressFromVsix Include="System.Numerics.dll"/>
+    <SuppressFromVsix Include="System.Runtime.Serialization.dll"/>
+    <SuppressFromVsix Include="Newtonsoft.Json.dll"/>
+  </ItemGroup>
+</Project>

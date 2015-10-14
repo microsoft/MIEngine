@@ -28,6 +28,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="..\RequiredNetFX46FacadeAssemblies.targets" />
+  <Import Project="SuppressFromVsix.targets" />
   <PropertyGroup>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
@@ -143,6 +145,8 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <None Include="..\RequiredNetFX46FacadeAssemblies.targets" />
+    <None Include="SuppressFromVsix.targets" />
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="MIDebugPackage.vsct">
@@ -156,6 +160,9 @@
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
+    <VSIXSourceItem Include="@(RequiredNetFX46FacadeAssemblies)" />
+  </ItemGroup>
+  <ItemGroup>
     <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
     <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
@@ -196,6 +203,7 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     <DropUnsignedFile Include="Install.cmd" />
+    <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup>
     <FilesToSign Include="@(DropSignedFile)">
@@ -252,7 +260,7 @@
       <DropLocation Condition="'$(DropLocation)'==''">$(MSBuildThisFileDirectory)..\..\bin\$(DropConfigurationName)\drop</DropLocation>
     </PropertyGroup>
     <MakeDir Condition="!Exists($(DropLocation))" Directories="$(DropLocation)" />
-    <Copy DestinationFolder="$(DropLocation)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)"/>
+    <Copy DestinationFolder="$(DropLocation)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
