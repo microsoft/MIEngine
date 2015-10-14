@@ -6,7 +6,7 @@
   "dependencies": {
     "Microsoft.NETCore": "5.0.0",
     "Microsoft.NETCore.Portable.Compatibility": "1.0.0",
-    "Microsoft.VisualStudio.Debugger.Interop.Portable": "1.0.0-beta"
+    "Microsoft.VisualStudio.Debugger.Interop.Portable": "1.0.0"
   },
   "frameworks": {
     "dotnet": {
