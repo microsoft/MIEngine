@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\build\all_projects.settings.targets" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</ProjectGuid>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <GenerateAssembly Include="$(ILDir)*.il">
+      <Visible>false</Visible>
+    </GenerateAssembly>
+  </ItemGroup>
+
+  <Target Name="GenerateAssemblies"
+        Condition="'@(GenerateAssembly)' != ''"
+        Inputs="@(GenerateAssembly)"
+        Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')"
+        AfterTargets="Build">
+    <PropertyGroup>
+      <IlAsmCommand>"$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe"</IlAsmCommand>
+      <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
+    </PropertyGroup>
+    <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
+    <Exec Command="$(IlAsmCommand) $(IlAsmFlags) /out=&quot;$(GeneratedAssembliesDir)%(FileName).dll&quot; @(GenerateAssembly->'&quot;%(Identity)&quot;')" />
+  </Target>
+  
+  <Target Name="Build">
+    <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; -MSBuildVersion 14 &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot;" />
+  </Target>
+
+  <Target Name="Clean">
+    <RemoveDir Directories="$(GeneratedAssembliesDir)" />
+  </Target>
+
+  <!--Empty targets to make msbuild happy-->
+  <Target Name="GetNativeManifest"/>
+  <Target Name="GetCopyToOutputDirectoryItems"/>
+  <Target Name="BuiltProjectOutputGroupDependencies"/>
+  <Target Name="BuiltProjectOutputGroup"/>
+  <Target Name="SatelliteDllsProjectOutputGroup"/>
+  <Target Name="DebugSymbolsProjectOutputGroup"/>
+</Project>
