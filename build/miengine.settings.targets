@@ -1,4 +1,11 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
+  
+  <!--
+  Settings file which is included by all the shipping code projects in the repo.
+  -->
+  
+  <Import Project="all_projects.settings.targets"/>
+
   <Choose>
     <When Condition="'$(Configuration)' == 'Debug.Lab' Or '$(Configuration)' == 'Release.Lab'">
         <PropertyGroup>
@@ -16,14 +23,9 @@
   </Choose>
   
   <PropertyGroup>
-	<GlassDir>$(MSBuildThisFileDirectory)..\Microsoft.VisualStudio.Glass\</GlassDir>
+    <GlassDir>$(MSBuildThisFileDirectory)..\Microsoft.VisualStudio.Glass\</GlassDir>
   </PropertyGroup>
-  
-  <PropertyGroup>
-    <ILDir>$(MSBuildThisFileDirectory)..\IL\</ILDir>
-    <GeneratedAssembliesDir>$(ILDir)GeneratedAssemblies\</GeneratedAssembliesDir>
-  </PropertyGroup>
-  
+    
   <PropertyGroup>
     <SignAssembly>True</SignAssembly>
     

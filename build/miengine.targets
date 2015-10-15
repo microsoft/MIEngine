@@ -6,32 +6,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <CoreCompileDependsOn>GenerateAssemblies;GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+    <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
   </PropertyGroup>
-
-  <Target Name="GenerateAssemblies"
-          Condition="'@(GenerateAssembly)' != ''"
-          Inputs="@(GenerateAssembly)"
-          Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')"
-          BeforeTargets="ResolveAssemblyReferences">
-    <PropertyGroup>
-        <IlAsmCommand Condition="'$(IlAsmCommand)'==''">"$(FrameworkPathOverride)\ilasm.exe"</IlAsmCommand>
-        <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
-    </PropertyGroup>
-    <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
-    <Exec Command="$(IlAsmCommand) $(IlAsmFlags) /out=&quot;$(GeneratedAssembliesDir)%(FileName).dll&quot; @(GenerateAssembly->'&quot;%(Identity)&quot;')" />
-  </Target>
-  
-  <PropertyGroup>
-    <CleanDependsOn>
-        $(CleanDependsOn);
-        CleanGenerateAssemblies;
-    </CleanDependsOn>
-  </PropertyGroup>
-  
-  <Target Name="CleanGenerateAssemblies">
-    <RemoveDir Directories="$(GeneratedAssembliesDir)" />
-  </Target>
   
   <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != ''" AfterTargets="Build">
 	<MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />

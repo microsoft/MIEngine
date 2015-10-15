@@ -100,13 +100,6 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
-  <!-- Genereate all necessary assemblies as part of MICore. Since everything depends on this, it guarantees they'll be there -->
-  <!-- TODO: Figure out something better than this, since the assemblies generated aren't dependencies of MICore -->
-  <ItemGroup>
-    <GenerateAssembly Include="$(ILDir)*.il">
-      <Visible>false</Visible>
-    </GenerateAssembly>
-  </ItemGroup>
   <ItemGroup>
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
   </ItemGroup>
