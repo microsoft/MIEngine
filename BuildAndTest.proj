@@ -24,21 +24,17 @@
     </Solution>
   </ItemGroup>
 
-  <Target Name="RestorePackages">
-    <Exec Command="&quot;$(ToolsHome)NuGet\NuGet.exe&quot; restore &quot;%(Solution.Identity)&quot;" />
-  </Target>
-
   <Target Name="Clean">
     <MSBuild Targets="Clean"
              Projects="@(Solution)" />
   </Target>
 
-  <Target Name="Build" DependsOnTargets="RestorePackages">
+  <Target Name="Build">
     <MSBuild Targets="Build"
              Projects="@(Solution)" />
   </Target>
 
-  <Target Name="Rebuild" DependsOnTargets="RestorePackages">
+  <Target Name="Rebuild">
     <MSBuild Targets="Rebuild"
              Projects="@(Solution)" />
   </Target>
