@@ -32,19 +32,19 @@ mkdir "%DESTDIR%"
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create destination directory '%DESTDIR%'. &exit /b -1
 :DESTDIR_Done
 
-if exist "%DESTDIR%\debugAdapter" goto DEBUGADAPTERDIR_Done
-mkdir "%DESTDIR%\debugAdapter"
-if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create debug adapter directory '%DESTDIR%\debugAdapter'. &exit /b -1
+if exist "%DESTDIR%\debugAdapters" goto DEBUGADAPTERDIR_Done
+mkdir "%DESTDIR%\debugAdapters"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create debug adapter directory '%DESTDIR%\debugAdapters'. &exit /b -1
 :DEBUGADAPTERDIR_Done
 
 set InstallError=
-for %%f in (OpenDebugAD7.exe Microsoft.DebugEngineHost.dll Newtonsoft.Json.dll) do call :InstallFile "%OpenDebugAD7Dir%\%%f" debugAdapter\
+for %%f in (OpenDebugAD7.exe Microsoft.DebugEngineHost.dll Newtonsoft.Json.dll) do call :InstallFile "%OpenDebugAD7Dir%\%%f" debugAdapters\
 for %%f in (coreclr\package.json) do call :InstallFile "%~dp0%%f"
-for %%f in (coreclr\coreclr.ad7Engine.json) do call :InstallFile "%~dp0%%f" debugAdapter\
-for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%DropDir%%%f" debugAdapter\
+for %%f in (coreclr\coreclr.ad7Engine.json) do call :InstallFile "%~dp0%%f" debugAdapters\
+for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%DropDir%%%f" debugAdapters\
 
 REM TODO: Stop doing this when we switch to running under CoreCLR
-for /f %%f in ('dir /b %DropDir%System*.dll') do call :InstallFile "%DropDir%%%f" debugAdapter\
+for /f %%f in ('dir /b %DropDir%System*.dll') do call :InstallFile "%DropDir%%%f" debugAdapters\
 
 REM TODO: Add more dependencies that we need for running on CoreCLR
 echo.
