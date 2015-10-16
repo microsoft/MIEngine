@@ -4,11 +4,11 @@
   "publisher": "vscode",
   "engines": { "vscode": "*" },
   "contributes": {
-    "debugAdapter": [
+    "debuggers": [
       {
         "type": "coreclr",
         "enableBreakpointsFor": { "languageIds": [ "csharp", "fsharp" ] },
-        "program": "./debugAdapter/OpenDebugAD7.exe"
+        "program": "./debugAdapters/OpenDebugAD7.exe"
       }
     ]
   }
