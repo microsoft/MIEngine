@@ -775,6 +775,7 @@ namespace MICore
                     switch (c)
                     {
                         case 'n': c = '\n'; break;
+                        case 'r': c = '\r'; break;
                         case 't': c = '\t'; break;
                         default: break;
                     }
