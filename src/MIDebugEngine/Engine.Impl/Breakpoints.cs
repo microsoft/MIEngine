@@ -209,7 +209,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                _breakState = StringToBreakpointState(bkpt.FindString("addr"));
+                _breakState = StringToBreakpointState(bkpt.TryFindString("addr"));
                 bbp = GetBoundBreakpoint(bkpt as TupleValue);
                 if (bbp != null)
                     resultList.Add(bbp);
