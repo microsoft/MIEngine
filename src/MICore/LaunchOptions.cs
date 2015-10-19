@@ -796,6 +796,7 @@ namespace MICore
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
+        /// <param name="targetEngine">[Optional] Desired debug engine architecture for target process. Some launchers may ignore this.</param>
         void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
 
         /// <summary>
