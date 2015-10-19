@@ -11,10 +11,11 @@ REM make sure we are elevated
 net session >nul 2>&1
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Must be called from an elevated command prompt.& exit /b -1
 
+if NOT exist "%ProgramFiles%\Microsoft Visual Studio 14.0\Common7\IDE\devenv.exe" echo ERROR: Visual Studio 2015 is not installed, or is not installed to the default location.& exit /b -1
+
 set VSVersion=14.0
 set BackupDir=%LOCALAPPDATA%\Microsoft\VisualStudio\%VSVersion%\MDDDebuggerBackup\
 set MDDDebuggerDir=%ProgramFiles%\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger\
-if not exist "%MDDDebuggerDir%" echo ERROR: Dev14 C++ MDD Tools are not installed on this computer.& exit /b -1
 
 set FilesToInstall=Microsoft.MICore.dll Microsoft.MIDebugEngine.dll Microsoft.MIDebugEngine.pkgdef Microsoft.MIDebugPackage.dll Microsoft.MIDebugPackage.pkgdef Microsoft.AndroidDebugLauncher.dll Microsoft.AndroidDebugLauncher.pkgdef Microsoft.IOSDebugLauncher.dll Microsoft.IOSDebugLauncher.pkgdef Microsoft.JDbg.dll
 
@@ -24,6 +25,7 @@ goto Backup
 
 :Backup
 if exist "%BackupDir%" goto InstallFiles
+if not exist "%MDDDebuggerDir%" goto InstallFiles
 echo INFO: Backing up MDD Debugger to '%BackupDir%'.
 mkdir "%BackupDir%"
 set CopyError=
@@ -35,6 +37,7 @@ goto InstallFiles
 
 :RestoreBackup
 if not exist "%BackupDir%" echo ERROR: No backup exists.& exit /b -1
+if not exist "%MDDDebuggerDir%" mkdir "%MDDDebuggerDir%"
 echo Restoring from backup
 call :CleanDebuggerDir
 set CopyError=
@@ -47,6 +50,7 @@ echo MDD Debugger succesfully restored from backup
 goto eof
 
 :InstallFiles
+if not exist "%MDDDebuggerDir%" mkdir "%MDDDebuggerDir%"
 echo Installing Files
 set CopyError=
 for %%f in (%FilesToInstall%) do call :CopyFile "%~dp0%%f" "%MDDDebuggerDir%"
@@ -67,7 +71,7 @@ if NOT "%ERRORLEVEL%"=="0" set CopyError=1
 goto eof
 
 :DeleteConfigRegistry
-reg delete HKCU\Software\Microsoft\VisualStudio\%VSVersion%_Config /f
+reg delete HKCU\Software\Microsoft\VisualStudio\%VSVersion%_Config /f >nul 2>&1
 goto eof
 
 :CleanDebuggerDir

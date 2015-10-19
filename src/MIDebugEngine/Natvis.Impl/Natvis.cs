@@ -210,8 +210,14 @@ namespace Microsoft.MIDebugEngine.Natvis
                     _process.WriteOutput(String.Format(CultureInfo.CurrentCulture, ResourceStrings.FileNotFound, path));
                     return false;
                 }
+                XmlReaderSettings settings = new XmlReaderSettings();
+                settings.IgnoreComments = true;
+                settings.IgnoreProcessingInstructions = true;
+                settings.IgnoreWhitespace = true;
+                settings.XmlResolver = null;
+
                 using (var stream = new System.IO.FileStream(path, FileMode.Open, FileAccess.Read))
-                using (var reader = XmlReader.Create(stream))
+                using (var reader = XmlReader.Create(stream, settings))
                 {
                     AutoVisualizer autoVis = null;
                     autoVis = serializer.Deserialize(reader) as AutoVisualizer;

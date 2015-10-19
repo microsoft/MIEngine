@@ -59,6 +59,21 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <uwagi/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string SourceRoots;
+        
+        /// <uwagi/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(65534)]
+        public int JVMPort;
+        
+        /// <uwagi/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("localhost")]
+        public string JVMHost;
+        
+        /// <uwagi/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public TargetArchitecture TargetArchitecture;
         
         /// <uwagi/>
@@ -75,6 +90,9 @@ namespace MICore.Xml.LaunchOptions {
         
         public AndroidLaunchOptions() {
             this.Attach = false;
+            this.SourceRoots = "";
+            this.JVMPort = 65534;
+            this.JVMHost = "localhost";
         }
     }
     
@@ -89,6 +107,9 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <uwagi/>
         arm,
+        
+        /// <uwagi/>
+        arm64,
         
         /// <uwagi/>
         mips,
@@ -107,6 +128,9 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <uwagi/>
         ARM,
+        
+        /// <uwagi/>
+        ARM64,
         
         /// <uwagi/>
         MIPS,
@@ -260,6 +284,10 @@ namespace MICore.Xml.LaunchOptions {
         /// <uwagi/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public IOSLaunchOptionsIOSDebugTarget IOSDebugTarget;
+        
+        /// <uwagi/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string DeviceUdid;
         
         /// <uwagi/>
         [System.Xml.Serialization.XmlAttributeAttribute()]

@@ -7,7 +7,7 @@
 ; "DataBP"=dword:00000001
 "Disassembly"=dword:00000001
 "EnginePriority"=dword:00000050
-; "Exceptions"=dword:00000001
+"Exceptions"=dword:00000001
 ; "FunctionBP"=dword:00000001
 ; "HitCountBP"=dword:00000001
 ; "JustMyCodeStepping"=dword:00000001

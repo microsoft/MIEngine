@@ -21,10 +21,18 @@ namespace MICore
     {
         Unknown,
         ARM,
+        ARM64,
         X86,
         X64,
         Mips
     };
+
+    public enum TargetEngine
+    {
+        Unknown,
+        Native,
+        Java,
+    }
 
     public enum LaunchCompleteCommand
     {
@@ -190,6 +198,32 @@ namespace MICore
         }
     }
 
+    public sealed class JavaLaunchOptions : LaunchOptions
+    {
+        /// <summary>
+        /// Creates an instance of JavaLaunchOptions. This is used to send information to the Java Debugger.
+        /// </summary>
+        /// <param name="jvmHost">Java Virtual Machine host.</param>
+        /// <param name="jvmPort">Java Virtual Machine port.</param>
+        /// <param name="sourceRoots">Source roots.</param>
+        /// <param name="processName">Logical name of the process. Usually indicates the name of the activity.</param>
+        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots, string processName)
+        {
+            JVMHost = jvmHost;
+            JVMPort = jvmPort;
+            SourceRoots = sourceRoots;
+            ProcessName = processName;
+        }
+
+        public string JVMHost { get; private set; }
+
+        public int JVMPort { get; private set; }
+
+        public string[] SourceRoots { get; private set; }
+
+        public string ProcessName { get; private set; }
+    }
+
 
     /// <summary>
     /// Base launch options class
@@ -353,7 +387,7 @@ namespace MICore
             }
         }
 
-        public static LaunchOptions GetInstance(string registryRoot, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback)
+        public static LaunchOptions GetInstance(string registryRoot, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
@@ -450,11 +484,14 @@ namespace MICore
 
             if (clsidLauncher != Guid.Empty)
             {
-                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback);
+                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine);
             }
 
-            if (launchOptions.ExePath == null)
-                launchOptions.ExePath = exePath;
+            if (targetEngine == TargetEngine.Native)
+            {
+                if (launchOptions.ExePath == null)
+                    launchOptions.ExePath = exePath;
+            }
 
             if (string.IsNullOrEmpty(launchOptions.ExeArguments))
                 launchOptions.ExeArguments = args;
@@ -477,6 +514,7 @@ namespace MICore
             settings.IgnoreProcessingInstructions = true;
             settings.IgnoreWhitespace = true;
             settings.NameTable = new NameTable();
+            settings.XmlResolver = null;
 
             // Create our own namespace manager so that we can set the default namespace
             // We need this because the XML serializer requires correct namespaces,
@@ -656,7 +694,7 @@ namespace MICore
             return attributeValue;
         }
 
-        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
+        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
             var deviceAppLauncher = (IPlatformAppLauncher)VSLoader.VsCoCreateManagedObject(registryRoot, clsidLauncher);
             if (deviceAppLauncher == null)
@@ -671,7 +709,7 @@ namespace MICore
                 try
                 {
                     deviceAppLauncher.Initialize(registryRoot, eventCallback);
-                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions);
+                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException))
                 {
@@ -724,6 +762,10 @@ namespace MICore
                 case Xml.LaunchOptions.TargetArchitecture.X86_64:
                     return TargetArchitecture.X64;
 
+                case Xml.LaunchOptions.TargetArchitecture.arm64:
+                case Xml.LaunchOptions.TargetArchitecture.ARM64:
+                    return TargetArchitecture.ARM64;
+
                 default:
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownTargetArchitecture, source.ToString()));
             }
@@ -754,7 +796,7 @@ namespace MICore
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
-        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions);
+        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
 
         /// <summary>
         /// Does whatever steps are necessary to setup for debugging. On Android this will include launching

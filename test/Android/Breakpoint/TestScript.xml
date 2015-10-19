@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GlassEventLog>
-  <Command name="setmode ShowParameterValues off">
-    <Duration Volatile="True">00:00:00.0068995</Duration>
-  </Command>
-  <Command name="SetLaunchOptionsString @LaunchOptions.xml">
-    <Duration Volatile="True">00:00:00.0001930</Duration>
-  </Command>
-  <Command name="bp main.cpp 25">
-    <Duration Volatile="True">00:00:00.0063298</Duration>
-  </Command>
+  <Command name="setmode ShowParameterValues off"/>
+  <Command name="setAsExpectedEvent IDebugBreakpointBoundEvent2" />
+  <Command name="setAsExpectedEvent IDebugBreakpointErrorEvent2" />
+  <Command name="SetLaunchOptionsString @LaunchOptions.xml" />
+  <Command name="bp main.cpp 25" />
   <Command name="launch MIEngine app_process">
     <Event name="IDebugSessionCreateEvent2" expected="False" />
     <Event name="IDebugProcessCreateEvent2" expected="False" />
     <Event name="IDebugProgramCreateEvent2" expected="False" />
-    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+    <Event name="IDebugBreakpointErrorEvent2" expected="True">
       <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
@@ -114,7 +110,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
-    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+    <Event name="IDebugBreakpointBoundEvent2" expected="True">
       <BoundBreakpoint>24,0 to 24,0 in [Unknown]!break_test_1()</BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
@@ -162,18 +158,14 @@ Type "apropos word" to search for commands related to "word".
     <Frame> break_test_1() ***</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Duration Volatile="True">00:00:00.0167567</Duration>
   </Command>
-  <Command name="delbps">
-    <Duration Volatile="True">00:00:00.0093596</Duration>
-  </Command>
+  <Command name="delbps" />
   <Command name="bp main.cpp 29">
-    <Duration Volatile="True">00:00:00.0167348</Duration>
-  </Command>
-  <Command name="go">
-    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+    <Event name="IDebugBreakpointBoundEvent2" expected="True">
       <BoundBreakpoint>28,0 to 28,0 in libbreakpoint.so!break_test_1()</BoundBreakpoint>
     </Event>
+  </Command>
+  <Command name="go">
     <Event name="IDebugProcessContinueEvent100" expected="False" />
     <Event name="IDebugBreakpointEvent2" expected="True">
       <functionName>break_test_1</functionName>
@@ -203,7 +195,7 @@ Type "apropos word" to search for commands related to "word".
   </Command>
   <Command name="bp main.cpp 38">
     <Event name="IDebugOutputStringEvent2" expected="False" />
-    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+    <Event name="IDebugBreakpointBoundEvent2" expected="True">
       <BoundBreakpoint>37,0 to 37,0 in libbreakpoint.so!loop_while_true()</BoundBreakpoint>
     </Event>
     <Event name="IDebugOutputStringEvent2" expected="False" />

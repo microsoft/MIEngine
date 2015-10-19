@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Collections.ObjectModel;
+using MICore;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -51,6 +52,32 @@ namespace Microsoft.MIDebugEngine
         }
     }
 
+    public class OutputMessage
+    {
+        public enum Severity
+        {
+            Error,
+            Warning
+        };
+
+        public readonly string Message;
+        public readonly enum_MESSAGETYPE MessageType;
+        public readonly Severity SeverityValue;
+
+        /// <summary>
+        /// Error HRESULT to send to the debug package. 0 (S_OK) if there is no associated error code.
+        /// </summary>
+        public readonly uint ErrorCode;
+
+        public OutputMessage(string message, enum_MESSAGETYPE messageType, Severity severity, uint errorCode = 0)
+        {
+            this.Message = message;
+            this.MessageType = messageType;
+            this.SeverityValue = severity;
+            this.ErrorCode = errorCode;
+        }
+    }
+
     public interface ISampleEngineCallback
     {
         void OnModuleLoad(DebuggedModule module);
@@ -59,7 +86,7 @@ namespace Microsoft.MIDebugEngine
         void OnThreadExit(DebuggedThread thread, uint exitCode);
         void OnProcessExit(uint exitCode);
         void OnOutputString(string outputString);
-        void OnOutputMessage(string message, enum_MESSAGETYPE messageType);
+        void OnOutputMessage(OutputMessage outputMessage);
 
         /// <summary>
         /// Raises an error event to Visual Studio, which will show a message box. Note that this function should never throw.
@@ -67,7 +94,7 @@ namespace Microsoft.MIDebugEngine
         /// <param name="message">[Required] message to send</param>
         void OnError(string message);
         void OnBreakpoint(DebuggedThread thread, ReadOnlyCollection<object> clients);
-        void OnException(DebuggedThread thread, string name, string description, uint code);
+        void OnException(DebuggedThread thread, string name, string description, uint code, Guid? exceptionCategory = null, ExceptionBreakpointState state = ExceptionBreakpointState.None);
         void OnStepComplete(DebuggedThread thread);
         void OnAsyncBreakComplete(DebuggedThread thread);
         void OnLoadComplete(DebuggedThread thread);

@@ -26,10 +26,10 @@ namespace Microsoft.MIDebugEngine
         public SourceLineCache SourceLineCache { get; private set; }
         public ThreadCache ThreadCache { get; private set; }
         public Disassembly Disassembly { get; private set; }
+        public ExceptionManager ExceptionManager { get; private set; }
 
         private List<DebuggedModule> _moduleList;
         private ISampleEngineCallback _callback;
-        private bool _bStarted;
         private bool _bLastModuleLoadFailed;
         private StringBuilder _pendingMessages;
         private WorkerThread _worker;
@@ -44,11 +44,10 @@ namespace Microsoft.MIDebugEngine
         private ReadOnlyCollection<RegisterDescription> _registers;
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, string registryRoot)
         {
             uint processExitCode = 0;
             g_Process = this;
-            _bStarted = false;
             _pendingMessages = new StringBuilder(400);
             _worker = worker;
             _launchOptions = launchOptions;
@@ -72,14 +71,15 @@ namespace Microsoft.MIDebugEngine
             _moduleList = new List<DebuggedModule>();
             ThreadCache = new ThreadCache(callback, this);
             Disassembly = new Disassembly(this);
+            ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, registryRoot);
 
             VariablesToDelete = new List<string>();
 
-            MessageEvent += delegate (object o, string message)
+            OutputStringEvent += delegate (object o, string message)
             {
                 // We can get messages before we have started the process
                 // but we can't send them on until it is
-                if (_bStarted)
+                if (_connected)
                 {
                     _callback.OnOutputString(message);
                 }
@@ -268,7 +268,7 @@ namespace Microsoft.MIDebugEngine
                         }
                         else
                         {
-                            _callback.OnOutputMessage(message, enum_MESSAGETYPE.MT_OUTPUTSTRING);
+                            _callback.OnOutputMessage(new OutputMessage(message, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
                         }
                     }
                 }
@@ -318,30 +318,6 @@ namespace Microsoft.MIDebugEngine
                 }
             };
 
-            RunModeEvent += delegate (object o, EventArgs args)
-            {
-                // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
-
-                if (!_bStarted)
-                {
-                    _bStarted = true;
-
-                    // Send any strings we got before the process came up
-                    if (_pendingMessages.Length != 0)
-                    {
-                        try
-                        {
-                            _callback.OnOutputString(_pendingMessages.ToString());
-                        }
-                        catch
-                        {
-                            // If something goes wrong sending the output, lets not crash VS
-                        }
-                    }
-                    _pendingMessages = null;
-                }
-            };
-
             ErrorEvent += delegate (object o, EventArgs args)
             {
                 // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
@@ -362,9 +338,18 @@ namespace Microsoft.MIDebugEngine
                 ThreadCache.ThreadEvent(result.Results.FindInt("id"), /*deleted*/true);
             };
 
+            MessageEvent += (object o, ResultEventArgs args) =>
+            {
+                OutputMessage outputMessage = DecodeOutputEvent(args.Results);
+                if (outputMessage != null)
+                {
+                    _callback.OnOutputMessage(outputMessage);
+                }
+            };
+
             BreakChangeEvent += _breakpointManager.BreakpointModified;
         }
-
+        
         public async Task Initialize(MICore.WaitLoop waitLoop, CancellationToken token)
         {
             bool success = false;
@@ -393,6 +378,10 @@ namespace Microsoft.MIDebugEngine
                             string miError = results.FindString("msg");
                             throw new UnexpectedMIResultException(command.CommandText, miError);
                         }
+                    }
+                    else
+                    {
+                        await ConsoleCmdAsync(command.CommandText);
                     }
                 }
 
@@ -614,8 +603,16 @@ namespace Microsoft.MIDebugEngine
             }
             else if (reason == "exception-received")
             {
-                string exception = results.Results.FindString("exception");
-                _callback.OnException(thread, "Exception", exception, 0);
+                string exceptionName = results.Results.TryFindString("exception-name");
+                if (string.IsNullOrEmpty(exceptionName))
+                    exceptionName = "Exception";
+
+                string description = results.Results.FindString("exception");
+                Guid? exceptionCategory;
+                ExceptionBreakpointState state;
+                MICommandFactory.DecodeExceptionReceivedProperties(results.Results, out exceptionCategory, out state);
+
+                _callback.OnException(thread, exceptionName, description, 0, exceptionCategory, state);
             }
             else
             {
@@ -728,20 +725,24 @@ namespace Microsoft.MIDebugEngine
             _worker.PostOperation(() => { func(); });
         }
 
-        public void Execute(DebuggedThread thread)
+        public async Task Execute(DebuggedThread thread)
         {
+            await ExceptionManager.EnsureSettingsUpdated();
+
             // Should clear stepping state
             _worker.PostOperation(CmdContinueAsync);
         }
 
-        public void Continue(DebuggedThread thread)
+        public Task Continue(DebuggedThread thread)
         {
             // Called after Stopping event
-            Execute(thread);
+            return Execute(thread);
         }
 
         public async Task Step(int threadId, enum_STEPKIND kind, enum_STEPUNIT unit)
         {
+            await ExceptionManager.EnsureSettingsUpdated();
+
             if ((unit == enum_STEPUNIT.STEP_LINE) || (unit == enum_STEPUNIT.STEP_STATEMENT))
             {
                 switch (kind)
@@ -789,6 +790,16 @@ namespace Microsoft.MIDebugEngine
         public async Task ResumeFromLaunch()
         {
             _connected = true;
+
+            // Send any strings we got before the process came up
+            if (_pendingMessages?.Length != 0)
+            {
+                _callback.OnOutputString(_pendingMessages.ToString());
+                _pendingMessages = null;
+            }
+
+            await this.ExceptionManager.EnsureSettingsUpdated();
+
             if (_initialBreakArgs != null)
             {
                 await CheckModules();
@@ -996,6 +1007,71 @@ namespace Microsoft.MIDebugEngine
                 bytes[pos] = Convert.ToByte(strByte, 16);
             }
             return toRead;
+        }
+
+        private OutputMessage DecodeOutputEvent(Results results)
+        {
+            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
+            string text = results.TryFindString("text");
+            if (string.IsNullOrEmpty(text))
+            {
+                Debug.Fail("Bogus message event. Missing 'text' property.");
+                return null;
+            }
+
+            string sendTo = results.TryFindString("send-to");
+            if (string.IsNullOrEmpty(sendTo))
+            {
+                Debug.Fail("Bogus message event, missing 'send-to' property");
+                return null;
+            }
+
+            enum_MESSAGETYPE messageType;
+            switch (sendTo)
+            {
+                case "message-box":
+                    messageType = enum_MESSAGETYPE.MT_MESSAGEBOX;
+                    break;
+
+                case "output-window":
+                    messageType = enum_MESSAGETYPE.MT_OUTPUTSTRING;
+                    break;
+
+                default:
+                    Debug.Fail("Bogus message event. Unexpected 'send-to' property. Ignoring.");
+                    return null;
+            }
+
+            OutputMessage.Severity severity = OutputMessage.Severity.Warning;
+            switch (results.TryFindString("severity"))
+            {
+                case "error":
+                    severity = OutputMessage.Severity.Error;
+                    break;
+
+                case "warning":
+                    severity = OutputMessage.Severity.Warning;
+                    break;
+            }
+
+            switch (results.TryFindString("source"))
+            {
+                case "target-exception":
+                    messageType |= enum_MESSAGETYPE.MT_REASON_EXCEPTION;
+                    break;
+                case "jmc-prompt":
+                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE90.MT_REASON_JMC_PROMPT;
+                    break;
+                case "step-filter":
+                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE90.MT_REASON_STEP_FILTER;
+                    break;
+                case "fatal-error":
+                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE120.MT_FATAL_ERROR;
+                    break;
+            }
+
+            uint errorCode = results.TryFindUint("error-code") ?? 0;
+            return new OutputMessage(text, messageType, severity, errorCode);
         }
 
         private static RegisterGroup GetGroupForRegister(List<RegisterGroup> registerGroups, string name, EngineUtils.RegisterNameMap nameMap)

@@ -852,12 +852,14 @@
        extends [mscorlib]System.Enum
 {
   .field public specialname rtspecialname int32 value__
+  .field public static literal valuetype libadb.DeviceAbi unknown = int32(0x00000000)
+  .field public static literal valuetype libadb.DeviceAbi 'x86' = int32(0x00000001)
   .field public static literal valuetype libadb.DeviceAbi armeabi = int32(0x00000002)
   .field public static literal valuetype libadb.DeviceAbi armeabiv7a = int32(0x00000003)
   .field public static literal valuetype libadb.DeviceAbi mips = int32(0x00000004)
   .field public static literal valuetype libadb.DeviceAbi mipsr2 = int32(0x00000005)
-  .field public static literal valuetype libadb.DeviceAbi unknown = int32(0x00000000)
-  .field public static literal valuetype libadb.DeviceAbi 'x86' = int32(0x00000001)
+  .field public static literal valuetype libadb.DeviceAbi x64 = int32(0x00000006)
+  .field public static literal valuetype libadb.DeviceAbi arm64v8a = int32(0x00000007)
 } // end of class libadb.DeviceAbi
 
 .class public auto ansi sealed libadb.DeviceState

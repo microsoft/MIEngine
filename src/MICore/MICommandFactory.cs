@@ -7,6 +7,9 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Globalization;
 
 namespace MICore
 {
@@ -22,6 +25,14 @@ namespace MICore
         NoValues = 0,
         AllValues = 1,
         SimpleValues = 2,
+    }
+
+    [Flags]
+    public enum ExceptionBreakpointState
+    {
+        None = 0,
+        BreakUserHandled = 0x1,
+        BreakThrown = 0x2
     }
 
     public abstract class MICommandFactory
@@ -397,6 +408,52 @@ namespace MICore
             await _debugger.CmdAsync(command, ResultClass.done);
         }
 
+        public virtual IEnumerable<Guid> GetSupportedExceptionCategories()
+        {
+            return new Guid[0];
+        }
+
+        /// <summary>
+        /// Adds a breakpoint which will be triggered when an exception is thrown and/or goes user-unhandled
+        /// </summary>
+        /// <param name="exceptionCategory">AD7 category for the execption</param>
+        /// <param name="exceptionNames">[Optional] names of the exceptions to set a breakpoint on. If null, this sets an breakpoint for all 
+        /// exceptions in the category. Note that this clear all previous exception breakpoints set in this category.</param>
+        /// <param name="exceptionBreakpointState">Indicates when the exception breakpoint should fire</param>
+        /// <returns>Task containing the exception breakpoint id's for the various set exceptions</returns>
+        public virtual Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
+        {
+            // NOTES: 
+            // GDB /MI has no support for exceptions. Though they do have it through the non-MI through a 'catch' command. Example:
+            //   catch throw MyException
+            //   Catchpoint 3 (throw)
+            //   =breakpoint-created,bkpt={number="3",type="breakpoint",disp="keep",enabled="y",addr="0xa1b5f830",what="exception throw",catch-type="throw",thread-groups=["i1"],regexp="MyException",times="0"}
+            // Documentation: http://www.sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html#Set-Catchpoints
+            // 
+            // LLDB-MI has no support for exceptions. Though they do have it through the non-MI breakpoint command. Example:
+            //   break set -F std::range_error
+            // And they do have it in their API:
+            //   SBTarget::BreakpointCreateForException
+            throw new NotImplementedException();
+        }
+
+        public virtual Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Decode properties from an exception-received event.
+        /// </summary>
+        /// <param name="miExceptionResult">Results object for the exception-received event</param>
+        /// <param name="exceptionCategory">AD7 Exception Category to return</param>
+        /// <param name="state">Exception state</param>
+        public virtual void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointState state)
+        {
+            exceptionCategory = null;
+            state = ExceptionBreakpointState.None;
+        }
+
         #endregion
 
         #region Helpers
@@ -409,6 +466,14 @@ namespace MICore
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
 
         abstract public bool SupportsStopOnDynamicLibLoad();
+
+        /// <summary>
+        /// True if the underlying debugger can format frames itself
+        /// </summary>
+        public virtual bool SupportsFrameFormatting
+        {
+            get { return false; }
+        }
 
         public virtual bool IsAsyncBreakSignal(Results results)
         {
@@ -434,7 +499,7 @@ namespace MICore
         /// </summary>
         /// <returns>[Required] Task to track when this is complete</returns>
         abstract public Task EnableTargetAsyncOption();
-
+        
         #endregion
     }
 
@@ -658,6 +723,10 @@ namespace MICore
 
     internal class ClrdbgMICommandFactory : MICommandFactory
     {
+        readonly static Guid ExceptionCategory_CLR = new Guid("449EC4CC-30D2-4032-9256-EE18EB41B62B");
+        readonly static Guid ExceptionCategory_MDA = new Guid("6ECE07A9-0EDE-45C4-8296-818D8FC401D4");
+        readonly static ReadOnlyCollection<Guid> ExceptionCategories = new ReadOnlyCollection<Guid>(new Guid[] { ExceptionCategory_CLR, ExceptionCategory_MDA });
+
         public override string Name
         {
             get { return "CLRDBG"; }
@@ -668,6 +737,12 @@ namespace MICore
             return false;
         }
 
+        // CLRDBG supports frame formatting itself
+        override public bool SupportsFrameFormatting
+        {
+            get { return true; }
+        }
+
         public override bool AllowCommandsWhileRunning()
         {
             return true;
@@ -675,8 +750,8 @@ namespace MICore
 
         public override Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
-            // TODO: for clrdbg, we should get this from the original stack walk instead
-            return Task<TupleValue[]>.FromResult(new TupleValue[0]);
+            // CLRDBG supports stack frame formatting, so this should not be used
+            throw new NotImplementedException();
         }
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel)
@@ -701,6 +776,110 @@ namespace MICore
         {
             // clrdbg is always in target-async mode
             return Task.FromResult((object)null);
+        }
+
+        public override IEnumerable<Guid> GetSupportedExceptionCategories()
+        {
+            return ExceptionCategories;
+        }
+
+        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
+        {
+            List<string> commandTokens = new List<string>();
+            commandTokens.Add("-break-exception-insert");
+
+            if (exceptionCategory == ExceptionCategory_MDA)
+            {
+                commandTokens.Add("--mda");
+            }
+            else if (exceptionCategory != ExceptionCategory_CLR)
+            {
+                throw new ArgumentOutOfRangeException("exceptionCategory");
+            }
+
+            if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakThrown))
+            {
+                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakUserHandled))
+                    commandTokens.Add("throw+user-unhandled");
+                else
+                    commandTokens.Add("throw");
+            }
+            else
+            {
+                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakUserHandled))
+                    commandTokens.Add("user-unhandled");
+                else
+                    commandTokens.Add("unhandled");
+            }
+
+            if (exceptionNames == null)
+                commandTokens.Add("*");
+            else
+                commandTokens.AddRange(exceptionNames);
+
+            string command = string.Join(" ", commandTokens);
+
+            Results results = await _debugger.CmdAsync(command, ResultClass.done);
+            ResultValue bkpt;
+            if (results.TryFind("bkpt", out bkpt))
+            {
+                if (bkpt is ValueListValue)
+                {
+                    MICore.ValueListValue list = bkpt as MICore.ValueListValue;
+                    return list.Content.Select((x) => x.FindAddr("number"));
+                }
+                else
+                {
+                    return new ulong[1] { bkpt.FindAddr("number") };
+                }
+            }
+            else
+            {
+                return new ulong[0];
+            }
+        }
+
+        public override Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpointIds)
+        {
+            string breakpointIds = string.Join(" ", exceptionBreakpointIds.Select(x => x.ToString(CultureInfo.InvariantCulture)));
+
+            string command = "-break-exception-delete " + breakpointIds;
+            return _debugger.CmdAsync(command, ResultClass.done);
+        }
+
+        public override void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointState state)
+        {
+            string category = miExceptionResult.FindString("exception-category");
+            if (category == "mda")
+            {
+                exceptionCategory = ExceptionCategory_MDA;
+            }
+            else
+            {
+                Debug.Assert(category == "clr");
+                exceptionCategory = ExceptionCategory_CLR;
+            }
+
+            string stage = miExceptionResult.FindString("exception-stage");
+            switch (stage)
+            {
+                case "throw":
+                    state = ExceptionBreakpointState.BreakThrown;
+                    break;
+
+                case "user-unhandled":
+                    state = ExceptionBreakpointState.BreakUserHandled;
+                    break;
+
+                case "unhandled":
+                    state = ExceptionBreakpointState.None;
+                    break;
+
+                default:
+                    Debug.Fail("Unknown exception-stage value");
+                    state = ExceptionBreakpointState.None;
+                    break;
+            }
         }
     }
 }

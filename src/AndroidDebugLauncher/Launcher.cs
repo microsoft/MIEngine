@@ -35,6 +35,7 @@ namespace AndroidDebugLauncher
         private JDbg.JDbg _jdbg;
         private IDeviceAppLauncherEventCallback _eventCallback;
         private static bool s_sentArmEmulatorWarning;
+        private TargetEngine _targetEngine;
 
         private const string LogcatServiceMessage_SourceId = "1CED0608-638C-4B00-A1D2-CE56B1B672FA";
         private const int LogcatServiceMessage_NewProcess = 0;
@@ -50,7 +51,7 @@ namespace AndroidDebugLauncher
             RegistryRoot.Set(registryRoot);
         }
 
-        void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions)
+        void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
         {
             if (launcherXmlOptions == null)
                 throw new ArgumentNullException("launcherXmlOptions");
@@ -69,7 +70,8 @@ namespace AndroidDebugLauncher
                 throw new InvalidOperationException();
             }
 
-            _launchOptions = new AndroidLaunchOptions(androidXmlOptions);
+            _launchOptions = new AndroidLaunchOptions(androidXmlOptions, targetEngine);
+            _targetEngine = targetEngine;
         }
 
         void IPlatformAppLauncher.SetupForDebugging(out LaunchOptions result)
@@ -83,7 +85,7 @@ namespace AndroidDebugLauncher
             ManualResetEvent doneEvent = new ManualResetEvent(false);
             var cancellationTokenSource = new CancellationTokenSource();
             ExceptionDispatchInfo exceptionDispatchInfo = null;
-            LocalLaunchOptions localLaunchOptions = null;
+            LaunchOptions localLaunchOptions = null;
 
             _waitLoop = new MICore.WaitLoop(LauncherResources.WaitDialogText);
 
@@ -111,7 +113,7 @@ namespace AndroidDebugLauncher
 
                     if (launchErrorTelemetryResult != null)
                     {
-                        Telemetry.SendLaunchError(launchErrorTelemetryResult);
+                        Telemetry.SendLaunchError(launchErrorTelemetryResult, _targetEngine.ToString());
                     }
                 }
             );
@@ -143,7 +145,7 @@ namespace AndroidDebugLauncher
             }
         }
 
-        private LocalLaunchOptions SetupForDebuggingWorker(CancellationToken token)
+        private LaunchOptions SetupForDebuggingWorker(CancellationToken token)
         {
             CancellationTokenRegistration onCancelRegistration = token.Register(() =>
             {
@@ -244,8 +246,16 @@ namespace AndroidDebugLauncher
                                 allowedAbis = new DeviceAbi[] { DeviceAbi.armeabi, DeviceAbi.armeabiv7a };
                                 break;
 
+                            case TargetArchitecture.ARM64:
+                                allowedAbis = new DeviceAbi[] { DeviceAbi.arm64v8a };
+                                break;
+
                             case TargetArchitecture.X86:
                                 allowedAbis = new DeviceAbi[] { DeviceAbi.x86 };
+                                break;
+
+                            case TargetArchitecture.X64:
+                                allowedAbis = new DeviceAbi[] { DeviceAbi.x64 };
                                 break;
 
                             default:
@@ -272,19 +282,14 @@ namespace AndroidDebugLauncher
 
                     VerifySdkVersion();
 
-                    string pwdCommand = string.Concat("run-as ", _launchOptions.Package, " /system/bin/sh -c pwd");
-                    ExecCommand(pwdCommand);
-                    workingDirectory = PwdOutputParser.ExtractWorkingDirectory(_shell.Out, _launchOptions.Package);
-
-                    // Kill old processes to make sure we aren't confused and think an old process is still arround
-                    gdbServerRemotePath = workingDirectory + "/lib/gdbserver";
-                    KillOldInstances(gdbServerRemotePath);
-
-                    string lsCommand = string.Format(CultureInfo.InvariantCulture, "ls {0}", gdbServerRemotePath);
-                    string output = ExecCommand(lsCommand);
-                    if (string.Compare(output, gdbServerRemotePath, StringComparison.OrdinalIgnoreCase) != 0)
+                    if (_targetEngine == TargetEngine.Native)
                     {
-                        throw new LauncherException(Telemetry.LaunchFailureCode.NoGdbServer, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_NoGdbServer, gdbServerRemotePath));
+                        string pwdCommand = string.Concat("run-as ", _launchOptions.Package, " /system/bin/sh -c pwd");
+                        ExecCommand(pwdCommand);
+                        workingDirectory = PwdOutputParser.ExtractWorkingDirectory(_shell.Out, _launchOptions.Package);
+                        gdbServerRemotePath = GetGdbServerPath(workingDirectory);
+
+                        KillOldInstances(gdbServerRemotePath);
                     }
                 }));
 
@@ -303,14 +308,17 @@ namespace AndroidDebugLauncher
                     _appProcessId = GetAppProcessId();
                 }));
 
-                actions.Add(new NamedAction(LauncherResources.Step_StartGDBServer, () =>
+                if (_targetEngine == TargetEngine.Native)
                 {
+                    actions.Add(new NamedAction(LauncherResources.Step_StartGDBServer, () =>
+                    {
                     // We will default to using a unix socket with gdbserver as this is what the ndk-gdb script uses. Though we have seen
                     // some machines where this doesn't work and we fall back to TCP instead.
                     const bool useUnixSocket = true;
 
-                    taskGdbServer = StartGdbServer(gdbServerRemotePath, workingDirectory, useUnixSocket, out gdbServerSocketDescription);
-                }));
+                        taskGdbServer = StartGdbServer(gdbServerRemotePath, workingDirectory, useUnixSocket, out gdbServerSocketDescription);
+                    }));
+                }
 
                 actions.Add(new NamedAction(LauncherResources.Step_PortForwarding, () =>
                 {
@@ -318,48 +326,76 @@ namespace AndroidDebugLauncher
                     gdbPortNumber = 5039;
                     _jdbPortNumber = 65534;
 
-                    device.Forward(string.Format(CultureInfo.InvariantCulture, "tcp:{0}", gdbPortNumber), gdbServerSocketDescription);
-                    if (!_launchOptions.IsAttach)
+                    if (_targetEngine == TargetEngine.Native)
                     {
-                        device.Forward(string.Format(CultureInfo.InvariantCulture, "tcp:{0}", _jdbPortNumber), string.Format(CultureInfo.InvariantCulture, "jdwp:{0}", _appProcessId));
+                        device.Forward(string.Format(CultureInfo.InvariantCulture, "tcp:{0}", gdbPortNumber), gdbServerSocketDescription);
                     }
+
+
+                    device.Forward(string.Format(CultureInfo.InvariantCulture, "tcp:{0}", _jdbPortNumber), string.Format(CultureInfo.InvariantCulture, "jdwp:{0}", _appProcessId));
                 }));
 
-                actions.Add(new NamedAction(LauncherResources.Step_DownloadingFiles, () =>
+                if (_targetEngine == TargetEngine.Native)
                 {
-                    //pull binaries from the emulator/device
-                    var fileSystem = device.FileSystem;
-
-                    // 64-bit TODO: Give the names of the files we download a '64' suffix and update
-                    // the catch block below.
-
-                    string app_process = "app_process32";
-                    exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
-
-                    bool retry = false;
-                    try
+                    actions.Add(new NamedAction(LauncherResources.Step_DownloadingFiles, () =>
                     {
-                        fileSystem.Download(@"/system/bin/" + app_process, exePath, true);
-                    }
-                    catch (AdbException) // 64-bit TODO: add 'when (is32BitTarget)'
-                    {
-                        // Older devices don't have an 'app_process32', only an 'app_process', so retry
-                        // NOTE: libadb doesn't have an error code property to verify that this is caused
-                        // by the file not being found.
-                        retry = true;
-                    }
-
-                    if (retry)
-                    {
-                        app_process = "app_process";
+                        //pull binaries from the emulator/device
+                        var fileSystem = device.FileSystem;
+    
+                        string app_process_suffix = String.Empty;
+                        switch (_launchOptions.TargetArchitecture)
+                        {
+                            case TargetArchitecture.X86:
+                            case TargetArchitecture.ARM:
+                                app_process_suffix = "32";
+                                break;
+                            case TargetArchitecture.X64:
+                            case TargetArchitecture.ARM64:
+                                app_process_suffix = "64";
+                                break;
+                            default:
+                                Debug.Fail("Unsupported Target Architecture!");
+                                break;
+                        }
+    
+                        string app_process = String.Concat("app_process", app_process_suffix);
                         exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
-                        fileSystem.Download(@"/system/bin/app_process", exePath, true);
-                    }
-
-                    fileSystem.Download(@"/system/bin/linker", Path.Combine(_launchOptions.IntermediateDirectory, "linker"), true);
-                    fileSystem.Download(@"/system/lib/libc.so", Path.Combine(_launchOptions.IntermediateDirectory, "libc.so"), true);
-                }));
-
+    
+                        bool retry = false;
+                        try
+                        {
+                            fileSystem.Download(@"/system/bin/" + app_process, exePath, true);
+                        }
+                        catch (AdbException) when (String.Compare(app_process_suffix, "32", StringComparison.OrdinalIgnoreCase) == 0)
+                        {
+                            // Older devices don't have an 'app_process32', only an 'app_process', so retry
+                            // NOTE: libadb doesn't have an error code property to verify that this is caused
+                            // by the file not being found.
+                            retry = true;
+                        }
+    
+                        if (retry)
+                        {
+                            app_process = "app_process";
+                            exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
+                            fileSystem.Download(@"/system/bin/app_process", exePath, true);
+                        }
+                        
+                        //on 64 bit, 'linker64' is the 64bit version and 'linker' is the 32 bit version 
+                        string suffix64bit = String.Empty;
+                        if (_launchOptions.TargetArchitecture == TargetArchitecture.X64 || _launchOptions.TargetArchitecture == TargetArchitecture.ARM64)
+                        {
+                            suffix64bit = "64";
+                        }
+    
+                        string linker = String.Concat("linker", suffix64bit);
+                        fileSystem.Download(String.Concat(@"/system/bin/", linker), Path.Combine(_launchOptions.IntermediateDirectory, linker), true);
+    
+                        //on 64 bit, libc.so lives in /system/lib64/, on 32 bit it lives in simply /system/lib/
+                        fileSystem.Download(@"/system/lib" + suffix64bit + "/libc.so", Path.Combine(_launchOptions.IntermediateDirectory, "libc.so"), true);
+                    }));
+                }
+    
                 progressStepCount = actions.Count;
 
                 foreach (NamedAction namedAction in actions)
@@ -373,7 +409,7 @@ namespace AndroidDebugLauncher
 
                 _waitLoop.SetProgress(progressStepCount, progressStepCount, string.Empty);
 
-                if (taskGdbServer.IsCompleted)
+                if (_targetEngine == TargetEngine.Native && taskGdbServer.IsCompleted)
                 {
                     token.ThrowIfCancellationRequested();
                     throw new LauncherException(Telemetry.LaunchFailureCode.GDBServerFailed, LauncherResources.Error_GDBServerFailed);
@@ -384,12 +420,23 @@ namespace AndroidDebugLauncher
                     _eventCallback.OnCustomDebugEvent(_launchOptions.LogcatServiceId, new Guid(LogcatServiceMessage_SourceId), LogcatServiceMessage_NewProcess, _appProcessId, null);
                 }
 
-                var launchOptions = new LocalLaunchOptions(_installPaths.GDBPath, string.Format(CultureInfo.InvariantCulture, ":{0}", gdbPortNumber));
+                LaunchOptions launchOptions = null;
+                if (_targetEngine == TargetEngine.Native)
+                {
+                    launchOptions = new LocalLaunchOptions(_installPaths.GDBPath, string.Format(CultureInfo.InvariantCulture, ":{0}", gdbPortNumber));
+                    launchOptions.ExePath = exePath;
+                }
+                else
+                {
+                    launchOptions = new JavaLaunchOptions(_launchOptions.JVMHost, _launchOptions.JVMPort, _launchOptions.SourceRoots, _launchOptions.Package);
+                }
+
                 launchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
                 launchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
                 launchOptions.WorkingDirectory = _launchOptions.IntermediateDirectory;
-                launchOptions.ExePath = exePath;
+
                 launchOptions.DebuggerMIMode = MIMode.Gdb;
+                
                 launchOptions.VisualizerFile = "Microsoft.Android.natvis";
 
                 return launchOptions;
@@ -493,6 +540,39 @@ namespace AndroidDebugLauncher
             if (sdkVersion < 17)
             {
                 throw new LauncherException(Telemetry.LaunchFailureCode.UnsupportedAndroidVersion, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_UnsupportedAPILevel, sdkVersion));
+            }
+        }
+
+        private string GetGdbServerPath(string workingDirectory)
+        {
+            // On the android device, the gdbserver and native shared objects of an ndk app can be out /data/data/<appname>/lib/*
+            // The lib directory symlinks to somewhere else on the file system, for example /data/data/<appname>/lib/ -> /data/app-lib/<appname>-1/lib
+            // On 64 bit, this symlink is broken (I think this is a bug in 64 bit android).
+            // We must attempt to find the gdbserver path manually then. 
+
+            // Android issue: https://code.google.com/p/android/issues/detail?id=186010&thanks=186010&ts=1441922626
+
+            //check the correct location for x86/arm/arm64
+            string gdbServerPath = workingDirectory + "/lib/gdbserver";
+
+            string lsCommand = string.Format(CultureInfo.InvariantCulture, "ls {0}", gdbServerPath);
+            string output = ExecCommand(lsCommand);
+            if (string.Compare(output, gdbServerPath, StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                //gdbserver is symlinked correctly
+                return gdbServerPath;
+            }
+            else if (_launchOptions.TargetArchitecture == TargetArchitecture.X64)
+            {
+                //start looking other places, only do this on 64 bit
+                //TODO: This needs some additional testsing
+                lsCommand = string.Format(CultureInfo.InvariantCulture, "ls /data/app/{0}*/lib/x86_64/gdbserver", _launchOptions.Package);
+                output = ExecCommand(lsCommand);
+                return output;
+            }
+            else
+            {
+                throw new LauncherException(Telemetry.LaunchFailureCode.NoGdbServer, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_NoGdbServer, gdbServerPath));
             }
         }
 

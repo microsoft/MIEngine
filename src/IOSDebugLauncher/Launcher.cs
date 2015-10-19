@@ -47,10 +47,13 @@ namespace IOSDebugLauncher
             _callback = eventCallback;
         }
 
-        void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions)
+        void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
         {
             if (launcherXmlOptions == null)
                 throw new ArgumentNullException("launcherXmlOptions");
+
+            if (targetEngine != TargetEngine.Native)
+                throw new LauncherException(String.Format(CultureInfo.CurrentCulture, LauncherResources.Error_BadTargetEngine, targetEngine.ToString()));
 
             var iosXmlOptions = (MICore.Xml.LaunchOptions.IOSLaunchOptions)launcherXmlOptions;
 

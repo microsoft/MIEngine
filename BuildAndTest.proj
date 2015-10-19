@@ -12,6 +12,10 @@
     <OutDir Condition=" '$(OutDir)'=='' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutDir>
     <SourceHome Condition=" '$(SourceHome)'=='' ">$(MSBuildThisFileDirectory)src\</SourceHome>
     <ToolsHome Condition=" '$(ToolsHome)'=='' ">$(MSBuildThisFileDirectory)tools\</ToolsHome>
+	
+	<!--Don't run unit tests for lab builds -->
+	<TargetsToRun>Build;Test</TargetsToRun>
+	<TargetsToRun Condition="'$(Configuration)' == 'Release.Lab' OR '$(Configuration)' == 'Debug.Lab'">Build</TargetsToRun>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,7 +46,7 @@
   <Target Name="Test">
  
     <ItemGroup>
-      <TestAssemblies Include="bin\$(Configuration)\**\*UnitTests.dll" />
+      <TestAssemblies Include="bin\$(Configuration)\**\*UnitTests.dll"/>
     </ItemGroup>
     
     <Exec Command="src\packages\xunit.runner.console.2.0.0\tools\xunit.console.exe @(TestAssemblies, ' ') -xml &quot;$(OutDir)TestResults.xml&quot;" />
@@ -50,6 +54,6 @@
   </Target>
   
   <Target Name="BuildAndTest"
-          DependsOnTargets="Build;Test" />
+          DependsOnTargets="$(TargetsToRun)" />
 
 </Project>

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
+using MICore;
+using System.Diagnostics;
 
 // This file contains the various event objects that are sent to the debugger from the sample engine via IDebugEventCallback2::Event.
 // These are used in EngineCallback.cs.
@@ -163,23 +165,13 @@ namespace Microsoft.MIDebugEngine
     {
         public const string IID = "3BDB28CF-DBD2-4D24-AF03-01072B67EB9E";
 
-        private readonly string _message;
-        private readonly enum_MESSAGETYPE _messageType;
+        private readonly OutputMessage _outputMessage;
         private readonly bool _isAsync;
-        private readonly Severity _severity;
-
-        internal enum Severity
+        
+        public AD7MessageEvent(OutputMessage outputMessage, bool isAsync)
         {
-            Error,
-            Warning
-        };
-
-        public AD7MessageEvent(string msg, enum_MESSAGETYPE messageType, bool isAsync, Severity severity)
-        {
-            _message = msg;
-            _messageType = messageType;
+            _outputMessage = outputMessage;
             _isAsync = isAsync;
-            _severity = severity;
         }
 
         int IDebugEvent2.GetAttributes(out uint eventAttributes)
@@ -194,21 +186,26 @@ namespace Microsoft.MIDebugEngine
 
         int IDebugMessageEvent2.GetMessage(enum_MESSAGETYPE[] pMessageType, out string pbstrMessage, out uint pdwType, out string pbstrHelpFileName, out uint pdwHelpId)
         {
+            return ConvertMessageToAD7(_outputMessage, pMessageType, out pbstrMessage, out pdwType, out pbstrHelpFileName, out pdwHelpId);
+        }
+
+        internal static int ConvertMessageToAD7(OutputMessage outputMessage, enum_MESSAGETYPE[] pMessageType, out string pbstrMessage, out uint pdwType, out string pbstrHelpFileName, out uint pdwHelpId)
+        {
             const uint MB_ICONERROR = 0x00000010;
             const uint MB_ICONWARNING = 0x00000030;
 
-            pMessageType[0] = _messageType;
-            pbstrMessage = _message;
+            pMessageType[0] = outputMessage.MessageType;
+            pbstrMessage = outputMessage.Message;
             pdwType = 0;
-            if (_messageType == enum_MESSAGETYPE.MT_MESSAGEBOX)
+            if ((outputMessage.MessageType & enum_MESSAGETYPE.MT_TYPE_MASK) == enum_MESSAGETYPE.MT_MESSAGEBOX)
             {
-                switch (_severity)
+                switch (outputMessage.SeverityValue)
                 {
-                    case Severity.Error:
+                    case OutputMessage.Severity.Error:
                         pdwType |= MB_ICONERROR;
                         break;
 
-                    case Severity.Warning:
+                    case OutputMessage.Severity.Warning:
                         pdwType |= MB_ICONWARNING;
                         break;
                 }
@@ -223,6 +220,36 @@ namespace Microsoft.MIDebugEngine
         int IDebugMessageEvent2.SetResponse(uint dwResponse)
         {
             return Constants.S_OK;
+        }
+    }
+
+    internal sealed class AD7ErrorEvent : IDebugEvent2, IDebugErrorEvent2
+    {
+        public const string IID = "FDB7A36C-8C53-41DA-A337-8BD86B14D5CB";
+
+        private readonly OutputMessage _outputMessage;
+        private readonly bool _isAsync;
+
+        public AD7ErrorEvent(OutputMessage outputMessage, bool isAsync)
+        {
+            _outputMessage = outputMessage;
+            _isAsync = isAsync;
+        }
+
+        int IDebugEvent2.GetAttributes(out uint eventAttributes)
+        {
+            if (_isAsync)
+                eventAttributes = (uint)enum_EVENTATTRIBUTES.EVENT_ASYNCHRONOUS;
+            else
+                eventAttributes = (uint)enum_EVENTATTRIBUTES.EVENT_IMMEDIATE;
+
+            return Constants.S_OK;
+        }
+
+        int IDebugErrorEvent2.GetErrorMessage(enum_MESSAGETYPE[] pMessageType, out string errorFormat, out int hrErrorReason, out uint pdwType, out string helpFilename, out uint pdwHelpId)
+        {
+            hrErrorReason = unchecked((int)_outputMessage.ErrorCode);
+            return AD7MessageEvent.ConvertMessageToAD7(_outputMessage, pMessageType, out errorFormat, out pdwType, out helpFilename, out pdwHelpId);
         }
     }
 
@@ -349,17 +376,32 @@ namespace Microsoft.MIDebugEngine
     {
         public const string IID = "51A94113-8788-4A54-AE15-08B74FF922D0";
 
-        public AD7ExceptionEvent(string name, uint code)
-        {
-            _name = name;
-            _code = code;
-            _description = name;
-        }
-        public AD7ExceptionEvent(string name, string description, uint code)
+        public AD7ExceptionEvent(string name, string description, uint code, Guid? exceptionCategory, ExceptionBreakpointState state)
         {
             _name = name;
             _code = code;
             _description = description ?? name;
+            _category = exceptionCategory ?? new Guid(EngineConstants.EngineId);
+
+            switch (state)
+            {
+                case ExceptionBreakpointState.None:
+                    _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE;
+                    break;
+
+                case ExceptionBreakpointState.BreakThrown:
+                    _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE;
+                    break;
+
+                case ExceptionBreakpointState.BreakUserHandled:
+                    _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
+                    break;
+
+                default:
+                    Debug.Fail("Unexpected state value");
+                    _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE;
+                    break;
+            }
         }
 
         #region IDebugExceptionEvent2 Members
@@ -375,8 +417,8 @@ namespace Microsoft.MIDebugEngine
             EXCEPTION_INFO ex = new EXCEPTION_INFO();
             ex.bstrExceptionName = _name;
             ex.dwCode = _code;
-            ex.dwState = enum_EXCEPTION_STATE.EXCEPTION_STOP_ALL;
-            ex.guidType = new Guid(EngineConstants.EngineId);   // use the engine guid - should we be using a shared guid for POSIX signals?
+            ex.dwState = _state;
+            ex.guidType = _category;
             pExceptionInfo[0] = ex;
             return Constants.S_OK;
         }
@@ -395,6 +437,8 @@ namespace Microsoft.MIDebugEngine
         private string _name;
         private uint _code;
         private string _description;
+        private Guid _category;
+        private enum_EXCEPTION_STATE _state;
         #endregion
     }
 

@@ -58,7 +58,7 @@ namespace IOSDebugLauncher
         public Launcher.RemotePorts StartDebugListener()
         {
             string remotePortsJsonString;
-            CallVcRemote(new Uri("debug/setupForDebugging?target=" + _launchOptions.IOSDebugTarget.ToString(), UriKind.Relative), LauncherResources.Info_StartingDebugListener, out remotePortsJsonString);
+            CallVcRemote(new Uri("debug/setupForDebugging?target=" + _launchOptions.IOSDebugTarget.ToString() + "&deviceUdid=" + _launchOptions.DeviceUdid, UriKind.Relative), LauncherResources.Info_StartingDebugListener, out remotePortsJsonString);
 
             try
             {
@@ -74,7 +74,7 @@ namespace IOSDebugLauncher
         public string GetRemoteAppPath()
         {
             string appPath = string.Empty;
-            var response = CallVcRemote(new Uri("debug/appRemotePath/" + _launchOptions.PackageId, UriKind.Relative), LauncherResources.Info_GettingInfo, out appPath);
+            var response = CallVcRemote(new Uri("debug/appRemotePath?package=" + _launchOptions.PackageId + "&deviceUdid=" + _launchOptions.DeviceUdid, UriKind.Relative), LauncherResources.Info_GettingInfo, out appPath);
 
             if (string.IsNullOrWhiteSpace(appPath))
             {

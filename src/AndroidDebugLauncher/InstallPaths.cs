@@ -64,9 +64,19 @@ namespace AndroidDebugLauncher
                     possibleGDBPaths = NDKToolChainFilePath.x86_GDBPaths();
                     break;
 
+                case MICore.TargetArchitecture.X64:
+                    targetArchitectureName = "x64";
+                    possibleGDBPaths = NDKToolChainFilePath.x64_GDBPaths();
+                    break;
+
                 case MICore.TargetArchitecture.ARM:
                     targetArchitectureName = "arm";
                     possibleGDBPaths = NDKToolChainFilePath.ARM_GDBPaths();
+                    break;
+
+                case MICore.TargetArchitecture.ARM64:
+                    targetArchitectureName = "arm64";
+                    possibleGDBPaths = NDKToolChainFilePath.ARM64_GDBPaths();
                     break;
 
                 default:
