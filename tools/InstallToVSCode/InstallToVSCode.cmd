@@ -45,6 +45,7 @@ for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFi
 
 REM TODO: Stop doing this when we switch to running under CoreCLR
 for /f %%f in ('dir /b %DropDir%System*.dll') do call :InstallFile "%DropDir%%%f" debugAdapters\
+call :InstallFile "%OpenDebugAD7Dir%\..\..\src\packages\System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23225\lib\dotnet\System.Runtime.InteropServices.RuntimeInformation.dll" debugAdapters\
 
 REM TODO: Add more dependencies that we need for running on CoreCLR
 echo.
