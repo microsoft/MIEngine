@@ -50,7 +50,7 @@ namespace BlackBerryDebugLauncher
                 throw new InvalidOperationException();
             }
 
-            _launchOptions = new BlackBerryLaunchOptions(exePath, (MICore.Xml.LaunchOptions.BlackBerryLaunchOptions)launcherXmlOptions);
+            _launchOptions = new BlackBerryLaunchOptions(exePath, (MICore.Xml.LaunchOptions.BlackBerryLaunchOptions)launcherXmlOptions, targetEngine);
         }
 
         public void SetupForDebugging(out LaunchOptions debuggerLaunchOptions)

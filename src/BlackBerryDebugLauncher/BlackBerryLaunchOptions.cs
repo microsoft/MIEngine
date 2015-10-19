@@ -5,7 +5,7 @@ namespace BlackBerryDebugLauncher
 {
     internal sealed class BlackBerryLaunchOptions
     {
-        public BlackBerryLaunchOptions(string exePath, MICore.Xml.LaunchOptions.BlackBerryLaunchOptions xmlOptions)
+        public BlackBerryLaunchOptions(string exePath, MICore.Xml.LaunchOptions.BlackBerryLaunchOptions xmlOptions, TargetEngine targetEngine)
         {
             if (string.IsNullOrEmpty(exePath))
                 throw new ArgumentNullException("exePath");
