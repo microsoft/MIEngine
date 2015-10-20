@@ -684,6 +684,14 @@ namespace MICore
             return attributeValue;
         }
 
+        public static uint RequirePositiveAttribute(uint attributeValue, string attributeName)
+        {
+            if (attributeValue == 0)
+                throw new InvalidLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MissingAttribute, attributeName));
+
+            return attributeValue;
+        }
+
         public static int RequirePortAttribute(int attributeValue, string attributeName)
         {
             if (attributeValue <= 0 || attributeValue >= 0xffff)
