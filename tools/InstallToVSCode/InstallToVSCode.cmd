@@ -38,21 +38,28 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create debug adapter directory 
 :DEBUGADAPTERDIR_Done
 
 set InstallError=
-for %%f in (OpenDebugAD7.exe Microsoft.DebugEngineHost.dll Newtonsoft.Json.dll) do call :InstallFile "%OpenDebugAD7Dir%\%%f" debugAdapters\
-for %%f in (coreclr\package.json) do call :InstallFile "%~dp0%%f"
+for %%f in (OpenDebugAD7.exe) do call :InstallFile "%OpenDebugAD7Dir%\%%f" debugAdapters\
+for %%f in (%OpenDebugAD7Dir%\*.dll) do call :InstallFile "%%f" debugAdapters\
+
+REM NOTE: The code that deals with starting the adapter can be found in Monaco\src\vs\workbench\parts\debug\node\rawDebugSession.ts.
+REM Look at getLaunchDetails.
+call :CopyFile "%~dp0coreclr\example-package.json" package.json
+
 for %%f in (coreclr\coreclr.ad7Engine.json) do call :InstallFile "%~dp0%%f" debugAdapters\
 for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%DropDir%%%f" debugAdapters\
 
-REM TODO: Stop doing this when we switch to running under CoreCLR
-for /f %%f in ('dir /b %DropDir%System*.dll') do call :InstallFile "%DropDir%%%f" debugAdapters\
-call :InstallFile "%OpenDebugAD7Dir%\..\..\src\packages\System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23225\lib\dotnet\System.Runtime.InteropServices.RuntimeInformation.dll" debugAdapters\
-
-REM TODO: Add more dependencies that we need for running on CoreCLR
 echo.
 if NOT "%InstallError%"=="" echo ERROR: Failed to copy one or more files.& exit /b -1
-echo InstallToVSCode.cmd succeeded. To complete setup, create a link or copy clrdbg next to the debug adapter. Ex:
+echo InstallToVSCode.cmd succeeded. To complete setup:
+echo. 1. Create a link or copy clrdbg next to the debug adapter. Ex:
 echo.
 echo    mklink /d %DESTDIR%\clrdbg C:\dd\vs\out\binaries\amd64chk\debugger\x-plat\clrdbg
+echo.
+echo.
+echo  2. Modify the 'runtime' value in package.json to indicate the directory where 
+echo     you have coreclr installed. Ex:
+echo.
+echo     notepad %DESTDIR%\package.json
 echo.
 exit /b 0
 

@@ -8,6 +8,7 @@
       {
         "type": "coreclr",
         "enableBreakpointsFor": { "languageIds": [ "csharp", "fsharp" ] },
+        "runtime": "c:\\vsdbgqa\\runtime-windows\\x64\\corerun.exe",
         "program": "./debugAdapters/OpenDebugAD7.exe"
       }
     ]
