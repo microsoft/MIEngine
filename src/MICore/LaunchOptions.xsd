@@ -162,7 +162,7 @@
       <xs:attribute name="TargetType" use="required">
         <xs:simpleType>
           <xs:annotation>
-            <xs:documentation>Indicates if the debugger should debug to the simulator or a device. It determins the target's architecture.</xs:documentation>
+            <xs:documentation>Indicates if the debugger should debug to the simulator or a device. It determines the target's architecture.</xs:documentation>
           </xs:annotation>
           <xs:restriction base="xs:string">
             <xs:enumeration value="Phone" />
