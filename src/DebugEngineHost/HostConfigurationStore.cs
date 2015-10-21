@@ -5,6 +5,7 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -60,7 +61,56 @@ namespace Microsoft.DebugEngineHost
             categoryName = categoryKey.GetSubKeyNames().Single();
         }
 
-        public object GetOptionalValue(string section, string valueName)
+        /// <summary>
+        /// Checks if logging is enabled, and if so returns a logger object.
+        /// </summary>
+        /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled. If not specified, this will check 'Logging' in the AD7 Metrics.</param>
+        /// <param name="logFileName">[Required] name of the log file to open if logging is enabled.</param>
+        /// <returns>[Optional] If logging is enabled, the logging object.</returns>
+        public HostLogger GetLogger(string enableLoggingSettingName, string logFileName)
+        {
+            if (string.IsNullOrEmpty(logFileName))
+            {
+                throw new ArgumentNullException("logFileName");
+            }
+
+            object enableLoggingValue;
+            if (!string.IsNullOrEmpty(enableLoggingSettingName))
+            {
+                enableLoggingValue = GetOptionalValue("Debugger", enableLoggingSettingName);
+            }
+            else
+            {
+                enableLoggingValue = GetEngineMetric("EnableLogging");
+            }
+
+            if (enableLoggingValue == null ||
+                !(enableLoggingValue is int) ||
+                ((int)enableLoggingValue) == 0)
+            {
+                return null;
+            }
+
+            string tempDirectory = Path.GetTempPath();
+            if (!string.IsNullOrEmpty(tempDirectory) && Directory.Exists(tempDirectory))
+            {
+                string filePath = Path.Combine(tempDirectory, logFileName);
+
+                try
+                {
+                    FileStream stream = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
+                    return new HostLogger(new StreamWriter(stream));
+                }
+                catch (IOException)
+                {
+                    // ignore failures from the log being in use by another process
+                }
+            }
+
+            return null;
+        }
+
+        private object GetOptionalValue(string section, string valueName)
         {
             using (RegistryKey key = _configKey.OpenSubKey(section))
             {
