@@ -277,8 +277,7 @@ namespace MICore
         {
             get
             {
-                // For now at least, we will assume that the target system is unix unless we are launching the MI Debugger locally
-                return !(this is LocalLaunchOptions);
+                return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             }
         }
 
