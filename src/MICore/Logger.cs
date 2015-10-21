@@ -23,9 +23,8 @@ namespace MICore
         private static bool s_isInitialized;
         private static bool s_isEnabled;
         private static DateTime s_initTime;
-
         // NOTE: We never clean this up
-        private static StreamWriter s_streamWriter;
+        private static HostLogger s_logger;
 
         public static void EnsureInitialized(HostConfigurationStore configStore)
         {
@@ -34,25 +33,10 @@ namespace MICore
                 s_isInitialized = true;
                 s_initTime = DateTime.Now;
 
-                object enableMILoggerValue = configStore.GetOptionalValue("Debugger", "EnableMIDebugLogger");
-                if (IsRegValueTrue(enableMILoggerValue))
+                s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
+                if (s_logger != null)
                 {
-                    string tempDirectory = Environment.GetEnvironmentVariable("TMP");
-                    if (!string.IsNullOrEmpty(tempDirectory) && Directory.Exists(tempDirectory))
-                    {
-                        string filePath = Path.Combine(tempDirectory, "Microsoft.MIDebug.log");
-
-                        try
-                        {
-                            FileStream stream = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-                            s_streamWriter = new StreamWriter(stream);
-                            s_isEnabled = true;
-                        }
-                        catch (IOException)
-                        {
-                            // ignore failures from the log being in use by another process
-                        }
-                    }
+                    s_isEnabled = true;
                 }
                 WriteLine("Initialized log at: " + s_initTime);
             }
@@ -122,29 +106,17 @@ namespace MICore
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
         private static void WriteLineImpl(string line)
         {
-            if (s_streamWriter != null)
-            {
-                lock (s_streamWriter)
-                {
-                    s_streamWriter.WriteLine(String.Format(CultureInfo.CurrentCulture, "({0}) {1}", (int)(DateTime.Now - s_initTime).TotalMilliseconds, line));
-                }
-            }
-
+            string fullLine = String.Format(CultureInfo.CurrentCulture, "({0}) {1}", (int)(DateTime.Now - s_initTime).TotalMilliseconds, line);
+            s_logger?.WriteLine(fullLine);
 #if DEBUG
-            Debug.WriteLine("MS_MIDebug: " + String.Format(CultureInfo.CurrentCulture, "({0}) {1}", (int)(DateTime.Now - s_initTime).TotalMilliseconds, line));
+            Debug.WriteLine("MS_MIDebug: " + fullLine);
 #endif
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
         private static void FlushImpl()
         {
-            if (s_streamWriter != null)
-            {
-                lock (s_streamWriter)
-                {
-                    s_streamWriter.Flush();
-                }
-            }
+            s_logger?.Flush();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
@@ -170,16 +142,6 @@ namespace MICore
                         WriteLineImpl(line);
                 }
             }
-        }
-
-        private static bool IsRegValueTrue(object enableMILoggerValue)
-        {
-            if (enableMILoggerValue == null)
-                return false;
-            if (!(enableMILoggerValue is int))
-                return false;
-
-            return ((int)enableMILoggerValue) != 0;
         }
     }
 }
