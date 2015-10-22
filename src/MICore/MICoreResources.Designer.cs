@@ -11,7 +11,7 @@
 namespace MICore {
     using System;
     using System.Reflection;
-    
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -225,6 +225,15 @@ namespace MICore {
         public static string Error_StringIsNullOrEmpty {
             get {
                 return ResourceManager.GetString("Error_StringIsNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Internal error. Failed to load serializer for type &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_UnableToLoadSerializer {
+            get {
+                return ResourceManager.GetString("Error_UnableToLoadSerializer", resourceCulture);
             }
         }
         
