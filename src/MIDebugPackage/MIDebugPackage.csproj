@@ -194,6 +194,7 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
