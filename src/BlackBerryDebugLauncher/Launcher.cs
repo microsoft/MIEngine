@@ -76,6 +76,7 @@ namespace BlackBerryDebugLauncher
             debuggerLaunchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
             debuggerLaunchOptions.DebuggerMIMode = MIMode.Gdb;
             debuggerLaunchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
+            debuggerLaunchOptions.UseUnixSymbolPaths = false;
 
             debuggerLaunchOptions.CustomLaunchSetupCommands = GetCustomLaunchSetupCommands();
             debuggerLaunchOptions.LaunchCompleteCommand = GetLaunchCompleteCommand();

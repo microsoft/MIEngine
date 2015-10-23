@@ -157,6 +157,7 @@ namespace MICore
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
 
+            UseUnixSymbolPaths = false;
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
         }
@@ -231,6 +232,11 @@ namespace MICore
     public abstract class LaunchOptions
     {
         private const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
+
+        protected LaunchOptions()
+        {
+            UseUnixSymbolPaths = true;
+        }
 
         private bool _initializationComplete;
 
@@ -332,11 +338,8 @@ namespace MICore
         /// </summary>
         public bool UseUnixSymbolPaths
         {
-            get
-            {
-                // For now at least, we will assume that the target system is unix unless we are launching the MI Debugger locally
-                return !(this is LocalLaunchOptions);
-            }
+            get;
+            set;
         }
 
         private ReadOnlyCollection<LaunchCommand> _setupCommands;
