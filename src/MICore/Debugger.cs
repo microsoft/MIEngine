@@ -427,7 +427,22 @@ namespace MICore
 
         public async Task CmdTerminate()
         {
-            await MICommandFactory.Terminate();
+            bool killProcess = false;
+
+            if (_breakHandler != null)
+            {
+                _breakHandler.Break();
+                killProcess = _breakHandler.ShouldKillProcess;
+            }
+
+            if (killProcess)
+            {
+                await MICommandFactory.Kill();
+            }
+            else
+            {
+                await MICommandFactory.Terminate();
+            }
         }
 
         public Task CmdBreakInternal()
@@ -458,7 +473,7 @@ namespace MICore
             PostCommand("-gdb-exit");
         }
 
-        private string Escape(string str)
+        private static string Escape(string str)
         {
             StringBuilder outStr = new StringBuilder();
             for (int i = 0; i < str.Length; ++i)

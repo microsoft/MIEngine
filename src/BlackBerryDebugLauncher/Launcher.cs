@@ -132,5 +132,10 @@ namespace BlackBerryDebugLauncher
                 _eventCtrlC.Set();
             }
         }
+
+        bool IBreakHandler.ShouldKillProcess
+        {
+            get { return true; }
+        }
     }
 }

@@ -351,6 +351,12 @@ namespace MICore
             await _debugger.CmdAsync(command, ResultClass.None);
         }
 
+        public async Task Kill()
+        {
+            string command = "kill";
+            await _debugger.CmdAsync(command, ResultClass.done);
+        }
+
         #endregion
 
         #region Breakpoints
