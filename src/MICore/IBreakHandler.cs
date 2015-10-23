@@ -12,9 +12,9 @@
         void Break();
 
         /// <summary>
-        /// Gets an indication, if instead of continue-to-exit, debugged process should be instantly terminated (killed).
+        /// Gets an indication, if instead of debugged process should be instantly terminated (killed).
         /// </summary>
-        bool ShouldKillProcess
+        bool UseOldStyleTermination
         {
             get;
         }

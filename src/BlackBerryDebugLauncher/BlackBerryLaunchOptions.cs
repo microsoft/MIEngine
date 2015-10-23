@@ -6,6 +6,9 @@ using System.IO;
 
 namespace BlackBerryDebugLauncher
 {
+    /// <summary>
+    /// Launch options dedicated to BlackBerry devices.
+    /// </summary>
     internal sealed class BlackBerryLaunchOptions
     {
         public BlackBerryLaunchOptions(string exePath, MICore.Xml.LaunchOptions.BlackBerryLaunchOptions xmlOptions, TargetEngine targetEngine)

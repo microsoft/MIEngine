@@ -9,6 +9,10 @@ using System.Threading;
 
 namespace BlackBerryDebugLauncher
 {
+    /// <summary>
+    /// Launcher type dedicated to start communication with BlackBerry devices.
+    /// It will start a 'host' process to communicate with GDB without 'async MI' support.
+    /// </summary>
     [ComVisible(true)]
     [Guid("43BC8C7F-5184-4FE8-9ECF-F33A498375EE")]
     public class Launcher : IPlatformAppLauncher, IBreakHandler
@@ -111,6 +115,7 @@ namespace BlackBerryDebugLauncher
                 _eventCtrlC = null;
             }
 
+            // ask the 'host' process to exit:
             if (_eventTerminate != null)
             {
                 _eventTerminate.Dispose();
@@ -134,7 +139,7 @@ namespace BlackBerryDebugLauncher
             }
         }
 
-        bool IBreakHandler.ShouldKillProcess
+        bool IBreakHandler.UseOldStyleTermination
         {
             get { return true; }
         }

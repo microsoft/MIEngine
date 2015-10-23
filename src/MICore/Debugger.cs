@@ -427,22 +427,15 @@ namespace MICore
 
         public async Task CmdTerminate()
         {
-            bool killProcess = false;
+            bool oldStyle = false;
 
             if (_breakHandler != null)
             {
                 _breakHandler.Break();
-                killProcess = _breakHandler.ShouldKillProcess;
+                oldStyle = _breakHandler.UseOldStyleTermination;
             }
 
-            if (killProcess)
-            {
-                await MICommandFactory.Kill();
-            }
-            else
-            {
-                await MICommandFactory.Terminate();
-            }
+            await MICommandFactory.Terminate(oldStyle);
         }
 
         public Task CmdBreakInternal()
