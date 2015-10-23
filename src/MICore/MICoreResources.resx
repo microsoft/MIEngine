@@ -177,6 +177,9 @@ Error: {1}</value>
   <data name="Error_StringIsNullOrEmpty" xml:space="preserve">
     <value>This string is null or empty.</value>
   </data>
+  <data name="Error_UnableToLoadSerializer" xml:space="preserve">
+    <value>Internal error. Failed to load serializer for type '{0}'.</value>
+  </data>
   <data name="Error_UnableToStartDebugging" xml:space="preserve">
     <value>Unable to start debugging. {0}</value>
   </data>
