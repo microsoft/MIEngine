@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <Solution Include="$(SourceHome)*.sln">
-      <AdditionalProperties>OutDir=$(OutDir);Configuration=$(Configuration)</AdditionalProperties>
+      <AdditionalProperties>Configuration=$(Configuration)</AdditionalProperties>
     </Solution>
   </ItemGroup>
 
