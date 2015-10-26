@@ -7,8 +7,10 @@
   
   <PropertyGroup>
     <MIEngineRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))\</MIEngineRoot>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <ILDir>$(MIEngineRoot)IL\</ILDir>
     <NuGetPackagesDirectory>$(MIEngineRoot)src\packages</NuGetPackagesDirectory>
     <GeneratedAssembliesDir>$(ILDir)GeneratedAssemblies\</GeneratedAssembliesDir>
+    <MIDefaultOutputPath>$(MIEngineRoot)bin\$(Configuration)\</MIDefaultOutputPath>
   </PropertyGroup>
 </Project>
