@@ -76,6 +76,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IBreakHandler.cs" />
     <Compile Include="InvalidLaunchOptionsException.cs" />
     <Compile Include="LaunchCommand.cs" />
     <Compile Include="CommandLock.cs" />

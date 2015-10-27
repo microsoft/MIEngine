@@ -5,14 +5,12 @@ using MICore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
 using Microsoft.Win32;
 using System.Globalization;
 using System.Collections.ObjectModel;
-using System.Collections.Concurrent;
 using System.Threading;
 
 namespace Microsoft.MIDebugEngine
@@ -296,7 +294,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         _lastUpdateTime = null;
                         _updateDelayCancelSource = new CancellationTokenSource();
-                        _updateTask = Task.Run(FlushSettingsUpdates);
+                        _updateTask = Task.Run(new Func<Task>(FlushSettingsUpdates));
                     }
                     else
                     {

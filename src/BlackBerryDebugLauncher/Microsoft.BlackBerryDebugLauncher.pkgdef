@@ -1,0 +1,4 @@
+﻿[$RootKey$\CLSID\{43BC8C7F-5184-4FE8-9ECF-F33A498375EE}]
+"Assembly"="Microsoft.BlackBerryDebugLauncher"
+"Class"="BlackBerryDebugLauncher.Launcher"
+"CodeBase"="$PackageFolder$\Microsoft.BlackBerryDebugLauncher.dll"

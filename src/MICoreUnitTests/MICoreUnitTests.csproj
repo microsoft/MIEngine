@@ -92,6 +92,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AndroidLauncherTests.cs" />
+    <Compile Include="BlackBerryLauncherTests.cs" />
     <Compile Include="CommandLockTests.cs" />
     <Compile Include="BasicLaunchOptionsTests.cs" />
     <Compile Include="MIResultsTests.cs" />
@@ -102,6 +103,10 @@
     <ProjectReference Include="..\AndroidDebugLauncher\AndroidDebugLauncher.csproj">
       <Project>{e0844bff-2d67-4cb0-8e2a-e9cd888f2eb0}</Project>
       <Name>AndroidDebugLauncher</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BlackBerryDebugLauncher\BlackBerryDebugLauncher.csproj">
+      <Project>{01a55fd3-30d4-46eb-b326-98f3502baf98}</Project>
+      <Name>BlackBerryDebugLauncher</Name>
     </ProjectReference>
     <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{12cc862d-95b7-4224-8e16-b928c6333677}</Project>

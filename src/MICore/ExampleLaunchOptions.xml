@@ -65,4 +65,17 @@
     IOSDebugTarget="device"
     TargetArchitecture="x86"
     AdditionalSOLibSearchPath=""/>
+
+  <!-- BlackBerry Launch -->
+  <BlackBerryLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    TargetAddress="192.168.2.148"
+    GdbPath="C:\bbndk\gold_2_0\host_10_2_0_15\win32\x86\usr\bin\ntoarm-gdb.exe"
+    GdbHostPath="C:\package\BlackBerry.GdbHost.exe"
+    NdkHostPath="C:\bbndk\gold_2_0\host_10_2_0_15\win32\x86"
+    NdkTargetPath="C:\bbndk\gold_2_0\target_10_2_0_1155\qnx6"
+    PID="123456"
+    TargetType="Phone"
+    TargetArchitecture="arm"
+    Attach="false"
+   />
 </Examples>

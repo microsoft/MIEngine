@@ -157,6 +157,7 @@ namespace MICore
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
 
+            UseUnixSymbolPaths = false;
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
         }
@@ -231,6 +232,11 @@ namespace MICore
     public abstract class LaunchOptions
     {
         private const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
+
+        protected LaunchOptions()
+        {
+            UseUnixSymbolPaths = true;
+        }
 
         private bool _initializationComplete;
 
@@ -332,11 +338,8 @@ namespace MICore
         /// </summary>
         public bool UseUnixSymbolPaths
         {
-            get
-            {
-                // For now at least, we will assume that the target system is unix unless we are launching the MI Debugger locally
-                return !(this is LocalLaunchOptions);
-            }
+            get;
+            set;
         }
 
         private ReadOnlyCollection<LaunchCommand> _setupCommands;
@@ -455,6 +458,14 @@ namespace MICore
                                 var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.AndroidLaunchOptionsSerializer();
                                 launcherXmlOptions = Deserialize(serializer, reader);
                                 clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
+                            }
+                            break;
+
+                        case "BlackBerryLaunchOptions":
+                            {
+                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.BlackBerryLaunchOptionsSerializer();
+                                launcherXmlOptions = Deserialize(serializer, reader);
+                                clsidLauncher = new Guid("43BC8C7F-5184-4FE8-9ECF-F33A498375EE");
                             }
                             break;
 
@@ -676,6 +687,14 @@ namespace MICore
             return attributeValue;
         }
 
+        public static uint RequirePositiveAttribute(uint attributeValue, string attributeName)
+        {
+            if (attributeValue == 0)
+                throw new InvalidLaunchOptionsException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MissingAttribute, attributeName));
+
+            return attributeValue;
+        }
+
         public static int RequirePortAttribute(int attributeValue, string attributeName)
         {
             if (attributeValue <= 0 || attributeValue >= 0xffff)
@@ -788,6 +807,7 @@ namespace MICore
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
+        /// <param name="targetEngine">[Optional] Desired debug engine architecture for target process. Some launchers may ignore this.</param>
         void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
 
         /// <summary>
