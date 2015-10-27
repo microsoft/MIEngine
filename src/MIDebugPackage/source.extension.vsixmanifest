@@ -17,5 +17,6 @@
     <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Microsoft.MIDebugEngine.pkgdef" />
     <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Microsoft.AndroidDebugLauncher.pkgdef" />
     <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Microsoft.IOSDebugLauncher.pkgdef" />
+    <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Microsoft.BlackBerryDebugLauncher.pkgdef" />
   </Assets>
 </PackageManifest>

@@ -129,6 +129,78 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:element name="BlackBerryLaunchOptions">
+    <xs:annotation>
+      <xs:documentation>Instructs the debugger, how to launch or attach to BlackBerry application.</xs:documentation>
+    </xs:annotation>
+
+    <xs:complexType>
+      <xs:attribute name="GdbPath" type="xs:string" use="required">
+        <xs:annotation>
+          <xs:documentation>Path to the local GDB used to communicate with the device. It is responsible for sending and receiving MI/MI2 commands.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      
+      <xs:attribute name="GdbHostPath" type="xs:string" use="required">
+        <xs:annotation>
+          <xs:documentation>Path to the local executable that will start GDB work as a pipe to for communication and CTRL+C signal generator.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="TargetAddress" type="xs:string" use="required">
+        <xs:annotation>
+          <xs:documentation>The network name or IP of the target device to connect to.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="TargetPort" type="xs:unsignedInt" use="optional" default="8000">
+        <xs:annotation>
+          <xs:documentation>The port number of the remote endpoint to connect to. Default value: 8000. </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="TargetType" use="required">
+        <xs:simpleType>
+          <xs:annotation>
+            <xs:documentation>Indicates if the debugger should debug to the simulator or a device. It determines the target's architecture.</xs:documentation>
+          </xs:annotation>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Phone" />
+            <xs:enumeration value="Tablet" />
+            <xs:enumeration value="Simulator" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+
+      <xs:attribute name="Attach" type="xs:boolean" use="optional" default="false">
+        <xs:annotation>
+          <xs:documentation>If true, attach to a running process rather than launching. Launched applications are break at main function and must be run once the debugger connection is established.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="PID" type="xs:unsignedInt" use="required">
+        <xs:annotation>
+          <xs:documentation>The ID of the process to attach to. Since deployment tools already launch the application and break it at main.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="NdkHostPath" type="xs:string" use="required">
+        <xs:annotation>
+          <xs:documentation>Full path to the 'host' root of the BlackBerry NDK. Used to indicate tools running on Windows.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="NdkTargetPath" type="xs:string" use="required">
+        <xs:annotation>
+          <xs:documentation>Full path to the 'target' root of the BlackBerry NDK. Used to indicate tools running on or communicating with the target platform.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <xs:attributeGroup ref="CommonAttributes"/>
+
+    </xs:complexType>
+  </xs:element>
+
   <xs:simpleType name="TargetArchitecture">
     <xs:annotation>
       <xs:documentation>Architecture of the target application. Examples: arm, x86</xs:documentation>

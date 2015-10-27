@@ -345,9 +345,13 @@ namespace MICore
             return results.FindString("path_expr");
         }
 
-        public async Task Terminate()
+        /// <summary>
+        /// Terminate debuggee.
+        /// </summary>
+        public async Task Terminate(bool oldStyle = false)
         {
-            string command = "-exec-abort";
+            // since exec-abort is not everywhere implemented:
+            string command = oldStyle ? "kill" : "-exec-abort";
             await _debugger.CmdAsync(command, ResultClass.None);
         }
 

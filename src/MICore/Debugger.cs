@@ -64,6 +64,7 @@ namespace MICore
         private LinkedList<string> _initialErrors = new LinkedList<string>();
 
         protected bool _connected;
+        private IBreakHandler _breakHandler;
 
         public class ResultEventArgs : EventArgs
         {
@@ -320,6 +321,7 @@ namespace MICore
             FlushBreakStateData();
 
             _transport.Init(this, options);
+            _breakHandler = options.DeviceAppLauncher as IBreakHandler;
 
             switch (options.TargetArchitecture)
             {
@@ -425,11 +427,24 @@ namespace MICore
 
         public async Task CmdTerminate()
         {
-            await MICommandFactory.Terminate();
+            bool oldStyle = false;
+
+            if (_breakHandler != null)
+            {
+                _breakHandler.Break();
+                oldStyle = _breakHandler.UseOldStyleTermination;
+            }
+
+            await MICommandFactory.Terminate(oldStyle);
         }
 
         public Task CmdBreakInternal()
         {
+            if (_breakHandler != null)
+            {
+                _breakHandler.Break();
+            }
+
             var res = CmdAsync("-exec-interrupt", ResultClass.done);
             return res.ContinueWith((t) =>
             {
@@ -451,7 +466,7 @@ namespace MICore
             PostCommand("-gdb-exit");
         }
 
-        private string Escape(string str)
+        private static string Escape(string str)
         {
             StringBuilder outStr = new StringBuilder();
             for (int i = 0; i < str.Length; ++i)
