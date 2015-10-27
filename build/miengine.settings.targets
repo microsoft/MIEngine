@@ -27,8 +27,8 @@
   <PropertyGroup>
     <SignAssembly>True</SignAssembly>
     
-	<!--SxS: These three properties should be changed at the start of a new version, VersionZeroYear should be the year
-    before the start of the project.-->
+    <!--SxS: These three properties should be changed at the start of a new version, VersionZeroYear should be the year
+    before the start of the project. When updating the version, also update MIEngine\metadata.json.-->
     <MajorVersion>14</MajorVersion>
     <MinorVersion>0</MinorVersion>
     <VersionZeroYear>2013</VersionZeroYear>

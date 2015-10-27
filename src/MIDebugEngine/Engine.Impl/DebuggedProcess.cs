@@ -189,7 +189,14 @@ namespace Microsoft.MIDebugEngine
 
                 if (results.Results.Contains("exit-code"))
                 {
-                    processExitCode = results.Results.FindUint("exit-code");
+                    // GDB sometimes returns exit codes, which don't fit into uint, like "030000000472".
+                    // And we can't throw from here, because it crashes VS.
+                    // Full exit code will still usually be reported in the Output window,
+                    // but here let's return "uint.MaxValue" just to indicate that something went wrong.
+                    if (!uint.TryParse(results.Results.FindString("exit-code"), out processExitCode))
+                    {
+                        processExitCode = uint.MaxValue;
+                    }
                 }
 
                 // quit MI Debugger
