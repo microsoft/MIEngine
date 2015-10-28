@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\build\all_projects.settings.targets" />
   <PropertyGroup>
@@ -11,18 +11,14 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug.Lab|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release.Lab|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug-PortablePDB|AnyCPU'" />
 
   <ItemGroup>
     <GenerateAssembly Include="$(ILDir)*.il">
       <Visible>false</Visible>
     </GenerateAssembly>
   </ItemGroup>
-
-  <Target Name="GenerateAssemblies"
-        Condition="'@(GenerateAssembly)' != ''"
-        Inputs="@(GenerateAssembly)"
-        Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')"
-        AfterTargets="Build">
+  <Target Name="GenerateAssemblies" Condition="'@(GenerateAssembly)' != ''" Inputs="@(GenerateAssembly)" Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')" AfterTargets="Build">
     <PropertyGroup>
       <IlAsmCommand>"$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe"</IlAsmCommand>
       <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
@@ -30,20 +26,17 @@
     <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
     <Exec Command="$(IlAsmCommand) $(IlAsmFlags) /out=&quot;$(GeneratedAssembliesDir)%(FileName).dll&quot; @(GenerateAssembly->'&quot;%(Identity)&quot;')" />
   </Target>
-  
   <Target Name="Build">
     <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; -MSBuildVersion 14 &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot;" />
   </Target>
-
   <Target Name="Clean">
     <RemoveDir Directories="$(GeneratedAssembliesDir)" />
   </Target>
-
   <!--Empty targets to make msbuild happy-->
-  <Target Name="GetNativeManifest"/>
-  <Target Name="GetCopyToOutputDirectoryItems"/>
-  <Target Name="BuiltProjectOutputGroupDependencies"/>
-  <Target Name="BuiltProjectOutputGroup"/>
-  <Target Name="SatelliteDllsProjectOutputGroup"/>
-  <Target Name="DebugSymbolsProjectOutputGroup"/>
+  <Target Name="GetNativeManifest" />
+  <Target Name="GetCopyToOutputDirectoryItems" />
+  <Target Name="BuiltProjectOutputGroupDependencies" />
+  <Target Name="BuiltProjectOutputGroup" />
+  <Target Name="SatelliteDllsProjectOutputGroup" />
+  <Target Name="DebugSymbolsProjectOutputGroup" />
 </Project>

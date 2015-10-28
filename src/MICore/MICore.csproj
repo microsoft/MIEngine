@@ -54,6 +54,17 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-PortablePDB|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="LaunchOptions.xsd" />
     <None Include="project.json" />
@@ -67,10 +78,10 @@
     <Compile Include="InvalidLaunchOptionsException.cs" />
     <Compile Include="LaunchCommand.cs" />
     <Compile Include="LaunchOptions.cs" />
-     <Compile Include="LaunchOptions.xsd.types.desginer.cs">
-       <AutoGen>True</AutoGen>
-       <DependentUpon>LaunchOptions.xsd</DependentUpon>
-     </Compile>
+    <Compile Include="LaunchOptions.xsd.types.desginer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>LaunchOptions.xsd</DependentUpon>
+    </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="MICommandFactory.cs" />
     <Compile Include="MICoreResources.Designer.cs">
@@ -131,7 +142,6 @@
     <!--Update the checked in types designer file if it is out of date-->
     <Exec Command="ValidateDesignerFile.cmd LaunchOptions.xsd.types.desginer.cs $(IntermediateOutputPath)LaunchOptions.xsd.types.desginer-candidate.cs &quot;$(IntermediateOutputPath)&quot;" />
   </Target>
-
   <!--This target is used to generate an XML serializers assembly for the types in LaunchOptions.xsd. We can't embed these types
   into MICore as CoreCLR doesn't expose the types needed to make that code work.-->
   <Target Name="GenerateXmlSerializersAssembly" AfterTargets="Compile" Inputs="LaunchOptions.xsd.types.desginer.cs;$(AssemblyOriginatorKeyFile)" Outputs="$(IntermediateOutputPath)sgen\$(AssemblyName).XmlSerializers.dll">
@@ -143,14 +153,13 @@
     <Error Condition="'$(MSBuildBinPath)'==''" Text="MSBuildBinPath msbuild property is undefined" />
     <Error Condition="!Exists('$(SDK40ToolsPath)sgen.exe')" Text="sgen.exe does not exist in the SDK40ToolsPath ($(SDK40ToolsPath)xsd.exe)." />
     <Error Condition="!Exists('$(MSBuildBinPath)\csc.exe')" Text="csc.exe does not exist in MSBuildBinPath ($(MSBuildBinPath))" />
-    <RemoveDir Condition="Exists('$(IntermediateOutputPath)sgen')" Directories="$(IntermediateOutputPath)sgen"/>
-    <MakeDir Directories="$(IntermediateOutputPath)sgen"/>
+    <RemoveDir Condition="Exists('$(IntermediateOutputPath)sgen')" Directories="$(IntermediateOutputPath)sgen" />
+    <MakeDir Directories="$(IntermediateOutputPath)sgen" />
     <!--Compile the types file into an assembly that we can use as input to sgen. We don't want to pass our real assembly as we have some things that sgen doesn't like.-->
     <Exec Command="&quot;$(MSBuildBinPath)\csc.exe&quot; LaunchOptions.xsd.types.desginer.cs $(GeneratedAssemblyInfoFile) /out:$(IntermediateOutputPath)sgen\$(AssemblyName).dll /target:library /noconfig $(SereializationSigningCompilerOptions) /r:$(MSBuildFrameworkToolsPath)\System.dll /r:$(MSBuildFrameworkToolsPath)\System.XML.dll" />
     <!--Now generate the serialization assembly-->
-    <Exec Command="&quot;$(SDK40ToolsPath)sgen.exe&quot; $(IntermediateOutputPath)sgen\$(AssemblyName).dll /force /compiler:&quot;$(SereializationSigningCompilerOptions)&quot; /keep"/>
+    <Exec Command="&quot;$(SDK40ToolsPath)sgen.exe&quot; $(IntermediateOutputPath)sgen\$(AssemblyName).dll /force /compiler:&quot;$(SereializationSigningCompilerOptions)&quot; /keep" />
   </Target>
-  
   <!--To get the seralization assembly copied to the vsix, and also to the output directory, we have this target
   which adds the XmlSerializers as if it was a source item in our project with a 'CopyToOutputDirectory' child
   node. See the 'GetCopyToOutputDirectoryItems' target in C:\Program Files (x86)\MSBuild\14.0\Bin\Microsoft.Common.CurrentVersion.targets
