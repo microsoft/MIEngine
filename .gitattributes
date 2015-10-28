@@ -7,3 +7,6 @@
 # Treat pkgdef files as text
 ###############################################################################
 *.pkgdef text
+
+# Use unix line endings on shell scripts so that they can be run on unix
+*.sh text eol=lf
