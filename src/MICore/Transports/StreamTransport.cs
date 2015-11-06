@@ -74,7 +74,7 @@ namespace MICore
         {
             try
             {
-                _callback.OnDebuggerProcessExit();
+                _callback.OnDebuggerProcessExit(null);
             }
             catch
             {

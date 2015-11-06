@@ -121,7 +121,7 @@
     <value>Required attribute '{0}' is missing or has an invalid value.</value>
   </data>
   <data name="Error_CorruptingException" xml:space="preserve">
-    <value>Internal error in the GDB engine. Exception of type '{0}' was thrown.
+    <value>Internal error in MIEngine. Exception of type '{0}' was thrown.
 
 {1}</value>
   </data>
@@ -134,7 +134,7 @@
 {1}</value>
   </data>
   <data name="Error_ExceptionInOperation" xml:space="preserve">
-    <value>Exception while processing GDB operation. {0}. If the problem continues restart debugging.</value>
+    <value>Exception while processing MIEngine operation. {0}. If the problem continues restart debugging.</value>
   </data>
   <data name="Error_ExceptionProcessingModules" xml:space="preserve">
     <value>An error occurred while processing modules from the target process.
@@ -156,14 +156,19 @@ Error: {1}</value>
   <data name="Error_LauncherNotFound" xml:space="preserve">
     <value>Device App Launcher {0} could not be found.</value>
   </data>
-  <data name="Error_MIDebuggerExited" xml:space="preserve">
-    <value>GDB exited unexpectedly. Debugging will now abort.</value>
+  <data name="Error_MIDebuggerExited_UnknownCode" xml:space="preserve">
+    <value>{0} exited unexpectedly. Debugging will now abort.</value>
+    <comment>{0} is the name of the debugger</comment>
+  </data>
+  <data name="Error_MIDebuggerExited_WithCode" xml:space="preserve">
+    <value>{0} exited unexpectedly with exit code {1}. Debugging will now abort.</value>
+    <comment>{0} is the name of the debugger</comment>
   </data>
   <data name="Error_MissingAttribute" xml:space="preserve">
     <value>Required attribute '{0}' is missing.</value>
   </data>
   <data name="Error_NoMIDebuggerProcess" xml:space="preserve">
-    <value>Unable to execute GDB command. There is no GDB process.</value>
+    <value>Unable to execute command. The MIEngine is not currently debugging any process.</value>
   </data>
   <data name="Error_ProcessMustBeStopped" xml:space="preserve">
     <value>Commands are only accepted when the process is stopped.</value>
@@ -184,7 +189,8 @@ Error: {1}</value>
     <value>Unable to start debugging. {0}</value>
   </data>
   <data name="Error_UnexpectedMIOutput" xml:space="preserve">
-    <value>Unexpected GDB output from command "{0}".</value>
+    <value>Unexpected {0} output from command "{1}".</value>
+    <comment>{0} is the name of the debugger</comment>
   </data>
   <data name="Error_UnknownTargetArchitecture" xml:space="preserve">
     <value>Unknown or unsupported target architecture '{0}'.</value>

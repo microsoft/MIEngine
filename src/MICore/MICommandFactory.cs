@@ -345,7 +345,7 @@ namespace MICore
             return results.FindString("path_expr");
         }
 
-        public async Task Terminate()
+        public virtual async Task Terminate()
         {
             string command = "-exec-abort";
             await _debugger.CmdAsync(command, ResultClass.None);
@@ -880,6 +880,12 @@ namespace MICore
                     state = ExceptionBreakpointState.None;
                     break;
             }
+        }
+
+        override public async Task Terminate()
+        {
+            string command = "-exec-abort";
+            await _debugger.CmdAsync(command, ResultClass.done);
         }
     }
 }

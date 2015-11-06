@@ -342,26 +342,15 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_engineCallback != null);
             Debug.Assert(_debuggedProcess != null);
 
-            try
-            {
-                AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
+            AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
 
-                if (EngineUtils.ProcIdEquals(processId, _debuggedProcess.Id))
-                {
-                    return Constants.S_OK;
-                }
-                else
-                {
-                    return Constants.S_FALSE;
-                }
-            }
-            catch (MIException e)
+            if (EngineUtils.ProcIdEquals(processId, _debuggedProcess.Id))
             {
-                return e.HResult;
+                return Constants.S_OK;
             }
-            catch (Exception e)
+            else
             {
-                return EngineUtils.UnexpectedException(e);
+                return Constants.S_FALSE;
             }
         }
 
@@ -516,27 +505,23 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_engineCallback != null);
             Debug.Assert(_debuggedProcess != null);
 
+            AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
+            if (!EngineUtils.ProcIdEquals(processId, _debuggedProcess.Id))
+            {
+                return Constants.S_FALSE;
+            }
+
             try
             {
-                AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
-                if (!EngineUtils.ProcIdEquals(processId, _debuggedProcess.Id))
-                {
-                    return Constants.S_FALSE;
-                }
-
                 _pollThread.RunOperation(() => _debuggedProcess.CmdTerminate());
                 _debuggedProcess.Terminate();
+            }
+            catch (ObjectDisposedException)
+            {
+                // if we have already shutdown, ignore the failure
+            }
 
-                return Constants.S_OK;
-            }
-            catch (MIException e)
-            {
-                return e.HResult;
-            }
-            catch (Exception e)
-            {
-                return EngineUtils.UnexpectedException(e);
-            }
+            return Constants.S_OK;
         }
 
         #endregion

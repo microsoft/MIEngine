@@ -176,14 +176,13 @@ namespace MICore
                 }
                 catch (InvalidOperationException)
                 {
-                    exitCode = "Unknown";
                 }
-                this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "\"{0}\" exited with code {1}.", _process.StartInfo.FileName, exitCode));
+                this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "\"{0}\" exited with code {1}.", _process.StartInfo.FileName, exitCode ?? "???"));
 
 
                 try
                 {
-                    this.Callback.OnDebuggerProcessExit();
+                    this.Callback.OnDebuggerProcessExit(exitCode);
                 }
                 catch
                 {

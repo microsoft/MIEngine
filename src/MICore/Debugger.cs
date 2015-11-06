@@ -27,7 +27,7 @@ namespace MICore
         public event EventHandler RunModeEvent;
         public event EventHandler ProcessExitEvent;
         public event EventHandler DebuggerExitEvent;
-        public event EventHandler DebuggerAbortedEvent;
+        public event EventHandler<string> DebuggerAbortedEvent;
         public event EventHandler<string> OutputStringEvent;
         public event EventHandler EvaluationEvent;
         public event EventHandler ErrorEvent;
@@ -219,7 +219,7 @@ namespace MICore
             }
             else if (mode == "exit")
             {
-                OnDebuggerProcessExit();
+                OnDebuggerProcessExit(null);
             }
             else if (mode.StartsWith("done,bkpt=", StringComparison.Ordinal))
             {
@@ -602,7 +602,7 @@ namespace MICore
             }
         }
 
-        public void OnDebuggerProcessExit()
+        public void OnDebuggerProcessExit(/*OPTIONAL*/ string exitCode)
         {
             // GDB has exited. Cleanup. Only let one thread perform the cleanup
             if (Interlocked.CompareExchange(ref _exiting, 1, 0) == 0)
@@ -627,7 +627,7 @@ namespace MICore
                 {
                     if (DebuggerAbortedEvent != null)
                     {
-                        DebuggerAbortedEvent(this, null);
+                        DebuggerAbortedEvent(this, exitCode);
                     }
                 }
                 else
@@ -714,7 +714,7 @@ namespace MICore
                 StartTime = DateTime.Now;
             }
 
-            internal void OnComplete(Results results)
+            internal void OnComplete(Results results, MICommandFactory commandFactory)
             {
                 if (_expectedResultClass != ResultClass.None && _expectedResultClass != results.ResultClass)
                 {
@@ -724,7 +724,7 @@ namespace MICore
                         miError = results.FindString("msg");
                     }
 
-                    _completionSource.SetException(new UnexpectedMIResultException(this.Command, miError));
+                    _completionSource.SetException(new UnexpectedMIResultException(commandFactory.Name, this.Command, miError));
                 }
                 else
                 {
@@ -785,7 +785,7 @@ namespace MICore
                         {
                             Results results = MIResults.ParseCommandOutput(noprefix);
                             Logger.WriteLine(id + ": elapsed time " + (int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds);
-                            waitingOperation.OnComplete(results);
+                            waitingOperation.OnComplete(results, this.MICommandFactory);
                             return;
                         }
                     }
