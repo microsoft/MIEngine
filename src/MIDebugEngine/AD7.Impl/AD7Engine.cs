@@ -518,7 +518,7 @@ namespace Microsoft.MIDebugEngine
             }
             catch (ObjectDisposedException)
             {
-                // if we have already shutdown, ignore the failure
+                // Ignore failures caused by the connection already being dead.
             }
 
             return Constants.S_OK;
