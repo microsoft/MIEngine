@@ -72,7 +72,14 @@ namespace MICore
         {
             if (_writer != null)
             {
-                Echo("logout");
+                try
+                {
+                    Echo("logout");
+                }
+                catch (Exception)
+                {
+                    // Ignore errors if logout couldn't be written
+                }
             }
 
             base.Close();
@@ -98,7 +105,7 @@ namespace MICore
 
             try
             {
-                if (_process.WaitForExit(50))
+                if (_process.WaitForExit(1000))
                 {
                     // If the pipe process has already exited, or is just about to exit, we want to send the abort event from OnProcessExit
                     // instead of from here since that will have access to stderr
