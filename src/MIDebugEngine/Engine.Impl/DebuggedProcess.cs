@@ -208,7 +208,7 @@ namespace Microsoft.MIDebugEngine
                 Dispose();
             };
 
-            DebuggerAbortedEvent += delegate (object o, EventArgs args)
+            DebuggerAbortedEvent += delegate (object o, /*OPTIONAL*/ string debuggerExitCode)
             {
                 // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
 
@@ -221,7 +221,13 @@ namespace Microsoft.MIDebugEngine
                             return;
                         }
 
-                        _callback.OnError(MICoreResources.Error_MIDebuggerExited);
+                        string message;
+                        if (string.IsNullOrEmpty(debuggerExitCode))
+                            message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_UnknownCode, MICommandFactory.Name);
+                        else
+                            message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_WithCode, MICommandFactory.Name, debuggerExitCode);
+
+                        _callback.OnError(message);
                         _callback.OnProcessExit(uint.MaxValue);
 
                         Dispose();
@@ -372,7 +378,7 @@ namespace Microsoft.MIDebugEngine
                         if (results.ResultClass == ResultClass.error && !command.IgnoreFailures)
                         {
                             string miError = results.FindString("msg");
-                            throw new UnexpectedMIResultException(command.CommandText, miError);
+                            throw new UnexpectedMIResultException(MICommandFactory.Name, command.CommandText, miError);
                         }
                     }
                     else
