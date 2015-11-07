@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
@@ -138,7 +139,8 @@ namespace Microsoft.MIDebugEngine
                     {
                         symPath = file;
                     }
-                    ulong loadAddr = results.Results.FindAddr("loaded_addr");
+                    ulong loadAddr = results.Results.FindAddr("loaded_addr");                    
+
                     uint size = results.Results.FindUint("size");
                     if (String.IsNullOrEmpty(id))
                     {
@@ -159,7 +161,16 @@ namespace Microsoft.MIDebugEngine
 
             if (_launchOptions is LocalLaunchOptions)
             {
-                this.Init(new MICore.LocalTransport(), _launchOptions);
+                // CONSIDER: add new flag and only do this if new terminal is true. Note that setting this to false on linux will cause a deadlock
+                // during debuggee launch
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && _launchOptions.DebuggerMIMode == MIMode.Gdb)
+                {
+                    this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
+                }
+                else
+                {
+                    this.Init(new MICore.LocalTransport(), _launchOptions);
+                }
             }
             else if (_launchOptions is PipeLaunchOptions)
             {
@@ -437,7 +448,6 @@ namespace Microsoft.MIDebugEngine
 
                 string exe = EscapePath(_launchOptions.ExePath);
                 commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath)));
-
                 commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
 
                 if (_launchOptions is LocalLaunchOptions)
@@ -645,7 +655,6 @@ namespace Microsoft.MIDebugEngine
         {
             // NOTE: The version of GDB that comes in the Android SDK doesn't support -file-list-shared-library
             // so we need to use the console command
-
             //string results = await MICommandFactory.GetSharedLibrary();
             string results = await ConsoleCmdAsync("info sharedlibrary");
 
@@ -655,7 +664,9 @@ namespace Microsoft.MIDebugEngine
                 {
                     string line = stringReader.ReadLine();
                     if (line == null)
+                    {
                         break;
+                    }
 
                     ulong startAddr = 0;
                     ulong endAddr = 0;
@@ -703,6 +714,7 @@ namespace Microsoft.MIDebugEngine
                         {
                             _moduleList.Add(module);
                         }
+
                         _callback.OnModuleLoad(module);
                     }
                 }

@@ -84,6 +84,7 @@
     <Compile Include="MIResults.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Transports\ITransport.cs" />
+    <Compile Include="Transports\LocalLinuxTransport.cs" />
     <Compile Include="Transports\LocalTransport.cs" />
     <Compile Include="Transports\MockTransport.cs" />
     <Compile Include="Transports\PipeTransport.cs" />

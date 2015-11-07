@@ -50,7 +50,7 @@ namespace MICore
             switch (mode)
             {
                 case MIMode.Gdb:
-                    commandFactory = new GdbMICommandyFactory();
+                    commandFactory = new GdbMICommandFactory();
                     break;
                 case MIMode.Lldb:
                     commandFactory = new LlldbMICommandFactory();
@@ -152,8 +152,8 @@ namespace MICore
         public virtual async Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
             string cmd = string.Format(@"-stack-list-arguments {0} {1} {2}", (int)printValues, lowFrameLevel, hiFrameLevel);
-
             Results argumentsResults = await ThreadCmdAsync(cmd, ResultClass.done, threadId);
+
             return argumentsResults.Find<ListValue>("stack-args").IsEmpty()
                 ? new TupleValue[0]
                 : argumentsResults.Find<ResultListValue>("stack-args").FindAll<TupleValue>("frame");
@@ -347,8 +347,19 @@ namespace MICore
 
         public async Task Terminate()
         {
-            string command = "-exec-abort";
-            await _debugger.CmdAsync(command, ResultClass.None);
+            if (this.Mode != MIMode.Gdb)
+            {
+                string command = "-exec-abort";
+                await _debugger.CmdAsync(command, ResultClass.None);
+            }
+            else
+            {
+                // Although the mi documentation states that the correct command to terminate is -exec-abort
+                // that isn't actually supported by gdb. 
+                string command = "kill";
+                await _debugger.CmdAsync(command, ResultClass.None);
+            }
+            
         }
 
         #endregion
@@ -503,7 +514,7 @@ namespace MICore
         #endregion
     }
 
-    internal class GdbMICommandyFactory : MICommandFactory
+    internal class GdbMICommandFactory : MICommandFactory
     {
         private int _currentThreadId = 0;
         private uint _currentFrameLevel = 0;
