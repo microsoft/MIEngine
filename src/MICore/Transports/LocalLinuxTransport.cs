@@ -37,6 +37,8 @@ namespace MICore
         {
             LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
 
+            // TODO: Need to deal with attach?
+
             string debuggeeDir = System.IO.Path.GetDirectoryName(options.ExePath);
 
             string gdbStdInName = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
