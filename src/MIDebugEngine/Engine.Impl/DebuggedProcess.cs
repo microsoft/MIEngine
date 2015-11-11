@@ -161,10 +161,14 @@ namespace Microsoft.MIDebugEngine
 
             if (_launchOptions is LocalLaunchOptions)
             {
-                // CONSIDER: add new flag and only do this if new terminal is true. Note that setting this to false on linux will cause a deadlock
-                // during debuggee launch
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && _launchOptions.DebuggerMIMode == MIMode.Gdb)
+                LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && 
+                    _launchOptions.DebuggerMIMode == MIMode.Gdb &&
+                    String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress))
                 {
+                    // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
+                    // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
+                    // during debuggee launch
                     this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
                 }
                 else
@@ -368,7 +372,6 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 await this.MICommandFactory.EnableTargetAsyncOption();
-
                 List<LaunchCommand> commands = GetInitializeCommands();
 
                 total = commands.Count();
