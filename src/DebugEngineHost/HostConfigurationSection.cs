@@ -10,10 +10,6 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DebugEngineHost
 {
-    /// <summary>
-    /// Abstraction over a named section within the HostConfigurationStore. This provides the ability
-    /// to enumerate values within the section.
-    /// </summary>
     public sealed class HostConfigurationSection : IDisposable
     {
         private readonly RegistryKey _key;
