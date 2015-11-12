@@ -71,6 +71,14 @@ namespace MICore
                     gdbStdOutName
                     );
 
+            if (localOptions.Environment != null)
+            {
+                foreach (EnvironmentEntry entry in localOptions.Environment)
+                {
+                    terminalProcess.StartInfo.Environment.Add(entry.Name, entry.Value);
+                }
+            }
+
             terminalProcess.Start();
 
             // The in/out names are confusing in this case as they are relative to gdb.

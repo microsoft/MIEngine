@@ -424,7 +424,7 @@ namespace AndroidDebugLauncher
                 LaunchOptions launchOptions = null;
                 if (_targetEngine == TargetEngine.Native)
                 {
-                    launchOptions = new LocalLaunchOptions(_installPaths.GDBPath, string.Format(CultureInfo.InvariantCulture, ":{0}", gdbPortNumber));
+                    launchOptions = new LocalLaunchOptions(_installPaths.GDBPath, string.Format(CultureInfo.InvariantCulture, ":{0}", gdbPortNumber), null);
                     launchOptions.ExePath = exePath;
                 }
                 else
