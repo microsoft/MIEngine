@@ -118,7 +118,7 @@ namespace MICoreUnitTests
             {
                 var serializer = new XmlSerializer(typeof(MICore.Xml.LaunchOptions.AndroidLaunchOptions));
                 var xmlOptions = (MICore.Xml.LaunchOptions.AndroidLaunchOptions)MICore.LaunchOptions.Deserialize(serializer, reader);
-                return new AndroidLaunchOptions(xmlOptions);
+                return new AndroidLaunchOptions(xmlOptions, MICore.TargetEngine.Native);
             }
         }
 

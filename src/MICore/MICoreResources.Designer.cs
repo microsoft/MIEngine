@@ -70,7 +70,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Internal error in the GDB engine. Exception of type &apos;{0}&apos; was thrown.
+        ///   Looks up a localized string similar to Internal error in MIEngine. Exception of type &apos;{0}&apos; was thrown.
         ///
         ///{1}.
         /// </summary>
@@ -101,7 +101,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception while processing GDB operation. {0}. If the problem continues restart debugging..
+        ///   Looks up a localized string similar to Exception while processing MIEngine operation. {0}. If the problem continues restart debugging..
         /// </summary>
         public static string Error_ExceptionInOperation {
             get {
@@ -166,11 +166,20 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to GDB exited unexpectedly. Debugging will now abort..
+        ///   Looks up a localized string similar to {0} exited unexpectedly. Debugging will now abort..
         /// </summary>
-        public static string Error_MIDebuggerExited {
+        public static string Error_MIDebuggerExited_UnknownCode {
             get {
-                return ResourceManager.GetString("Error_MIDebuggerExited", resourceCulture);
+                return ResourceManager.GetString("Error_MIDebuggerExited_UnknownCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} exited unexpectedly with exit code {1}. Debugging will now abort..
+        /// </summary>
+        public static string Error_MIDebuggerExited_WithCode {
+            get {
+                return ResourceManager.GetString("Error_MIDebuggerExited_WithCode", resourceCulture);
             }
         }
         
@@ -184,7 +193,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to execute GDB command. There is no GDB process..
+        ///   Looks up a localized string similar to Unable to execute command. The MIEngine is not currently debugging any process..
         /// </summary>
         public static string Error_NoMIDebuggerProcess {
             get {
@@ -229,6 +238,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal error. Failed to load serializer for type &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_UnableToLoadSerializer {
+            get {
+                return ResourceManager.GetString("Error_UnableToLoadSerializer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to start debugging. {0}.
         /// </summary>
         public static string Error_UnableToStartDebugging {
@@ -238,7 +256,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unexpected GDB output from command &quot;{0}&quot;..
+        ///   Looks up a localized string similar to Unexpected {0} output from command &quot;{1}&quot;..
         /// </summary>
         public static string Error_UnexpectedMIOutput {
             get {

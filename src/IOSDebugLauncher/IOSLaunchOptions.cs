@@ -41,6 +41,7 @@ namespace IOSDebugLauncher
             this.TargetArchitecture = LaunchOptions.ConvertTargetArchitectureAttribute(xmlOptions.TargetArchitecture);
             this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
             this.Secure = (xmlOptions.Secure == MICore.Xml.LaunchOptions.IOSLaunchOptionsSecure.True);
+            this.DeviceUdid = xmlOptions.DeviceUdid ?? string.Empty;
         }
 
         public string ExePath { get; private set; }
@@ -48,6 +49,7 @@ namespace IOSDebugLauncher
         public string PackageId { get; private set; }
         public int VcRemotePort { get; private set; }
         public IOSDebugTarget IOSDebugTarget { get; private set; }
+        public string DeviceUdid { get; private set; }
         public TargetArchitecture TargetArchitecture { get; private set; }
         public string AdditionalSOLibSearchPath { get; private set; }
         public bool Secure { get; private set; }

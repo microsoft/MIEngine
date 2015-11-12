@@ -15,7 +15,7 @@ namespace AndroidDebugLauncher
 {
     internal class AndroidLaunchOptions
     {
-        public AndroidLaunchOptions(MICore.Xml.LaunchOptions.AndroidLaunchOptions xmlOptions)
+        public AndroidLaunchOptions(MICore.Xml.LaunchOptions.AndroidLaunchOptions xmlOptions, TargetEngine targetEngine)
         {
             if (xmlOptions == null)
             {
@@ -32,7 +32,23 @@ namespace AndroidDebugLauncher
             this.SDKRoot = GetOptionalDirectoryAttribute(xmlOptions.SDKRoot, "SDKRoot");
             this.NDKRoot = GetOptionalDirectoryAttribute(xmlOptions.NDKRoot, "NDKRoot");
             this.TargetArchitecture = LaunchOptions.ConvertTargetArchitectureAttribute(xmlOptions.TargetArchitecture);
-            this.IntermediateDirectory = RequireValidDirectoryAttribute(xmlOptions.IntermediateDirectory, "IntermediateDirectory");
+
+            if (targetEngine == TargetEngine.Native)
+                this.IntermediateDirectory = RequireValidDirectoryAttribute(xmlOptions.IntermediateDirectory, "IntermediateDirectory");
+            else
+                this.IntermediateDirectory = GetOptionalDirectoryAttribute(xmlOptions.IntermediateDirectory, "IntermediateDirectory");
+
+            if (targetEngine == TargetEngine.Java)
+            {
+                this.JVMHost = LaunchOptions.RequireAttribute(xmlOptions.JVMHost, "JVMHost");
+                this.JVMPort = xmlOptions.JVMPort;
+                this.SourceRoots = LaunchOptions.RequireAttribute(xmlOptions.SourceRoots, "SourceRoots").Split(new char[] { ';' });
+                foreach (string root in SourceRoots)
+                {
+                    EnsureValidDirectory(root, "SourceRoots");
+                }
+            }
+
             this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
             this.DeviceId = LaunchOptions.RequireAttribute(xmlOptions.DeviceId, "DeviceId");
             this.LogcatServiceId = GetLogcatServiceIdAttribute(xmlOptions.LogcatServiceId);
@@ -156,5 +172,11 @@ namespace AndroidDebugLauncher
         /// [Optional] Set to true if we are performing an attach instead of a launch. Default is false.
         /// </summary>
         public bool IsAttach { get; private set; }
+
+        public string JVMHost { get; private set; }
+
+        public int JVMPort { get; private set; }
+
+        public string[] SourceRoots { get; private set; }
     }
 }

@@ -7,16 +7,11 @@ namespace MICore.Xml.LaunchOptions
 
 
     /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable = false)]
-    public partial class AndroidLaunchOptions
-    {
-        public AndroidLaunchOptions()
-        {
-            this.Attach = false;
-        }
-
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
+    public partial class AndroidLaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Package;
@@ -52,6 +47,21 @@ namespace MICore.Xml.LaunchOptions
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string SourceRoots;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(65534)]
+        public int JVMPort;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("localhost")]
+        public string JVMHost;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public TargetArchitecture TargetArchitecture;
 
         /// <remarks/>
@@ -65,12 +75,20 @@ namespace MICore.Xml.LaunchOptions
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool MIModeSpecified;
+        
+        public AndroidLaunchOptions() {
+            this.Attach = false;
+            this.SourceRoots = "";
+            this.JVMPort = 65534;
+            this.JVMHost = "localhost";
+        }
     }
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public enum TargetArchitecture
-    {
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public enum TargetArchitecture {
+    
         /// <remarks/>
         x86,
 
@@ -115,9 +133,10 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public enum MIMode
-    {
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public enum MIMode {
+
         /// <remarks/>
         gdb,
 
@@ -129,10 +148,11 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public partial class Command
-    {
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public partial class Command {
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public bool IgnoreFailures;
@@ -151,10 +171,11 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public partial class BaseLaunchOptions
-    {
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public partial class BaseLaunchOptions {
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable = false)]
         public Command[] SetupCommands;
@@ -204,9 +225,10 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public enum BaseLaunchOptionsLaunchCompleteCommand
-    {
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public enum BaseLaunchOptionsLaunchCompleteCommand {
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlEnumAttribute("exec-run")]
         execrun,
@@ -220,11 +242,12 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable = false)]
-    public partial class IOSLaunchOptions
-    {
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
+    public partial class IOSLaunchOptions {
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string RemoteMachineName;
@@ -241,6 +264,10 @@ namespace MICore.Xml.LaunchOptions
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public IOSLaunchOptionsIOSDebugTarget IOSDebugTarget;
 
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string DeviceUdid;
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public IOSLaunchOptionsSecure Secure;
@@ -263,9 +290,10 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public enum IOSLaunchOptionsIOSDebugTarget
-    {
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public enum IOSLaunchOptionsIOSDebugTarget {
+        
         /// <remarks/>
         Device,
 
@@ -274,9 +302,10 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public enum IOSLaunchOptionsSecure
-    {
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public enum IOSLaunchOptionsSecure {
+        
         /// <remarks/>
         True,
 
@@ -285,11 +314,12 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable = false)]
-    public partial class LocalLaunchOptions : BaseLaunchOptions
-    {
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
+    public partial class LocalLaunchOptions : BaseLaunchOptions {
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string MIDebuggerPath;
@@ -298,13 +328,14 @@ namespace MICore.Xml.LaunchOptions
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string MIDebuggerServerAddress;
     }
-
+    
     /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable = false)]
-    public partial class PipeLaunchOptions : BaseLaunchOptions
-    {
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
+    public partial class PipeLaunchOptions : BaseLaunchOptions {
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string PipePath;
@@ -315,11 +346,12 @@ namespace MICore.Xml.LaunchOptions
     }
 
     /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable = false)]
-    public partial class TcpLaunchOptions : BaseLaunchOptions
-    {
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
+    public partial class TcpLaunchOptions : BaseLaunchOptions {
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Hostname;

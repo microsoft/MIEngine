@@ -97,6 +97,15 @@ namespace IOSDebugLauncher {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot launch iOS debugging for target engine &apos;{0}&apos;..
+        /// </summary>
+        internal static string Error_BadTargetEngine {
+            get {
+                return ResourceManager.GetString("Error_BadTargetEngine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to reach the vcremote server. Make sure that the vcremote server is running and is configured with the same security setting as Visual Studio..
         /// </summary>
         internal static string Error_UnableToReachServer {

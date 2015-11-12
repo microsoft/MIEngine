@@ -29,7 +29,7 @@
           <xs:documentation>Full path to the root of the Android NDK.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="IntermediateDirectory" type="xs:string" use="required">
+      <xs:attribute name="IntermediateDirectory" type="xs:string" use="optional">
         <xs:annotation>
           <xs:documentation>Full path to the directory where files from the device/emulator will be downloaded to. This directory is added to the SO Lib search path automatically.</xs:documentation>
         </xs:annotation>
@@ -67,6 +67,12 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="SourceRoots" type="xs:string" use="optional" default="">
+      </xs:attribute>
+      <xs:attribute name="JVMPort" type="xs:int" use="optional" default="65534">
+      </xs:attribute>
+      <xs:attribute name="JVMHost" type="xs:string" use="optional" default="localhost">
+      </xs:attribute>
       <xs:attributeGroup ref="CommonAttributes"/>
     </xs:complexType>
   </xs:element>
@@ -102,6 +108,11 @@
             <xs:enumeration value="Simulator" />
           </xs:restriction>
         </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="DeviceUdid" type="xs:string" use="optional">
+        <xs:annotation>
+          <xs:documentation>The 40 digit UDID of the iOS device to be targeted in the case that IOSDebugTarget is set to "Device"</xs:documentation>
+        </xs:annotation>
       </xs:attribute>
       <xs:attribute name="Secure" use="required">
         <xs:simpleType>

@@ -21,3 +21,4 @@ packages/
 .vs/
 Microsoft.VisualStudio.Glass
 project.lock.json
+.DS_Store

@@ -6,16 +6,14 @@
   "dependencies": {
     "Microsoft.NETCore": "5.0.0",
     "Microsoft.NETCore.Portable.Compatibility": "1.0.0",
-    "System.Console": "4.0.0-beta-23409",
     "System.Diagnostics.Process": "4.0.0-beta-23225",
     "System.Net.Security": "4.0.0-beta-23225",
     "System.Net.Sockets": "4.1.0-beta-23225",
-    "System.Reflection.TypeExtensions": "4.0.1-beta-23409",
+    "System.Reflection.TypeExtensions": "4.0.0",
     "System.Security.Cryptography.X509Certificates": "4.0.0-beta-23225",
     "System.Threading.Thread": "4.0.0-beta-23225",
     "System.Xml.XmlSerializer": "4.0.11-beta-23225",
-    "System.Runtime.InteropServices.RuntimeInformation": "4.0.0-beta-23225",
-    "Newtonsoft.Json": "7.0.1"
+    "System.Runtime.InteropServices.RuntimeInformation": "4.0.0-beta-23225"
   },
   "frameworks": {
     "dotnet": {

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Xml;
 using System.Globalization;
 using System.Net.Security;
@@ -29,6 +30,13 @@ namespace MICore
         X64,
         Mips
     };
+
+    public enum TargetEngine
+    {
+        Unknown,
+        Native,
+        Java,
+    }
 
     public enum LaunchCompleteCommand
     {
@@ -167,6 +175,32 @@ namespace MICore
         }
     }
 
+    public sealed class JavaLaunchOptions : LaunchOptions
+    {
+        /// <summary>
+        /// Creates an instance of JavaLaunchOptions. This is used to send information to the Java Debugger.
+        /// </summary>
+        /// <param name="jvmHost">Java Virtual Machine host.</param>
+        /// <param name="jvmPort">Java Virtual Machine port.</param>
+        /// <param name="sourceRoots">Source roots.</param>
+        /// <param name="processName">Logical name of the process. Usually indicates the name of the activity.</param>
+        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots, string processName)
+        {
+            JVMHost = jvmHost;
+            JVMPort = jvmPort;
+            SourceRoots = sourceRoots;
+            ProcessName = processName;
+        }
+
+        public string JVMHost { get; private set; }
+
+        public int JVMPort { get; private set; }
+
+        public string[] SourceRoots { get; private set; }
+
+        public string ProcessName { get; private set; }
+    }
+
 
     /// <summary>
     /// Base launch options class
@@ -174,9 +208,9 @@ namespace MICore
     public abstract class LaunchOptions
     {
         private const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
-
+        private static Lazy<Assembly> s_serializationAssembly = new Lazy<Assembly>(LoadSerializationAssembly, LazyThreadSafetyMode.ExecutionAndPublication);
         private bool _initializationComplete;
-
+        
         /// <summary>
         /// [Optional] Launcher used to start the application on the device
         /// </summary>
@@ -329,7 +363,7 @@ namespace MICore
             }
         }
 
-        public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback)
+        public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
@@ -352,7 +386,7 @@ namespace MICore
                     {
                         case "LocalLaunchOptions":
                             {
-                                serializer = new XmlSerializer(typeof(Xml.LaunchOptions.LocalLaunchOptions));
+                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.LocalLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.LocalLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = LocalLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
@@ -360,7 +394,7 @@ namespace MICore
 
                         case "PipeLaunchOptions":
                             {
-                                serializer = new XmlSerializer(typeof(Xml.LaunchOptions.PipeLaunchOptions));
+                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.PipeLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.PipeLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = PipeLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
@@ -368,7 +402,7 @@ namespace MICore
 
                         case "TcpLaunchOptions":
                             {
-                                serializer = new XmlSerializer(typeof(Xml.LaunchOptions.TcpLaunchOptions));
+                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.TcpLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.TcpLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = TcpLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
@@ -376,7 +410,7 @@ namespace MICore
 
                         case "IOSLaunchOptions":
                             {
-                                serializer = new XmlSerializer(typeof(IOSLaunchOptions));
+                                serializer = GetXmlSerializer(typeof(IOSLaunchOptions));
                                 launcherXmlOptions = Deserialize(serializer, reader);
                                 clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
                             }
@@ -384,7 +418,7 @@ namespace MICore
 
                         case "AndroidLaunchOptions":
                             {
-                                serializer = new XmlSerializer(typeof(AndroidLaunchOptions));
+                                serializer = GetXmlSerializer(typeof(AndroidLaunchOptions));
                                 launcherXmlOptions = Deserialize(serializer, reader);
                                 clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
                             }
@@ -408,11 +442,14 @@ namespace MICore
 
             if (clsidLauncher != Guid.Empty)
             {
-                launchOptions = ExecuteLauncher(configStore, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback);
+                launchOptions = ExecuteLauncher(configStore, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine);
             }
 
-            if (launchOptions.ExePath == null)
-                launchOptions.ExePath = exePath;
+            if (targetEngine == TargetEngine.Native)
+            {
+                if (launchOptions.ExePath == null)
+                    launchOptions.ExePath = exePath;
+            }
 
             if (string.IsNullOrEmpty(launchOptions.ExeArguments))
                 launchOptions.ExeArguments = args;
@@ -618,7 +655,7 @@ namespace MICore
             return attributeValue;
         }
 
-        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback)
+        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
             var deviceAppLauncher = (IPlatformAppLauncher)HostLoader.VsCoCreateManagedObject(configStore, clsidLauncher);
             if (deviceAppLauncher == null)
@@ -633,7 +670,7 @@ namespace MICore
                 try
                 {
                     deviceAppLauncher.Initialize(configStore, eventCallback);
-                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions);
+                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException))
                 {
@@ -655,6 +692,45 @@ namespace MICore
                 }
             }
         }
+
+        private static XmlSerializer GetXmlSerializer(Type type)
+        {
+            Assembly serializationAssembly = s_serializationAssembly.Value;
+            if (serializationAssembly == null)
+            {
+                return new XmlSerializer(type);
+            }
+            else
+            {
+                // NOTE: You can look at MIEngine\src\MICore\obj\Debug\sgen\<random-temp-file-name>.cs to see the source code for this assembly.
+                Type serializerType = serializationAssembly.GetType("Microsoft.Xml.Serialization.GeneratedAssembly." + type.Name + "Serializer");
+                ConstructorInfo constructor = serializerType?.GetConstructor(new Type[0]);
+                if (constructor == null)
+                {
+                    throw new Exception(string.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_UnableToLoadSerializer, type.Name));
+                }
+
+                object serializer = constructor.Invoke(new object[0]);
+                return (XmlSerializer)serializer;
+            }
+        }
+
+        private static Assembly LoadSerializationAssembly()
+        {
+            // This code looks to see if we have sgen-created XmlSerializers assembly next to this dll, which will be true
+            // when the MIEngine is running in Visual Studio. If so, it loads it, so that we can get the performance advantages
+            // of a static XmlSerializers assembly. Otherwise we return null, and we will use a dynamic deserializer.
+
+            string thisModulePath = typeof(LaunchOptions).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
+            string thisModuleDir = Path.GetDirectoryName(thisModulePath);
+            string thisModuleName = Path.GetFileNameWithoutExtension(thisModulePath);
+            string serializerAssemblyPath = Path.Combine(thisModuleDir, thisModuleName + ".XmlSerializers.dll");
+            if (!File.Exists(serializerAssemblyPath))
+                return null;
+
+            return Assembly.Load(new AssemblyName(thisModuleName + ".XmlSerializers"));
+        }
+
 
         private void VerifyCanModifyProperty(string propertyName)
         {
@@ -720,7 +796,7 @@ namespace MICore
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
-        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions);
+        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
 
         /// <summary>
         /// Does whatever steps are necessary to setup for debugging. On Android this will include launching
