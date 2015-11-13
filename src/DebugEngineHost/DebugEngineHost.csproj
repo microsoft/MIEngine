@@ -116,6 +116,9 @@
     <Compile Include="HostLoader.cs" />
     <Compile Include="HostWaitLoop.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
