@@ -16,6 +16,7 @@ using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
 using Microsoft.DebugEngineHost;
+using System.Reflection;
 
 namespace Microsoft.MIDebugEngine.Natvis
 {
@@ -200,6 +201,8 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",
+            Justification = "Usage is secure -- XmlResolver property is set to 'null' in desktop CLR, and is always null in CoreCLR. But CodeAnalysis cannot understand the invocation since it happens through reflection.")]
         private bool LoadFile(string path)
         {
             try
@@ -214,6 +217,11 @@ namespace Microsoft.MIDebugEngine.Natvis
                 settings.IgnoreComments = true;
                 settings.IgnoreProcessingInstructions = true;
                 settings.IgnoreWhitespace = true;
+
+                // set XmlResolver via reflection, if it exists. This is required for desktop CLR, as otherwise the XML reader may
+                // attempt to hit untrusted external resources.
+                var xmlResolverProperty = settings.GetType().GetProperty("XmlResolver", BindingFlags.Public | BindingFlags.Instance);
+                xmlResolverProperty?.SetValue(settings, null);
 
                 using (var stream = new System.IO.FileStream(path, FileMode.Open, FileAccess.Read))
                 using (var reader = XmlReader.Create(stream, settings))
