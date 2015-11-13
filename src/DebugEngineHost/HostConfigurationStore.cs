@@ -30,7 +30,7 @@ namespace Microsoft.DebugEngineHost
             _configKey = Registry.LocalMachine.OpenSubKey(registryRoot);
             if (_configKey == null)
             {
-                throw new HostConfirigurationException(registryRoot);
+                throw new HostConfigurationException(registryRoot);
             }
         }
 
@@ -54,7 +54,7 @@ namespace Microsoft.DebugEngineHost
             RegistryKey categoryKey = _configKey.OpenSubKey(subKeyName);
             if (categoryKey == null)
             {
-                throw new HostConfirigurationException("$RegRoot$\\" + subKeyName);
+                throw new HostConfigurationException("$RegRoot$\\" + subKeyName);
             }
 
             categoryConfigSection = new HostConfigurationSection(categoryKey);
