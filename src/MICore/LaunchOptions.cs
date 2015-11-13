@@ -475,7 +475,8 @@ namespace MICore
             settings.IgnoreWhitespace = true;
             settings.NameTable = new NameTable();
 
-            // set XmlResolver via reflection, if it exists, to satisfy FxCop
+            // set XmlResolver via reflection, if it exists. This is required for desktop CLR, as otherwise the XML reader may
+            // attempt to hit untrusted external resources.
             var xmlResolverProperty = settings.GetType().GetProperty("XmlResolver", BindingFlags.Public | BindingFlags.Instance);
             xmlResolverProperty?.SetValue(settings, null);
 
