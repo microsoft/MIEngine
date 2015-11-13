@@ -35,7 +35,7 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Obtains a document position interface given the specified IntPtr of the document position.
         /// </summary>
-        /// <param name="documentPositionId">In VS, the IUknown pointer to QI for a document position. In VS Code,
+        /// <param name="documentPositionId">In VS, the IUnknown pointer to QI for a document position. In VS Code,
         /// the identifier for the document position</param>
         /// <returns>Document position object</returns>
         public static IDebugDocumentPosition2 GetDocumentPositionForIntPtr(IntPtr documentPositionId)

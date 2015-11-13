@@ -14,6 +14,9 @@ namespace Microsoft.DebugEngineHost
     /// </summary>
     public static class Host
     {
+        /// <summary>
+        /// Called by a debug engine to ensure that the main thread is initialized.
+        /// </summary>
         public static void EnsureMainThreadInitialized()
         {
             //This call is to initialize the global service provider while we are still on the main thread.
