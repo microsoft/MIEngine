@@ -464,6 +464,8 @@ namespace MICore
             return launchOptions;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.", 
+            Justification = "Usage is secure -- XmlResolver property is set to 'null' in desktop CLR, and is always null in CoreCLR. But CodeAnalysis cannot understand the invocation since it happens through reflection.")]
         public static XmlReader OpenXml(string content)
         {
             var settings = new XmlReaderSettings();
