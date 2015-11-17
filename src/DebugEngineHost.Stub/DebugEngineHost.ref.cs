@@ -236,6 +236,10 @@ namespace Microsoft.DebugEngineHost
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Natvis")]
     public static class HostNatvisProject
     {
+        /// <summary>
+        /// Delegate which is fired to process a natvis file.
+        /// </summary>
+        /// <param name="path"></param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Natvis")]
         public delegate void NatvisLoader(string path);
 

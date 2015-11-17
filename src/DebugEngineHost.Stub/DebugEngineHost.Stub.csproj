@@ -25,6 +25,7 @@
     <!--NOTE: This does NOT go to the same output directory as the rest of the MIEngine project as this is just the stub (contract) definition
     of DebugEngineHost, so we don't want to conflict with the real version. -->
     <OutputPath>bin\$(Configuration)</OutputPath>
+    <DocumentationFile>$(DropRootDir)\ReferenceAssemblies\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -74,8 +75,15 @@
     <Compile Include="DebugEngineHost.ref.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <PropertyGroup>
+    <DropSubDir>ReferenceAssemblies</DropSubDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
+  <Import Project="..\..\build\DropFiles.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

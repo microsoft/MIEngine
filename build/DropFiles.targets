@@ -1,0 +1,19 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <ItemGroup>
+    <FilesToSign Include="@(DropSignedFile)">
+      <Authenticode>Microsoft</Authenticode>
+      <StrongName>StrongName</StrongName>
+    </FilesToSign>
+  </ItemGroup>
+
+  <Target Name="DropFiles" AfterTargets="SignFiles;Build" Condition="'@(DropUnsignedFile);@(DropSignedFile)' != ''">
+    <PropertyGroup>
+      <DropDir>$(DropRootDir)</DropDir>
+      <DropDir Condition="'$(DropSubDir)'!=''">$(DropRootDir)\$(DropSubDir)</DropDir>
+    </PropertyGroup>
+    <MakeDir Condition="!Exists($(DropDir))" Directories="$(DropDir)" />
+    <Copy DestinationFolder="$(DropDir)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)" />
+  </Target>
+  
+</Project>

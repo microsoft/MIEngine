@@ -181,7 +181,6 @@ namespace MICore
         /// <param name="printValues"></param>
         /// <param name="threadId"></param>
         /// <param name="frameLevel"></param>
-        /// <param name="resultClass"></param>
         /// <returns>Returns an array of results for variables</returns>
         public async Task<ValueListValue> StackListVariables(PrintValues printValues, int threadId, uint frameLevel)
         {
