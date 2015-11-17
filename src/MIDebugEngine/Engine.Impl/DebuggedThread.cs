@@ -105,7 +105,7 @@ namespace Microsoft.MIDebugEngine
             {
                 _stackFrames[thread.Id] = stack;
                 _topContext[thread.Id] = (stack != null && stack.Count > 0) ? stack[0] : null;
-                return _stackFrames[thread.Id];
+                return (stack != null && stack.Count > thread.Id) ? _stackFrames[thread.Id] : null;
             }
         }
 

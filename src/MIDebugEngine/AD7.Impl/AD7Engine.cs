@@ -318,8 +318,31 @@ namespace Microsoft.MIDebugEngine
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
         int IDebugEngine2.SetMetric(string pszMetric, object varValue)
         {
-            // The sample engine does not need to understand any metric settings.
-            return Constants.S_OK;
+            if (string.CompareOrdinal(pszMetric, "JustMyCodeStepping") == 0)
+            {
+                string strJustMyCode = varValue as string;
+                bool? optJustMyCode = null;
+
+                if (string.CompareOrdinal(strJustMyCode, "0") == 0)
+                {
+                    optJustMyCode = false;
+                }
+                else if (string.CompareOrdinal(strJustMyCode, "1") == 0)
+                {
+                    optJustMyCode = true;
+                }
+
+                if (!optJustMyCode.HasValue)
+                {
+                    return Constants.E_FAIL;
+                }
+
+                bool bOk = this._debuggedProcess.MICommandFactory.SetJustMyCode(optJustMyCode.Value).Result;
+                return bOk ? Constants.S_OK : Constants.E_FAIL;
+            }
+
+            // The sample engine does not need to understand any other metric settings.
+            return Constants.E_NOTIMPL;
         }
 
         // Sets the registry root currently in use by the DE. Different installations of Visual Studio can change where their registry information is stored
