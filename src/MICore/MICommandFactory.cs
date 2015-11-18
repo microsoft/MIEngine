@@ -115,7 +115,22 @@ namespace MICore
         {
             string command = string.Format(@"-stack-list-frames {0} {1}", lowFrameLevel, highFrameLevel);
             Results results = await ThreadCmdAsync(command, ResultClass.done, threadId);
-            return results.Find<ResultListValue>("stack").FindAll<TupleValue>("frame");
+
+            ListValue list = results.Find<ListValue>("stack");
+            if (list is ResultListValue)
+            {
+                // Populated stacks are converted to ResultListValue type. Return all instances of "frame={...}".
+                return ((ResultListValue)list).FindAll<TupleValue>("frame");
+            }
+            else if (list is ValueListValue)
+            {
+                // Empty stacks are converted to ValueListValue type. Just return an empty stack.
+                return new TupleValue[0];
+            }
+            else
+            {
+                throw new MIResultFormatException("stack", results);
+            }
         }
 
         public async Task<Results> StackInfoFrame()
@@ -271,6 +286,13 @@ namespace MICore
             Results results = await _debugger.CmdAsync(command, ResultClass.None);
             Radix = radix;
             return results.ResultClass == ResultClass.done;
+        }
+
+        public virtual Task<bool> SetJustMyCode(bool enabled)
+        {
+            // Default implementation of SetJustMyCode does nothing as only a few engines support this feature.
+            // We will override this for debuggers that support Just My Code.
+            return Task.FromResult<bool>(true);
         }
 
         public uint Radix { get; protected set; }
@@ -745,6 +767,13 @@ namespace MICore
         public override bool AllowCommandsWhileRunning()
         {
             return true;
+        }
+
+        public override async Task<bool> SetJustMyCode(bool enabled)
+        {
+            string command = "-gdb-set just-my-code " + (enabled ? "1" : "0");
+            Results results = await _debugger.CmdAsync(command, ResultClass.None);
+            return results.ResultClass == ResultClass.done;
         }
 
         public override Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
