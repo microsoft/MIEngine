@@ -320,9 +320,8 @@ namespace Microsoft.MIDebugEngine
         {
             if (string.CompareOrdinal(pszMetric, "JustMyCodeStepping") == 0)
             {
-                string strJustMyCode = varValue as string;
-                bool? optJustMyCode = null;
-
+                string strJustMyCode = varValue.ToString();
+                bool optJustMyCode;
                 if (string.CompareOrdinal(strJustMyCode, "0") == 0)
                 {
                     optJustMyCode = false;
@@ -331,17 +330,15 @@ namespace Microsoft.MIDebugEngine
                 {
                     optJustMyCode = true;
                 }
-
-                if (!optJustMyCode.HasValue)
+                else
                 {
                     return Constants.E_FAIL;
                 }
 
-                bool bOk = this._debuggedProcess.MICommandFactory.SetJustMyCode(optJustMyCode.Value).Result;
-                return bOk ? Constants.S_OK : Constants.E_FAIL;
+                _pollThread.RunOperation(new Operation(() => { this._debuggedProcess.MICommandFactory.SetJustMyCode(optJustMyCode); }));
+                return Constants.S_OK;
             }
 
-            // The sample engine does not need to understand any other metric settings.
             return Constants.E_NOTIMPL;
         }
 

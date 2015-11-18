@@ -290,6 +290,8 @@ namespace MICore
 
         public virtual Task<bool> SetJustMyCode(bool enabled)
         {
+            // Default implementation of SetJustMyCode does nothing as only a few engines support this feature.
+            // We will override this for debuggers that support Just My Code.
             return Task.FromResult<bool>(true);
         }
 
