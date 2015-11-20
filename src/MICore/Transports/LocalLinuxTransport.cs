@@ -2,22 +2,20 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 using System.Diagnostics;
 using System.IO;
-using System.Collections.Specialized;
-using System.Collections;
-using System.Globalization;
+using System.Runtime.InteropServices;
 
 
 namespace MICore
 {
     public class LocalLinuxTransport : StreamTransport
     {
-        [System.Runtime.InteropServices.DllImport("System.Native", SetLastError = true)]
+        [DllImport("System.Native", SetLastError = true)]
         private static extern int MkFifo(string name, int mode);
+
+        [DllImport("System.Native", SetLastError = true)]
+        private static extern uint GetEUid();
 
         private void MakeGdbFifo(string path)
         {
@@ -29,15 +27,13 @@ namespace MICore
             {
                 // Failed to create the fifo. Bail.
                 Logger.WriteLine("Failed to create gdb fifo");
-                throw new ArgumentException("MakeGdbFifo failed to create fifo");
+                throw new ArgumentException("MakeGdbFifo failed to create fifo at path {0}", path);
             }
         }
 
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
             LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
-
-            // TODO: Need to deal with attach?
 
             string debuggeeDir = System.IO.Path.GetDirectoryName(options.ExePath);
 
@@ -51,25 +47,34 @@ namespace MICore
             System.IO.FileStream gdbStdInStream = new FileStream(gdbStdInName, FileMode.Open);
             System.IO.FileStream gdbStdOutStream = new FileStream(gdbStdOutName, FileMode.Open);
 
+            // If running as root, make sure the new console is also root. 
+            bool isRoot = GetEUid() == 0;
+
             // Spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it
             // start the debugger in mi mode setting the tty to the terminal defined earlier and redirect stdin/stdout
-            // to the correct pipes.
-            // After gdb exits, cleanup the FIFOs.
-            // TODO: this should be configurable in launch options with a default of gnome-terminal
+            // to the correct pipes. After gdb exits, cleanup the FIFOs.
+            //
+            // NOTE: sudo launch requires sudo or the terminal will fail to launch. The first argument must then be the terminal path
+            // TODO: this should be configurable in launch options to allow for other terminals with a default of gnome-terminal so the user can change the terminal
+            // command. Note that this is trickier than it sounds since each terminal has its own set of parameters. For now, rely on remote for those scenarios
             string terminalPath = "/usr/bin/gnome-terminal";
+            string sudoPath = "/usr/bin/sudo";
             Process terminalProcess = new Process();
             terminalProcess.StartInfo.CreateNoWindow = false;
             terminalProcess.StartInfo.UseShellExecute = false;
             terminalProcess.StartInfo.WorkingDirectory = debuggeeDir;
-            terminalProcess.StartInfo.FileName = terminalPath;
-            terminalProcess.StartInfo.Arguments =
-                string.Format(System.Globalization.CultureInfo.InvariantCulture,
+            terminalProcess.StartInfo.FileName = !isRoot ? terminalPath : sudoPath;
+
+            string argumentString = string.Format(System.Globalization.CultureInfo.InvariantCulture,
                     "--title DebuggerTerminal -x bash -c \"cd {0}; DbgTerm=`tty`; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3}; rm {2}; rm {3} ;\"",
                     debuggeeDir,
                     localOptions.MIDebuggerPath,
                     gdbStdInName,
                     gdbStdOutName
                     );
+
+            terminalProcess.StartInfo.Arguments = !isRoot ? argumentString : String.Concat(terminalPath, " ", argumentString);
+            Logger.WriteLine(terminalProcess.StartInfo.Arguments);
 
             if (localOptions.Environment != null)
             {
@@ -91,6 +96,6 @@ namespace MICore
         protected override string GetThreadName()
         {
             return "MI.LocalLinuxTransport";
-        }
+        } 
     }
 }

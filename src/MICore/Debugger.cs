@@ -10,6 +10,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace MICore
 {
@@ -100,6 +101,14 @@ namespace MICore
         private const int BREAK_DELTA = 3000;   // millisec before trying to break again
         private const int BREAK_RETRY_MAX = 3;  // maximum times to retry
 
+        // The key is the thread group, the value is the pid
+        private Dictionary<string, int> _debuggeePids;
+
+        public Debugger()
+        {
+            _debuggeePids = new Dictionary<string, int>();
+        }
+
         private void RetryBreak(object o)
         {
             lock (_internalBreakActions)
@@ -155,7 +164,20 @@ namespace MICore
             string reason = results.TryFindString("reason");
 
             if (reason.StartsWith("exited"))
-            {
+            {       
+                string threadGroupId = results.FindString("id");
+                if (!String.IsNullOrEmpty(threadGroupId))
+                {
+                    lock (_debuggeePids)
+                    {
+                        _debuggeePids.Remove(threadGroupId);
+                    }
+                }
+                else
+                {
+                    Logger.WriteLine("OnStopped no thread group found in event");
+                }
+
                 this.ProcessState = ProcessState.Exited;
                 if (ProcessExitEvent != null)
                 {
@@ -178,7 +200,6 @@ namespace MICore
             }
 
             bool fIsAsyncBreak = MICommandFactory.IsAsyncBreakSignal(results);
-
             if (await DoInternalBreakActions(fIsAsyncBreak))
             {
                 return;
@@ -430,6 +451,32 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
+           if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && 
+                this.MICommandFactory.Mode == MIMode.Gdb &&
+                _transport is LocalLinuxTransport
+                )
+            {
+                // for local linux debugging, send a signal to one of the debugee processes rather than 
+                // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
+                // deadlocks or missed bps (since binding in runtime requires break state). 
+                // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
+                bool useSignal = false;
+                int debuggeePid = 0;
+                lock (_debuggeePids)
+                {
+                    if (_debuggeePids.Count > 0)
+                    {
+                        debuggeePid = _debuggeePids.First().Value;
+                        useSignal = true;
+                    }
+                }
+
+                if (useSignal)
+                {
+                    return CmdLinuxBreak(debuggeePid, ResultClass.done);
+                }
+            }
+            
             var res = CmdAsync("-exec-interrupt", ResultClass.done);
             return res.ContinueWith((t) =>
             {
@@ -560,6 +607,21 @@ namespace MICore
             SendToTransport(id.ToString(CultureInfo.InvariantCulture) + command);
 
             return waitingOperation.Task;
+        }
+
+        // TODO: move this to a class called nativemethods or fxcop will complain.
+        [DllImport("System.Native", SetLastError = true)]
+        private static extern int Kill(int pid, int mode);
+
+        private Task<Results> CmdLinuxBreak(int debugeePid, ResultClass expectedResultClass)
+        {            
+            // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
+            // This will cause gdb to async-break. This is necessary because gdb does not support async break
+            // when attached.
+            const int sigint = 2;
+            Kill(debugeePid, sigint);
+
+            return Task.FromResult<Results>(new Results(ResultClass.done));
         }
 
         #region ITransportCallback implementation
@@ -937,6 +999,11 @@ namespace MICore
                     BreakChangeEvent(this, new ResultEventArgs(results));
                 }
             }
+            else if (cmd.StartsWith("thread-group-started,", StringComparison.Ordinal))
+            {
+                results = MIResults.ParseResultList(cmd.Substring("thread-group-started,".Length));
+                HandleThreadGroupStarted(results);
+            }
             else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
             {
                 results = MIResults.ParseResultList(cmd.Substring("thread-created,".Length));
@@ -959,6 +1026,17 @@ namespace MICore
             else
             {
                 OnDebuggeeOutput("=" + cmd);
+            }
+        }
+
+        private void HandleThreadGroupStarted(Results results)
+        {
+            string idString = results.FindString("id");
+            string pidString = results.FindString("pid");
+
+            lock (_debuggeePids)
+            {
+                _debuggeePids.Add(idString, Int32.Parse(pidString, CultureInfo.InvariantCulture));
             }
         }
 
