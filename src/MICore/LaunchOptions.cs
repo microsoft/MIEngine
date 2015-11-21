@@ -157,16 +157,16 @@ namespace MICore
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
             this.ProcessId = processId;
 
-            List<EnvironmentEntry> enironmentList = new List<EnvironmentEntry>();
+            List<EnvironmentEntry> environmentList = new List<EnvironmentEntry>();
             if (environmentEntries != null)
             {
                 foreach (Xml.LaunchOptions.EnvironmentEntry xmlEntry in environmentEntries)
                 {
-                    enironmentList.Add(new EnvironmentEntry(xmlEntry));
+                    environmentList.Add(new EnvironmentEntry(xmlEntry));
                 }
             }
 
-            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(enironmentList);
+            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentList);
         }
 
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
