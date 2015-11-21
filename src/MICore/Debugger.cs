@@ -168,8 +168,8 @@ namespace MICore
             string reason = results.TryFindString("reason");
 
             if (reason.StartsWith("exited"))
-            {       
-                string threadGroupId = results.FindString("id");
+            {
+                string threadGroupId = results.TryFindString("id");
                 if (!String.IsNullOrEmpty(threadGroupId))
                 {
                     lock (_debuggeePids)
@@ -177,9 +177,10 @@ namespace MICore
                         _debuggeePids.Remove(threadGroupId);
                     }
                 }
-                else
+
+                if (IsLocalGdbAttach())
                 {
-                    Logger.WriteLine("OnStopped no thread group found in event");
+                    CmdExitAsync();
                 }
 
                 this.ProcessState = ProcessState.Exited;
@@ -448,18 +449,38 @@ namespace MICore
             return CmdBreakInternal();
         }
 
-        public async Task CmdTerminate()
+
+        bool IsLocalGdbAttach()
+        {
+            if (this.MICommandFactory.Mode == MIMode.Gdb &&
+               this._launchOptions is LocalLaunchOptions &&
+               ((LocalLaunchOptions)this._launchOptions).ProcessId != 0 &&
+               String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
+               )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task<Results> CmdTerminate()
         {
             await MICommandFactory.Terminate();
+
+            if (IsLocalGdbAttach())
+            {
+                CmdExitAsync();
+            }
+
+            return new Results(ResultClass.done);
         }
 
         public Task CmdBreakInternal()
         {
-            if (this.MICommandFactory.Mode == MIMode.Gdb &&
-                this._launchOptions is LocalLaunchOptions &&
-                ((LocalLaunchOptions)this._launchOptions).ProcessId != 0 &&
-                String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
-                )
+            if (IsLocalGdbAttach())
             {
                 // for local linux debugging with attach, send a signal to one of the debugee processes rather than 
                 // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either

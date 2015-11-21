@@ -355,8 +355,7 @@ namespace MICore
             {
                 // Although the mi documentation states that the correct command to terminate is -exec-abort
                 // that isn't actually supported by gdb. 
-                string command = "kill";
-                await _debugger.CmdAsync(command, ResultClass.None);
+                await _debugger.CmdAsync("kill", ResultClass.None);
             }
             
         }
