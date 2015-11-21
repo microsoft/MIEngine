@@ -91,6 +91,7 @@
     </Compile>
     <Compile Include="MIException.cs" />
     <Compile Include="MIResults.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Transports\ITransport.cs" />
     <Compile Include="Transports\LocalTransport.cs" />

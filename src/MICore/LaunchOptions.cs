@@ -148,13 +148,14 @@ namespace MICore
     /// </summary>
     public sealed class LocalLaunchOptions : LaunchOptions
     {
-        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, Xml.LaunchOptions.EnvironmentEntry[] environmentEntries)
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, int processId, Xml.LaunchOptions.EnvironmentEntry[] environmentEntries)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
+            this.ProcessId = processId;
 
             this.Environment = new List<EnvironmentEntry>();
             if (environmentEntries != null)
@@ -168,7 +169,11 @@ namespace MICore
 
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
-            var options = new LocalLaunchOptions(RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"), source.MIDebuggerServerAddress, source.Environment);
+            var options = new LocalLaunchOptions(
+                RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"), 
+                source.MIDebuggerServerAddress,
+                source.ProcessId,
+                source.Environment);
             options.InitializeCommonOptions(source);
 
             return options;
@@ -183,6 +188,11 @@ namespace MICore
         /// [Optional] Server address that MI Debugger server is listening to
         /// </summary>
         public string MIDebuggerServerAddress { get; private set; }
+
+        /// <summary>
+        /// [Optional] If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.
+        /// </summary>
+        public int ProcessId { get; private set; }
 
         /// <summary>
         /// [Required] Path to the executable file. This path must exist on the Visual Studio computer.

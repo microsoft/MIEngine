@@ -221,6 +221,11 @@
               <xs:documentation>Network address of the MI Debugger Server to connect to (example: localhost:1234).</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="ProcessId" type="xs:int" use="optional">
+            <xs:annotation>
+              <xs:documentation>If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>

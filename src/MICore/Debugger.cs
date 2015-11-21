@@ -58,6 +58,9 @@ namespace MICore
         public CommandLock CommandLock { get { return _commandLock; } }
         public MICommandFactory MICommandFactory { get; protected set; }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        protected readonly LaunchOptions _launchOptions;
+
         private Queue<Func<Task>> _internalBreakActions = new Queue<Func<Task>>();
         private TaskCompletionSource<object> _internalBreakActionCompletionSource;
         private TaskCompletionSource<object> _consoleDebuggerInitializeCompletionSource = new TaskCompletionSource<object>();
@@ -104,8 +107,9 @@ namespace MICore
         // The key is the thread group, the value is the pid
         private Dictionary<string, int> _debuggeePids;
 
-        public Debugger()
+        public Debugger(LaunchOptions launchOptions)
         {
+            _launchOptions = launchOptions;
             _debuggeePids = new Dictionary<string, int>();
         }
 
@@ -451,12 +455,13 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
-           if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && 
-                this.MICommandFactory.Mode == MIMode.Gdb &&
-                _transport is LocalLinuxTransport
+            if (this.MICommandFactory.Mode == MIMode.Gdb &&
+                this._launchOptions is LocalLaunchOptions &&
+                ((LocalLaunchOptions)this._launchOptions).ProcessId != 0 &&
+                String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
                 )
             {
-                // for local linux debugging, send a signal to one of the debugee processes rather than 
+                // for local linux debugging with attach, send a signal to one of the debugee processes rather than 
                 // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
                 // deadlocks or missed bps (since binding in runtime requires break state). 
                 // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
@@ -609,17 +614,13 @@ namespace MICore
             return waitingOperation.Task;
         }
 
-        // TODO: move this to a class called nativemethods or fxcop will complain.
-        [DllImport("System.Native", SetLastError = true)]
-        private static extern int Kill(int pid, int mode);
-
         private Task<Results> CmdLinuxBreak(int debugeePid, ResultClass expectedResultClass)
         {            
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             const int sigint = 2;
-            Kill(debugeePid, sigint);
+            NativeMethods.Kill(debugeePid, sigint);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
@@ -1138,3 +1139,4 @@ namespace MICore
         }
     }
 }
+
