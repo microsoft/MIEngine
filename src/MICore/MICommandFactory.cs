@@ -346,18 +346,8 @@ namespace MICore
 
         public virtual async Task Terminate()
         {
-            if (this.Mode != MIMode.Gdb)
-            {
-                string command = "-exec-abort";
-                await _debugger.CmdAsync(command, ResultClass.None);
-            }
-            else
-            {
-                // Although the mi documentation states that the correct command to terminate is -exec-abort
-                // that isn't actually supported by gdb. 
-                await _debugger.CmdAsync("kill", ResultClass.None);
-            }
-            
+            string command = "-exec-abort";
+            await _debugger.CmdAsync(command, ResultClass.None);
         }
 
         #endregion
@@ -676,6 +666,13 @@ namespace MICore
             // Linux attach. GDB will fail this command when attaching. This is worked around
             // by using signals for that case.
             return _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
+        }
+
+        public override async Task Terminate()
+        {
+            // Although the mi documentation states that the correct command to terminate is -exec-abort
+            // that isn't actually supported by gdb. 
+            await _debugger.CmdAsync("kill", ResultClass.None);
         }
     }
 

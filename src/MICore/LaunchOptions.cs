@@ -215,7 +215,7 @@ namespace MICore
         /// <summary>
         /// [Optional] List of environment variables to add to the launched process
         /// </summary>
-        public List<EnvironmentEntry> Environment { get; private set; }
+        public readonly List<EnvironmentEntry> Environment { get; private set; }
 
     }
 
