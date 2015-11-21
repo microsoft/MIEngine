@@ -157,14 +157,16 @@ namespace MICore
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
             this.ProcessId = processId;
 
-            this.Environment = new List<EnvironmentEntry>();
+            List<EnvironmentEntry> enironmentList = new List<EnvironmentEntry>();
             if (environmentEntries != null)
             {
                 foreach (Xml.LaunchOptions.EnvironmentEntry xmlEntry in environmentEntries)
                 {
-                    this.Environment.Add(new EnvironmentEntry(xmlEntry));
+                    enironmentList.Add(new EnvironmentEntry(xmlEntry));
                 }
             }
+
+            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(enironmentList);
         }
 
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
@@ -215,7 +217,7 @@ namespace MICore
         /// <summary>
         /// [Optional] List of environment variables to add to the launched process
         /// </summary>
-        public readonly List<EnvironmentEntry> Environment { get; private set; }
+        public ReadOnlyCollection<EnvironmentEntry> Environment { get; private set; }
 
     }
 
