@@ -570,7 +570,7 @@ namespace Microsoft.MIDebugEngine
         public int Continue(IDebugThread2 pThread)
         {
             AD7Thread thread = pThread as AD7Thread;
-            _pollThread.RunOperation(() => _debuggedProcess.Continue(thread != null ? thread.GetDebuggedThread() : null));
+            _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
 
             return Constants.S_OK;
         }
