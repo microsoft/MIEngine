@@ -569,9 +569,8 @@ namespace Microsoft.MIDebugEngine
         // and the debugger does not want to actually enter break mode.
         public int Continue(IDebugThread2 pThread)
         {
-            AD7Thread thread = (AD7Thread)pThread;
-
-            _pollThread.RunOperation(() => _debuggedProcess.Continue(thread.GetDebuggedThread()));
+            AD7Thread thread = pThread as AD7Thread;
+            _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
 
             return Constants.S_OK;
         }
