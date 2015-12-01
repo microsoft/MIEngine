@@ -424,7 +424,7 @@ namespace Microsoft.MIDebugEngine
                     else
                         message = e.Message;
 
-                    SetAsError(string.Format("Error: {0}", message));
+                    SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
                 }
 
                 if (consoleResults.Length > 0)
