@@ -569,6 +569,7 @@ namespace Microsoft.MIDebugEngine
         // and the debugger does not want to actually enter break mode.
         public int Continue(IDebugThread2 pThread)
         {
+            // VS Code currently isn't providing a thread Id in certain cases. Work around this by handling null values.
             AD7Thread thread = pThread as AD7Thread;
             _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
 
