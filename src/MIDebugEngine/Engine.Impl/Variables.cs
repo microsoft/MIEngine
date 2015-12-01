@@ -424,18 +424,13 @@ namespace Microsoft.MIDebugEngine
                     else
                         message = e.Message;
 
-                    SetAsError(string.Format("Error: {0}\r\n", message));
+                    SetAsError(string.Format("Error: {0}", message));
                 }
 
                 if (consoleResults.Length > 0)
                 {
-                    // Make sure that we are printing whole lines
-                    if (!consoleResults.EndsWith("\n") && !consoleResults.EndsWith("\r\n"))
-                    {
-                        consoleResults = consoleResults + "\n";
-                    }
-
                     Value = consoleResults;
+                    this.TypeName = null;
                 }
             }
             else
