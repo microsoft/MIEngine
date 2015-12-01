@@ -63,7 +63,7 @@ namespace Microsoft.MIDebugEngine
 
         // This method evaluates the expression synchronously.
         int IDebugExpression2.EvaluateSync(enum_EVALFLAGS dwFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult)
-        {
+        {            
             ppResult = null;
             if ((dwFlags & enum_EVALFLAGS.EVAL_NOSIDEEFFECTS) != 0 && _var.IsVisualized)
             {
