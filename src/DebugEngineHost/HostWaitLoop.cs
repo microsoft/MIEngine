@@ -9,18 +9,18 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MICore
+namespace Microsoft.DebugEngineHost
 {
-    public class WaitLoop
+    public sealed class HostWaitLoop
     {
         private readonly object _progressLock = new object();
-        private VsWaitLoop _vsWaitLoop;
+        private VSImpl.VsWaitLoop _vsWaitLoop;
 
-        public WaitLoop(string message)
+        public HostWaitLoop(string message)
         {
             try
             {
-                _vsWaitLoop = VsWaitLoop.TryCreate(message);
+                _vsWaitLoop = VSImpl.VsWaitLoop.TryCreate(message);
             }
             catch (FileNotFoundException)
             {

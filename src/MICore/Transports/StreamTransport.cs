@@ -74,7 +74,7 @@ namespace MICore
         {
             try
             {
-                _callback.OnDebuggerProcessExit();
+                _callback.OnDebuggerProcessExit(null);
             }
             catch
             {
@@ -112,7 +112,7 @@ namespace MICore
         public virtual void Close()
         {
             _bQuit = true;
-            _reader.Close(); // close the stream. This usually, but not always, causes the OS to give back our reader thread.
+            _reader.Dispose(); // close the stream. This usually, but not always, causes the OS to give back our reader thread.
         }
 
         public bool IsClosed

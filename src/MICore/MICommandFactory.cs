@@ -115,7 +115,22 @@ namespace MICore
         {
             string command = string.Format(@"-stack-list-frames {0} {1}", lowFrameLevel, highFrameLevel);
             Results results = await ThreadCmdAsync(command, ResultClass.done, threadId);
-            return results.Find<ResultListValue>("stack").FindAll<TupleValue>("frame");
+
+            ListValue list = results.Find<ListValue>("stack");
+            if (list is ResultListValue)
+            {
+                // Populated stacks are converted to ResultListValue type. Return all instances of "frame={...}".
+                return ((ResultListValue)list).FindAll<TupleValue>("frame");
+            }
+            else if (list is ValueListValue)
+            {
+                // Empty stacks are converted to ValueListValue type. Just return an empty stack.
+                return new TupleValue[0];
+            }
+            else
+            {
+                throw new MIResultFormatException("stack", results);
+            }
         }
 
         public async Task<Results> StackInfoFrame()
@@ -181,7 +196,6 @@ namespace MICore
         /// <param name="printValues"></param>
         /// <param name="threadId"></param>
         /// <param name="frameLevel"></param>
-        /// <param name="resultClass"></param>
         /// <returns>Returns an array of results for variables</returns>
         public async Task<ValueListValue> StackListVariables(PrintValues printValues, int threadId, uint frameLevel)
         {
@@ -274,6 +288,13 @@ namespace MICore
             return results.ResultClass == ResultClass.done;
         }
 
+        public virtual Task<bool> SetJustMyCode(bool enabled)
+        {
+            // Default implementation of SetJustMyCode does nothing as only a few engines support this feature.
+            // We will override this for debuggers that support Just My Code.
+            return Task.FromResult<bool>(true);
+        }
+
         public uint Radix { get; protected set; }
 
 
@@ -345,7 +366,7 @@ namespace MICore
             return results.FindString("path_expr");
         }
 
-        public async Task Terminate()
+        public virtual async Task Terminate()
         {
             string command = "-exec-abort";
             await _debugger.CmdAsync(command, ResultClass.None);
@@ -499,7 +520,7 @@ namespace MICore
         /// </summary>
         /// <returns>[Required] Task to track when this is complete</returns>
         abstract public Task EnableTargetAsyncOption();
-        
+
         #endregion
     }
 
@@ -723,9 +744,9 @@ namespace MICore
 
     internal class ClrdbgMICommandFactory : MICommandFactory
     {
-        readonly static Guid ExceptionCategory_CLR = new Guid("449EC4CC-30D2-4032-9256-EE18EB41B62B");
-        readonly static Guid ExceptionCategory_MDA = new Guid("6ECE07A9-0EDE-45C4-8296-818D8FC401D4");
-        readonly static ReadOnlyCollection<Guid> ExceptionCategories = new ReadOnlyCollection<Guid>(new Guid[] { ExceptionCategory_CLR, ExceptionCategory_MDA });
+        private readonly static Guid s_exceptionCategory_CLR = new Guid("449EC4CC-30D2-4032-9256-EE18EB41B62B");
+        private readonly static Guid s_exceptionCategory_MDA = new Guid("6ECE07A9-0EDE-45C4-8296-818D8FC401D4");
+        private readonly static ReadOnlyCollection<Guid> s_exceptionCategories = new ReadOnlyCollection<Guid>(new Guid[] { s_exceptionCategory_CLR, s_exceptionCategory_MDA });
 
         public override string Name
         {
@@ -746,6 +767,13 @@ namespace MICore
         public override bool AllowCommandsWhileRunning()
         {
             return true;
+        }
+
+        public override async Task<bool> SetJustMyCode(bool enabled)
+        {
+            string command = "-gdb-set just-my-code " + (enabled ? "1" : "0");
+            Results results = await _debugger.CmdAsync(command, ResultClass.None);
+            return results.ResultClass == ResultClass.done;
         }
 
         public override Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
@@ -780,7 +808,7 @@ namespace MICore
 
         public override IEnumerable<Guid> GetSupportedExceptionCategories()
         {
-            return ExceptionCategories;
+            return s_exceptionCategories;
         }
 
         public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
@@ -788,11 +816,11 @@ namespace MICore
             List<string> commandTokens = new List<string>();
             commandTokens.Add("-break-exception-insert");
 
-            if (exceptionCategory == ExceptionCategory_MDA)
+            if (exceptionCategory == s_exceptionCategory_MDA)
             {
                 commandTokens.Add("--mda");
             }
-            else if (exceptionCategory != ExceptionCategory_CLR)
+            else if (exceptionCategory != s_exceptionCategory_CLR)
             {
                 throw new ArgumentOutOfRangeException("exceptionCategory");
             }
@@ -852,12 +880,12 @@ namespace MICore
             string category = miExceptionResult.FindString("exception-category");
             if (category == "mda")
             {
-                exceptionCategory = ExceptionCategory_MDA;
+                exceptionCategory = s_exceptionCategory_MDA;
             }
             else
             {
                 Debug.Assert(category == "clr");
-                exceptionCategory = ExceptionCategory_CLR;
+                exceptionCategory = s_exceptionCategory_CLR;
             }
 
             string stage = miExceptionResult.FindString("exception-stage");
@@ -880,6 +908,12 @@ namespace MICore
                     state = ExceptionBreakpointState.None;
                     break;
             }
+        }
+
+        override public async Task Terminate()
+        {
+            string command = "-exec-abort";
+            await _debugger.CmdAsync(command, ResultClass.done);
         }
     }
 }

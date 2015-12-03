@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Runtime.InteropServices;
 using System.Runtime.ExceptionServices;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
@@ -12,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MICore;
 using System.Globalization;
-using Microsoft.Win32;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -30,8 +29,8 @@ namespace Microsoft.MIDebugEngine
     //
     // IDebugEngineProgram2: This interface provides simultanious debugging of multiple threads in a debuggee.
 
-    [ComVisible(true)]
-    [Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
+    [System.Runtime.InteropServices.ComVisible(true)]
+    [System.Runtime.InteropServices.Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
     sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110
     {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
@@ -51,15 +50,13 @@ namespace Microsoft.MIDebugEngine
         // A unique identifier for the program being debugged.
         private Guid _ad7ProgramId;
 
-        private string _registryRoot;
+        private HostConfigurationStore _configStore;
 
         private IDebugSettingsCallback110 _settingsCallback;
 
         public AD7Engine()
         {
-            //This call is to initialize the global service provider while we are still on the main thread.
-            //Do not remove this this, even though the return value goes unused.
-            var globalProvider = Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider;
+            Host.EnsureMainThreadInitialized();
 
             _breakpointManager = new BreakpointManager(this);
         }
@@ -111,15 +108,7 @@ namespace Microsoft.MIDebugEngine
 
         public object GetMetric(string metric)
         {
-            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(_registryRoot + @"\AD7Metrics\Engine\" + EngineConstants.EngineId.ToUpper(CultureInfo.InvariantCulture)))
-            {
-                if (key == null)
-                {
-                    return null;
-                }
-
-                return key.GetValue(metric);
-            }
+            return _configStore.GetEngineMetric(metric);
         }
 
         #region IDebugEngine2 Members
@@ -329,16 +318,36 @@ namespace Microsoft.MIDebugEngine
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
         int IDebugEngine2.SetMetric(string pszMetric, object varValue)
         {
-            // The sample engine does not need to understand any metric settings.
-            return Constants.S_OK;
+            if (string.CompareOrdinal(pszMetric, "JustMyCodeStepping") == 0)
+            {
+                string strJustMyCode = varValue.ToString();
+                bool optJustMyCode;
+                if (string.CompareOrdinal(strJustMyCode, "0") == 0)
+                {
+                    optJustMyCode = false;
+                }
+                else if (string.CompareOrdinal(strJustMyCode, "1") == 0)
+                {
+                    optJustMyCode = true;
+                }
+                else
+                {
+                    return Constants.E_FAIL;
+                }
+
+                _pollThread.RunOperation(new Operation(() => { this._debuggedProcess.MICommandFactory.SetJustMyCode(optJustMyCode); }));
+                return Constants.S_OK;
+            }
+
+            return Constants.E_NOTIMPL;
         }
 
         // Sets the registry root currently in use by the DE. Different installations of Visual Studio can change where their registry information is stored
         // This allows the debugger to tell the engine where that location is.
         int IDebugEngine2.SetRegistryRoot(string registryRoot)
         {
-            _registryRoot = registryRoot;
-            Logger.EnsureInitialized(registryRoot);
+            _configStore = new HostConfigurationStore(registryRoot, EngineConstants.EngineId);
+            Logger.EnsureInitialized(_configStore);
             return Constants.S_OK;
         }
 
@@ -353,26 +362,15 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_engineCallback != null);
             Debug.Assert(_debuggedProcess != null);
 
-            try
-            {
-                AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
+            AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
 
-                if (EngineUtils.ProcIdEquals(processId, _debuggedProcess.Id))
-                {
-                    return Constants.S_OK;
-                }
-                else
-                {
-                    return Constants.S_FALSE;
-                }
-            }
-            catch (MIException e)
+            if (EngineUtils.ProcIdEquals(processId, _debuggedProcess.Id))
             {
-                return e.HResult;
+                return Constants.S_OK;
             }
-            catch (Exception e)
+            else
             {
-                return EngineUtils.UnexpectedException(e);
+                return Constants.S_FALSE;
             }
         }
 
@@ -398,7 +396,7 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 // Note: LaunchOptions.GetInstance can be an expensive operation and may push a wait message loop
-                LaunchOptions launchOptions = LaunchOptions.GetInstance(_registryRoot, exe, args, dir, options, _engineCallback, TargetEngine.Native);
+                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, _engineCallback, TargetEngine.Native);
 
                 // We are being asked to debug a process when we currently aren't debugging anything
                 _pollThread = new WorkerThread();
@@ -406,11 +404,11 @@ namespace Microsoft.MIDebugEngine
 
                 using (cancellationTokenSource)
                 {
-                    _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (MICore.WaitLoop waitLoop) =>
+                    _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (HostWaitLoop waitLoop) =>
                     {
                         try
                         {
-                            _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _registryRoot);
+                            _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore);
                         }
                         finally
                         {
@@ -464,7 +462,7 @@ namespace Microsoft.MIDebugEngine
                 string outputMessage = string.Join("\r\n", initializationException.OutputLines) + "\r\n";
 
                 // NOTE: We can't write to the output window by sending an AD7 event because this may be called before the session create event
-                VsOutputWindow.WriteLaunchError(outputMessage);
+                HostOutputWindow.WriteLaunchError(outputMessage);
             }
 
             _engineCallback.OnErrorImmediate(message);
@@ -527,27 +525,23 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_engineCallback != null);
             Debug.Assert(_debuggedProcess != null);
 
+            AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
+            if (!EngineUtils.ProcIdEquals(processId, _debuggedProcess.Id))
+            {
+                return Constants.S_FALSE;
+            }
+
             try
             {
-                AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
-                if (!EngineUtils.ProcIdEquals(processId, _debuggedProcess.Id))
-                {
-                    return Constants.S_FALSE;
-                }
-
                 _pollThread.RunOperation(() => _debuggedProcess.CmdTerminate());
                 _debuggedProcess.Terminate();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ignore failures caused by the connection already being dead.
+            }
 
-                return Constants.S_OK;
-            }
-            catch (MIException e)
-            {
-                return e.HResult;
-            }
-            catch (Exception e)
-            {
-                return EngineUtils.UnexpectedException(e);
-            }
+            return Constants.S_OK;
         }
 
         #endregion
@@ -575,9 +569,9 @@ namespace Microsoft.MIDebugEngine
         // and the debugger does not want to actually enter break mode.
         public int Continue(IDebugThread2 pThread)
         {
-            AD7Thread thread = (AD7Thread)pThread;
-
-            _pollThread.RunOperation(() => _debuggedProcess.Continue(thread.GetDebuggedThread()));
+            // VS Code currently isn't providing a thread Id in certain cases. Work around this by handling null values.
+            AD7Thread thread = pThread as AD7Thread;
+            _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
 
             return Constants.S_OK;
         }

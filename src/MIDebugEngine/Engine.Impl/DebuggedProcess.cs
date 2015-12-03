@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -39,12 +40,12 @@ namespace Microsoft.MIDebugEngine
         private ResultEventArgs _initialBreakArgs;
         private List<string> _libraryLoaded;   // unprocessed library loaded messages
         private uint _loadOrder;
-        private WaitDialog _waitDialog;
+        private HostWaitDialog _waitDialog;
         public readonly Natvis.Natvis Natvis;
         private ReadOnlyCollection<RegisterDescription> _registers;
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, string registryRoot)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore)
         {
             uint processExitCode = 0;
             g_Process = this;
@@ -56,7 +57,7 @@ namespace Microsoft.MIDebugEngine
             _libraryLoaded = new List<string>();
             _loadOrder = 0;
             MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
-            _waitDialog = MICommandFactory.SupportsStopOnDynamicLibLoad() ? new WaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
+            _waitDialog = MICommandFactory.SupportsStopOnDynamicLibLoad() ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
             Natvis = new Natvis.Natvis(this);
 
             // we do NOT have real Win32 process IDs, so we use a guid
@@ -71,7 +72,7 @@ namespace Microsoft.MIDebugEngine
             _moduleList = new List<DebuggedModule>();
             ThreadCache = new ThreadCache(callback, this);
             Disassembly = new Disassembly(this);
-            ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, registryRoot);
+            ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, configStore);
 
             VariablesToDelete = new List<string>();
 
@@ -168,11 +169,6 @@ namespace Microsoft.MIDebugEngine
             {
                 this.Init(new MICore.TcpTransport(), _launchOptions);
             }
-            else if (_launchOptions is SerialLaunchOptions)
-            {
-                string port = ((SerialLaunchOptions)_launchOptions).Port;
-                this.Init(new MICore.SerialTransport(port), _launchOptions);
-            }
             else
             {
                 throw new ArgumentOutOfRangeException("LaunchInfo.options");
@@ -219,7 +215,7 @@ namespace Microsoft.MIDebugEngine
                 Dispose();
             };
 
-            DebuggerAbortedEvent += delegate (object o, EventArgs args)
+            DebuggerAbortedEvent += delegate (object o, /*OPTIONAL*/ string debuggerExitCode)
             {
                 // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
 
@@ -232,7 +228,13 @@ namespace Microsoft.MIDebugEngine
                             return;
                         }
 
-                        _callback.OnError(MICoreResources.Error_MIDebuggerExited);
+                        string message;
+                        if (string.IsNullOrEmpty(debuggerExitCode))
+                            message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_UnknownCode, MICommandFactory.Name);
+                        else
+                            message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_WithCode, MICommandFactory.Name, debuggerExitCode);
+
+                        _callback.OnError(message);
                         _callback.OnProcessExit(uint.MaxValue);
 
                         Dispose();
@@ -356,8 +358,8 @@ namespace Microsoft.MIDebugEngine
 
             BreakChangeEvent += _breakpointManager.BreakpointModified;
         }
-        
-        public async Task Initialize(MICore.WaitLoop waitLoop, CancellationToken token)
+
+        public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
         {
             bool success = false;
             Natvis.Initialize(_launchOptions.VisualizerFile);
@@ -383,7 +385,7 @@ namespace Microsoft.MIDebugEngine
                         if (results.ResultClass == ResultClass.error && !command.IgnoreFailures)
                         {
                             string miError = results.FindString("msg");
-                            throw new UnexpectedMIResultException(command.CommandText, miError);
+                            throw new UnexpectedMIResultException(MICommandFactory.Name, command.CommandText, miError);
                         }
                     }
                     else

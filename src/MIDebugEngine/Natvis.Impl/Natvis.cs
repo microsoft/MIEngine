@@ -15,7 +15,8 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
-using Microsoft.Win32;
+using Microsoft.DebugEngineHost;
+using System.Reflection;
 
 namespace Microsoft.MIDebugEngine.Natvis
 {
@@ -143,7 +144,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         private DebuggedProcess _process;
         private Dictionary<string, VisualizerInfo> _vizCache;
         private uint _depth;
-        public WaitDialog WaitDialog { get; private set; }
+        public HostWaitDialog WaitDialog { get; private set; }
 
         public VisualizationCache Cache { get; private set; }
 
@@ -171,7 +172,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             _typeVisualizers = new List<FileInfo>();
             _process = process;
             _vizCache = new Dictionary<string, VisualizerInfo>();
-            WaitDialog = new WaitDialog(ResourceStrings.VisualizingExpressionMessage, ResourceStrings.VisualizingExpressionCaption);
+            WaitDialog = new HostWaitDialog(ResourceStrings.VisualizingExpressionMessage, ResourceStrings.VisualizingExpressionCaption);
             ShowDisplayStrings = DisplayStringsState.ForVisualizedItems;  // don't compute display strings unless explicitly requested
             _depth = 0;
             Cache = new VisualizationCache();
@@ -181,7 +182,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             try
             {
-                VsNatvisProject.FindNatvisInSolution((s) => LoadFile(s));
+                HostNatvisProject.FindNatvisInSolution((s) => LoadFile(s));
             }
             catch (FileNotFoundException)
             {
@@ -200,6 +201,8 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",
+            Justification = "Usage is secure -- XmlResolver property is set to 'null' in desktop CLR, and is always null in CoreCLR. But CodeAnalysis cannot understand the invocation since it happens through reflection.")]
         private bool LoadFile(string path)
         {
             try
@@ -214,7 +217,11 @@ namespace Microsoft.MIDebugEngine.Natvis
                 settings.IgnoreComments = true;
                 settings.IgnoreProcessingInstructions = true;
                 settings.IgnoreWhitespace = true;
-                settings.XmlResolver = null;
+
+                // set XmlResolver via reflection, if it exists. This is required for desktop CLR, as otherwise the XML reader may
+                // attempt to hit untrusted external resources.
+                var xmlResolverProperty = settings.GetType().GetProperty("XmlResolver", BindingFlags.Public | BindingFlags.Instance);
+                xmlResolverProperty?.SetValue(settings, null);
 
                 using (var stream = new System.IO.FileStream(path, FileMode.Open, FileAccess.Read))
                 using (var reader = XmlReader.Create(stream, settings))
@@ -361,7 +368,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
                 List<IVariableInformation> children = new List<IVariableInformation>();
                 children.Add(visView);
-                Array.ForEach(variable.Children, (c) => children.Add(c));
+                children.AddRange(variable.Children);
                 return children.ToArray();
             }
             catch (Exception e)
@@ -453,7 +460,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
-                                Array.ForEach(arrayExpr.Children, (c) => children.Add(c));
+                                children.AddRange(arrayExpr.Children);
                             }
                             break;
                         }
@@ -643,7 +650,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     var eChildren = Expand(expand);
                     if (eChildren != null)
                     {
-                        Array.ForEach(eChildren, (c) => children.Add(c));
+                        children.AddRange(eChildren);
                     }
                 }
             }

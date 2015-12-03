@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
-using System.Runtime.InteropServices;
 using System.Linq;
 
 namespace Microsoft.MIDebugEngine

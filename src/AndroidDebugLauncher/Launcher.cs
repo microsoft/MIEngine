@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using Microsoft.DebugEngineHost;
 
 namespace AndroidDebugLauncher
 {
@@ -26,7 +27,7 @@ namespace AndroidDebugLauncher
         private readonly CancellationTokenSource _gdbServerExecCancellationSource = new CancellationTokenSource();
         private AndroidLaunchOptions _launchOptions;
         private InstallPaths _installPaths;
-        private MICore.WaitLoop _waitLoop;
+        private HostWaitLoop _waitLoop;
         private int _jdbPortNumber;
         private AdbShell _shell;
         private int _appProcessId;
@@ -40,15 +41,15 @@ namespace AndroidDebugLauncher
         private const string LogcatServiceMessage_SourceId = "1CED0608-638C-4B00-A1D2-CE56B1B672FA";
         private const int LogcatServiceMessage_NewProcess = 0;
 
-        void IPlatformAppLauncher.Initialize(string registryRoot, IDeviceAppLauncherEventCallback eventCallback)
+        void IPlatformAppLauncher.Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback)
         {
-            if (string.IsNullOrEmpty(registryRoot))
-                throw new ArgumentNullException("registryRoot");
+            if (configStore == null)
+                throw new ArgumentNullException("configStore");
             if (eventCallback == null)
                 throw new ArgumentNullException("eventCallback");
 
             _eventCallback = eventCallback;
-            RegistryRoot.Set(registryRoot);
+            RegistryRoot.Set(configStore.RegistryRoot);
         }
 
         void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
@@ -87,7 +88,7 @@ namespace AndroidDebugLauncher
             ExceptionDispatchInfo exceptionDispatchInfo = null;
             LaunchOptions localLaunchOptions = null;
 
-            _waitLoop = new MICore.WaitLoop(LauncherResources.WaitDialogText);
+            _waitLoop = new HostWaitLoop(LauncherResources.WaitDialogText);
 
             // Do the work on a worker thread to avoid blocking the UI. Use ThreadPool.QueueUserWorkItem instead
             // of Task.Run to avoid needing to unwrap the AggregateException.

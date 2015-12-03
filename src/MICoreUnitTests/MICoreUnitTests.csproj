@@ -2,6 +2,8 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\xunit.runner.visualstudio.2.0.0\build\net20\xunit.runner.visualstudio.props" Condition="Exists('..\packages\xunit.runner.visualstudio.2.0.0\build\net20\xunit.runner.visualstudio.props')" />
   <Import Project="..\packages\xunit.core.2.0.0\build\portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS\xunit.core.props" Condition="Exists('..\packages\xunit.core.2.0.0\build\portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS\xunit.core.props')" />
+  <Import Project="..\..\build\all_projects.settings.targets" />
+  <Import Project="..\RequiredNetFX46FacadeAssemblies.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,7 +12,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MICoreUnitTests</RootNamespace>
     <AssemblyName>MICoreUnitTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -21,6 +23,7 @@
     <TargetFrameworkProfile />
     <AssemblyOriginatorKeyFile>..\..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>True</SignAssembly>
+    <OutputPath>$(MIDefaultOutputPath)</OutputPath>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -28,7 +31,6 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -39,7 +41,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -47,7 +48,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug.Lab|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug.Lab\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -55,7 +55,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release.Lab|AnyCPU'">
-    <OutputPath>bin\Release.Lab\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -97,14 +96,22 @@
     <Compile Include="MIResultsTests.cs" />
     <Compile Include="NdkVersionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="@(RequiredNetFX46FacadeAssemblies)">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AndroidDebugLauncher\AndroidDebugLauncher.csproj">
       <Project>{e0844bff-2d67-4cb0-8e2a-e9cd888f2eb0}</Project>
       <Name>AndroidDebugLauncher</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
+      <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
+      <Name>DebugEngineHost.Stub</Name>
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\MICore\MICore.csproj">
-      <Project>{12cc862d-95b7-4224-8e16-b928c6333677}</Project>
+      <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
       <Name>MICore</Name>
     </ProjectReference>
   </ItemGroup>

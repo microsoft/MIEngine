@@ -1,0 +1,16 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <!--
+  Settings file which is included by all projects in the repo. Most projects include it through miengine.settings.targets,
+  the few special projects (prebuild.csproj, some unit tests) include it directly.
+  -->
+  
+  <PropertyGroup>
+    <MIEngineRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))\</MIEngineRoot>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ILDir>$(MIEngineRoot)IL\</ILDir>
+    <NuGetPackagesDirectory>$(MIEngineRoot)src\packages</NuGetPackagesDirectory>
+    <GeneratedAssembliesDir>$(ILDir)GeneratedAssemblies\</GeneratedAssembliesDir>
+    <MIDefaultOutputPath>$(MIEngineRoot)bin\$(Configuration)\</MIDefaultOutputPath>
+  </PropertyGroup>
+</Project>

@@ -99,7 +99,7 @@ namespace Microsoft.MIDebugEngine
             catch (UnexpectedMIResultException)
             {
                 Logger.WriteLine("Stack walk failed on thread: " + thread.TargetId);
-                _stateChange = true;   // thread may have been seleted. Force a resync
+                _stateChange = true;   // thread may have been deleted. Force a resync
             }
             lock (_threadList)
             {

@@ -7,9 +7,9 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio;
 using System.Globalization;
 
-namespace Microsoft.MIDebugEngine
+namespace Microsoft.DebugEngineHost.VSImpl
 {
-    public class VSWaitDialog
+    internal class VSWaitDialog
     {
         private readonly IVsThreadedWaitDialog2 _waitDialog;
         private const int m_delayShowDialogTimeInSeconds = 2;
