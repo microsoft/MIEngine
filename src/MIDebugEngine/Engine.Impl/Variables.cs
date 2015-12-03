@@ -483,7 +483,7 @@ namespace Microsoft.MIDebugEngine
         }
         private async Task InternalFetchChildren()
         {
-            Results results = await _engine.DebuggedProcess.CmdAsync(string.Format("-var-list-children --simple-values {0}", _internalName), ResultClass.None);
+            Results results = await _engine.DebuggedProcess.CmdAsync(string.Format("-var-list-children --simple-values \"{0}\"", _internalName), ResultClass.None);
 
             if (results.ResultClass == ResultClass.done)
             {
