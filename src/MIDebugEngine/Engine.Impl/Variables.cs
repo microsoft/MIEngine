@@ -427,10 +427,12 @@ namespace Microsoft.MIDebugEngine
                     SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
                 }
 
+                Value = "-exec results:" + Environment.NewLine;
+                this.TypeName = null;
+
                 if (consoleResults.Length > 0)
                 {
-                    Value = consoleResults;
-                    this.TypeName = null;
+                    this._debuggedProcess.WriteOutput(consoleResults);
                 }
             }
             else
