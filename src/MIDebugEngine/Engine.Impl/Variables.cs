@@ -427,7 +427,7 @@ namespace Microsoft.MIDebugEngine
                     SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
                 }
 
-                Value = "-exec results:" + Environment.NewLine;
+                Value = String.Empty;
                 this.TypeName = null;
 
                 if (consoleResults.Length > 0)
