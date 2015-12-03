@@ -313,9 +313,9 @@ namespace AndroidDebugLauncher
                 {
                     actions.Add(new NamedAction(LauncherResources.Step_StartGDBServer, () =>
                     {
-                    // We will default to using a unix socket with gdbserver as this is what the ndk-gdb script uses. Though we have seen
-                    // some machines where this doesn't work and we fall back to TCP instead.
-                    const bool useUnixSocket = true;
+                        // We will default to using a unix socket with gdbserver as this is what the ndk-gdb script uses. Though we have seen
+                        // some machines where this doesn't work and we fall back to TCP instead.
+                        const bool useUnixSocket = true;
 
                         taskGdbServer = StartGdbServer(gdbServerRemotePath, workingDirectory, useUnixSocket, out gdbServerSocketDescription);
                     }));
@@ -342,7 +342,7 @@ namespace AndroidDebugLauncher
                     {
                         //pull binaries from the emulator/device
                         var fileSystem = device.FileSystem;
-    
+
                         string app_process_suffix = String.Empty;
                         switch (_launchOptions.TargetArchitecture)
                         {
@@ -358,10 +358,10 @@ namespace AndroidDebugLauncher
                                 Debug.Fail("Unsupported Target Architecture!");
                                 break;
                         }
-    
+
                         string app_process = String.Concat("app_process", app_process_suffix);
                         exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
-    
+
                         bool retry = false;
                         try
                         {
@@ -374,29 +374,29 @@ namespace AndroidDebugLauncher
                             // by the file not being found.
                             retry = true;
                         }
-    
+
                         if (retry)
                         {
                             app_process = "app_process";
                             exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
                             fileSystem.Download(@"/system/bin/app_process", exePath, true);
                         }
-                        
+
                         //on 64 bit, 'linker64' is the 64bit version and 'linker' is the 32 bit version 
                         string suffix64bit = String.Empty;
                         if (_launchOptions.TargetArchitecture == TargetArchitecture.X64 || _launchOptions.TargetArchitecture == TargetArchitecture.ARM64)
                         {
                             suffix64bit = "64";
                         }
-    
+
                         string linker = String.Concat("linker", suffix64bit);
                         fileSystem.Download(String.Concat(@"/system/bin/", linker), Path.Combine(_launchOptions.IntermediateDirectory, linker), true);
-    
+
                         //on 64 bit, libc.so lives in /system/lib64/, on 32 bit it lives in simply /system/lib/
                         fileSystem.Download(@"/system/lib" + suffix64bit + "/libc.so", Path.Combine(_launchOptions.IntermediateDirectory, "libc.so"), true);
                     }));
                 }
-    
+
                 progressStepCount = actions.Count;
 
                 foreach (NamedAction namedAction in actions)
@@ -437,7 +437,7 @@ namespace AndroidDebugLauncher
                 launchOptions.WorkingDirectory = _launchOptions.IntermediateDirectory;
 
                 launchOptions.DebuggerMIMode = MIMode.Gdb;
-                
+
                 launchOptions.VisualizerFile = "Microsoft.Android.natvis";
 
                 return launchOptions;

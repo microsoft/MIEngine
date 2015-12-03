@@ -335,7 +335,7 @@ namespace Microsoft.MIDebugEngine
                     return Constants.E_FAIL;
                 }
 
-                _pollThread.RunOperation(new Operation(() => { this._debuggedProcess.MICommandFactory.SetJustMyCode(optJustMyCode); }));
+                _pollThread.RunOperation(new Operation(() => { _debuggedProcess.MICommandFactory.SetJustMyCode(optJustMyCode); }));
                 return Constants.S_OK;
             }
 

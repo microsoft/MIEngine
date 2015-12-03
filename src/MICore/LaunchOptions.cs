@@ -210,7 +210,7 @@ namespace MICore
         private const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
         private static Lazy<Assembly> s_serializationAssembly = new Lazy<Assembly>(LoadSerializationAssembly, LazyThreadSafetyMode.ExecutionAndPublication);
         private bool _initializationComplete;
-        
+
         /// <summary>
         /// [Optional] Launcher used to start the application on the device
         /// </summary>
@@ -464,7 +464,7 @@ namespace MICore
             return launchOptions;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.", 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",
             Justification = "Usage is secure -- XmlResolver property is set to 'null' in desktop CLR, and is always null in CoreCLR. But CodeAnalysis cannot understand the invocation since it happens through reflection.")]
         public static XmlReader OpenXml(string content)
         {
