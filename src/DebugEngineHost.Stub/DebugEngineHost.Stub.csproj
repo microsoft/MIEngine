@@ -5,7 +5,6 @@
     NOTE: Ths must be set BEFORE improting miengine.settings.targets-->
     <AssemblyVersion>1.0.0</AssemblyVersion>
   </PropertyGroup>
-
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
@@ -26,6 +25,7 @@
     <!--NOTE: This does NOT go to the same output directory as the rest of the MIEngine project as this is just the stub (contract) definition
     of DebugEngineHost, so we don't want to conflict with the real version. -->
     <OutputPath>bin\$(Configuration)</OutputPath>
+    <DocumentationFile>$(DropRootDir)\ReferenceAssemblies\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,6 +34,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>Contract.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -70,19 +72,18 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Host.cs" />
-    <Compile Include="HostConfigurationSection.cs" />
-    <Compile Include="HostConfigurationStore.cs" />
-    <Compile Include="HostLoader.cs" />
-    <Compile Include="HostMarshal.cs" />
-    <Compile Include="HostNatvisProject.cs" />
-    <Compile Include="HostOutputWindow.cs" />
-    <Compile Include="HostWaitDialog.cs" />
-    <Compile Include="HostWaitLoop.cs" />
+    <Compile Include="DebugEngineHost.ref.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DropSubDir>ReferenceAssemblies</DropSubDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
+  <Import Project="..\..\build\DropFiles.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

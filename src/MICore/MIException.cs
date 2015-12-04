@@ -62,7 +62,7 @@ namespace MICore
         //    MessageText:
         //      The message is improperly formatted or was damaged in transit
         private const int COMQC_E_BAD_MESSAGE = unchecked((int)0x80110604);
-        public readonly string _debuggerName;
+        private readonly string _debuggerName;
         private readonly string _command;
         private readonly string _miError;
 

@@ -12,7 +12,7 @@ namespace Microsoft.DebugEngineHost
 {
     public sealed class HostLogger
     {
-        readonly StreamWriter _streamWriter;
+        private readonly StreamWriter _streamWriter;
 
         internal HostLogger(StreamWriter streamWriter)
         {
