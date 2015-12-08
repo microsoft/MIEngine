@@ -42,7 +42,16 @@ namespace AndroidDebugLauncher
             {
                 this.JVMHost = LaunchOptions.RequireAttribute(xmlOptions.JVMHost, "JVMHost");
                 this.JVMPort = xmlOptions.JVMPort;
-                this.SourceRoots = LaunchOptions.RequireAttribute(xmlOptions.SourceRoots, "SourceRoots").Split(new char[] { ';' });
+
+                if (!string.IsNullOrWhiteSpace(xmlOptions.SourceRoots))
+                {
+                    this.SourceRoots = xmlOptions.SourceRoots.Split(new char[] { ';' });
+                }
+                else
+                {
+                    this.SourceRoots = new string[] { };
+                }
+
                 foreach (string root in SourceRoots)
                 {
                     EnsureValidDirectory(root, "SourceRoots");
