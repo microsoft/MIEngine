@@ -15,7 +15,7 @@
 	
 	<!--Don't run unit tests for lab builds -->
 	<TargetsToRun>Build;Test</TargetsToRun>
-	<TargetsToRun Condition="'$(Configuration)' == 'Release.Lab' OR '$(Configuration)' == 'Debug.Lab'">Build</TargetsToRun>
+	<TargetsToRun Condition="'$(Configuration)' == 'Lab.Release' OR '$(Configuration)' == 'Lab.Debug'">Build</TargetsToRun>
   </PropertyGroup>
 
   <ItemGroup>
