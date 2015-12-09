@@ -219,6 +219,10 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool ShowDisplayString;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public TargetArchitecture TargetArchitecture;
         
         /// <remarks/>
