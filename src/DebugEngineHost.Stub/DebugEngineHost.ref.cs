@@ -136,6 +136,17 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Read the debugger setting
+        /// 
+        /// In VS, this is wired up to read setting value from RegistryRoot\\Debugger\\
+        /// </summary>
+        /// <returns>value of the setting</returns>
+        public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
