@@ -4,6 +4,7 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace Microsoft.DebugEngineHost
 {
     public sealed class HostConfigurationStore
     {
+        const string DebuggerSectionName = "Debugger";
+
         private string _engineId;
         private string _registryRoot;
         private RegistryKey _configKey;
@@ -77,7 +80,7 @@ namespace Microsoft.DebugEngineHost
             object enableLoggingValue;
             if (!string.IsNullOrEmpty(enableLoggingSettingName))
             {
-                enableLoggingValue = GetOptionalValue("Debugger", enableLoggingSettingName);
+                enableLoggingValue = GetOptionalValue(DebuggerSectionName, enableLoggingSettingName);
             }
             else
             {
@@ -108,6 +111,28 @@ namespace Microsoft.DebugEngineHost
             }
 
             return null;
+        }
+
+        public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)
+        {
+            object valueObj = GetOptionalValue(DebuggerSectionName, settingName);
+            if (valueObj == null)
+            {
+                return defaultValue;
+            }
+
+            T result;
+            try
+            {
+                result = (T)valueObj;
+            }
+            catch (InvalidCastException)
+            {
+                Debug.Fail(string.Format(CultureInfo.CurrentCulture, "Failed to convert {0} to {1}", valueObj, typeof(T).Name));
+                result = defaultValue;
+            }
+
+            return result;
         }
 
         private object GetOptionalValue(string section, string valueName)
