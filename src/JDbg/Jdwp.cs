@@ -22,8 +22,6 @@ namespace JDbg
         private TcpTransport _transport;
         private JdwpCommand.IDSizes _IDSizes;
 
-
-
         private Jdwp(string hostname, int port)
         {
             _transport = new TcpTransport(hostname, port, OnPacketReceived, OnDisconnect);
@@ -66,20 +64,22 @@ namespace JDbg
             // This handles disconnects if, for example, the app exits
 
             // If we have any waiting operations, we want to abort them
+            List<WaitingOperationDescriptor> operationsToAbort = null;
             lock (_waitingOperations)
             {
-                foreach (var operation in _waitingOperations)
-                {
-                    if (socketException == null)
-                    {
-                        operation.Value.Abort();
-                    }
-                    else
-                    {
-                        operation.Value.OnSocketError(socketException);
-                    }
-                }
+                operationsToAbort = new List<WaitingOperationDescriptor>(_waitingOperations.Values);
                 _waitingOperations.Clear();
+            }
+            foreach(var operation in operationsToAbort)
+            {
+                if (socketException == null)
+                {
+                    operation.Abort();
+                }
+                else
+                {
+                    operation.OnSocketError(socketException);
+                }
             }
 
             // Otherwise just drop the connection
@@ -196,13 +196,16 @@ namespace JDbg
                 _transport.Close();
             }
 
+            //Abort remaining WaitingOperations
+            List<WaitingOperationDescriptor> operationsToAbort = null;
             lock (_waitingOperations)
             {
-                foreach (var operation in _waitingOperations)
-                {
-                    operation.Value.Abort();
-                }
+                operationsToAbort = new List<WaitingOperationDescriptor>(_waitingOperations.Values);
                 _waitingOperations.Clear();
+            }
+            foreach(var operation in operationsToAbort)
+            {
+                operation.Abort();
             }
         }
 
