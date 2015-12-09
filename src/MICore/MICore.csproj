@@ -45,7 +45,7 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug.Lab|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
@@ -53,7 +53,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release.Lab|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU'">
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -137,7 +137,7 @@
   <!--This is a target file used to generate + validate LaunchOptions.xsd.types.desginer.cs. The way this works is that we have a baseline
   file checked in. This target will create a new one, and if it is different from the baseline, it will update the baseline.
   NOTE: We skip this step for the lab configuration to ensure that in the lab we build exsactly what is checked in.-->
-  <Target Name="BeforeBuild" Inputs="LaunchOptions.xsd;ValidateDesignerFile.cmd;PostProcessXsdOutput.cmd" Outputs="$(IntermediateOutputPath)LaunchOptions.xsd.types.desginer-candidate.cs" Condition="'$(Configuration)' != 'Debug.Lab' And '$(Configuration)' != 'Release.Lab'">
+  <Target Name="BeforeBuild" Inputs="LaunchOptions.xsd;ValidateDesignerFile.cmd;PostProcessXsdOutput.cmd" Outputs="$(IntermediateOutputPath)LaunchOptions.xsd.types.desginer-candidate.cs" Condition="'$(Configuration)' != 'Lab.Debug' And '$(Configuration)' != 'Lab.Release'">
     <!--First validate the tools we need are where we expect-->
     <Error Condition="'$(SDK40ToolsPath)'==''" Text="SDK40ToolsPath msbuild property is undefined." />
     <Error Condition="!Exists('$(SDK40ToolsPath)xsd.exe')" Text="xsd.exe does not exist in the SDK40ToolsPath ($(SDK40ToolsPath)xsd.exe)." />
