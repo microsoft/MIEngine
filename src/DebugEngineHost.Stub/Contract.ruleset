@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Contract assembly ruleset" Description="Enables all rules as errors, except for a select few that didn't seem to make sense for a contract assembly." ToolsVersion="14.0">
+  <IncludeAll Action="Error" />
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA1014" Action="None" />
+    <Rule Id="CA1017" Action="None" />
+    <Rule Id="CA1021" Action="None" />
+    <Rule Id="CA1024" Action="None" />
+    <Rule Id="CA1034" Action="None" />
+    <Rule Id="CA1065" Action="None" />
+    <Rule Id="CA1801" Action="None" />
+    <Rule Id="CA1822" Action="None" />
+  </Rules>
+</RuleSet>

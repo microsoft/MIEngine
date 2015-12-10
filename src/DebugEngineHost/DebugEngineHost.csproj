@@ -28,6 +28,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -102,7 +103,7 @@
     <Compile Include="Host.cs" />
     <Compile Include="HostConfigurationSection.cs" />
     <Compile Include="HostConfigurationStore.cs" />
-    <Compile Include="HostConfirigurationException.cs" />
+    <Compile Include="HostConfigurationException.cs" />
     <Compile Include="HostLogger.cs" />
     <Compile Include="VSImpl\VSEventCallbackWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -114,6 +115,9 @@
     <Compile Include="VSImpl\VsWaitLoop.cs" />
     <Compile Include="HostLoader.cs" />
     <Compile Include="HostWaitLoop.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />

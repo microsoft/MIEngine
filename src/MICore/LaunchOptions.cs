@@ -256,7 +256,7 @@ namespace MICore
         private const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
         private static Lazy<Assembly> s_serializationAssembly = new Lazy<Assembly>(LoadSerializationAssembly, LazyThreadSafetyMode.ExecutionAndPublication);
         private bool _initializationComplete;
-        
+
         /// <summary>
         /// [Optional] Launcher used to start the application on the device
         /// </summary>
@@ -510,6 +510,8 @@ namespace MICore
             return launchOptions;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",
+            Justification = "Usage is secure -- XmlResolver property is set to 'null' in desktop CLR, and is always null in CoreCLR. But CodeAnalysis cannot understand the invocation since it happens through reflection.")]
         public static XmlReader OpenXml(string content)
         {
             var settings = new XmlReaderSettings();
@@ -519,7 +521,8 @@ namespace MICore
             settings.IgnoreWhitespace = true;
             settings.NameTable = new NameTable();
 
-            // set XmlResolver via reflection, if it exists, to satisfy FxCop
+            // set XmlResolver via reflection, if it exists. This is required for desktop CLR, as otherwise the XML reader may
+            // attempt to hit untrusted external resources.
             var xmlResolverProperty = settings.GetType().GetProperty("XmlResolver", BindingFlags.Public | BindingFlags.Instance);
             xmlResolverProperty?.SetValue(settings, null);
 
@@ -842,6 +845,7 @@ namespace MICore
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
+        /// <param name="targetEngine">Indicates the type of debugging being done.</param>
         void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
 
         /// <summary>

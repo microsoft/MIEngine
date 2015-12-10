@@ -16,6 +16,7 @@ set _DeviceId=
 set _Platform=
 set _SdkRoot=%ProgramFiles(x86)%\Android\android-sdk
 set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+set _LoopCount=
 set _Verbose=
 set _TestsToRun=
 
@@ -23,7 +24,7 @@ if "%~1"=="" goto Help
 if "%~1"=="-?" goto Help
 if "%~1"=="/?" goto Help
 
-set _ProjectRoot=%~dp0..\..\
+call :SetProjectRoot %~dp0..\..\
 
 set _GlassPackageName=Microsoft.VisualStudio.Glass
 set _GlassPackageVersion=1.0.0
@@ -43,6 +44,8 @@ xcopy /Y /D "%VSINSTALLDIR%Common7\IDE\PrivateAssemblies\libadb.dll" "%_GlassDir
 if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy libadb.dll from Visual Studio installation.& exit /b -1
 
 call :EnsureGlassRegisterd
+if not "%ERRORLEVEL%"=="0" exit /b -1
+
 call :EnsureLaunchOptionsGenBuilt
 
 
@@ -53,6 +56,7 @@ if /i "%~1"=="/Platform"    goto SetPlatform
 if /i "%~1"=="/SdkRoot"     goto SetSdkRoot
 if /i "%~1"=="/NdkRoot"     goto SetNdkRoot
 if /i "%~1"=="/v"           set _Verbose=1& goto NextArg
+if /i "%~1"=="/Loop"        goto SetLoop
 if /i "%~1"=="/Tests"       goto SetTests
 echo ERROR: Unknown argument '%~1'.&exit /b -1
 
@@ -78,6 +82,11 @@ goto :NextArg
 :SetNdkRoot
 shift
 set _NdkRoot=%~1
+goto :NextArg
+
+:SetLoop
+shift
+set _LoopCount=%~1
 goto :NextArg
 
 :SetTests
@@ -108,7 +117,7 @@ if "%_Verbose%"=="1" (
     echo SdkRoot:     "%_SdkRoot%"
     echo NdkRoot:     "%_NdkRoot%"
     echo Tests:       %_TestsToRun%
-	echo Glass Flags: %_GlassFlags%
+    echo Glass Flags: %_GlassFlags%
 )
 
 if "%_TestsToRun%"=="" goto RunAll
@@ -118,7 +127,6 @@ goto RunArgs
     set FAILED_TESTS=
     
     pushd %~dp0\
-    
     for /d %%t in (*) do if exist "%%t\TestScript.xml" call :RunSingleTest "%%t"
     goto ReportResults
 
@@ -137,7 +145,7 @@ goto RunArgs
     goto ReportSuccess
     
 :ReportFailure
-    echo ERROR: Failures detected 'RunTests.cmd /DeviceId %_DeviceId% /Platform %_Platform% /Tests %FAILED_TESTS%' to rerun.
+    echo ERROR: Failures detected 'AndroidTest.cmd /DeviceId %_DeviceId% /Platform %_Platform% /Tests %FAILED_TESTS%' to rerun.
     echo.
     exit /b -1
     
@@ -152,8 +160,21 @@ goto RunArgs
     exit /b 0
 
 :RunSingleTest
+    if "%_LoopCount%"=="" goto RunSingleTestOnce
+    set _ContinueRunningTests=true
+    FOR /L %%l IN (1,1,%_LoopCount%) DO call :RunSingleTestInLoop %*
+    goto EOF
+
+:RunSingleTestInLoop
+    if NOT "%_ContinueRunningTests%"=="true" goto EOF
+    call :RunSingleTestOnce %*
+    if NOT "%LastTestSucceeded%"=="true" set _ContinueRunningTests=false
+    goto EOF
+
+:RunSingleTestOnce
     pushd "%~1"
     echo Running '%~1'
+    set LastTestSucceeded=false
     
     ::Build the app
     call msbuild /p:Platform=%_Platform%;VS_NDKRoot="%_NdkRoot%";VS_SDKRoot="%_SdkRoot%";PackageDebugSymbols=true > build.log
@@ -171,33 +192,74 @@ goto RunArgs
 
     ::Run Glass
     call "%_GlassDir%glass2.exe" %_GlassFlags% %_GlassLog%
-    if NOT "%ERRORLEVEL%"=="0" echo ERROR: Test failed. See ErrorLog.xml for more information.& set FAILED_TESTS="%~1" %FAILED_TESTS%
+    if NOT "%ERRORLEVEL%"=="0" echo ERROR: Test failed. See ErrorLog.xml for more information.& set FAILED_TESTS="%~1" %FAILED_TESTS%& goto RunSingleTestDone
+
+    set LastTestSucceeded=true
     
     :RunSingleTestDone
     popd
     exit /b 0
 
 ::These are functions called at the beginning
-	
+
 :EnsureGlassRegisterd
-reg query HKLM\SOFTWARE\Microsoft\glass\14.0 1>NUL 2>NUL
-if errorlevel 1 reg query HKLM\SOFTWARE\Wow6432Node\Microsoft\glass\14.0 1>NUL 2>NUL & if errorlevel 1 echo Running RegisterGlass.cmd... & call "%_GlassDir%RegisterGlass.cmd" & call "%~dp0..\RegisterMIEngine.cmd"
-exit /b 0
+REM Check if the key exists. If not, we need to register glass.
+reg query HKLM\SOFTWARE\Microsoft\glass\14.0 /v InstallDir /reg:32 1>NUL 2>NUL
+if NOT "%ERRORLEVEL%"=="0" goto :RegisterGlass
+
+REM Check if glass is currently registered at a differnt location
+set CurrentGlassRegRoot=
+for /f "tokens=3* skip=2" %%a in ('reg query HKLM\SOFTWARE\Microsoft\glass\14.0 /v InstallDir /reg:32') do call :SetCurrentGlassRegRoot %%a %%b %%c %%d %%e
+if /i "%CurrentGlassRegRoot%"=="%_GlassDir%" goto EOF
+
+:RegisterGlass
+echo Running RegisterGlass.cmd... 
+call "%_GlassDir%RegisterGlass.cmd"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to register glass. Ensure that this command prompt is elevated.& goto :EOF
+call "%~dp0..\RegisterMIEngine.cmd"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to register MIEngine.& goto :EOF
+set ERRORLEVEL=0
+goto EOF
+
+:SetCurrentGlassRegRoot
+REM %1 contains the glass install root. Unfortunately, if the path to the has spaces in it,
+REM these will get broken up with each chunk in a different token. Lets try to put these tokens
+REM back together.
+set CurrentGlassRegRoot=%1
+if "%2"=="%%b" goto EOF
+if "%2"=="" goto EOF
+if "%2"=="d" goto EOF
+set CurrentGlassRegRoot=%1 %2
+if "%3"=="%%c" goto EOF
+if "%3"=="" goto EOF
+if "%3"=="e" goto EOF
+set CurrentGlassRegRoot=%1 %2 %3
+if "%4"=="%%d" goto EOF
+if "%4"=="" goto EOF
+set CurrentGlassRegRoot=%1 %2 %3 %4
+if "%5"=="%%e" goto EOF
+if "%5"=="" goto EOF
+set CurrentGlassRegRoot=%1 %2 %3 %4 %5
+goto EOF
 
 :EnsureLaunchOptionsGenBuilt
 if not exist %_GlassDir%LaunchOptionsGen.exe echo Building LaunchOptionsGen.exe& msbuild /p:Configuration=Release;OutDir=%_GlassDir% /v:quiet %~dp0..\LaunchOptionsGen\LaunchOptionsGen.csproj
 exit /b 0
 
+:SetProjectRoot
+set _ProjectRoot=%~f1
+goto EOF
+
 :Help
 echo --- MIEngine Android Test Script ---
-echo Usage: androidtest.cmd /DeviceId ^<id^> /Platform ^<platform^> [/SdkRoot ^<path^>] [/NdkRoot ^<path^>] [/v] [/Tests ^<test 1^> [^<test 2^> [...]]]
+echo Usage: androidtest.cmd /DeviceId ^<id^> /Platform ^<platform^> [/SdkRoot ^<path^>] [/NdkRoot ^<path^>] [/v] [/Loop ^<num_iterations^>] [/Tests ^<test 1^> [^<test 2^> [...]]]
 echo. 
 echo --- Examples --- 
 echo Run All Tests:
-echo androidtest.cmd /DeviceId emulator-5554 /Platform x86 
+echo androidtest.cmd /DeviceId 169.254.138.123:5555 /Platform x86 
 echo.
 echo Run two specific tests:
-echo androidtest.cmd /DeviceId emulator-5554 /Platform x86 /Tests Stepping Exceptions
+echo androidtest.cmd /DeviceId 169.254.138.123:5555 /Platform x86 /Tests Stepping Exceptions
 echo.
 
 if exist "%_SdkRoot%" "%_SdkRoot%\platform-tools\adb.exe" devices -l

@@ -105,7 +105,7 @@ namespace AndroidDebugLauncher
         }
         public static void SendLaunchError(string launchErrorTelemetryResult, string targetEngine)
         {
-            SendEvent(Event_LaunchError, 
+            SendEvent(Event_LaunchError,
                 new KeyValuePair<string, object>(Property_LaunchErrorResult, launchErrorTelemetryResult),
                 new KeyValuePair<string, object>(Property_LaunchTargetEngine, targetEngine));
         }

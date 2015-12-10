@@ -298,7 +298,7 @@ namespace Microsoft.MIDebugEngine
         /// <summary>
         /// Called before resuming the target process to make sure that all updates have been sent
         /// </summary>
-        /// <returns>Task which is signalled when the operation is complete</returns>
+        /// <returns>Task which is signaled when the operation is complete</returns>
         public Task EnsureSettingsUpdated()
         {
             lock (_updateLock)
@@ -328,7 +328,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    // No task is running, so just return an already signalled task
+                    // No task is running, so just return an already signaled task
                     return Task.FromResult<object>(null);
                 }
             }
