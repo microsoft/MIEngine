@@ -411,6 +411,8 @@ namespace Microsoft.MIDebugEngine
                 try
                 {
                     consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand);
+                    Value = String.Empty;
+                    this.TypeName = null;
                 }
                 catch (Exception e)
                 {
@@ -427,10 +429,7 @@ namespace Microsoft.MIDebugEngine
                     SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
                 }
 
-                Value = String.Empty;
-                this.TypeName = null;
-
-                if (consoleResults.Length > 0)
+                if (!String.IsNullOrEmpty(consoleResults))
                 {
                     this._debuggedProcess.WriteOutput(consoleResults);
                 }

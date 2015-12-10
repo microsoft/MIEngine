@@ -497,7 +497,7 @@ namespace MICore
         /// Sets the gdb 'target-async' option to 'on'.
         /// </summary>
         /// <returns>[Required] Task to track when this is complete</returns>
-        abstract public Task<Results> EnableTargetAsyncOption();
+        abstract public Task EnableTargetAsyncOption();
 
         #endregion
     }
@@ -661,9 +661,9 @@ namespace MICore
             return addresses;
         }
 
-        public override Task<Results> EnableTargetAsyncOption()
+        public override Task EnableTargetAsyncOption()
         {
-            // Linux attach. GDB will fail this command when attaching. This is worked around
+            // Linux attach TODO: GDB will fail this command when attaching. This is worked around
             // by using signals for that case.
             return _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
         }
@@ -719,11 +719,11 @@ namespace MICore
             return Task.FromResult<List<ulong>>(null);
         }
 
-        public override Task<Results> EnableTargetAsyncOption()
+        public override Task EnableTargetAsyncOption()
         {
             // lldb-mi doesn't support target-async mode, and doesn't seem to need to
-            return Task.FromResult(new Results(ResultClass.done));
-        }        
+            return Task.FromResult((object)null);
+        }
     }
 
 
@@ -778,10 +778,10 @@ namespace MICore
             return Task.FromResult<List<ulong>>(null);
         }
 
-        public override Task<Results> EnableTargetAsyncOption()
+        public override Task EnableTargetAsyncOption()
         {
             // clrdbg is always in target-async mode
-            return Task.FromResult(new Results(ResultClass.done));
+            return Task.FromResult((object)null);
         }
 
         public override IEnumerable<Guid> GetSupportedExceptionCategories()
