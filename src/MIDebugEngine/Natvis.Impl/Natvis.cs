@@ -167,13 +167,13 @@ namespace Microsoft.MIDebugEngine.Natvis
             s_expression = new Regex(@"^\{[^\}]*\}");
         }
 
-        internal Natvis(DebuggedProcess process)
+        internal Natvis(DebuggedProcess process, bool showDisplayString)
         {
             _typeVisualizers = new List<FileInfo>();
             _process = process;
             _vizCache = new Dictionary<string, VisualizerInfo>();
             WaitDialog = new HostWaitDialog(ResourceStrings.VisualizingExpressionMessage, ResourceStrings.VisualizingExpressionCaption);
-            ShowDisplayStrings = DisplayStringsState.ForVisualizedItems;  // don't compute display strings unless explicitly requested
+            ShowDisplayStrings = showDisplayString ? DisplayStringsState.On : DisplayStringsState.ForVisualizedItems;  // don't compute display strings unless explicitly requested
             _depth = 0;
             Cache = new VisualizationCache();
         }
@@ -297,8 +297,9 @@ namespace Microsoft.MIDebugEngine.Natvis
                 _depth++;
                 if (_depth < MAX_FORMAT_DEPTH)
                 {
-                    if (ShowDisplayStrings == DisplayStringsState.On
-                        || (ShowDisplayStrings == DisplayStringsState.ForVisualizedItems && variable.IsVisualized))
+                    if (!(variable is VisualizerWrapper) && //no displaystring for dummy vars ([Raw View])
+                        (ShowDisplayStrings == DisplayStringsState.On
+                        || (ShowDisplayStrings == DisplayStringsState.ForVisualizedItems && variable.IsVisualized)))
                     {
                         VisualizerInfo visualizer = FindType(variable);
                         if (visualizer == null)
@@ -357,7 +358,8 @@ namespace Microsoft.MIDebugEngine.Natvis
             try
             {
                 variable.EnsureChildren();
-                if (variable.IsVisualized)
+                if (variable.IsVisualized
+                        || ((ShowDisplayStrings == DisplayStringsState.On) && !(variable is VisualizerWrapper)))    // visualize right away if DisplayStringsState.On, but only if not dummy var ([Raw View])
                 {
                     return ExpandVisualized(variable);
                 }

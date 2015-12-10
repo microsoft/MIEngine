@@ -58,7 +58,7 @@ namespace Microsoft.MIDebugEngine
             _loadOrder = 0;
             MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
             _waitDialog = MICommandFactory.SupportsStopOnDynamicLibLoad() ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
-            Natvis = new Natvis.Natvis(this);
+            Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString);
 
             // we do NOT have real Win32 process IDs, so we use a guid
             AD_PROCESS_ID pid = new AD_PROCESS_ID();

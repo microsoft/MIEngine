@@ -308,6 +308,14 @@
         <xs:documentation>.natvis file to be used when debugging this platform</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="ShowDisplayString" type="xs:boolean" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
+          Should only be enabled if debugger is fast enough providing the value.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attributeGroup ref="CommonAttributes"/>
   </xs:complexType>
   <xs:complexType name="Command">

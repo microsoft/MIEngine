@@ -292,6 +292,11 @@ namespace MICore
             }
         }
 
+        /// <summary>
+        /// If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
+        /// Should only be enabled if debugger is fast enough providing the value.
+        /// </summary>
+        public bool ShowDisplayString { get; set; }
 
         private TargetArchitecture _targetArchitecture;
         public TargetArchitecture TargetArchitecture
@@ -617,6 +622,8 @@ namespace MICore
 
             if (string.IsNullOrEmpty(this.VisualizerFile))
                 this.VisualizerFile = source.VisualizerFile;
+
+            this.ShowDisplayString = source.ShowDisplayString;
 
             this.SetupCommands = LaunchCommand.CreateCollectionFromXml(source.SetupCommands);
 
