@@ -43,7 +43,7 @@ for %%f in (%OpenDebugAD7Dir%\*.dll) do call :InstallFile "%%f" debugAdapters\
 
 REM NOTE: The code that deals with starting the adapter can be found in Monaco\src\vs\workbench\parts\debug\node\rawDebugSession.ts.
 REM Look at getLaunchDetails.
-call :CopyFile "%~dp0coreclr\example-package.json" package.json
+call :CopyFile "%~dp0coreclr\package.json" package.json
 
 for %%f in (coreclr\coreclr.ad7Engine.json) do call :InstallFile "%~dp0%%f" debugAdapters\
 for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%DropDir%%%f" debugAdapters\
