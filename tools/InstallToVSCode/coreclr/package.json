@@ -11,8 +11,8 @@
         "type": "coreclr",
         "enableBreakpointsFor": { "languageIds": [ "csharp", "fsharp" ] },
 
-        "runtime": "./debugAdapters/corerun",
-        "win": { "runtime": "./debugAdapters/CoreRun.exe" },
+        "runtime": "./runtime/corerun",
+        "win": { "runtime": "./runtime/CoreRun.exe" },
         "runtimeArgs": [],
 
         "program": "./debugAdapters/OpenDebugAD7.exe",
