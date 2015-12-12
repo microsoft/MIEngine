@@ -43,7 +43,7 @@ for %%f in (%OpenDebugAD7Dir%\*.dll) do call :InstallFile "%%f" debugAdapters\
 
 REM NOTE: The code that deals with starting the adapter can be found in Monaco\src\vs\workbench\parts\debug\node\rawDebugSession.ts.
 REM Look at getLaunchDetails.
-call :CopyFile "%~dp0coreclr\example-package.json" package.json
+call :CopyFile "%~dp0coreclr\package.json" package.json
 
 for %%f in (coreclr\coreclr.ad7Engine.json) do call :InstallFile "%~dp0%%f" debugAdapters\
 for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%DropDir%%%f" debugAdapters\
@@ -56,10 +56,9 @@ echo.
 echo    mklink /d %DESTDIR%\clrdbg C:\dd\vs\out\binaries\amd64chk\debugger\x-plat\clrdbg
 echo.
 echo.
-echo  2. Modify the 'runtime' value in package.json to indicate the directory where 
-echo     you have coreclr installed. Ex:
+echo  2. Create a link or copy the corerun runtime next to the debug adapter. Ex:
 echo.
-echo     notepad %DESTDIR%\package.json
+echo    mklink /d %DESTDIR%\runtime \\vsdbgqa\x-plat\runtime-windows\x64
 echo.
 exit /b 0
 

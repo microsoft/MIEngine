@@ -1,0 +1,67 @@
+{
+  "name": "coreclr-debug",
+  "version": "0.1.1",
+  "publisher": "vscode",
+  "engines": { "vscode": "*" },
+  "categories": ["Debuggers"],
+
+  "contributes": {
+    "debuggers": [
+      {
+        "type": "coreclr",
+        "enableBreakpointsFor": { "languageIds": [ "csharp", "fsharp" ] },
+
+        "runtime": "./runtime/corerun",
+        "win": { "runtime": "./runtime/CoreRun.exe" },
+        "runtimeArgs": [],
+
+        "program": "./debugAdapters/OpenDebugAD7.exe",
+
+        "configurationAttributes": {
+          "launch": {
+            "required": [ "runtimeExecutable", "cwd" ],
+            "properties": {
+              "cwd": {
+                "type": "string",
+                "description": "Specifies the workspace relative or absolute path to the webserver root.",
+                "default": "."
+              },
+              "runtimeExecutable": {
+                  "type": "string",
+                  "description": "Workspace relative or absolute path to the runtime executable to be used.",
+                  "default": null
+              },
+              "runtimeArgs": {
+                  "type": "array",
+                  "description": "Optional arguments passed to the runtime executable.",
+                  "items": { "type": "string" },
+                  "default": []
+              },
+              "sourceFileMap": {
+                  "type": "object",
+                  "description": "Optional source file mappings passed to the debug engine.",
+                  "default": {}
+              },
+              "justMyCode": {
+                "type": "boolean",
+                "description": "Optional flag to only show user code.",
+                "default": true
+              }
+            }
+          }
+        },
+
+        "initialConfigurations": [
+          {
+            "name": "Launch dnx",
+            "type": "coreclr",
+            "request": "launch",
+            "cwd": ".",
+            "runtimeExecutable": "<path to dnx.exe>",
+            "runtimeArgs": [ "kestrel" ]
+          }
+        ]
+      }
+    ]
+  }
+}
