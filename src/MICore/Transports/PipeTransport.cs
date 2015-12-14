@@ -33,6 +33,7 @@ namespace MICore
         protected virtual void InitProcess(Process proc, out StreamReader stdout, out StreamWriter stdin)
         {
             _process = proc;
+
             _process.EnableRaisingEvents = true;
             _process.Exited += OnProcessExit;
 
@@ -55,6 +56,7 @@ namespace MICore
                 AsyncReadFromStdError();
             }
         }
+
 
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {

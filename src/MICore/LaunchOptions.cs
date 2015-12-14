@@ -124,23 +124,58 @@ namespace MICore
         public RemoteCertificateValidationCallback ServerCertificateValidationCallback { get; set; }
     }
 
+    public sealed class EnvironmentEntry
+    {
+        public EnvironmentEntry(Xml.LaunchOptions.EnvironmentEntry xmlEntry)
+        {
+            this.Name = xmlEntry.Name;
+            this.Value = xmlEntry.Value;
+        }
+
+        /// <summary>
+        /// [Required] Name of the environment variable
+        /// </summary>
+        public string Name { get; private set; }
+
+        /// <summary>
+        /// [Required] Value of the environment variable
+        /// </summary>
+        public string Value { get; private set; }
+    }
+
     /// <summary>
     /// Launch options class when VS should launch an instance of an MI Debugger to connect to an MI Debugger server
     /// </summary>
     public sealed class LocalLaunchOptions : LaunchOptions
     {
-        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress)
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, int processId, Xml.LaunchOptions.EnvironmentEntry[] environmentEntries)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
+            this.ProcessId = processId;
+
+            List<EnvironmentEntry> environmentList = new List<EnvironmentEntry>();
+            if (environmentEntries != null)
+            {
+                foreach (Xml.LaunchOptions.EnvironmentEntry xmlEntry in environmentEntries)
+                {
+                    environmentList.Add(new EnvironmentEntry(xmlEntry));
+                }
+            }
+
+            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentList);
         }
 
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
-            var options = new LocalLaunchOptions(RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"), source.MIDebuggerServerAddress);
+            var options = new LocalLaunchOptions(
+                RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"), 
+                source.MIDebuggerServerAddress,
+                source.ProcessId,
+                source.Environment);
             options.InitializeCommonOptions(source);
 
             return options;
@@ -155,6 +190,11 @@ namespace MICore
         /// [Optional] Server address that MI Debugger server is listening to
         /// </summary>
         public string MIDebuggerServerAddress { get; private set; }
+
+        /// <summary>
+        /// [Optional] If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.
+        /// </summary>
+        public int ProcessId { get; private set; }
 
         /// <summary>
         /// [Required] Path to the executable file. This path must exist on the Visual Studio computer.
@@ -173,6 +213,12 @@ namespace MICore
                 base.ExePath = value;
             }
         }
+
+        /// <summary>
+        /// [Optional] List of environment variables to add to the launched process
+        /// </summary>
+        public ReadOnlyCollection<EnvironmentEntry> Environment { get; private set; }
+
     }
 
     public sealed class JavaLaunchOptions : LaunchOptions

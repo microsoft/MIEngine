@@ -163,7 +163,31 @@
       <xs:enumeration value="clrdbg"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
+  <xs:complexType name="EnvironmentEntry">
+    <xs:annotation>
+      <xs:documentation>A name value pair for an environment variable that should be set as part of LocalLaunchOptions</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="Name" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>The name of the variable</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Value" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>The value of the variable</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="EnvironmentEntryList">
+    <xs:sequence>
+      <xs:element name="EnvironmentEntry" minOccurs="0" maxOccurs="unbounded" type="EnvironmentEntry"/>
+    </xs:sequence>
+  </xs:complexType>
   <xs:attributeGroup name="CommonAttributes">
     <xs:attribute name="TargetArchitecture" use="required" type="TargetArchitecture"/>
     <xs:attribute name="AdditionalSOLibSearchPath" type="xs:string" use="optional">
@@ -173,7 +197,6 @@
     </xs:attribute>
     <xs:attribute name="MIMode" type="MIMode" use="optional"/>
   </xs:attributeGroup>
-
   <xs:element name="LocalLaunchOptions">
     <xs:annotation>
       <xs:documentation>Instructs the debugger to launch a local MI Debugger process and connect to a remote MI Debugger Server.</xs:documentation>
@@ -181,6 +204,13 @@
     <xs:complexType>
       <xs:complexContent>
         <xs:extension base="BaseLaunchOptions">
+          <xs:sequence>
+            <xs:element name="Environment" minOccurs="0" maxOccurs="1" type="EnvironmentEntryList">
+              <xs:annotation>
+                <xs:documentation>Option list of environment variables to set for launch.</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:sequence>  
           <xs:attribute name="MIDebuggerPath" type="xs:string" use="required">
             <xs:annotation>
               <xs:documentation>Full path to the MI Debugger executable.</xs:documentation>
@@ -189,6 +219,11 @@
           <xs:attribute name="MIDebuggerServerAddress" type="xs:string" use="optional">
             <xs:annotation>
               <xs:documentation>Network address of the MI Debugger Server to connect to (example: localhost:1234).</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="ProcessId" type="xs:int" use="optional">
+            <xs:annotation>
+              <xs:documentation>If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
         </xs:extension>

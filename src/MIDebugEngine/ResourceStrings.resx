@@ -183,4 +183,7 @@
   <data name="VisualizingExpressionMessage" xml:space="preserve">
     <value>Visualizing expression: {0}</value>
   </data>
+  <data name="Failed_ExecCommandError" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
 </root>

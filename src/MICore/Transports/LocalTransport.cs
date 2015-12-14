@@ -34,6 +34,11 @@ namespace MICore
                 proc.StartInfo.Environment["PATH"] = proc.StartInfo.Environment["PATH"] + ";" + miDebuggerDir;
             }
 
+            foreach (EnvironmentEntry entry in localOptions.Environment)
+            {
+                proc.StartInfo.Environment.Add(entry.Name, entry.Value);
+            }
+
             InitProcess(proc, out reader, out writer);
         }
 

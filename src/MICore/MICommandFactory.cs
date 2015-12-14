@@ -50,7 +50,7 @@ namespace MICore
             switch (mode)
             {
                 case MIMode.Gdb:
-                    commandFactory = new GdbMICommandyFactory();
+                    commandFactory = new GdbMICommandFactory();
                     break;
                 case MIMode.Lldb:
                     commandFactory = new LlldbMICommandFactory();
@@ -61,7 +61,6 @@ namespace MICore
                 default:
                     throw new ArgumentException("mode");
             }
-
             commandFactory._debugger = debugger;
             commandFactory.Mode = mode;
             commandFactory.Radix = 10;
@@ -167,8 +166,8 @@ namespace MICore
         public virtual async Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
             string cmd = string.Format(@"-stack-list-arguments {0} {1} {2}", (int)printValues, lowFrameLevel, hiFrameLevel);
-
             Results argumentsResults = await ThreadCmdAsync(cmd, ResultClass.done, threadId);
+
             return argumentsResults.Find<ListValue>("stack-args").IsEmpty()
                 ? new TupleValue[0]
                 : argumentsResults.Find<ResultListValue>("stack-args").FindAll<TupleValue>("frame");
@@ -524,7 +523,7 @@ namespace MICore
         #endregion
     }
 
-    internal class GdbMICommandyFactory : MICommandFactory
+    internal class GdbMICommandFactory : MICommandFactory
     {
         private int _currentThreadId = 0;
         private uint _currentFrameLevel = 0;
@@ -685,9 +684,16 @@ namespace MICore
 
         public override Task EnableTargetAsyncOption()
         {
-            // Linux attach TODO: GDB will fail this command when attaching. We need to handle this failure,
-            // and find a way to work arround the problem.
+            // Linux attach TODO: GDB will fail this command when attaching. This is worked around
+            // by using signals for that case.
             return _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
+        }
+
+        public override async Task Terminate()
+        {
+            // Although the mi documentation states that the correct command to terminate is -exec-abort
+            // that isn't actually supported by gdb. 
+            await _debugger.CmdAsync("kill", ResultClass.None);
         }
     }
 

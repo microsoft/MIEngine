@@ -401,48 +401,84 @@ namespace Microsoft.MIDebugEngine
         {
             _engine.CurrentRadix();    // ensure the radix value is up-to-date
 
-            int threadId = Client.GetDebuggedThread().Id;
-            uint frameLevel = _ctx.Level;
-            Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, ResultClass.None);
-
-            if (results.ResultClass == ResultClass.done)
+            string execCommandString = "-exec ";
+            if (this._strippedName.StartsWith(execCommandString))
             {
-                _internalName = results.FindString("name");
-                TypeName = results.TryFindString("type");
-                CountChildren = results.FindUint("numchild");
-                Value = results.TryFindString("value");
-                if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
+                // special case for executing raw mi commands. 
+                string consoleCommand = this._strippedName.Substring(execCommandString.Length);
+                string consoleResults = null;
+
+                try
                 {
-                    if (_format != null)
-                    {
-                        await Format();
-                    }
-                    else
-                    {
-                        results = await _engine.DebuggedProcess.MICommandFactory.VarEvaluateExpression(_internalName, ResultClass.None);
-
-                        if (results.ResultClass == ResultClass.done)
-                        {
-                            Value = results.FindString("value");
-                        }
-                        else if (results.ResultClass == ResultClass.error)
-                        {
-                            SetAsError(results.FindString("msg"));
-                        }
-                        else
-                        {
-                            Debug.Fail("Weird msg from -var-evaluate-expression");
-                        }
-                    }
+                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand);
+                    Value = String.Empty;
+                    this.TypeName = null;
                 }
-            }
-            else if (results.ResultClass == ResultClass.error)
-            {
-                SetAsError(results.FindString("msg"));
+                catch (Exception e)
+                {
+                    if (e.InnerException != null)
+                        e = e.InnerException;
+
+                    UnexpectedMIResultException miException = e as UnexpectedMIResultException;
+                    string message;
+                    if (miException != null && miException.MIError != null)
+                        message = miException.MIError;
+                    else
+                        message = e.Message;
+
+                    SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
+                }
+
+                if (!String.IsNullOrEmpty(consoleResults))
+                {
+                    this._debuggedProcess.WriteOutput(consoleResults);
+                }
             }
             else
             {
-                Debug.Fail("Weird msg from -var-create");
+                int threadId = Client.GetDebuggedThread().Id;
+                uint frameLevel = _ctx.Level;
+                Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, ResultClass.None);
+
+                if (results.ResultClass == ResultClass.done)
+                {
+                    _internalName = results.FindString("name");
+                    TypeName = results.TryFindString("type");
+                    CountChildren = results.FindUint("numchild");
+                    Value = results.TryFindString("value");
+                    if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
+                    {
+                        if (_format != null)
+                        {
+                            await Format();
+                        }
+                        else
+                        {
+                            results = await _engine.DebuggedProcess.MICommandFactory.VarEvaluateExpression(_internalName, ResultClass.None);
+
+                            if (results.ResultClass == ResultClass.done)
+                            {
+                                Value = results.FindString("value");
+                            }
+                            else if (results.ResultClass == ResultClass.error)
+                            {
+                                SetAsError(results.FindString("msg"));
+                            }
+                            else
+                            {
+                                Debug.Fail("Weird msg from -var-evaluate-expression");
+                            }
+                        }
+                    }
+                }
+                else if (results.ResultClass == ResultClass.error)
+                {
+                    SetAsError(results.FindString("msg"));
+                }
+                else
+                {
+                    Debug.Fail("Weird msg from -var-create");
+                }
             }
         }
 

@@ -11,7 +11,8 @@
 namespace Microsoft.MIDebugEngine {
     using System;
     using System.Reflection;
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -102,6 +103,15 @@ namespace Microsoft.MIDebugEngine {
         internal static string ExceptionSettingsError {
             get {
                 return ResourceManager.GetString("ExceptionSettingsError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        internal static string Failed_ExecCommandError {
+            get {
+                return ResourceManager.GetString("Failed_ExecCommandError", resourceCulture);
             }
         }
         
