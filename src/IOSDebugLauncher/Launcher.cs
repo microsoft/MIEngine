@@ -19,6 +19,7 @@ using System.Threading;
 using System.Runtime.ExceptionServices;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
+using Microsoft.DebugEngineHost;
 
 namespace IOSDebugLauncher
 {
@@ -42,7 +43,7 @@ namespace IOSDebugLauncher
         }
         private RemotePorts _remotePorts;
 
-        void IPlatformAppLauncher.Initialize(string registryRoot, IDeviceAppLauncherEventCallback eventCallback)
+        void IPlatformAppLauncher.Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback)
         {
             _callback = eventCallback;
         }
@@ -130,7 +131,7 @@ namespace IOSDebugLauncher
                 if (!String.IsNullOrWhiteSpace(file))
                 {
                     string targetAttachCommand = string.Format(CultureInfo.InvariantCulture, "-target-attach -n {0}  --waitfor", file);
-                    string launchMessage = string.Format(CultureInfo.InstalledUICulture, LauncherResources.WaitingForApp, file);
+                    string launchMessage = string.Format(CultureInfo.CurrentCulture, LauncherResources.WaitingForApp, file);
                     commands.Add(new LaunchCommand(targetAttachCommand, launchMessage));
                 }
                 else

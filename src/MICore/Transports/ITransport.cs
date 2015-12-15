@@ -40,7 +40,8 @@ namespace MICore
         /// <summary>
         /// Fired when either the target process exits or when the stdout stream is closed.
         /// </summary>
-        void OnDebuggerProcessExit();
+        /// <param name="exitCode">[Optional] exit code from the target process. null if unknown.</param>
+        void OnDebuggerProcessExit(string exitCode);
 
         /// <summary>
         /// Appends a line of text to the initialization log which is dumped to the output

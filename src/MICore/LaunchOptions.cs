@@ -8,12 +8,16 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Xml;
 using System.Globalization;
 using System.Net.Security;
 using System.Collections.ObjectModel;
 using System.Xml.Serialization;
 using System.Diagnostics;
+using Microsoft.DebugEngineHost;
+using MICore.Xml.LaunchOptions;
+using System.Reflection;
 
 namespace MICore
 {
@@ -53,33 +57,6 @@ namespace MICore
         /// </summary>
         None
     };
-
-    /// <summary>
-    /// Launch options when connecting to an instance of an MI Debugger through a serial port
-    /// </summary>
-    public sealed class SerialLaunchOptions : LaunchOptions
-    {
-        public SerialLaunchOptions(string Port)
-        {
-            if (string.IsNullOrEmpty(Port))
-                throw new ArgumentNullException("Port");
-
-            this.Port = Port;
-        }
-
-        static internal SerialLaunchOptions CreateFromXml(Xml.LaunchOptions.SerialPortLaunchOptions source)
-        {
-            var options = new SerialLaunchOptions(RequireAttribute(source.Port, "Port"));
-            options.InitializeCommonOptions(source);
-
-            return options;
-        }
-
-        /// <summary>
-        /// [Required] Serial port to connect to
-        /// </summary>
-        public string Port { get; private set; }
-    }
 
     /// <summary>
     /// Launch options when connecting to an instance of an MI Debugger running on a remote device through a shell
@@ -147,23 +124,58 @@ namespace MICore
         public RemoteCertificateValidationCallback ServerCertificateValidationCallback { get; set; }
     }
 
+    public sealed class EnvironmentEntry
+    {
+        public EnvironmentEntry(Xml.LaunchOptions.EnvironmentEntry xmlEntry)
+        {
+            this.Name = xmlEntry.Name;
+            this.Value = xmlEntry.Value;
+        }
+
+        /// <summary>
+        /// [Required] Name of the environment variable
+        /// </summary>
+        public string Name { get; private set; }
+
+        /// <summary>
+        /// [Required] Value of the environment variable
+        /// </summary>
+        public string Value { get; private set; }
+    }
+
     /// <summary>
     /// Launch options class when VS should launch an instance of an MI Debugger to connect to an MI Debugger server
     /// </summary>
     public sealed class LocalLaunchOptions : LaunchOptions
     {
-        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress)
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, int processId, Xml.LaunchOptions.EnvironmentEntry[] environmentEntries)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
+            this.ProcessId = processId;
+
+            List<EnvironmentEntry> environmentList = new List<EnvironmentEntry>();
+            if (environmentEntries != null)
+            {
+                foreach (Xml.LaunchOptions.EnvironmentEntry xmlEntry in environmentEntries)
+                {
+                    environmentList.Add(new EnvironmentEntry(xmlEntry));
+                }
+            }
+
+            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentList);
         }
 
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
-            var options = new LocalLaunchOptions(RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"), source.MIDebuggerServerAddress);
+            var options = new LocalLaunchOptions(
+                RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"), 
+                source.MIDebuggerServerAddress,
+                source.ProcessId,
+                source.Environment);
             options.InitializeCommonOptions(source);
 
             return options;
@@ -178,6 +190,11 @@ namespace MICore
         /// [Optional] Server address that MI Debugger server is listening to
         /// </summary>
         public string MIDebuggerServerAddress { get; private set; }
+
+        /// <summary>
+        /// [Optional] If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.
+        /// </summary>
+        public int ProcessId { get; private set; }
 
         /// <summary>
         /// [Required] Path to the executable file. This path must exist on the Visual Studio computer.
@@ -196,6 +213,12 @@ namespace MICore
                 base.ExePath = value;
             }
         }
+
+        /// <summary>
+        /// [Optional] List of environment variables to add to the launched process
+        /// </summary>
+        public ReadOnlyCollection<EnvironmentEntry> Environment { get; private set; }
+
     }
 
     public sealed class JavaLaunchOptions : LaunchOptions
@@ -231,7 +254,7 @@ namespace MICore
     public abstract class LaunchOptions
     {
         private const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
-
+        private static Lazy<Assembly> s_serializationAssembly = new Lazy<Assembly>(LoadSerializationAssembly, LazyThreadSafetyMode.ExecutionAndPublication);
         private bool _initializationComplete;
 
         /// <summary>
@@ -243,7 +266,7 @@ namespace MICore
 
         private string _exePath;
         /// <summary>
-        /// [Required] Path to the executable file. This could be a path on the remote machine (for Pipe/Serial transports)
+        /// [Required] Path to the executable file. This could be a path on the remote machine (for Pipe transport)
         /// or the local machine (Local transport).
         /// </summary>
         public virtual string ExePath
@@ -315,6 +338,11 @@ namespace MICore
             }
         }
 
+        /// <summary>
+        /// If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
+        /// Should only be enabled if debugger is fast enough providing the value.
+        /// </summary>
+        public bool ShowDisplayString { get; set; }
 
         private TargetArchitecture _targetArchitecture;
         public TargetArchitecture TargetArchitecture
@@ -334,8 +362,7 @@ namespace MICore
         {
             get
             {
-                // For now at least, we will assume that the target system is unix unless we are launching the MI Debugger locally
-                return !(this is LocalLaunchOptions);
+                return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             }
         }
 
@@ -387,16 +414,13 @@ namespace MICore
             }
         }
 
-        public static LaunchOptions GetInstance(string registryRoot, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
+        public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
 
             if (string.IsNullOrWhiteSpace(options))
                 throw new InvalidLaunchOptionsException(MICoreResources.Error_StringIsNullOrEmpty);
-
-            if (string.IsNullOrEmpty(registryRoot))
-                throw new ArgumentNullException("registryRoot");
 
             Logger.WriteTextBlock("LaunchOptions", options);
 
@@ -406,29 +430,22 @@ namespace MICore
 
             try
             {
+                XmlSerializer serializer;
                 using (XmlReader reader = OpenXml(options))
                 {
                     switch (reader.LocalName)
                     {
                         case "LocalLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.LocalLaunchOptionsSerializer();
+                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.LocalLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.LocalLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = LocalLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
                             break;
 
-                        case "SerialPortLaunchOptions":
-                            {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.SerialPortLaunchOptionsSerializer();
-                                var xmlLaunchOptions = (Xml.LaunchOptions.SerialPortLaunchOptions)Deserialize(serializer, reader);
-                                launchOptions = SerialLaunchOptions.CreateFromXml(xmlLaunchOptions);
-                            }
-                            break;
-
                         case "PipeLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.PipeLaunchOptionsSerializer();
+                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.PipeLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.PipeLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = PipeLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
@@ -436,7 +453,7 @@ namespace MICore
 
                         case "TcpLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.TcpLaunchOptionsSerializer();
+                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.TcpLaunchOptions));
                                 var xmlLaunchOptions = (Xml.LaunchOptions.TcpLaunchOptions)Deserialize(serializer, reader);
                                 launchOptions = TcpLaunchOptions.CreateFromXml(xmlLaunchOptions);
                             }
@@ -444,7 +461,7 @@ namespace MICore
 
                         case "IOSLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.IOSLaunchOptionsSerializer();
+                                serializer = GetXmlSerializer(typeof(IOSLaunchOptions));
                                 launcherXmlOptions = Deserialize(serializer, reader);
                                 clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
                             }
@@ -452,7 +469,7 @@ namespace MICore
 
                         case "AndroidLaunchOptions":
                             {
-                                var serializer = new Microsoft.Xml.Serialization.GeneratedAssembly.AndroidLaunchOptionsSerializer();
+                                serializer = GetXmlSerializer(typeof(AndroidLaunchOptions));
                                 launcherXmlOptions = Deserialize(serializer, reader);
                                 clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
                             }
@@ -476,7 +493,7 @@ namespace MICore
 
             if (clsidLauncher != Guid.Empty)
             {
-                launchOptions = ExecuteLauncher(registryRoot, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine);
+                launchOptions = ExecuteLauncher(configStore, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine);
             }
 
             if (targetEngine == TargetEngine.Native)
@@ -498,6 +515,8 @@ namespace MICore
             return launchOptions;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",
+            Justification = "Usage is secure -- XmlResolver property is set to 'null' in desktop CLR, and is always null in CoreCLR. But CodeAnalysis cannot understand the invocation since it happens through reflection.")]
         public static XmlReader OpenXml(string content)
         {
             var settings = new XmlReaderSettings();
@@ -506,7 +525,11 @@ namespace MICore
             settings.IgnoreProcessingInstructions = true;
             settings.IgnoreWhitespace = true;
             settings.NameTable = new NameTable();
-            settings.XmlResolver = null;
+
+            // set XmlResolver via reflection, if it exists. This is required for desktop CLR, as otherwise the XML reader may
+            // attempt to hit untrusted external resources.
+            var xmlResolverProperty = settings.GetType().GetProperty("XmlResolver", BindingFlags.Public | BindingFlags.Instance);
+            xmlResolverProperty?.SetValue(settings, null);
 
             // Create our own namespace manager so that we can set the default namespace
             // We need this because the XML serializer requires correct namespaces,
@@ -542,13 +565,13 @@ namespace MICore
                 {
                     if (reader != null)
                     {
-                        reader.Close();
+                        reader.Dispose();
                     }
                     else if (stringReader != null)
                     {
                         // NOTE: the reader will close the input, so we only want to do this
                         // if we failed to create the reader.
-                        stringReader.Close();
+                        stringReader.Dispose();
                     }
                 }
             }
@@ -646,6 +669,8 @@ namespace MICore
             if (string.IsNullOrEmpty(this.VisualizerFile))
                 this.VisualizerFile = source.VisualizerFile;
 
+            this.ShowDisplayString = source.ShowDisplayString;
+
             this.SetupCommands = LaunchCommand.CreateCollectionFromXml(source.SetupCommands);
 
             if (source.CustomLaunchSetupCommands != null)
@@ -686,12 +711,12 @@ namespace MICore
             return attributeValue;
         }
 
-        private static LaunchOptions ExecuteLauncher(string registryRoot, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
+        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
-            var deviceAppLauncher = (IPlatformAppLauncher)VSLoader.VsCoCreateManagedObject(registryRoot, clsidLauncher);
+            var deviceAppLauncher = (IPlatformAppLauncher)HostLoader.VsCoCreateManagedObject(configStore, clsidLauncher);
             if (deviceAppLauncher == null)
             {
-                throw new ApplicationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, clsidLauncher.ToString("B")));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, clsidLauncher.ToString("B")));
             }
 
             bool success = false;
@@ -700,7 +725,7 @@ namespace MICore
             {
                 try
                 {
-                    deviceAppLauncher.Initialize(registryRoot, eventCallback);
+                    deviceAppLauncher.Initialize(configStore, eventCallback);
                     deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException))
@@ -723,6 +748,45 @@ namespace MICore
                 }
             }
         }
+
+        private static XmlSerializer GetXmlSerializer(Type type)
+        {
+            Assembly serializationAssembly = s_serializationAssembly.Value;
+            if (serializationAssembly == null)
+            {
+                return new XmlSerializer(type);
+            }
+            else
+            {
+                // NOTE: You can look at MIEngine\src\MICore\obj\Debug\sgen\<random-temp-file-name>.cs to see the source code for this assembly.
+                Type serializerType = serializationAssembly.GetType("Microsoft.Xml.Serialization.GeneratedAssembly." + type.Name + "Serializer");
+                ConstructorInfo constructor = serializerType?.GetConstructor(new Type[0]);
+                if (constructor == null)
+                {
+                    throw new Exception(string.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_UnableToLoadSerializer, type.Name));
+                }
+
+                object serializer = constructor.Invoke(new object[0]);
+                return (XmlSerializer)serializer;
+            }
+        }
+
+        private static Assembly LoadSerializationAssembly()
+        {
+            // This code looks to see if we have sgen-created XmlSerializers assembly next to this dll, which will be true
+            // when the MIEngine is running in Visual Studio. If so, it loads it, so that we can get the performance advantages
+            // of a static XmlSerializers assembly. Otherwise we return null, and we will use a dynamic deserializer.
+
+            string thisModulePath = typeof(LaunchOptions).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
+            string thisModuleDir = Path.GetDirectoryName(thisModulePath);
+            string thisModuleName = Path.GetFileNameWithoutExtension(thisModulePath);
+            string serializerAssemblyPath = Path.Combine(thisModuleDir, thisModuleName + ".XmlSerializers.dll");
+            if (!File.Exists(serializerAssemblyPath))
+                return null;
+
+            return Assembly.Load(new AssemblyName(thisModuleName + ".XmlSerializers"));
+        }
+
 
         private void VerifyCanModifyProperty(string propertyName)
         {
@@ -777,9 +841,9 @@ namespace MICore
         /// <summary>
         /// Initialized the device app launcher
         /// </summary>
-        /// <param name="registryRoot">Current VS registry root</param>
+        /// <param name="configStore">Current VS registry root</param>
         /// <param name="eventCallback">[Required] Callback object used to send events to the rest of Visual Studio</param>
-        void Initialize(string registryRoot, IDeviceAppLauncherEventCallback eventCallback);
+        void Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback);
 
         /// <summary>
         /// Initializes the launcher from the launch settings
@@ -788,6 +852,7 @@ namespace MICore
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
+        /// <param name="targetEngine">Indicates the type of debugging being done.</param>
         void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
 
         /// <summary>

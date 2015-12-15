@@ -163,7 +163,31 @@
       <xs:enumeration value="clrdbg"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
+  <xs:complexType name="EnvironmentEntry">
+    <xs:annotation>
+      <xs:documentation>A name value pair for an environment variable that should be set as part of LocalLaunchOptions</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="Name" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>The name of the variable</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="Value" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>The value of the variable</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="EnvironmentEntryList">
+    <xs:sequence>
+      <xs:element name="EnvironmentEntry" minOccurs="0" maxOccurs="unbounded" type="EnvironmentEntry"/>
+    </xs:sequence>
+  </xs:complexType>
   <xs:attributeGroup name="CommonAttributes">
     <xs:attribute name="TargetArchitecture" use="required" type="TargetArchitecture"/>
     <xs:attribute name="AdditionalSOLibSearchPath" type="xs:string" use="optional">
@@ -173,7 +197,6 @@
     </xs:attribute>
     <xs:attribute name="MIMode" type="MIMode" use="optional"/>
   </xs:attributeGroup>
-
   <xs:element name="LocalLaunchOptions">
     <xs:annotation>
       <xs:documentation>Instructs the debugger to launch a local MI Debugger process and connect to a remote MI Debugger Server.</xs:documentation>
@@ -181,6 +204,13 @@
     <xs:complexType>
       <xs:complexContent>
         <xs:extension base="BaseLaunchOptions">
+          <xs:sequence>
+            <xs:element name="Environment" minOccurs="0" maxOccurs="1" type="EnvironmentEntryList">
+              <xs:annotation>
+                <xs:documentation>Option list of environment variables to set for launch.</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:sequence>  
           <xs:attribute name="MIDebuggerPath" type="xs:string" use="required">
             <xs:annotation>
               <xs:documentation>Full path to the MI Debugger executable.</xs:documentation>
@@ -191,20 +221,9 @@
               <xs:documentation>Network address of the MI Debugger Server to connect to (example: localhost:1234).</xs:documentation>
             </xs:annotation>
           </xs:attribute>
-        </xs:extension>
-      </xs:complexContent>
-    </xs:complexType>
-  </xs:element>
-  <xs:element name="SerialPortLaunchOptions">
-    <xs:annotation>
-      <xs:documentation>Instructions the debugger to connect to an instance of an MI Debugger running on the target computer over serial port</xs:documentation>
-    </xs:annotation>
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="BaseLaunchOptions">
-          <xs:attribute name="Port" type="xs:string" use="required">
+          <xs:attribute name="ProcessId" type="xs:int" use="optional">
             <xs:annotation>
-              <xs:documentation>Serial port to connect to (ex:com1).</xs:documentation>
+              <xs:documentation>If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
         </xs:extension>
@@ -258,7 +277,7 @@
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
-  <!--base type for LocalLaunchOptions, PipeLaunchOptions, SerialPortLaunchOptions, and TcpLaunchOptions -->
+  <!--base type for LocalLaunchOptions, PipeLaunchOptions, and TcpLaunchOptions -->
   <xs:complexType name="BaseLaunchOptions">
     <xs:sequence>
       <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
@@ -304,7 +323,7 @@
       <xs:annotation>
         <xs:documentation>
           Path to the executable file. For LocalLaunchOptions, this is a path on the Windows machine,
-          for Pipe/Serial, this is a path on the remote machine. This path is not required if the project system provides
+          for Pipe, this is a path on the remote machine. This path is not required if the project system provides
           it through the LaunchDebugTargets structure.
         </xs:documentation>
       </xs:annotation>
@@ -322,6 +341,14 @@
     <xs:attribute name="VisualizerFile" type="xs:string" use="optional">
       <xs:annotation>
         <xs:documentation>.natvis file to be used when debugging this platform</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="ShowDisplayString" type="xs:boolean" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
+          Should only be enabled if debugger is fast enough providing the value.
+        </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attributeGroup ref="CommonAttributes"/>

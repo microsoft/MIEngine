@@ -10,6 +10,7 @@
 
 namespace Microsoft.MIDebugEngine {
     using System;
+    using System.Reflection;
     
     
     /// <summary>
@@ -39,7 +40,7 @@ namespace Microsoft.MIDebugEngine {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.MIDebugEngine.ResourceStrings", typeof(ResourceStrings).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.MIDebugEngine.ResourceStrings", typeof(ResourceStrings).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -102,6 +103,15 @@ namespace Microsoft.MIDebugEngine {
         internal static string ExceptionSettingsError {
             get {
                 return ResourceManager.GetString("ExceptionSettingsError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        internal static string Failed_ExecCommandError {
+            get {
+                return ResourceManager.GetString("Failed_ExecCommandError", resourceCulture);
             }
         }
         

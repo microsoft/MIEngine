@@ -10,6 +10,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace MICore
 {
@@ -27,7 +28,7 @@ namespace MICore
         public event EventHandler RunModeEvent;
         public event EventHandler ProcessExitEvent;
         public event EventHandler DebuggerExitEvent;
-        public event EventHandler DebuggerAbortedEvent;
+        public event EventHandler<string> DebuggerAbortedEvent;
         public event EventHandler<string> OutputStringEvent;
         public event EventHandler EvaluationEvent;
         public event EventHandler ErrorEvent;
@@ -56,6 +57,9 @@ namespace MICore
         public bool Is64BitArch { get; private set; }
         public CommandLock CommandLock { get { return _commandLock; } }
         public MICommandFactory MICommandFactory { get; protected set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        protected readonly LaunchOptions _launchOptions;
 
         private Queue<Func<Task>> _internalBreakActions = new Queue<Func<Task>>();
         private TaskCompletionSource<object> _internalBreakActionCompletionSource;
@@ -99,6 +103,15 @@ namespace MICore
         private int _retryCount;
         private const int BREAK_DELTA = 3000;   // millisec before trying to break again
         private const int BREAK_RETRY_MAX = 3;  // maximum times to retry
+
+        // The key is the thread group, the value is the pid
+        private Dictionary<string, int> _debuggeePids;
+
+        public Debugger(LaunchOptions launchOptions)
+        {
+            _launchOptions = launchOptions;
+            _debuggeePids = new Dictionary<string, int>();
+        }
 
         private void RetryBreak(object o)
         {
@@ -156,6 +169,20 @@ namespace MICore
 
             if (reason.StartsWith("exited"))
             {
+                string threadGroupId = results.TryFindString("id");
+                if (!String.IsNullOrEmpty(threadGroupId))
+                {
+                    lock (_debuggeePids)
+                    {
+                        _debuggeePids.Remove(threadGroupId);
+                    }
+                }
+
+                if (IsLocalGdbAttach())
+                {
+                    CmdExitAsync();
+                }
+
                 this.ProcessState = ProcessState.Exited;
                 if (ProcessExitEvent != null)
                 {
@@ -178,7 +205,6 @@ namespace MICore
             }
 
             bool fIsAsyncBreak = MICommandFactory.IsAsyncBreakSignal(results);
-
             if (await DoInternalBreakActions(fIsAsyncBreak))
             {
                 return;
@@ -219,7 +245,7 @@ namespace MICore
             }
             else if (mode == "exit")
             {
-                OnDebuggerProcessExit();
+                OnDebuggerProcessExit(null);
             }
             else if (mode.StartsWith("done,bkpt=", StringComparison.Ordinal))
             {
@@ -423,13 +449,60 @@ namespace MICore
             return CmdBreakInternal();
         }
 
-        public async Task CmdTerminate()
+
+        bool IsLocalGdbAttach()
+        {
+            if (this.MICommandFactory.Mode == MIMode.Gdb &&
+               this._launchOptions is LocalLaunchOptions &&
+               ((LocalLaunchOptions)this._launchOptions).ProcessId != 0 &&
+               String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
+               )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task<Results> CmdTerminate()
         {
             await MICommandFactory.Terminate();
+
+            if (IsLocalGdbAttach())
+            {
+                CmdExitAsync();
+            }
+
+            return new Results(ResultClass.done);
         }
 
         public Task CmdBreakInternal()
         {
+            if (IsLocalGdbAttach())
+            {
+                // for local linux debugging with attach, send a signal to one of the debugee processes rather than 
+                // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
+                // deadlocks or missed bps (since binding in runtime requires break state). 
+                // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
+                bool useSignal = false;
+                int debuggeePid = 0;
+                lock (_debuggeePids)
+                {
+                    if (_debuggeePids.Count > 0)
+                    {
+                        debuggeePid = _debuggeePids.First().Value;
+                        useSignal = true;
+                    }
+                }
+
+                if (useSignal)
+                {
+                    return CmdLinuxBreak(debuggeePid, ResultClass.done);
+                }
+            }
+            
             var res = CmdAsync("-exec-interrupt", ResultClass.done);
             return res.ContinueWith((t) =>
             {
@@ -562,6 +635,17 @@ namespace MICore
             return waitingOperation.Task;
         }
 
+        private Task<Results> CmdLinuxBreak(int debugeePid, ResultClass expectedResultClass)
+        {            
+            // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
+            // This will cause gdb to async-break. This is necessary because gdb does not support async break
+            // when attached.
+            const int sigint = 2;
+            NativeMethods.Kill(debugeePid, sigint);
+
+            return Task.FromResult<Results>(new Results(ResultClass.done));
+        }
+
         #region ITransportCallback implementation
         // Note: this can be called from any thread
         void ITransportCallback.OnStdOutLine(string line)
@@ -602,7 +686,7 @@ namespace MICore
             }
         }
 
-        public void OnDebuggerProcessExit()
+        public void OnDebuggerProcessExit(/*OPTIONAL*/ string exitCode)
         {
             // GDB has exited. Cleanup. Only let one thread perform the cleanup
             if (Interlocked.CompareExchange(ref _exiting, 1, 0) == 0)
@@ -627,7 +711,7 @@ namespace MICore
                 {
                     if (DebuggerAbortedEvent != null)
                     {
-                        DebuggerAbortedEvent(this, null);
+                        DebuggerAbortedEvent(this, exitCode);
                     }
                 }
                 else
@@ -714,7 +798,7 @@ namespace MICore
                 StartTime = DateTime.Now;
             }
 
-            internal void OnComplete(Results results)
+            internal void OnComplete(Results results, MICommandFactory commandFactory)
             {
                 if (_expectedResultClass != ResultClass.None && _expectedResultClass != results.ResultClass)
                 {
@@ -724,7 +808,7 @@ namespace MICore
                         miError = results.FindString("msg");
                     }
 
-                    _completionSource.SetException(new UnexpectedMIResultException(this.Command, miError));
+                    _completionSource.SetException(new UnexpectedMIResultException(commandFactory.Name, this.Command, miError));
                 }
                 else
                 {
@@ -785,7 +869,7 @@ namespace MICore
                         {
                             Results results = MIResults.ParseCommandOutput(noprefix);
                             Logger.WriteLine(id + ": elapsed time " + (int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds);
-                            waitingOperation.OnComplete(results);
+                            waitingOperation.OnComplete(results, this.MICommandFactory);
                             return;
                         }
                     }
@@ -834,7 +918,7 @@ namespace MICore
 
         private void OnUnknown(string cmd)
         {
-            Debug.Print("DBG:Unknown command: {0}", cmd);
+            Debug.WriteLine("DBG:Unknown command: {0}", cmd);
         }
 
         private void OnResult(string cmd, string token)
@@ -937,6 +1021,11 @@ namespace MICore
                     BreakChangeEvent(this, new ResultEventArgs(results));
                 }
             }
+            else if (cmd.StartsWith("thread-group-started,", StringComparison.Ordinal))
+            {
+                results = MIResults.ParseResultList(cmd.Substring("thread-group-started,".Length));
+                HandleThreadGroupStarted(results);
+            }
             else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
             {
                 results = MIResults.ParseResultList(cmd.Substring("thread-created,".Length));
@@ -959,6 +1048,17 @@ namespace MICore
             else
             {
                 OnDebuggeeOutput("=" + cmd);
+            }
+        }
+
+        private void HandleThreadGroupStarted(Results results)
+        {
+            string idString = results.FindString("id");
+            string pidString = results.FindString("pid");
+
+            lock (_debuggeePids)
+            {
+                _debuggeePids.Add(idString, Int32.Parse(pidString, CultureInfo.InvariantCulture));
             }
         }
 
@@ -1060,3 +1160,4 @@ namespace MICore
         }
     }
 }
+

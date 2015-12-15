@@ -9,15 +9,15 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
-using Microsoft.Win32;
 using System.Globalization;
 using System.Collections.ObjectModel;
 using System.Collections.Concurrent;
 using System.Threading;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
-    class ExceptionManager
+    internal class ExceptionManager
     {
         // ***************** DESIGN NOTES *************************
         // At least at the time of the creation (VS 2015 RTM), the exception settings dialog pushes
@@ -29,18 +29,18 @@ namespace Microsoft.MIDebugEngine
         // back into the exception manager (EnsureSettingsUpdated) to wait for the settings to be flushed.
         //
 
-        readonly MICommandFactory _commandFactory;
-        readonly WorkerThread _worker;
-        readonly ReadOnlyDictionary<Guid, ExceptionCategorySettings> _categoryMap;
-        readonly ISampleEngineCallback _callback;
-        bool _initialSettingssSent;
+        private readonly MICommandFactory _commandFactory;
+        private readonly WorkerThread _worker;
+        private readonly ReadOnlyDictionary<Guid, ExceptionCategorySettings> _categoryMap;
+        private readonly ISampleEngineCallback _callback;
+        private bool _initialSettingssSent;
 
-        readonly object _updateLock = new object();
-        int? _lastUpdateTime;
-        Task _updateTask;
-        CancellationTokenSource _updateDelayCancelSource;
+        private readonly object _updateLock = new object();
+        private int? _lastUpdateTime;
+        private Task _updateTask;
+        private CancellationTokenSource _updateDelayCancelSource;
 
-        class SettingsUpdates
+        private class SettingsUpdates
         {
             // Threading note: these are only modified on the main thread
             public ExceptionBreakpointState? NewCategoryState;
@@ -64,7 +64,7 @@ namespace Microsoft.MIDebugEngine
         /// the holder is disposed, we will drop the lock and ensure that we have
         /// queued the processing of updates.
         /// </summary>
-        class SettingsUpdateHolder : IDisposable
+        private class SettingsUpdateHolder : IDisposable
         {
             /// <summary>
             /// [Required] The SettingsUpdates being held by the holder
@@ -76,19 +76,19 @@ namespace Microsoft.MIDebugEngine
             public SettingsUpdateHolder(SettingsUpdates value, ExceptionManager parent, object updateLock)
             {
                 this.Value = value;
-                this._parent = parent;
-                this._updateLock = updateLock;
-                Monitor.Enter(this._updateLock);
+                _parent = parent;
+                _updateLock = updateLock;
+                Monitor.Enter(_updateLock);
             }
 
             public void Dispose()
             {
-                Monitor.Exit(this._updateLock);
-                this._parent.EnsureUpdateTaskStarted();
+                Monitor.Exit(_updateLock);
+                _parent.EnsureUpdateTaskStarted();
             }
         }
 
-        class ExceptionCategorySettings
+        private class ExceptionCategorySettings
         {
             private readonly ExceptionManager _parent;
             public readonly string CategoryName;
@@ -100,43 +100,32 @@ namespace Microsoft.MIDebugEngine
             public ExceptionBreakpointState CategoryState;
             public readonly Dictionary<string, ulong> CurrentRules = new Dictionary<string, ulong>();
 
-            readonly object _updateLock = new object();
-            /*OPTIONAL*/ SettingsUpdates _settingsUpdate;
+            private readonly object _updateLock = new object();
+            /*OPTIONAL*/
+            private SettingsUpdates _settingsUpdate;
 
-            // VS CODE TODO: RegistryKey should be replaced with some sort of generic configuration store, and it should NOT be
-            // optional.
-            public ExceptionCategorySettings(ExceptionManager parent, /*OPTIONAL*/ RegistryKey categoryKey)
+            public ExceptionCategorySettings(ExceptionManager parent, HostConfigurationSection categoryKey, string categoryName)
             {
                 _parent = parent;
-                if (categoryKey != null)
+                this.CategoryName = categoryName;
+                this.DefaultCategoryState = RegistryToExceptionBreakpointState(categoryKey.GetValue("*"));
+                Dictionary<string, ExceptionBreakpointState> exceptionSettings = new Dictionary<string, ExceptionBreakpointState>();
+                foreach (string valueName in categoryKey.GetValueNames())
                 {
-                    this.CategoryName = categoryKey.GetSubKeyNames().Single();
-                    this.DefaultCategoryState = RegistryToExceptionBreakpointState(categoryKey.GetValue("*"));
-                    Dictionary<string, ExceptionBreakpointState> exceptionSettings = new Dictionary<string, ExceptionBreakpointState>();
-                    foreach (string valueName in categoryKey.GetValueNames())
+                    if (string.IsNullOrEmpty(valueName) || valueName == "*" || !ExceptionManager.IsSupportedException(valueName))
+                        continue;
+
+                    ExceptionBreakpointState value = RegistryToExceptionBreakpointState(categoryKey.GetValue(valueName));
+                    if (value == this.DefaultCategoryState)
                     {
-                        if (string.IsNullOrEmpty(valueName) || valueName == "*" || !ExceptionManager.IsSupportedException(valueName))
-                            continue;
-
-                        ExceptionBreakpointState value = RegistryToExceptionBreakpointState(categoryKey.GetValue(valueName));
-                        if (value == this.DefaultCategoryState)
-                        {
-                            Debug.Fail("Redundant exception trigger found in the registry.");
-                            continue;
-                        }
-
-                        exceptionSettings.Add(valueName, value);
+                        Debug.Fail("Redundant exception trigger found in the registry.");
+                        continue;
                     }
-                    this.DefaultRules = new ReadOnlyDictionary<string, ExceptionBreakpointState>(exceptionSettings);
-                }
-                else
-                {
-                    this.CategoryName = string.Empty;
-                    this.DefaultCategoryState = ExceptionBreakpointState.None;
-                    this.DefaultRules = new ReadOnlyDictionary<string, ExceptionBreakpointState>(new Dictionary<string, ExceptionBreakpointState>(0));
-                }
 
-                this._settingsUpdate = new SettingsUpdates(this.DefaultCategoryState, this.DefaultRules);
+                    exceptionSettings.Add(valueName, value);
+                }
+                this.DefaultRules = new ReadOnlyDictionary<string, ExceptionBreakpointState>(exceptionSettings);
+                _settingsUpdate = new SettingsUpdates(this.DefaultCategoryState, this.DefaultRules);
             }
 
             public SettingsUpdateHolder GetSettingsUpdate()
@@ -172,7 +161,7 @@ namespace Microsoft.MIDebugEngine
             }
         };
 
-        public ExceptionManager(MICommandFactory commandFactory, WorkerThread worker, ISampleEngineCallback callback, /*OPTIONAL*/ string registryRoot)
+        public ExceptionManager(MICommandFactory commandFactory, WorkerThread worker, ISampleEngineCallback callback, /*OPTIONAL*/ HostConfigurationStore configStore)
         {
             Debug.Assert(commandFactory != null, "Missing commandFactory");
             Debug.Assert(worker != null, "Missing worker");
@@ -181,7 +170,7 @@ namespace Microsoft.MIDebugEngine
             _commandFactory = commandFactory;
             _worker = worker;
             _callback = callback;
-            _categoryMap = ReadDefaultSettings(registryRoot);
+            _categoryMap = ReadDefaultSettings(configStore);
         }
 
         public void RemoveAllSetExceptions(Guid guidType)
@@ -309,7 +298,7 @@ namespace Microsoft.MIDebugEngine
         /// <summary>
         /// Called before resuming the target process to make sure that all updates have been sent
         /// </summary>
-        /// <returns>Task which is signalled when the operation is complete</returns>
+        /// <returns>Task which is signaled when the operation is complete</returns>
         public Task EnsureSettingsUpdated()
         {
             lock (_updateLock)
@@ -321,7 +310,7 @@ namespace Microsoft.MIDebugEngine
 
                     return _updateTask;
                 }
-                else if (!_initialSettingssSent && this._categoryMap.Count > 0)
+                else if (!_initialSettingssSent && _categoryMap.Count > 0)
                 {
                     // The initial resume is special in how we schedule it -- we wait until the first call to
                     // EnsureSettingsUpdated to run it, and we kick it off from this thread.
@@ -339,7 +328,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    // No task is running, so just return an already signalled task
+                    // No task is running, so just return an already signaled task
                     return Task.FromResult<object>(null);
                 }
             }
@@ -499,35 +488,21 @@ namespace Microsoft.MIDebugEngine
                 return "0x" + dwCode.ToString("X", CultureInfo.InvariantCulture);
         }
 
-        private ReadOnlyDictionary<Guid, ExceptionCategorySettings>  ReadDefaultSettings(string registryRoot)
+        private ReadOnlyDictionary<Guid, ExceptionCategorySettings> ReadDefaultSettings(HostConfigurationStore configStore)
         {
             Dictionary<Guid, ExceptionCategorySettings> categoryMap = new Dictionary<Guid, ExceptionCategorySettings>();
 
-            Lazy<RegistryKey> exceptionKey = new Lazy<RegistryKey>(() =>
+            IEnumerable<Guid> categories = _commandFactory.GetSupportedExceptionCategories();
+            foreach (Guid categoryId in categories)
             {
-                if (string.IsNullOrEmpty(registryRoot))
-                    return null;
+                string categoryName;
+                HostConfigurationSection categoryConfigSection;
+                configStore.GetExceptionCategorySettings(categoryId, out categoryConfigSection, out categoryName);
 
-                return Registry.LocalMachine.OpenSubKey(registryRoot + @"\AD7Metrics\Exception");
-            });
-
-            try
-            {
-                IEnumerable<Guid> categories = _commandFactory.GetSupportedExceptionCategories();
-                foreach (Guid categoryId in categories)
+                using (categoryConfigSection)
                 {
-                    using (RegistryKey categoryKey = exceptionKey.Value?.OpenSubKey(categoryId.ToString("B", CultureInfo.InvariantCulture)))
-                    {
-                        ExceptionCategorySettings categorySettings = new ExceptionCategorySettings(this, categoryKey);
-                        categoryMap.Add(categoryId, categorySettings);
-                    }
-                }
-            }
-            finally
-            {
-                if (exceptionKey.IsValueCreated && exceptionKey.Value != null)
-                {
-                    exceptionKey.Value.Close();
+                    ExceptionCategorySettings categorySettings = new ExceptionCategorySettings(this, categoryConfigSection, categoryName);
+                    categoryMap.Add(categoryId, categorySettings);
                 }
             }
 

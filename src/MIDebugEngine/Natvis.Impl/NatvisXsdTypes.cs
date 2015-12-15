@@ -23,9 +23,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 {
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true, Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     [System.Xml.Serialization.XmlRootAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010", IsNullable = false)]
     public partial class AutoVisualizer
@@ -98,9 +96,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class VersionType
     {
@@ -155,9 +151,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class AlternativeHResultType
     {
@@ -180,9 +174,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class HResultType
     {
@@ -251,9 +243,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class UIVisualizerItemType
     {
@@ -308,9 +298,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(TypeName = "ExpandType", Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class ExpandType1
     {
@@ -340,9 +328,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class ArrayItemsType
     {
@@ -489,7 +475,6 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public enum ArrayDirectionType
     {
@@ -502,9 +487,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class ValuePointerType
     {
@@ -543,9 +526,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class CustomListItemsType
     {
@@ -680,9 +661,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class VariableType
     {
@@ -721,9 +700,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class CustomListSizeType
     {
@@ -762,9 +739,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class SkipType
     {
@@ -787,9 +762,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class ExpandedItemType
     {
@@ -860,9 +833,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class IndexListItemsType
     {
@@ -949,9 +920,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class IndexNodeType
     {
@@ -990,9 +959,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class ItemType
     {
@@ -1079,9 +1046,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class LinkedListItemsType
     {
@@ -1210,9 +1175,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class SyntheticItemType
     {
@@ -1370,9 +1333,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class CustomVisualizerType
     {
@@ -1443,9 +1404,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class DisplayStringType
     {
@@ -1548,9 +1507,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class StringViewType
     {
@@ -1621,9 +1578,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class TreeItemsType
     {
@@ -1753,9 +1708,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class AlternativeTypeType
     {
@@ -1842,9 +1795,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class VisualizerType
     {
@@ -2029,9 +1980,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class UIVisualizerType
     {
@@ -2118,9 +2067,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class LocalizedStringType
     {
@@ -2159,9 +2106,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440")]
-    [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class AliasType
     {

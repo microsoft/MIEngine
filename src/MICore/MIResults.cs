@@ -293,11 +293,8 @@ namespace MICore
                     else if (_value is ResultListValue)
                     {
                         var resultListValue = (ResultListValue)_value;
-                        values = new List<NamedResultValue>(resultListValue.Length);
-                        Array.ForEach(resultListValue.Content, (namedresultValue) =>
-                        {
-                            values.Add(new NamedResultValue(namedresultValue));
-                        });
+                        var namedResultValues = resultListValue.Content.Select(value => new NamedResultValue(value));
+                        values = new List<NamedResultValue>(namedResultValues);
                     }
                     else if (_value is TupleValue)
                     {
@@ -429,12 +426,12 @@ namespace MICore
         }
         public T[] AsArray<T>() where T : ResultValue
         {
-            return Array.ConvertAll(Content, (c) => (T)c);
+            return Content.Cast<T>().ToArray();
         }
 
         public string[] AsStrings
         {
-            get { return Array.ConvertAll(Content, (c) => ((ConstValue)c).AsString); }
+            get { return Content.Cast<ConstValue>().Select(c => c.AsString).ToArray(); }
         }
 
         public override string ToString()
@@ -497,9 +494,7 @@ namespace MICore
 
         public int CountOf(string name)
         {
-            int i = 0;
-            Array.ForEach(Content, (c) => { if (c.Name == name) i++; });
-            return i;
+            return Content.Count(c => c.Name == name);
         }
 
         public override string ToString()
@@ -663,11 +658,11 @@ namespace MICore
         }
 
         /// <summary>
-        /// GDB (on x86) sometimes returns a tuple list in a context requiring a tuple (<MULTIPLE> breakpoints). 
+        /// GDB (on x86) sometimes returns a tuple list in a context requiring a tuple (&lt;MULTIPLE&gt; breakpoints). 
         /// The grammer does not allow this, but we recognize it and accept it only in the special case when it is contained
         /// in a result value.
-        ///     tuplelist ==>  tuple ("," tuple)*
-        ///     value ==>const | tuple | tuplelist | list
+        ///     tuplelist --  tuple ("," tuple)*
+        ///     value -- const | tuple | tuplelist | list
         /// </summary>
         /// <returns></returns>
         private static ResultValue ParseResultValue(string resultStr, out string rest)
@@ -780,6 +775,7 @@ namespace MICore
                     switch (c)
                     {
                         case 'n': c = '\n'; break;
+                        case 'r': c = '\r'; break;
                         case 't': c = '\t'; break;
                         default: break;
                     }

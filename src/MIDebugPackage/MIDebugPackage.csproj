@@ -6,18 +6,18 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <TargetFrameworkProfile />
+    <OutputPath>$(MIDefaultOutputPath)</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug.Lab|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug.Lab\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release.Lab|AnyCPU'">
-    <OutputPath>bin\Release.Lab\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU'">
     <DefineConstants>CODE_ANALYSIS;TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -27,6 +27,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="..\RequiredNetFX46FacadeAssemblies.targets" />
+  <Import Project="SuppressFromVsix.targets" />
   <PropertyGroup>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
@@ -36,7 +38,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.MIDebugPackage</RootNamespace>
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Because the MIEngine ships in Visual Studio, it is recommended NOT to install the .vsix
@@ -53,7 +55,6 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -64,7 +65,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -142,6 +142,8 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <None Include="..\RequiredNetFX46FacadeAssemblies.targets" />
+    <None Include="SuppressFromVsix.targets" />
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="MIDebugPackage.vsct">
@@ -155,30 +157,52 @@
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef"/>
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb"/>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef"/>
-    <DropUnsignedFile Include="Install.cmd"/>
+    <VSIXSourceItem Include="@(RequiredNetFX46FacadeAssemblies)" />
+    <GlassDirCopy Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup>
-    <FilesToSign Include="@(DropSignedFile)">
-      <Authenticode>Microsoft</Authenticode>
-      <StrongName>StrongName</StrongName>
-    </FilesToSign>
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
+    <DropUnsignedFile Include="Install.cmd" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
+    <DropUnsignedFile Include="Install.cmd" />
+    <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AndroidDebugLauncher\AndroidDebugLauncher.csproj">
@@ -186,17 +210,23 @@
       <Name>AndroidDebugLauncher</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\MICore\MICore.csproj">
-      <Project>{12cc862d-95b7-4224-8e16-b928c6333677}</Project>
-      <Name>MICore</Name>
+    <ProjectReference Include="..\DebugEngineHost\DebugEngineHost.csproj">
+      <Project>{e659fee3-7773-4a73-880a-83ce5c9634cc}</Project>
+      <Name>DebugEngineHost</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\IOSDebugLauncher\IOSDebugLauncher.csproj">
       <Project>{d2a11674-f677-4b11-9989-2f6099a6f0a2}</Project>
       <Name>IOSDebugLauncher</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
+    </ProjectReference>
+    <ProjectReference Include="..\MICore\MICore.csproj">
+      <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
+      <Name>MICore</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\MIDebugEngine\MIDebugEngine.csproj">
-      <Project>{6d2688fe-6fd8-44a8-b96a-6037457f72a7}</Project>
+      <Project>{a8b0230c-7806-407c-af18-54b2ce21275e}</Project>
       <Name>MIDebugEngine</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
@@ -208,24 +238,14 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
+  <Import Project="..\..\build\DropFiles.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
-  
   <!--
   Target to drop the built files into a directory.
   For the official build, we need to drop files to the build share
   For normal builds, we drop files to <enlistment-root>\bin\debug\drop for easy sharing
   -->
-  <Target Name="DropFiles" AfterTargets="SignFiles;Build">
-    <PropertyGroup>
-      <DropConfigurationName>$(Configuration)</DropConfigurationName>
-      <DropConfigurationName Condition="'$(Configuration)' == 'Debug.Lab'">Debug</DropConfigurationName>
-      <DropConfigurationName Condition="'$(Configuration)' == 'Release.Lab'">Release</DropConfigurationName>
-      <DropLocation Condition="'$(TF_BUILD_BINARIESDIRECTORY)'!=''">$(TF_BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropLocation>
-      <DropLocation Condition="'$(DropLocation)'==''">$(MSBuildThisFileDirectory)..\..\bin\$(DropConfigurationName)\drop</DropLocation>
-    </PropertyGroup>
-    <MakeDir Condition="!Exists($(DropLocation))" Directories="$(DropLocation)" />
-    <Copy DestinationFolder="$(DropLocation)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)"/>
-  </Target>
+  
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

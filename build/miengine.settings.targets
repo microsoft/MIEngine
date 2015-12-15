@@ -1,6 +1,13 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
+  
+  <!--
+  Settings file which is included by all the shipping code projects in the repo.
+  -->
+  
+  <Import Project="all_projects.settings.targets"/>
+
   <Choose>
-    <When Condition="'$(Configuration)' == 'Debug.Lab' Or '$(Configuration)' == 'Release.Lab'">
+    <When Condition="'$(Configuration)' == 'Lab.Debug' Or '$(Configuration)' == 'Lab.Release'">
         <PropertyGroup>
             <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
             <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
@@ -16,19 +23,19 @@
   </Choose>
   
   <PropertyGroup>
-	<GlassDir>$(MSBuildThisFileDirectory)..\Microsoft.VisualStudio.Glass\</GlassDir>
+    <GlassDir>$(MSBuildThisFileDirectory)..\Microsoft.VisualStudio.Glass\</GlassDir>
+    <DropConfigurationName>$(Configuration)</DropConfigurationName>
+    <DropConfigurationName Condition="'$(Configuration)' == 'Lab.Debug'">Debug</DropConfigurationName>
+    <DropConfigurationName Condition="'$(Configuration)' == 'Lab.Release'">Release</DropConfigurationName>
+    <DropRootDir Condition="'$(TF_BUILD_BINARIESDIRECTORY)'!=''">$(TF_BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropRootDir>
+    <DropRootDir Condition="'$(DropRootDir)'==''">$(MIEngineRoot)bin\$(DropConfigurationName)\drop</DropRootDir>
   </PropertyGroup>
-  
-  <PropertyGroup>
-    <ILDir>$(MSBuildThisFileDirectory)..\IL\</ILDir>
-    <GeneratedAssembliesDir>$(ILDir)GeneratedAssemblies\</GeneratedAssembliesDir>
-  </PropertyGroup>
-  
+    
   <PropertyGroup>
     <SignAssembly>True</SignAssembly>
     
-	<!--SxS: These three properties should be changed at the start of a new version, VersionZeroYear should be the year
-    before the start of the project.-->
+    <!--SxS: These three properties should be changed at the start of a new version, VersionZeroYear should be the year
+    before the start of the project. When updating the version, also update MIEngine\metadata.json.-->
     <MajorVersion>14</MajorVersion>
     <MinorVersion>0</MinorVersion>
     <VersionZeroYear>2013</VersionZeroYear>
@@ -47,7 +54,7 @@
     <BuildNumberMinor>0</BuildNumberMinor>
     <BuildNumberMinor Condition="$(BuildDateRevision.Length) &gt; 9">$(BuildDateRevision.Substring(9))</BuildNumberMinor>
 
-    <AssemblyVersion>$(MajorVersion).$(MinorVersion).0</AssemblyVersion>
+    <AssemblyVersion Condition="'$(AssemblyVersion)'==''">$(MajorVersion).$(MinorVersion).0</AssemblyVersion>
     <BuildVersion>$(MajorVersion).$(MinorVersion).$(BuildNumberMajor).$(BuildNumberMinor)</BuildVersion>
     <BuildVersionExtended>$(BuildVersion)</BuildVersionExtended>
     <BuildVersionExtended Condition="'$(TF_BUILD_SOURCEGETVERSION)'!=''">$(BuildVersionExtended) commit:$(TF_BUILD_SOURCEGETVERSION)</BuildVersionExtended>

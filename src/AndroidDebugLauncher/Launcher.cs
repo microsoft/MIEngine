@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using Microsoft.DebugEngineHost;
 
 namespace AndroidDebugLauncher
 {
@@ -26,7 +27,7 @@ namespace AndroidDebugLauncher
         private readonly CancellationTokenSource _gdbServerExecCancellationSource = new CancellationTokenSource();
         private AndroidLaunchOptions _launchOptions;
         private InstallPaths _installPaths;
-        private MICore.WaitLoop _waitLoop;
+        private HostWaitLoop _waitLoop;
         private int _jdbPortNumber;
         private AdbShell _shell;
         private int _appProcessId;
@@ -40,15 +41,15 @@ namespace AndroidDebugLauncher
         private const string LogcatServiceMessage_SourceId = "1CED0608-638C-4B00-A1D2-CE56B1B672FA";
         private const int LogcatServiceMessage_NewProcess = 0;
 
-        void IPlatformAppLauncher.Initialize(string registryRoot, IDeviceAppLauncherEventCallback eventCallback)
+        void IPlatformAppLauncher.Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback)
         {
-            if (string.IsNullOrEmpty(registryRoot))
-                throw new ArgumentNullException("registryRoot");
+            if (configStore == null)
+                throw new ArgumentNullException("configStore");
             if (eventCallback == null)
                 throw new ArgumentNullException("eventCallback");
 
             _eventCallback = eventCallback;
-            RegistryRoot.Set(registryRoot);
+            RegistryRoot.Set(configStore.RegistryRoot);
         }
 
         void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
@@ -87,7 +88,7 @@ namespace AndroidDebugLauncher
             ExceptionDispatchInfo exceptionDispatchInfo = null;
             LaunchOptions localLaunchOptions = null;
 
-            _waitLoop = new MICore.WaitLoop(LauncherResources.WaitDialogText);
+            _waitLoop = new HostWaitLoop(LauncherResources.WaitDialogText);
 
             // Do the work on a worker thread to avoid blocking the UI. Use ThreadPool.QueueUserWorkItem instead
             // of Task.Run to avoid needing to unwrap the AggregateException.
@@ -312,9 +313,9 @@ namespace AndroidDebugLauncher
                 {
                     actions.Add(new NamedAction(LauncherResources.Step_StartGDBServer, () =>
                     {
-                    // We will default to using a unix socket with gdbserver as this is what the ndk-gdb script uses. Though we have seen
-                    // some machines where this doesn't work and we fall back to TCP instead.
-                    const bool useUnixSocket = true;
+                        // We will default to using a unix socket with gdbserver as this is what the ndk-gdb script uses. Though we have seen
+                        // some machines where this doesn't work and we fall back to TCP instead.
+                        const bool useUnixSocket = true;
 
                         taskGdbServer = StartGdbServer(gdbServerRemotePath, workingDirectory, useUnixSocket, out gdbServerSocketDescription);
                     }));
@@ -341,7 +342,7 @@ namespace AndroidDebugLauncher
                     {
                         //pull binaries from the emulator/device
                         var fileSystem = device.FileSystem;
-    
+
                         string app_process_suffix = String.Empty;
                         switch (_launchOptions.TargetArchitecture)
                         {
@@ -357,10 +358,10 @@ namespace AndroidDebugLauncher
                                 Debug.Fail("Unsupported Target Architecture!");
                                 break;
                         }
-    
+
                         string app_process = String.Concat("app_process", app_process_suffix);
                         exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
-    
+
                         bool retry = false;
                         try
                         {
@@ -373,29 +374,29 @@ namespace AndroidDebugLauncher
                             // by the file not being found.
                             retry = true;
                         }
-    
+
                         if (retry)
                         {
                             app_process = "app_process";
                             exePath = Path.Combine(_launchOptions.IntermediateDirectory, app_process);
                             fileSystem.Download(@"/system/bin/app_process", exePath, true);
                         }
-                        
+
                         //on 64 bit, 'linker64' is the 64bit version and 'linker' is the 32 bit version 
                         string suffix64bit = String.Empty;
                         if (_launchOptions.TargetArchitecture == TargetArchitecture.X64 || _launchOptions.TargetArchitecture == TargetArchitecture.ARM64)
                         {
                             suffix64bit = "64";
                         }
-    
+
                         string linker = String.Concat("linker", suffix64bit);
                         fileSystem.Download(String.Concat(@"/system/bin/", linker), Path.Combine(_launchOptions.IntermediateDirectory, linker), true);
-    
+
                         //on 64 bit, libc.so lives in /system/lib64/, on 32 bit it lives in simply /system/lib/
                         fileSystem.Download(@"/system/lib" + suffix64bit + "/libc.so", Path.Combine(_launchOptions.IntermediateDirectory, "libc.so"), true);
                     }));
                 }
-    
+
                 progressStepCount = actions.Count;
 
                 foreach (NamedAction namedAction in actions)
@@ -423,7 +424,7 @@ namespace AndroidDebugLauncher
                 LaunchOptions launchOptions = null;
                 if (_targetEngine == TargetEngine.Native)
                 {
-                    launchOptions = new LocalLaunchOptions(_installPaths.GDBPath, string.Format(CultureInfo.InvariantCulture, ":{0}", gdbPortNumber));
+                    launchOptions = new LocalLaunchOptions(_installPaths.GDBPath, string.Format(CultureInfo.InvariantCulture, ":{0}", gdbPortNumber), 0, null);
                     launchOptions.ExePath = exePath;
                 }
                 else
@@ -436,7 +437,7 @@ namespace AndroidDebugLauncher
                 launchOptions.WorkingDirectory = _launchOptions.IntermediateDirectory;
 
                 launchOptions.DebuggerMIMode = MIMode.Gdb;
-                
+
                 launchOptions.VisualizerFile = "Microsoft.Android.natvis";
 
                 return launchOptions;

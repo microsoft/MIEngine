@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using System.Runtime.InteropServices;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -33,31 +35,29 @@ namespace Microsoft.MIDebugEngine
         private bool _bLastModuleLoadFailed;
         private StringBuilder _pendingMessages;
         private WorkerThread _worker;
-        private readonly LaunchOptions _launchOptions;
         private BreakpointManager _breakpointManager;
         private bool _bEntrypointHit;
         private ResultEventArgs _initialBreakArgs;
         private List<string> _libraryLoaded;   // unprocessed library loaded messages
         private uint _loadOrder;
-        private WaitDialog _waitDialog;
+        private HostWaitDialog _waitDialog;
         public readonly Natvis.Natvis Natvis;
         private ReadOnlyCollection<RegisterDescription> _registers;
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, string registryRoot)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions)
         {
             uint processExitCode = 0;
             g_Process = this;
             _pendingMessages = new StringBuilder(400);
             _worker = worker;
-            _launchOptions = launchOptions;
             _breakpointManager = bpman;
             Engine = engine;
             _libraryLoaded = new List<string>();
             _loadOrder = 0;
             MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
-            _waitDialog = MICommandFactory.SupportsStopOnDynamicLibLoad() ? new WaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
-            Natvis = new Natvis.Natvis(this);
+            _waitDialog = MICommandFactory.SupportsStopOnDynamicLibLoad() ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
+            Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString);
 
             // we do NOT have real Win32 process IDs, so we use a guid
             AD_PROCESS_ID pid = new AD_PROCESS_ID();
@@ -71,7 +71,7 @@ namespace Microsoft.MIDebugEngine
             _moduleList = new List<DebuggedModule>();
             ThreadCache = new ThreadCache(callback, this);
             Disassembly = new Disassembly(this);
-            ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, registryRoot);
+            ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, configStore);
 
             VariablesToDelete = new List<string>();
 
@@ -137,7 +137,8 @@ namespace Microsoft.MIDebugEngine
                     {
                         symPath = file;
                     }
-                    ulong loadAddr = results.Results.FindAddr("loaded_addr");
+                    ulong loadAddr = results.Results.FindAddr("loaded_addr");                    
+
                     uint size = results.Results.FindUint("size");
                     if (String.IsNullOrEmpty(id))
                     {
@@ -158,7 +159,21 @@ namespace Microsoft.MIDebugEngine
 
             if (_launchOptions is LocalLaunchOptions)
             {
-                this.Init(new MICore.LocalTransport(), _launchOptions);
+                LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && 
+                    _launchOptions.DebuggerMIMode == MIMode.Gdb &&
+                    String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress)
+                    )
+                {
+                    // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
+                    // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
+                    // during debuggee launch
+                    this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
+                }
+                else
+                {
+                    this.Init(new MICore.LocalTransport(), _launchOptions);
+                }
             }
             else if (_launchOptions is PipeLaunchOptions)
             {
@@ -167,11 +182,6 @@ namespace Microsoft.MIDebugEngine
             else if (_launchOptions is TcpLaunchOptions)
             {
                 this.Init(new MICore.TcpTransport(), _launchOptions);
-            }
-            else if (_launchOptions is SerialLaunchOptions)
-            {
-                string port = ((SerialLaunchOptions)_launchOptions).Port;
-                this.Init(new MICore.SerialTransport(port), _launchOptions);
             }
             else
             {
@@ -189,7 +199,14 @@ namespace Microsoft.MIDebugEngine
 
                 if (results.Results.Contains("exit-code"))
                 {
-                    processExitCode = results.Results.FindUint("exit-code");
+                    // GDB sometimes returns exit codes, which don't fit into uint, like "030000000472".
+                    // And we can't throw from here, because it crashes VS.
+                    // Full exit code will still usually be reported in the Output window,
+                    // but here let's return "uint.MaxValue" just to indicate that something went wrong.
+                    if (!uint.TryParse(results.Results.FindString("exit-code"), out processExitCode))
+                    {
+                        processExitCode = uint.MaxValue;
+                    }
                 }
 
                 // quit MI Debugger
@@ -212,7 +229,7 @@ namespace Microsoft.MIDebugEngine
                 Dispose();
             };
 
-            DebuggerAbortedEvent += delegate (object o, EventArgs args)
+            DebuggerAbortedEvent += delegate (object o, /*OPTIONAL*/ string debuggerExitCode)
             {
                 // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
 
@@ -225,7 +242,13 @@ namespace Microsoft.MIDebugEngine
                             return;
                         }
 
-                        _callback.OnError(MICoreResources.Error_MIDebuggerExited);
+                        string message;
+                        if (string.IsNullOrEmpty(debuggerExitCode))
+                            message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_UnknownCode, MICommandFactory.Name);
+                        else
+                            message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_WithCode, MICommandFactory.Name, debuggerExitCode);
+
+                        _callback.OnError(message);
                         _callback.OnProcessExit(uint.MaxValue);
 
                         Dispose();
@@ -349,8 +372,8 @@ namespace Microsoft.MIDebugEngine
 
             BreakChangeEvent += _breakpointManager.BreakpointModified;
         }
-        
-        public async Task Initialize(MICore.WaitLoop waitLoop, CancellationToken token)
+
+        public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
         {
             bool success = false;
             Natvis.Initialize(_launchOptions.VisualizerFile);
@@ -361,7 +384,6 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 await this.MICommandFactory.EnableTargetAsyncOption();
-
                 List<LaunchCommand> commands = GetInitializeCommands();
 
                 total = commands.Count();
@@ -376,7 +398,7 @@ namespace Microsoft.MIDebugEngine
                         if (results.ResultClass == ResultClass.error && !command.IgnoreFailures)
                         {
                             string miError = results.FindString("msg");
-                            throw new UnexpectedMIResultException(command.CommandText, miError);
+                            throw new UnexpectedMIResultException(MICommandFactory.Name, command.CommandText, miError);
                         }
                     }
                     else
@@ -426,30 +448,47 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                // The default launch is to start a new process
-
-                if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
+                if (_launchOptions is LocalLaunchOptions && ((LocalLaunchOptions)_launchOptions).ProcessId != 0)
                 {
-                    commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
-                }
+                    // This is an attach
+                    LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;                   
 
-                if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
-                {
-                    string escappedDir = EscapePath(_launchOptions.WorkingDirectory);
-                    commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
-                }
-
-                string exe = EscapePath(_launchOptions.ExePath);
-                commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath)));
-
-                commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
-
-                if (_launchOptions is LocalLaunchOptions)
-                {
-                    string destination = ((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress;
+                    // check for remote
+                    string destination = localLaunchOptions.MIDebuggerServerAddress;
                     if (!string.IsNullOrEmpty(destination))
                     {
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
+                    }
+
+                    int pid = localLaunchOptions.ProcessId;
+                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
+                    return commands;
+                }
+                else
+                {
+                    // The default launch is to start a new process
+                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
+                    {
+                        commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
+                    {
+                        string escappedDir = EscapePath(_launchOptions.WorkingDirectory);
+                        commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
+                    }
+
+                    string exe = EscapePath(_launchOptions.ExePath);
+                    commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath)));
+                    commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
+
+                    if (_launchOptions is LocalLaunchOptions)
+                    {
+                        string destination = ((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress;
+                        if (!string.IsNullOrEmpty(destination))
+                        {
+                            commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
+                        }
                     }
                 }
             }
@@ -649,7 +688,6 @@ namespace Microsoft.MIDebugEngine
         {
             // NOTE: The version of GDB that comes in the Android SDK doesn't support -file-list-shared-library
             // so we need to use the console command
-
             //string results = await MICommandFactory.GetSharedLibrary();
             string results = await ConsoleCmdAsync("info sharedlibrary");
 
@@ -659,7 +697,9 @@ namespace Microsoft.MIDebugEngine
                 {
                     string line = stringReader.ReadLine();
                     if (line == null)
+                    {
                         break;
+                    }
 
                     ulong startAddr = 0;
                     ulong endAddr = 0;
@@ -707,6 +747,7 @@ namespace Microsoft.MIDebugEngine
                         {
                             _moduleList.Add(module);
                         }
+
                         _callback.OnModuleLoad(module);
                     }
                 }
@@ -809,19 +850,33 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                switch (_launchOptions.LaunchCompleteCommand)
+                bool attach = false;
+                int attachPid = 0;
+                if (_launchOptions is LocalLaunchOptions)
                 {
-                    case LaunchCompleteCommand.ExecRun:
-                        await MICommandFactory.ExecRun();
-                        break;
-                    case LaunchCompleteCommand.ExecContinue:
-                        await MICommandFactory.ExecContinue();
-                        break;
-                    case LaunchCompleteCommand.None:
-                        break;
-                    default:
-                        Debug.Fail("Not implemented enum code for LaunchCompleteCommand??");
-                        throw new NotImplementedException();
+                    attachPid = ((LocalLaunchOptions)_launchOptions).ProcessId;
+                    if (attachPid != 0)
+                    {
+                        attach = true;
+                    }
+                }
+
+                if (!attach)
+                {
+                    switch (_launchOptions.LaunchCompleteCommand)
+                    {
+                        case LaunchCompleteCommand.ExecRun:
+                            await MICommandFactory.ExecRun();
+                            break;
+                        case LaunchCompleteCommand.ExecContinue:
+                            await MICommandFactory.ExecContinue();
+                            break;
+                        case LaunchCompleteCommand.None:
+                            break;
+                        default:
+                            Debug.Fail("Not implemented enum code for LaunchCompleteCommand??");
+                            throw new NotImplementedException();
+                    }
                 }
 
                 FireDeviceAppLauncherResume();
