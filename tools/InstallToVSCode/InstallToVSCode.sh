@@ -167,7 +167,7 @@ for dll in $(ls $OpenDebugAD7Dir/*.dll); do
     install_module "$dll" debugAdapters ignoreMissingPdbs
 done
 
-copy_file "$script_dir/coreclr/example-package.json" $DESTDIR/package.json
+copy_file "$script_dir/coreclr/package.json" $DESTDIR/package.json
 
 install_file "$script_dir/coreclr/coreclr.ad7Engine.json" debugAdapters
 
@@ -183,6 +183,13 @@ if [ ! -z "$InstallError" ]; then
     exit 1
 fi
 
-echo 'InstallToVSCode.sh succeeded.'
-echo ''
+echo "InstallToVSCode.sh succeeded. To complete setup:"
+echo "1. Create a link or copy clrdbg next to the debug adapter. Ex:"
+echo ""
+echo "   ln -s $HOME/clrdbg/out/OSX/bin/x64.Debug/clrdbg $DESTDIR/clrdbg"
+echo ""
+echo "2. Create a link or copy the corerun runtime next to the debug adapter. Ex:"
+echo ""
+echo "   cp -r /Volumes/runtime-osx/x64 $DESTDIR/runtime"
+echo ""
 exit 0
