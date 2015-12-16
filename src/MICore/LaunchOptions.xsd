@@ -69,6 +69,11 @@
       </xs:attribute>
       <xs:attribute name="SourceRoots" type="xs:string" use="optional" default="">
       </xs:attribute>
+      <xs:attribute name="RecursiveSourceSearchEnabled" type="xs:boolean" use="optional" default="false">
+        <xs:annotation>
+          <xs:documentation>If true, recursive source search is enabled.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attribute name="JVMPort" type="xs:int" use="optional" default="65534">
       </xs:attribute>
       <xs:attribute name="JVMHost" type="xs:string" use="optional" default="localhost">

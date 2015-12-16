@@ -35,7 +35,8 @@ namespace MICoreUnitTests
             Assert.Equal(options.IntermediateDirectory, temp);
             Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
             Assert.Equal(options.DeviceId, "default");
-            Assert.Equal(options.IsAttach, false);
+            Assert.False(options.IsAttach);
+            Assert.False(options.RecursiveSourceSearchEnabled);
         }
 
         [Fact]
@@ -61,6 +62,31 @@ namespace MICoreUnitTests
             {
                 Assert.True(e.Message.Contains("LaunchActivity"));
             }
+        }
+
+        [Fact]
+        public void TestAndroidLaunchOptions3()
+        {
+            string temp = Environment.GetEnvironmentVariable("TMP");
+
+            string content = string.Concat("<AndroidLaunchOptions xmlns=\"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014\"\n",
+                "Package=\"com.example.hellojni\"\n",
+                "LaunchActivity=\".HelloJni\"\n",
+                "TargetArchitecture=\"x86\"\n",
+                "IntermediateDirectory=\"", temp, "\"\n",
+                "AdditionalSOLibSearchPath=\"c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug\"\n",
+                "RecursiveSourceSearchEnabled=\"true\"\n",
+                "DeviceId=\"default\"/>");
+
+            var options = CreateFromXml(content);
+            Assert.Equal(options.Package, "com.example.hellojni");
+            Assert.Equal(options.LaunchActivity, ".HelloJni");
+            Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.X86);
+            Assert.Equal(options.IntermediateDirectory, temp);
+            Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
+            Assert.Equal(options.DeviceId, "default");
+            Assert.False(options.IsAttach);
+            Assert.True(options.RecursiveSourceSearchEnabled);
         }
 
         [Fact]
