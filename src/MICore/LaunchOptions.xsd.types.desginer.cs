@@ -62,6 +62,11 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool RecursiveSourceSearchEnabled;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         [System.ComponentModel.DefaultValueAttribute(65534)]
         public int JVMPort;
         
@@ -89,6 +94,7 @@ namespace MICore.Xml.LaunchOptions {
         public AndroidLaunchOptions() {
             this.Attach = false;
             this.SourceRoots = "";
+            this.RecursiveSourceSearchEnabled = false;
             this.JVMPort = 65534;
             this.JVMHost = "localhost";
         }

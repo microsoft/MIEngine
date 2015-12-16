@@ -229,13 +229,15 @@ namespace MICore
         /// <param name="jvmHost">Java Virtual Machine host.</param>
         /// <param name="jvmPort">Java Virtual Machine port.</param>
         /// <param name="sourceRoots">Source roots.</param>
+        /// <param name="recursiveSourceSearchEnabled">If true, searches recursively for java source files.</param>
         /// <param name="processName">Logical name of the process. Usually indicates the name of the activity.</param>
-        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots, string processName)
+        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots, bool recursiveSourceSearchEnabled, string processName)
         {
             JVMHost = jvmHost;
             JVMPort = jvmPort;
             SourceRoots = sourceRoots;
             ProcessName = processName;
+            RecursiveSourceSearchEnabled = recursiveSourceSearchEnabled;
         }
 
         public string JVMHost { get; private set; }
@@ -245,6 +247,8 @@ namespace MICore
         public string[] SourceRoots { get; private set; }
 
         public string ProcessName { get; private set; }
+
+        public bool RecursiveSourceSearchEnabled { get; private set; }
     }
 
 

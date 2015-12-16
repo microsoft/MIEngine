@@ -61,6 +61,7 @@ namespace AndroidDebugLauncher
             this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
             this.DeviceId = LaunchOptions.RequireAttribute(xmlOptions.DeviceId, "DeviceId");
             this.LogcatServiceId = GetLogcatServiceIdAttribute(xmlOptions.LogcatServiceId);
+            this.RecursiveSourceSearchEnabled = xmlOptions.RecursiveSourceSearchEnabled;
 
             CheckTargetArchitectureSupported();
         }
@@ -187,5 +188,10 @@ namespace AndroidDebugLauncher
         public int JVMPort { get; private set; }
 
         public string[] SourceRoots { get; private set; }
+
+        /// <summary>
+        /// [Optional] Set to true if recursive source search should be enabled for java source files.
+        /// </summary>
+        public bool RecursiveSourceSearchEnabled { get; private set; }
     }
 }
