@@ -690,7 +690,7 @@ namespace Microsoft.MIDebugEngine
         // In order for this to be called, the Disassembly capability must be set in the registry for this Engine
         public int GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE dwScope, IDebugCodeContext2 codeContext, out IDebugDisassemblyStream2 disassemblyStream)
         {
-            disassemblyStream = new AD7DisassemblyStream(dwScope, codeContext);
+            disassemblyStream = new AD7DisassemblyStream(this, dwScope, codeContext);
             return Constants.S_OK;
         }
 

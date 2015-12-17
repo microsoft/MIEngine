@@ -161,7 +161,7 @@ namespace Microsoft.MIDebugEngine
 
                 if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS) != 0)
                 {
-                    pinfo[0].bstrAddress = EngineUtils.AsAddr(_address);
+                    pinfo[0].bstrAddress = EngineUtils.AsAddr(_address, _engine.DebuggedProcess.Is64BitArch);
                     pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS;
                 }
 
@@ -169,7 +169,7 @@ namespace Microsoft.MIDebugEngine
                 if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSOFFSET) != 0) { }
                 if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSABSOLUTE) != 0)
                 {
-                    pinfo[0].bstrAddressAbsolute = EngineUtils.AsAddr(_address);
+                    pinfo[0].bstrAddressAbsolute = EngineUtils.AsAddr(_address, _engine.DebuggedProcess.Is64BitArch);
                     pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSABSOLUTE;
                 }
                 if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_MODULEURL) != 0)

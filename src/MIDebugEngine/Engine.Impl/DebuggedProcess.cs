@@ -20,7 +20,6 @@ namespace Microsoft.MIDebugEngine
 {
     internal class DebuggedProcess : MICore.Debugger
     {
-        public static DebuggedProcess g_Process; // TODO: Remove
         public AD_PROCESS_ID Id { get; private set; }
         public AD7Engine Engine { get; private set; }
         public List<string> VariablesToDelete { get; private set; }
@@ -48,7 +47,6 @@ namespace Microsoft.MIDebugEngine
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions)
         {
             uint processExitCode = 0;
-            g_Process = this;
             _pendingMessages = new StringBuilder(400);
             _worker = worker;
             _breakpointManager = bpman;
@@ -1024,7 +1022,7 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<uint> ReadProcessMemory(ulong address, uint count, byte[] bytes)
         {
-            string cmd = "-data-read-memory-bytes " + EngineUtils.AsAddr(address) + " " + count.ToString();
+            string cmd = "-data-read-memory-bytes " + EngineUtils.AsAddr(address, Is64BitArch) + " " + count.ToString();
             Results results = await CmdAsync(cmd, ResultClass.None);
             if (results.ResultClass == ResultClass.error)
             {
