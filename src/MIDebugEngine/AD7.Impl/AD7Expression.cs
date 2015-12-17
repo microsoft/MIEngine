@@ -15,10 +15,12 @@ namespace Microsoft.MIDebugEngine
     // For the purposes of this sample, this means obtaining the values of locals and parameters from a stack frame.
     public class AD7Expression : IDebugExpression2
     {
+        private AD7Engine _engine;
         private IVariableInformation _var;
 
-        internal AD7Expression(IVariableInformation var)
+        internal AD7Expression(AD7Engine engine, IVariableInformation var)
         {
+            _engine = engine;
             _var = var;
         }
 
@@ -40,7 +42,7 @@ namespace Microsoft.MIDebugEngine
         {
             if (((dwFlags & enum_EVALFLAGS.EVAL_NOSIDEEFFECTS) != 0 && (dwFlags & enum_EVALFLAGS.EVAL_ALLOWBPS) == 0) && _var.IsVisualized)
             {
-                IVariableInformation variable = DebuggedProcess.g_Process.Natvis.Cache.Lookup(_var);
+                IVariableInformation variable = _engine.DebuggedProcess.Natvis.Cache.Lookup(_var);
                 if (variable == null)
                 {
                     _var.AsyncError(pExprCallback, new AD7ErrorProperty(_var.Name, ResourceStrings.NoSideEffectsVisualizerMessage));
@@ -50,7 +52,7 @@ namespace Microsoft.MIDebugEngine
                     _var = variable;    // use the old value
                     Task.Run(() =>
                     {
-                        new EngineCallback(DebuggedProcess.g_Process.Engine, pExprCallback).OnExpressionEvaluationComplete(variable);
+                        new EngineCallback(_engine, pExprCallback).OnExpressionEvaluationComplete(variable);
                     });
                 }
             }
@@ -67,7 +69,7 @@ namespace Microsoft.MIDebugEngine
             ppResult = null;
             if ((dwFlags & enum_EVALFLAGS.EVAL_NOSIDEEFFECTS) != 0 && _var.IsVisualized)
             {
-                IVariableInformation variable = DebuggedProcess.g_Process.Natvis.Cache.Lookup(_var);
+                IVariableInformation variable = _engine.DebuggedProcess.Natvis.Cache.Lookup(_var);
                 if (variable == null)
                 {
                     ppResult = new AD7ErrorProperty(_var.Name, ResourceStrings.NoSideEffectsVisualizerMessage);
@@ -75,13 +77,13 @@ namespace Microsoft.MIDebugEngine
                 else
                 {
                     _var = variable;
-                    ppResult = new AD7Property(_var);
+                    ppResult = new AD7Property(_engine, _var);
                 }
                 return Constants.S_OK;
             }
 
             _var.SyncEval();
-            ppResult = new AD7Property(_var);
+            ppResult = new AD7Property(_engine, _var);
             return Constants.S_OK;
         }
 

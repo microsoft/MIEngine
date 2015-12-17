@@ -290,7 +290,7 @@ namespace Microsoft.MIDebugEngine
             {
                 for (int i = 0; i < _locals.Count; i++)
                 {
-                    AD7Property property = new AD7Property(_locals[i]);
+                    AD7Property property = new AD7Property(Engine, _locals[i]);
                     propInfo[i] = property.ConstructDebugPropertyInfo(dwFields);
                 }
             }
@@ -299,7 +299,7 @@ namespace Microsoft.MIDebugEngine
             {
                 for (int i = 0; i < _parameters.Count; i++)
                 {
-                    AD7Property property = new AD7Property(_parameters[i]);
+                    AD7Property property = new AD7Property(Engine, _parameters[i]);
                     propInfo[localsLength + i] = property.ConstructDebugPropertyInfo(dwFields);
                 }
             }
@@ -315,7 +315,7 @@ namespace Microsoft.MIDebugEngine
 
             for (int i = 0; i < propInfo.Length; i++)
             {
-                AD7Property property = new AD7Property(_locals[i]);
+                AD7Property property = new AD7Property(Engine, _locals[i]);
                 propInfo[i] = property.ConstructDebugPropertyInfo(dwFields);
             }
 
@@ -330,7 +330,7 @@ namespace Microsoft.MIDebugEngine
 
             for (int i = 0; i < propInfo.Length; i++)
             {
-                AD7Property property = new AD7Property(_parameters[i]);
+                AD7Property property = new AD7Property(Engine, _parameters[i]);
                 propInfo[i] = property.ConstructDebugPropertyInfo(dwFields);
             }
 
@@ -351,7 +351,7 @@ namespace Microsoft.MIDebugEngine
             int i = 0;
             foreach (var grp in registerGroups)
             {
-                AD7RegGroupProperty regProp = new AD7RegGroupProperty(dwFields, grp, values);
+                AD7RegGroupProperty regProp = new AD7RegGroupProperty(Engine, dwFields, grp, values);
                 propInfo[i] = regProp.PropertyInfo;
                 i++;
             }
@@ -581,7 +581,7 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 // we have no "parser" as such, so we accept anything that isn't blank and let the Evaluate method figure out the errors
-                ppExpr = new AD7Expression(Engine.DebuggedProcess.Natvis.GetVariable(pszCode, this));
+                ppExpr = new AD7Expression(Engine, Engine.DebuggedProcess.Natvis.GetVariable(pszCode, this));
                 return Constants.S_OK;
             }
             catch (MIException e)

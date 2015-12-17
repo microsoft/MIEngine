@@ -19,10 +19,12 @@ namespace Microsoft.MIDebugEngine
         private static uint s_maxChars = 1000000;
         private byte[] _bytes;
 
+        private AD7Engine _engine;
         private IVariableInformation _variableInformation;
 
-        public AD7Property(IVariableInformation vi)
+        public AD7Property(AD7Engine engine, IVariableInformation vi)
         {
+            _engine = engine;
             _variableInformation = vi;
         }
 
@@ -32,7 +34,7 @@ namespace Microsoft.MIDebugEngine
             IVariableInformation variable = _variableInformation;
             if ((dwFields & (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS100.DEBUGPROP100_INFO_NOSIDEEFFECTS) != 0)
             {
-                if ((variable = DebuggedProcess.g_Process.Natvis.Cache.VisualizeOnRefresh(_variableInformation)) == null)
+                if ((variable = _engine.DebuggedProcess.Natvis.Cache.VisualizeOnRefresh(_variableInformation)) == null)
                 {
                     return AD7ErrorProperty.ConstructErrorPropertyInfo(dwFields, _variableInformation.Name, ResourceStrings.NoSideEffectsVisualizerMessage, this);
                 }
@@ -63,7 +65,7 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE) != 0)
             {
-                propertyInfo.bstrValue = DebuggedProcess.g_Process.Natvis.FormatDisplayString(variable);
+                propertyInfo.bstrValue = _engine.DebuggedProcess.Natvis.FormatDisplayString(variable);
                 propertyInfo.dwFields |= enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE;
             }
 
@@ -117,19 +119,19 @@ namespace Microsoft.MIDebugEngine
             {
                 try
                 {
-                    DebuggedProcess.g_Process.Natvis.WaitDialog.ShowWaitDialog(_variableInformation.Name);
-                    var children = DebuggedProcess.g_Process.Natvis.Expand(_variableInformation);
+                    _engine.DebuggedProcess.Natvis.WaitDialog.ShowWaitDialog(_variableInformation.Name);
+                    var children = _engine.DebuggedProcess.Natvis.Expand(_variableInformation);
                     DEBUG_PROPERTY_INFO[] properties = new DEBUG_PROPERTY_INFO[children.Length];
                     for (int i = 0; i < children.Length; i++)
                     {
-                        properties[i] = (new AD7Property(children[i])).ConstructDebugPropertyInfo(dwFields);
+                        properties[i] = (new AD7Property(_engine, children[i])).ConstructDebugPropertyInfo(dwFields);
                     }
                     ppEnum = new AD7PropertyEnum(properties);
                     return Constants.S_OK;
                 }
                 finally
                 {
-                    DebuggedProcess.g_Process.Natvis.WaitDialog.EndWaitDialog();
+                    _engine.DebuggedProcess.Natvis.WaitDialog.EndWaitDialog();
                 }
             }
 
@@ -198,7 +200,7 @@ namespace Microsoft.MIDebugEngine
                     return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
                 }
             }
-            ppMemory = new AD7MemoryAddress(DebuggedProcess.g_Process.Engine, addr, null);
+            ppMemory = new AD7MemoryAddress(_engine, addr, null);
             return Constants.S_OK;
         }
 
@@ -286,7 +288,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     return;
                 }
-                AD7Property p = new AD7Property(v);
+                AD7Property p = new AD7Property(_engine, v);
                 uint pLen;
                 if (p.GetStringCharLength(out pLen) == Constants.S_OK)
                 {
