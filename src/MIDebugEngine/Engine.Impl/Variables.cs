@@ -213,7 +213,14 @@ namespace Microsoft.MIDebugEngine
             TypeName = results.TryFindString("type");
             Value = results.TryFindString("value");
             Name = results.FindString("exp");
-            CountChildren = results.FindUint("numchild");
+            if (results.Contains("dynamic"))
+            {
+                CountChildren = 1;
+            }
+            else
+            {
+                CountChildren = results.FindUint("numchild");
+            }
             int index;
 
             if (!results.Contains("value") && (Name == TypeName || Name.Contains("::")))
@@ -444,7 +451,14 @@ namespace Microsoft.MIDebugEngine
                 {
                     _internalName = results.FindString("name");
                     TypeName = results.TryFindString("type");
-                    CountChildren = results.FindUint("numchild");
+                    if (results.Contains("dynamic") && results.Contains("has_more"))
+                    {
+                        CountChildren = results.FindUint("has_more");
+                    }
+                    else
+                    {
+                        CountChildren = results.FindUint("numchild");
+                    }
                     Value = results.TryFindString("value");
                     if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
                     {
