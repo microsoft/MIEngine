@@ -247,7 +247,7 @@ namespace MICore
         {
             JVMHost = jvmHost;
             JVMPort = jvmPort;
-            SourceRoots = sourceRoots;
+            SourceRoots = new ReadOnlyCollection<SourceRoot>(sourceRoots);
             ProcessName = processName;
         }
 
@@ -255,7 +255,7 @@ namespace MICore
 
         public int JVMPort { get; private set; }
 
-        public SourceRoot[] SourceRoots { get; private set; }
+        public ReadOnlyCollection<SourceRoot> SourceRoots { get; private set; }
 
         public string ProcessName { get; private set; }
     }
