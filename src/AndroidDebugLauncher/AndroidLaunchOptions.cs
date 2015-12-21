@@ -71,7 +71,7 @@ namespace AndroidDebugLauncher
                 foreach (string path in pathList.Split(new char[] { ';' }))
                 {
                     string trimmedPath = path.Trim();
-                    if (trimmedPath.EndsWith(wildcardEnding) || trimmedPath.EndsWith(altWildcardEnding))
+                    if (trimmedPath.EndsWith(wildcardEnding, StringComparison.OrdinalIgnoreCase) || trimmedPath.EndsWith(altWildcardEnding, StringComparison.OrdinalIgnoreCase))
                     {
                         string rootedPath = trimmedPath.Substring(0, trimmedPath.Length - 2);
                         sourceRoots.Add(new MICore.SourceRoot(rootedPath, true));
