@@ -2,14 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AndroidDebugLauncher;
+using MICore;
 using System;
 using System.Collections.Generic;
-using Xunit;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using Xunit;
 
 namespace MICoreUnitTests
 {
@@ -36,7 +35,6 @@ namespace MICoreUnitTests
             Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
             Assert.Equal(options.DeviceId, "default");
             Assert.False(options.IsAttach);
-            Assert.False(options.RecursiveSourceSearchEnabled);
         }
 
         [Fact]
@@ -65,28 +63,31 @@ namespace MICoreUnitTests
         }
 
         [Fact]
-        public void TestAndroidLaunchOptions3()
+        public void TestGetSourceRoots()
         {
-            string temp = Environment.GetEnvironmentVariable("TMP");
+            var actualRoots = AndroidLaunchOptions.GetSourceRoots("c:\\example\\src; d:\\someotherdir\\src\\**;d://otherdir//src//**");
 
-            string content = string.Concat("<AndroidLaunchOptions xmlns=\"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014\"\n",
-                "Package=\"com.example.hellojni\"\n",
-                "LaunchActivity=\".HelloJni\"\n",
-                "TargetArchitecture=\"x86\"\n",
-                "IntermediateDirectory=\"", temp, "\"\n",
-                "AdditionalSOLibSearchPath=\"c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug\"\n",
-                "RecursiveSourceSearchEnabled=\"true\"\n",
-                "DeviceId=\"default\"/>");
+            List<SourceRoot> expectedRoots = new List<SourceRoot>();
+            expectedRoots.Add(new SourceRoot("c:\\example\\src", false));
+            expectedRoots.Add(new SourceRoot("d:\\someotherdir\\src\\", true));
+            expectedRoots.Add(new SourceRoot("d://otherdir//src//", true));
 
-            var options = CreateFromXml(content);
-            Assert.Equal(options.Package, "com.example.hellojni");
-            Assert.Equal(options.LaunchActivity, ".HelloJni");
-            Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.X86);
-            Assert.Equal(options.IntermediateDirectory, temp);
-            Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
-            Assert.Equal(options.DeviceId, "default");
-            Assert.False(options.IsAttach);
-            Assert.True(options.RecursiveSourceSearchEnabled);
+            Assert.Equal(expectedRoots.Count(), actualRoots.Count());
+            var comparer = new SourceRootComparer();
+            expectedRoots.All(x => actualRoots.Contains(x, comparer));
+        }
+
+        private class SourceRootComparer : IEqualityComparer<SourceRoot>
+        {
+            public bool Equals(SourceRoot x, SourceRoot y)
+            {
+                return x.Path.Equals(y.Path) && x.RecursiveSearchEnabled == y.RecursiveSearchEnabled;
+            }
+
+            public int GetHashCode(SourceRoot obj)
+            {
+                return obj.GetHashCode();
+            }
         }
 
         [Fact]
@@ -144,7 +145,7 @@ namespace MICoreUnitTests
             {
                 var serializer = new XmlSerializer(typeof(MICore.Xml.LaunchOptions.AndroidLaunchOptions));
                 var xmlOptions = (MICore.Xml.LaunchOptions.AndroidLaunchOptions)MICore.LaunchOptions.Deserialize(serializer, reader);
-                return new AndroidLaunchOptions(xmlOptions, MICore.TargetEngine.Native);
+                return new AndroidLaunchOptions(xmlOptions, TargetEngine.Native);
             }
         }
 

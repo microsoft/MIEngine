@@ -429,7 +429,7 @@ namespace AndroidDebugLauncher
                 }
                 else
                 {
-                    launchOptions = new JavaLaunchOptions(_launchOptions.JVMHost, _launchOptions.JVMPort, _launchOptions.SourceRoots, _launchOptions.RecursiveSourceSearchEnabled, _launchOptions.Package);
+                    launchOptions = new JavaLaunchOptions(_launchOptions.JVMHost, _launchOptions.JVMPort, _launchOptions.SourceRoots, _launchOptions.Package);
                 }
 
                 launchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
