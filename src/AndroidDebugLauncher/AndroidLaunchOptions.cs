@@ -43,18 +43,11 @@ namespace AndroidDebugLauncher
                 this.JVMHost = LaunchOptions.RequireAttribute(xmlOptions.JVMHost, "JVMHost");
                 this.JVMPort = xmlOptions.JVMPort;
 
-                if (!string.IsNullOrWhiteSpace(xmlOptions.SourceRoots))
-                {
-                    this.SourceRoots = xmlOptions.SourceRoots.Split(new char[] { ';' });
-                }
-                else
-                {
-                    this.SourceRoots = new string[] { };
-                }
+                this.SourceRoots = GetSourceRoots(xmlOptions.SourceRoots);
 
-                foreach (string root in SourceRoots)
+                foreach (SourceRoot root in this.SourceRoots)
                 {
-                    EnsureValidDirectory(root, "SourceRoots");
+                    EnsureValidDirectory(root.Path, "SourceRoots");
                 }
             }
 
@@ -63,6 +56,34 @@ namespace AndroidDebugLauncher
             this.LogcatServiceId = GetLogcatServiceIdAttribute(xmlOptions.LogcatServiceId);
 
             CheckTargetArchitectureSupported();
+        }
+
+        public static SourceRoot[] GetSourceRoots(string pathList)
+        {
+            List<SourceRoot> sourceRoots = new List<MICore.SourceRoot>();
+
+            if (!string.IsNullOrWhiteSpace(pathList))
+            {
+                string format = "{0}**";
+                string wildcardEnding = string.Format(CultureInfo.InvariantCulture, format, Path.DirectorySeparatorChar);
+                string altWildcardEnding = string.Format(CultureInfo.InvariantCulture, format, Path.AltDirectorySeparatorChar);
+
+                foreach (string path in pathList.Split(new char[] { ';' }))
+                {
+                    string trimmedPath = path.Trim();
+                    if (trimmedPath.EndsWith(wildcardEnding, StringComparison.OrdinalIgnoreCase) || trimmedPath.EndsWith(altWildcardEnding, StringComparison.OrdinalIgnoreCase))
+                    {
+                        string rootedPath = trimmedPath.Substring(0, trimmedPath.Length - 2);
+                        sourceRoots.Add(new MICore.SourceRoot(rootedPath, true));
+                    }
+                    else
+                    {
+                        sourceRoots.Add(new MICore.SourceRoot(trimmedPath, false));
+                    }
+                }
+            }
+
+            return sourceRoots.ToArray();
         }
 
         private string GetOptionalDirectoryAttribute(string value, string attributeName)
@@ -186,6 +207,6 @@ namespace AndroidDebugLauncher
 
         public int JVMPort { get; private set; }
 
-        public string[] SourceRoots { get; private set; }
+        public SourceRoot[] SourceRoots { get; private set; }
     }
 }

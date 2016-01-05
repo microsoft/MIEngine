@@ -289,7 +289,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return Constants.S_FALSE;
             }
-            string result = frame.EvaluateExpression("$pc=" + EngineUtils.AsAddr(addr));
+            string result = frame.EvaluateExpression("$pc=" + EngineUtils.AsAddr(addr, _engine.DebuggedProcess.Is64BitArch));
             if (result != null)
             {
                 _engine.DebuggedProcess.ThreadCache.MarkDirty();

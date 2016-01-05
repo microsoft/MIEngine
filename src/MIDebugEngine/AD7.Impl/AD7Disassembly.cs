@@ -11,11 +11,13 @@ namespace Microsoft.MIDebugEngine
 {
     internal class AD7DisassemblyStream : IDebugDisassemblyStream2
     {
+        private AD7Engine _engine;
         private ulong _addr;
         private enum_DISASSEMBLY_STREAM_SCOPE _scope;
 
-        internal AD7DisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE scope, IDebugCodeContext2 pCodeContext)
+        internal AD7DisassemblyStream(AD7Engine engine, enum_DISASSEMBLY_STREAM_SCOPE scope, IDebugCodeContext2 pCodeContext)
         {
+            _engine = engine;
             _scope = scope;
             AD7MemoryAddress addr = pCodeContext as AD7MemoryAddress;
             _addr = addr.Address;
@@ -25,7 +27,7 @@ namespace Microsoft.MIDebugEngine
 
         public int GetCodeContext(ulong uCodeLocationId, out IDebugCodeContext2 ppCodeContext)
         {
-            ppCodeContext = new AD7MemoryAddress(DebuggedProcess.g_Process.Engine, (uint)uCodeLocationId, null);
+            ppCodeContext = new AD7MemoryAddress(_engine, (uint)uCodeLocationId, null);
             return Constants.S_OK;
         }
 
@@ -65,11 +67,10 @@ namespace Microsoft.MIDebugEngine
         {
             uint iOp = 0;
 
-            DebuggedProcess process = DebuggedProcess.g_Process;
             IEnumerable<DisasmInstruction> instructions = null;
-            process.WorkerThread.RunOperation(async () =>
+            _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
-                instructions = await process.Disassembly.FetchInstructions(_addr, (int)dwInstructions);
+                instructions = await _engine.DebuggedProcess.Disassembly.FetchInstructions(_addr, (int)dwInstructions);
             });
 
             if (instructions != null)
@@ -132,11 +133,10 @@ namespace Microsoft.MIDebugEngine
 
             if (iInstructions != 0)
             {
-                DebuggedProcess process = DebuggedProcess.g_Process;
                 IEnumerable<DisasmInstruction> instructions = null;
-                process.WorkerThread.RunOperation(async () =>
+                _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
                 {
-                    instructions = await process.Disassembly.FetchInstructions(_addr, (int)iInstructions);
+                    instructions = await _engine.DebuggedProcess.Disassembly.FetchInstructions(_addr, (int)iInstructions);
                 });
                 if (instructions == null)
                 {

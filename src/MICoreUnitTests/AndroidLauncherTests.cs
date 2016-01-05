@@ -2,14 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AndroidDebugLauncher;
+using MICore;
 using System;
 using System.Collections.Generic;
-using Xunit;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using Xunit;
 
 namespace MICoreUnitTests
 {
@@ -35,7 +34,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.IntermediateDirectory, temp);
             Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
             Assert.Equal(options.DeviceId, "default");
-            Assert.Equal(options.IsAttach, false);
+            Assert.False(options.IsAttach);
         }
 
         [Fact]
@@ -60,6 +59,34 @@ namespace MICoreUnitTests
             catch (MICore.InvalidLaunchOptionsException e)
             {
                 Assert.True(e.Message.Contains("LaunchActivity"));
+            }
+        }
+
+        [Fact]
+        public void TestGetSourceRoots()
+        {
+            var actualRoots = AndroidLaunchOptions.GetSourceRoots("c:\\example\\src; d:\\someotherdir\\src\\**;d://otherdir//src//**");
+
+            List<SourceRoot> expectedRoots = new List<SourceRoot>();
+            expectedRoots.Add(new SourceRoot("c:\\example\\src", false));
+            expectedRoots.Add(new SourceRoot("d:\\someotherdir\\src\\", true));
+            expectedRoots.Add(new SourceRoot("d://otherdir//src//", true));
+
+            Assert.Equal(expectedRoots.Count(), actualRoots.Count());
+            var comparer = new SourceRootComparer();
+            expectedRoots.All(x => actualRoots.Contains(x, comparer));
+        }
+
+        private class SourceRootComparer : IEqualityComparer<SourceRoot>
+        {
+            public bool Equals(SourceRoot x, SourceRoot y)
+            {
+                return x.Path.Equals(y.Path) && x.RecursiveSearchEnabled == y.RecursiveSearchEnabled;
+            }
+
+            public int GetHashCode(SourceRoot obj)
+            {
+                return obj.GetHashCode();
             }
         }
 
@@ -118,7 +145,7 @@ namespace MICoreUnitTests
             {
                 var serializer = new XmlSerializer(typeof(MICore.Xml.LaunchOptions.AndroidLaunchOptions));
                 var xmlOptions = (MICore.Xml.LaunchOptions.AndroidLaunchOptions)MICore.LaunchOptions.Deserialize(serializer, reader);
-                return new AndroidLaunchOptions(xmlOptions, MICore.TargetEngine.Native);
+                return new AndroidLaunchOptions(xmlOptions, TargetEngine.Native);
             }
         }
 

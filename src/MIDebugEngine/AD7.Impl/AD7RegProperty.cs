@@ -11,11 +11,13 @@ namespace Microsoft.MIDebugEngine
 {
     public class AD7RegGroupProperty : IDebugProperty2
     {
+        private readonly AD7Engine _engine;
         private readonly RegisterGroup _group;
         private readonly Tuple<int, string>[] _values;
         public readonly DEBUG_PROPERTY_INFO PropertyInfo;
-        public AD7RegGroupProperty(enum_DEBUGPROP_INFO_FLAGS dwFields, RegisterGroup grp, Tuple<int, string>[] values)
+        public AD7RegGroupProperty(AD7Engine engine, enum_DEBUGPROP_INFO_FLAGS dwFields, RegisterGroup grp, Tuple<int, string>[] values)
         {
+            _engine = engine;
             _group = grp;
             _values = values;
             PropertyInfo = CreateInfo(dwFields);
@@ -52,7 +54,7 @@ namespace Microsoft.MIDebugEngine
         {
             DEBUG_PROPERTY_INFO[] properties = new DEBUG_PROPERTY_INFO[_group.Count];
             int i = 0;
-            foreach (var reg in DebuggedProcess.g_Process.GetRegisterDescriptions())
+            foreach (var reg in _engine.DebuggedProcess.GetRegisterDescriptions())
             {
                 if (reg.Group == _group)
                 {

@@ -17,7 +17,10 @@ set VSVersion=14.0
 set BackupDir=%LOCALAPPDATA%\Microsoft\VisualStudio\%VSVersion%\MDDDebuggerBackup\
 set MDDDebuggerDir=%ProgramFiles%\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger\
 
-set FilesToInstall=Microsoft.MICore.dll Microsoft.MIDebugEngine.dll Microsoft.MIDebugEngine.pkgdef Microsoft.MIDebugPackage.dll Microsoft.MIDebugPackage.pkgdef Microsoft.AndroidDebugLauncher.dll Microsoft.AndroidDebugLauncher.pkgdef Microsoft.IOSDebugLauncher.dll Microsoft.IOSDebugLauncher.pkgdef Microsoft.JDbg.dll Microsoft.DebugEngineHost.dll
+set FilesToInstall=Microsoft.MICore.dll Microsoft.MIDebugEngine.dll Microsoft.MIDebugEngine.pkgdef Microsoft.MIDebugPackage.dll Microsoft.MIDebugPackage.pkgdef Microsoft.AndroidDebugLauncher.dll Microsoft.AndroidDebugLauncher.pkgdef Microsoft.IOSDebugLauncher.dll Microsoft.IOSDebugLauncher.pkgdef Microsoft.JDbg.dll Microsoft.DebugEngineHost.dll Microsoft.MICore.XmlSerializers.dll 
+
+REM Add in the Facade assemblies we need to run on the desktop CLR
+set FilesToInstall=%FilesToInstall% System.Diagnostics.Process.dll System.IO.FileSystem.dll System.IO.FileSystem.Primitives.dll System.Net.Security.dll System.Net.Sockets.dll System.Reflection.TypeExtensions.dll System.Runtime.InteropServices.RuntimeInformation.dll System.Security.Cryptography.X509Certificates.dll System.Threading.Thread.dll
 
 if "%~1"=="/restore" goto RestoreBackup
 

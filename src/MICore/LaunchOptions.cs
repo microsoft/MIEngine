@@ -221,6 +221,19 @@ namespace MICore
 
     }
 
+    public sealed class SourceRoot
+    {
+        public SourceRoot(string path, bool recursive)
+        {
+            Path = path;
+            RecursiveSearchEnabled = recursive;
+        }
+
+        public string Path { get; private set; }
+
+        public bool RecursiveSearchEnabled { get; private set; }
+    }
+
     public sealed class JavaLaunchOptions : LaunchOptions
     {
         /// <summary>
@@ -230,11 +243,11 @@ namespace MICore
         /// <param name="jvmPort">Java Virtual Machine port.</param>
         /// <param name="sourceRoots">Source roots.</param>
         /// <param name="processName">Logical name of the process. Usually indicates the name of the activity.</param>
-        public JavaLaunchOptions(string jvmHost, int jvmPort, string[] sourceRoots, string processName)
+        public JavaLaunchOptions(string jvmHost, int jvmPort, SourceRoot[] sourceRoots, string processName)
         {
             JVMHost = jvmHost;
             JVMPort = jvmPort;
-            SourceRoots = sourceRoots;
+            SourceRoots = new ReadOnlyCollection<SourceRoot>(sourceRoots);
             ProcessName = processName;
         }
 
@@ -242,7 +255,7 @@ namespace MICore
 
         public int JVMPort { get; private set; }
 
-        public string[] SourceRoots { get; private set; }
+        public ReadOnlyCollection<SourceRoot> SourceRoots { get; private set; }
 
         public string ProcessName { get; private set; }
     }

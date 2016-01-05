@@ -15,9 +15,9 @@ namespace Microsoft.MIDebugEngine
 {
     public static class EngineUtils
     {
-        internal static string AsAddr(ulong addr)
+        internal static string AsAddr(ulong addr, bool is64bit)
         {
-            string addrFormat = DebuggedProcess.g_Process.Is64BitArch ? "x16" : "x8";
+            string addrFormat = is64bit ? "x16" : "x8";
             return "0x" + addr.ToString(addrFormat, CultureInfo.InvariantCulture);
         }
 
@@ -51,7 +51,7 @@ namespace Microsoft.MIDebugEngine
 
             if (location == null)
             {
-                string addrFormat = DebuggedProcess.g_Process.Is64BitArch ? "x16" : "x8";
+                string addrFormat = proc.Is64BitArch ? "x16" : "x8";
                 location = ip.ToString(addrFormat, CultureInfo.InvariantCulture);
             }
 

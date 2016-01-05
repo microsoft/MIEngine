@@ -207,7 +207,7 @@ namespace Microsoft.MIDebugEngine
 
         public void OnExpressionEvaluationComplete(IVariableInformation var, IDebugProperty2 prop = null)
         {
-            AD7ExpressionCompleteEvent eventObject = new AD7ExpressionCompleteEvent(var, prop);
+            AD7ExpressionCompleteEvent eventObject = new AD7ExpressionCompleteEvent(_engine, var, prop);
             Send(eventObject, AD7ExpressionCompleteEvent.IID, var.Client);
         }
 
