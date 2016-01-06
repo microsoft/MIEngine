@@ -38,6 +38,7 @@ namespace MICore
         public event EventHandler ThreadCreatedEvent;
         public event EventHandler ThreadExitedEvent;
         public event EventHandler<ResultEventArgs> MessageEvent;
+        public event EventHandler<ResultEventArgs> TelemetryEvent;
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
 
@@ -1043,6 +1044,14 @@ namespace MICore
                 if (this.MessageEvent != null)
                 {
                     this.MessageEvent(this, new ResultEventArgs(results));
+                }
+            }
+            else if (cmd.StartsWith("telemetry,", StringComparison.Ordinal))
+            {
+                results = MIResults.ParseResultList(cmd.Substring("telemetry,".Length));
+                if (this.TelemetryEvent != null)
+                {
+                    this.TelemetryEvent(this, new ResultEventArgs(results));
                 }
             }
             else
