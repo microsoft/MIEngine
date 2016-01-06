@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,13 +16,13 @@ using System.Threading.Tasks;
 
 namespace ConsoleApplication9
 {
-    class DebugListenerTool
+    internal class DebugListenerTool
     {
-        const int RemotePort = 3030;
-        const int LldbProxyPort = 3002;
-        const string MachineName = "Chucks-mac-mini";
+        private const int RemotePort = 3030;
+        private const int LldbProxyPort = 3002;
+        private const string MachineName = "Chucks-mac-mini";
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Task.Run(() =>
             {
@@ -55,7 +58,6 @@ namespace ConsoleApplication9
                                 }
                                 catch (IOException)
                                 {
-
                                 }
                             }
                         }
@@ -80,7 +82,6 @@ namespace ConsoleApplication9
 
                     e.WaitOne();
                 }
-
             }).Wait();
         }
     }

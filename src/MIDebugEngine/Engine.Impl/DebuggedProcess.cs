@@ -135,7 +135,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         symPath = file;
                     }
-                    ulong loadAddr = results.Results.FindAddr("loaded_addr");                    
+                    ulong loadAddr = results.Results.FindAddr("loaded_addr");
 
                     uint size = results.Results.FindUint("size");
                     if (String.IsNullOrEmpty(id))
@@ -158,7 +158,7 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions is LocalLaunchOptions)
             {
                 LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && 
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
                     _launchOptions.DebuggerMIMode == MIMode.Gdb &&
                     String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress)
                     )
@@ -449,7 +449,7 @@ namespace Microsoft.MIDebugEngine
                 if (_launchOptions is LocalLaunchOptions && ((LocalLaunchOptions)_launchOptions).ProcessId != 0)
                 {
                     // This is an attach
-                    LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;                   
+                    LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
 
                     // check for remote
                     string destination = localLaunchOptions.MIDebuggerServerAddress;
