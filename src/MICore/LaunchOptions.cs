@@ -172,7 +172,7 @@ namespace MICore
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
             var options = new LocalLaunchOptions(
-                RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"), 
+                RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"),
                 source.MIDebuggerServerAddress,
                 source.ProcessId,
                 source.Environment);
@@ -218,7 +218,6 @@ namespace MICore
         /// [Optional] List of environment variables to add to the launched process
         /// </summary>
         public ReadOnlyCollection<EnvironmentEntry> Environment { get; private set; }
-
     }
 
     public sealed class SourceRoot

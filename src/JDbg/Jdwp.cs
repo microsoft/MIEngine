@@ -70,7 +70,7 @@ namespace JDbg
                 operationsToAbort = new List<WaitingOperationDescriptor>(_waitingOperations.Values);
                 _waitingOperations.Clear();
             }
-            foreach(var operation in operationsToAbort)
+            foreach (var operation in operationsToAbort)
             {
                 if (socketException == null)
                 {
@@ -203,7 +203,7 @@ namespace JDbg
                 operationsToAbort = new List<WaitingOperationDescriptor>(_waitingOperations.Values);
                 _waitingOperations.Clear();
             }
-            foreach(var operation in operationsToAbort)
+            foreach (var operation in operationsToAbort)
             {
                 operation.Abort();
             }
