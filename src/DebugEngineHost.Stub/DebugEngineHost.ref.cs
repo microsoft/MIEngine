@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 
 
@@ -354,6 +355,27 @@ namespace Microsoft.DebugEngineHost
         /// <param name="currentStep">The step that is currently finished.</param>
         /// <param name="progressText">Text describing the current progress.</param>
         public void SetProgress(int totalSteps, int currentStep, string progressText)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Static class providing telemetry reporting services to debug engines. Telemetry 
+    /// reports go to Microsoft, and so in general this functionality should not be used 
+    /// by non-Microsoft implemented debug engines.
+    /// </summary>
+    public static class HostTelemetry
+    {
+        /// <summary>
+        /// Reports a telemetry event to Microsoft. This method is a nop in non-lab configurations.
+        /// </summary>
+        /// <param name="eventName">Name of the event. This should generally start with the 
+        /// prefix 'VS/Diagnostics/Debugger/'</param>
+        /// <param name="eventProperties">0 or more properties of the event. Property names 
+        /// should generally start with the prefix 'VS.Diagnostics.Debugger.'</param>
+        [Conditional("LAB")]
+        public static void SendEvent(string eventName, params KeyValuePair<string, object>[] eventProperties)
         {
             throw new NotImplementedException();
         }

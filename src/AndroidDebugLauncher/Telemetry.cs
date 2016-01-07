@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using MICore;
-using Microsoft.Internal.VisualStudio.Shell;
-using Microsoft.Internal.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Shell;
+using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +16,6 @@ namespace AndroidDebugLauncher
     /// </summary>
     internal static class Telemetry
     {
-        private static bool s_isDisabled;
-
         private const string Event_LaunchError = @"VS/Diagnostics/Debugger/Android/LaunchFailure";
         private const string Property_LaunchErrorResult = @"VS.Diagnostics.Debugger.Android.FailureResult";
         private const string Property_LaunchTargetEngine = @"VS.Diagnostics.Debugger.Android.TargetEngine";
@@ -105,45 +101,11 @@ namespace AndroidDebugLauncher
         }
         public static void SendLaunchError(string launchErrorTelemetryResult, string targetEngine)
         {
-            SendEvent(Event_LaunchError,
+            HostTelemetry.SendEvent(Event_LaunchError,
                 new KeyValuePair<string, object>(Property_LaunchErrorResult, launchErrorTelemetryResult),
                 new KeyValuePair<string, object>(Property_LaunchTargetEngine, targetEngine));
         }
 
         #endregion
-
-        private static void SendEvent(string eventName, params KeyValuePair<string, object>[] eventProperties)
-        {
-            if (s_isDisabled)
-                return;
-
-            try
-            {
-                Internal.SendEvent(eventName, eventProperties);
-            }
-            catch
-            {
-                // disable telemetry in the future so that we don't keep failing if types are unavailable
-                s_isDisabled = true;
-            }
-        }
-
-        /// <summary>
-        /// Internal class used to reference shell types. This is needed to allow our code to safely reference 14.0 types
-        /// while still allowing us to run in glass or in Visual Studio 12.0. Any calls in this class need to be guarded
-        /// by a try/catch
-        /// </summary>
-        private static class Internal
-        {
-            internal static void SendEvent(string eventName, params KeyValuePair<string, object>[] eventProperties)
-            {
-                var telemetryEvent = TelemetryHelper.TelemetryService.CreateEvent(eventName);
-                foreach (var property in eventProperties)
-                {
-                    telemetryEvent.SetProperty(property.Key, property.Value);
-                }
-                TelemetryHelper.DefaultTelemetrySession.PostEvent(telemetryEvent);
-            }
-        }
     }
 }
