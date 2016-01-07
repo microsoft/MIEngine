@@ -38,6 +38,7 @@ namespace MICore
         public event EventHandler ThreadCreatedEvent;
         public event EventHandler ThreadExitedEvent;
         public event EventHandler<ResultEventArgs> MessageEvent;
+        public event EventHandler<ResultEventArgs> TelemetryEvent;
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
 
@@ -450,7 +451,7 @@ namespace MICore
         }
 
 
-        bool IsLocalGdbAttach()
+        private bool IsLocalGdbAttach()
         {
             if (this.MICommandFactory.Mode == MIMode.Gdb &&
                this._launchOptions is LocalLaunchOptions &&
@@ -502,7 +503,7 @@ namespace MICore
                     return CmdLinuxBreak(debuggeePid, ResultClass.done);
                 }
             }
-            
+
             var res = CmdAsync("-exec-interrupt", ResultClass.done);
             return res.ContinueWith((t) =>
             {
@@ -636,7 +637,7 @@ namespace MICore
         }
 
         private Task<Results> CmdLinuxBreak(int debugeePid, ResultClass expectedResultClass)
-        {            
+        {
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
@@ -1043,6 +1044,14 @@ namespace MICore
                 if (this.MessageEvent != null)
                 {
                     this.MessageEvent(this, new ResultEventArgs(results));
+                }
+            }
+            else if (cmd.StartsWith("telemetry,", StringComparison.Ordinal))
+            {
+                results = MIResults.ParseResultList(cmd.Substring("telemetry,".Length));
+                if (this.TelemetryEvent != null)
+                {
+                    this.TelemetryEvent(this, new ResultEventArgs(results));
                 }
             }
             else

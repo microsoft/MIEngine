@@ -347,7 +347,7 @@ namespace Microsoft.MIDebugEngine
 
     internal sealed class AD7ExpressionCompleteEvent : AD7AsynchronousEvent, IDebugExpressionEvaluationCompleteEvent2
     {
-        AD7Engine _engine;
+        private AD7Engine _engine;
         public const string IID = "C0E13A85-238A-4800-8315-D947C960A843";
 
         public AD7ExpressionCompleteEvent(AD7Engine engine, IVariableInformation var, IDebugProperty2 prop = null)

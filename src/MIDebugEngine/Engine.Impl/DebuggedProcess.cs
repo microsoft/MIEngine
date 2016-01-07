@@ -135,7 +135,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         symPath = file;
                     }
-                    ulong loadAddr = results.Results.FindAddr("loaded_addr");                    
+                    ulong loadAddr = results.Results.FindAddr("loaded_addr");
 
                     uint size = results.Results.FindUint("size");
                     if (String.IsNullOrEmpty(id))
@@ -158,7 +158,7 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions is LocalLaunchOptions)
             {
                 LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && 
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
                     _launchOptions.DebuggerMIMode == MIMode.Gdb &&
                     String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress)
                     )
@@ -368,6 +368,16 @@ namespace Microsoft.MIDebugEngine
                 }
             };
 
+            TelemetryEvent += (object o, ResultEventArgs args) =>
+            {
+                string eventName;
+                KeyValuePair<string, object>[] properties;
+                if (DecodeTelemetryEvent(args.Results, out eventName, out properties))
+                {
+                    HostTelemetry.SendEvent(eventName, properties);
+                }
+            };
+
             BreakChangeEvent += _breakpointManager.BreakpointModified;
         }
 
@@ -449,7 +459,7 @@ namespace Microsoft.MIDebugEngine
                 if (_launchOptions is LocalLaunchOptions && ((LocalLaunchOptions)_launchOptions).ProcessId != 0)
                 {
                     // This is an attach
-                    LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;                   
+                    LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
 
                     // check for remote
                     string destination = localLaunchOptions.MIDebuggerServerAddress;
@@ -1125,6 +1135,57 @@ namespace Microsoft.MIDebugEngine
 
             uint errorCode = results.TryFindUint("error-code") ?? 0;
             return new OutputMessage(text, messageType, severity, errorCode);
+        }
+
+        private bool DecodeTelemetryEvent(Results results, out string eventName, out KeyValuePair<string, object>[] properties)
+        {
+            properties = null;
+
+            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
+            eventName = results.TryFindString("event-name");
+            if (string.IsNullOrEmpty(eventName) || !char.IsLetter(eventName[0]) || !eventName.Contains('/'))
+            {
+                Debug.Fail("Bogus telemetry event. 'Event-name' property is missing or invalid.");
+                return false;
+            }
+
+            TupleValue tuple;
+            if (!results.TryFind("properties", out tuple))
+            {
+                Debug.Fail("Bogus message event, missing 'properties' property");
+                return false;
+            }
+
+            List<KeyValuePair<string, object>> propertyList = new List<KeyValuePair<string, object>>(tuple.Content.Count);
+            foreach (NamedResultValue pair in tuple.Content)
+            {
+                ConstValue resultValue = pair.Value as ConstValue;
+                if (resultValue == null)
+                    continue;
+
+                string content = resultValue.Content;
+                if (string.IsNullOrEmpty(content))
+                    continue;
+
+                object value = content;
+                int numericValue;
+                if (content.Length >= 3 && content.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(content.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out numericValue))
+                {
+                    value = numericValue;
+                }
+                else if (int.TryParse(content, NumberStyles.None, CultureInfo.InvariantCulture, out numericValue))
+                {
+                    value = numericValue;
+                }
+
+                if (value != null)
+                {
+                    propertyList.Add(new KeyValuePair<string, object>(pair.Name, value));
+                }
+            }
+
+            properties = propertyList.ToArray();
+            return true;
         }
 
         private static RegisterGroup GetGroupForRegister(List<RegisterGroup> registerGroups, string name, EngineUtils.RegisterNameMap nameMap)

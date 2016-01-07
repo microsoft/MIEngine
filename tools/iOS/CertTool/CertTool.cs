@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -9,10 +12,10 @@ using System.Threading.Tasks;
 
 namespace ConsoleApplication12
 {
-    class CertTool
+    internal class CertTool
     {
-        const int RemotePort = 3030;
-        const string MachineName = "Chucks-mac-mini";
+        private const int RemotePort = 3030;
+        private const string MachineName = "Chucks-mac-mini";
 
         public static bool ValidateServerCertificate(
             object sender,
@@ -24,7 +27,7 @@ namespace ConsoleApplication12
             return true;
         }
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Task.Run(async () =>
             {
@@ -34,7 +37,8 @@ namespace ConsoleApplication12
                 WebRequestHandler handler = new WebRequestHandler();
                 handler.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(ValidateServerCertificate);
 
-                using(HttpClient client = new HttpClient(handler, true)) {
+                using (HttpClient client = new HttpClient(handler, true))
+                {
                     client.BaseAddress = new Uri(string.Format(@"https://{0}:{1}", MachineName, RemotePort));
 
                     X509Store store = null;

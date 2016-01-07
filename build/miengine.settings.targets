@@ -25,6 +25,7 @@
   <PropertyGroup>
     <GlassDir>$(MSBuildThisFileDirectory)..\Microsoft.VisualStudio.Glass\</GlassDir>
     <DropConfigurationName>$(Configuration)</DropConfigurationName>
+    <DefineConstants Condition="'$(Configuration)' == 'Lab.Debug' or '$(Configuration)' == 'Lab.Release'">$(DefineConstants);LAB</DefineConstants>
     <DropConfigurationName Condition="'$(Configuration)' == 'Lab.Debug'">Debug</DropConfigurationName>
     <DropConfigurationName Condition="'$(Configuration)' == 'Lab.Release'">Release</DropConfigurationName>
     <DropRootDir Condition="'$(TF_BUILD_BINARIESDIRECTORY)'!=''">$(TF_BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropRootDir>

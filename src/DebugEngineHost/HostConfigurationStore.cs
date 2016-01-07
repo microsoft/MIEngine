@@ -15,7 +15,7 @@ namespace Microsoft.DebugEngineHost
 {
     public sealed class HostConfigurationStore
     {
-        const string DebuggerSectionName = "Debugger";
+        private const string DebuggerSectionName = "Debugger";
 
         private string _engineId;
         private string _registryRoot;

@@ -90,6 +90,6 @@ namespace MICore
         protected override string GetThreadName()
         {
             return "MI.LocalLinuxTransport";
-        } 
+        }
     }
 }

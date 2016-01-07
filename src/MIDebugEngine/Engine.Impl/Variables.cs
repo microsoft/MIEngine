@@ -409,10 +409,10 @@ namespace Microsoft.MIDebugEngine
             _engine.CurrentRadix();    // ensure the radix value is up-to-date
 
             string execCommandString = "-exec ";
-            if (this._strippedName.StartsWith(execCommandString))
+            if (_strippedName.StartsWith(execCommandString))
             {
                 // special case for executing raw mi commands. 
-                string consoleCommand = this._strippedName.Substring(execCommandString.Length);
+                string consoleCommand = _strippedName.Substring(execCommandString.Length);
                 string consoleResults = null;
 
                 try
@@ -438,7 +438,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (!String.IsNullOrEmpty(consoleResults))
                 {
-                    this._debuggedProcess.WriteOutput(consoleResults);
+                    _debuggedProcess.WriteOutput(consoleResults);
                 }
             }
             else
