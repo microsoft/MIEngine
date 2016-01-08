@@ -741,6 +741,18 @@ namespace MICore
             }
         }
 
+        void ITransportCallback.LogText(string line)
+        {
+            if (!line.EndsWith("\n", StringComparison.Ordinal))
+            {
+                line += "\n";
+            }
+            if (OutputStringEvent != null)
+            {
+                OutputStringEvent(this, line);
+            }
+        }
+
         #endregion
 
         // inherited classes can override this for thread marshalling etc

@@ -34,7 +34,6 @@
     <Prefer32Bit>false</Prefer32Bit>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
-    
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -100,11 +99,13 @@
     <Compile Include="MIResults.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Transports\ClientServerTransport.cs" />
     <Compile Include="Transports\ITransport.cs" />
     <Compile Include="Transports\LocalTransport.cs" />
     <Compile Include="Transports\LocalLinuxTransport.cs" />
     <Compile Include="Transports\MockTransport.cs" />
     <Compile Include="Transports\PipeTransport.cs" />
+    <Compile Include="Transports\ServerTransport.cs" />
     <Compile Include="Transports\StreamTransport.cs" />
     <Compile Include="Transports\TcpTransport.cs" />
   </ItemGroup>

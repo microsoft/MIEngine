@@ -20,9 +20,13 @@ namespace MICore
         private StreamReader _stdErrReader;
         private int _remainingReaders;
         private ManualResetEvent _allReadersDone = new ManualResetEvent(false);
+        private bool _killOnClose;
+        private bool _filterStderr;
 
-        public PipeTransport()
+        public PipeTransport(bool killOnClose = false, bool filterStderr = false, bool filterStdout = false) : base(filterStdout)
         {
+            _killOnClose = killOnClose;
+            _filterStderr = filterStderr;
         }
 
         protected override string GetThreadName()
@@ -97,6 +101,15 @@ namespace MICore
             {
                 _process.EnableRaisingEvents = false;
                 _process.Exited -= OnProcessExit;
+                if (_killOnClose && !_process.HasExited)
+                {
+                    try {
+                        _process.Kill();
+                    }
+                    catch
+                    {
+                    }
+                }
                 _process.Dispose();
             }
         }
@@ -133,7 +146,15 @@ namespace MICore
                     if (line == null)
                         break;
 
-                    this.Callback.OnStdErrorLine(line);
+                    if (_filterStderr)
+                    {
+                        line = FilterLine(line);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        this.Callback.OnStdErrorLine(line);
+                    }
                 }
             }
             catch (Exception)
