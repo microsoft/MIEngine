@@ -49,5 +49,11 @@ namespace MICore
         /// </summary>
         /// <param name="line">[Required] line of text to write</param>
         void AppendToInitializationLog(string line);
+
+        /// <summary>
+        /// Fired when the transport wishes to log a message to the debugger output window
+        /// </summary>
+        /// <param name="line">[Required] Line of text to be logged</param>
+        void LogText(string line);
     };
 }

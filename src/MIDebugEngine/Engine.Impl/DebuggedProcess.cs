@@ -170,7 +170,14 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    this.Init(new MICore.LocalTransport(), _launchOptions);
+                    if (MICore.ClientServerTransport.ShouldStartServer(_launchOptions))
+                    {
+                        this.Init(new MICore.ClientServerTransport(filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr), _launchOptions);
+                    }
+                    else
+                    {
+                        this.Init(new MICore.LocalTransport(), _launchOptions);
+                    }
                 }
             }
             else if (_launchOptions is PipeLaunchOptions)

@@ -102,6 +102,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debug server process failed to initialize..
+        /// </summary>
+        public static string Error_DebugServerInitializationFailed {
+            get {
+                return ResourceManager.GetString("Error_DebugServerInitializationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exception while processing MIEngine operation. {0}. If the problem continues restart debugging..
         /// </summary>
         public static string Error_ExceptionInOperation {
