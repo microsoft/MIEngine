@@ -14,17 +14,18 @@ using System.Globalization;
 
 namespace MICore
 {
-    public class ServerTransport : PipeTransport
+    public class ServerTransport : PipeTransport, ISignalingTransport
     {
         private string _startPattern;
         public string _messagePrefix;
         private bool _started;
-        private ManualResetEvent _event;
 
-        public ServerTransport(ManualResetEvent e, bool killOnClose, bool filterStderr = false, bool filterStdout = false) 
+        public ManualResetEvent StartedEvent { get; }
+
+        public ServerTransport(bool killOnClose, bool filterStderr = false, bool filterStdout = false) 
             : base(killOnClose, filterStderr, filterStdout)
         {
-            _event = e;
+            StartedEvent = new ManualResetEvent(false);
         }
 
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
@@ -47,7 +48,7 @@ namespace MICore
             if (!_started && Regex.IsMatch(line, _startPattern, RegexOptions.None, new TimeSpan(0, 0, 0, 0, 10) /* 10 ms */))
             {
                 _started = true;
-                _event.Set();
+                StartedEvent.Set();
             }
 
             this.Callback.LogText(_messagePrefix + ": " + line);   // log to debug output
