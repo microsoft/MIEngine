@@ -18,6 +18,11 @@
       <Visible>false</Visible>
     </GenerateAssembly>
   </ItemGroup>
+
+  <ItemGroup>
+    <FilesToCopy Include="..\..\ThirdPartyNotices.txt" />
+  </ItemGroup>
+
   <Target Name="GenerateAssemblies" Condition="'@(GenerateAssembly)' != ''" Inputs="@(GenerateAssembly)" Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')" AfterTargets="Build">
     <PropertyGroup>
       <IlAsmCommand>"$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe"</IlAsmCommand>
@@ -29,7 +34,9 @@
 
   <Target Name="Build">
     <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; -MSBuildVersion 14 &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot;" />
+    <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(MIDefaultOutputPath)" />
   </Target>
+
   <Target Name="Clean">
     <RemoveDir Directories="$(GeneratedAssembliesDir)" />
   </Target>
