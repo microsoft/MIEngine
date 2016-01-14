@@ -18,6 +18,7 @@
       <Visible>false</Visible>
     </GenerateAssembly>
   </ItemGroup>
+
   <Target Name="GenerateAssemblies" Condition="'@(GenerateAssembly)' != ''" Inputs="@(GenerateAssembly)" Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')" AfterTargets="Build">
     <PropertyGroup>
       <IlAsmCommand>"$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe"</IlAsmCommand>
@@ -29,6 +30,7 @@
 
   <Target Name="Build">
     <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; -MSBuildVersion 14 &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot;" />
+    <Exec Command="copy /y ..\..\ThirdPartyNotices.txt &quot;$(MIDefaultOutputPath)&quot;" />
   </Target>
   <Target Name="Clean">
     <RemoveDir Directories="$(GeneratedAssembliesDir)" />
