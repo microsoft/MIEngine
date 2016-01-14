@@ -188,6 +188,11 @@ namespace MICore
             }
         }
 
+        public bool ShouldStartServer()
+        {
+            return !string.IsNullOrWhiteSpace(DebugServer);
+        }
+
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
             var options = new LocalLaunchOptions(

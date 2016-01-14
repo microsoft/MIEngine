@@ -166,13 +166,30 @@ namespace Microsoft.MIDebugEngine
                     // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
                     // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
                     // during debuggee launch
-                    this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
+                    if (localLaunchOptions.ShouldStartServer())
+                    {
+                        this.Init(new MICore.ClientServerTransport
+                            (
+                                        new LocalLinuxTransport(),
+                                        new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
+                                  ), _launchOptions
+                            );
+                    }
+                    else
+                    {
+                        this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
+                    }
                 }
                 else
                 {
-                    if (MICore.ClientServerTransport.ShouldStartServer(_launchOptions))
+                    if (localLaunchOptions.ShouldStartServer())
                     {
-                        this.Init(new MICore.ClientServerTransport(filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr), _launchOptions);
+                        this.Init(new MICore.ClientServerTransport
+                            (
+                                        new LocalTransport(),
+                                        new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
+                                  ), _launchOptions
+                            );
                     }
                     else
                     {

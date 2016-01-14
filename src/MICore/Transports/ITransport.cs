@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace MICore
 {
@@ -14,7 +15,13 @@ namespace MICore
         void Init(ITransportCallback transportCallback, LaunchOptions options);
         void Send(string cmd);
         void Close();
+        bool IsClosed { get; }
     }
+    public interface ISignalingTransport: ITransport
+    {
+        ManualResetEvent StartedEvent { get; }
+    }
+
 
     /// <summary>
     /// Interface implemented by the Debugger class to recieve notifications from the transport

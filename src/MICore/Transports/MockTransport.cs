@@ -60,6 +60,8 @@ namespace MICore
             }
         }
 
+        public bool IsClosed { get { return _bQuit; } }
+
         private void TransportLoop()
         {
             _lineNumber = 0;

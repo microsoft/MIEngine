@@ -14,46 +14,48 @@ using System.Text.RegularExpressions;
 namespace MICore
 {
     // Manage both the client and server transports for a debugging session
-    public class ClientServerTransport : LocalTransport
+    public class ClientServerTransport : ITransport
     {
-        private ServerTransport _serverTransport;
-        private ManualResetEvent _event;
+        private ISignalingTransport _serverTransport;
+        private ITransport _clientTransport;
         private int _launchTimeout;
 
-        public static bool ShouldStartServer(LaunchOptions options)
+        public ClientServerTransport(ITransport clientTransport, ISignalingTransport serverTransport)
         {
-            return !string.IsNullOrWhiteSpace((options as LocalLaunchOptions)?.DebugServer);
+            _clientTransport = clientTransport;
+            _serverTransport = serverTransport;
         }
 
-        public ClientServerTransport(bool filterStdout, bool filterStderr)
-        {
-            _event = new ManualResetEvent(false);
-            _serverTransport = new ServerTransport(_event, killOnClose:true, filterStderr: filterStderr, filterStdout: filterStdout);
-        }
-
-        public override void Init(ITransportCallback transportCallback, LaunchOptions options)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options)
         {
             _launchTimeout = ((LocalLaunchOptions)options).ServerLaunchTimeout;
             _serverTransport.Init(transportCallback, options);
             WaitForStart();
-            if (!IsClosed)
+            if (!_clientTransport.IsClosed)
             {
-                base.Init(transportCallback, options);
+                _clientTransport.Init(transportCallback, options);
             }
         }
 
         private void WaitForStart()
         {
-            if (!_event.WaitOne(_launchTimeout))  // wait for the server to start
+            if (!_serverTransport.StartedEvent.WaitOne(_launchTimeout))  // wait for the server to start
             {
                 _serverTransport.Close();
                 throw new TimeoutException(MICoreResources.Error_DebugServerInitializationFailed);
             }
         }
-        public override void Close()
+        public void Close()
         {
-            base.Close();
+            _clientTransport.Close();
             _serverTransport.Close();
+        }
+
+        public bool IsClosed { get { return _clientTransport.IsClosed; } }
+
+        public void Send(string cmd)
+        {
+            _clientTransport.Send(cmd);
         }
     }
 }

@@ -11,6 +11,7 @@ using System.Collections.Specialized;
 using System.Collections;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace MICore
 {
@@ -74,6 +75,50 @@ namespace MICore
             InitProcess(proc, out reader, out writer);
         }
 
+        private void KillChildren(List<Tuple<int,int>> processes, int pid)
+        {
+            processes.ForEach((p) =>
+            {
+                if (p.Item2 == pid)
+                {
+                    KillChildren(processes, p.Item1);
+                    var k = Process.Start("/bin/kill", String.Format(CultureInfo.InvariantCulture, "-9 {0}", p.Item1));
+                    k.WaitForExit();
+                }
+            });
+        }
+
+        private void KillProcess(Process p)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Run 'ps h -o "%p %P"', which generates a list of the process ids (%p) and parent process ids (%P).
+                // Using this list, issue a 'kill' command for each child process. Kill the children (recursively) to eliminate
+                // the entire process tree rooted at p. 
+                Process ps = new Process();
+                ps.StartInfo.FileName ="/bin/ps";
+                ps.StartInfo.Arguments = "h -o \"%p %P\"";
+                ps.StartInfo.RedirectStandardOutput = true;
+                ps.StartInfo.UseShellExecute = false;
+                ps.Start();
+                string line;
+                List<Tuple<int, int>> processAndParent = new List<Tuple<int, int>>();
+                char[] whitespace = new char[] { ' ', '\t' };
+                while ((line = ps.StandardOutput.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    int id = Int32.Parse(line.Substring(0, line.IndexOfAny(whitespace)), CultureInfo.InvariantCulture);
+                    int pid = Int32.Parse(line.Substring(line.IndexOfAny(whitespace)).Trim(), CultureInfo.InvariantCulture);
+                    processAndParent.Add(new Tuple<int, int>(id, pid));
+                }
+                KillChildren(processAndParent, p.Id);
+            }
+            if (!p.HasExited)
+            {
+                p.Kill();
+            }
+        }
+
         public override void Close()
         {
             if (_writer != null)
@@ -104,7 +149,7 @@ namespace MICore
                 if (_killOnClose && !_process.HasExited)
                 {
                     try {
-                        _process.Kill();
+                        KillProcess(_process);
                     }
                     catch
                     {
