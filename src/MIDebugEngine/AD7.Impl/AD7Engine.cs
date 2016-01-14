@@ -571,7 +571,15 @@ namespace Microsoft.MIDebugEngine
         {
             // VS Code currently isn't providing a thread Id in certain cases. Work around this by handling null values.
             AD7Thread thread = pThread as AD7Thread;
-            _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+
+            if (_pollThread.IsPollThread())
+            {
+                _debuggedProcess.Continue(thread?.GetDebuggedThread());
+            }
+            else
+            {
+                _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+            }
 
             return Constants.S_OK;
         }

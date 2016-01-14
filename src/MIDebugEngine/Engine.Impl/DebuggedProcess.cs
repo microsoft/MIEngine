@@ -771,7 +771,14 @@ namespace Microsoft.MIDebugEngine
             await ExceptionManager.EnsureSettingsUpdated();
 
             // Should clear stepping state
-            _worker.PostOperation(CmdContinueAsync);
+            if (_worker.IsPollThread())
+            {
+                CmdContinueAsync();
+            }
+            else
+            {
+                _worker.PostOperation(CmdContinueAsync);
+            }
         }
 
         public Task Continue(DebuggedThread thread)
