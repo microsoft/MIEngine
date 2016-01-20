@@ -90,14 +90,16 @@ namespace MICore
 
         private void KillProcess(Process p)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            bool isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            if (isLinux || isOSX)
             {
-                // Run 'ps h -o "%p %P"', which generates a list of the process ids (%p) and parent process ids (%P).
+                // On linux run 'ps -x -o "%p %P"' (similarly on Mac), which generates a list of the process ids (%p) and parent process ids (%P).
                 // Using this list, issue a 'kill' command for each child process. Kill the children (recursively) to eliminate
                 // the entire process tree rooted at p. 
                 Process ps = new Process();
                 ps.StartInfo.FileName ="/bin/ps";
-                ps.StartInfo.Arguments = "h -o \"%p %P\"";
+                ps.StartInfo.Arguments = isLinux ? "-x -o \"%p %P\"" : "-x -o \"pid ppid\"";
                 ps.StartInfo.RedirectStandardOutput = true;
                 ps.StartInfo.UseShellExecute = false;
                 ps.Start();
@@ -107,9 +109,12 @@ namespace MICore
                 while ((line = ps.StandardOutput.ReadLine()) != null)
                 {
                     line = line.Trim();
-                    int id = Int32.Parse(line.Substring(0, line.IndexOfAny(whitespace)), CultureInfo.InvariantCulture);
-                    int pid = Int32.Parse(line.Substring(line.IndexOfAny(whitespace)).Trim(), CultureInfo.InvariantCulture);
-                    processAndParent.Add(new Tuple<int, int>(id, pid));
+                    int id, pid;
+                    if (Int32.TryParse(line.Substring(0, line.IndexOfAny(whitespace)), NumberStyles.Integer, CultureInfo.InvariantCulture, out id)
+                        && Int32.TryParse(line.Substring(line.IndexOfAny(whitespace)).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out pid))
+                    {
+                        processAndParent.Add(new Tuple<int, int>(id, pid));
+                    }
                 }
                 KillChildren(processAndParent, p.Id);
             }
