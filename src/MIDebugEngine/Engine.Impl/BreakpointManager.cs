@@ -141,29 +141,66 @@ namespace Microsoft.MIDebugEngine
             return pending;
         }
 
-        public AD7BoundBreakpoint FindHitBreakpoint(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame, out bool fContinue)
+        // Return all bound breakpoints bound to an address regardless of bptno
+        AD7BoundBreakpoint[] FindBoundBreakpointsAtAddress(ulong addr)
         {
-            fContinue = false;
             lock (_pendingBreakpoints)
             {
-                AD7BoundBreakpoint bbp;
-                AD7PendingBreakpoint pending = BindToAddress(bkptno, addr, frame, out bbp);
-                if (pending == null)
+                List<AD7BoundBreakpoint> matchingBoundBreakpoints = new List<AD7BoundBreakpoint>();
+                foreach (AD7PendingBreakpoint currPending in _pendingBreakpoints)
                 {
-                    return null;
+                    matchingBoundBreakpoints.AddRange(Array.FindAll(currPending.EnumBoundBreakpoints(), (b) => b.Addr == addr));
                 }
-                fContinue = true;
-                if (!pending.Enabled || pending.Deleted || pending.PendingDelete)
-                {
-                    return null;
-                }
-                if (!bbp.Enabled || bbp.Deleted)
-                {
-                    return null;
-                }
-                fContinue = false;
-                return bbp;
+
+                return matchingBoundBreakpoints.ToArray();
             }
+        }
+
+
+        public AD7BoundBreakpoint[] FindHitBreakpoints(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame, out bool fContinue)
+        {
+            fContinue = false;
+            List<AD7BoundBreakpoint> hitBoundBreakpoints = new List<AD7BoundBreakpoint>();
+            lock (_pendingBreakpoints)
+            {
+                AD7BoundBreakpoint[] hitBps;
+
+                // For the case where an address is provided for the breakpoint, match based on address.
+                // This will cause the engine to send a breakpoint event accounting for all breakpoints
+                // that are hit. 
+                // However, clrdbg does not support addresses on its breakpoints, so the bkptno code path is
+                // preserved.
+                if (addr != 0)
+                {
+                    hitBps = FindBoundBreakpointsAtAddress(addr);
+                }
+                else
+                {
+                    AD7BoundBreakpoint bbp;
+                    BindToAddress(bkptno, addr, frame, out bbp);
+                    hitBps = new AD7BoundBreakpoint[1];
+                    hitBps[0] = bbp;
+                }
+
+                foreach (AD7BoundBreakpoint currBoundBp in hitBps)
+                {
+                    if (!currBoundBp.Enabled || currBoundBp.Deleted)
+                    {
+                        continue;
+                    }
+
+                    if (!currBoundBp.PendingBreakpoint.Enabled || currBoundBp.PendingBreakpoint.Deleted || currBoundBp.PendingBreakpoint.PendingDelete)
+                    {
+                        continue;
+                    }
+
+                    hitBoundBreakpoints.Add(currBoundBp);
+                }
+
+            }
+
+            fContinue = (hitBoundBreakpoints.Count == 0);
+            return hitBoundBreakpoints.Count != 0 ? hitBoundBreakpoints.ToArray() : null;
         }
 
         public async Task DeleteBreakpointsPendingDeletion()

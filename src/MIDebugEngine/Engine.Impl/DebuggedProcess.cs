@@ -593,14 +593,14 @@ namespace Microsoft.MIDebugEngine
             {
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
-                AD7BoundBreakpoint bkpt = null;
+                
                 bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
-                bkpt = _breakpointManager.FindHitBreakpoint(bkptno, addr, frame, out fContinue); // use breakpoint number to resolve breakpoint
+                AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
                 if (bkpt != null)
                 {
                     List<object> bplist = new List<object>();
-                    bplist.Add(bkpt);
+                    bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
                 else if (!_bEntrypointHit)
