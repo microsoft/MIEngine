@@ -4,6 +4,7 @@
 using System;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using MICore;
@@ -141,18 +142,30 @@ namespace Microsoft.MIDebugEngine
             return pending;
         }
 
-        // Return all bound breakpoints bound to an address regardless of bptno
-        AD7BoundBreakpoint[] FindBoundBreakpointsAtAddress(ulong addr)
+        // Return all bound breakpoints bound to an address including the one withe matching bptno. 
+        // Note that there are still cases where gdb won't return the address for a breakpoint 
+        // (breakpoint that binds to multiple locations) in which case the bktpno is the best match
+        // the engine can do
+        AD7BoundBreakpoint[] FindBoundBreakpointsAtAddress(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame)
         {
             lock (_pendingBreakpoints)
-            {
+            { 
+                // Add all bound bps whose address match
                 List<AD7BoundBreakpoint> matchingBoundBreakpoints = new List<AD7BoundBreakpoint>();
                 foreach (AD7PendingBreakpoint currPending in _pendingBreakpoints)
                 {
-                    matchingBoundBreakpoints.AddRange(Array.FindAll(currPending.EnumBoundBreakpoints(), (b) => b.Addr == addr));
+                    matchingBoundBreakpoints.AddRange(Array.FindAll(currPending.EnumBoundBreakpoints(), (b) => b.Addr != 0 && b.Addr == addr));
                 }
 
-                return matchingBoundBreakpoints.ToArray();
+                // Include the bp whose bkptno matches
+                AD7BoundBreakpoint bbp;
+                BindToAddress(bkptno, addr, frame, out bbp);
+                if (bbp != null)
+                {
+                    matchingBoundBreakpoints.Add(bbp);
+                }
+
+                return matchingBoundBreakpoints.Distinct().ToArray();
             }
         }
 
@@ -163,24 +176,13 @@ namespace Microsoft.MIDebugEngine
             List<AD7BoundBreakpoint> hitBoundBreakpoints = new List<AD7BoundBreakpoint>();
             lock (_pendingBreakpoints)
             {
-                AD7BoundBreakpoint[] hitBps;
-
-                // For the case where an address is provided for the breakpoint, match based on address.
-                // This will cause the engine to send a breakpoint event accounting for all breakpoints
+                // match based on address and bkptno since there are many
+                // cases where gdb doesn't provide the breakpoint address (multple binds to the same location)
+                // This will cause the engine to send a breakpoint event accounting for all known breakpoints
                 // that are hit. 
-                // However, clrdbg does not support addresses on its breakpoints, so the bkptno code path is
-                // preserved.
-                if (addr != 0)
-                {
-                    hitBps = FindBoundBreakpointsAtAddress(addr);
-                }
-                else
-                {
-                    AD7BoundBreakpoint bbp;
-                    BindToAddress(bkptno, addr, frame, out bbp);
-                    hitBps = new AD7BoundBreakpoint[1];
-                    hitBps[0] = bbp;
-                }
+                // Clrdbg does not support addresses on its breakpoints, so the bkptno code path is the only 
+                // supported path in that case
+                AD7BoundBreakpoint[] hitBps = FindBoundBreakpointsAtAddress(bkptno, addr, frame);
 
                 foreach (AD7BoundBreakpoint currBoundBp in hitBps)
                 {
