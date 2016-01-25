@@ -429,7 +429,15 @@ namespace MICore
         {
             get
             {
-                return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                if (this is LocalLaunchOptions)
+                {
+                    return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                }
+                else
+                {
+                    // For now lets assume the debugger is on Unix if we are using Pipe/Tcp launch options
+                    return true;
+                }
             }
         }
 
