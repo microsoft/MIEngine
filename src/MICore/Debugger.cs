@@ -1077,9 +1077,16 @@ namespace MICore
             string idString = results.FindString("id");
             string pidString = results.FindString("pid");
 
-            lock (_debuggeePids)
+            int pid = Int32.Parse(pidString, CultureInfo.InvariantCulture);
+
+            // Ignore pid 0 due to spurious thread group created event on iOS (lldb).
+            // On android the scheduler runs as pid 0, but that process cannot currently be debugged anyway.
+            if (pid != 0)
             {
-                _debuggeePids.Add(idString, Int32.Parse(pidString, CultureInfo.InvariantCulture));
+                lock (_debuggeePids)
+                {
+                    _debuggeePids.Add(idString, pid);
+                }
             }
         }
 
