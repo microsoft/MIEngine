@@ -46,7 +46,8 @@ namespace MICore
 
             // Spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it
             // start the debugger in mi mode setting the tty to the terminal defined earlier and redirect stdin/stdout
-            // to the correct pipes. After gdb exits, cleanup the FIFOs.
+            // to the correct pipes. After gdb exits, cleanup the FIFOs. This is done using the trap command to add a 
+            // signal handler for SIGHUP on the console (executing the two rm commands)
             //
             // NOTE: sudo launch requires sudo or the terminal will fail to launch. The first argument must then be the terminal path
             // TODO: this should be configurable in launch options to allow for other terminals with a default of gnome-terminal so the user can change the terminal
@@ -60,7 +61,7 @@ namespace MICore
             terminalProcess.StartInfo.FileName = !isRoot ? terminalPath : sudoPath;
 
             string argumentString = string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                    "--title DebuggerTerminal -x bash -c \"cd {0}; DbgTerm=`tty`; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3}; rm {2}; rm {3} ;\"",
+                    "--title DebuggerTerminal -x bash -c \"cd {0}; DbgTerm=`tty`; trap 'rm {2}; rm {3}' EXIT; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3};",
                     debuggeeDir,
                     localOptions.MIDebuggerPath,
                     gdbStdInName,
@@ -68,7 +69,7 @@ namespace MICore
                     );
 
             terminalProcess.StartInfo.Arguments = !isRoot ? argumentString : String.Concat(terminalPath, " ", argumentString);
-            Logger.WriteLine(terminalProcess.StartInfo.Arguments);
+            Logger.WriteLine("LocalLinuxTransport command: " + terminalProcess.StartInfo.FileName + " " + terminalProcess.StartInfo.Arguments);
 
             if (localOptions.Environment != null)
             {

@@ -166,11 +166,35 @@ namespace Microsoft.MIDebugEngine
                     // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
                     // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
                     // during debuggee launch
-                    this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
+                    if (localLaunchOptions.ShouldStartServer())
+                    {
+                        this.Init(new MICore.ClientServerTransport
+                            (
+                                        new LocalLinuxTransport(),
+                                        new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
+                                  ), _launchOptions
+                            );
+                    }
+                    else
+                    {
+                        this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
+                    }
                 }
                 else
                 {
-                    this.Init(new MICore.LocalTransport(), _launchOptions);
+                    if (localLaunchOptions.ShouldStartServer())
+                    {
+                        this.Init(new MICore.ClientServerTransport
+                            (
+                                        new LocalTransport(),
+                                        new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
+                                  ), _launchOptions
+                            );
+                    }
+                    else
+                    {
+                        this.Init(new MICore.LocalTransport(), _launchOptions);
+                    }
                 }
             }
             else if (_launchOptions is PipeLaunchOptions)
@@ -586,14 +610,14 @@ namespace Microsoft.MIDebugEngine
             {
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
-                AD7BoundBreakpoint bkpt = null;
+                
                 bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
-                bkpt = _breakpointManager.FindHitBreakpoint(bkptno, addr, frame, out fContinue); // use breakpoint number to resolve breakpoint
+                AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
                 if (bkpt != null)
                 {
                     List<object> bplist = new List<object>();
-                    bplist.Add(bkpt);
+                    bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
                 else if (!_bEntrypointHit)
@@ -779,7 +803,14 @@ namespace Microsoft.MIDebugEngine
             await ExceptionManager.EnsureSettingsUpdated();
 
             // Should clear stepping state
-            _worker.PostOperation(CmdContinueAsync);
+            if (_worker.IsPollThread())
+            {
+                CmdContinueAsync();
+            }
+            else
+            {
+                _worker.PostOperation(CmdContinueAsync);
+            }
         }
 
         public Task Continue(DebuggedThread thread)

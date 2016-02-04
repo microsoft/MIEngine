@@ -19,11 +19,20 @@ namespace MICore
         private bool _bQuit;
         protected StreamReader _reader;
         protected StreamWriter _writer;
+        bool _filterStdout;
+
+        protected StreamTransport()
+        { }
+
+        protected StreamTransport(bool filterStdout)
+        {
+            _filterStdout = filterStdout;
+        }
 
         public abstract void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer);
         protected virtual string GetThreadName() { return "MI.StreamTransport"; }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options)
+        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options)
         {
             _callback = transportCallback;
             InitStreams(options, out _reader, out _writer);
@@ -37,6 +46,11 @@ namespace MICore
             _thread.Start();
         }
 
+        protected virtual string FilterLine(string line)
+        {
+            return line;
+        }
+
         private void TransportLoop()
         {
             string line;
@@ -48,20 +62,23 @@ namespace MICore
                     break;
 
                 line = line.TrimEnd();
-
                 Logger.WriteLine("->" + line);
 
-                if (!String.IsNullOrWhiteSpace(line) && !line.StartsWith("-", StringComparison.Ordinal))
+                try
                 {
-                    try
+                    if (_filterStdout)
+                    {
+                        line = FilterLine(line);
+                    }
+                    if (!String.IsNullOrWhiteSpace(line) && !line.StartsWith("-", StringComparison.Ordinal))
                     {
                         _callback.OnStdOutLine(line);
                     }
-                    catch (ObjectDisposedException)
-                    {
-                        Debug.Assert(_bQuit);
-                        break;
-                    }
+                }
+                catch (ObjectDisposedException)
+                {
+                    Debug.Assert(_bQuit);
+                    break;
                 }
             }
             if (!_bQuit)
@@ -112,7 +129,11 @@ namespace MICore
         public virtual void Close()
         {
             _bQuit = true;
-            _reader.Dispose(); // close the stream. This usually, but not always, causes the OS to give back our reader thread.
+            if (_reader != null)
+            {
+                _reader.Dispose(); // close the stream. This usually, but not always, causes the OS to give back our reader thread.
+                _reader = null;
+            }
         }
 
         public bool IsClosed
