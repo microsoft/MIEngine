@@ -90,6 +90,10 @@ namespace MICore
         private CommandLock _commandLock = new CommandLock();
 
         private string _lastResult;
+        /// <summary>
+        /// The last command we sent over the transport. This includes both the command name and arguments.
+        /// </summary>
+        private string _lastCommandText;
         private uint _lastCommandId;
         private bool _isClosed;
 
@@ -629,6 +633,7 @@ namespace MICore
 
                 id = ++_lastCommandId;
                 _waitingOperations.Add(id, waitingOperation);
+                _lastCommandText = command;
             }
 
             SendToTransport(id.ToString(CultureInfo.InvariantCulture) + command);
@@ -1072,6 +1077,33 @@ namespace MICore
             }
         }
 
+        /// <summary>
+        /// Obtains the last command (ex: '-exec-break') that we sent to the debugger. This is used in telemetry, and probably shouldn't
+        /// be used for any other reason.
+        /// </summary>
+        /// <returns>The empty string if we haven't sent any commands yet. Otherwise the text of the command</returns>
+        public string GetLastSentCommandName()
+        {
+            string lastCommandText = _lastCommandText;
+            if (string.IsNullOrEmpty(lastCommandText))
+            {
+                // We haven't sent any commands yet
+                return string.Empty;
+            }
+
+            int spaceIndex = lastCommandText.IndexOf(' ');
+            if (spaceIndex >= 0)
+            {
+                // The last command had arguments. Remove them.
+                return lastCommandText.Substring(0, spaceIndex);
+            }
+            else
+            {
+                // The last command took no arguments.
+                return lastCommandText;
+            }
+        }
+
         private void HandleThreadGroupStarted(Results results)
         {
             string idString = results.FindString("id");
@@ -1097,6 +1129,7 @@ namespace MICore
                 await _commandLock.AquireShared();
                 try
                 {
+                    _lastCommandText = cmd;
                     SendToTransport(cmd);
                 }
                 finally

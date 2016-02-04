@@ -102,6 +102,7 @@
     <Compile Include="Engine.Impl\OperationThread.cs" />
     <Compile Include="Engine.Impl\SourceLine.cs" />
     <Compile Include="Engine.Impl\Structures.cs" />
+    <Compile Include="Engine.Impl\EngineTelemetry.cs" />
     <Compile Include="Engine.Impl\Variables.cs" />
     <Compile Include="MIDebugCommandDispatcher.cs" />
     <Compile Include="Natvis.Impl\Natvis.cs" />
