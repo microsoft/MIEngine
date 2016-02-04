@@ -161,6 +161,14 @@
     <GlassDirCopy Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="$(ToolsHome)\InstallToVSCode\coreclr\package.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(ToolsHome)\InstallToVSCode\coreclr\coreclr.ad7Engine.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
     <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
@@ -201,7 +209,6 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
-    <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup>
