@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.VisualStudio.clrdbg.MIEngine$suffix$</id>
+    <version>1.0</version>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>MIEngine for use with clrdbg via VSCode</description>
+    <releaseNotes />
+    <copyright>Copyright 2015</copyright>
+  </metadata>
+  <files>
+    <file src="Microsoft.MICore.dll" />
+    <file src="Microsoft.MIDebugEngine.dll" />
+    <file src="package.json" />
+    <file src="coreclr.ad7Engine.json" />
+  </files>
+</package>

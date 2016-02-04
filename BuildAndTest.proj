@@ -3,6 +3,8 @@
          DefaultTargets="BuildAndTest"
          xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
          
+  <Import Project="build\version.settings.targets" />
+         
   <UsingTask
     AssemblyFile="src\packages\xunit.runners.2.0.0\tools\xunit.runner.msbuild.dll"
     TaskName="Xunit.Runner.MSBuild.xunit" />
@@ -15,7 +17,7 @@
 	
 	<!--Don't run unit tests for lab builds -->
 	<TargetsToRun>Build;Test</TargetsToRun>
-	<TargetsToRun Condition="'$(Configuration)' == 'Lab.Release' OR '$(Configuration)' == 'Lab.Debug'">Build</TargetsToRun>
+	<TargetsToRun Condition="'$(Configuration)' == 'Lab.Release' OR '$(Configuration)' == 'Lab.Debug'">Build;Package</TargetsToRun>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,6 +49,16 @@
     
     <Exec Command="src\packages\xunit.runner.console.2.0.0\tools\xunit.console.exe @(TestAssemblies, ' ') -xml &quot;$(OutDir)TestResults.xml&quot;" />
     
+  </Target>
+  
+  <Target Name="Package">
+    <PropertyGroup>
+        <NuGetPath>$(ToolsHome)\nuget\nuget.exe</NuGetPath>
+        <NuGetPackageVersion Condition="'$(NuGetPackageVersion)'==''">$(MajorVersion).$(MinorVersion).$(BuildNumberMajor)</NuGetPackageVersion>
+        <NuGetPackageSuffix Condition="$(Configuration.Contains('Debug'))">.dev</NuGetPackageSuffix>
+        <NuGetArguments>-NoPackageAnalysis -NonInteractive -BasePath $(OutDir) -OutputDirectory $(OutDir) -Version $(NuGetPackageVersion) -Properties suffix=$(NuGetPackageSuffix)</NuGetArguments>
+    </PropertyGroup>
+    <Exec Command="$(NuGetPath) pack $(MSBuildThisFileDirectory)\MIEngine.clrdbg.nuspec $(NuGetArguments)" />
   </Target>
   
   <Target Name="BuildAndTest"
