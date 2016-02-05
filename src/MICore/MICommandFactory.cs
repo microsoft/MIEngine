@@ -941,7 +941,7 @@ namespace MICore
 
         public override async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-list-children --simple-values \"{0}\" --propInfoFlags {1}", variableReference, dwFlags);
+            string command = string.Format("-var-list-children --simple-values \"{0}\" --propertyInfoFlags {1}", variableReference, (uint)dwFlags);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
