@@ -13,7 +13,6 @@
   <files>
     <file src="Microsoft.MICore.dll" />
     <file src="Microsoft.MIDebugEngine.dll" />
-    <file src="package.json" />
     <file src="coreclr.ad7Engine.json" />
   </files>
 </package>
