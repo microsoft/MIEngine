@@ -32,11 +32,12 @@ namespace Microsoft.MIDebugEngine
         void EnsureChildren();
         void AsyncEval(IDebugEventCallback2 pExprCallback);
         void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error);
-        void SyncEval();
+        void SyncEval(enum_EVALFLAGS dwFlags = 0);
         ThreadContext ThreadContext { get; }
         VariableInformation FindChildByName(string name);
         string EvalDependentExpression(string expr);
         bool IsVisualized { get; }
+        enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
     }
 
     internal class SimpleVariableInformation
@@ -82,7 +83,7 @@ namespace Microsoft.MIDebugEngine
         public bool IsChild { get; set; }
         public enum_DBG_ATTRIB_FLAGS Access { get; private set; }
         public bool IsVisualized { get { return _parent == null ? false : _parent.IsVisualized; } }
-
+        public enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
 
         private static bool IsPointer(string typeName)
         {
@@ -246,6 +247,7 @@ namespace Microsoft.MIDebugEngine
             IsChild = true;
             _format = parent._format; // inherit formatting
             _parent = parent.VariableNodeType == NodeType.AccessQualifier ? parent._parent : parent;
+            this.PropertyInfoFlags = parent.PropertyInfoFlags;
         }
 
         private VariableInformation(TupleValue results, VariableInformation parent, bool ro)
@@ -384,11 +386,11 @@ namespace Microsoft.MIDebugEngine
             AsyncErrorImpl(pExprCallback != null ? new EngineCallback(_engine, pExprCallback) : _engine.Callback, this, error);
         }
 
-        public void SyncEval()
+        public void SyncEval(enum_EVALFLAGS dwFlags = 0)
         {
             Task eval = Task.Run(async () =>
             {
-                await Eval();
+                await Eval(dwFlags);
             });
             eval.Wait();
         }
@@ -404,7 +406,7 @@ namespace Microsoft.MIDebugEngine
             return val;
         }
 
-        internal async Task Eval()
+        internal async Task Eval(enum_EVALFLAGS dwFlags = 0)
         {
             _engine.CurrentRadix();    // ensure the radix value is up-to-date
 
@@ -445,7 +447,7 @@ namespace Microsoft.MIDebugEngine
             {
                 int threadId = Client.GetDebuggedThread().Id;
                 uint frameLevel = _ctx.Level;
-                Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, ResultClass.None);
+                Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, dwFlags, ResultClass.None);
 
                 if (results.ResultClass == ResultClass.done)
                 {
@@ -533,7 +535,7 @@ namespace Microsoft.MIDebugEngine
         }
         private async Task InternalFetchChildren()
         {
-            Results results = await _engine.DebuggedProcess.CmdAsync(string.Format("-var-list-children --simple-values \"{0}\"", _internalName), ResultClass.None);
+            Results results = await _engine.DebuggedProcess.MICommandFactory.VarListChildren(_internalName, PropertyInfoFlags, ResultClass.None);
 
             if (results.ResultClass == ResultClass.done)
             {

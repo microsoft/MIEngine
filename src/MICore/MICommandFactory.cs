@@ -10,6 +10,7 @@ using System.Text;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Globalization;
+using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace MICore
 {
@@ -301,7 +302,7 @@ namespace MICore
 
         #region Variable Objects
 
-        public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             string command = string.Format("-var-create - * \"{0}\"", expression);
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
@@ -312,6 +313,14 @@ namespace MICore
         public async Task<Results> VarSetFormat(string variableName, string format, ResultClass resultClass = ResultClass.done)
         {
             string command = string.Format(@"-var-set-format {0} {1}", variableName, format);
+            Results results = await _debugger.CmdAsync(command, resultClass);
+
+            return results;
+        }
+
+        public virtual async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
+        {
+            string command = string.Format("-var-list-children --simple-values \"{0}\"", variableReference);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
@@ -482,7 +491,7 @@ namespace MICore
 
         #region Abstract Methods
 
-        abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel);
+        abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
 
         abstract public bool SupportsStopOnDynamicLibLoad();
@@ -714,7 +723,7 @@ namespace MICore
             return false;
         }
 
-        public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, ResultClass resultClass = ResultClass.done)
+        public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             string command = string.Format("-var-create - - \"{0}\"", expression);  // use '-' to indicate that "--frame" should be used to determine the frame number
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
@@ -788,11 +797,11 @@ namespace MICore
             throw new NotImplementedException();
         }
 
-        protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel)
+        protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
         {
             string threadFrameCommand = string.Format(@"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
 
-            return await _debugger.CmdAsync(threadFrameCommand, exepctedResultClass);
+            return await _debugger.CmdAsync(threadFrameCommand, expectedResultClass);
         }
 
         protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
@@ -920,6 +929,22 @@ namespace MICore
         {
             string command = "-exec-abort";
             await _debugger.CmdAsync(command, ResultClass.done);
+        }
+
+        public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
+        {
+            string command = string.Format("-var-create - * \"{0}\" --evalFlags {1}", expression, (uint)dwFlags);
+            Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
+
+            return results;
+        }
+
+        public override async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
+        {
+            string command = string.Format("-var-list-children --simple-values \"{0}\" --propInfoFlags {1}", variableReference, dwFlags);
+            Results results = await _debugger.CmdAsync(command, resultClass);
+
+            return results;
         }
     }
 }
