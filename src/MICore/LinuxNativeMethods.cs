@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace MICore
 {
-    internal class NativeMethods
+    internal class LinuxNativeMethods
     {
         private const string Libc = "libc";
 
