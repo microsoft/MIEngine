@@ -84,10 +84,19 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
+        internal static async Task<BindResult> Bind(string functionName, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
+        {
+            return EvalBindResult(await process.MICommandFactory.BreakInsert(functionName, condition, ResultClass.None), pbreak);
+        }
+
         internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
         {
             string basename = System.IO.Path.GetFileName(documentName);     // get basename from Windows path
-            Results bindResult = await process.MICommandFactory.BreakInsert(process.EscapePath(basename), line, condition, ResultClass.None);
+            return EvalBindResult(await process.MICommandFactory.BreakInsert(process.EscapePath(basename), line, condition, ResultClass.None), pbreak);
+        }
+
+        internal static BindResult EvalBindResult(Results bindResult, AD7PendingBreakpoint pbreak)
+        {
             string errormsg = "Unknown error";
             if (bindResult.ResultClass == ResultClass.error)
             {

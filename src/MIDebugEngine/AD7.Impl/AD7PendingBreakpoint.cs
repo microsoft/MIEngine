@@ -77,8 +77,10 @@ namespace Microsoft.MIDebugEngine
 
         private bool CanBind()
         {
-            // The sample engine only supports breakpoints on a file and line number. No other types of breakpoints are supported.
-            if (_deleted || _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE)
+            // The sample engine only supports breakpoints on a file and line number or function name. No other types of breakpoints are supported.
+            if (_deleted ||
+                (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE
+                && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET))
             {
                 _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
                 return false;
@@ -184,6 +186,7 @@ namespace Microsoft.MIDebugEngine
             if (CanBind())
             {
                 string documentName = null;
+                string functionName = null;
                 TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
                 TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
                 string condition = null;
@@ -195,22 +198,40 @@ namespace Microsoft.MIDebugEngine
                         Debug.Fail("Breakpoint already bound");
                         return;
                     }
-                    IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                    if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0
+                        && _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET
+                        )
+                    {
+                        IDebugFunctionPosition2 functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                        EngineUtils.CheckOk(functionPosition.GetFunctionName(out functionName));
+                    }
+                    else
+                    {
+                        IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
 
-                    // Get the name of the document that the breakpoint was put in
-                    EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
+                        // Get the name of the document that the breakpoint was put in
+                        EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
 
-                    // Get the location in the document that the breakpoint is in.
-                    EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                        // Get the location in the document that the breakpoint is in.
+                        EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                    }
                     if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0
                         && _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE)
                     {
                         condition = _bpRequestInfo.bpCondition.bstrCondition;
                     }
-                }
 
+                }
+                PendingBreakpoint.BindResult bindResult;
                 // Bind all breakpoints that match this source and line number.
-                PendingBreakpoint.BindResult bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, this);
+                if (documentName != null)
+                {
+                    bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, this);
+                }
+                else
+                {
+                    bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, this);
+                }
 
                 lock (_boundBreakpoints)
                 {
