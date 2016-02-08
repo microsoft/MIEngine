@@ -485,7 +485,8 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
-            if (IsLocalGdbAttach())
+            //TODO May need to fix attach on windows and osx.
+            if (IsLocalGdbAttach() && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 // for local linux debugging with attach, send a signal to one of the debugee processes rather than 
                 // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
@@ -647,7 +648,7 @@ namespace MICore
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             const int sigint = 2;
-            NativeMethods.Kill(debugeePid, sigint);
+            LinuxNativeMethods.Kill(debugeePid, sigint);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }

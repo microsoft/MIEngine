@@ -15,7 +15,7 @@ namespace MICore
         {
             // Mod is normally in octal, but C# has no octal values. This is 384 (rw owner, no rights anyone else)
             const int rw_owner = 384;
-            int result = NativeMethods.MkFifo(path, rw_owner);
+            int result = LinuxNativeMethods.MkFifo(path, rw_owner);
 
             if (result != 0)
             {
@@ -42,7 +42,7 @@ namespace MICore
             System.IO.FileStream gdbStdOutStream = new FileStream(gdbStdOutName, FileMode.Open);
 
             // If running as root, make sure the new console is also root. 
-            bool isRoot = NativeMethods.GetEUid() == 0;
+            bool isRoot = LinuxNativeMethods.GetEUid() == 0;
 
             // Spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it
             // start the debugger in mi mode setting the tty to the terminal defined earlier and redirect stdin/stdout
