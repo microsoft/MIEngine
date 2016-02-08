@@ -84,6 +84,7 @@ namespace Microsoft.MIDebugEngine
         public enum_DBG_ATTRIB_FLAGS Access { get; private set; }
         public bool IsVisualized { get { return _parent == null ? false : _parent.IsVisualized; } }
         public enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
+        private string DisplayHint { get; set; }
 
         private static bool IsPointer(string typeName)
         {
@@ -208,12 +209,12 @@ namespace Microsoft.MIDebugEngine
         }
 
         //this constructor is private because it should only be used internally to create children
-        private VariableInformation(TupleValue results, VariableInformation parent)
+        private VariableInformation(TupleValue results, VariableInformation parent, string name = null)
             : this(parent._ctx, parent._engine, parent.Client)
         {
             TypeName = results.TryFindString("type");
             Value = results.TryFindString("value");
-            Name = results.FindString("exp");
+            Name = name ?? results.FindString("exp");
             if (results.Contains("dynamic"))
             {
                 CountChildren = 1;
@@ -222,6 +223,11 @@ namespace Microsoft.MIDebugEngine
             {
                 CountChildren = results.FindUint("numchild");
             }
+            if (results.Contains("displayhint"))
+            {
+                DisplayHint = results.FindString("displayhint");
+            }
+
             int index;
 
             if (!results.Contains("value") && (Name == TypeName || Name.Contains("::")))
@@ -461,6 +467,10 @@ namespace Microsoft.MIDebugEngine
                     {
                         CountChildren = results.FindUint("numchild");
                     }
+                    if (results.Contains("displayhint"))
+                    {
+                        DisplayHint = results.FindString("displayhint");
+                    }
                     Value = results.TryFindString("value");
                     if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
                     {
@@ -539,7 +549,9 @@ namespace Microsoft.MIDebugEngine
 
             if (results.ResultClass == ResultClass.done)
             {
-                TupleValue[] children = results.Find<ResultListValue>("children").FindAll<TupleValue>("child");
+                TupleValue[] children = results.Contains("children") 
+                    ? results.Find<ResultListValue>("children").FindAll<TupleValue>("child")
+                    : new TupleValue[0];
                 int i = 0;
                 bool isArray = IsArrayType();
                 bool elementIsReadonly = false;
@@ -560,6 +572,21 @@ namespace Microsoft.MIDebugEngine
                         Children[i] = new VariableInformation(c, this, elementIsReadonly);
                         i++;
                     }
+                }
+                else if (IsMapType())
+                {
+                    //
+                    // support for gdb's pretty-printing built-in displayHint "map"
+                    //
+                    List<VariableInformation> listChildren = new List<VariableInformation>();
+                    for(int p = 0; p+1 < children.Length; p+=2)
+                    {
+                        string name = children[p].FindString("value");
+                        var variable = new VariableInformation(children[p+1], this, '[' + name + ']');
+                        listChildren.Add(variable);
+                    }
+                    Children = listChildren.ToArray();
+                    CountChildren = (uint)Children.Length;
                 }
                 else
                 {
@@ -626,11 +653,20 @@ namespace Microsoft.MIDebugEngine
 
         private bool IsArrayType()
         {
-            if (!string.IsNullOrWhiteSpace(TypeName))
+            if (DisplayHint == "array")
+            {
+                return true;
+            }
+            else if (!string.IsNullOrWhiteSpace(TypeName))
             {
                 return TypeName[TypeName.Length - 1] == ']';
             }
             return false;
+        }
+
+        private bool IsMapType()
+        {
+            return DisplayHint == "map";
         }
 
         public bool IsReadOnly()
