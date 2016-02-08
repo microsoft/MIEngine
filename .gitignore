@@ -17,6 +17,7 @@ BuildResults.xml
 intermediate
 *.metaproj
 *.tmp
+*.VC.opendb
 packages/
 .vs/
 Microsoft.VisualStudio.Glass

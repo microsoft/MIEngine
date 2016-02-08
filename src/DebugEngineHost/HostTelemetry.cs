@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.Internal.VisualStudio.Shell;
 using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
+using System.Globalization;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -45,6 +46,22 @@ namespace Microsoft.DebugEngineHost
                 // disable telemetry in the future so that we don't keep failing if types are unavailable
                 s_isDisabled = true;
             }
+#endif
+        }
+
+        /// <summary>
+        /// Reports the current exception to Microsoft's telemetry service. 
+        /// 
+        /// *NOTE*: This should only be called from a 'catch(...) when' handler.
+        /// </summary>
+        /// <param name="currentException">Exception object to report.</param>
+        /// <param name="engineName">Name of the engine reporting the exception. Ex:Microsoft.MIEngine</param>
+        public static void ReportCurrentException(Exception currentException, string engineName)
+        {
+            Debug.Fail(string.Format(CultureInfo.InvariantCulture, "{0} was raised and would normally be reported to telemetry.\n\nStack trace: {1}", currentException.GetType(), currentException.StackTrace));
+
+#if LAB
+            VisualStudio.Debugger.DkmComponentManager.ReportCurrentNonFatalException(currentException, engineName);
 #endif
         }
 

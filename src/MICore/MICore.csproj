@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="CommandLock.cs" />
     <Compile Include="Debugger.cs" />
+    <Compile Include="ExceptionHelper.cs" />
     <Compile Include="InvalidLaunchOptionsException.cs" />
     <Compile Include="LaunchCommand.cs" />
     <Compile Include="LaunchOptions.cs" />
