@@ -379,5 +379,17 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Reports the current exception to Microsoft's telemetry service. 
+        /// 
+        /// *NOTE*: This should only be called from a 'catch(...) when' handler.
+        /// </summary>
+        /// <param name="currentException">Exception object to report.</param>
+        /// <param name="engineName">Name of the engine reporting the exception. Ex:Microsoft.MIEngine</param>
+        public static void ReportCurrentException(Exception currentException, string engineName)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

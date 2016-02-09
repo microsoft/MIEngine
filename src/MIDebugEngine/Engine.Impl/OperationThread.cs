@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using Microsoft.DebugEngineHost;
+using MICore;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -300,7 +301,7 @@ namespace Microsoft.MIDebugEngine
                             {
                                 syncOp();
                             }
-                            catch (Exception opException)
+                            catch (Exception opException) when (ExceptionHelper.BeforeCatch(opException, reportOnlyCorrupting: true))
                             {
                                 runningOp.ExceptionDispatchInfo = ExceptionDispatchInfo.Capture(opException);
                             }
@@ -313,7 +314,7 @@ namespace Microsoft.MIDebugEngine
                             {
                                 runningOp.Task = asyncOp();
                             }
-                            catch (Exception opException)
+                            catch (Exception opException) when (ExceptionHelper.BeforeCatch(opException, reportOnlyCorrupting: true))
                             {
                                 runningOp.ExceptionDispatchInfo = ExceptionDispatchInfo.Capture(opException);
                             }
@@ -353,7 +354,7 @@ namespace Microsoft.MIDebugEngine
                         {
                             postedOperation();
                         }
-                        catch (Exception e)
+                        catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: false))
                         {
                             if (PostedOperationErrorEvent != null)
                             {

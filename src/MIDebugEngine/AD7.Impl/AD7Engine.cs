@@ -166,7 +166,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e)
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -430,7 +430,7 @@ namespace Microsoft.MIDebugEngine
 
                 return Constants.S_OK;
             }
-            catch (Exception e)
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
             {
                 exception = e;
                 // Return from the catch block so that we can let the exception unwind - the stack can get kind of big
@@ -511,7 +511,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e)
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
             {
                 return EngineUtils.UnexpectedException(e);
             }

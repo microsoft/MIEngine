@@ -298,7 +298,7 @@ namespace Microsoft.MIDebugEngine
 
                         _bLastModuleLoadFailed = false;
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
                     {
                         if (this.ProcessState == MICore.ProcessState.Exited)
                         {
@@ -351,7 +351,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     await HandleBreakModeEvent(results);
                 }
-                catch (Exception e)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
                 {
                     if (this.ProcessState == MICore.ProcessState.Exited)
                     {

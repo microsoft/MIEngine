@@ -803,7 +803,7 @@ namespace MICore
                     deviceAppLauncher.Initialize(configStore, eventCallback);
                     deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
                 }
-                catch (Exception e) when (!(e is InvalidLaunchOptionsException))
+                catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
                 {
                     throw new InvalidLaunchOptionsException(e.Message);
                 }

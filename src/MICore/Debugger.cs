@@ -306,7 +306,7 @@ namespace MICore
                 {
                     await item();
                 }
-                catch (Exception e)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
                 {
                     if (firstException != null)
                     {
