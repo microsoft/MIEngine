@@ -576,11 +576,15 @@ namespace Microsoft.MIDebugEngine
                 else if (IsMapType())
                 {
                     //
-                    // support for gdb's pretty-printing built-in displayHint "map"
+                    // support for gdb's pretty-printing built-in displayHint "map", from the gdb docs:
+                    //      'Indicate that the object being printed is “map-like”, and that the 
+                    //      children of this value can be assumed to alternate between keys and values.'
                     //
                     List<VariableInformation> listChildren = new List<VariableInformation>();
                     for(int p = 0; p+1 < children.Length; p+=2)
                     {
+                        // One Variable is created for each pair returned with the first element (p) being the name of the child
+                        // and the second element (p+1) becoming the value.
                         string name = children[p].FindString("value");
                         var variable = new VariableInformation(children[p+1], this, '[' + name + ']');
                         listChildren.Add(variable);
