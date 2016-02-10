@@ -384,7 +384,7 @@ namespace MICore
 
         #region Breakpoints
 
-        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, ResultClass resultClass = ResultClass.done)
+        private StringBuilder BuildBreakInsert(string condition)
         {
             StringBuilder cmd = new StringBuilder("-break-insert -f ");
             if (condition != null)
@@ -393,9 +393,23 @@ namespace MICore
                 cmd.Append(condition);
                 cmd.Append("\" ");
             }
+            return cmd;
+        }
+
+        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, ResultClass resultClass = ResultClass.done)
+        {
+            StringBuilder cmd = BuildBreakInsert(condition);
             cmd.Append(filename);
             cmd.Append(":");
             cmd.Append(line.ToString());
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
+        }
+
+        public virtual async Task<Results> BreakInsert(string functionName, string condition, ResultClass resultClass = ResultClass.done)
+        {
+            StringBuilder cmd = BuildBreakInsert(condition);
+            // TODO: Add support of break function type filename:function locations
+            cmd.Append(functionName);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
