@@ -26,6 +26,7 @@ namespace Microsoft.MIDebugEngine
         internal bool Enabled { get { return _enabled; } }
         internal bool Deleted { get { return _deleted; } }
         internal ulong Addr { get; private set; }
+        internal AD7PendingBreakpoint PendingBreakpoint { get { return _pendingBreakpoint; } }
 
         public AD7BoundBreakpoint(AD7Engine engine, ulong address, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution, BoundBreakpoint bp)
         {

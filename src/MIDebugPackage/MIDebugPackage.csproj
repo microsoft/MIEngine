@@ -161,6 +161,14 @@
     <GlassDirCopy Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="$(ToolsHome)\InstallToVSCode\coreclr\package.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(ToolsHome)\InstallToVSCode\coreclr\coreclr.ad7Engine.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
     <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
@@ -201,7 +209,6 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
-    <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup>
@@ -239,6 +246,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\DropFiles.targets" />
+  <Import Project="..\..\build\PackageNuGet.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <!--
   Target to drop the built files into a directory.

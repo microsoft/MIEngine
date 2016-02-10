@@ -166,7 +166,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e)
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -430,7 +430,7 @@ namespace Microsoft.MIDebugEngine
 
                 return Constants.S_OK;
             }
-            catch (Exception e)
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
             {
                 exception = e;
                 // Return from the catch block so that we can let the exception unwind - the stack can get kind of big
@@ -511,7 +511,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e)
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -571,7 +571,15 @@ namespace Microsoft.MIDebugEngine
         {
             // VS Code currently isn't providing a thread Id in certain cases. Work around this by handling null values.
             AD7Thread thread = pThread as AD7Thread;
-            _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+
+            if (_pollThread.IsPollThread())
+            {
+                _debuggedProcess.Continue(thread?.GetDebuggedThread());
+            }
+            else
+            {
+                _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+            }
 
             return Constants.S_OK;
         }

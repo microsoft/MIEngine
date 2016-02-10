@@ -230,6 +230,18 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Obtains a function position interface given the specified IntPtr of the location.
+        /// </summary>
+        /// <param name="locationId">In VS, the IUnknown pointer to QI for a function position. In VS Code,
+        /// the identifier for the function position</param>
+        /// <returns>Function position object</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ForInt")]
+        public static IDebugFunctionPosition2 GetDebugFunctionPositionForIntPtr(IntPtr locationId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
         /// <param name="ad7Callback">The underlying event call back which was obtained from the port</param>
@@ -376,6 +388,18 @@ namespace Microsoft.DebugEngineHost
         /// should generally start with the prefix 'VS.Diagnostics.Debugger.'</param>
         [Conditional("LAB")]
         public static void SendEvent(string eventName, params KeyValuePair<string, object>[] eventProperties)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Reports the current exception to Microsoft's telemetry service. 
+        /// 
+        /// *NOTE*: This should only be called from a 'catch(...) when' handler.
+        /// </summary>
+        /// <param name="currentException">Exception object to report.</param>
+        /// <param name="engineName">Name of the engine reporting the exception. Ex:Microsoft.MIEngine</param>
+        public static void ReportCurrentException(Exception currentException, string engineName)
         {
             throw new NotImplementedException();
         }

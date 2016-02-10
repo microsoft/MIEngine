@@ -113,6 +113,7 @@ namespace Microsoft.MIDebugEngine
         {
             ppEnum = null;
 
+            _variableInformation.PropertyInfoFlags = dwFields;
             _variableInformation.EnsureChildren();
 
             if (_variableInformation.CountChildren != 0)

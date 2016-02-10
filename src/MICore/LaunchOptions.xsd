@@ -226,6 +226,36 @@
               <xs:documentation>If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="DebugServer" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>Full path to the server executable. If non-null then the MIEngine will start the server.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="DebugServerArgs" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>Arguments to the debug server.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="ServerStarted" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>Wait for a line containing this pattern in the debug server output. Pattern is a regular expression in Regex format.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="FilterStdout" type="xs:boolean" use="optional">
+            <xs:annotation>
+              <xs:documentation>Log stdout to debug output. Examine content for ServerStarted pattern</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="FilterStderr" type="xs:boolean" use="optional">
+            <xs:annotation>
+              <xs:documentation>Log stderr to debug output. Examine content for ServerStarted pattern</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="ServerLaunchTimeout" type="xs:int" use="optional">
+            <xs:annotation>
+              <xs:documentation>How long, in milliseconds, to wait for the DebugServer executable to start and ServerStarted pattern to be found.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
