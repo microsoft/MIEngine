@@ -53,6 +53,8 @@ namespace Microsoft.DebugEngineHost
         /// <returns>Function position object</returns>
         public static IDebugFunctionPosition2 GetDebugFunctionPositionForIntPtr(IntPtr locationId)
         {
+            // TODO: It looks like the MIEngine currently leaks the native document position. Fix that.
+
             return (IDebugFunctionPosition2)Marshal.GetObjectForIUnknown(locationId);
         }
 

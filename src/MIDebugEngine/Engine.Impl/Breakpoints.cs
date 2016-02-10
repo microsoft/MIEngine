@@ -95,7 +95,7 @@ namespace Microsoft.MIDebugEngine
             return EvalBindResult(await process.MICommandFactory.BreakInsert(process.EscapePath(basename), line, condition, ResultClass.None), pbreak);
         }
 
-        internal static BindResult EvalBindResult(Results bindResult, AD7PendingBreakpoint pbreak)
+        private static BindResult EvalBindResult(Results bindResult, AD7PendingBreakpoint pbreak)
         {
             string errormsg = "Unknown error";
             if (bindResult.ResultClass == ResultClass.error)

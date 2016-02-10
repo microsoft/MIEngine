@@ -198,22 +198,23 @@ namespace Microsoft.MIDebugEngine
                         Debug.Fail("Breakpoint already bound");
                         return;
                     }
-                    if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0
-                        && _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET
-                        )
+                    if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0)
                     {
-                        IDebugFunctionPosition2 functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
-                        EngineUtils.CheckOk(functionPosition.GetFunctionName(out functionName));
-                    }
-                    else
-                    {
-                        IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                        if (_bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET)
+                        {
+                            IDebugFunctionPosition2 functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                            EngineUtils.CheckOk(functionPosition.GetFunctionName(out functionName));
+                        }
+                        else if (_bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE)
+                        {
+                            IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
 
-                        // Get the name of the document that the breakpoint was put in
-                        EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
+                            // Get the name of the document that the breakpoint was put in
+                            EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
 
-                        // Get the location in the document that the breakpoint is in.
-                        EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                            // Get the location in the document that the breakpoint is in.
+                            EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                        }
                     }
                     if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0
                         && _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE)

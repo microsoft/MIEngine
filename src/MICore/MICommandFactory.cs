@@ -408,6 +408,7 @@ namespace MICore
         public virtual async Task<Results> BreakInsert(string functionName, string condition, ResultClass resultClass = ResultClass.done)
         {
             StringBuilder cmd = BuildBreakInsert(condition);
+            // TODO: Add support of break function type filename:function locations
             cmd.Append(functionName);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
