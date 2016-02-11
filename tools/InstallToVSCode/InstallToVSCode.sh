@@ -5,7 +5,7 @@ script_dir=`dirname $0`
 
 print_help()
 {
-    echo 'InstallToVSCode.sh <-c|-l> [--pdbs] <OpenDebugAD7-dir> [destination-dir]'
+    echo 'InstallToVSCode.sh <-c|-l> [--pdbs] <OpenDebugAD7-dir> [-d <clrdbg-binaries-dir>] [destination-dir]'
     echo ''
     echo 'This script is used to copy files needed to enable MIEngine based debugging'
     echo 'into VS Code.'
@@ -16,6 +16,7 @@ print_help()
     echo ' -c : Copy files to the output directory'
     echo ' --pdbs : Copy PDB files in addition to the dlls'
     echo ' open-debug-ad7-dir : Directory which contains OpenDebugAD7.exe'
+    echo ' clrdbg-binaries-dir : Directory containing clrdbg binaries'
     echo ' destination-dir: Directory to install to. By default this is:'
     echo "    $DefaultDestDir"
     echo ''
@@ -135,7 +136,14 @@ pushd $DropDir
 DropDir=$(pwd)
 popd
 
-DESTDIR=$3
+if [ "$3" == "-d" ]; then
+    CLRDBGBITSDIR=${4:?"ERROR: Clrdbg binaries directory must be specified with -d option. See -h for usage."}
+    [ ! -f "$CLRDBGBITSDIR/clrdbg" ] && echo "ERROR: $CLRDBGBITSDIR/clrdbg does not exist." && exit 1
+    DESTDIR=$5
+else
+    DESTDIR=$3
+fi
+
 if [ -z "$DESTDIR" ]
 then
     DESTDIR=$DefaultDestDir
@@ -163,9 +171,53 @@ fi
 
 set InstallError=
 install_module "$OpenDebugAD7Dir/OpenDebugAD7.exe" debugAdapters
+install_module "$OpenDebugAD7Dir/dar.exe" debugAdapters
+install_module "$OpenDebugAD7Dir/xunit.console.netcore.exe" debugAdapters
 for dll in $(ls $OpenDebugAD7Dir/*.dll); do
     install_module "$dll" debugAdapters ignoreMissingPdbs
 done
+
+if [ ! -z "$CLRDBGBITSDIR" ]; then
+    echo ''
+    echo "Installing clrdbg bits from $CLRDBGBITSDIR"
+
+    for dll in $(ls $CLRDBGBITSDIR/*.dll); do
+        install_module "$dll" debugAdapters ignoreMissingPdbs
+    done
+
+    OSName=$(uname -s)
+    if [ $OSName == "Linux" ]; then
+        library_ext=so
+    else
+        library_ext=dylib
+    fi
+
+    for shared_library in $(ls $CLRDBGBITSDIR/*.$library_ext); do
+        install_file "$shared_library" debugAdapters
+    done
+
+    for vsdconfig in $(ls $CLRDBGBITSDIR/*.vsdconfig); do
+        install_file "$vsdconfig" debugAdapters
+    done
+
+    install_file "$CLRDBGBITSDIR/clrdbg" debugAdapters
+    install_file "$CLRDBGBITSDIR/version.txt" debugAdapters
+    install_file "$CLRDBGBITSDIR/mscorlib.resources" debugAdapters
+    
+    for directory in $(ls -d $CLRDBGBITSDIR/*/); do
+        echo "Installing clrdbg bits from $directory..."
+        directory_name=$(basename $directory)
+        
+        if [ ! -d "$DESTDIR/debugAdapters/$directory_name" ]; then
+            mkdir "$DESTDIR/debugAdapters/$directory_name"
+        fi
+        
+        for dll in $(ls $directory/*.dll); do
+            install_file "$dll" debugAdapters/$directory_name
+        done
+    done
+
+fi
 
 copy_file "$script_dir/coreclr/package.json" $DESTDIR/package.json
 
@@ -184,11 +236,7 @@ if [ ! -z "$InstallError" ]; then
 fi
 
 echo "InstallToVSCode.sh succeeded. To complete setup:"
-echo "1. Create a link or copy clrdbg next to the debug adapter. Ex:"
-echo ""
-echo "   ln -s $HOME/clrdbg/out/OSX/bin/x64.Debug/clrdbg $DESTDIR/clrdbg"
-echo ""
-echo "2. Create a link or copy the corerun runtime next to the debug adapter. Ex:"
+echo "Create a link or copy the corerun runtime next to the debug adapter. Ex:"
 echo ""
 echo "   cp -r /Volumes/runtime-osx/x64 $DESTDIR/runtime"
 echo ""

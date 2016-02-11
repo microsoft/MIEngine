@@ -24,14 +24,23 @@ set OpenDebugAD7Dir=%~2
 set DropDir=%~dp0..\..\bin\Debug\drop\
 if not exist "%DropDir%Microsoft.MIDebugEngine.dll" echo ERROR: Microsoft.MIDebugEngine.dll has not been built & exit /b -1
 
-set DESTDIR=%~3
+if "%~3"=="-d" (
+    if "%~4" == "" echo ERROR: Clrdbg binaries directory not set &exit /b -1
+    set CLRDBGBITSDIR=%~4
+    set DESTDIR=%~5
+) else (
+    set DESTDIR=%~3
+)
+
 if "%DESTDIR%"=="" set DESTDIR=%DefaultDestDir%
 
 if exist "%DESTDIR%" goto DESTDIR_Done
 mkdir "%DESTDIR%"
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create destination directory '%DESTDIR%'. &exit /b -1
-:DESTDIR_Done
 
+:DESTDIR_Done
+echo Installing files to %DESTDIR%
+echo.
 if exist "%DESTDIR%\debugAdapters" goto DEBUGADAPTERDIR_Done
 mkdir "%DESTDIR%\debugAdapters"
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create debug adapter directory '%DESTDIR%\debugAdapters'. &exit /b -1
@@ -39,7 +48,24 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create debug adapter directory 
 
 set InstallError=
 for %%f in (OpenDebugAD7.exe) do call :InstallFile "%OpenDebugAD7Dir%\%%f" debugAdapters\
+for %%f in (dar.exe) do call :InstallFile "%OpenDebugAD7Dir%\%%f" debugAdapters\
+for %%f in (xunit.console.netcore.exe) do call :InstallFile "%OpenDebugAD7Dir%\%%f" debugAdapters\
 for %%f in (%OpenDebugAD7Dir%\*.dll) do call :InstallFile "%%f" debugAdapters\
+
+if NOT "%CLRDBGBITSDIR%" == "" (
+    echo.
+    echo Installing clrdbg bits from %CLRDBGBITSDIR%...
+    for %%f in (%CLRDBGBITSDIR%\*.dll) do call :InstallFile "%%f" debugAdapters\
+    for %%f in (%CLRDBGBITSDIR%\*.exe) do call :InstallFile "%%f" debugAdapters\
+    for %%f in (%CLRDBGBITSDIR%\*.vsdconfig) do call :InstallFile "%%f" debugAdapters\
+    for %%f in (%CLRDBGBITSDIR%\version.txt) do call :InstallFile "%%f" debugAdapters\
+    for /D %%d in (%CLRDBGBITSDIR%\*) do (
+      echo.
+      echo Installing clrdbg bits from %%d... to debugAdapters\%%~nd
+      if NOT exist "%DESTDIR%\debugAdapters\%%~nd" mkdir "%DESTDIR%\debugAdapters\%%~nd
+      for %%f in (%%d\*.dll) do call :InstallFile "%%f" debugAdapters\%%~nd\
+    )
+)
 
 REM NOTE: The code that deals with starting the adapter can be found in Monaco\src\vs\workbench\parts\debug\node\rawDebugSession.ts.
 REM Look at getLaunchDetails.
@@ -51,12 +77,7 @@ for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFi
 echo.
 if NOT "%InstallError%"=="" echo ERROR: Failed to copy one or more files.& exit /b -1
 echo InstallToVSCode.cmd succeeded. To complete setup:
-echo. 1. Create a link or copy clrdbg next to the debug adapter. Ex:
-echo.
-echo    mklink /d %DESTDIR%\clrdbg C:\dd\vs\out\binaries\amd64chk\debugger\x-plat\clrdbg
-echo.
-echo.
-echo  2. Create a link or copy the corerun runtime next to the debug adapter. Ex:
+echo  Create a link or copy the corerun runtime next to the debug adapter. Ex:
 echo.
 echo    mklink /d %DESTDIR%\runtime \\vsdbgqa\x-plat\runtime-windows\x64
 echo.
@@ -82,7 +103,7 @@ if NOT "%ERRORLEVEL%"=="0" set InstallError=1& echo ERROR: Unable to create link
 goto eof
 
 :Help
-echo InstallToVSCode ^<-l^|-c^> ^<open-debug-ad7-dir^> [destination-dir]
+echo InstallToVSCode ^<-l^|-c^> ^<open-debug-ad7-dir^> [-d ^<clrdbg-binaries^>] [destination-dir]
 echo.
 echo This script is used to copy files needed to enable MIEngine based debugging 
 echo into VS Code.
@@ -92,6 +113,7 @@ echo    is possible to rebuild MIEngine or OpenDebugAD7 without re-running this
 echo    script.
 echo  -c : Copy files to the output directory
 echo  open-debug-ad7-dir : Directory which contains OpenDebugAD7.exe
+echo  clrdbg-binaries: Directory which contains clrdbg binaries
 echo  destination-dir: Directory to install to. By default this is:
 echo     %DefaultDestDir%
 echo.
