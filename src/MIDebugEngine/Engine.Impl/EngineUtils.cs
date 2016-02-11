@@ -252,7 +252,7 @@ namespace Microsoft.MIDebugEngine
 
         internal static string GetExceptionDescription(Exception exception)
         {
-            if (!IsCorruptingException(exception))
+            if (!ExceptionHelper.IsCorruptingException(exception))
             {
                 return exception.Message;
             }
@@ -260,28 +260,6 @@ namespace Microsoft.MIDebugEngine
             {
                 return string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_CorruptingException, exception.GetType().FullName, exception.StackTrace);
             }
-        }
-
-        private static bool IsCorruptingException(Exception exception)
-        {
-            if (exception is NullReferenceException)
-                return true;
-            if (exception is ArgumentNullException)
-                return true;
-            if (exception is ArithmeticException)
-                return true;
-            if (exception is ArrayTypeMismatchException)
-                return true;
-            if (exception is DivideByZeroException)
-                return true;
-            if (exception is IndexOutOfRangeException)
-                return true;
-            if (exception is InvalidCastException)
-                return true;
-            if (exception is System.Runtime.InteropServices.SEHException)
-                return true;
-
-            return false;
         }
 
         internal class SignalMap : Dictionary<string, uint>

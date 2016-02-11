@@ -46,6 +46,19 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Obtains a function position interface given the specified IntPtr of the location.
+        /// </summary>
+        /// <param name="locationId">In VS, the IUnknown pointer to QI for a function position. In VS Code,
+        /// the identifier for the function position</param>
+        /// <returns>Function position object</returns>
+        public static IDebugFunctionPosition2 GetDebugFunctionPositionForIntPtr(IntPtr locationId)
+        {
+            // TODO: It looks like the MIEngine currently leaks the native document position. Fix that.
+
+            return (IDebugFunctionPosition2)Marshal.GetObjectForIUnknown(locationId);
+        }
+
+        /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
         /// <param name="ad7Callback">The underlying event call back which was obtained from the port</param>

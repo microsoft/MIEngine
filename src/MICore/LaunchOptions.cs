@@ -148,6 +148,8 @@ namespace MICore
     /// </summary>
     public sealed class LocalLaunchOptions : LaunchOptions
     {
+        private const int DefaultLaunchTimeout = 10 * 1000; // 10 seconds
+
         public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, int processId, Xml.LaunchOptions.EnvironmentEntry[] environmentEntries)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
@@ -169,6 +171,28 @@ namespace MICore
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentList);
         }
 
+        private void InitializeServerOptions(Xml.LaunchOptions.LocalLaunchOptions source)
+        {
+            if (!String.IsNullOrWhiteSpace(source.DebugServer))
+            {
+                DebugServer = source.DebugServer;
+                DebugServerArgs = source.DebugServerArgs;
+                ServerStarted = source.ServerStarted;
+                FilterStderr = source.FilterStderr;
+                FilterStdout = source.FilterStdout;
+                if (!FilterStderr && !FilterStdout)
+                {
+                    FilterStdout = true;    // no pattern source specified, use stdout
+                }
+                ServerLaunchTimeout = source.ServerLaunchTimeoutSpecified ? source.ServerLaunchTimeout : DefaultLaunchTimeout; 
+            }
+        }
+
+        public bool ShouldStartServer()
+        {
+            return !string.IsNullOrWhiteSpace(DebugServer);
+        }
+
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
             var options = new LocalLaunchOptions(
@@ -177,6 +201,7 @@ namespace MICore
                 source.ProcessId,
                 source.Environment);
             options.InitializeCommonOptions(source);
+            options.InitializeServerOptions(source);
 
             return options;
         }
@@ -218,6 +243,36 @@ namespace MICore
         /// [Optional] List of environment variables to add to the launched process
         /// </summary>
         public ReadOnlyCollection<EnvironmentEntry> Environment { get; private set; }
+
+        /// <summary>
+        /// [Optional] MI Debugger Server exe, if non-null then the MIEngine will start the debug server before starting the debugger
+        /// </summary>
+        public string DebugServer { get; private set; }
+
+        /// <summary>
+        /// [Optional] Args for MI Debugger Server exe
+        /// </summary>
+        public string DebugServerArgs { get; private set; }
+
+        /// <summary>
+        /// [Optional] Server started pattern (in Regex format)
+        /// </summary>
+        public string ServerStarted { get; private set; }
+
+        /// <summary>
+        /// [Optional] Log strings written to stderr and examine for server started pattern
+        /// </summary>
+        public bool FilterStderr { get; private set; }
+
+        /// <summary>
+        /// [Optional] Log strings written to stdout and examine for server started pattern
+        /// </summary>
+        public bool FilterStdout { get; private set; }
+
+        /// <summary>
+        /// [Optional] Log strings written to stderr and examine for server started pattern
+        /// </summary>
+        public int ServerLaunchTimeout { get; private set; }
     }
 
     public sealed class SourceRoot
@@ -374,7 +429,15 @@ namespace MICore
         {
             get
             {
-                return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                if (this is LocalLaunchOptions)
+                {
+                    return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                }
+                else
+                {
+                    // For now lets assume the debugger is on Unix if we are using Pipe/Tcp launch options
+                    return true;
+                }
             }
         }
 
@@ -740,7 +803,7 @@ namespace MICore
                     deviceAppLauncher.Initialize(configStore, eventCallback);
                     deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
                 }
-                catch (Exception e) when (!(e is InvalidLaunchOptionsException))
+                catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
                 {
                     throw new InvalidLaunchOptionsException(e.Message);
                 }

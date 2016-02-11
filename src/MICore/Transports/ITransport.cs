@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace MICore
 {
@@ -14,7 +15,13 @@ namespace MICore
         void Init(ITransportCallback transportCallback, LaunchOptions options);
         void Send(string cmd);
         void Close();
+        bool IsClosed { get; }
     }
+    public interface ISignalingTransport: ITransport
+    {
+        ManualResetEvent StartedEvent { get; }
+    }
+
 
     /// <summary>
     /// Interface implemented by the Debugger class to recieve notifications from the transport
@@ -49,5 +56,11 @@ namespace MICore
         /// </summary>
         /// <param name="line">[Required] line of text to write</param>
         void AppendToInitializationLog(string line);
+
+        /// <summary>
+        /// Fired when the transport wishes to log a message to the debugger output window
+        /// </summary>
+        /// <param name="line">[Required] Line of text to be logged</param>
+        void LogText(string line);
     };
 }

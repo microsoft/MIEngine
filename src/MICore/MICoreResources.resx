@@ -133,6 +133,9 @@
 
 {1}</value>
   </data>
+  <data name="Error_DebugServerInitializationFailed" xml:space="preserve">
+    <value>Debug server process failed to initialize.</value>
+  </data>
   <data name="Error_ExceptionInOperation" xml:space="preserve">
     <value>Exception while processing MIEngine operation. {0}. If the problem continues restart debugging.</value>
   </data>

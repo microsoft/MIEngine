@@ -11,6 +11,7 @@ using System.Collections.Specialized;
 using System.Collections;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace MICore
 {
@@ -20,9 +21,13 @@ namespace MICore
         private StreamReader _stdErrReader;
         private int _remainingReaders;
         private ManualResetEvent _allReadersDone = new ManualResetEvent(false);
+        private bool _killOnClose;
+        private bool _filterStderr;
 
-        public PipeTransport()
+        public PipeTransport(bool killOnClose = false, bool filterStderr = false, bool filterStdout = false) : base(filterStdout)
         {
+            _killOnClose = killOnClose;
+            _filterStderr = filterStderr;
         }
 
         protected override string GetThreadName()
@@ -70,6 +75,55 @@ namespace MICore
             InitProcess(proc, out reader, out writer);
         }
 
+        private void KillChildren(List<Tuple<int,int>> processes, int pid)
+        {
+            processes.ForEach((p) =>
+            {
+                if (p.Item2 == pid)
+                {
+                    KillChildren(processes, p.Item1);
+                    var k = Process.Start("/bin/kill", String.Format(CultureInfo.InvariantCulture, "-9 {0}", p.Item1));
+                    k.WaitForExit();
+                }
+            });
+        }
+
+        private void KillProcess(Process p)
+        {
+            bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            bool isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            if (isLinux || isOSX)
+            {
+                // On linux run 'ps -x -o "%p %P"' (similarly on Mac), which generates a list of the process ids (%p) and parent process ids (%P).
+                // Using this list, issue a 'kill' command for each child process. Kill the children (recursively) to eliminate
+                // the entire process tree rooted at p. 
+                Process ps = new Process();
+                ps.StartInfo.FileName ="/bin/ps";
+                ps.StartInfo.Arguments = isLinux ? "-x -o \"%p %P\"" : "-x -o \"pid ppid\"";
+                ps.StartInfo.RedirectStandardOutput = true;
+                ps.StartInfo.UseShellExecute = false;
+                ps.Start();
+                string line;
+                List<Tuple<int, int>> processAndParent = new List<Tuple<int, int>>();
+                char[] whitespace = new char[] { ' ', '\t' };
+                while ((line = ps.StandardOutput.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    int id, pid;
+                    if (Int32.TryParse(line.Substring(0, line.IndexOfAny(whitespace)), NumberStyles.Integer, CultureInfo.InvariantCulture, out id)
+                        && Int32.TryParse(line.Substring(line.IndexOfAny(whitespace)).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out pid))
+                    {
+                        processAndParent.Add(new Tuple<int, int>(id, pid));
+                    }
+                }
+                KillChildren(processAndParent, p.Id);
+            }
+            if (!p.HasExited)
+            {
+                p.Kill();
+            }
+        }
+
         public override void Close()
         {
             if (_writer != null)
@@ -97,6 +151,15 @@ namespace MICore
             {
                 _process.EnableRaisingEvents = false;
                 _process.Exited -= OnProcessExit;
+                if (_killOnClose && !_process.HasExited)
+                {
+                    try {
+                        KillProcess(_process);
+                    }
+                    catch
+                    {
+                    }
+                }
                 _process.Dispose();
             }
         }
@@ -133,7 +196,15 @@ namespace MICore
                     if (line == null)
                         break;
 
-                    this.Callback.OnStdErrorLine(line);
+                    if (_filterStderr)
+                    {
+                        line = FilterLine(line);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        this.Callback.OnStdErrorLine(line);
+                    }
                 }
             }
             catch (Exception)

@@ -90,6 +90,10 @@ namespace MICore
         private CommandLock _commandLock = new CommandLock();
 
         private string _lastResult;
+        /// <summary>
+        /// The last command we sent over the transport. This includes both the command name and arguments.
+        /// </summary>
+        private string _lastCommandText;
         private uint _lastCommandId;
         private bool _isClosed;
 
@@ -302,7 +306,7 @@ namespace MICore
                 {
                     await item();
                 }
-                catch (Exception e)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
                 {
                     if (firstException != null)
                     {
@@ -481,7 +485,8 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
-            if (IsLocalGdbAttach())
+            //TODO May need to fix attach on windows and osx.
+            if (IsLocalGdbAttach() && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 // for local linux debugging with attach, send a signal to one of the debugee processes rather than 
                 // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
@@ -629,6 +634,7 @@ namespace MICore
 
                 id = ++_lastCommandId;
                 _waitingOperations.Add(id, waitingOperation);
+                _lastCommandText = command;
             }
 
             SendToTransport(id.ToString(CultureInfo.InvariantCulture) + command);
@@ -642,7 +648,7 @@ namespace MICore
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             const int sigint = 2;
-            NativeMethods.Kill(debugeePid, sigint);
+            LinuxNativeMethods.Kill(debugeePid, sigint);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
@@ -739,6 +745,18 @@ namespace MICore
                         _initializationLog.AddLast(line);
                     }
                 }
+            }
+        }
+
+        void ITransportCallback.LogText(string line)
+        {
+            if (!line.EndsWith("\n", StringComparison.Ordinal))
+            {
+                line += "\n";
+            }
+            if (OutputStringEvent != null)
+            {
+                OutputStringEvent(this, line);
             }
         }
 
@@ -1060,14 +1078,48 @@ namespace MICore
             }
         }
 
+        /// <summary>
+        /// Obtains the last command (ex: '-exec-break') that we sent to the debugger. This is used in telemetry, and probably shouldn't
+        /// be used for any other reason.
+        /// </summary>
+        /// <returns>The empty string if we haven't sent any commands yet. Otherwise the text of the command</returns>
+        public string GetLastSentCommandName()
+        {
+            string lastCommandText = _lastCommandText;
+            if (string.IsNullOrEmpty(lastCommandText))
+            {
+                // We haven't sent any commands yet
+                return string.Empty;
+            }
+
+            int spaceIndex = lastCommandText.IndexOf(' ');
+            if (spaceIndex >= 0)
+            {
+                // The last command had arguments. Remove them.
+                return lastCommandText.Substring(0, spaceIndex);
+            }
+            else
+            {
+                // The last command took no arguments.
+                return lastCommandText;
+            }
+        }
+
         private void HandleThreadGroupStarted(Results results)
         {
             string idString = results.FindString("id");
             string pidString = results.FindString("pid");
 
-            lock (_debuggeePids)
+            int pid = Int32.Parse(pidString, CultureInfo.InvariantCulture);
+
+            // Ignore pid 0 due to spurious thread group created event on iOS (lldb).
+            // On android the scheduler runs as pid 0, but that process cannot currently be debugged anyway.
+            if (pid != 0)
             {
-                _debuggeePids.Add(idString, Int32.Parse(pidString, CultureInfo.InvariantCulture));
+                lock (_debuggeePids)
+                {
+                    _debuggeePids.Add(idString, pid);
+                }
             }
         }
 
@@ -1078,6 +1130,7 @@ namespace MICore
                 await _commandLock.AquireShared();
                 try
                 {
+                    _lastCommandText = cmd;
                     SendToTransport(cmd);
                 }
                 finally

@@ -56,11 +56,12 @@ namespace Microsoft.MIDebugEngine.Natvis
             VariableInformation.AsyncErrorImpl(pExprCallback != null ? new EngineCallback(_engine, pExprCallback) : _engine.Callback, this, error);
         }
         public void AsyncEval(IDebugEventCallback2 pExprCallback) { Parent.AsyncEval(pExprCallback); }
-        public void SyncEval() { Parent.SyncEval(); }
+        public void SyncEval(enum_EVALFLAGS dwFlags) { Parent.SyncEval(dwFlags); }
         public ThreadContext ThreadContext { get { return Parent.ThreadContext; } }
         public VariableInformation FindChildByName(string name) { return Parent.FindChildByName(name); }
         public string EvalDependentExpression(string expr) { return Parent.EvalDependentExpression(expr); }
         public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
+        public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
     }
 
     internal class VisualizerWrapper : SimpleWrapper

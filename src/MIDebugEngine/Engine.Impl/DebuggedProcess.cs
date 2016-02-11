@@ -43,6 +43,7 @@ namespace Microsoft.MIDebugEngine
         public readonly Natvis.Natvis Natvis;
         private ReadOnlyCollection<RegisterDescription> _registers;
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
+        private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions)
         {
@@ -166,11 +167,35 @@ namespace Microsoft.MIDebugEngine
                     // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
                     // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
                     // during debuggee launch
-                    this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
+                    if (localLaunchOptions.ShouldStartServer())
+                    {
+                        this.Init(new MICore.ClientServerTransport
+                            (
+                                        new LocalLinuxTransport(),
+                                        new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
+                                  ), _launchOptions
+                            );
+                    }
+                    else
+                    {
+                        this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
+                    }
                 }
                 else
                 {
-                    this.Init(new MICore.LocalTransport(), _launchOptions);
+                    if (localLaunchOptions.ShouldStartServer())
+                    {
+                        this.Init(new MICore.ClientServerTransport
+                            (
+                                        new LocalTransport(),
+                                        new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
+                                  ), _launchOptions
+                            );
+                    }
+                    else
+                    {
+                        this.Init(new MICore.LocalTransport(), _launchOptions);
+                    }
                 }
             }
             else if (_launchOptions is PipeLaunchOptions)
@@ -234,6 +259,8 @@ namespace Microsoft.MIDebugEngine
                 // The MI debugger process unexpectedly exited.
                 _worker.PostOperation(() =>
                     {
+                        _engineTelemetry.SendDebuggerAborted(MICommandFactory, GetLastSentCommandName(), debuggerExitCode);
+
                         // If the MI Debugger exits before we get a resume call, we have no way of sending program destroy. So just let start debugging fail.
                         if (!_connected)
                         {
@@ -271,7 +298,7 @@ namespace Microsoft.MIDebugEngine
 
                         _bLastModuleLoadFailed = false;
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
                     {
                         if (this.ProcessState == MICore.ProcessState.Exited)
                         {
@@ -324,7 +351,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     await HandleBreakModeEvent(results);
                 }
-                catch (Exception e)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
                 {
                     if (this.ProcessState == MICore.ProcessState.Exited)
                     {
@@ -372,7 +399,7 @@ namespace Microsoft.MIDebugEngine
             {
                 string eventName;
                 KeyValuePair<string, object>[] properties;
-                if (DecodeTelemetryEvent(args.Results, out eventName, out properties))
+                if (_engineTelemetry.DecodeTelemetryEvent(args.Results, out eventName, out properties))
                 {
                     HostTelemetry.SendEvent(eventName, properties);
                 }
@@ -586,14 +613,14 @@ namespace Microsoft.MIDebugEngine
             {
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
-                AD7BoundBreakpoint bkpt = null;
+                
                 bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
-                bkpt = _breakpointManager.FindHitBreakpoint(bkptno, addr, frame, out fContinue); // use breakpoint number to resolve breakpoint
+                AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
                 if (bkpt != null)
                 {
                     List<object> bplist = new List<object>();
-                    bplist.Add(bkpt);
+                    bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
                 else if (!_bEntrypointHit)
@@ -779,7 +806,14 @@ namespace Microsoft.MIDebugEngine
             await ExceptionManager.EnsureSettingsUpdated();
 
             // Should clear stepping state
-            _worker.PostOperation(CmdContinueAsync);
+            if (_worker.IsPollThread())
+            {
+                CmdContinueAsync();
+            }
+            else
+            {
+                _worker.PostOperation(CmdContinueAsync);
+            }
         }
 
         public Task Continue(DebuggedThread thread)
@@ -1135,57 +1169,6 @@ namespace Microsoft.MIDebugEngine
 
             uint errorCode = results.TryFindUint("error-code") ?? 0;
             return new OutputMessage(text, messageType, severity, errorCode);
-        }
-
-        private bool DecodeTelemetryEvent(Results results, out string eventName, out KeyValuePair<string, object>[] properties)
-        {
-            properties = null;
-
-            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
-            eventName = results.TryFindString("event-name");
-            if (string.IsNullOrEmpty(eventName) || !char.IsLetter(eventName[0]) || !eventName.Contains('/'))
-            {
-                Debug.Fail("Bogus telemetry event. 'Event-name' property is missing or invalid.");
-                return false;
-            }
-
-            TupleValue tuple;
-            if (!results.TryFind("properties", out tuple))
-            {
-                Debug.Fail("Bogus message event, missing 'properties' property");
-                return false;
-            }
-
-            List<KeyValuePair<string, object>> propertyList = new List<KeyValuePair<string, object>>(tuple.Content.Count);
-            foreach (NamedResultValue pair in tuple.Content)
-            {
-                ConstValue resultValue = pair.Value as ConstValue;
-                if (resultValue == null)
-                    continue;
-
-                string content = resultValue.Content;
-                if (string.IsNullOrEmpty(content))
-                    continue;
-
-                object value = content;
-                int numericValue;
-                if (content.Length >= 3 && content.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(content.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out numericValue))
-                {
-                    value = numericValue;
-                }
-                else if (int.TryParse(content, NumberStyles.None, CultureInfo.InvariantCulture, out numericValue))
-                {
-                    value = numericValue;
-                }
-
-                if (value != null)
-                {
-                    propertyList.Add(new KeyValuePair<string, object>(pair.Name, value));
-                }
-            }
-
-            properties = propertyList.ToArray();
-            return true;
         }
 
         private static RegisterGroup GetGroupForRegister(List<RegisterGroup> registerGroups, string name, EngineUtils.RegisterNameMap nameMap)

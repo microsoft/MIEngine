@@ -82,7 +82,7 @@ namespace Microsoft.MIDebugEngine
                 return Constants.S_OK;
             }
 
-            _var.SyncEval();
+            _var.SyncEval(dwFlags);
             ppResult = new AD7Property(_engine, _var);
             return Constants.S_OK;
         }

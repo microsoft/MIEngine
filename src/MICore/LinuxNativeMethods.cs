@@ -6,17 +6,17 @@ using System.Runtime.InteropServices;
 
 namespace MICore
 {
-    internal class NativeMethods
+    internal class LinuxNativeMethods
     {
-        // TODO: It would be better to route these to the correct .so files directly rather than pasing through system.native. 
+        private const string Libc = "libc";
 
-        [DllImport("System.Native", SetLastError = true)]
+        [DllImport(Libc, EntryPoint = "kill", SetLastError = true)]
         internal static extern int Kill(int pid, int mode);
 
-        [DllImport("System.Native", SetLastError = true)]
+        [DllImport(Libc, EntryPoint = "mkfifo", SetLastError = true)]
         internal static extern int MkFifo(string name, int mode);
 
-        [DllImport("System.Native", SetLastError = true)]
+        [DllImport(Libc, EntryPoint = "geteuid", SetLastError = true)]
         internal static extern uint GetEUid();
     }
 }
