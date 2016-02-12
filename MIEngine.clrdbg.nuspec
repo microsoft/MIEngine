@@ -11,8 +11,8 @@
     <copyright>Copyright 2015</copyright>
   </metadata>
   <files>
-    <file src="Microsoft.MICore.dll" />
-    <file src="Microsoft.MIDebugEngine.dll" />
-    <file src="coreclr.ad7Engine.json" />
+    <file src="Microsoft.MICore.dll" target="lib\dnxcore50\Microsoft.MICore.dll" />
+    <file src="Microsoft.MIDebugEngine.dll" target="lib\dnxcore50\Microsoft.MIDebugEngine.dll" />
+    <file src="coreclr.ad7Engine.json" /><!--TODO: contentFiles -->
   </files>
 </package>
