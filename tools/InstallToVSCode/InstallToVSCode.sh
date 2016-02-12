@@ -181,28 +181,11 @@ if [ ! -z "$CLRDBGBITSDIR" ]; then
     echo ''
     echo "Installing clrdbg bits from $CLRDBGBITSDIR"
 
-    for dll in $(ls $CLRDBGBITSDIR/*.dll); do
-        install_module "$dll" debugAdapters ignoreMissingPdbs
+    for clrdbgFile in $(ls $CLRDBGBITSDIR/*); do
+        if [ -f "$clrdbgFile" ]; then
+            install_file "$clrdbgFile" debugAdapters
+        fi
     done
-
-    OSName=$(uname -s)
-    if [ $OSName == "Linux" ]; then
-        library_ext=so
-    else
-        library_ext=dylib
-    fi
-
-    for shared_library in $(ls $CLRDBGBITSDIR/*.$library_ext); do
-        install_file "$shared_library" debugAdapters
-    done
-
-    for vsdconfig in $(ls $CLRDBGBITSDIR/*.vsdconfig); do
-        install_file "$vsdconfig" debugAdapters
-    done
-
-    install_file "$CLRDBGBITSDIR/clrdbg" debugAdapters
-    install_file "$CLRDBGBITSDIR/version.txt" debugAdapters
-    install_file "$CLRDBGBITSDIR/mscorlib.resources" debugAdapters
     
     for directory in $(ls -d $CLRDBGBITSDIR/*/); do
         echo "Installing clrdbg bits from $directory..."
