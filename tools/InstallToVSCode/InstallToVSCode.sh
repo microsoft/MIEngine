@@ -5,7 +5,7 @@ script_dir=`dirname $0`
 
 print_help()
 {
-    echo 'InstallToVSCode.sh <-c|-l> [--pdbs] <OpenDebugAD7-dir> [-d <clrdbg-binaries-dir>] [destination-dir]'
+    echo 'InstallToVSCode.sh <-c|-l> [--pdbs] <OpenDebugAD7-dir> -d <clrdbg-binaries-dir> [destination-dir]'
     echo ''
     echo 'This script is used to copy files needed to enable MIEngine based debugging'
     echo 'into VS Code.'
@@ -21,7 +21,7 @@ print_help()
     echo "    $DefaultDestDir"
     echo ''
     echo 'Example:'
-    echo "$script_dir/InstallToVSCode.sh -l --pdbs /Volumes/OpenDebugAD7/bin/Debug-PortablePDB $HOME/OpenDebugAD7-debug"
+    echo "$script_dir/InstallToVSCode.sh -l --pdbs /Volumes/dd/OpenDebugAD7/bin/Debug-PortablePDB -d ~/clrdbg/out/Linux/bin/x64.Debug/clrdbg $HOME/.vscode-alpha/extensions/coreclr-debug"
 }
 
 # Copies a file to another file or directory
@@ -122,7 +122,7 @@ if [ "$2" == "--pdbs" ]; then
 fi
 
 OpenDebugAD7Dir=${2:?"ERROR: OpenDebugAD7 binaries directory must be specified. See -h for usage."}
-[ ! -f "$OpenDebugAD7Dir/OpenDebugAD7.exe" ] && echo "ERROR: $OpenDebugAD7Dir/OpenDebugAD7.exe does not exist." && exit 1
+[ ! -f "$OpenDebugAD7Dir/OpenDebugAD7.dll" ] && echo "ERROR: $OpenDebugAD7Dir/OpenDebugAD7.dll does not exist." && exit 1
 
 DropDir=$script_dir/../../bin/Debug-PortablePDB
 if [ ! -f "$DropDir/Microsoft.MIDebugEngine.dll" ]
@@ -132,75 +132,74 @@ then
 fi
 
 # Remove the relative path from DropDir
-pushd $DropDir
+pushd $DropDir >/dev/null
 DropDir=$(pwd)
-popd
+popd >/dev/null
 
-if [ "$3" == "-d" ]; then
-    CLRDBGBITSDIR=${4:?"ERROR: Clrdbg binaries directory must be specified with -d option. See -h for usage."}
-    [ ! -f "$CLRDBGBITSDIR/clrdbg" ] && echo "ERROR: $CLRDBGBITSDIR/clrdbg does not exist." && exit 1
-    DESTDIR=$5
-else
-    DESTDIR=$3
-fi
+[ ! "$3" == "-d" ] && echo "ERROR: Bad command line argument. Expected '-d <clrdbg-dir>'." && exit 1
+CLRDBGBITSDIR=${4:?"ERROR: Clrdbg binaries directory must be specified with -d option. See -h for usage."}
+[ ! -f "$CLRDBGBITSDIR/clrdbg" ] && echo "ERROR: $CLRDBGBITSDIR/clrdbg does not exist." && exit 1
+DESTDIR=$5
 
 if [ -z "$DESTDIR" ]
 then
     DESTDIR=$DefaultDestDir
 fi
 
-if [ ! -d "$DESTDIR" ]
+hash dotnet 2>/dev/null 
+[ $? -ne 0 ] && echo "ERROR: The .NET CLI is not installed. see: http://dotnet.github.io/getting-started/" && exit 1
+
+if [ -d "$DESTDIR" ]
 then
-    mkdir "$DESTDIR"
-    if [ $? -ne 0 ]
-    then
-        echo "ERROR: unable to create destination directory '$DESTDIR'."
-        exit 1
-    fi
+    rm -r "$DESTDIR"
+    [ $? -ne 0 ] && echo "ERROR: Unable to clean destination directory '$DESTDIR'." && exit 1
 fi
 
-if [ ! -d "$DESTDIR/debugAdapters" ]
-then
-    mkdir "$DESTDIR/debugAdapters"
-    if [ $? -ne 0 ]
-    then
-        echo "ERROR: unable to create destination directory '$DESTDIR/debugAdapters'."
-        exit 1
-    fi
-fi
+mkdir -p "$DESTDIR/debugAdapters"
+[ $? -ne 0 ] && echo "ERROR: unable to create destination directory '$DESTDIR/debugAdapters'." && exit 1
+
+pushd $script_dir/CLRDependencies 1>/dev/null 2>/dev/null
+[ $? -ne 0 ] && echo "ERROR: Unable to find CLRDependencies directory???" && exit 1
+
+dotnet restore
+[ $? -ne 0 ] && echo "ERROR: dotnet restore failed." && exit 1
+
+dotnet publish -o "$DESTDIR/debugAdapters"
+[ $? -ne 0 ] && echo "ERROR: dotnet publish failed." && exit 1
+
+popd >/dev/null
+
+mv "$DESTDIR/debugAdapters/dummy" "$DESTDIR/debugAdapters/OpenDebugAD7"
+[ $? -ne 0 ] && echo "ERROR: Unable to move OpenDebugAD7 executable." && exit 1
 
 set InstallError=
-install_module "$OpenDebugAD7Dir/OpenDebugAD7.exe" debugAdapters
 install_module "$OpenDebugAD7Dir/dar.exe" debugAdapters
 install_module "$OpenDebugAD7Dir/xunit.console.netcore.exe" debugAdapters
 for dll in $(ls $OpenDebugAD7Dir/*.dll); do
     install_module "$dll" debugAdapters ignoreMissingPdbs
 done
 
-if [ ! -z "$CLRDBGBITSDIR" ]; then
-    echo ''
-    echo "Installing clrdbg bits from $CLRDBGBITSDIR"
+echo ''
+echo "Installing clrdbg bits from $CLRDBGBITSDIR"
 
-    for clrdbgFile in $(ls $CLRDBGBITSDIR/*); do
-        if [ -f "$clrdbgFile" ]; then
-            install_file "$clrdbgFile" debugAdapters
-        fi
-    done
+for clrdbgFile in $(ls $CLRDBGBITSDIR/*); do
+    if [ -f "$clrdbgFile" ]; then
+        install_file "$clrdbgFile" debugAdapters
+    fi
+done
     
-    for directory in $(ls -d $CLRDBGBITSDIR/*/); do
-        echo "Installing clrdbg bits from $directory..."
-        directory_name=$(basename $directory)
+for directory in $(ls -d $CLRDBGBITSDIR/*/); do
+    echo "Installing clrdbg bits from $directory..."
+    directory_name=$(basename $directory)
         
-        if [ ! -d "$DESTDIR/debugAdapters/$directory_name" ]; then
-            mkdir "$DESTDIR/debugAdapters/$directory_name"
-        fi
+    if [ ! -d "$DESTDIR/debugAdapters/$directory_name" ]; then
+        mkdir "$DESTDIR/debugAdapters/$directory_name"
+    fi
         
-        for dll in $(ls $directory/*.dll); do
-            install_file "$dll" debugAdapters/$directory_name
-        done
+    for dll in $(ls $directory/*.dll); do
+        install_file "$dll" debugAdapters/$directory_name
     done
-
-fi
+done
 
 copy_file "$script_dir/coreclr/package.json" $DESTDIR/package.json
 
@@ -218,9 +217,6 @@ if [ ! -z "$InstallError" ]; then
     exit 1
 fi
 
-echo "InstallToVSCode.sh succeeded. To complete setup:"
-echo "Create a link or copy the corerun runtime next to the debug adapter. Ex:"
-echo ""
-echo "   cp -r /Volumes/runtime-osx/x64 $DESTDIR/runtime"
+echo "InstallToVSCode.sh succeeded."
 echo ""
 exit 0
