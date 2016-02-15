@@ -169,6 +169,10 @@ dotnet publish -o "$DESTDIR/debugAdapters"
 
 popd >/dev/null
 
+# Work arround https://github.com/dotnet/coreclr/issues/3164
+[ -f $DESTDIR/debugAdapters/libcoreclrtraceptprovider.so ] && rm $DESTDIR/debugAdapters/libcoreclrtraceptprovider.so
+[ -f $DESTDIR/debugAdapters/libcoreclrtraceptprovider.dylib ] && rm $DESTDIR/debugAdapters/libcoreclrtraceptprovider.dylib
+
 mv "$DESTDIR/debugAdapters/dummy" "$DESTDIR/debugAdapters/OpenDebugAD7"
 [ $? -ne 0 ] && echo "ERROR: Unable to move OpenDebugAD7 executable." && exit 1
 
