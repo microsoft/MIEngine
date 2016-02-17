@@ -9,13 +9,13 @@
     "debuggers": [
       {
         "type": "coreclr",
+        "label": ".NET Core",
         "enableBreakpointsFor": { "languageIds": [ "csharp", "fsharp" ] },
 
-        "runtime": "./runtime/corerun",
-        "win": { "runtime": "./runtime/CoreRun.exe" },
-        "runtimeArgs": [],
-
-        "program": "./debugAdapters/OpenDebugAD7.exe",
+        "program": "./debugAdapters/OpenDebugAD7",
+        "windows": {
+          "program": "./debugAdapters/OpenDebugAD7.exe"
+        },
 
         "configurationAttributes": {
           "launch": {
@@ -23,13 +23,13 @@
             "properties": {
               "program": {
                 "type": "string",
-                "description": "Workspace relative path to the program (executable file) to launch. On Windows, a '.exe' suffix is appended if not specified already.",
-                "default": "bin/Debug/dnxcore50/<My-Project-Name>"
+                "description": "Path to the program (executable file) to launch. On Windows, a '.exe' suffix is appended if not specified already.",
+                "default": "${workspaceRoot}/bin/Debug/dnxcore50/<My-Project-Name>"
               },
               "cwd": {
                 "type": "string",
-                "description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
-                "default": "."
+                "description": "Path to the working directory of the program being debugged. Default is the current workspace.",
+                "default": "${workspaceRoot}"
               },
               "args": {
                 "type": "array",
@@ -102,10 +102,10 @@
             "name": ".NET Core Launch",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "compile",
-            "program": "bin/Debug/dnxcore50/<My-Project-Name>",
+            "preLaunchTask": "build",
+            "program": "${workspaceRoot}/bin/Debug/dnxcore50/<My-Project-Name>",
             "args": [ ],
-            "cwd": ".",
+            "cwd": "${workspaceRoot}",
             "stopAtEntry": false,
             "sourceFileMap": { }
           },
