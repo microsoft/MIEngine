@@ -1,10 +1,29 @@
 {
   "name": "coreclr-debug",
-  "version": "0.1.1",
-  "publisher": "vscode",
-  "engines": { "vscode": "*" },
-  "categories": ["Debuggers"],
-
+  "displayName": "coreclr-debug",
+  "description": "coreclr-debug",
+  "version": "0.1.0",
+  "publisher": "Microsoft",
+  "engines": {
+    "vscode": "^0.10.6"
+  },
+  "categories": [
+    "Debuggers"
+  ],
+  "activationEvents": [
+    "onLanguage:csharp",
+    "onLanguage:fsharp"
+  ],
+  "main": "./out/src/extension",
+  "scripts": {
+    "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
+    "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install"
+  },
+  "devDependencies": {
+    "typescript": "^1.7.5",
+    "vscode": "^0.11.0"
+  },
   "contributes": {
     "debuggers": [
       {
@@ -14,7 +33,7 @@
 
         "program": "./debugAdapters/OpenDebugAD7",
         "windows": {
-          "program": "./debugAdapters/OpenDebugAD7.exe"
+            "program": "./debugAdapters/OpenDebugAD7.exe"
         },
 
         "configurationAttributes": {
@@ -42,7 +61,94 @@
                 "description": "If true, the debugger should stop at the entry point of the target.",
                 "default": false
               },
-              // --- Begin common attributes. Copy these down to 'attach' if modified
+              "launchBrowser": {
+                "type": "object",
+                "description": "Describes options to launch a web browser as part of launch",
+                "default": {
+                  "enabled": true,
+                  "args": "${auto-detect-url}",
+                  "windows": {
+                    "command": "cmd.exe",
+                    "args": "/C start ${auto-detect-url}"
+                  },
+                  "osx": {
+                    "command": "open"
+                  },
+                  "linux": {
+                    "command": "xdg-open"  
+                  }
+                },
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Whether web browser launch is enabled",
+                    "default": true
+                  },
+                  "args": {
+                    "type": "string",
+                    "description": "The arguments to pass to the command to open the browser. Use ${auto-detect-url} to automatically use the address the server is listening to",
+                    "default": "${auto-detect-url}"
+                  },
+                  "osx": {
+                    "type": "object",
+                    "description": "OSX-specific web launch configuration options",
+                    "default": {
+                      "command": "open"
+                    },
+                    "properties": {
+                        "command": {
+                          "type": "string",
+                          "description": "The command to execute for launching the web browser",
+                          "default": "open"
+                        },
+                        "args": {
+                          "type": "string",
+                          "description": "The arguments to pass to the command to open the browser. Use ${auto-detect-url} to automatically use the address the server is listening to",
+                          "default": "${auto-detect-url}"
+                        }
+                    }
+                  },
+                  "linux": {
+                    "type": "object",
+                    "description": "Linux-specific web launch configuration options",
+                    "default": {
+                      "command": "xdg-open"
+                    },
+                    "properties": {
+                        "command": {
+                          "type": "string",
+                          "description": "The command to execute for launching the web browser",
+                          "default": "xdg-open"
+                        },
+                        "args": {
+                          "type": "string",
+                          "description": "The arguments to pass to the command to open the browser. Use ${auto-detect-url} to automatically use the address the server is listening to",
+                          "default": "${auto-detect-url}"
+                        }
+                    }  
+                  },
+                  "windows": {
+                    "type": "object",
+                    "description": "Windows-specific web launch configuration options",
+                    "default": {
+                      "command": "cmd.exe",
+                      "args": "/C start ${auto-detect-url}"
+                    },
+                    "properties": {
+                        "command": {
+                          "type": "string",
+                          "description": "The command to execute for launching the web browser",
+                          "default": "cmd.exe"
+                        },
+                        "args": {
+                          "type": "string",
+                          "description": "The arguments to pass to the command to open the browser. Use ${auto-detect-url} to automatically use the address the server is listening to",
+                          "default": "/C start ${auto-detect-url}"
+                        }
+                    }  
+                  }
+                }
+              },
               "sourceFileMap": {
                 "type": "object",
                 "description": "Optional source file mappings passed to the debug engine.",
@@ -59,7 +165,6 @@
                 "items": { "type": "string" },
                 "default": [ ]
               }
-              // --- End common attributes. Copy these down to 'attach' if modified
             }
           },
           "attach": {
@@ -75,7 +180,6 @@
                 "description": "The process id to attach to. If this is used, 'processName' should not be used.",
                 "default": ""
               },
-              // --- Begin common attributes. Copy these up to 'launch' if modified
               "sourceFileMap": {
                 "type": "object",
                 "description": "Optional source file mappings passed to the debug engine.",
@@ -92,14 +196,13 @@
                 "items": { "type": "string" },
                 "default": [ ]
               }
-              // --- End common attributes. Copy these up to 'launch' if modified
             }
           }
         },
 
         "initialConfigurations": [
           {
-            "name": ".NET Core Launch",
+            "name": ".NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -110,13 +213,37 @@
             "sourceFileMap": { }
           },
           {
+            "name": ".NET Core Launch (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceRoot}/bin/Debug/dnxcore50/<My-Project-Name>",
+            "args": [ ],
+            "cwd": "${workspaceRoot}",
+            "stopAtEntry": false,
+            "sourceFileMap": { },
+            "launchBrowser": {
+              "enabled": true,
+              "args": "${auto-detect-url}",
+              "windows": {
+                "command": "cmd.exe",
+                "args": "/C start ${auto-detect-url}"
+              },              
+              "osx": {
+                "command": "open"  
+              },
+              "linux": {
+                "command": "xdg-open"  
+              }
+            }
+          },
+          {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach",
             "processName": "<example>",
             "sourceFileMap": { }
           }
-
         ]
       }
     ]
