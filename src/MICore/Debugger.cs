@@ -174,15 +174,6 @@ namespace MICore
 
             if (reason.StartsWith("exited"))
             {
-                string threadGroupId = results.TryFindString("id");
-                if (!String.IsNullOrEmpty(threadGroupId))
-                {
-                    lock (_debuggeePids)
-                    {
-                        _debuggeePids.Remove(threadGroupId);
-                    }
-                }
-
                 if (IsLocalGdbAttach())
                 {
                     CmdExitAsync();
@@ -1045,6 +1036,11 @@ namespace MICore
                 results = MIResults.ParseResultList(cmd.Substring("thread-group-started,".Length));
                 HandleThreadGroupStarted(results);
             }
+            else if (cmd.StartsWith("thread-group-exited,", StringComparison.Ordinal))
+            {
+                results = MIResults.ParseResultList(cmd.Substring("thread-group-exited,".Length));
+                HandleThreadGroupExited(results);
+            }
             else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
             {
                 results = MIResults.ParseResultList(cmd.Substring("thread-created,".Length));
@@ -1107,7 +1103,7 @@ namespace MICore
 
         private void HandleThreadGroupStarted(Results results)
         {
-            string idString = results.FindString("id");
+            string threadGroupId = results.FindString("id");
             string pidString = results.FindString("pid");
 
             int pid = Int32.Parse(pidString, CultureInfo.InvariantCulture);
@@ -1118,8 +1114,30 @@ namespace MICore
             {
                 lock (_debuggeePids)
                 {
-                    _debuggeePids.Add(idString, pid);
+                    _debuggeePids.Add(threadGroupId, pid);
                 }
+            }
+        }
+
+        private void HandleThreadGroupExited(Results results)
+        {
+            string threadGroupId = results.TryFindString("id");
+
+            if (!String.IsNullOrEmpty(threadGroupId))
+            {
+                lock (_debuggeePids)
+                {
+                    if (_debuggeePids.Remove(threadGroupId))
+                    {
+                        if (_debuggeePids.Count == 0)
+                            ProcessState = ProcessState.Exited;
+                    }
+                }
+            }
+
+            if (ProcessState == ProcessState.Exited)
+            {
+                OnDebuggerProcessExit(null);
             }
         }
 
