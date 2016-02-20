@@ -44,6 +44,7 @@ namespace Microsoft.MIDebugEngine
         private ReadOnlyCollection<RegisterDescription> _registers;
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
+        private bool _needTerminalReset;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions)
         {
@@ -164,6 +165,8 @@ namespace Microsoft.MIDebugEngine
                     String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress)
                     )
                 {
+                    _needTerminalReset = true;
+
                     // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
                     // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
                     // during debuggee launch
@@ -283,6 +286,15 @@ namespace Microsoft.MIDebugEngine
             ModuleLoadEvent += async delegate (object o, EventArgs args)
             {
                 // NOTE: This is an async void method, so make sure exceptions are caught and somehow reported
+                
+                if (_needTerminalReset)
+                {
+                    _needTerminalReset = false;
+
+                    // This is to work around a GDB bug of warning "Failed to set controlling terminal: Operation not permitted"
+                    // Reset debuggee terminal after the first module load.
+                    await ConsoleCmdAsync("shell reset");
+                }
 
                 if (_libraryLoaded.Count != 0)
                 {
