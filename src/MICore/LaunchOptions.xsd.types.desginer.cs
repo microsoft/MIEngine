@@ -412,6 +412,10 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool ServerLaunchTimeoutSpecified;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string CoreDumpPath;
     }
     
     /// <remarks/>

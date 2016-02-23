@@ -143,6 +143,15 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading core dump {0}.
+        /// </summary>
+        internal static string LoadingCoreDumpMessage {
+            get {
+                return ResourceManager.GetString("LoadingCoreDumpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading Symbols.
         /// </summary>
         internal static string LoadingSymbolCaption {

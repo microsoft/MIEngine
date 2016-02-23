@@ -158,6 +158,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid path to core dump file &apos;{0}&apos;. File must be a valid file name that exists on the computer..
+        /// </summary>
+        public static string Error_InvalidLocalCoreDumpPath {
+            get {
+                return ResourceManager.GetString("Error_InvalidLocalCoreDumpPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists on the Visual Studio computer..
         /// </summary>
         public static string Error_InvalidLocalExePath {

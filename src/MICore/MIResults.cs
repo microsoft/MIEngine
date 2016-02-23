@@ -403,6 +403,16 @@ namespace MICore
         {
             return FindAll(name).OfType<T>().ToArray();
         }
+
+        public TupleValue Subset(params string[] names)
+        {
+            List<NamedResultValue> values = new List<NamedResultValue>();
+            foreach (string name in names)
+            {
+                values.Add(new NamedResultValue(name, this.Find(name)));
+            }
+            return new TupleValue(values);
+        }
     }
 
     public abstract class ListValue : ResultValue

@@ -86,11 +86,15 @@ namespace Microsoft.MIDebugEngine
 
         internal static async Task<BindResult> Bind(string functionName, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
         {
+            process.VerifyNotDebuggingCoreDump();
+
             return EvalBindResult(await process.MICommandFactory.BreakInsert(functionName, condition, ResultClass.None), pbreak);
         }
 
         internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
         {
+            process.VerifyNotDebuggingCoreDump();
+
             string basename = System.IO.Path.GetFileName(documentName);     // get basename from Windows path
             return EvalBindResult(await process.MICommandFactory.BreakInsert(process.EscapePath(basename), line, condition, ResultClass.None), pbreak);
         }

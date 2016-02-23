@@ -186,4 +186,7 @@
   <data name="Failed_ExecCommandError" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
+  <data name="LoadingCoreDumpMessage" xml:space="preserve">
+    <value>Loading core dump {0}</value>
+  </data>
 </root>

@@ -37,6 +37,8 @@ namespace MICoreUnitTests
             Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecRun);
             Assert.Null(options.CustomLaunchSetupCommands);
             Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 0);
+            Assert.True(String.IsNullOrEmpty(options.CoreDumpPath));
+            Assert.False(options.IsCoreDump);
         }
 
         [Fact]
@@ -68,6 +70,8 @@ namespace MICoreUnitTests
             Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecRun);
             Assert.True(options.CustomLaunchSetupCommands != null && options.CustomLaunchSetupCommands.Count == 0);
             Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 0);
+            Assert.True(String.IsNullOrEmpty(options.CoreDumpPath));
+            Assert.False(options.IsCoreDump);
         }
 
         [Fact]

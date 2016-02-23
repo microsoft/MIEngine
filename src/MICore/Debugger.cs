@@ -225,8 +225,11 @@ namespace MICore
 
         protected virtual void OnStateChanged(string mode, string strresult)
         {
-            Results results = MIResults.ParseResultList(strresult);
+            this.OnStateChanged(mode, MIResults.ParseResultList(strresult));
+        }
 
+        protected void OnStateChanged(string mode, Results results)
+        {
             if (mode == "stopped")
             {
                 OnStopped(results);
@@ -297,7 +300,7 @@ namespace MICore
                 {
                     await item();
                 }
-                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
                 {
                     if (firstException != null)
                     {
@@ -430,11 +433,15 @@ namespace MICore
 
         public Task CmdStopAtMain()
         {
+            this.VerifyNotDebuggingCoreDump();
+
             return CmdAsync("-break-insert main", ResultClass.done);
         }
 
         public Task CmdStart()
         {
+            this.VerifyNotDebuggingCoreDump();
+
             return CmdAsync("-exec-run", ResultClass.running);
         }
 
@@ -459,6 +466,18 @@ namespace MICore
             else
             {
                 return false;
+            }
+        }
+
+        protected bool IsCoreDump
+        {
+            get
+            {
+                LocalLaunchOptions localOptions = this._launchOptions as LocalLaunchOptions;
+                if (null == localOptions)
+                    return false;
+
+                return localOptions.IsCoreDump;
             }
         }
 
@@ -518,6 +537,8 @@ namespace MICore
 
         public void CmdContinueAsync()
         {
+            this.VerifyNotDebuggingCoreDump();
+
             PostCommand("-exec-continue");
         }
 
@@ -1248,6 +1269,12 @@ namespace MICore
                 }
             }
             return value;
+        }
+
+        public void VerifyNotDebuggingCoreDump()
+        {
+            if (this.IsCoreDump)
+                throw new InvalidCoreDumpOperationException();
         }
     }
 }
