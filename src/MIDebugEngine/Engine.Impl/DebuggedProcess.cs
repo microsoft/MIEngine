@@ -617,16 +617,20 @@ namespace Microsoft.MIDebugEngine
 
             if (String.IsNullOrWhiteSpace(reason) && !_bEntrypointHit)
             {
-                // CLRDBG TODO: Try to verify this code path
                 _bEntrypointHit = true;
                 CmdContinueAsync();
                 FireDeviceAppLauncherResume();
+            }
+            else if (reason == "entry-point-hit")
+            {
+                _bEntrypointHit = true;
+                _callback.OnEntryPoint(thread);
             }
             else if (reason == "breakpoint-hit")
             {
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
-                
+
                 bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
