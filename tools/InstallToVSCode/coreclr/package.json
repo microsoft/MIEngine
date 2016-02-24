@@ -16,7 +16,8 @@
         "windows": {
           "program": "./debugAdapters/OpenDebugAD7.exe"
         },
-
+        "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+        
         "configurationAttributes": {
           "launch": {
             "required": [ "program", "cwd" ],
@@ -41,6 +42,94 @@
                 "type": "boolean",
                 "description": "If true, the debugger should stop at the entry point of the target.",
                 "default": false
+              },
+              "launchBrowser": {
+                "type": "object",
+                "description": "Describes options to launch a web browser as part of launch",
+                "default": {
+                  "enabled": true,
+                  "args": "${auto-detect-url}",
+                  "windows": {
+                    "command": "cmd.exe",
+                    "args": "/C start ${auto-detect-url}"
+                  },
+                  "osx": {
+                    "command": "open"
+                  },
+                  "linux": {
+                    "command": "xdg-open"  
+                  }
+                },
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Whether web browser launch is enabled",
+                    "default": true
+                  },
+                  "args": {
+                    "type": "string",
+                    "description": "The arguments to pass to the command to open the browser. Use ${auto-detect-url} to automatically use the address the server is listening to",
+                    "default": "${auto-detect-url}"
+                  },
+                  "osx": {
+                    "type": "object",
+                    "description": "OSX-specific web launch configuration options",
+                    "default": {
+                      "command": "open"
+                    },
+                    "properties": {
+                        "command": {
+                          "type": "string",
+                          "description": "The command to execute for launching the web browser",
+                          "default": "open"
+                        },
+                        "args": {
+                          "type": "string",
+                          "description": "The arguments to pass to the command to open the browser. Use ${auto-detect-url} to automatically use the address the server is listening to",
+                          "default": "${auto-detect-url}"
+                        }
+                    }
+                  },
+                  "linux": {
+                    "type": "object",
+                    "description": "Linux-specific web launch configuration options",
+                    "default": {
+                      "command": "xdg-open"
+                    },
+                    "properties": {
+                        "command": {
+                          "type": "string",
+                          "description": "The command to execute for launching the web browser",
+                          "default": "xdg-open"
+                        },
+                        "args": {
+                          "type": "string",
+                          "description": "The arguments to pass to the command to open the browser. Use ${auto-detect-url} to automatically use the address the server is listening to",
+                          "default": "${auto-detect-url}"
+                        }
+                    }  
+                  },
+                  "windows": {
+                    "type": "object",
+                    "description": "Windows-specific web launch configuration options",
+                    "default": {
+                      "command": "cmd.exe",
+                      "args": "/C start ${auto-detect-url}"
+                    },
+                    "properties": {
+                        "command": {
+                          "type": "string",
+                          "description": "The command to execute for launching the web browser",
+                          "default": "cmd.exe"
+                        },
+                        "args": {
+                          "type": "string",
+                          "description": "The arguments to pass to the command to open the browser. Use ${auto-detect-url} to automatically use the address the server is listening to",
+                          "default": "/C start ${auto-detect-url}"
+                        }
+                    }  
+                  }
+                }
               },
               // --- Begin common attributes. Copy these down to 'attach' if modified
               "sourceFileMap": {
@@ -99,7 +188,7 @@
 
         "initialConfigurations": [
           {
-            "name": ".NET Core Launch",
+            "name": ".NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -108,6 +197,31 @@
             "cwd": "${workspaceRoot}",
             "stopAtEntry": false,
             "sourceFileMap": { }
+          },
+          {
+            "name": ".NET Core Launch (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceRoot}/bin/Debug/dnxcore50/<My-Project-Name>",
+            "args": [ ],
+            "cwd": "${workspaceRoot}",
+            "stopAtEntry": false,
+            "sourceFileMap": { },
+            "launchBrowser": {
+              "enabled": true,
+              "args": "${auto-detect-url}",
+              "windows": {
+                "command": "cmd.exe",
+                "args": "/C start ${auto-detect-url}"
+              },              
+              "osx": {
+                "command": "open"  
+              },
+              "linux": {
+                "command": "xdg-open"  
+              }
+            }
           },
           {
             "name": ".NET Core Attach",
