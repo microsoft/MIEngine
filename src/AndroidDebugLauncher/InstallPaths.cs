@@ -36,13 +36,13 @@ namespace AndroidDebugLauncher
             }
             else
             {
-                result.SDKRoot = GetDirectoryFromRegistry(@"SOFTWARE\Android SDK Tools", "Path", checkBothBitnesses: true, externalProductName: LauncherResources.ProductName_NDK);
+                result.SDKRoot = GetDirectoryFromRegistry(@"SOFTWARE\Android SDK Tools", "Path", checkBothBitnesses: true, externalProductName: LauncherResources.ProductName_SDK);
             }
 
             string ndkRoot = launchOptions.NDKRoot;
             if (ndkRoot == null)
             {
-                ndkRoot = GetDirectoryFromRegistry(RegistryRoot.Value + @"\Setup\VS\SecondaryInstaller\AndroidNDK", "NDK_HOME", checkBothBitnesses: false, externalProductName: LauncherResources.ProductName_SDK);
+                ndkRoot = GetDirectoryFromRegistry(RegistryRoot.Value + @"\Setup\VS\SecondaryInstaller\AndroidNDK", "NDK_HOME", checkBothBitnesses: false, externalProductName: LauncherResources.ProductName_NDK);
             }
 
             string ndkReleaseVersionFile = Path.Combine(ndkRoot, "RELEASE.TXT");
