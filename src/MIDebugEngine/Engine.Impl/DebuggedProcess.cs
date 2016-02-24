@@ -604,94 +604,102 @@ namespace Microsoft.MIDebugEngine
 
             if (String.IsNullOrWhiteSpace(reason) && !_bEntrypointHit)
             {
-                // CLRDBG TODO: Try to verify this code path
                 _bEntrypointHit = true;
                 CmdContinueAsync();
                 FireDeviceAppLauncherResume();
             }
-            else if (reason == "breakpoint-hit")
+
+            switch (reason)
             {
-                string bkptno = results.Results.FindString("bkptno");
-                ulong addr = cxt.pc ?? 0;
-                
-                bool fContinue;
-                TupleValue frame = results.Results.TryFind<TupleValue>("frame");
-                AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
-                if (bkpt != null)
-                {
-                    List<object> bplist = new List<object>();
-                    bplist.AddRange(bkpt);
-                    _callback.OnBreakpoint(thread, bplist.AsReadOnly());
-                }
-                else if (!_bEntrypointHit)
-                {
+                case "entry-point-hit":
                     _bEntrypointHit = true;
                     _callback.OnEntryPoint(thread);
-                }
-                else
-                {
-                    if (fContinue)
+                    break;
+
+                case "breakpoint-hit":
+                    string bkptno = results.Results.FindString("bkptno");
+                    ulong addr = cxt.pc ?? 0;
+
+                    bool fContinue;
+                    TupleValue frame = results.Results.TryFind<TupleValue>("frame");
+                    AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
+                    if (bkpt != null)
                     {
-                        //we hit a bp pending deletion
-                        //post the CmdContinueAsync operation so it does not happen until we have deleted all the pending deletes
-                        CmdContinueAsync();
+                        List<object> bplist = new List<object>();
+                        bplist.AddRange(bkpt);
+                        _callback.OnBreakpoint(thread, bplist.AsReadOnly());
+                    }
+                    else if (!_bEntrypointHit)
+                    {
+                        _bEntrypointHit = true;
+                        _callback.OnEntryPoint(thread);
                     }
                     else
                     {
-                        // not one of our breakpoints, so stop with a message
-                        _callback.OnException(thread, "Unknown breakpoint", "", 0);
+                        if (fContinue)
+                        {
+                            //we hit a bp pending deletion
+                            //post the CmdContinueAsync operation so it does not happen until we have deleted all the pending deletes
+                            CmdContinueAsync();
+                        }
+                        else
+                        {
+                            // not one of our breakpoints, so stop with a message
+                            _callback.OnException(thread, "Unknown breakpoint", "", 0);
+                        }
                     }
-                }
-            }
-            else if (reason == "end-stepping-range" || reason == "function-finished")
-            {
-                _callback.OnStepComplete(thread);
-            }
-            else if (reason == "signal-received")
-            {
-                string name = results.Results.TryFindString("signal-name");
-                if ((name == "SIG32") || (name == "SIG33"))
-                {
-                    // we are going to ignore these (Sigma) signals for now
-                    CmdContinueAsync();
-                }
-                else if (MICommandFactory.IsAsyncBreakSignal(results.Results))
-                {
-                    _callback.OnAsyncBreakComplete(thread);
-                }
-                else
-                {
-                    uint code = 0;
-                    string sigName = results.Results.TryFindString("signal-name");
-                    code = results.Results.Contains("signal") ? results.Results.FindUint("signal") : 0;
-                    if (String.IsNullOrEmpty(sigName) && code != 0 && EngineUtils.SignalMap.Instance.ContainsValue(code))
-                    {
-                        sigName = EngineUtils.SignalMap.Instance.First((p) => p.Value == code).Key;
-                    }
-                    else if (!String.IsNullOrEmpty(sigName) && code == 0 && EngineUtils.SignalMap.Instance.ContainsKey(sigName))
-                    {
-                        code = EngineUtils.SignalMap.Instance[sigName];
-                    }
-                    _callback.OnException(thread, sigName, results.Results.TryFindString("signal-meaning"), code);
-                }
-            }
-            else if (reason == "exception-received")
-            {
-                string exceptionName = results.Results.TryFindString("exception-name");
-                if (string.IsNullOrEmpty(exceptionName))
-                    exceptionName = "Exception";
+                    break;
 
-                string description = results.Results.FindString("exception");
-                Guid? exceptionCategory;
-                ExceptionBreakpointState state;
-                MICommandFactory.DecodeExceptionReceivedProperties(results.Results, out exceptionCategory, out state);
+                case "end-stepping-range":
+                case "function-finished":
+                    _callback.OnStepComplete(thread);
+                    break;
 
-                _callback.OnException(thread, exceptionName, description, 0, exceptionCategory, state);
-            }
-            else
-            {
-                Debug.Fail("Unknown stopping reason");
-                _callback.OnException(thread, "Unknown", "Unknown stopping event", 0);
+                case "signal-received":
+                    string name = results.Results.TryFindString("signal-name");
+                    if ((name == "SIG32") || (name == "SIG33"))
+                    {
+                        // we are going to ignore these (Sigma) signals for now
+                        CmdContinueAsync();
+                    }
+                    else if (MICommandFactory.IsAsyncBreakSignal(results.Results))
+                    {
+                        _callback.OnAsyncBreakComplete(thread);
+                    }
+                    else
+                    {
+                        uint code = 0;
+                        string sigName = results.Results.TryFindString("signal-name");
+                        code = results.Results.Contains("signal") ? results.Results.FindUint("signal") : 0;
+                        if (String.IsNullOrEmpty(sigName) && code != 0 && EngineUtils.SignalMap.Instance.ContainsValue(code))
+                        {
+                            sigName = EngineUtils.SignalMap.Instance.First((p) => p.Value == code).Key;
+                        }
+                        else if (!String.IsNullOrEmpty(sigName) && code == 0 && EngineUtils.SignalMap.Instance.ContainsKey(sigName))
+                        {
+                            code = EngineUtils.SignalMap.Instance[sigName];
+                        }
+                        _callback.OnException(thread, sigName, results.Results.TryFindString("signal-meaning"), code);
+                    }
+                    break;
+
+                case "exception-received":
+                    string exceptionName = results.Results.TryFindString("exception-name");
+                    if (string.IsNullOrEmpty(exceptionName))
+                        exceptionName = "Exception";
+
+                    string description = results.Results.FindString("exception");
+                    Guid? exceptionCategory;
+                    ExceptionBreakpointState state;
+                    MICommandFactory.DecodeExceptionReceivedProperties(results.Results, out exceptionCategory, out state);
+
+                    _callback.OnException(thread, exceptionName, description, 0, exceptionCategory, state);
+                    break;
+
+                default:
+                    Debug.Fail("Unknown stopping reason");
+                    _callback.OnException(thread, "Unknown", "Unknown stopping event", 0);
+                    break;
             }
         }
 
