@@ -173,7 +173,9 @@ namespace Microsoft.MIDebugEngine
                     )
                 {
                     localTransport = new LocalLinuxTransport();
-                    _needTerminalReset = true;
+
+                    // Only need to clear terminal for linux local launch
+                    _needTerminalReset = (localLaunchOptions.ProcessId == 0);
                 }
                 else
                 {
