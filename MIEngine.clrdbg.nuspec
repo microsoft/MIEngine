@@ -9,10 +9,13 @@
     <description>MIEngine for use with clrdbg via VSCode</description>
     <releaseNotes />
     <copyright>Copyright 2015</copyright>
+    <contentFiles>
+        <files include="**\*" buildAction="None" copyToOutput="true" flatten="false" />
+    </contentFiles>
   </metadata>
   <files>
     <file src="Microsoft.MICore.dll" target="lib\dnxcore50\Microsoft.MICore.dll" />
     <file src="Microsoft.MIDebugEngine.dll" target="lib\dnxcore50\Microsoft.MIDebugEngine.dll" />
-    <file src="coreclr.ad7Engine.json" /><!--TODO: contentFiles -->
+    <file src="coreclr.ad7Engine.json" target="contentFiles\any\any" />
   </files>
 </package>
