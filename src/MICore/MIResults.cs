@@ -617,13 +617,13 @@ namespace MICore
                 return string.Empty;
             }
 
-            input = input.Trim();
-            if (input[0] != '\"')   // not a Cstring, just return the string
+            string cstr = input.Trim();
+            if (cstr[0] != '\"')   // not a Cstring, just return the string
             {
                 return input;
             }
             string rest;
-            var s = ParseCString(input, out rest);
+            var s = ParseCString(cstr, out rest);
             return s == null ? string.Empty : s.AsString;
         }
 
