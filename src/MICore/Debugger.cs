@@ -466,10 +466,16 @@ namespace MICore
         {
             await MICommandFactory.Terminate();
 
-            if (IsLocalGdbAttach())
+            return new Results(ResultClass.done);
+        }
+
+        public async Task<Results> CmdDetach()
+        {
+            if (ProcessState == ProcessState.Running)
             {
-                CmdExitAsync();
+                await CmdBreak();
             }
+            CmdExitAsync();
 
             return new Results(ResultClass.done);
         }

@@ -590,10 +590,7 @@ namespace Microsoft.MIDebugEngine
         {
             _breakpointManager.ClearBoundBreakpoints();
 
-            _pollThread.RunOperation(new Operation(delegate
-            {
-                _debuggedProcess.Detach();
-            }));
+            _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
 
             return Constants.S_OK;
         }
