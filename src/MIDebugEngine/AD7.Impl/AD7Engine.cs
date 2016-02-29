@@ -166,7 +166,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -572,13 +572,20 @@ namespace Microsoft.MIDebugEngine
             // VS Code currently isn't providing a thread Id in certain cases. Work around this by handling null values.
             AD7Thread thread = pThread as AD7Thread;
 
-            if (_pollThread.IsPollThread())
+            try
             {
-                _debuggedProcess.Continue(thread?.GetDebuggedThread());
+                if (_pollThread.IsPollThread())
+                {
+                    _debuggedProcess.Continue(thread?.GetDebuggedThread());
+                }
+                else
+                {
+                    _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+                }
             }
-            else
+            catch (InvalidCoreDumpOperationException)
             {
-                _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
             }
 
             return Constants.S_OK;
@@ -747,7 +754,14 @@ namespace Microsoft.MIDebugEngine
         {
             AD7Thread thread = (AD7Thread)pThread;
 
-            _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
+            try
+            {
+                _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
+            }
+            catch (InvalidCoreDumpOperationException)
+            {
+                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+            }
 
             return Constants.S_OK;
         }
@@ -777,7 +791,14 @@ namespace Microsoft.MIDebugEngine
         {
             AD7Thread thread = (AD7Thread)pThread;
 
-            _pollThread.RunOperation(() => _debuggedProcess.Execute(thread.GetDebuggedThread()));
+            try
+            {
+                _pollThread.RunOperation(() => _debuggedProcess.Execute(thread.GetDebuggedThread()));
+            }
+            catch (InvalidCoreDumpOperationException)
+            {
+                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+            }
 
             return Constants.S_OK;
         }

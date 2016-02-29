@@ -55,7 +55,7 @@ namespace MICore
         /// <summary>
         /// No command should be executed. This is useful if the target is already ready to go.
         /// </summary>
-        None
+        None,
     };
 
     /// <summary>
@@ -148,6 +148,8 @@ namespace MICore
     /// </summary>
     public sealed class LocalLaunchOptions : LaunchOptions
     {
+        private string _coreDumpPath;
+
         private const int DefaultLaunchTimeout = 10 * 1000; // 10 seconds
 
         public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, int processId, Xml.LaunchOptions.EnvironmentEntry[] environmentEntries)
@@ -184,8 +186,21 @@ namespace MICore
                 {
                     FilterStdout = true;    // no pattern source specified, use stdout
                 }
-                ServerLaunchTimeout = source.ServerLaunchTimeoutSpecified ? source.ServerLaunchTimeout : DefaultLaunchTimeout; 
+                ServerLaunchTimeout = source.ServerLaunchTimeoutSpecified ? source.ServerLaunchTimeout : DefaultLaunchTimeout;
             }
+        }
+
+        /// <summary>
+        /// Checks that the path is valid, exists, and is rooted.
+        /// </summary>
+        private static bool CheckPath(string path)
+        {
+            return path.IndexOfAny(Path.GetInvalidPathChars()) < 0 && File.Exists(path) && Path.IsPathRooted(path);
+        }
+
+        public bool IsCoreDump
+        {
+            get { return !String.IsNullOrEmpty(this.CoreDumpPath); }
         }
 
         public bool ShouldStartServer()
@@ -202,6 +217,7 @@ namespace MICore
                 source.Environment);
             options.InitializeCommonOptions(source);
             options.InitializeServerOptions(source);
+            options.CoreDumpPath = source.CoreDumpPath;
 
             return options;
         }
@@ -232,7 +248,7 @@ namespace MICore
             }
             set
             {
-                if (string.IsNullOrWhiteSpace(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0 || !File.Exists(value) || !Path.IsPathRooted(value))
+                if (String.IsNullOrEmpty(value) || !LocalLaunchOptions.CheckPath(value))
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, value));
 
                 base.ExePath = value;
@@ -273,6 +289,25 @@ namespace MICore
         /// [Optional] Log strings written to stderr and examine for server started pattern
         /// </summary>
         public int ServerLaunchTimeout { get; private set; }
+
+        /// <summary>
+        /// [Optional] Path to a core dump file for the specified executable.
+        /// </summary>
+        public string CoreDumpPath
+        {
+            get
+            {
+                return _coreDumpPath;
+            }
+            private set
+            {
+                // CoreDumpPath is allowed to be null/empty
+                if (!String.IsNullOrEmpty(value) && !LocalLaunchOptions.CheckPath(value))
+                    throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, value));
+
+                _coreDumpPath = value;
+            }
+        }
     }
 
     public sealed class SourceRoot
@@ -803,7 +838,7 @@ namespace MICore
                     deviceAppLauncher.Initialize(configStore, eventCallback);
                     deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
                 }
-                catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
+                catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
                 {
                     throw new InvalidLaunchOptionsException(e.Message);
                 }

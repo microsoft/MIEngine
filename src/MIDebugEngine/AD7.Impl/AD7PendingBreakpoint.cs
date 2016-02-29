@@ -175,6 +175,17 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
+            catch (AggregateException e)
+            {
+                if (e.GetBaseException() is InvalidCoreDumpOperationException)
+                    return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+                else
+                    return EngineUtils.UnexpectedException(e);
+            }
+            catch (InvalidCoreDumpOperationException)
+            {
+                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+            }
             catch (Exception e)
             {
                 return EngineUtils.UnexpectedException(e);
@@ -221,7 +232,6 @@ namespace Microsoft.MIDebugEngine
                     {
                         condition = _bpRequestInfo.bpCondition.bstrCondition;
                     }
-
                 }
                 PendingBreakpoint.BindResult bindResult;
                 // Bind all breakpoints that match this source and line number.

@@ -160,45 +160,38 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions is LocalLaunchOptions)
             {
                 LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
+
+                ITransport localTransport = null;
+                // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
+                // Do not use local linux transport for core dump debugging as no special handling is necessary (no new terminal is involved).
+                // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
+                // during debuggee launch
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
                     _launchOptions.DebuggerMIMode == MIMode.Gdb &&
-                    String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress)
+                    String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) &&
+                    !localLaunchOptions.IsCoreDump
                     )
                 {
+                    localTransport = new LocalLinuxTransport();
                     _needTerminalReset = true;
-
-                    // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
-                    // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
-                    // during debuggee launch
-                    if (localLaunchOptions.ShouldStartServer())
-                    {
-                        this.Init(new MICore.ClientServerTransport
-                            (
-                                        new LocalLinuxTransport(),
-                                        new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
-                                  ), _launchOptions
-                            );
-                    }
-                    else
-                    {
-                        this.Init(new MICore.LocalLinuxTransport(), _launchOptions);
-                    }
                 }
                 else
                 {
-                    if (localLaunchOptions.ShouldStartServer())
-                    {
-                        this.Init(new MICore.ClientServerTransport
-                            (
-                                        new LocalTransport(),
-                                        new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
-                                  ), _launchOptions
-                            );
-                    }
-                    else
-                    {
-                        this.Init(new MICore.LocalTransport(), _launchOptions);
-                    }
+                    localTransport = new LocalTransport();
+                }
+
+                if (localLaunchOptions.ShouldStartServer())
+                {
+                    this.Init(
+                        new MICore.ClientServerTransport(
+                            localTransport,
+                            new ServerTransport(killOnClose: true, filterStdout: localLaunchOptions.FilterStdout, filterStderr: localLaunchOptions.FilterStderr)
+                        ),
+                        _launchOptions);
+                }
+                else
+                {
+                    this.Init(localTransport, _launchOptions);
                 }
             }
             else if (_launchOptions is PipeLaunchOptions)
@@ -339,7 +332,11 @@ namespace Microsoft.MIDebugEngine
                 }
                 if (MICommandFactory.SupportsStopOnDynamicLibLoad())
                 {
-                    CmdContinueAsync();
+                    // Do not continue if debugging core dump
+                    if (!this.IsCoreDump)
+                    {
+                        CmdContinueAsync();
+                    }
                 }
             };
 
@@ -485,7 +482,11 @@ namespace Microsoft.MIDebugEngine
 
             if (this.MICommandFactory.SupportsStopOnDynamicLibLoad())
             {
-                commands.Add(new LaunchCommand("-gdb-set stop-on-solib-events 1"));
+                // Do not stop on shared library load/unload events while debugging core dump
+                if (!this.IsCoreDump)
+                {
+                    commands.Add(new LaunchCommand("-gdb-set stop-on-solib-events 1"));
+                }
             }
 
             // Custom launch options replace the built in launch steps. This is used on iOS
@@ -496,10 +497,20 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                if (_launchOptions is LocalLaunchOptions && ((LocalLaunchOptions)_launchOptions).ProcessId != 0)
+                LocalLaunchOptions localLaunchOptions = _launchOptions as LocalLaunchOptions;
+                if (this.IsCoreDump)
+                {
+                    // Add executable information
+                    this.AddExecutablePathCommand(commands);
+
+                    // Add core dump information
+                    string coreDumpCommand = String.Concat("-target-select core ", EscapePath(localLaunchOptions.CoreDumpPath));
+                    string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, localLaunchOptions.CoreDumpPath);
+                    commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
+                }
+                else if (null != localLaunchOptions && localLaunchOptions.ProcessId != 0)
                 {
                     // This is an attach
-                    LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
 
                     // check for remote
                     string destination = localLaunchOptions.MIDebuggerServerAddress;
@@ -526,13 +537,12 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
                     }
 
-                    string exe = EscapePath(_launchOptions.ExePath);
-                    commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath)));
+                    this.AddExecutablePathCommand(commands);
                     commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
 
-                    if (_launchOptions is LocalLaunchOptions)
+                    if (null != localLaunchOptions)
                     {
-                        string destination = ((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress;
+                        string destination = localLaunchOptions.MIDebuggerServerAddress;
                         if (!string.IsNullOrEmpty(destination))
                         {
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
@@ -542,6 +552,12 @@ namespace Microsoft.MIDebugEngine
             }
 
             return commands;
+        }
+
+        private void AddExecutablePathCommand(IList<LaunchCommand> commands)
+        {
+            string exe = EscapePath(_launchOptions.ExePath);
+            commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath)));
         }
 
         public override void FlushBreakStateData()
@@ -841,6 +857,8 @@ namespace Microsoft.MIDebugEngine
 
         public async Task Step(int threadId, enum_STEPKIND kind, enum_STEPUNIT unit)
         {
+            this.VerifyNotDebuggingCoreDump();
+
             await ExceptionManager.EnsureSettingsUpdated();
 
             if ((unit == enum_STEPUNIT.STEP_LINE) || (unit == enum_STEPUNIT.STEP_STATEMENT))
@@ -907,6 +925,11 @@ namespace Microsoft.MIDebugEngine
                 await HandleBreakModeEvent(_initialBreakArgs);
                 _initialBreakArgs = null;
             }
+            else if (this.IsCoreDump)
+            {
+                // Set initial state of debug engine to stopped with emulated results
+                this.OnStateChanged("stopped", await this.GenerateStoppedRecordResults());
+            }
             else
             {
                 bool attach = false;
@@ -948,6 +971,36 @@ namespace Microsoft.MIDebugEngine
             {
                 _launchOptions.DeviceAppLauncher.OnResume();
             }
+        }
+
+        /// <summary>
+        /// Generates results that represent an emulated MI stopped record.
+        /// </summary>
+        private async Task<Results> GenerateStoppedRecordResults()
+        {
+            Results threadInfo = await this.MICommandFactory.ThreadInfo();
+
+            // Get the current thread identifier
+            string currentThreadId = threadInfo.FindString("current-thread-id");
+
+            // Get list of all threads in the process
+            ValueListValue threads = threadInfo.Find<ValueListValue>("threads");
+
+            // Find the thread that is the current thread, which should exist since there is a current thread id value
+            TupleValue currentThread = threads.AsArray<TupleValue>().FirstOrDefault(tv => currentThreadId.Equals(tv.FindString("id"), StringComparison.Ordinal));
+            Debug.Assert(null != currentThread, String.Concat("Unable to find thread with ID ", currentThreadId, "."));
+            if (null == currentThread)
+                throw new UnexpectedMIResultException(this.MICommandFactory.Name, "-thread-info", null);
+
+            // Get the frame of the current thread
+            TupleValue currentFrame = currentThread.Find<TupleValue>("frame");
+
+            // Create result that emulates a signal received from the debuggee with the frame and thread information
+            List<NamedResultValue> values = new List<NamedResultValue>();
+            values.Add(new NamedResultValue("reason", new ConstValue("signal-received")));
+            values.Add(new NamedResultValue("frame", currentFrame.Subset("addr", "func", "args", "file", "fullname", "line")));
+            values.Add(new NamedResultValue("thread-id", new ConstValue(currentThreadId)));
+            return new Results(ResultClass.done, values);
         }
 
         public void Terminate()

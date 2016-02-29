@@ -256,6 +256,11 @@
               <xs:documentation>How long, in milliseconds, to wait for the DebugServer executable to start and ServerStarted pattern to be found.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="CoreDumpPath" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>Path to a core dump file for the specified executable.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
