@@ -71,6 +71,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Both &apos;{0}&apos; and &apos;{1}&apos; cannot be specified at the same time..
+        /// </summary>
+        public static string Error_CannotSpecifyBoth {
+            get {
+                return ResourceManager.GetString("Error_CannotSpecifyBoth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal error in MIEngine. Exception of type &apos;{0}&apos; was thrown.
         ///
         ///{1}.

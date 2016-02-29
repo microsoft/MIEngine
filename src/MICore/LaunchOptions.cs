@@ -219,6 +219,10 @@ namespace MICore
             options.InitializeServerOptions(source);
             options.CoreDumpPath = source.CoreDumpPath;
 
+            // Ensure that CoreDumpPath and ProcessId are not specified at the same time
+            if (!String.IsNullOrEmpty(source.CoreDumpPath) && source.ProcessId != 0)
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
+
             return options;
         }
 
