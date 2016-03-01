@@ -149,20 +149,7 @@ namespace Microsoft.MIDebugEngine
                         bindTask = _engine.DebuggedProcess.AddInternalBreakAction(this.BindAsync);
                     });
 
-                    bindTask.Wait(250); //wait a quarter of a second
-
-                    if (!bindTask.IsCompleted)
-                    {
-                        //send a low severity warning bp. This will allow the UI to respond quickly, and if the mi debugger doesn't end up binding, this warning will get 
-                        //replaced by the real mi debugger error text
-                        _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.LongBind, enum_BP_ERROR_TYPE.BPET_SEV_LOW | enum_BP_ERROR_TYPE.BPET_TYPE_WARNING);
-                        _engine.Callback.OnBreakpointError(_BPError);
-                        return Constants.S_FALSE;
-                    }
-                    else
-                    {
-                        return Constants.S_OK;
-                    }
+                    return Constants.S_OK;
                 }
                 else
                 {
