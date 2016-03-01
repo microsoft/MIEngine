@@ -534,7 +534,16 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 _pollThread.RunOperation(() => _debuggedProcess.CmdTerminate());
-                _debuggedProcess.Terminate();
+
+                if (_debuggedProcess.MICommandFactory.Mode != MIMode.Clrdbg)
+                {
+                    _debuggedProcess.Terminate();
+                }
+                else
+                {
+                    // Clrdbg issues a proper exit event on CmdTerminate call, don't call _debuggedProcess.Terminate() which 
+                    // simply sends a fake exit event that overrides the exit code of the real one
+                }
             }
             catch (ObjectDisposedException)
             {
