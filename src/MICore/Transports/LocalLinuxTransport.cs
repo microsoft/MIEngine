@@ -61,7 +61,7 @@ namespace MICore
             terminalProcess.StartInfo.FileName = !isRoot ? terminalPath : sudoPath;
 
             string argumentString = string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                    "--title DebuggerTerminal -x bash -c \"cd {0}; DbgTerm=`tty`; trap 'rm {2}; rm {3}' EXIT; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3};",
+                    "--title DebuggerTerminal -x bash -c \"cd {0}; DbgTerm=`tty`; trap 'rm {2}; rm {3}' EXIT; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3};\"",
                     debuggeeDir,
                     localOptions.MIDebuggerPath,
                     gdbStdInName,
