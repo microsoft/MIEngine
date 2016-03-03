@@ -404,13 +404,35 @@ namespace MICore
             return FindAll(name).OfType<T>().ToArray();
         }
 
-        public TupleValue Subset(params string[] names)
+        /// <summary>
+        /// Creates a new TupleValue with a subset of values from this TupleValue.
+        /// </summary>
+        /// <param name="requiredNames">The list of names that must be added to the TupleValue.</param>
+        /// <param name="optionalNames">The list of names that will be added to the TupleValue if they exist in this TupleValue.</param>
+        public TupleValue Subset(IEnumerable<string> requiredNames, IEnumerable<string> optionalNames = null)
         {
             List<NamedResultValue> values = new List<NamedResultValue>();
-            foreach (string name in names)
+            
+            // Iterate the required list and add the values.
+            // Will throw if a name cannot be found.
+            foreach (string name in requiredNames)
             {
                 values.Add(new NamedResultValue(name, this.Find(name)));
             }
+
+            // Iterate the optional list and add the values of the name exists.
+            if (null != optionalNames)
+            {
+                foreach (string name in optionalNames)
+                {
+                    ResultValue value;
+                    if (this.TryFind(name, out value))
+                    {
+                        values.Add(new NamedResultValue(name, value));
+                    }
+                }
+            }
+
             return new TupleValue(values);
         }
     }
