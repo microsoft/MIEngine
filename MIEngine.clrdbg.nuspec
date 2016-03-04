@@ -5,10 +5,10 @@
     <version>1.0</version>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
+    <licenseUrl>https://raw.githubusercontent.com/Microsoft/MIEngine/ea6860a7ef1b111864e6a7d0bc2e82c23f25b6fe/PackageLicenses/license-prerelease.txt</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MIEngine for use with clrdbg via VSCode</description>
-    <releaseNotes />
-    <copyright>Copyright 2015</copyright>
+    <copyright>© Microsoft Corporation.  All rights reserved.</copyright>
     <contentFiles>
         <files include="**\*" buildAction="None" copyToOutput="true" flatten="false" />
     </contentFiles>
