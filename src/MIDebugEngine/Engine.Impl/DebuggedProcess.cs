@@ -661,6 +661,10 @@ namespace Microsoft.MIDebugEngine
                     _bEntrypointHit = true;
                     _callback.OnEntryPoint(thread);
                 }
+                else if (bkptno == "<EMBEDDED>")
+                {
+                    _callback.OnBreakpoint(thread, new ReadOnlyCollection<object>(new AD7BoundBreakpoint[] { }));
+                }
                 else
                 {
                     if (fContinue)
