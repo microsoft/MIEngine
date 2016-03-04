@@ -185,13 +185,13 @@ namespace Microsoft.MIDebugEngine
             {
                 v = v.Substring(0, i);
             }
-            uint addr;
-            if (!UInt32.TryParse(v, System.Globalization.NumberStyles.Any, null, out addr))
+            ulong addr;
+            if (!UInt64.TryParse(v, System.Globalization.NumberStyles.Any, null, out addr))
             {
                 if (v.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
                 {
                     v = v.Substring(2);
-                    if (!UInt32.TryParse(v, System.Globalization.NumberStyles.AllowHexSpecifier, null, out addr))
+                    if (!UInt64.TryParse(v, System.Globalization.NumberStyles.AllowHexSpecifier, null, out addr))
                     {
                         return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
                     }
