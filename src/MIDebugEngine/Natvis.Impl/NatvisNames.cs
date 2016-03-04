@@ -144,7 +144,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// </summary>
         /// <param name="fullyQualifiedName"></param>
         /// <returns></returns>
-        public static TypeName Parse(string fullyQualifiedName)
+        public static TypeName Parse(string fullyQualifiedName, Logger logger)
         {
             if (String.IsNullOrEmpty(fullyQualifiedName))
                 return null;
@@ -152,7 +152,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             TypeName t = MatchTypeName(fullyQualifiedName.Trim(), out rest);
             if (!String.IsNullOrWhiteSpace(rest))
             {
-                Logger.WriteLine("Natvis failed to parse typename: " + fullyQualifiedName);
+                logger.WriteLine("Natvis failed to parse typename: " + fullyQualifiedName);
                 return null;
             }
             return t;

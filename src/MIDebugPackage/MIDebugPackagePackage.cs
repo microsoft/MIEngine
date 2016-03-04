@@ -226,12 +226,29 @@ namespace Microsoft.MIDebugPackage
         private async void MIDebugExecAsync(string command)
         {
             var commandWindow = (IVsCommandWindow)GetService(typeof(SVsCommandWindow));
+            bool atBreak = false;
+            var debugger = GetService(typeof(SVsShellDebugger)) as IVsDebugger;
+            if (debugger != null)
+            {
+                DBGMODE[] mode = new DBGMODE[1];
+                if (debugger.GetMode(mode) == MIDebugEngine.Constants.S_OK)
+                {
+                    atBreak = mode[0] == DBGMODE.DBGMODE_Break;
+                }
+            }
 
             string results = null;
 
             try
             {
-                results = await MIDebugCommandDispatcher.ExecuteCommand(command);
+                if (atBreak)
+                {
+                    commandWindow.ExecuteCommand(String.Format(CultureInfo.InvariantCulture, "Debug.EvaluateStatement -exec {0}", command));
+                }
+                else
+                {
+                    results = await MIDebugCommandDispatcher.ExecuteCommand(command);
+                }
             }
             catch (Exception e)
             {
@@ -249,7 +266,7 @@ namespace Microsoft.MIDebugPackage
                 return;
             }
 
-            if (results.Length > 0)
+            if (results != null && results.Length > 0)
             {
                 // Make sure that we are printing whole lines
                 if (!results.EndsWith("\n") && !results.EndsWith("\r\n"))

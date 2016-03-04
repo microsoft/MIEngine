@@ -16,20 +16,22 @@ namespace MICoreUnitTests
 
             Assert.Throws<ArgumentNullException>(delegate
             {
-                MIResults.ParseCString(miString);
+                MIResults r = new MIResults(null);
+                r.ParseCString(miString);
             });
         }
 
         [Fact]
         public void TestParseCStringEmpty()
         {
+            MIResults r = new MIResults(null);
             string miString = ""; // input = <empty>
-            string result = MIResults.ParseCString(miString);
+            string result = r.ParseCString(miString);
 
             Assert.Equal(String.Empty, result);
 
             miString = "\"\""; // input = ""
-            result = MIResults.ParseCString(miString);
+            result = r.ParseCString(miString);
 
             Assert.Equal(String.Empty, result);
         }
@@ -37,32 +39,34 @@ namespace MICoreUnitTests
         [Fact]
         public void TestParseCString()
         {
+            MIResults r = new MIResults(null);
             string miString = "\"hello\""; //input = "hello"
-            string result = MIResults.ParseCString(miString);
+            string result = r.ParseCString(miString);
             Assert.Equal("hello", result);
 
             miString = "\"\\tHello\\n\""; //input = "\tHello\n"
-            result = MIResults.ParseCString(miString);
+            result = r.ParseCString(miString);
             Assert.Equal("\tHello\n", result);
 
             miString = "\"    \""; //input = <four spaces>
-            result = MIResults.ParseCString(miString);
+            result = r.ParseCString(miString);
             Assert.Equal("    ", result);
 
             miString = "    \"Hello\"     "; //input = <leading spaces>"Hello"<trailing spaces>
-            result = MIResults.ParseCString(miString);
+            result = r.ParseCString(miString);
             Assert.Equal("Hello", result);
 
             miString = "\"\"\"\"\"\""; //input = """"""
-            result = MIResults.ParseCString(miString);
+            result = r.ParseCString(miString);
             Assert.Equal("\"\"", result);
         }
 
         [Fact]
         public void TestParseResultListConstValues()
         {
+            MIResults r = new MIResults(null);
             string miString = @"name=""value"""; // name="value"
-            Results results = MIResults.ParseResultList(miString);
+            Results results = r.ParseResultList(miString);
 
             Assert.Equal(1, results.Content.Length);
             Assert.Equal("name", results.Content[0].Name);
@@ -71,7 +75,7 @@ namespace MICoreUnitTests
             Assert.Equal("value", results.FindString("name"));
 
             miString = @"name1=""value1"",name2=""value2"""; // name1="value1",name2="value2"
-            results = MIResults.ParseResultList(miString);
+            results = r.ParseResultList(miString);
 
             Assert.Equal(2, results.Content.Length);
             Assert.Equal("name1", results.Content[0].Name);

@@ -19,7 +19,11 @@ namespace MICore
         private bool _bQuit;
         protected StreamReader _reader;
         protected StreamWriter _writer;
-        bool _filterStdout;
+        private bool _filterStdout;
+        protected Logger Logger
+        {
+            get; private set;
+        }
 
         protected StreamTransport()
         { }
@@ -32,8 +36,9 @@ namespace MICore
         public abstract void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer);
         protected virtual string GetThreadName() { return "MI.StreamTransport"; }
 
-        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options)
+        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
         {
+            Logger = logger;
             _callback = transportCallback;
             InitStreams(options, out _reader, out _writer);
             StartThread(GetThreadName());
@@ -62,7 +67,7 @@ namespace MICore
                     break;
 
                 line = line.TrimEnd();
-                Logger.WriteLine("->" + line);
+                Logger?.WriteLine("->" + line);
 
                 try
                 {
@@ -100,7 +105,7 @@ namespace MICore
         }
         protected void Echo(string cmd)
         {
-            Logger.WriteLine("<-" + cmd);
+            Logger?.WriteLine("<-" + cmd);
             _writer.WriteLine(cmd);
             _writer.Flush();
         }

@@ -40,6 +40,7 @@ namespace AndroidDebugLauncher
 
         private const string LogcatServiceMessage_SourceId = "1CED0608-638C-4B00-A1D2-CE56B1B672FA";
         private const int LogcatServiceMessage_NewProcess = 0;
+        private MICore.Logger Logger { get; set; }
 
         void IPlatformAppLauncher.Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback)
         {
@@ -50,6 +51,7 @@ namespace AndroidDebugLauncher
 
             _eventCallback = eventCallback;
             RegistryRoot.Set(configStore.RegistryRoot);
+            Logger = MICore.Logger.EnsureInitialized(configStore);
         }
 
         void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
@@ -174,7 +176,7 @@ namespace AndroidDebugLauncher
 
                 actions.Add(new NamedAction(LauncherResources.Step_ResolveInstallPaths, () =>
                 {
-                    _installPaths = InstallPaths.Resolve(token, _launchOptions);
+                    _installPaths = InstallPaths.Resolve(token, _launchOptions, Logger);
                 }));
 
                 actions.Add(new NamedAction(LauncherResources.Step_ConnectToDevice, () =>
@@ -806,7 +808,7 @@ namespace AndroidDebugLauncher
                     }
                     catch (JDbg.JdwpException e)
                     {
-                        MICore.Logger.WriteLine("JdwpException: {0}", e.Message);
+                        Logger.WriteLine("JdwpException: {0}", e.Message);
 
                         string message = LauncherResources.Warning_JDbgResumeFailure;
 

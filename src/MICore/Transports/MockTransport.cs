@@ -33,7 +33,7 @@ namespace MICore
             _filename = logfilename;
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
         {
             _bQuit = false;
             _callback = transportCallback;
