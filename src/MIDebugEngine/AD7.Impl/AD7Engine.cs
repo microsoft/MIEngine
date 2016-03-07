@@ -52,6 +52,8 @@ namespace Microsoft.MIDebugEngine
 
         private HostConfigurationStore _configStore;
 
+        public Logger Logger { private set; get; }
+
         private IDebugSettingsCallback110 _settingsCallback;
 
         public AD7Engine()
@@ -135,7 +137,7 @@ namespace Microsoft.MIDebugEngine
                 if (_pollThread == null)
                 {
                     // We are being asked to debug a process when we currently aren't debugging anything
-                    _pollThread = new WorkerThread();
+                    _pollThread = new WorkerThread(Logger);
 
                     _engineCallback = new EngineCallback(this, ad7Callback);
 
@@ -166,7 +168,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting:true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -347,7 +349,7 @@ namespace Microsoft.MIDebugEngine
         int IDebugEngine2.SetRegistryRoot(string registryRoot)
         {
             _configStore = new HostConfigurationStore(registryRoot, EngineConstants.EngineId);
-            Logger.EnsureInitialized(_configStore);
+            Logger = Logger.EnsureInitialized(_configStore);
             return Constants.S_OK;
         }
 
@@ -396,10 +398,10 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 // Note: LaunchOptions.GetInstance can be an expensive operation and may push a wait message loop
-                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, _engineCallback, TargetEngine.Native);
+                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, _engineCallback, TargetEngine.Native, Logger);
 
                 // We are being asked to debug a process when we currently aren't debugging anything
-                _pollThread = new WorkerThread();
+                _pollThread = new WorkerThread(Logger);
                 var cancellationTokenSource = new CancellationTokenSource();
 
                 using (cancellationTokenSource)
@@ -430,7 +432,7 @@ namespace Microsoft.MIDebugEngine
 
                 return Constants.S_OK;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
                 exception = e;
                 // Return from the catch block so that we can let the exception unwind - the stack can get kind of big
@@ -511,7 +513,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
                 return EngineUtils.UnexpectedException(e);
             }

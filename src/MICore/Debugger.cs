@@ -41,6 +41,7 @@ namespace MICore
         public event EventHandler<ResultEventArgs> TelemetryEvent;
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
+        private MIResults _miResults;
 
         public virtual void FlushBreakStateData()
         {
@@ -58,6 +59,7 @@ namespace MICore
         public bool Is64BitArch { get; private set; }
         public CommandLock CommandLock { get { return _commandLock; } }
         public MICommandFactory MICommandFactory { get; protected set; }
+        public Logger Logger { private set; get; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         protected readonly LaunchOptions _launchOptions;
@@ -112,10 +114,12 @@ namespace MICore
         // The key is the thread group, the value is the pid
         private Dictionary<string, int> _debuggeePids;
 
-        public Debugger(LaunchOptions launchOptions)
+        public Debugger(LaunchOptions launchOptions, Logger logger)
         {
             _launchOptions = launchOptions;
             _debuggeePids = new Dictionary<string, int>();
+            Logger = logger;
+            _miResults = new MIResults(logger);
         }
 
         private void RetryBreak(object o)
@@ -225,7 +229,7 @@ namespace MICore
 
         protected virtual void OnStateChanged(string mode, string strresult)
         {
-            this.OnStateChanged(mode, MIResults.ParseResultList(strresult));
+            this.OnStateChanged(mode, _miResults.ParseResultList(strresult));
         }
 
         protected void OnStateChanged(string mode, Results results)
@@ -300,7 +304,7 @@ namespace MICore
                 {
                     await item();
                 }
-                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting:true))
                 {
                     if (firstException != null)
                     {
@@ -344,7 +348,7 @@ namespace MICore
             _transport = transport;
             FlushBreakStateData();
 
-            _transport.Init(this, options);
+            _transport.Init(this, options, Logger);
 
             switch (options.TargetArchitecture)
             {
@@ -904,7 +908,7 @@ namespace MICore
                         }
                         if (waitingOperation != null)
                         {
-                            Results results = MIResults.ParseCommandOutput(noprefix);
+                            Results results = _miResults.ParseCommandOutput(noprefix);
                             Logger.WriteLine(id + ": elapsed time " + (int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds);
                             waitingOperation.OnComplete(results, this.MICommandFactory);
                             return;
@@ -962,7 +966,7 @@ namespace MICore
         {
             uint id = token != null ? uint.Parse(token, CultureInfo.InvariantCulture) : 0;
             _lastResult = cmd;
-            Results results = MIResults.ParseCommandOutput(cmd);
+            Results results = _miResults.ParseCommandOutput(cmd);
 
             if (results.ResultClass == ResultClass.done)
             {
@@ -986,7 +990,7 @@ namespace MICore
 
         private void OnDebuggeeOutput(string cmd)
         {
-            string decodedOutput = MIResults.ParseCString(cmd);
+            string decodedOutput = _miResults.ParseCString(cmd);
 
             if (_consoleCommandOutput == null)
             {
@@ -1017,7 +1021,7 @@ namespace MICore
             }
             else
             {
-                string decodedOutput = MIResults.ParseCString(cmd);
+                string decodedOutput = _miResults.ParseCString(cmd);
                 _consoleCommandOutput.Append(decodedOutput);
             }
         }
@@ -1026,12 +1030,12 @@ namespace MICore
         {
             if (cmd.StartsWith("stopped,", StringComparison.Ordinal))
             {
-                string status = MIResults.ParseCString(cmd.Substring(8));
+                string status = _miResults.ParseCString(cmd.Substring(8));
                 OnStateChanged("stopped", status);
             }
             else if (cmd.StartsWith("running,", StringComparison.Ordinal))
             {
-                string status = MIResults.ParseCString(cmd.Substring(8));
+                string status = _miResults.ParseCString(cmd.Substring(8));
                 OnStateChanged("running", status);
             }
             else
@@ -1052,7 +1056,7 @@ namespace MICore
             }
             else if (cmd.StartsWith("breakpoint-modified,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring(20));
+                results = _miResults.ParseResultList(cmd.Substring(20));
                 if (BreakChangeEvent != null)
                 {
                     BreakChangeEvent(this, new ResultEventArgs(results));
@@ -1060,28 +1064,28 @@ namespace MICore
             }
             else if (cmd.StartsWith("thread-group-started,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring("thread-group-started,".Length));
+                results = _miResults.ParseResultList(cmd.Substring("thread-group-started,".Length));
                 HandleThreadGroupStarted(results);
             }
             else if (cmd.StartsWith("thread-group-exited,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring("thread-group-exited,".Length));
+                results = _miResults.ParseResultList(cmd.Substring("thread-group-exited,".Length));
                 HandleThreadGroupExited(results);
             }
             else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring("thread-created,".Length));
+                results = _miResults.ParseResultList(cmd.Substring("thread-created,".Length));
                 ThreadCreatedEvent(this, new ResultEventArgs(results, 0));
             }
             else if (cmd.StartsWith("thread-exited,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring("thread-exited,".Length));
+                results = _miResults.ParseResultList(cmd.Substring("thread-exited,".Length));
                 ThreadExitedEvent(this, new ResultEventArgs(results, 0));
             }
             // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
             else if (cmd.StartsWith("message,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring("message,".Length));
+                results = _miResults.ParseResultList(cmd.Substring("message,".Length));
                 if (this.MessageEvent != null)
                 {
                     this.MessageEvent(this, new ResultEventArgs(results));
@@ -1089,7 +1093,7 @@ namespace MICore
             }
             else if (cmd.StartsWith("telemetry,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring("telemetry,".Length));
+                results = _miResults.ParseResultList(cmd.Substring("telemetry,".Length));
                 if (this.TelemetryEvent != null)
                 {
                     this.TelemetryEvent(this, new ResultEventArgs(results));

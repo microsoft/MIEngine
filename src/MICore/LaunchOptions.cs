@@ -528,7 +528,7 @@ namespace MICore
             }
         }
 
-        public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
+        public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
         {
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
@@ -536,7 +536,7 @@ namespace MICore
             if (string.IsNullOrWhiteSpace(options))
                 throw new InvalidLaunchOptionsException(MICoreResources.Error_StringIsNullOrEmpty);
 
-            Logger.WriteTextBlock("LaunchOptions", options);
+            logger?.WriteTextBlock("LaunchOptions", options);
 
             LaunchOptions launchOptions = null;
             Guid clsidLauncher = Guid.Empty;
@@ -607,7 +607,7 @@ namespace MICore
 
             if (clsidLauncher != Guid.Empty)
             {
-                launchOptions = ExecuteLauncher(configStore, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine);
+                launchOptions = ExecuteLauncher(configStore, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
             }
 
             if (targetEngine == TargetEngine.Native)
@@ -825,7 +825,7 @@ namespace MICore
             return attributeValue;
         }
 
-        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
+        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, Guid clsidLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
         {
             var deviceAppLauncher = (IPlatformAppLauncher)HostLoader.VsCoCreateManagedObject(configStore, clsidLauncher);
             if (deviceAppLauncher == null)
@@ -842,7 +842,7 @@ namespace MICore
                     deviceAppLauncher.Initialize(configStore, eventCallback);
                     deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
                 }
-                catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+                catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, logger, reportOnlyCorrupting: true))
                 {
                     throw new InvalidLaunchOptionsException(e.Message);
                 }

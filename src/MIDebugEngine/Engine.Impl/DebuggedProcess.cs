@@ -46,7 +46,7 @@ namespace Microsoft.MIDebugEngine
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
         private bool _needTerminalReset;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
         {
             uint processExitCode = 0;
             _pendingMessages = new StringBuilder(400);
@@ -306,7 +306,7 @@ namespace Microsoft.MIDebugEngine
 
                         _bLastModuleLoadFailed = false;
                     }
-                    catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+                    catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                     {
                         if (this.ProcessState == MICore.ProcessState.Exited)
                         {
@@ -363,7 +363,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     await HandleBreakModeEvent(results);
                 }
-                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
                     if (this.ProcessState == MICore.ProcessState.Exited)
                     {

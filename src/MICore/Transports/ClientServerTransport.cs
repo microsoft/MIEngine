@@ -26,14 +26,14 @@ namespace MICore
             _serverTransport = serverTransport;
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
         {
             _launchTimeout = ((LocalLaunchOptions)options).ServerLaunchTimeout;
-            _serverTransport.Init(transportCallback, options);
+            _serverTransport.Init(transportCallback, options, logger);
             WaitForStart();
             if (!_clientTransport.IsClosed)
             {
-                _clientTransport.Init(transportCallback, options);
+                _clientTransport.Init(transportCallback, options, logger);
             }
         }
 

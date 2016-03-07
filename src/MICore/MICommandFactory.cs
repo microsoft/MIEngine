@@ -528,7 +528,8 @@ namespace MICore
             Results results = null;
             if (cmd.StartsWith("library-loaded,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring(15));
+                MIResults res = new MIResults(_debugger.Logger);
+                results = res.ParseResultList(cmd.Substring(15));
             }
             return results;
         }
