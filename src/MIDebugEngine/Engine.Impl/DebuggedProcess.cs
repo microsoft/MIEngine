@@ -602,6 +602,17 @@ namespace Microsoft.MIDebugEngine
             DebuggedThread thread = await ThreadCache.GetThread(tid);
             await ThreadCache.StackFrames(thread);  // prepopulate the break thread in the thread cache
             ThreadContext cxt = await ThreadCache.GetThreadContext(thread);
+
+            if (cxt == null)
+            {
+                // Something went seriously wrong. For instance, this can happen when the primary thread
+                // of an app exits on linux while background threads continue to run with pthread_exit on the main thread
+                // See https://devdiv.visualstudio.com/DefaultCollection/DevDiv/VS%20Diag%20IntelliTrace/_workItems?_a=edit&id=197616&triage=true
+                // for a repro
+                Debug.Fail("Failed to find thread on break event.");
+                throw new Exception(String.Format(CultureInfo.CurrentUICulture, ResourceStrings.MissingThreadBreakEvent, tid));
+            }
+
             ThreadCache.SendThreadEvents(this, null);   // make sure that new threads have been pushed to the UI
 
             //always delete breakpoints pending deletion on break mode

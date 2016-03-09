@@ -179,6 +179,15 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to find thread {0} for break event.
+        /// </summary>
+        internal static string MissingThreadBreakEvent {
+            get {
+                return ResourceManager.GetString("MissingThreadBreakEvent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit refresh required for visualized expressions.
         /// </summary>
         internal static string NoSideEffectsVisualizerMessage {
