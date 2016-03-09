@@ -189,4 +189,7 @@
   <data name="LoadingCoreDumpMessage" xml:space="preserve">
     <value>Loading core dump {0}</value>
   </data>
+  <data name="MissingThreadBreakEvent" xml:space="preserve">
+    <value>Failed to find thread {0} for break event</value>
+  </data>
 </root>
