@@ -185,6 +185,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The value of miDebuggerPath is invalid.
+        /// </summary>
+        public static string Error_InvalidMiDebuggerPath {
+            get {
+                return ResourceManager.GetString("Error_InvalidMiDebuggerPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Device App Launcher {0} could not be found..
         /// </summary>
         public static string Error_LauncherNotFound {
