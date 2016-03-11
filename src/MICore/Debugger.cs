@@ -178,15 +178,13 @@ namespace MICore
 
             if (reason.StartsWith("exited"))
             {
-                if (IsLocalGdbAttach())
+                if (this.ProcessState != ProcessState.Exited)
                 {
-                    CmdExitAsync();
-                }
-
-                this.ProcessState = ProcessState.Exited;
-                if (ProcessExitEvent != null)
-                {
-                    ProcessExitEvent(this, new ResultEventArgs(results));
+                    this.ProcessState = ProcessState.Exited;
+                    if (ProcessExitEvent != null)
+                    {
+                        ProcessExitEvent(this, new ResultEventArgs(results));
+                    }
                 }
                 return;
             }
@@ -498,7 +496,7 @@ namespace MICore
             {
                 await CmdBreak();
             }
-            CmdExitAsync();
+            await CmdAsync("-target-detach", ResultClass.done);
 
             return new Results(ResultClass.done);
         }
@@ -508,9 +506,9 @@ namespace MICore
             //TODO May need to fix attach on windows and osx.
             if (IsLocalGdbAttach() && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                // for local linux debugging with attach, send a signal to one of the debugee processes rather than 
+                // for local linux debugging with attach, send a signal to one of the debugee processes rather than
                 // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
-                // deadlocks or missed bps (since binding in runtime requires break state). 
+                // deadlocks or missed bps (since binding in runtime requires break state).
                 // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
                 bool useSignal = false;
                 int debuggeePid = 0;
@@ -1158,6 +1156,7 @@ namespace MICore
         private void HandleThreadGroupExited(Results results)
         {
             string threadGroupId = results.TryFindString("id");
+            bool isThreadGroupEmpty = false;
 
             if (!String.IsNullOrEmpty(threadGroupId))
             {
@@ -1165,15 +1164,14 @@ namespace MICore
                 {
                     if (_debuggeePids.Remove(threadGroupId))
                     {
-                        if (_debuggeePids.Count == 0)
-                            ProcessState = ProcessState.Exited;
+                        isThreadGroupEmpty = _debuggeePids.Count == 0;
                     }
                 }
             }
 
-            if (ProcessState == ProcessState.Exited)
+            if (isThreadGroupEmpty)
             {
-                OnDebuggerProcessExit(null);
+                ScheduleStdOutProcessing(@"*stopped,reason=""exited""");
             }
         }
 
