@@ -62,6 +62,24 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug.Desktop|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release.Desktop|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.Debugger.Engine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <Private>False</Private>
@@ -138,13 +156,11 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
-  
   <!--Verify that we will be able to find the correct build of Microsoft.VisualStudio.Debugger.Engine-->
   <Target Name="BeforeBuild">
-    <Error Condition="'$(VSSDKRoot)'==''" Text="'VSSDKRoot' is not defined. Unable to find Visual Studio SDK install root."/>
-    <Error Condition="!Exists('$(MicrosoftVisualStudioDebuggerEnginePath)')"  Text="$(MicrosoftVisualStudioDebuggerEnginePath) cannot be found."/>
+    <Error Condition="'$(VSSDKRoot)'==''" Text="'VSSDKRoot' is not defined. Unable to find Visual Studio SDK install root." />
+    <Error Condition="!Exists('$(MicrosoftVisualStudioDebuggerEnginePath)')" Text="$(MicrosoftVisualStudioDebuggerEnginePath) cannot be found." />
   </Target>
-  
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="AfterBuild">

@@ -157,9 +157,10 @@ namespace MICore
 
             if (localOptions.Environment != null)
             {
+                ProcessStartInfo processStartInfo = terminalProcess.StartInfo;
                 foreach (EnvironmentEntry entry in localOptions.Environment)
                 {
-                    terminalProcess.StartInfo.Environment.Add(entry.Name, entry.Value);
+                    processStartInfo.AddToEnvironment(entry.Name, entry.Value);
                 }
             }
 

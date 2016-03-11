@@ -1,0 +1,108 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- This is a target file used to generate + validate LaunchOptions.xsd.types.designer.cs. The way this works is that we have a baseline
+  file checked in. This target will create a new one, and if it is different from the baseline, it will update the baseline.
+  NOTE: We skip this step for the lab configuration to ensure that in the lab we build exactly what is checked in.-->
+  <Target Name="BeforeBuild"
+          Inputs="LaunchOptions.xsd"
+          Outputs="$(IntermediateOutputPath)LaunchOptions.cs"
+          Condition="'$(Lab)' == 'false'">
+    <!-- First validate the tools we need are where we expect -->
+    <Error Condition="'$(SDK40ToolsPath)'==''" Text="SDK40ToolsPath msbuild property is undefined." />
+    <Error Condition="!Exists('$(SDK40ToolsPath)xsd.exe')" Text="xsd.exe does not exist in the SDK40ToolsPath ($(SDK40ToolsPath)xsd.exe)." />
+
+    <!-- Convert the .xsd -> types -->
+    <MakeDir Condition="!Exists('$(IntermediateOutputPath)')" Directories="$(IntermediateOutputPath)" />
+    <PropertyGroup>
+      <XsdParameters>LaunchOptions.xsd /classes /namespace:$(RootNamespace).Xml.LaunchOptions </XsdParameters>
+      <!-- Mono's XSD.exe uses /outputdir instead of /out -->
+      <XsdParameters Condition="'$(IsMonoRuntime)' == 'false'">$(XsdParameters) /out:"$(IntermediateOutputPath)."</XsdParameters>
+      <XsdParameters Condition="'$(IsMonoRuntime)' == 'true'">$(XsdParameters) /outputdir:"$(IntermediateOutputPath)."</XsdParameters>
+      <XsdParameters Condition="'$(IsCoreClr)' == 'true'">$(XsdParameters) /fields</XsdParameters>
+
+      <XsdCandidateFile>$(IntermediateOutputPath)LaunchOptions.cs</XsdCandidateFile>
+
+      <XsdCodeFile Condition="'$(IsCoreClr)' == 'true'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
+      <XsdCodeFile Condition="'$(IsCoreClr)' == 'false'">LaunchOptions.xsd.types.designer.desktop.cs</XsdCodeFile>
+    </PropertyGroup>
+    <Exec Command="&quot;$(SDK40ToolsPath)xsd.exe&quot; $(XsdParameters)" />
+
+    <!-- Remove non-portable attributes if we're building for CoreCLR -->
+    <PropertyGroup>
+      <LineEndingRegex>\r\n|\n|\r</LineEndingRegex>
+      <SerializableRegex>^.*\[System.SerializableAttribute\(.*[$(LineEndingRegex)]+</SerializableRegex>
+      <DesignerCategoryRegex>^.*\[System.ComponentModel.DesignerCategoryAttribute\(.*[$(LineEndingRegex)]+</DesignerCategoryRegex>
+      <CandidateFileContents>$([System.IO.File]::ReadAllText($(XsdCandidateFile)))</CandidateFileContents>
+      <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(SerializableRegex), "", RegexOptions.Multiline))</CandidateFileContents>
+      <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(DesignerCategoryRegex), "", RegexOptions.Multiline))</CandidateFileContents>
+    </PropertyGroup>
+    <WriteLinesToFile Condition="'$(IsCoreClr)' == 'true'"
+                      File="$(XsdCandidateFile)"
+                      Lines="$(CandidateFileContents)"
+                      Overwrite="true" />
+
+    <!-- Update the checked-in types designer file if it is out of date -->
+    <Message Text="Comparing '$(XsdCandidateFile)' to '$(XsdCodeFile)'" />
+    <PropertyGroup>
+      <!-- Read files from disk, remove comments, normalize whitespace, and account for differences in Mono XSD.exe -->
+      <LineEndingRegex>\r\n|\n|\r</LineEndingRegex>
+      <CommentRegex>^\s*//.*[$(LineEndingRegex)]+</CommentRegex>
+      <GeneratedCodeRegex>^.*\[System.CodeDom.Compiler.GeneratedCodeAttribute\(.*[$(LineEndingRegex)]+</GeneratedCodeRegex>
+      <UsingRegex>^\s*using.*[$(LineEndingRegex)]+</UsingRegex>
+
+      <CandidateFileContents>$([System.IO.File]::ReadAllText($(XsdCandidateFile)))</CandidateFileContents>
+      <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(CommentRegex), "", RegexOptions.Multiline))</CandidateFileContents>
+      <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(LineEndingRegex), "%0D%0A", RegexOptions.Multiline))</CandidateFileContents>
+      <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(GeneratedCodeRegex), "", RegexOptions.Multiline))</CandidateFileContents>
+      <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(UsingRegex), "", RegexOptions.Multiline))</CandidateFileContents>
+
+      <CurrentFileContents>$([System.IO.File]::ReadAllText($(XsdCodeFile)))</CurrentFileContents>
+      <CurrentFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CurrentFileContents), $(CommentRegex), "", RegexOptions.Multiline))</CurrentFileContents>
+      <CurrentFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CurrentFileContents), $(LineEndingRegex), "%0D%0A", RegexOptions.Multiline))</CurrentFileContents>
+      <CurrentFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CurrentFileContents), $(GeneratedCodeRegex), "", RegexOptions.Multiline))</CurrentFileContents>
+      <CurrentFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CurrentFileContents), $(UsingRegex), "", RegexOptions.Multiline))</CurrentFileContents>
+
+      <ContentsEqual>$([System.String]::Equals($(CandidateFileContents), $(CurrentFileContents), StringComparison.Ordinal))</ContentsEqual>
+    </PropertyGroup>
+
+    <!-- If the files don't match, replace the checked-in copy with the candidate -->
+    <Message Condition="'$(ContentsEqual)' == 'false'" Text="Updating $(XsdCodeFile)" />
+    <Message Condition="'$(ContentsEqual)' == 'true'" Text="$(XsdCodeFile) is up to date" />
+
+    <Copy Condition="'$(ContentsEqual)' == 'false'"
+          SourceFiles="$(XsdCandidateFile)"
+          DestinationFiles="$(XsdCodeFile)" />
+  </Target>
+
+  <!-- This target is used to generate an XML serializers assembly for the types in LaunchOptions.xsd. We can't embed these types
+  into MICore as CoreCLR doesn't expose the types needed to make that code work.
+  NOTE: We don't do this in the Debug-PortablePDB configuration as having this file messes up unix, and when we use 'InstallToVSCode link'
+  the CLR will try and load the assembly directly from the output directory. -->
+  <Target Name="GenerateXmlSerializersAssembly"
+          AfterTargets="Compile"
+          Condition="'$(Configuration)'!='Debug-PortablePDB'"
+          Inputs="$(XsdCodeFile);$(AssemblyOriginatorKeyFile)"
+          Outputs="$(IntermediateOutputPath)sgen/$(AssemblyName).XmlSerializers.dll">
+    <PropertyGroup>
+      <SerializationSigningCompilerOptions>/keyfile:$(AssemblyOriginatorKeyFile)</SerializationSigningCompilerOptions>
+      <SerializationSigningCompilerOptions Condition="'$(DelaySign)'=='true'">$(SerializationSigningCompilerOptions) /delaysign</SerializationSigningCompilerOptions>
+
+      <CompilerPath>$(CscToolPath)$(CscToolExe)</CompilerPath>
+      <CompilerPath Condition="'$(CompilerPath)' == ''">$(MSBuildBinPath)\csc.exe</CompilerPath>
+
+      <RefPath Condition="'$(IsMonoRuntime)' == 'false'">$(MSBuildFrameworkToolsPath)</RefPath>
+      <RefPath Condition="'$(IsMonoRuntime)' == 'true'">$(SDK40ToolsPath)</RefPath>
+    </PropertyGroup>
+
+    <Error Condition="'$(SDK40ToolsPath)'==''" Text="SDK40ToolsPath msbuild property is undefined." />
+    <Error Condition="!Exists('$(SDK40ToolsPath)sgen.exe')" Text="sgen.exe does not exist in the SDK40ToolsPath ($(SDK40ToolsPath)xsd.exe)." />
+
+    <RemoveDir Condition="Exists('$(IntermediateOutputPath)sgen')" Directories="$(IntermediateOutputPath)sgen" />
+    <MakeDir Directories="$(IntermediateOutputPath)sgen" />
+
+    <!-- Compile the types file into an assembly that we can use as input to sgen. We don't want to pass our real assembly as we have some things that sgen doesn't like. -->
+    <Exec Command="&quot;$(CompilerPath)&quot; $(XsdCodeFile) $(GeneratedAssemblyInfoFile) /out:$(IntermediateOutputPath)sgen/$(AssemblyName).dll /target:library /noconfig $(SerializationSigningCompilerOptions) /r:$(RefPath)/System.dll /r:$(RefPath)/System.Xml.dll" />
+
+    <!-- Now generate the serialization assembly -->
+    <Exec Command="&quot;$(SDK40ToolsPath)sgen.exe&quot; $(IntermediateOutputPath)sgen/$(AssemblyName).dll /force /compiler:&quot;$(SerializationSigningCompilerOptions)&quot; /keep" />
+  </Target>
+</Project>

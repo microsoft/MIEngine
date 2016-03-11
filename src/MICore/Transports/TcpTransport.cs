@@ -75,7 +75,7 @@ namespace MICore
         public override void Close()
         {
             base.Close();
-            _client.Dispose();
+            ((IDisposable)_client).Dispose();
         }
     }
 }

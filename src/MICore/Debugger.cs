@@ -91,7 +91,6 @@ namespace MICore
         private ITransport _transport;
         private CommandLock _commandLock = new CommandLock();
 
-        private string _lastResult;
         /// <summary>
         /// The last command we sent over the transport. This includes both the command name and arguments.
         /// </summary>
@@ -504,7 +503,7 @@ namespace MICore
         public Task CmdBreakInternal()
         {
             //TODO May need to fix attach on windows and osx.
-            if (IsLocalGdbAttach() && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (IsLocalGdbAttach() && PlatformUtilities.IsLinux())
             {
                 // for local linux debugging with attach, send a signal to one of the debugee processes rather than
                 // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
@@ -963,7 +962,6 @@ namespace MICore
         private void OnResult(string cmd, string token)
         {
             uint id = token != null ? uint.Parse(token, CultureInfo.InvariantCulture) : 0;
-            _lastResult = cmd;
             Results results = _miResults.ParseCommandOutput(cmd);
 
             if (results.ResultClass == ResultClass.done)
