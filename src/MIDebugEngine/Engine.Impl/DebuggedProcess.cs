@@ -1008,10 +1008,17 @@ namespace Microsoft.MIDebugEngine
             // Get the frame of the current thread
             TupleValue currentFrame = currentThread.Find<TupleValue>("frame");
 
+            // Collect the addr, func, and args fields from the current frame as they are required.
+            // Collect the file, fullname, and line fileds if they are available. They may be missing if the frame is for
+            // a binary that does not have symbols.
+            TupleValue newFrame = currentFrame.Subset(
+                new string[] { "addr", "func", "args" },
+                new string[] { "file", "fullname", "line" });
+
             // Create result that emulates a signal received from the debuggee with the frame and thread information
             List<NamedResultValue> values = new List<NamedResultValue>();
             values.Add(new NamedResultValue("reason", new ConstValue("signal-received")));
-            values.Add(new NamedResultValue("frame", currentFrame.Subset("addr", "func", "args", "file", "fullname", "line")));
+            values.Add(new NamedResultValue("frame", newFrame));
             values.Add(new NamedResultValue("thread-id", new ConstValue(currentThreadId)));
             return new Results(ResultClass.done, values);
         }
