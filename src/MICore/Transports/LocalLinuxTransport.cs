@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -11,6 +12,11 @@ namespace MICore
 {
     public class LocalLinuxTransport : StreamTransport
     {
+        private const string PtraceScopePath = "/proc/sys/kernel/yama/ptrace_scope";
+        private const string PKExecPath = "/usr/bin/pkexec";
+        private const string SudoPath = "/usr/bin/sudo";
+        private const string GnomeTerminalPath = "/usr/bin/gnome-terminal";
+
         private void MakeGdbFifo(string path)
         {
             // Mod is normally in octal, but C# has no octal values. This is 384 (rw owner, no rights anyone else)
@@ -44,6 +50,27 @@ namespace MICore
             return true;
         }
 
+        private int GetPtraceScope()
+        {
+            // See: https://www.kernel.org/doc/Documentation/security/Yama.txt
+            if (!File.Exists(LocalLinuxTransport.PtraceScopePath))
+            {
+                // If the scope file doesn't exist, security is disabled
+                return 0;
+            }
+
+            try
+            {
+                string scope = File.ReadAllText(LocalLinuxTransport.PtraceScopePath);
+                return Int32.Parse(scope, CultureInfo.CurrentCulture);
+            }
+            catch
+            {
+                // If we were unable to determine the current scope setting, assume we need root
+                return -1;
+            }
+        }
+
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
             LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
@@ -68,6 +95,9 @@ namespace MICore
             // If running as root, make sure the new console is also root. 
             bool isRoot = LinuxNativeMethods.GetEUid() == 0;
 
+            // If "ptrace_scope" is a value other than 0, only root can attach to arbitrary processes
+            bool requiresRootAttach = this.GetPtraceScope() != 0;
+
             // Spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it
             // start the debugger in mi mode setting the tty to the terminal defined earlier and redirect stdin/stdout
             // to the correct pipes. After gdb exits, cleanup the FIFOs. This is done using the trap command to add a 
@@ -76,23 +106,41 @@ namespace MICore
             // NOTE: sudo launch requires sudo or the terminal will fail to launch. The first argument must then be the terminal path
             // TODO: this should be configurable in launch options to allow for other terminals with a default of gnome-terminal so the user can change the terminal
             // command. Note that this is trickier than it sounds since each terminal has its own set of parameters. For now, rely on remote for those scenarios
-            string terminalPath = "/usr/bin/gnome-terminal";
-            string sudoPath = "/usr/bin/sudo";
             Process terminalProcess = new Process();
             terminalProcess.StartInfo.CreateNoWindow = false;
             terminalProcess.StartInfo.UseShellExecute = false;
             terminalProcess.StartInfo.WorkingDirectory = debuggeeDir;
-            terminalProcess.StartInfo.FileName = !isRoot ? terminalPath : sudoPath;
+            terminalProcess.StartInfo.FileName = !isRoot ? GnomeTerminalPath : SudoPath;
+
+            string debuggerCmd = localOptions.MIDebuggerPath;
+
+            // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
+            if (localOptions.DebuggerMIMode == MIMode.Gdb && localOptions.ProcessId != 0 && !isRoot && requiresRootAttach)
+            {
+                // Prefer pkexec for a nice graphical prompt, but fall back to sudo if it's not available
+                if (File.Exists(LocalLinuxTransport.PKExecPath))
+                {
+                    debuggerCmd = String.Concat(LocalLinuxTransport.PKExecPath, " ", debuggerCmd);
+                }
+                else if (File.Exists(LocalLinuxTransport.SudoPath))
+                {
+                    debuggerCmd = String.Concat(LocalLinuxTransport.SudoPath, " ", debuggerCmd);
+                }
+                else
+                {
+                    Debug.Fail("Root required to attach, but no means of elevating available!");
+                }
+            }
 
             string argumentString = string.Format(System.Globalization.CultureInfo.InvariantCulture,
                     "--title DebuggerTerminal -x bash -c \"cd {0}; DbgTerm=`tty`; trap 'rm {2}; rm {3}' EXIT; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3};\"",
                     debuggeeDir,
-                    localOptions.MIDebuggerPath,
+                    debuggerCmd,
                     gdbStdInName,
                     gdbStdOutName
                     );
 
-            terminalProcess.StartInfo.Arguments = !isRoot ? argumentString : String.Concat(terminalPath, " ", argumentString);
+            terminalProcess.StartInfo.Arguments = !isRoot ? argumentString : String.Concat(GnomeTerminalPath, " ", argumentString);
             Logger?.WriteLine("LocalLinuxTransport command: " + terminalProcess.StartInfo.FileName + " " + terminalProcess.StartInfo.Arguments);
 
             if (localOptions.Environment != null)
