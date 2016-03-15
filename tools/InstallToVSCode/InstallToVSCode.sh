@@ -12,7 +12,7 @@ print_help()
     echo ' link : Create links to files instead of copying them. With this mode, it'
     echo '   is possible to rebuild MIEngine or OpenDebugAD7 without re-running this'
     echo '   script. **NOTE**: Using this option requires starting OpenDebugAD7 with'
-    echo "   '--adapterDirectory=${env.HOME}/.MIEngine-VSCode-Debug'"
+    echo "   '--adapterDirectory=\${env.HOME}/.MIEngine-VSCode-Debug'"
     echo ' copy : Copy files to the output directory'
     echo ''
     echo ' alpha: Install to VSCode alpha'
