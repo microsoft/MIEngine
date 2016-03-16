@@ -196,6 +196,13 @@
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="MIMode" type="MIMode" use="optional"/>
+    <xs:attribute name="WaitDynamicLibLoad" type="xs:boolean" use="optional" default="true">
+      <xs:annotation>
+        <xs:documentation>
+          If true, wait for dynamic library load to finish.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:attributeGroup>
   <xs:element name="LocalLaunchOptions">
     <xs:annotation>

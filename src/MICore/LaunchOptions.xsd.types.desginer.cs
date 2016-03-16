@@ -81,7 +81,12 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public MIMode MIMode;
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool WaitDynamicLibLoad;
+
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool MIModeSpecified;
@@ -91,6 +96,7 @@ namespace MICore.Xml.LaunchOptions {
             this.SourceRoots = "";
             this.JVMPort = 65534;
             this.JVMHost = "localhost";
+            this.WaitDynamicLibLoad = true;
         }
     }
     
@@ -239,7 +245,12 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public bool ShowDisplayString;
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool WaitDynamicLibLoad;
+
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool ShowDisplayStringSpecified;
