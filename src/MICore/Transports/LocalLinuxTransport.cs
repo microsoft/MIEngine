@@ -16,6 +16,7 @@ namespace MICore
         private const string PKExecPath = "/usr/bin/pkexec";
         private const string SudoPath = "/usr/bin/sudo";
         private const string GnomeTerminalPath = "/usr/bin/gnome-terminal";
+        private const string XTermPath = "/usr/bin/xterm";
 
         private void MakeGdbFifo(string path)
         {
@@ -110,6 +111,19 @@ namespace MICore
             // If "ptrace_scope" is a value other than 0, only root can attach to arbitrary processes
             bool requiresRootAttach = this.GetPtraceScope() != 0;
 
+            // Check and see if gnome-terminal exists. If not, fall back to xterm
+            string terminalCmd, bashCommandPrefix;
+            if (File.Exists(GnomeTerminalPath))
+            {
+                terminalCmd = GnomeTerminalPath;
+                bashCommandPrefix = "--title DebuggerTerminal -x";
+            }
+            else
+            {
+                terminalCmd = XTermPath;
+                bashCommandPrefix = "-title DebuggerTerminal -e";
+            }
+
             // Spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it
             // start the debugger in mi mode setting the tty to the terminal defined earlier and redirect stdin/stdout
             // to the correct pipes. After gdb exits, cleanup the FIFOs. This is done using the trap command to add a 
@@ -122,7 +136,7 @@ namespace MICore
             terminalProcess.StartInfo.CreateNoWindow = false;
             terminalProcess.StartInfo.UseShellExecute = false;
             terminalProcess.StartInfo.WorkingDirectory = debuggeeDir;
-            terminalProcess.StartInfo.FileName = !isRoot ? GnomeTerminalPath : SudoPath;
+            terminalProcess.StartInfo.FileName = !isRoot ? terminalCmd : SudoPath;
 
             string debuggerCmd = localOptions.MIDebuggerPath;
 
@@ -144,15 +158,16 @@ namespace MICore
                 }
             }
 
-            string argumentString = string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                    "--title DebuggerTerminal -x bash -c \"cd {0}; DbgTerm=`tty`; trap 'rm {2}; rm {3}' EXIT; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3};\"",
+            string argumentString = string.Format(CultureInfo.InvariantCulture,
+                    "{4} bash -c \"cd {0}; DbgTerm=`tty`; trap 'rm {2}; rm {3}' EXIT; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3};\"",
                     debuggeeDir,
                     debuggerCmd,
                     gdbStdInName,
-                    gdbStdOutName
+                    gdbStdOutName,
+                    bashCommandPrefix
                     );
 
-            terminalProcess.StartInfo.Arguments = !isRoot ? argumentString : String.Concat(GnomeTerminalPath, " ", argumentString);
+            terminalProcess.StartInfo.Arguments = !isRoot ? argumentString : String.Concat(terminalCmd, " ", argumentString);
             Logger?.WriteLine("LocalLinuxTransport command: " + terminalProcess.StartInfo.FileName + " " + terminalProcess.StartInfo.Arguments);
 
             if (localOptions.Environment != null)
