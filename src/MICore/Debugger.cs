@@ -302,7 +302,7 @@ namespace MICore
                 {
                     await item();
                 }
-                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting:true))
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
                     if (firstException != null)
                     {
@@ -1172,6 +1172,11 @@ namespace MICore
             if (isThreadGroupEmpty)
             {
                 ScheduleStdOutProcessing(@"*stopped,reason=""exited""");
+
+                // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
+                //  the debugger process is already gone (e.g. because the terminal window was closed), we won't get
+                //  a response, so queue a fake "exit" event for processing as well, just to be sure.
+                ScheduleStdOutProcessing("^exit");
             }
         }
 
