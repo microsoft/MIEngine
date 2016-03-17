@@ -289,7 +289,12 @@ namespace Microsoft.MIDebugEngine
                     // This is to work around a GDB bug of warning "Failed to set controlling terminal: Operation not permitted"
                     // Reset debuggee terminal after the first module load.
                     // The clear is done by sending reset string (ESC, c) to terminal STDERR
-                    await ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
+                    await ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");                    
+                }
+
+                if (this.MICommandFactory.SupportsStopOnDynamicLibLoad() && !_launchOptions.WaitDynamicLibLoad)
+                {
+                    await CmdAsync("-gdb-set stop-on-solib-events 0", ResultClass.None);
                 }
 
                 if (_libraryLoaded.Count != 0)
@@ -485,7 +490,7 @@ namespace Microsoft.MIDebugEngine
             if (this.MICommandFactory.SupportsStopOnDynamicLibLoad())
             {
                 // Do not stop on shared library load/unload events while debugging core dump
-                if (!this.IsCoreDump)
+                if ((_needTerminalReset || _launchOptions.WaitDynamicLibLoad) && !this.IsCoreDump)
                 {
                     commands.Add(new LaunchCommand("-gdb-set stop-on-solib-events 1"));
                 }
