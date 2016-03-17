@@ -444,7 +444,7 @@ namespace MICore
             }
         }
 
-        private bool _waitDynamicLibLoad;
+        private bool _waitDynamicLibLoad = true;
         /// <summary>
         /// If true, wait for dynamic library load to finish.
         /// </summary>
@@ -453,7 +453,7 @@ namespace MICore
             get { return _waitDynamicLibLoad; }
             set
             {
-                VerifyCanModifyProperty("StopOnDynamicLibLoad");
+                VerifyCanModifyProperty("WaitDynamicLibLoad");
                 _waitDynamicLibLoad = value;
             }
         }
@@ -798,6 +798,7 @@ namespace MICore
                 this.VisualizerFile = source.VisualizerFile;
 
             this.ShowDisplayString = source.ShowDisplayString;
+            this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;
 
             this.SetupCommands = LaunchCommand.CreateCollectionFromXml(source.SetupCommands);
 
