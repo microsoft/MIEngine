@@ -444,6 +444,20 @@ namespace MICore
             }
         }
 
+        private bool _waitDynamicLibLoad = true;
+        /// <summary>
+        /// If true, wait for dynamic library load to finish.
+        /// </summary>
+        public bool WaitDynamicLibLoad
+        {
+            get { return _waitDynamicLibLoad; }
+            set
+            {
+                VerifyCanModifyProperty("WaitDynamicLibLoad");
+                _waitDynamicLibLoad = value;
+            }
+        }
+
         /// <summary>
         /// If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
         /// Should only be enabled if debugger is fast enough providing the value.
@@ -784,6 +798,7 @@ namespace MICore
                 this.VisualizerFile = source.VisualizerFile;
 
             this.ShowDisplayString = source.ShowDisplayString;
+            this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;
 
             this.SetupCommands = LaunchCommand.CreateCollectionFromXml(source.SetupCommands);
 

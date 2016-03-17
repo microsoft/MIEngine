@@ -54,6 +54,7 @@ namespace AndroidDebugLauncher
             this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
             this.DeviceId = LaunchOptions.RequireAttribute(xmlOptions.DeviceId, "DeviceId");
             this.LogcatServiceId = GetLogcatServiceIdAttribute(xmlOptions.LogcatServiceId);
+            this.WaitDynamicLibLoad = xmlOptions.WaitDynamicLibLoad;
 
             CheckTargetArchitectureSupported();
         }
@@ -202,6 +203,11 @@ namespace AndroidDebugLauncher
         /// [Optional] Set to true if we are performing an attach instead of a launch. Default is false.
         /// </summary>
         public bool IsAttach { get; private set; }
+
+        /// <summary>
+        /// [Optional] If true, wait for dynamic library load to finish.
+        /// </summary>
+        public bool WaitDynamicLibLoad { get; private set; }
 
         public string JVMHost { get; private set; }
 

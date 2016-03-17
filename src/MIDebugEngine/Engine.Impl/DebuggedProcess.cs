@@ -56,7 +56,7 @@ namespace Microsoft.MIDebugEngine
             _libraryLoaded = new List<string>();
             _loadOrder = 0;
             MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
-            _waitDialog = MICommandFactory.SupportsStopOnDynamicLibLoad() ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
+            _waitDialog = (MICommandFactory.SupportsStopOnDynamicLibLoad() && launchOptions.WaitDynamicLibLoad) ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
             Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString);
 
             // we do NOT have real Win32 process IDs, so we use a guid
@@ -289,7 +289,12 @@ namespace Microsoft.MIDebugEngine
                     // This is to work around a GDB bug of warning "Failed to set controlling terminal: Operation not permitted"
                     // Reset debuggee terminal after the first module load.
                     // The clear is done by sending reset string (ESC, c) to terminal STDERR
-                    await ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
+                    await ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");                    
+                }
+
+                if (this.MICommandFactory.SupportsStopOnDynamicLibLoad() && !_launchOptions.WaitDynamicLibLoad)
+                {
+                    await CmdAsync("-gdb-set stop-on-solib-events 0", ResultClass.None);
                 }
 
                 if (_libraryLoaded.Count != 0)
@@ -484,8 +489,13 @@ namespace Microsoft.MIDebugEngine
 
             if (this.MICommandFactory.SupportsStopOnDynamicLibLoad())
             {
-                // Do not stop on shared library load/unload events while debugging core dump
-                if (!this.IsCoreDump)
+                // Do not stop on shared library load/unload events while debugging core dump.
+                // Also check _needTerminalReset because we need to work around a GDB bug and clear the terminal error message. 
+                // This clear operation can't be done too early (because GDB only generate this message after start debugging) 
+                // or too late (otherwise we might clear debuggee's output). 
+                // The stop cause by first module load seems to be the perfect timing to clear the terminal, 
+                // that's why we still need to initially turn stop-on-solib-events on then turn it off after the first stop.
+                if ((_needTerminalReset || _launchOptions.WaitDynamicLibLoad) && !this.IsCoreDump)
                 {
                     commands.Add(new LaunchCommand("-gdb-set stop-on-solib-events 1"));
                 }
