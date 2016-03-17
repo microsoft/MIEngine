@@ -1,27 +1,29 @@
 #!/bin/bash
 
-DefaultDestDir=$HOME/.vscode/extensions/coreclr-debug
 script_dir=`dirname $0`
 
 print_help()
 {
-    echo 'InstallToVSCode.sh <-c|-l> [--pdbs] <OpenDebugAD7-dir> -d <clrdbg-binaries-dir> [destination-dir]'
+    echo 'InstallToVSCode.sh <link|copy> <alpha|insider|stable> <open-debug-ad7-dir> -d <clrdbg-binaries>'
     echo ''
     echo 'This script is used to copy files needed to enable MIEngine based debugging'
     echo 'into VS Code.'
     echo ''
-    echo ' -l : Create links to files instead of copying them. With this mode, it'
+    echo ' link : Create links to files instead of copying them. With this mode, it'
     echo '   is possible to rebuild MIEngine or OpenDebugAD7 without re-running this'
-    echo '   script.'
-    echo ' -c : Copy files to the output directory'
-    echo ' --pdbs : Copy PDB files in addition to the dlls'
-    echo ' open-debug-ad7-dir : Directory which contains OpenDebugAD7.exe'
+    echo '   script. **NOTE**: Using this option requires starting OpenDebugAD7 with'
+    echo "   '--adapterDirectory=\${env.HOME}/.MIEngine-VSCode-Debug'"
+    echo ' copy : Copy files to the output directory'
+    echo ''
+    echo ' alpha: Install to VSCode alpha'
+    echo ' insider: Install to VSCode insider'
+    echo ' stable: Install to VSCode stable'
+    echo ''
+    echo ' open-debug-ad7-dir : Root of the OpenDebugAD7 repo'
     echo ' clrdbg-binaries-dir : Directory containing clrdbg binaries'
-    echo ' destination-dir: Directory to install to. By default this is:'
-    echo "    $DefaultDestDir"
     echo ''
     echo 'Example:'
-    echo "$script_dir/InstallToVSCode.sh -l --pdbs /Volumes/dd/OpenDebugAD7/bin/Debug-PortablePDB -d ~/clrdbg/out/Linux/bin/x64.Debug/clrdbg $HOME/.vscode-alpha/extensions/coreclr-debug"
+    echo "$script_dir/InstallToVSCode.sh link alpha /Volumes/dd/OpenDebugAD7 -d ~/clrdbg/out/Linux/bin/x64.Debug/clrdbg"
 }
 
 # Copies a file to another file or directory
@@ -29,11 +31,10 @@ print_help()
 # arg2: destination file or directory
 copy_file()
 {
-    echo "cp $1 $2"
     cp $1 $2
     if [ $? -ne 0 ]
     then
-        echo "ERROR: Failed to copy '$1'"
+        echo "ERROR: Failed to copy '$1' to '$2'"
         InstallError=1
     fi
 }
@@ -61,11 +62,10 @@ link_file()
         fi
     fi
 
-    echo "ln -fs $1 $2"
     ln -fs $1 $2
     if [ $? -ne 0 ]
     then
-        echo "ERROR: Failed to link file '$1'"
+        echo "ERROR: Failed to link file '$1' to '$2'"
         InstallError=1
         return 1
     fi
@@ -75,28 +75,45 @@ link_file()
 
 install_file()
 {
-    $InstallAction $1 $DESTDIR/$2/$(basename $1)
+    $InstallAction $1 $DESTDIR/$2$(basename $1)
 }
 
 install_module()
 {
     modulPath=$1
     moduleName=$(basename $modulPath)
-    $InstallAction $modulPath $DESTDIR/$2/$moduleName
+    $InstallAction $modulPath $DESTDIR/$2$moduleName
     if [ $? -ne 0 ]; then
         return $?
     fi
 
-    if [ "$install_pdbs" == "1" ]; then
-        sourcePdb=${modulPath%\.[^.]*}.pdb
-        if [ ! -f "$sourcePdb" ]; then
-            if [ "$3" == "ignoreMissingPdbs" ]; then
-                return 0
-            fi
+    sourcePdb=${modulPath%\.[^.]*}.pdb
+    if [ ! -f "$sourcePdb" ]; then
+        if [ "$3" == "ignoreMissingPdbs" ]; then
+            return 0
         fi
-
-        $InstallAction $sourcePdb $DESTDIR/$2/${moduleName%\.[^.]*}.pdb
     fi
+
+    $InstallAction $sourcePdb $DESTDIR/$2${moduleName%\.[^.]*}.pdb
+}
+
+# Setup the symbolic link from under the extension directory to DESTDIR
+# arg 1 : symbolic link
+# arg 2 : DESTDIR
+SetupSymLink()
+{
+    # If arg1 already exists, remove it first
+    if [ -d $1 ]; then
+        # If it is already a link, remove it
+        if [ -L $1 ]; then
+            rm $1
+        else
+            rm -r $1
+        fi
+    fi
+    
+    ln -s $2 $1
+    return $?
 }
 
 InstallAction=
@@ -106,23 +123,31 @@ if [ -z "$1" ]; then
 elif [ "$1" == "-h" ]; then
     print_help
     exit 1
-elif [ "$1" == "-l" ]; then
+elif [ "$1" == "link" ]; then
     InstallAction=link_file
-elif [ "$1" == "-c" ]; then
+elif [ "$1" == "copy" ]; then
     InstallAction=copy_file
 else
-    echo "ERROR: Unexpected first argument '$1'. Expected '-l' or '-c'."
+    echo "ERROR: Unexpected first argument '$1'. Expected 'link' or 'copy'."
     exit 1
 fi
 
-install_pdbs=0
-if [ "$2" == "--pdbs" ]; then
-    install_pdbs=1
-    shift
+VSCodeDirName=
+if [ "$2" == "alpha" ]; then
+    VSCodeDirName=".vscode-alpha"
+elif [ "$2" == "insider" ]; then
+    VSCodeDirName=".vscode-insider"
+elif [ "$2" == "stable" ]; then
+    VSCodeDirName=".vscode"
+else
+    echo "ERROR: Unexpected second argument '$2'. Expected 'alpha', 'insider' or 'stable'."
+    exit 1
 fi
 
-OpenDebugAD7Dir=${2:?"ERROR: OpenDebugAD7 binaries directory must be specified. See -h for usage."}
-[ ! -f "$OpenDebugAD7Dir/OpenDebugAD7.dll" ] && echo "ERROR: $OpenDebugAD7Dir/OpenDebugAD7.dll does not exist." && exit 1
+OpenDebugAD7Dir=${3:?"ERROR: OpenDebugAD7 directory must be specified. See -h for usage."}
+OpenDebugAD7BinDir=$OpenDebugAD7Dir/bin/Debug-PortablePDB
+[ ! -d "$OpenDebugAD7Dir/src/OpenDebugAD7" ] && echo "ERROR: argmument 3 is invalid. '$OpenDebugAD7Dir/src/OpenDebugAD7' does not exist." && exit 1
+[ ! -f "$OpenDebugAD7BinDir/OpenDebugAD7.dll" ] && echo "ERROR: $OpenDebugAD7BinDir/OpenDebugAD7.dll does not exist." && exit 1
 
 DropDir=$script_dir/../../bin/Debug-PortablePDB
 if [ ! -f "$DropDir/Microsoft.MIDebugEngine.dll" ]
@@ -136,18 +161,19 @@ pushd $DropDir >/dev/null
 DropDir=$(pwd)
 popd >/dev/null
 
-[ ! "$3" == "-d" ] && echo "ERROR: Bad command line argument. Expected '-d <clrdbg-dir>'." && exit 1
-CLRDBGBITSDIR=${4:?"ERROR: Clrdbg binaries directory must be specified with -d option. See -h for usage."}
+[ ! "$4" == "-d" ] && echo "ERROR: Bad command line argument. Expected '-d <clrdbg-dir>'." && exit 1
+CLRDBGBITSDIR=${5:?"ERROR: Clrdbg binaries directory must be specified with -d option. See -h for usage."}
 [ ! -f "$CLRDBGBITSDIR/clrdbg" ] && echo "ERROR: $CLRDBGBITSDIR/clrdbg does not exist." && exit 1
-DESTDIR=$5
+DESTDIR=$HOME/.MIEngine-VSCode-Debug
 
-if [ -z "$DESTDIR" ]
-then
-    DESTDIR=$DefaultDestDir
-fi
+VSCodeExtensionsRoot=$HOME/$VSCodeDirName/extensions
+[ ! -d "$VSCodeExtensionsRoot" ] && echo "ERROR: $VSCodeExtensionsRoot does not exist." && exit 1
 
-hash dotnet 2>/dev/null 
-[ $? -ne 0 ] && echo "ERROR: The .NET CLI is not installed. see: http://dotnet.github.io/getting-started/" && exit 1
+CSharpExtensionRoot="$(ls -d $VSCodeExtensionsRoot/ms-vscode.csharp-* 2>/dev/null)" 
+[ "$CSharpExtensionRoot" == "" ] && echo "ERROR: C# extension is not installed in VS Code. No directory matching '$VSCodeExtensionsRoot/ms-vscode.csharp-*' found." && exit 1
+
+num_results=$(echo "$CSharpExtensionRoot" | wc -l)
+[ "$num_results" != "1" ] && echo "ERROR: more than one instance of the C# extension is found under '$VSCodeExtensionsRoot/ms-vscode.csharp-*'." && exit 1
 
 if [ -d "$DESTDIR" ]
 then
@@ -155,8 +181,14 @@ then
     [ $? -ne 0 ] && echo "ERROR: Unable to clean destination directory '$DESTDIR'." && exit 1
 fi
 
-mkdir -p "$DESTDIR/debugAdapters"
-[ $? -ne 0 ] && echo "ERROR: unable to create destination directory '$DESTDIR/debugAdapters'." && exit 1
+mkdir -p "$DESTDIR"
+[ $? -ne 0 ] && echo "ERROR: unable to create destination directory '$DESTDIR'." && exit 1
+
+hash dotnet 2>/dev/null 
+[ $? -ne 0 ] && echo "ERROR: The .NET CLI is not installed. see: http://dotnet.github.io/getting-started/" && exit 1
+
+SetupSymLink "$CSharpExtensionRoot/coreclr-debug/debugAdapters" "$DESTDIR"
+[ $? -ne 0 ] && echo "ERROR: Unable to link $CSharpExtensionRoot/coreclr-debug/debugAdapters to $DESTDIR" && exit 1
 
 pushd $script_dir/CLRDependencies 1>/dev/null 2>/dev/null
 [ $? -ne 0 ] && echo "ERROR: Unable to find CLRDependencies directory???" && exit 1
@@ -164,23 +196,23 @@ pushd $script_dir/CLRDependencies 1>/dev/null 2>/dev/null
 dotnet restore
 [ $? -ne 0 ] && echo "ERROR: dotnet restore failed." && exit 1
 
-dotnet publish -o "$DESTDIR/debugAdapters"
+dotnet publish -o "$DESTDIR"
 [ $? -ne 0 ] && echo "ERROR: dotnet publish failed." && exit 1
 
 popd >/dev/null
 
 # Work arround https://github.com/dotnet/coreclr/issues/3164
-[ -f $DESTDIR/debugAdapters/libcoreclrtraceptprovider.so ] && rm $DESTDIR/debugAdapters/libcoreclrtraceptprovider.so
-[ -f $DESTDIR/debugAdapters/libcoreclrtraceptprovider.dylib ] && rm $DESTDIR/debugAdapters/libcoreclrtraceptprovider.dylib
+[ -f $DESTDIR/libcoreclrtraceptprovider.so ] && rm $DESTDIR/libcoreclrtraceptprovider.so
+[ -f $DESTDIR/libcoreclrtraceptprovider.dylib ] && rm $DESTDIR/libcoreclrtraceptprovider.dylib
 
-mv "$DESTDIR/debugAdapters/dummy" "$DESTDIR/debugAdapters/OpenDebugAD7"
+mv "$DESTDIR/dummy" "$DESTDIR/OpenDebugAD7"
 [ $? -ne 0 ] && echo "ERROR: Unable to move OpenDebugAD7 executable." && exit 1
 
-set InstallError=
-install_module "$OpenDebugAD7Dir/dar.exe" debugAdapters
-install_module "$OpenDebugAD7Dir/xunit.console.netcore.exe" debugAdapters
-for dll in $(ls $OpenDebugAD7Dir/*.dll); do
-    install_module "$dll" debugAdapters ignoreMissingPdbs
+InstallError=
+install_module "$OpenDebugAD7BinDir/dar.exe"
+install_module "$OpenDebugAD7BinDir/xunit.console.netcore.exe" "" ignoreMissingPdbs 
+for dll in $(ls $OpenDebugAD7BinDir/*.dll); do
+    install_module "$dll" "" ignoreMissingPdbs
 done
 
 echo ''
@@ -188,31 +220,34 @@ echo "Installing clrdbg bits from $CLRDBGBITSDIR"
 
 for clrdbgFile in $(ls $CLRDBGBITSDIR/*); do
     if [ -f "$clrdbgFile" ]; then
-        install_file "$clrdbgFile" debugAdapters
+        install_file "$clrdbgFile"
     fi
 done
     
 for directory in $(ls -d $CLRDBGBITSDIR/*/); do
-    echo "Installing clrdbg bits from $directory..."
     directory_name=$(basename $directory)
         
-    if [ ! -d "$DESTDIR/debugAdapters/$directory_name" ]; then
-        mkdir "$DESTDIR/debugAdapters/$directory_name"
+    if [ ! -d "$DESTDIR/$directory_name" ]; then
+        mkdir "$DESTDIR/$directory_name"
     fi
         
     for dll in $(ls $directory/*.dll); do
-        install_file "$dll" debugAdapters/$directory_name
+        install_file "$dll" "$directory_name/"
     done
 done
 
-copy_file "$script_dir/coreclr/package.json" $DESTDIR/package.json
-
-install_file "$script_dir/coreclr/coreclr.ad7Engine.json" debugAdapters
+install_file "$script_dir/coreclr/coreclr.ad7Engine.json"
 
 for dll in Microsoft.MICore.dll Microsoft.MIDebugEngine.dll
 do 
-    install_module "$DropDir/$dll" debugAdapters
+    install_module "$DropDir/$dll"
 done
+
+if [ ! -f "$OpenDebugAD7Dir/.vscode/launch.json" ]; then
+    cp "$OpenDebugAD7Dir/.vscode/example-launch.json" "$OpenDebugAD7Dir/.vscode/launch.json"
+    [ $? -ne 0 ] && echo "ERROR: failed to setup launch.json file. Copy to $OpenDebugAD7Dir/.vscode/launch.json failed." && exit 1
+fi
+
 
 echo ''
 if [ ! -z "$InstallError" ]; then
@@ -221,6 +256,10 @@ if [ ! -z "$InstallError" ]; then
     exit 1
 fi
 
-echo "InstallToVSCode.sh succeeded."
+# Write out an install.complete file so that the C# extension doesn't try to restore.
+echo "InstallToVSCode.sh done">$DESTDIR/install.complete
+
+echo "InstallToVSCode.sh succeeded. Open directory '$OpenDebugAD7Dir' in VS Code" 
+echo "to debug. Edit .vscode/launch.json before launching."
 echo ""
 exit 0
