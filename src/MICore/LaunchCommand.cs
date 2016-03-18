@@ -21,8 +21,9 @@ namespace MICore
         public readonly string Description;
         public readonly bool IgnoreFailures;
         public readonly bool IsMICommand;
+        public /*OPTIONAL*/ Action<string> FailureHandler { get; private set; }
 
-        public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false)
+        public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false, Action<string> failureHandler = null)
         {
             if (commandText == null)
                 throw new ArgumentNullException("commandText");
@@ -36,6 +37,7 @@ namespace MICore
                 this.Description = this.CommandText;
 
             this.IgnoreFailures = ignoreFailures;
+            this.FailureHandler = failureHandler;
         }
 
         public static ReadOnlyCollection<LaunchCommand> CreateCollectionFromXml(Xml.LaunchOptions.Command[] source)
