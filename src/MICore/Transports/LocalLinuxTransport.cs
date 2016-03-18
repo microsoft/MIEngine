@@ -80,7 +80,19 @@ namespace MICore
                 throw new Exception(MICoreResources.Error_InvalidMiDebuggerPath);
             }
 
-            string debuggeeDir = System.IO.Path.GetDirectoryName(options.ExePath);
+            // Default working directory is next to the app
+            string debuggeeDir;
+            if (Path.IsPathRooted(options.ExePath) && File.Exists(options.ExePath))
+            {
+                debuggeeDir = System.IO.Path.GetDirectoryName(options.ExePath);
+            }
+            else
+            {
+                // If we don't know where the app is, default to HOME, and if we somehow can't get that, go with the root directory.
+                debuggeeDir = Environment.GetEnvironmentVariable("HOME");
+                if (string.IsNullOrEmpty(debuggeeDir))
+                    debuggeeDir = "/";
+            }
 
             string gdbStdInName = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             string gdbStdOutName = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());

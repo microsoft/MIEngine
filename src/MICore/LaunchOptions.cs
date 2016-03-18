@@ -242,24 +242,6 @@ namespace MICore
         public int ProcessId { get; private set; }
 
         /// <summary>
-        /// [Required] Path to the executable file. This path must exist on the Visual Studio computer.
-        /// </summary>
-        public override string ExePath
-        {
-            get
-            {
-                return base.ExePath;
-            }
-            set
-            {
-                if (String.IsNullOrEmpty(value) || !LocalLaunchOptions.CheckPath(value))
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, value));
-
-                base.ExePath = value;
-            }
-        }
-
-        /// <summary>
         /// [Optional] List of environment variables to add to the launched process
         /// </summary>
         public ReadOnlyCollection<EnvironmentEntry> Environment { get; private set; }

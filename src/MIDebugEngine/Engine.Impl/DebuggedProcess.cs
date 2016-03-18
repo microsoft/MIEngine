@@ -447,10 +447,17 @@ namespace Microsoft.MIDebugEngine
                     if (command.IsMICommand)
                     {
                         Results results = await CmdAsync(command.CommandText, ResultClass.None);
-                        if (results.ResultClass == ResultClass.error && !command.IgnoreFailures)
+                        if (results.ResultClass == ResultClass.error)
                         {
-                            string miError = results.FindString("msg");
-                            throw new UnexpectedMIResultException(MICommandFactory.Name, command.CommandText, miError);
+                            if (command.FailureHandler != null)
+                            {
+                                command.FailureHandler(results.FindString("msg"));
+                            }
+                            else if (!command.IgnoreFailures)
+                            {
+                                string miError = results.FindString("msg");
+                                throw new UnexpectedMIResultException(MICommandFactory.Name, command.CommandText, miError);
+                            }
                         }
                     }
                     else
@@ -569,7 +576,14 @@ namespace Microsoft.MIDebugEngine
         private void AddExecutablePathCommand(IList<LaunchCommand> commands)
         {
             string exe = EscapePath(_launchOptions.ExePath);
-            commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath)));
+            string description = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath);
+            Action<string> failureHandler = (string miError) =>
+            {
+                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                throw new LaunchErrorException(message);
+            };
+
+            commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures:false, failureHandler:failureHandler));
         }
 
         public override void FlushBreakStateData()
