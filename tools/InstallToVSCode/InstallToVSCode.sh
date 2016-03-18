@@ -78,6 +78,15 @@ install_file()
     $InstallAction $1 $DESTDIR/$2$(basename $1)
 }
 
+install_new_file()
+{
+    destFile=$DESTDIR/$2$(basename $1)
+    if [ ! -f $destFile ]; then
+        $InstallAction $1 $destFile
+    fi
+}
+
+
 install_module()
 {
     modulPath=$1
@@ -220,7 +229,10 @@ echo "Installing clrdbg bits from $CLRDBGBITSDIR"
 
 for clrdbgFile in $(ls $CLRDBGBITSDIR/*); do
     if [ -f "$clrdbgFile" ]; then
-        install_file "$clrdbgFile"
+        # NOTE: We ignore files that already exist. This is because we have already
+        # cleaned the directory originally, and published CoreCLR files. Replacing existing
+        # files will replace some of those CoreCLR files with new copies that will not work.
+        install_new_file "$clrdbgFile"
     fi
 done
     

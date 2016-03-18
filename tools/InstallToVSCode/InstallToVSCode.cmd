@@ -35,8 +35,8 @@ if not exist %4 echo ERROR: open-debug-ad7-dir '%~4' does not exist.& exit /b -1
 if not exist "%~4\src\OpenDebugAD7" echo ERROR: open-debug-ad7-dir '%~4' is invalid. Couldn't find OpenDebugAD7 sources.& exit /b -1
 if not exist "%OpenDebugAD7BinDir%\OpenDebugAD7.dll" echo ERROR: %OpenDebugAD7BinDir%\OpenDebugAD7.dll does not exist.& exit /b -1
 
-set DropDir=%~dp0..\..\bin\Debug\drop\
-if not exist "%DropDir%Microsoft.MIDebugEngine.dll" echo ERROR: Microsoft.MIDebugEngine.dll has not been built & exit /b -1
+set MIEngineBinDir=%~dp0..\..\bin\%Configuration%\
+if not exist "%MIEngineBinDir%Microsoft.MIDebugEngine.dll" echo ERROR: Microsoft.MIDebugEngine.dll has not been built & exit /b -1
 
 if NOT "%~5"=="-d" echo ERROR: Bad command line argument. Expected '-d ^<clrdbg-dir^>'. & exit /b -1
 if "%~6" == "" echo ERROR: Clrdbg binaries directory not set &exit /b -1
@@ -84,7 +84,11 @@ for %%f in (%OpenDebugAD7BinDir%\*.dll) do call :InstallFile "%%f"
 
 echo.
 echo Installing clrdbg bits from %CLRDBGBITSDIR%...
-for %%f in (%CLRDBGBITSDIR%\*.dll) do call :InstallFile "%%f"
+
+REM NOTE: We ignore files that already exist. This is because we have already
+REM cleaned the directory originally, and published CoreCLR files. Replacing existing
+REM files will replace some of those CoreCLR files with new copies that will not work.
+for %%f in (%CLRDBGBITSDIR%\*.dll) do call :InstallNewFile "%%f"
 for %%f in (%CLRDBGBITSDIR%\*.exe) do call :InstallFile "%%f"
 for %%f in (%CLRDBGBITSDIR%\*.vsdconfig) do call :InstallFile "%%f"
 for %%f in (%CLRDBGBITSDIR%\version.txt) do call :InstallFile "%%f"
@@ -96,7 +100,7 @@ for /D %%d in (%CLRDBGBITSDIR%\*) do (
 )
 
 for %%f in (coreclr\coreclr.ad7Engine.json) do call :InstallFile "%~dp0%%f"
-for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%DropDir%%%f"
+for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%MIEngineBinDir%%%f"
 
 echo.
 if NOT "%InstallError%"=="" echo ERROR: Failed to copy one or more files.& exit /b -1
@@ -107,6 +111,10 @@ echo "InstallToVSCode.cmd done">%DESTDIR%\install.complete
 echo InstallToVSCode.cmd succeeded.
 echo.
 exit /b 0
+
+:InstallNewFile
+if exist "%DESTDIR%\%2%~nx1" goto eof
+goto InstallFile
 
 :InstallFile
 echo Installing %~f1
