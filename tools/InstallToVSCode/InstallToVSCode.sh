@@ -182,7 +182,7 @@ CSharpExtensionRoot="$(ls -d $VSCodeExtensionsRoot/ms-vscode.csharp-* 2>/dev/nul
 [ "$CSharpExtensionRoot" == "" ] && echo "ERROR: C# extension is not installed in VS Code. No directory matching '$VSCodeExtensionsRoot/ms-vscode.csharp-*' found." && exit 1
 
 num_results=$(echo "$CSharpExtensionRoot" | wc -l)
-[ "$num_results" != "1" ] && echo "ERROR: more than one instance of the C# extension is found under '$VSCodeExtensionsRoot/ms-vscode.csharp-*'." && exit 1
+! [[ "$num_results" =~ ^[[:space:]]*1$ ]] && echo "ERROR: more than one instance of the C# extension is found under '$VSCodeExtensionsRoot/ms-vscode.csharp-*'." && exit 1
 
 if [ -d "$DESTDIR" ]
 then
