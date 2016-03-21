@@ -149,6 +149,7 @@ namespace MICore
     public sealed class LocalLaunchOptions : LaunchOptions
     {
         private string _coreDumpPath;
+        private bool _useExternalConsole;
 
         private const int DefaultLaunchTimeout = 10 * 1000; // 10 seconds
 
@@ -218,6 +219,7 @@ namespace MICore
             options.InitializeCommonOptions(source);
             options.InitializeServerOptions(source);
             options.CoreDumpPath = source.CoreDumpPath;
+            options._useExternalConsole = source.ExternalConsole;
 
             // Ensure that CoreDumpPath and ProcessId are not specified at the same time
             if (!String.IsNullOrEmpty(source.CoreDumpPath) && source.ProcessId != 0)
@@ -293,6 +295,11 @@ namespace MICore
 
                 _coreDumpPath = value;
             }
+        }
+
+        public bool UseExternalConsole
+        {
+            get { return _useExternalConsole; }
         }
     }
 

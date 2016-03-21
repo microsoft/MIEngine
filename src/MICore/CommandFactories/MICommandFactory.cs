@@ -504,7 +504,7 @@ namespace MICore
 
         #endregion
 
-        #region Abstract Methods
+        #region Other
 
         abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
@@ -522,6 +522,16 @@ namespace MICore
         public virtual bool IsAsyncBreakSignal(Results results)
         {
             return (results.TryFindString("reason") == "signal-received" && results.TryFindString("signal-name") == "SIGINT");
+        }
+
+        /// <summary>
+        /// Determines if a new external console should be spawned on non-Windows platforms for the debugger+app
+        /// </summary>
+        /// <param name="localLaunchOptions">[required] local launch options</param>
+        /// <returns>True if an external console should be used</returns>
+        public virtual bool UseExternalConsoleForLocalLaunch(LocalLaunchOptions localLaunchOptions)
+        {
+            return localLaunchOptions.UseExternalConsole && String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
         }
 
         public Results IsModuleLoad(string cmd)

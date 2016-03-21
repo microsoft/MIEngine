@@ -17,7 +17,7 @@ namespace MICore
         private const string SudoPath = "/usr/bin/sudo";
         private const string GnomeTerminalPath = "/usr/bin/gnome-terminal";
         private const string XTermPath = "/usr/bin/xterm";
-        private const string FifoPrefix = "cpp-debug-fifo-";
+        private const string FifoPrefix = "Microsoft-MIEngine-fifo-";
 
         private string _gdbStdInName;
         private string _gdbStdOutName;
@@ -54,27 +54,6 @@ namespace MICore
             }
 
             return true;
-        }
-
-        private int GetPtraceScope()
-        {
-            // See: https://www.kernel.org/doc/Documentation/security/Yama.txt
-            if (!File.Exists(LocalLinuxTransport.PtraceScopePath))
-            {
-                // If the scope file doesn't exist, security is disabled
-                return 0;
-            }
-
-            try
-            {
-                string scope = File.ReadAllText(LocalLinuxTransport.PtraceScopePath);
-                return Int32.Parse(scope, CultureInfo.CurrentCulture);
-            }
-            catch
-            {
-                // If we were unable to determine the current scope setting, assume we need root
-                return -1;
-            }
         }
 
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
@@ -117,9 +96,6 @@ namespace MICore
             // If running as root, make sure the new console is also root. 
             bool isRoot = LinuxNativeMethods.GetEUid() == 0;
 
-            // If "ptrace_scope" is a value other than 0, only root can attach to arbitrary processes
-            bool requiresRootAttach = this.GetPtraceScope() != 0;
-
             // Check and see if gnome-terminal exists. If not, fall back to xterm
             string terminalCmd, bashCommandPrefix;
             if (File.Exists(GnomeTerminalPath))
@@ -150,7 +126,7 @@ namespace MICore
             string debuggerCmd = localOptions.MIDebuggerPath;
 
             // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
-            if (localOptions.DebuggerMIMode == MIMode.Gdb && localOptions.ProcessId != 0 && !isRoot && requiresRootAttach)
+            if (localOptions.ProcessId != 0 && !isRoot && GetRequiresRootAttach(localOptions))
             {
                 // Prefer pkexec for a nice graphical prompt, but fall back to sudo if it's not available
                 if (File.Exists(LocalLinuxTransport.PKExecPath))
@@ -210,6 +186,42 @@ namespace MICore
             catch
             {
                 // Don't take down OpenDebugAD7 if the file watcher handler failed
+            }
+        }
+
+        private bool GetRequiresRootAttach(LocalLaunchOptions localOptions)
+        {
+            if (localOptions.DebuggerMIMode != MIMode.Clrdbg)
+            {
+                // If "ptrace_scope" is a value other than 0, only root can attach to arbitrary processes
+                if (this.GetPtraceScope() != 0)
+                {
+                    return true; // Attaching to any non-child process requires root
+                }
+            }
+            
+            // TODO: detect if the target is under a different user and if so return true
+            return false;
+        }
+
+        private int GetPtraceScope()
+        {
+            // See: https://www.kernel.org/doc/Documentation/security/Yama.txt
+            if (!File.Exists(LocalLinuxTransport.PtraceScopePath))
+            {
+                // If the scope file doesn't exist, security is disabled
+                return 0;
+            }
+
+            try
+            {
+                string scope = File.ReadAllText(LocalLinuxTransport.PtraceScopePath);
+                return Int32.Parse(scope, CultureInfo.CurrentCulture);
+            }
+            catch
+            {
+                // If we were unable to determine the current scope setting, assume we need root
+                return -1;
             }
         }
 

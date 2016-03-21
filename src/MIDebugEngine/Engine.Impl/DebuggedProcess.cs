@@ -165,19 +165,14 @@ namespace Microsoft.MIDebugEngine
 
                 ITransport localTransport = null;
                 // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
-                // Do not use local linux transport for core dump debugging as no special handling is necessary (no new terminal is involved).
-                // CONSIDER: add new flag and only do this if new terminal is true? Note that setting this to false on linux will cause a deadlock
-                // during debuggee launch
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
-                    _launchOptions.DebuggerMIMode == MIMode.Gdb &&
-                    String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) &&
-                    !localLaunchOptions.IsCoreDump
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && // TODO: Support OSX also
+                    this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions)
                     )
                 {
                     localTransport = new LocalLinuxTransport();
 
                     // Only need to clear terminal for linux local launch
-                    _needTerminalReset = (localLaunchOptions.ProcessId == 0);
+                    _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);
                 }
                 else
                 {
@@ -567,6 +562,15 @@ namespace Microsoft.MIDebugEngine
                     {
                         string escappedDir = EscapePath(_launchOptions.WorkingDirectory);
                         commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
+                    }
+
+                    // On Windows, with CLRDBG, if we should launch a new console, set the TTY
+                    if (localLaunchOptions != null && 
+                        this.MICommandFactory.Mode == MIMode.Clrdbg &&
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
+                    {
+                        commands.Add(new LaunchCommand("-inferior-tty-set <new-console>"));
                     }
 
                     this.AddExecutablePathCommand(commands);

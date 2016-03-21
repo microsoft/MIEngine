@@ -38,6 +38,15 @@ namespace MICore
             return false;
         }
 
+        public override bool UseExternalConsoleForLocalLaunch(LocalLaunchOptions localLaunchOptions)
+        {
+            // NOTE: On Linux at least, there are issues if we try to have GDB launch the process as a child of VS 
+            // code -- it will cause a deadlock during debuggee launch. So we always use the external console 
+            // unless we are in a scenario where the debuggee will not be a child process. In the future we 
+            // might want to change this for other OSs.
+            return String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
+        }
+
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
         {
             // first aquire an exclusive lock. This is used as we don't want to fight with other commands that also require the current
