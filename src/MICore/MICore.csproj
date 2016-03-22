@@ -79,6 +79,10 @@
     <None Include="PostProcessXsdOutput.cmd" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandFactories\clrdbg.cs" />
+    <Compile Include="CommandFactories\gdb.cs" />
+    <Compile Include="CommandFactories\lldb.cs" />
+    <Compile Include="CommandFactories\MICommandFactory.cs" />
     <Compile Include="CommandLock.cs" />
     <Compile Include="Debugger.cs" />
     <Compile Include="ExceptionHelper.cs" />
@@ -91,7 +95,6 @@
       <DependentUpon>LaunchOptions.xsd</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
-    <Compile Include="MICommandFactory.cs" />
     <Compile Include="MICoreResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
