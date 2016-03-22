@@ -47,16 +47,29 @@ elif [ "$1" == "-h" ]; then
     exit 1
 fi
 
-if [ "$1" == "latest" ]; then
-    __ClrDbgVersion=14.0.25109-preview-2865786
-else
-    simpleVersionRegex="^[0-9].*"
-    if ! [[ "$1" =~ $simpleVersionRegex ]]; then
-        echo "Error: '$1' does not look like a valid version number."
-        exit 1
-    fi
-    __ClrDbgVersion=$1
-fi
+version_string=$1
+# This case statement is done on the lower case version of version_string
+# Add new version constants here
+# 'latest' version may be updated
+# all other version contstants i.e. 'vs2015u2' may not be updated after they are finalized
+case "${version_string,,}" in
+    latest)
+        __ClrDbgVersion=14.0.25109-preview-2865786
+        ;;
+    vs2015u2)
+        __ClrDbgVersion=14.0.25109-preview-2865786
+        ;;
+    *)
+        simpleVersionRegex="^[0-9].*"
+        if ! [[ "$1" =~ $simpleVersionRegex ]]; then
+            echo "Error: '$1' does not look like a valid version number."
+            exit 1
+        fi
+        __ClrDbgVersion=$1
+        ;;
+esac
+
+echo "Info: Using clrdbg version '$__ClrDbgVersion'"
 
 __InstallPath=$PWD
 if [ ! -z "$2" ]; then
@@ -80,6 +93,8 @@ if [ "$?" -ne 0 ]; then
     exit 1
 fi
 
+# For the rest of this script we can assume the working directory is the install path
+
 echo 'Info: Generating project.json'
 generate_project_json
 
@@ -91,14 +106,14 @@ generate_nuget_config
 # the shell output when running this as part of docker build
 # Therefore, I redirect the output of these commands to a log
 echo 'Info: Executing dotnet restore'
-dotnet restore > $__InstallPath/dotnet_restore.log 2>&1
+dotnet restore > dotnet_restore.log 2>&1
 if [ $? -ne 0 ]; then
     echo "dotnet restore failed"
     exit 1
 fi
 
 echo 'Info: Executing dotnet publish'
-dotnet publish -o $__InstallPath > $__InstallPath/dotnet_publish.log 2>&1
+dotnet publish -o . > dotnet_publish.log 2>&1
 if [ $? -ne 0 ]; then
     echo "dotnet publish failed"
     exit 1
