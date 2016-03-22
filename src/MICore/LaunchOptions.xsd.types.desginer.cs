@@ -81,15 +81,15 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public MIMode MIMode;
-
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool MIModeSpecified;
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         [System.ComponentModel.DefaultValueAttribute(true)]
         public bool WaitDynamicLibLoad;
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool MIModeSpecified;
         
         public AndroidLaunchOptions() {
             this.Attach = false;
@@ -245,12 +245,7 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public bool ShowDisplayString;
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(true)]
-        public bool WaitDynamicLibLoad;
-
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool ShowDisplayStringSpecified;
@@ -270,6 +265,15 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool MIModeSpecified;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool WaitDynamicLibLoad;
+        
+        public BaseLaunchOptions() {
+            this.WaitDynamicLibLoad = true;
+        }
     }
     
     /// <remarks/>
@@ -335,6 +339,15 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool MIModeSpecified;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool WaitDynamicLibLoad;
+        
+        public IOSLaunchOptions() {
+            this.WaitDynamicLibLoad = true;
+        }
     }
     
     /// <remarks/>
