@@ -47,12 +47,12 @@ elif [ "$1" == "-h" ]; then
     exit 1
 fi
 
-version_string=$1
 # This case statement is done on the lower case version of version_string
 # Add new version constants here
 # 'latest' version may be updated
 # all other version contstants i.e. 'vs2015u2' may not be updated after they are finalized
-case "${version_string,,}" in
+version_string="$(echo $1 | awk '{print tolower($0)}')"
+case $version_string in
     latest)
         __ClrDbgVersion=14.0.25109-preview-2865786
         ;;
