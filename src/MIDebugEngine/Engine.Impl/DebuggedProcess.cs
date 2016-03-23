@@ -491,15 +491,16 @@ namespace Microsoft.MIDebugEngine
             string escappedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
             if (!string.IsNullOrWhiteSpace(escappedSearchPath))
             {
-                if (!_launchOptions.UseUnixSymbolPaths)
+                if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
                 {
-                    // surround so lib path with quotes on windows
-                    commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
+                    // Do not place quotes around so paths for gdb
+                    commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escappedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
+                    
                 }
                 else
                 {
-                    // Do not place quotes around so paths on linux/mac. Gdb will ignore the option on these platforms with quotes. Note that spaces do work without them
-                    commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escappedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
+                    // surround so lib path with quotes in other cases
+                    commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
                 }
             }
 
