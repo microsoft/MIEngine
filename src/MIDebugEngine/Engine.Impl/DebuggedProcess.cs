@@ -491,7 +491,17 @@ namespace Microsoft.MIDebugEngine
             string escappedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
             if (!string.IsNullOrWhiteSpace(escappedSearchPath))
             {
-                commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
+                if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
+                {
+                    // Do not place quotes around so paths for gdb
+                    commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escappedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
+                    
+                }
+                else
+                {
+                    // surround so lib path with quotes in other cases
+                    commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
+                }
             }
 
             if (this.MICommandFactory.SupportsStopOnDynamicLibLoad())
@@ -522,8 +532,9 @@ namespace Microsoft.MIDebugEngine
                     // Add executable information
                     this.AddExecutablePathCommand(commands);
 
-                    // Add core dump information
-                    string coreDumpCommand = String.Concat("-target-select core ", EscapePath(localLaunchOptions.CoreDumpPath));
+                    // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
+                    string coreDump = _launchOptions.UseUnixSymbolPaths ? localLaunchOptions.CoreDumpPath : EscapePath(localLaunchOptions.CoreDumpPath);
+                    string coreDumpCommand = String.Concat("-target-select core ", coreDump);
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, localLaunchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
@@ -776,17 +787,20 @@ namespace Microsoft.MIDebugEngine
         internal string EscapePath(string path, bool ignoreSpaces = false)
         {
             if (_launchOptions.UseUnixSymbolPaths)
-                return path.Replace('\\', '/');
+            {
+                path = path.Replace('\\', '/');
+            }
             else
             {
                 path = path.Trim();
                 path = path.Replace(@"\", @"\\");
-                if (!ignoreSpaces && path.IndexOf(' ') != -1)
-                {
-                    path = '"' + path + '"';
-                }
-                return path;
             }
+
+            if (!ignoreSpaces && path.IndexOf(' ') != -1)
+            {
+                path = '"' + path + '"';
+            }
+            return path;
         }
 
         internal static string UnixPathToWindowsPath(string unixPath)
