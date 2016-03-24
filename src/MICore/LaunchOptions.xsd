@@ -268,6 +268,12 @@
               <xs:documentation>Path to a core dump file for the specified executable.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="ExternalConsole" type="xs:boolean" use="optional">
+            <xs:annotation>
+              <xs:documentation>If enabled, this tells the MIEngine that the target process should run in a new console window which
+              is external to the debugger UI.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
