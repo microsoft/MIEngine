@@ -91,7 +91,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to establish a connection to {0}. Go to the &apos;Debug&apos; pane of the Visual Studio output window for more information..
+        ///   Looks up a localized string similar to Unable to establish a connection to {0}. Debug output may contain more information..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_NoStdErr {
             get {
@@ -176,7 +176,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists on the Visual Studio computer..
+        ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists..
         /// </summary>
         public static string Error_InvalidLocalExePath {
             get {
