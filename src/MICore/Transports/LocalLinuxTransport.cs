@@ -17,6 +17,11 @@ namespace MICore
         private const string SudoPath = "/usr/bin/sudo";
         private const string GnomeTerminalPath = "/usr/bin/gnome-terminal";
         private const string XTermPath = "/usr/bin/xterm";
+        private const string FifoPrefix = "cpp-debug-fifo-";
+
+        private string _gdbStdInName;
+        private string _gdbStdOutName;
+        private FileSystemWatcher _fifoWatcher;
 
         private void MakeGdbFifo(string path)
         {
@@ -95,15 +100,19 @@ namespace MICore
                     debuggeeDir = "/";
             }
 
-            string gdbStdInName = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            string gdbStdOutName = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            _gdbStdInName = Path.Combine(Path.GetTempPath(), FifoPrefix + Path.GetRandomFileName());
+            _gdbStdOutName = Path.Combine(Path.GetTempPath(), FifoPrefix + Path.GetRandomFileName());
 
-            MakeGdbFifo(gdbStdInName);
-            MakeGdbFifo(gdbStdOutName);
+            MakeGdbFifo(_gdbStdInName);
+            MakeGdbFifo(_gdbStdOutName);
+
+            _fifoWatcher = new FileSystemWatcher(Path.GetTempPath(), FifoPrefix + "*");
+            _fifoWatcher.Deleted += FifoWatcher_Deleted;
+            _fifoWatcher.EnableRaisingEvents = true;
 
             // Setup the streams on the fifos as soon as possible.
-            System.IO.FileStream gdbStdInStream = new FileStream(gdbStdInName, FileMode.Open);
-            System.IO.FileStream gdbStdOutStream = new FileStream(gdbStdOutName, FileMode.Open);
+            System.IO.FileStream gdbStdInStream = new FileStream(_gdbStdInName, FileMode.Open);
+            System.IO.FileStream gdbStdOutStream = new FileStream(_gdbStdOutName, FileMode.Open);
 
             // If running as root, make sure the new console is also root. 
             bool isRoot = LinuxNativeMethods.GetEUid() == 0;
@@ -162,8 +171,8 @@ namespace MICore
                     "{4} bash -c \"cd {0}; DbgTerm=`tty`; trap 'rm {2}; rm {3}' EXIT; {1} --interpreter=mi --tty=$DbgTerm < {2} > {3};\"",
                     debuggeeDir,
                     debuggerCmd,
-                    gdbStdInName,
-                    gdbStdOutName,
+                    _gdbStdInName,
+                    _gdbStdOutName,
                     bashCommandPrefix
                     );
 
@@ -187,9 +196,36 @@ namespace MICore
             reader = new StreamReader(gdbStdOutStream);
         }
 
+        private void FifoWatcher_Deleted(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                if (e.FullPath == _gdbStdInName || e.FullPath == _gdbStdOutName)
+                {
+                    Logger?.WriteLine("Gdb fifo deleted, stop debugging");
+                    _fifoWatcher.Deleted -= FifoWatcher_Deleted;
+                    this.Callback.OnDebuggerProcessExit(null);
+                }
+            }
+            catch
+            {
+                // Don't take down OpenDebugAD7 if the file watcher handler failed
+            }
+        }
+
         protected override string GetThreadName()
         {
             return "MI.LocalLinuxTransport";
+        }
+
+        public override void Close()
+        {
+            base.Close();
+
+            if (_fifoWatcher != null)
+            {
+                _fifoWatcher.Deleted -= FifoWatcher_Deleted;
+            }
         }
     }
 }
