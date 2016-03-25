@@ -239,7 +239,7 @@ namespace Microsoft.MIDebugEngine
             {
                 // base classes show up with no value and exp==type 
                 // (sometimes underlying debugger does not follow this convention, when using typedefs in templated types so look for "::" in the field name too)
-                Name = "base";
+                Name = TypeName + " (base)";
                 Value = TypeName;
                 VariableNodeType = NodeType.BaseClass;
             }
