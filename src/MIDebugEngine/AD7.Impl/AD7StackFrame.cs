@@ -25,6 +25,7 @@ namespace Microsoft.MIDebugEngine
         private bool _hasGottenLocalsAndParams = false;
         private uint _radix;
         private AD7MemoryAddress _codeCxt;
+        private AD7DocumentContext _documentCxt;
 
         // An array of this frame's parameters
         private readonly List<VariableInformation> _parameters = new List<VariableInformation>();
@@ -48,10 +49,15 @@ namespace Microsoft.MIDebugEngine
             {
                 _codeCxt = new AD7MemoryAddress(this.Engine, threadContext.pc.Value, _functionName);
             }
+
             if (_textPosition != null)
             {
-                var docContext = new AD7DocumentContext(_textPosition, _codeCxt);
-                _codeCxt.SetDocumentContext(docContext);
+                _documentCxt = new AD7DocumentContext(_textPosition, _codeCxt);
+
+                if (_codeCxt != null)
+                {
+                    _codeCxt.SetDocumentContext(_documentCxt);
+                }
             }
         }
 
@@ -220,7 +226,7 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FLAGS) != 0)
             {
-                if (_codeCxt == null)
+                if (_documentCxt == null)
                 {
                     frameInfo.m_dwFlags |= (uint)enum_FRAMEINFO_FLAGS_VALUES.FIFV_ANNOTATEDFRAME;
                 }
@@ -456,13 +462,14 @@ namespace Microsoft.MIDebugEngine
         // and will use it to open the correct source document for this stack frame.
         int IDebugStackFrame2.GetDocumentContext(out IDebugDocumentContext2 docContext)
         {
-            if (_codeCxt == null)
+            if (_documentCxt == null)
             {
                 docContext = null;
                 return Constants.E_FAIL; // annotated frame
             }
 
-            return _codeCxt.GetDocumentContext(out docContext);
+            docContext = _documentCxt;
+            return Constants.S_OK;
         }
 
         // Gets an evaluation context for expression evaluation within the current context of a stack frame and thread.
@@ -497,9 +504,9 @@ namespace Microsoft.MIDebugEngine
         // Gets the language associated with this stack frame. 
         public int GetLanguageInfo(ref string pbstrLanguage, ref Guid pguidLanguage)
         {
-            if (_codeCxt != null)
+            if (_documentCxt != null)
             {
-                return _codeCxt.GetLanguageInfo(ref pbstrLanguage, ref pguidLanguage);
+                return ((IDebugDocumentContext2)_documentCxt).GetLanguageInfo(ref pbstrLanguage, ref pguidLanguage);
             }
             else
             {

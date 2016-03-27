@@ -40,6 +40,12 @@ namespace Microsoft.MIDebugEngine
         int IDebugDocumentContext2.EnumCodeContexts(out IEnumDebugCodeContexts2 ppEnumCodeCxts)
         {
             ppEnumCodeCxts = null;
+
+            if (_codeContext == null)
+            {
+                return Constants.E_FAIL;
+            }
+
             try
             {
                 AD7MemoryAddress[] codeContexts = new AD7MemoryAddress[1];
