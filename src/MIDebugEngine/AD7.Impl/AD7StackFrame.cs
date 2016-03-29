@@ -226,7 +226,7 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FLAGS) != 0)
             {
-                if (_documentCxt == null)
+                if (_codeCxt == null && _documentCxt == null)
                 {
                     frameInfo.m_dwFlags |= (uint)enum_FRAMEINFO_FLAGS_VALUES.FIFV_ANNOTATEDFRAME;
                 }
