@@ -1422,29 +1422,53 @@ namespace Microsoft.MIDebugEngine
             await _breakpointManager.EnableAfterFuncEvalAsync();
         }
 
-        public async Task<List<ulong>> StartAddressesForLine(string file, uint line)
+        /// <summary>
+        /// Finds the line associated with a start address.
+        /// </summary>
+        public async Task<uint> LineForStartAddress(string file, ulong startAddress)
         {
             List<ulong> addresses = new List<ulong>();
-            var srcLines = await SourceLineCache.GetLinesForFile(file);
-            if (srcLines == null || srcLines.Length == 0)
+            SourceLineMap srcLines = await SourceLineCache.GetLinesForFile(file);
+            if (srcLines == null || srcLines.Count == 0)
             {
                 srcLines = await SourceLineCache.GetLinesForFile(System.IO.Path.GetFileName(file));
             }
-            if (srcLines != null && srcLines.Length > 0)
+            if (srcLines == null || srcLines.Count == 0)
+            {
+                return 0;
+            }
+
+            SourceLine srcLine;
+            if (srcLines.TryGetValue(startAddress, out srcLine))
+            {
+                return srcLine.Line;
+            }
+            return 0;
+        }
+
+        public async Task<List<ulong>> StartAddressesForLine(string file, uint line)
+        {
+            List<ulong> addresses = new List<ulong>();
+            SourceLineMap srcLines = await SourceLineCache.GetLinesForFile(file);
+            if (srcLines == null || srcLines.Count == 0)
+            {
+                srcLines = await SourceLineCache.GetLinesForFile(System.IO.Path.GetFileName(file));
+            }
+            if (srcLines != null && srcLines.Count > 0)
             {
                 bool gotoNextFunc = false;
-                foreach (var l in srcLines)
+                foreach (KeyValuePair<ulong, SourceLine> l in srcLines)
                 {
                     if (gotoNextFunc)
                     {
-                        if (l.Line == 0)
+                        if (l.Value.Line == 0)
                         {
                             gotoNextFunc = false;
                         }
                     }
-                    else if (line == l.Line)
+                    else if (line == l.Value.Line)
                     {
-                        addresses.Add(l.AddrStart);
+                        addresses.Add(l.Value.AddrStart);
                         gotoNextFunc = true;
                     }
                 }

@@ -96,7 +96,21 @@ namespace Microsoft.MIDebugEngine
             process.VerifyNotDebuggingCoreDump();
 
             string basename = System.IO.Path.GetFileName(documentName);     // get basename from Windows path
-            return EvalBindResult(await process.MICommandFactory.BreakInsert(process.EscapePath(basename), line, condition, ResultClass.None), pbreak);
+            basename = process.EscapePath(basename);
+            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(basename, line, condition, ResultClass.None), pbreak);
+
+            // On GDB, the returned line information is from the pending breakpoint instead of the bound breakpoint.
+            // Check the address mapping to make sure the line info is correct.
+            if (process.MICommandFactory.Mode == MIMode.Gdb &&
+                bindResults.BoundBreakpoints != null)
+            {
+                foreach (var boundBreakpoint in bindResults.BoundBreakpoints)
+                {
+                    boundBreakpoint.Line = await process.LineForStartAddress(basename, boundBreakpoint.Addr);
+                }
+            }
+
+            return bindResults;
         }
 
         private static BindResult EvalBindResult(Results bindResult, AD7PendingBreakpoint pbreak)
@@ -324,6 +338,26 @@ namespace Microsoft.MIDebugEngine
             }
 
             return new AD7DocumentContext(_textPosition, new AD7MemoryAddress(engine, Addr, this.FunctionName));
+        }
+
+        /// <summary>
+        /// Returns the start line of the breakpoint.
+        /// NOTE: If set this overwrites any column or multiline information.
+        /// </summary>
+        internal uint Line
+        {
+            get
+            {
+                return _textPosition.BeginPosition.dwLine;
+            }
+            set
+            {
+                if (this.Line == value || value == 0)
+                {
+                    return;
+                }
+                _textPosition = new MITextPosition(_textPosition.FileName, value);
+            }
         }
     }
 }
