@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Collections.Specialized;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace MICore
 {
@@ -28,8 +29,10 @@ namespace MICore
             proc.StartInfo.Arguments = "--interpreter=mi";
             proc.StartInfo.WorkingDirectory = miDebuggerDir;
 
-            //GDB locally requires that the directory be on the PATH, being the working directory isn't good enough
-            if (proc.StartInfo.Environment.ContainsKey("PATH"))
+            // On Windows, GDB locally requires that the directory be on the PATH, being the working directory isn't good enough
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                options.DebuggerMIMode == MIMode.Gdb &&
+                proc.StartInfo.Environment.ContainsKey("PATH"))
             {
                 proc.StartInfo.Environment["PATH"] = proc.StartInfo.Environment["PATH"] + ";" + miDebuggerDir;
             }

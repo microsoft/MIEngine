@@ -101,7 +101,23 @@ namespace MICore
                     _bQuit = true;
                     _streamReadCancellationTokenSource.Dispose();
                     _reader.Dispose();
-                    _writer.Dispose();
+
+                    try
+                    {
+                        _writer.Dispose();
+                    }
+                    catch
+                    {
+                        // This can fail flush side effects if the debugger goes down. When this happens we don't want
+                        // to crash OpenDebugAD7/VS. Stack:
+                        //   System.IO.UnixFileStream.WriteNative(Byte[] array, Int32 offset, Int32 count)
+                        //   System.IO.UnixFileStream.FlushWriteBuffer()
+                        //   System.IO.UnixFileStream.Dispose(Boolean disposing)
+                        //   System.IO.FileStream.Dispose(Boolean disposing)
+                        //   System.IO.Stream.Close()
+                        //   System.IO.StreamWriter.Dispose(Boolean disposing)
+                        //   System.IO.TextWriter.Dispose()
+                    }
                 }
             }
         }
