@@ -86,11 +86,17 @@ namespace MICore.Xml.LaunchOptions {
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool MIModeSpecified;
         
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool WaitDynamicLibLoad;
+        
         public AndroidLaunchOptions() {
             this.Attach = false;
             this.SourceRoots = "";
             this.JVMPort = 65534;
             this.JVMHost = "localhost";
+            this.WaitDynamicLibLoad = true;
         }
     }
     
@@ -259,6 +265,15 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool MIModeSpecified;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool WaitDynamicLibLoad;
+        
+        public BaseLaunchOptions() {
+            this.WaitDynamicLibLoad = true;
+        }
     }
     
     /// <remarks/>
@@ -324,6 +339,15 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool MIModeSpecified;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool WaitDynamicLibLoad;
+        
+        public IOSLaunchOptions() {
+            this.WaitDynamicLibLoad = true;
+        }
     }
     
     /// <remarks/>
@@ -416,6 +440,14 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string CoreDumpPath;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool ExternalConsole;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ExternalConsoleSpecified;
     }
     
     /// <remarks/>

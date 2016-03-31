@@ -38,6 +38,7 @@ namespace MICoreUnitTests
             Assert.Null(options.CustomLaunchSetupCommands);
             Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 0);
             Assert.True(String.IsNullOrEmpty(options.CoreDumpPath));
+            Assert.False(options.UseExternalConsole);
             Assert.False(options.IsCoreDump);
         }
 
@@ -71,6 +72,7 @@ namespace MICoreUnitTests
             Assert.True(options.CustomLaunchSetupCommands != null && options.CustomLaunchSetupCommands.Count == 0);
             Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 0);
             Assert.True(String.IsNullOrEmpty(options.CoreDumpPath));
+            Assert.False(options.UseExternalConsole);
             Assert.False(options.IsCoreDump);
         }
 
@@ -295,7 +297,7 @@ namespace MICoreUnitTests
 
         private LaunchOptions GetLaunchOptions(string content)
         {
-            return LaunchOptions.GetInstance(null, "bogus-exe-path", null, null, content, null, TargetEngine.Native);
+            return LaunchOptions.GetInstance(null, "bogus-exe-path", null, null, content, null, TargetEngine.Native, null);
         }
     }
 }

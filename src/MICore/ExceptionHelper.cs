@@ -15,9 +15,10 @@ namespace MICore
         /// Exception filter function used to report exceptions to telemetry. This **ALWAYS** returns 'true'.
         /// </summary>
         /// <param name="currentException">The current exception which is about to be caught.</param>
+        /// <param name="logger">For logging messages</param>
         /// <param name="reportOnlyCorrupting">If true, only corrupting exceptions are reported</param>
         /// <returns>true</returns>
-        public static bool BeforeCatch(Exception currentException, bool reportOnlyCorrupting)
+        public static bool BeforeCatch(Exception currentException, Logger logger, bool reportOnlyCorrupting)
         {
             if (reportOnlyCorrupting && !IsCorruptingException(currentException))
             {
@@ -28,8 +29,8 @@ namespace MICore
             {
                 HostTelemetry.ReportCurrentException(currentException, "Microsoft.MIDebugEngine");
 
-                Logger.WriteLine("EXCEPTION: " + currentException.GetType());
-                Logger.WriteTextBlock("EXCEPTION: ", currentException.StackTrace);
+                logger?.WriteLine("EXCEPTION: " + currentException.GetType());
+                logger?.WriteTextBlock("EXCEPTION: ", currentException.StackTrace);
             }
             catch
             {

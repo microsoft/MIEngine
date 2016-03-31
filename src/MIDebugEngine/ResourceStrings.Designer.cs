@@ -89,6 +89,17 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Program path &apos;{0}&apos; is missing or invalid.
+        ///
+        ///{1} failed with message: {2}.
+        /// </summary>
+        internal static string Error_ExePathInvalid {
+            get {
+                return ResourceManager.GetString("Error_ExePathInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error &quot;{0}&quot; while reading file: {1}.
         /// </summary>
         internal static string ErrorReadingFile {
@@ -175,6 +186,15 @@ namespace Microsoft.MIDebugEngine {
         internal static string LongBind {
             get {
                 return ResourceManager.GetString("LongBind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to find thread {0} for break event.
+        /// </summary>
+        internal static string MissingThreadBreakEvent {
+            get {
+                return ResourceManager.GetString("MissingThreadBreakEvent", resourceCulture);
             }
         }
         

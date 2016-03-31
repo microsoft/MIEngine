@@ -78,6 +78,15 @@ install_file()
     $InstallAction $1 $DESTDIR/$2$(basename $1)
 }
 
+install_new_file()
+{
+    destFile=$DESTDIR/$2$(basename $1)
+    if [ ! -f $destFile ]; then
+        $InstallAction $1 $destFile
+    fi
+}
+
+
 install_module()
 {
     modulPath=$1
@@ -173,7 +182,7 @@ CSharpExtensionRoot="$(ls -d $VSCodeExtensionsRoot/ms-vscode.csharp-* 2>/dev/nul
 [ "$CSharpExtensionRoot" == "" ] && echo "ERROR: C# extension is not installed in VS Code. No directory matching '$VSCodeExtensionsRoot/ms-vscode.csharp-*' found." && exit 1
 
 num_results=$(echo "$CSharpExtensionRoot" | wc -l)
-[ "$num_results" != "1" ] && echo "ERROR: more than one instance of the C# extension is found under '$VSCodeExtensionsRoot/ms-vscode.csharp-*'." && exit 1
+! [[ "$num_results" =~ ^[[:space:]]*1$ ]] && echo "ERROR: more than one instance of the C# extension is found under '$VSCodeExtensionsRoot/ms-vscode.csharp-*'." && exit 1
 
 if [ -d "$DESTDIR" ]
 then
@@ -220,7 +229,10 @@ echo "Installing clrdbg bits from $CLRDBGBITSDIR"
 
 for clrdbgFile in $(ls $CLRDBGBITSDIR/*); do
     if [ -f "$clrdbgFile" ]; then
-        install_file "$clrdbgFile"
+        # NOTE: We ignore files that already exist. This is because we have already
+        # cleaned the directory originally, and published CoreCLR files. Replacing existing
+        # files will replace some of those CoreCLR files with new copies that will not work.
+        install_new_file "$clrdbgFile"
     fi
 done
     

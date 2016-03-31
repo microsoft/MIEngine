@@ -126,7 +126,7 @@
 {1}</value>
   </data>
   <data name="Error_DebuggerInitializeFailed_NoStdErr" xml:space="preserve">
-    <value>Unable to establish a connection to {0}. Go to the 'Debug' pane of the Visual Studio output window for more information.</value>
+    <value>Unable to establish a connection to {0}. Debug output may contain more information.</value>
   </data>
   <data name="Error_DebuggerInitializeFailed_StdErr" xml:space="preserve">
     <value>Unable to establish a connection to {0}. The following message was written to stderr:
@@ -154,7 +154,7 @@ Error: {1}</value>
     <value>Launch options string provided by the project system is invalid. {0}</value>
   </data>
   <data name="Error_InvalidLocalExePath" xml:space="preserve">
-    <value>Invalid path to executable file path '{0}'. File must be a valid file name that exists on the Visual Studio computer.</value>
+    <value>Invalid path to executable file path '{0}'. File must be a valid file name that exists.</value>
   </data>
   <data name="Error_LauncherNotFound" xml:space="preserve">
     <value>Device App Launcher {0} could not be found.</value>
@@ -206,5 +206,11 @@ Error: {1}</value>
   </data>
   <data name="Error_InvalidLocalCoreDumpPath" xml:space="preserve">
     <value>Invalid path to core dump file '{0}'. File must be a valid file name that exists on the computer.</value>
+  </data>
+  <data name="Error_CannotSpecifyBoth" xml:space="preserve">
+    <value>Both '{0}' and '{1}' cannot be specified at the same time.</value>
+  </data>
+  <data name="Error_InvalidMiDebuggerPath" xml:space="preserve">
+    <value>The value of miDebuggerPath is invalid</value>
   </data>
 </root>

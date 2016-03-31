@@ -404,13 +404,35 @@ namespace MICore
             return FindAll(name).OfType<T>().ToArray();
         }
 
-        public TupleValue Subset(params string[] names)
+        /// <summary>
+        /// Creates a new TupleValue with a subset of values from this TupleValue.
+        /// </summary>
+        /// <param name="requiredNames">The list of names that must be added to the TupleValue.</param>
+        /// <param name="optionalNames">The list of names that will be added to the TupleValue if they exist in this TupleValue.</param>
+        public TupleValue Subset(IEnumerable<string> requiredNames, IEnumerable<string> optionalNames = null)
         {
             List<NamedResultValue> values = new List<NamedResultValue>();
-            foreach (string name in names)
+            
+            // Iterate the required list and add the values.
+            // Will throw if a name cannot be found.
+            foreach (string name in requiredNames)
             {
                 values.Add(new NamedResultValue(name, this.Find(name)));
             }
+
+            // Iterate the optional list and add the values of the name exists.
+            if (null != optionalNames)
+            {
+                foreach (string name in optionalNames)
+                {
+                    ResultValue value;
+                    if (this.TryFind(name, out value))
+                    {
+                        values.Add(new NamedResultValue(name, value));
+                    }
+                }
+            }
+
             return new TupleValue(values);
         }
     }
@@ -572,13 +594,20 @@ namespace MICore
         }
     };
 
-    public static class MIResults
+    public class MIResults
     {
+        private Logger Logger { get; set; }
+
+        public MIResults(Logger logger)
+        {
+            Logger = logger;
+        }
+
         /// <summary>
         /// result-record ==> result-class ( "," result )* 
         /// </summary>
         /// <param name="output"></param>
-        public static Results ParseCommandOutput(string output)
+        public Results ParseCommandOutput(string output)
         {
             output = output.Trim();
             int comma = output.IndexOf(',');
@@ -597,7 +626,7 @@ namespace MICore
             return results;
         }
 
-        public static Results ParseResultList(string listStr, ResultClass resultClass = ResultClass.None)
+        public Results ParseResultList(string listStr, ResultClass resultClass = ResultClass.None)
         {
             listStr = listStr.Trim();
             string rest;
@@ -616,7 +645,7 @@ namespace MICore
             return new Results(resultClass, list);
         }
 
-        public static string ParseCString(string input)
+        public string ParseCString(string input)
         {
             if (input == null)
             {
@@ -641,7 +670,7 @@ namespace MICore
         /// value ==>const | tuple | list
         /// </summary>
         /// <returns></returns>
-        private static ResultValue ParseValue(string resultStr, out string rest)
+        private ResultValue ParseValue(string resultStr, out string rest)
         {
             ResultValue value = null;
             rest = String.Empty;
@@ -675,7 +704,7 @@ namespace MICore
         ///     value -- const | tuple | tuplelist | list
         /// </summary>
         /// <returns></returns>
-        private static ResultValue ParseResultValue(string resultStr, out string rest)
+        private ResultValue ParseResultValue(string resultStr, out string rest)
         {
             ResultValue value = null;
             rest = String.Empty;
@@ -714,7 +743,7 @@ namespace MICore
         /// </summary>
         /// <param name="resultStr">trimmed input string</param>
         /// <param name="rest">trimmed remainder after result</param>
-        private static NamedResultValue ParseResult(string resultStr, out string rest)
+        private NamedResultValue ParseResult(string resultStr, out string rest)
         {
             rest = String.Empty;
             int equals = resultStr.IndexOf('=');
@@ -749,7 +778,7 @@ namespace MICore
             }
         }
 
-        private static ConstValue ParseCString(string input, out string rest)
+        private ConstValue ParseCString(string input, out string rest)
         {
             rest = input;
             StringBuilder output = new StringBuilder(input.Length);
@@ -803,7 +832,7 @@ namespace MICore
 
         private delegate bool EdgeCondition(string s, ref int i);
 
-        private static List<NamedResultValue> ParseResultList(EdgeCondition begin, EdgeCondition end, string input, out string rest)
+        private List<NamedResultValue> ParseResultList(EdgeCondition begin, EdgeCondition end, string input, out string rest)
         {
             rest = string.Empty;
             List<NamedResultValue> list = new List<NamedResultValue>();
@@ -850,7 +879,7 @@ namespace MICore
             return list;
         }
 
-        private static List<NamedResultValue> ParseResultList(char begin, char end, string input, out string rest)
+        private List<NamedResultValue> ParseResultList(char begin, char end, string input, out string rest)
         {
             return ParseResultList((string s, ref int i) =>
             {
@@ -875,7 +904,7 @@ namespace MICore
         /// tuple ==> "{}" | "{" result ( "," result )* "}" 
         /// </summary>
         /// <returns>if one tuple found a TupleValue, otherwise a ValueListValue of TupleValues</returns>
-        private static ResultValue ParseResultTuple(string input, out string rest)
+        private ResultValue ParseResultTuple(string input, out string rest)
         {
             var list = ParseResultList('{', '}', input, out rest);
             if (list == null)
@@ -903,7 +932,7 @@ namespace MICore
         /// <summary>
         /// tuple ==> "{}" | "{" result ( "," result )* "}" 
         /// </summary>
-        private static TupleValue ParseTuple(string input, out string rest)
+        private TupleValue ParseTuple(string input, out string rest)
         {
             var list = ParseResultList('{', '}', input, out rest);
             if (list == null)
@@ -916,7 +945,7 @@ namespace MICore
         /// <summary>
         /// list ==> "[]" | "[" value ( "," value )* "]" | "[" result ( "," result )* "]"  
         /// </summary>
-        private static ResultValue ParseList(string input, out string rest)
+        private ResultValue ParseList(string input, out string rest)
         {
             rest = string.Empty;
             if (input[0] != '[')
@@ -942,7 +971,7 @@ namespace MICore
         /// <summary>
         /// list ==>  "[" value ( "," value )* "]"   
         /// </summary>
-        private static ValueListValue ParseValueList(string input, out string rest)
+        private ValueListValue ParseValueList(string input, out string rest)
         {
             rest = string.Empty;
             List<ResultValue> list = new List<ResultValue>();
@@ -985,7 +1014,7 @@ namespace MICore
         /// <summary>
         /// list ==>  "[" result ( "," result )* "]"  
         /// </summary>
-        private static ResultListValue ParseResultList(string input, out string rest)
+        private ResultListValue ParseResultList(string input, out string rest)
         {
             var list = ParseResultList('[', ']', input, out rest);
             if (list == null)
@@ -995,11 +1024,11 @@ namespace MICore
             return new ResultListValue(list);
         }
 
-        private static void ParseError(string message, string input)
+        private void ParseError(string message, string input)
         {
             Debug.Fail(message + ": " + input);
 #if DEBUG
-            Logger.WriteLine(String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, input));
+            Logger?.WriteLine(String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, input));
 #endif
         }
     }

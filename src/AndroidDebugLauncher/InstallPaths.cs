@@ -26,7 +26,7 @@ namespace AndroidDebugLauncher
         /// <param name="token">token to check for cancelation</param>
         /// <param name="launchOptions">[Required] launch options object</param>
         /// <returns>[Required] Created InstallPaths object</returns>
-        public static InstallPaths Resolve(CancellationToken token, AndroidLaunchOptions launchOptions)
+        public static InstallPaths Resolve(CancellationToken token, AndroidLaunchOptions launchOptions, MICore.Logger logger)
         {
             var result = new InstallPaths();
 
@@ -53,7 +53,7 @@ namespace AndroidDebugLauncher
 
             NdkReleaseId ndkReleaseId;
             NdkReleaseId.TryParseFile(ndkReleaseVersionFile, out ndkReleaseId);
-            MICore.Logger.WriteLine("Using NDK '{0}' from path '{1}'", ndkReleaseId, ndkRoot);
+            logger.WriteLine("Using NDK '{0}' from path '{1}'", ndkReleaseId, ndkRoot);
 
             string targetArchitectureName;
             NDKToolChainFilePath[] possibleGDBPaths;
