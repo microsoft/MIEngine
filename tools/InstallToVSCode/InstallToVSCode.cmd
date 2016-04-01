@@ -63,8 +63,16 @@ if "%CSharpExtensionRoot%"=="" echo ERROR: C# extension is not installed in VS C
 call :SetupSymLink %CSharpExtensionRoot%\coreclr-debug\debugAdapters
 if NOT "%InstallError%"=="" exit /b -1
 
-pushd %~dp0CLRDependencies
-if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to find CLRDependencies directory???& exit /b -1
+mkdir "%DESTDIR%\CLRDependencies"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create directory '%DESTDIR%\CLRDependencies'. &exit /b -1
+
+xcopy /s %~dp0CLRDependencies "%DESTDIR%\CLRDependencies"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy CLRDependencies directory???& exit /b -1
+
+pushd "%DESTDIR%\CLRDependencies"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to change to CLRDependencies directory???& exit /b -1
+
+for /f "tokens=1 delims=" %%l in (project.json.template) do if NOT "%%l"=="@current-OS@" (echo %%l>>project.json) else (echo     "win7-x64":{}>>project.json)
 
 dotnet restore
 if NOT "%ERRORLEVEL%"=="0" echo "ERROR: 'dotnet restore' failed." & exit /b -1

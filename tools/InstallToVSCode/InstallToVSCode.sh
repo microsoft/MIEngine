@@ -1,5 +1,4 @@
 #!/bin/bash
-
 script_dir=`dirname $0`
 
 print_help()
@@ -199,8 +198,31 @@ hash dotnet 2>/dev/null
 SetupSymLink "$CSharpExtensionRoot/coreclr-debug/debugAdapters" "$DESTDIR"
 [ $? -ne 0 ] && echo "ERROR: Unable to link $CSharpExtensionRoot/coreclr-debug/debugAdapters to $DESTDIR" && exit 1
 
-pushd $script_dir/CLRDependencies 1>/dev/null 2>/dev/null
-[ $? -ne 0 ] && echo "ERROR: Unable to find CLRDependencies directory???" && exit 1
+mkdir -p "$DESTDIR/CLRDependencies"
+[ $? -ne 0 ] && echo "ERROR: unable to create destination directory '$DESTDIR/CLRDependencies'." && exit 1
+
+cp -r $script_dir/CLRDependencies/* $DESTDIR/CLRDependencies
+[ $? -ne 0 ] && echo "ERROR: unable to create destination copy CLRDependencies directory." && exit 1
+
+pushd $DESTDIR/CLRDependencies 1>/dev/null 2>/dev/null
+[ $? -ne 0 ] && echo "ERROR: Unable to change to CLRDependencies directory???" && exit 1
+
+OSName=$(uname -s)
+if [ "$OSName" == "Darwin" ]; then
+    # On OSX, hard code the runtime id so we don't need to worry about version.
+    runtime_id="osx.10.11-x64"
+else
+    # This code will --
+    # 1. Call 'dotnet --info'
+    # 2. There should be one line that starts with 'RID:'. Filter to that.
+    # 3. Remove the whitespace from the line
+    # 4. Split the line in two at the colon character, grab the second colom
+    runtime_id=`dotnet --info | grep RID: | tr -d ' ' | cut -f2 -d:`
+    [ "$runtime_id" == "" ] && echo "ERROR: Cannot determine the runtime id. Ensure that .NET CLI build 2173+ is installed." && exit 1
+fi
+
+sed s/@current-OS@/\ \ \ \ \"${runtime_id}\":{}/ project.json.template>project.json
+[ $? -ne 0 ] && echo "ERROR: sed failed." && exit 1
 
 dotnet restore
 [ $? -ne 0 ] && echo "ERROR: dotnet restore failed." && exit 1
