@@ -74,6 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="INDKFilePath.cs" />
     <Compile Include="InstallPaths.cs" />
     <Compile Include="Launcher.cs" />
     <Compile Include="AndroidLaunchOptions.cs" />
@@ -83,6 +84,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>LauncherResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="NDKPrebuiltFilePath.cs" />
     <Compile Include="NDKToolChainFilePath.cs" />
     <Compile Include="NdkToolVersion.cs" />
     <Compile Include="NdkReleaseId.cs" />
