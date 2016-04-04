@@ -207,19 +207,13 @@ cp -r $script_dir/CLRDependencies/* $DESTDIR/CLRDependencies
 pushd $DESTDIR/CLRDependencies 1>/dev/null 2>/dev/null
 [ $? -ne 0 ] && echo "ERROR: Unable to change to CLRDependencies directory???" && exit 1
 
-OSName=$(uname -s)
-if [ "$OSName" == "Darwin" ]; then
-    # On OSX, hard code the runtime id so we don't need to worry about version.
-    runtime_id="osx.10.11-x64"
-else
-    # This code will --
-    # 1. Call 'dotnet --info'
-    # 2. There should be one line that starts with 'RID:'. Filter to that.
-    # 3. Remove the whitespace from the line
-    # 4. Split the line in two at the colon character, grab the second colom
-    runtime_id=`dotnet --info | grep RID: | tr -d ' ' | cut -f2 -d:`
-    [ "$runtime_id" == "" ] && echo "ERROR: Cannot determine the runtime id. Ensure that .NET CLI build 2173+ is installed." && exit 1
-fi
+# This code will --
+# 1. Call 'dotnet --info'
+# 2. There should be one line that starts with 'RID:'. Filter to that.
+# 3. Remove the whitespace from the line
+# 4. Split the line in two at the colon character, grab the second colom
+runtime_id=`dotnet --info | grep RID: | tr -d ' ' | cut -f2 -d:`
+[ "$runtime_id" == "" ] && echo "ERROR: Cannot determine the runtime id. Ensure that .NET CLI build 2173+ is installed." && exit 1
 
 sed s/@current-OS@/\ \ \ \ \"${runtime_id}\":{}/ project.json.template>project.json
 [ $? -ne 0 ] && echo "ERROR: sed failed." && exit 1
