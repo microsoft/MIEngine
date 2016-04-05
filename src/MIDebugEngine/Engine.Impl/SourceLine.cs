@@ -11,12 +11,24 @@ using MICore;
 
 namespace Microsoft.MIDebugEngine
 {
+    public class SourceLineMap : Dictionary<ulong, SourceLine>
+    {
+        public SourceLineMap(int capacity)
+            : base(capacity)
+        { }
+
+        public void Add(ulong addr, uint line)
+        {
+            base.Add(addr, new SourceLine(line, addr));
+        }
+    }
+
     public struct SourceLine
     {
         public uint Line { get; private set; }
         public ulong AddrStart { get; private set; }
 
-        public void Set(uint line, ulong addr)
+        public SourceLine(uint line, ulong addr)
         {
             Line = line;
             AddrStart = addr;
@@ -27,15 +39,15 @@ namespace Microsoft.MIDebugEngine
 
     internal class SourceLineCache
     {
-        private Dictionary<string, SourceLine[]> _mapFileToLinenums;
+        private Dictionary<string, SourceLineMap> _mapFileToLinenums;
         private DebuggedProcess _process;
 
         public SourceLineCache(DebuggedProcess process)
         {
             _process = process;
-            _mapFileToLinenums = new Dictionary<string, SourceLine[]>();
+            _mapFileToLinenums = new Dictionary<string, SourceLineMap>();
         }
-        internal async Task<SourceLine[]> GetLinesForFile(string file)
+        internal async Task<SourceLineMap> GetLinesForFile(string file)
         {
             string fileKey = file;
             lock (_mapFileToLinenums)
@@ -45,26 +57,26 @@ namespace Microsoft.MIDebugEngine
                     return _mapFileToLinenums[fileKey];
                 }
             }
-            SourceLine[] lines = null;
-            lines = await LinesForFile(fileKey);
+            SourceLineMap linesMap = null;
+            linesMap = await LinesForFile(fileKey);
             lock (_mapFileToLinenums)
             {
                 if (_mapFileToLinenums.ContainsKey(fileKey))
                 {
                     return _mapFileToLinenums[fileKey];
                 }
-                if (lines != null)
+                if (linesMap != null)
                 {
-                    _mapFileToLinenums.Add(fileKey, lines);
+                    _mapFileToLinenums.Add(fileKey, linesMap);
                 }
                 else
                 {
-                    _mapFileToLinenums.Add(fileKey, new SourceLine[0]);    // empty list to prevent requerying. Release this list on dynamic library loading
+                    _mapFileToLinenums.Add(fileKey, new SourceLineMap(0));    // empty list to prevent requerying. Release this list on dynamic library loading
                 }
                 return _mapFileToLinenums[fileKey];
             }
         }
-        private async Task<SourceLine[]> LinesForFile(string file)
+        private async Task<SourceLineMap> LinesForFile(string file)
         {
             string cmd = "-symbol-list-lines " + _process.EscapePath(file);
             Results results = await _process.CmdAsync(cmd, ResultClass.None);
@@ -75,14 +87,14 @@ namespace Microsoft.MIDebugEngine
             }
 
             ValueListValue lines = results.Find<ValueListValue>("lines");
-            SourceLine[] list = new SourceLine[lines.Content.Length];
+            SourceLineMap linesMap = new SourceLineMap(lines.Content.Length);
             for (int i = 0; i < lines.Content.Length; ++i)
             {
                 ulong addr = lines.Content[i].FindAddr("pc");
                 uint line = lines.Content[i].FindUint("line");
-                list[i].Set(line, addr);
+                linesMap.Add(addr, line);
             }
-            return list;
+            return linesMap;
         }
 
         internal void OnLibraryLoad()
@@ -92,7 +104,7 @@ namespace Microsoft.MIDebugEngine
                 List<string> toDelete = new List<string>();
                 foreach (var l in _mapFileToLinenums)
                 {
-                    if (l.Value.Length == 0)
+                    if (l.Value.Count == 0)
                     {
                         toDelete.Add(l.Key);
                     }
