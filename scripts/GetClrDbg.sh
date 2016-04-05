@@ -12,15 +12,54 @@ print_help()
     echo '<version> can be "latest" or a version number such as 14.0.25109-preview-2865786'
 }
 
+# Sets __RuntimeID as given by 'dotnet --info'
+get_dotnet_runtime_id()
+{
+    # example output of dotnet --info
+    # .NET Command Line Tools (1.0.0-beta-002194)
+    #
+    # Product Information:
+    #  Version:     1.0.0-beta-002194
+    #  Commit Sha:  a28369bfe0
+    #
+    # Runtime Environment:
+    #  OS Name:     ubuntu
+    #  OS Version:  14.04
+    #  OS Platform: Linux
+    #  RID:         ubuntu.14.04-x64
+
+    # Get the output of dotnet --info
+    info="$(dotnet --info)"
+
+    # filter to the line that contains the RID. Output still contains spaces. Example: '         ubuntu.14.04-x64'
+    rid_line="$(echo "${info}" | awk 'BEGIN { FS=":" }{ if ( $1 ~ "RID" ) { print $2 } }')"
+
+    # trim whitespace from awk return
+    rid="$(echo -e "${rid_line}" | tr -d '[[:space:]]')"
+
+    __RuntimeID=$rid
+}
+
 # Produces project.json in the current directory
+# $1 is Runtime ID
 generate_project_json()
 {
+    if [ -z $1 ]; then
+        echo "Error: project.json cannot be produced without a Runtime ID being provided."
+        exit 1
+    fi
+
     echo "{"                                                                >  project.json
     echo "   \"dependencies\": {"                                           >> project.json
     echo "       \"Microsoft.VisualStudio.clrdbg\": \"$__ClrDbgVersion\""   >> project.json
     echo "   },"                                                            >> project.json
     echo "   \"frameworks\": {"                                             >> project.json
-    echo "       \"dnxcore50\": { }"                                        >> project.json
+    echo "       \"netstandardapp1.5\": {"                                  >> project.json
+    echo "          \"imports\": [ \"dnxcore50\", \"portable-net45+win8\" ]" >> project.json
+    echo "       }"                                                         >> project.json
+    echo "   },"                                                            >> project.json
+    echo "   \"runtimes\": {"                                               >> project.json
+    echo "      \"$1\": {}"                                                 >> project.json
     echo "   }"                                                             >> project.json
     echo "}"                                                                >> project.json
 }
@@ -54,10 +93,10 @@ fi
 version_string="$(echo $1 | awk '{print tolower($0)}')"
 case $version_string in
     latest)
-        __ClrDbgVersion=14.0.25109-preview-2865786
+        __ClrDbgVersion=14.0.25201-preview-2911579
         ;;
     vs2015u2)
-        __ClrDbgVersion=14.0.25109-preview-2865786
+        __ClrDbgVersion=14.0.25201-preview-2911579
         ;;
     *)
         simpleVersionRegex="^[0-9].*"
@@ -95,8 +134,18 @@ fi
 
 # For the rest of this script we can assume the working directory is the install path
 
+echo 'Info: Determinig Runtime ID'
+__RuntimeID=
+get_dotnet_runtime_id
+if [ -z $__RuntimeID ]; then
+    echo "Error: Unable to determine dotnet Runtime ID"
+    echo "GetClrDbg.sh requires .NET CLI Tools version >= 1.0.0-beta-002173. Please make sure your install of .NET CLI is up to date"
+    exit 1
+fi
+echo "Info: Using Runtime ID '$__RuntimeID'"
+
 echo 'Info: Generating project.json'
-generate_project_json
+generate_project_json $rid
 
 echo 'Info: Generating NuGet.config'
 generate_nuget_config
