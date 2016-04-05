@@ -549,6 +549,13 @@ namespace Microsoft.MIDebugEngine
 
                     int pid = localLaunchOptions.ProcessId;
                     commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
+
+                    if (this.MICommandFactory.Mode == MIMode.Lldb)
+                    {
+                        // LLDB finishes attach in break mode. Gdb does finishes in run mode. Issue a continue in lldb to match the gdb behavior
+                        commands.Add(new LaunchCommand("-exec-continue", ignoreFailures: false));
+                    }
+
                     return commands;
                 }
                 else
