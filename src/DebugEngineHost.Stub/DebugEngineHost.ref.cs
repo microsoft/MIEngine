@@ -251,6 +251,16 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Allocate storage and copy the guid to the allocated bytes
+        /// </summary>
+        /// <param name="id">guid to copy</param>
+        /// <returns>pointer to the allocated bytes</returns>
+        public static IntPtr AllocateGuid(Guid id)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -273,6 +283,20 @@ namespace Microsoft.DebugEngineHost
         /// <param name="loader">Natvis loader method to invoke</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Natvis")]
         public static void FindNatvisInSolution(NatvisLoader loader)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Provides interactions with the host's debugger
+    /// </summary>
+    public static class HostDebugger
+    {
+        /// <summary>
+        /// Attach to a process using the provided options
+        /// </summary>
+        public static void Attach(string filePath, string options, Guid engineId)
         {
             throw new NotImplementedException();
         }

@@ -213,11 +213,18 @@ namespace Microsoft.MIDebugEngine
                             {
                                 thread.TargetId = tid;
                             }
-                            else if (targetId.StartsWith("Thread") &&
+                            else if (targetId.StartsWith("Thread", StringComparison.OrdinalIgnoreCase) &&
                                      System.UInt32.TryParse(targetId.Substring("Thread ".Length), out tid) &&
                                      tid != 0
                             )
                             {
+                                thread.TargetId = tid;
+                            }
+                            else if (targetId.StartsWith("Process", StringComparison.OrdinalIgnoreCase) &&
+                                    System.UInt32.TryParse(targetId.Substring("Process ".Length), out tid) &&
+                                    tid != 0
+                            )
+                            {   // First thread in a linux process has tid == pid
                                 thread.TargetId = tid;
                             }
                         }

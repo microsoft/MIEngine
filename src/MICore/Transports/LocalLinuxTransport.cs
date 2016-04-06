@@ -23,7 +23,7 @@ namespace MICore
         private string _gdbStdOutName;
         private FileSystemWatcher _fifoWatcher;
 
-        private void MakeGdbFifo(string path)
+        public static void MakeGdbFifo(string path, Logger logger)
         {
             // Mod is normally in octal, but C# has no octal values. This is 384 (rw owner, no rights anyone else)
             const int rw_owner = 384;
@@ -32,7 +32,7 @@ namespace MICore
             if (result != 0)
             {
                 // Failed to create the fifo. Bail.
-                Logger?.WriteLine("Failed to create gdb fifo");
+                logger?.WriteLine("Failed to create gdb fifo");
                 throw new ArgumentException("MakeGdbFifo failed to create fifo at path {0}", path);
             }
         }
@@ -82,8 +82,8 @@ namespace MICore
             _gdbStdInName = Path.Combine(Path.GetTempPath(), FifoPrefix + Path.GetRandomFileName());
             _gdbStdOutName = Path.Combine(Path.GetTempPath(), FifoPrefix + Path.GetRandomFileName());
 
-            MakeGdbFifo(_gdbStdInName);
-            MakeGdbFifo(_gdbStdOutName);
+            MakeGdbFifo(_gdbStdInName, Logger);
+            MakeGdbFifo(_gdbStdOutName, Logger);
 
             _fifoWatcher = new FileSystemWatcher(Path.GetTempPath(), FifoPrefix + "*");
             _fifoWatcher.Deleted += FifoWatcher_Deleted;

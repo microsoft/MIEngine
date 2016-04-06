@@ -228,11 +228,6 @@
               <xs:documentation>Network address of the MI Debugger Server to connect to (example: localhost:1234).</xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="ProcessId" type="xs:int" use="optional">
-            <xs:annotation>
-              <xs:documentation>If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.</xs:documentation>
-            </xs:annotation>
-          </xs:attribute>
           <xs:attribute name="DebugServer" type="xs:string" use="optional">
             <xs:annotation>
               <xs:documentation>Full path to the server executable. If non-null then the MIEngine will start the server.</xs:documentation>
@@ -261,11 +256,6 @@
           <xs:attribute name="ServerLaunchTimeout" type="xs:int" use="optional">
             <xs:annotation>
               <xs:documentation>How long, in milliseconds, to wait for the DebugServer executable to start and ServerStarted pattern to be found.</xs:documentation>
-            </xs:annotation>
-          </xs:attribute>
-          <xs:attribute name="CoreDumpPath" type="xs:string" use="optional">
-            <xs:annotation>
-              <xs:documentation>Path to a core dump file for the specified executable.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="ExternalConsole" type="xs:boolean" use="optional">
@@ -396,6 +386,23 @@
         <xs:documentation>
           If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
           Should only be enabled if debugger is fast enough providing the value.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="ProcessId" type="xs:int" use="optional">
+      <xs:annotation>
+        <xs:documentation>If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="CoreDumpPath" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>Path to a core dump file for the specified executable.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DebugChildProcesses" type="xs:boolean" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          If true, automatically attach debugger to any child processes created.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

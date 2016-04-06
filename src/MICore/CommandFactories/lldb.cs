@@ -26,6 +26,11 @@ namespace MICore
             return false;
         }
 
+        public override bool SupportsChildProcessDebugging()
+        {
+            return false;
+        }
+
         public override bool AllowCommandsWhileRunning()
         {
             return false;
@@ -61,6 +66,15 @@ namespace MICore
         {
             // lldb-mi doesn't support target-async mode, and doesn't seem to need to
             return Task.FromResult((object)null);
+        }
+        public override Task Signal(string sig)
+        {
+            throw new NotImplementedException("lldb signal command");
+        }
+
+        public override Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done)
+        {
+            throw new NotImplementedException("lldb catch command");
         }
     }
 }

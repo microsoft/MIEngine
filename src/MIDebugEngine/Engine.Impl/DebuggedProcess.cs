@@ -47,6 +47,7 @@ namespace Microsoft.MIDebugEngine
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
         private bool _needTerminalReset;
+        private ProcessSequence _inProgress;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
         {
@@ -421,6 +422,12 @@ namespace Microsoft.MIDebugEngine
             };
 
             BreakChangeEvent += _breakpointManager.BreakpointModified;
+
+            BreakCreatedEvent += (object o, EventArgs args) =>
+            {
+                ResultEventArgs result = (ResultEventArgs)args;
+                _inProgress?.BreakpointCreated(result.Results);
+            };
         }
 
         public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
@@ -435,6 +442,7 @@ namespace Microsoft.MIDebugEngine
             {
                 await this.MICommandFactory.EnableTargetAsyncOption();
                 List<LaunchCommand> commands = GetInitializeCommands();
+                _inProgress?.Enable(true);
 
                 total = commands.Count();
                 var i = 0;
@@ -463,7 +471,6 @@ namespace Microsoft.MIDebugEngine
                         await ConsoleCmdAsync(command.CommandText);
                     }
                 }
-
 
                 success = true;
             }
@@ -516,6 +523,14 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
+            if (MICommandFactory.SupportsChildProcessDebugging())
+            {
+                if (_launchOptions.DebugChildProcesses || true)
+                {
+                    _inProgress = new DebugUnixChild(this, this._launchOptions);  // TODO: let the user enable/disable this functionality
+                }
+            }
+
             // Custom launch options replace the built in launch steps. This is used on iOS
             // and Linux attach scenarios.
             if (_launchOptions.CustomLaunchSetupCommands != null)
@@ -531,23 +546,23 @@ namespace Microsoft.MIDebugEngine
                     this.AddExecutablePathCommand(commands);
 
                     // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
-                    string coreDump = _launchOptions.UseUnixSymbolPaths ? localLaunchOptions.CoreDumpPath : EscapePath(localLaunchOptions.CoreDumpPath);
+                    string coreDump = _launchOptions.UseUnixSymbolPaths ? _launchOptions.CoreDumpPath : EscapePath(_launchOptions.CoreDumpPath);
                     string coreDumpCommand = String.Concat("-target-select core ", coreDump);
-                    string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, localLaunchOptions.CoreDumpPath);
+                    string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
-                else if (null != localLaunchOptions && localLaunchOptions.ProcessId != 0)
+                else if (_launchOptions.ProcessId != 0)
                 {
                     // This is an attach
 
                     // check for remote
-                    string destination = localLaunchOptions.MIDebuggerServerAddress;
+                    string destination = localLaunchOptions?.MIDebuggerServerAddress;
                     if (!string.IsNullOrEmpty(destination))
                     {
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
 
-                    int pid = localLaunchOptions.ProcessId;
+                    int pid = _launchOptions.ProcessId;
                     commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
@@ -647,6 +662,11 @@ namespace Microsoft.MIDebugEngine
 
         private async Task HandleBreakModeEvent(ResultEventArgs results)
         {
+            if (_inProgress != null && await _inProgress.Stopped(results.Results))
+            {
+                return;
+            }
+
             string reason = results.Results.TryFindString("reason");
             int tid;
             if (!results.Results.Contains("thread-id"))
@@ -793,7 +813,27 @@ namespace Microsoft.MIDebugEngine
                     {
                         code = EngineUtils.SignalMap.Instance[sigName];
                     }
-                    _callback.OnException(thread, sigName, results.Results.TryFindString("signal-meaning"), code);
+                    bool _stoppedAtSIGSTOP = false;
+                    if (sigName == "SIGSTOP")
+                    {
+                        lock (AD7Engine.ChildProcessLaunch)
+                        {
+                            if (AD7Engine.ChildProcessLaunch.Contains(_launchOptions.ProcessId))
+                            {
+                                AD7Engine.ChildProcessLaunch.Remove(_launchOptions.ProcessId);
+                                _stoppedAtSIGSTOP = true;
+                            }
+                        }
+                    }
+                    string message = results.Results.TryFindString("signal-meaning");
+                    if (_stoppedAtSIGSTOP)
+                    {
+                        await MICommandFactory.Signal("SIGCONT");
+                    }
+                    else
+                    {
+                        _callback.OnException(thread, sigName, message, code);
+                    }
                 }
             }
             else if (reason == "exception-received")
@@ -1024,14 +1064,10 @@ namespace Microsoft.MIDebugEngine
             else
             {
                 bool attach = false;
-                int attachPid = 0;
-                if (_launchOptions is LocalLaunchOptions)
+                int attachPid = _launchOptions.ProcessId;
+                if (attachPid != 0)
                 {
-                    attachPid = ((LocalLaunchOptions)_launchOptions).ProcessId;
-                    if (attachPid != 0)
-                    {
-                        attach = true;
-                    }
+                    attach = true;
                 }
 
                 if (!attach)

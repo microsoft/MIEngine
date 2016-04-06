@@ -35,6 +35,7 @@ namespace MICore
         public event EventHandler ModuleLoadEvent;  // occurs when stopped after a libraryLoadEvent
         public event EventHandler LibraryLoadEvent; // a shared library was loaded
         public event EventHandler BreakChangeEvent; // a breakpoint was changed
+        public event EventHandler BreakCreatedEvent; // a breakpoint was created
         public event EventHandler ThreadCreatedEvent;
         public event EventHandler ThreadExitedEvent;
         public event EventHandler<ResultEventArgs> MessageEvent;
@@ -1061,6 +1062,14 @@ namespace MICore
                     BreakChangeEvent(this, new ResultEventArgs(results));
                 }
             }
+            else if (cmd.StartsWith("breakpoint-created,", StringComparison.Ordinal))
+            {
+                results = _miResults.ParseResultList(cmd.Substring("breakpoint-created,".Length));
+                if (BreakCreatedEvent != null)
+                {
+                    BreakCreatedEvent(this, new ResultEventArgs(results));
+                }
+            }
             else if (cmd.StartsWith("thread-group-started,", StringComparison.Ordinal))
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-group-started,".Length));
@@ -1152,6 +1161,27 @@ namespace MICore
                     _debuggeePids.Add(threadGroupId, pid);
                 }
             }
+        }
+
+        public int InferiorByPid(int pid)
+        {
+            foreach (var grp in _debuggeePids)
+            {
+                if ( grp.Value == pid)
+                {
+                    // Inferior names are of the form "iX" where X in the inferior number
+                    string name = grp.Key;
+                    if (name[0] == 'i')
+                    {
+                        int id;
+                        if (Int32.TryParse(name.Substring(1), out id))
+                        {
+                            return id;
+                        }
+                    }
+                }
+            }
+            return 0;
         }
 
         private void HandleThreadGroupExited(Results results)
