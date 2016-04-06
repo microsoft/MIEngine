@@ -135,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Host.cs" />
+    <Compile Include="HostDebugger.cs" />
     <Compile Include="HostConfigurationSection.cs" />
     <Compile Include="HostConfigurationStore.cs" />
     <Compile Include="HostConfigurationException.cs" />

@@ -58,6 +58,13 @@ namespace Microsoft.MIDebugEngine
 
         private IDebugSettingsCallback110 _settingsCallback;
 
+        public static List<int> ChildProcessLaunch;
+
+        static AD7Engine()
+        {
+            ChildProcessLaunch = new List<int>();
+        }
+
         public AD7Engine()
         {
             Host.EnsureMainThreadInitialized();
@@ -811,7 +818,7 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                _pollThread.RunOperation(() => _debuggedProcess.Execute(thread.GetDebuggedThread()));
+                _pollThread.RunOperation(() => _debuggedProcess.Execute(thread?.GetDebuggedThread()));
             }
             catch (InvalidCoreDumpOperationException)
             {
@@ -831,10 +838,13 @@ namespace Microsoft.MIDebugEngine
         // that is, not all threads should be required to be stopped before this method returns. The implementation of this method may be 
         // as simple as calling the IDebugProgram2::CauseBreak method on this program.
         //
-        // The sample engine only supports debugging native applications and therefore only has one program per-process
         public int Stop()
         {
-            throw new NotImplementedException();
+            DebuggedProcess.WorkerThread.RunOperation(async () =>
+            {
+                await _debuggedProcess.CmdBreak();
+            });
+            return Constants.S_OK;
         }
 
         // WatchForExpressionEvaluationOnThread is used to cooperate between two different engines debugging 

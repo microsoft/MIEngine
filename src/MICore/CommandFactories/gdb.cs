@@ -33,6 +33,11 @@ namespace MICore
             return true;
         }
 
+        public override bool SupportsChildProcessDebugging()
+        {
+            return true;
+        }
+
         public override bool AllowCommandsWhileRunning()
         {
             return false;
@@ -257,6 +262,18 @@ namespace MICore
                 }
             }
             return TargetArchitecture.Unknown;
+        }
+
+        public override async Task Signal(string sig)
+        {
+            string command = String.Format("-interpreter-exec console \"signal {0}\"", sig);
+            await _debugger.CmdAsync(command, ResultClass.running);
+        }
+
+        public override async Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done)
+        {
+            string command = onlyOnce ? "tcatch " : "catch ";
+            await _debugger.ConsoleCmdAsync(command + name);
         }
     }
 }
