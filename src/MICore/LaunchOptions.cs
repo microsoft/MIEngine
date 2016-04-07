@@ -405,6 +405,20 @@ namespace MICore
             }
         }
 
+        private string _absolutePrefixSoLibSearchPath;
+        /// <summary>
+        /// [Optional] Absolute prefix for directories to search for shared library symbols
+        /// </summary>
+        public string AbsolutePrefixSOLibSearchPath
+        {
+            get { return _absolutePrefixSoLibSearchPath; }
+            set
+            {
+                VerifyCanModifyProperty("AbsolutePrefixSOLibSearchPath");
+                _absolutePrefixSoLibSearchPath = value;
+            }
+        }
+
         private string _additionalSOLibSearchPath;
         /// <summary>
         /// [Optional] Additional directories to search for shared library symbols
@@ -809,6 +823,9 @@ namespace MICore
                 else
                     this.AdditionalSOLibSearchPath = string.Concat(this.AdditionalSOLibSearchPath, ";", additionalSOLibSearchPath);
             }
+
+            if (string.IsNullOrEmpty(this.AbsolutePrefixSOLibSearchPath))
+                this.AbsolutePrefixSOLibSearchPath = source.AbsolutePrefixSOLibSearchPath;
         }
 
         public static string RequireAttribute(string attributeValue, string attributeName)

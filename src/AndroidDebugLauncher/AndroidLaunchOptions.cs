@@ -52,6 +52,7 @@ namespace AndroidDebugLauncher
             }
 
             this.AdditionalSOLibSearchPath = xmlOptions.AdditionalSOLibSearchPath;
+            this.AbsolutePrefixSOLibSearchPath = xmlOptions.AbsolutePrefixSOLibSearchPath ?? "\"\"";
             this.DeviceId = LaunchOptions.RequireAttribute(xmlOptions.DeviceId, "DeviceId");
             this.LogcatServiceId = GetLogcatServiceIdAttribute(xmlOptions.LogcatServiceId);
             this.WaitDynamicLibLoad = xmlOptions.WaitDynamicLibLoad;
@@ -183,6 +184,11 @@ namespace AndroidDebugLauncher
         /// [Required] Directory where files from the device/emulator will be downloaded to.
         /// </summary>
         public string IntermediateDirectory { get; private set; }
+
+        /// <summary>
+        /// [Optional] Absolute prefix for directories to search for shared library symbols
+        /// </summary>
+        public string AbsolutePrefixSOLibSearchPath { get; private set; }
 
         /// <summary>
         /// [Optional] Additional directories to add to the search path

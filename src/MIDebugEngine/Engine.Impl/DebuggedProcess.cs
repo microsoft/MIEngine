@@ -484,6 +484,13 @@ namespace Microsoft.MIDebugEngine
 
             commands.AddRange(_launchOptions.SetupCommands);
 
+            // If the absolute prefix so path has not been specified, then don't set it to null
+            // because the debugger might already have a default.
+            if (!string.IsNullOrEmpty(_launchOptions.AbsolutePrefixSOLibSearchPath))
+            {
+                commands.Add(new LaunchCommand("-gdb-set solib-absolute-prefix " + _launchOptions.AbsolutePrefixSOLibSearchPath));
+            }
+
             // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
             string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
             string escappedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
