@@ -44,5 +44,16 @@ namespace AndroidDebugLauncher
         {
             return Path.Combine(ndkRoot, "prebuilt");
         }
+
+        public static NDKPrebuiltFilePath[] GDBServerPaths(string targetArchitecture)
+        {
+            string gdbServerPartialPath = Path.Combine(
+                String.Concat("android-", targetArchitecture),
+                "gdbserver", "gdbserver");
+
+            return new NDKPrebuiltFilePath[] {
+                new NDKPrebuiltFilePath(gdbServerPartialPath)
+            };
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace AndroidDebugLauncher
     {
         public static string ExtractWorkingDirectory(string commandOutput, string packageName)
         {
-            IEnumerable<string> allLines = GetLines(commandOutput);
+            IEnumerable<string> allLines = commandOutput.GetLines();
 
             // Linux will allow just about anything in a directory name as long as it is excaped. Android is much
             // more picky about package names. Let's reject characters which are invalid in a package name, highly
@@ -34,49 +34,8 @@ namespace AndroidDebugLauncher
                 return workingDirectoryLines.Single();
             }
 
-            // Handle run-as errors. We will get into this code path if the supplied package name is wrong.
-            // Example commandOutput: "run-as: Package 'com.bogus.hellojni' is unknown"
-            string runAsLine = allLines.Where(line => line.StartsWith("run-as:", StringComparison.Ordinal))
-                .FirstOrDefault();
-
-            if (runAsLine != null)
-            {
-                string errorMessage = runAsLine.Substring("run-as:".Length).Trim();
-                if (errorMessage.Length > 0)
-                {
-                    if (!char.IsPunctuation(errorMessage[errorMessage.Length - 1]))
-                    {
-                        errorMessage = string.Concat(errorMessage, ".");
-                    }
-
-                    Telemetry.LaunchFailureCode telemetryCode = Telemetry.LaunchFailureCode.RunAsFailure;
-
-                    if (errorMessage == string.Format(CultureInfo.InvariantCulture, "Package '{0}' is unknown.", packageName))
-                    {
-                        telemetryCode = Telemetry.LaunchFailureCode.RunAsPackageUnknown;
-                        errorMessage = string.Concat(errorMessage, "\r\n\r\n", LauncherResources.Error_RunAsUnknownPackage);
-                    }
-
-                    throw new LauncherException(telemetryCode, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_ShellCommandFailed, "run-as", errorMessage));
-                }
-            }
-
+            RunAsOutputParser.ThrowIfRunAsErrors(commandOutput, packageName);
             throw new LauncherException(Telemetry.LaunchFailureCode.BadPwdOutput, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_ShellCommandBadResults, "pwd"));
-        }
-
-        private static IEnumerable<string> GetLines(string content)
-        {
-            using (var reader = new StringReader(content))
-            {
-                while (true)
-                {
-                    var line = reader.ReadLine();
-                    if (line == null)
-                        break;
-
-                    yield return line;
-                }
-            }
         }
     }
 }
