@@ -29,7 +29,7 @@ MIEngine requires [Visual Studio 2015](https://www.visualstudio.com/downloads/do
 
 ### Get Started
 * Clone the sources: `git clone https://github.com/Microsoft/MIEngine.git`
-* Open [MIDebugEngine.sln](https://github.com/Microsoft/MIEngine/blob/master/MIDebugEngine.sln) in Visual Studio.
+* Open [src/MIDebugEngine.sln](https://github.com/Microsoft/MIEngine/blob/master/src/MIDebugEngine.sln) in Visual Studio.
 * Debug -> Start Debugging (or F5) to to build, deploy, and start debugging the [Experimental Instance of Visual Studio](https://msdn.microsoft.com/en-us/library/bb166560.aspx).
 * See the [wiki](https://github.com/Microsoft/MIEngine/wiki) for more info.
 
