@@ -6,6 +6,7 @@ using libadb;
 using JDbg;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -435,6 +436,14 @@ namespace AndroidDebugLauncher
                 }
 
                 launchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
+                launchOptions.AbsolutePrefixSOLibSearchPath = _launchOptions.AbsolutePrefixSOLibSearchPath;
+
+                // The default ABI is 'Cygwin' in the Android NDK >= r11 for Windows.
+                launchOptions.SetupCommands = new ReadOnlyCollection<LaunchCommand>( new LaunchCommand[]
+                {
+                    new LaunchCommand("-gdb-set osabi GNU/Linux")
+                });
+
                 launchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
                 launchOptions.WorkingDirectory = _launchOptions.IntermediateDirectory;
 

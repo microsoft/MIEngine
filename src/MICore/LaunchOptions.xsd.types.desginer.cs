@@ -76,6 +76,10 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string AbsolutePrefixSOLibSearchPath;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string AdditionalSOLibSearchPath;
         
         /// <remarks/>
@@ -256,6 +260,10 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string AbsolutePrefixSOLibSearchPath;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string AdditionalSOLibSearchPath;
         
         /// <remarks/>
@@ -327,6 +335,10 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public TargetArchitecture TargetArchitecture;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string AbsolutePrefixSOLibSearchPath;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]

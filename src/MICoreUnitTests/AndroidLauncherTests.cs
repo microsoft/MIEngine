@@ -33,6 +33,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
             Assert.Equal(options.IntermediateDirectory, temp);
             Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
+            Assert.Equal(options.AbsolutePrefixSOLibSearchPath, "\"\"");
             Assert.Equal(options.DeviceId, "default");
             Assert.False(options.IsAttach);
         }
@@ -109,6 +110,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
             Assert.Equal(options.IntermediateDirectory, temp);
             Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
+            Assert.Equal(options.AbsolutePrefixSOLibSearchPath, "\"\"");
             Assert.Equal(options.DeviceId, "default");
             Assert.Equal(options.IsAttach, true);
         }
