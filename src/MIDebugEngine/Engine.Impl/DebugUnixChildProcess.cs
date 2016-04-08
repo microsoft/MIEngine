@@ -58,7 +58,7 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_newpid != 0, "Child process id not found.");
             if (_newpid != 0)
             {
-                int inf = _process.InferiorByPid(_newpid);
+                uint inf = _process.InferiorByPid(_newpid);
                 if (inf != 0)
                 {
                     await _process.ConsoleCmdAsync("inferior " + inf.ToString());
@@ -78,7 +78,7 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_newpid != 0, "Child process id not found.");
             if (_newpid != 0)
             {
-                int inf = _process.InferiorByPid(_newpid);
+                uint inf = _process.InferiorByPid(_newpid);
                 if (inf != 0)
                 {
                     await _process.ConsoleCmdAsync("inferior " + inf.ToString());
@@ -94,7 +94,7 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_state == State.AtExec, "wrong vfork processing state");
             if (_newpid != 0)
             {
-                int inf = _process.InferiorByPid(_newpid);
+                uint inf = _process.InferiorByPid(_newpid);
                 if (inf != 0)
                 {
                     await _process.ConsoleCmdAsync("inferior " + inf.ToString());
@@ -105,7 +105,7 @@ namespace Microsoft.MIDebugEngine
 
         private async Task<bool> DetachAndContinue()
         {
-            int inf = _process.InferiorByPid(_newpid);
+            uint inf = _process.InferiorByPid(_newpid);
             if (inf == 0)
                 return false;    // cannot process the child
             await _process.ConsoleCmdAsync("inferior " + inf.ToString());
@@ -120,7 +120,6 @@ namespace Microsoft.MIDebugEngine
             _process.Engine.GetEngineInfo(out engineName, out engineGuid);
             _launchOptions.BaseOptions.ProcessId = _newpid;
             _launchOptions.BaseOptions.ProcessIdSpecified = true;
-            //_process.Callbacks.OnDebugLaunchedProcessAttachRequest(_newpid, _process.Engine);
             _state = State.Enabled;
             HostDebugger.Attach(_launchOptions.ExePath, LaunchOptions.GetOptionsString(_launchOptions.BaseOptions), engineGuid);
             await _process.MICommandFactory.ExecContinue();     // continue the parent
@@ -131,7 +130,7 @@ namespace Microsoft.MIDebugEngine
         {
             if (enable && _state == State.Init)
             {
-                await _process.MICommandFactory.Set("detach-on-fork", "off");
+                await _process.MICommandFactory.SetOption("detach-on-fork", "off");
                 await _process.MICommandFactory.Catch("fork");
                 await _process.MICommandFactory.Catch("vfork");
                 _state = State.Enabled;
@@ -187,7 +186,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         int threadId = results.FindInt("thread-id");
                         _newpid = results.FindInt("newpid");
-                        await _process.MICommandFactory.Set("schedule-multiple", "on");
+                        await _process.MICommandFactory.SetOption("schedule-multiple", "on");
                         await _process.MICommandFactory.Catch("exec", onlyOnce: true);
                         var thread = await _process.ThreadCache.GetThread(threadId);
                         _state = State.AtVfork;
@@ -201,7 +200,7 @@ namespace Microsoft.MIDebugEngine
                 case State.AtVfork:
                     if ("exec" == results.TryFindString("reason"))
                     {
-                        await _process.MICommandFactory.Set("schedule-multiple", "off");
+                        await _process.MICommandFactory.SetOption("schedule-multiple", "off");
                         await RunChildToMain();
                     }
                     else

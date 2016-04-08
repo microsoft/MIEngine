@@ -257,6 +257,11 @@ namespace MICore
             await _debugger.CmdAsync(command, ResultClass.running);
         }
 
+        /// <summary>
+        /// Deliver signal to the process. Continue running the process. [Optional]
+        /// </summary>
+        /// <param name="sig">The signal to deliver, e.g. "SIGSTOP"</param>
+        /// <returns></returns>
         public abstract Task Signal(string sig);
 
         public async Task TargetDetach()
@@ -532,12 +537,16 @@ namespace MICore
 
         #region Helpers
 
+<<<<<<< 62d7b4e45a37e1bac5c07d4a5463e7e41711090e
         public virtual Task<TargetArchitecture> GetTargetArchitecture()
         {
             return Task.FromResult(TargetArchitecture.Unknown);
         }
 
         public virtual async Task<Results> Set(string variable, string value, ResultClass resultClass = ResultClass.done)
+=======
+        public virtual async Task<Results> SetOption(string variable, string value, ResultClass resultClass = ResultClass.done)
+>>>>>>> Review feedback for child process debugging
         {
             string command = string.Format("-gdb-set {0} {1}", variable, value);
             Results results = await _debugger.CmdAsync(command, resultClass);

@@ -579,7 +579,7 @@ namespace Microsoft.MIDebugEngine
 
             if (MICommandFactory.SupportsChildProcessDebugging())
             {
-                if (_launchOptions.DebugChildProcesses || true)
+                if (_launchOptions.DebugChildProcesses)
                 {
                     _inProgress = new DebugUnixChild(this, this._launchOptions);  // TODO: let the user enable/disable this functionality
                 }

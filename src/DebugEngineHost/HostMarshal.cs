@@ -101,18 +101,5 @@ namespace Microsoft.DebugEngineHost
         {
             return new VSImpl.VSEventCallbackWrapper(ad7Callback);
         }
-
-        /// <summary>
-        /// Allocate storage and copy the guid to the allocated bytes
-        /// </summary>
-        /// <param name="guid">guid to copy</param>
-        /// <returns>pointer to the allocated bytes</returns>
-        public static IntPtr AllocateGuid(Guid guid)
-        {
-            byte[] guidBytes = guid.ToByteArray();
-            IntPtr result = Marshal.AllocCoTaskMem(guidBytes.Length);
-            Marshal.Copy(guidBytes, 0, result, guidBytes.Length);
-            return result;
-        }
     }
 }

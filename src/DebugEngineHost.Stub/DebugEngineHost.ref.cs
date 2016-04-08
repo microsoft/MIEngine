@@ -284,16 +284,6 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
-
-        /// <summary>
-        /// Allocate storage and copy the guid to the allocated bytes
-        /// </summary>
-        /// <param name="id">guid to copy</param>
-        /// <returns>pointer to the allocated bytes</returns>
-        public static IntPtr AllocateGuid(Guid id)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     /// <summary>

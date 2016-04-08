@@ -1224,7 +1224,7 @@ namespace MICore
             }
         }
 
-        public int InferiorByPid(int pid)
+        public uint InferiorByPid(int pid)
         {
             foreach (var grp in _debuggeePids)
             {
@@ -1234,8 +1234,8 @@ namespace MICore
                     string name = grp.Key;
                     if (name[0] == 'i')
                     {
-                        int id;
-                        if (Int32.TryParse(name.Substring(1), out id))
+                        uint id;
+                        if (UInt32.TryParse(name.Substring(1), out id))
                         {
                             return id;
                         }
