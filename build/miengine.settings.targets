@@ -49,6 +49,7 @@
     <DropConfigurationName Condition="'$(Lab)' == 'true' AND $(Configuration.Contains('Debug'))">Debug</DropConfigurationName>
     <DropConfigurationName Condition="'$(Lab)' == 'true' AND $(Configuration.Contains('Release'))">Release</DropConfigurationName>
     <DropRootDir Condition="'$(TF_BUILD_BINARIESDIRECTORY)'!=''">$(TF_BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropRootDir>
+    <DropRootDir Condition="'$(BUILD_BINARIESDIRECTORY)'!=''">$(BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropRootDir>
     <DropRootDir Condition="'$(DropRootDir)'==''">$(MIEngineRoot)bin\$(DropConfigurationName)\drop</DropRootDir>
   </PropertyGroup>
    
