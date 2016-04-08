@@ -71,6 +71,7 @@ namespace MICore
 
                     line = line.TrimEnd();
                     Logger?.WriteLine("->" + line);
+                    Logger?.Flush();
 
                     try
                     {
@@ -136,6 +137,7 @@ namespace MICore
         protected void Echo(string cmd)
         {
             Logger?.WriteLine("<-" + cmd);
+            Logger?.Flush();
             _writer.WriteLine(cmd);
             _writer.Flush();
         }

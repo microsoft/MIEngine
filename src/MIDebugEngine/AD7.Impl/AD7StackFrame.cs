@@ -455,7 +455,8 @@ namespace Microsoft.MIDebugEngine
         // pointer associated with the stack frame. The debugger calls EnumProperties to obtain these values in the sample.
         int IDebugStackFrame2.GetDebugProperty(out IDebugProperty2 property)
         {
-            throw new NotImplementedException();
+            property = null;
+            return Constants.E_NOTIMPL;
         }
 
         // Gets the document context for this stack frame. The debugger will call this when the current stack frame is changed
