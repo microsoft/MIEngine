@@ -265,11 +265,11 @@
     <LocalType>DerivedClass *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str.?1&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 &lt;.L.str.1&gt; "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>const_escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str.?1&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 &lt;.L.str.1&gt; "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>state</Local>
@@ -339,11 +339,11 @@
     <LocalType>DerivedClass *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str.?1&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 &lt;.L.str.1&gt; "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>const_escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str.?1&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 &lt;.L.str.1&gt; "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>state</Local>
