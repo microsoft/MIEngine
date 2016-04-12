@@ -15,7 +15,7 @@ if not defined VisualStudioVersion (
 set _DeviceId=
 set _Platform=
 set _SdkRoot=%ProgramFiles(x86)%\Android\android-sdk
-set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r11c
 set _LoopCount=
 set _Verbose=
 set _TestsToRun=
@@ -60,36 +60,36 @@ if /i "%~1"=="/Tests"       goto SetTests
 echo ERROR: Unknown argument '%~1'.&exit /b -1
 
 :NextArg
-shift
+shift /1
 goto ArgLoopStart
 
 :SetDeviceId
-shift
+shift /1
 set _DeviceId=%~1
 goto :NextArg
 
 :SetPlatform
-shift
+shift /1
 set _Platform=%~1&
 goto :NextArg
 
 :SetSdkRoot
-shift
+shift /1
 set _SdkRoot=%~1
 goto :NextArg
 
 :SetNdkRoot
-shift
+shift /1
 set _NdkRoot=%~1
 goto :NextArg
 
 :SetLoop
-shift
+shift /1
 set _LoopCount=%~1
 goto :NextArg
 
 :SetTests
-shift
+shift /1
 if "%~1"=="" goto SetTestsDone
 set _TestsToRun="%~1" %_TestsToRun%
 goto SetTests
