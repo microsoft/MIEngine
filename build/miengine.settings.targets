@@ -13,14 +13,12 @@
             <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
             <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
             <DelaySign>true</DelaySign>
-            <Lab>true</Lab>
         </PropertyGroup>
     </When>
     <Otherwise>
         <PropertyGroup>
             <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
             <DelaySign>false</DelaySign>
-            <Lab>false</Lab>
         </PropertyGroup>
     </Otherwise>
   </Choose>

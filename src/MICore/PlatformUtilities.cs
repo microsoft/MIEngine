@@ -121,7 +121,7 @@ namespace MICore
         }
 
         // Abstract API call to add an environment variable to a new process
-        public static void AddToEnvironment(this ProcessStartInfo processStartInfo, string key, string value)
+        public static void SetEnvironmentVariable(this ProcessStartInfo processStartInfo, string key, string value)
         {
 #if CORECLR
             processStartInfo.Environment[key] = value;
@@ -132,7 +132,7 @@ namespace MICore
         }
 
         // Abstract API call to add an environment variable to a new process
-        public static string GetFromEnvironment(this ProcessStartInfo processStartInfo, string key)
+        public static string GetEnvironmentVariable(this ProcessStartInfo processStartInfo, string key)
         {
 #if CORECLR
             if (processStartInfo.Environment.ContainsKey(key))
