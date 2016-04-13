@@ -44,7 +44,7 @@
       <DesktopProjects Include="../MICoreUnitTests/MICoreUnitTests.csproj" />
       <DesktopProjects Include="../MIDebugEngine/MIDebugEngine.csproj" />
       <DesktopProjects Include="../JDbgUnitTests/JDbgUnitTests.csproj" />
-      <DesktopProjects Include="../MIDebugEngine/MIDebugEngine.csproj" />
+      <DesktopProjects Include="../MIDebugPackage/MIDebugPackage.csproj" />
       <DesktopProjects Include="../DebugEngineHost.Stub/DebugEngineHost.stub.csproj" />
     </ItemGroup>
 
