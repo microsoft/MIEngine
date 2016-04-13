@@ -17,7 +17,7 @@ namespace AndroidDebugLauncher
         private readonly TextColumn _pidColumn;
         private readonly TextColumn _nameColumn;
 
-        public ProcessListParser(string text) : this(SplitIntoLines(text))
+        public ProcessListParser(string text) : this(text.GetLines().ToList())
         {
         }
 
@@ -47,25 +47,6 @@ namespace AndroidDebugLauncher
                 // use the last column if one wasn't called 'name'
                 _nameColumn = columns[columns.Length - 1];
             }
-        }
-
-        private static IList<string> SplitIntoLines(string text)
-        {
-            List<string> lines = new List<string>();
-
-            using (var reader = new StringReader(text))
-            {
-                while (true)
-                {
-                    var line = reader.ReadLine();
-                    if (line == null)
-                        break;
-
-                    lines.Add(line);
-                }
-            }
-
-            return lines;
         }
 
         /// <summary>

@@ -330,5 +330,47 @@ namespace MICoreUnitTests
                 Assert.True(e.TelemetryCode == Telemetry.LaunchFailureCode.RunAsPackageUnknown);
             }
         }
+
+        [Fact]
+        public void TestRunAsOutputParser1()
+        {
+            try
+            {
+                RunAsOutputParser.ThrowIfRunAsErrors("run-as: Package 'com.bogus.hellojni' is unknown", "com.bogus.hellojni");
+                Assert.True(false, "Code should not be reached");
+            }
+            catch (LauncherException e)
+            {
+                Assert.True(e.TelemetryCode == Telemetry.LaunchFailureCode.RunAsPackageUnknown);
+            }
+        }
+
+        [Fact]
+        public void TestRunAsOutputParser2()
+        {
+            try
+            {
+                RunAsOutputParser.ThrowIfRunAsErrors("run-as: Package 'com.android.phone' is not an application", "com.android.phone");
+                Assert.True(false, "Code should not be reached");
+            }
+            catch (LauncherException e)
+            {
+                Assert.True(e.TelemetryCode == Telemetry.LaunchFailureCode.RunAsFailure);
+            }
+        }
+
+        [Fact]
+        public void TestRunAsOutputParser3()
+        {
+            try
+            {
+                RunAsOutputParser.ThrowIfRunAsErrors("run-as: Package 'com.android.email' is not debuggable", "com.android.email");
+                Assert.True(false, "Code should not be reached");
+            }
+            catch (LauncherException e)
+            {
+                Assert.True(e.TelemetryCode == Telemetry.LaunchFailureCode.RunAsPackageNotDebuggable);
+            }
+        }
     }
 }

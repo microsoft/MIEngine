@@ -73,28 +73,24 @@ namespace AndroidDebugLauncher
             bool usePrebuiltGDB = ndkReleaseId.CompareVersion(r11) >= 0;
             IEnumerable<INDKFilePath> prebuiltGDBPath = NDKPrebuiltFilePath.GDBPaths();
 
-            string targetArchitectureName;
+            string targetArchitectureName = launchOptions.TargetArchitecture.ToNDKArchitectureName();
             IEnumerable<INDKFilePath> possibleGDBPaths;
 
             switch (launchOptions.TargetArchitecture)
             {
                 case MICore.TargetArchitecture.X86:
-                    targetArchitectureName = "x86";
                     possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath: NDKToolChainFilePath.x86_GDBPaths();
                     break;
 
                 case MICore.TargetArchitecture.X64:
-                    targetArchitectureName = "x64";
                     possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.x64_GDBPaths();
                     break;
 
                 case MICore.TargetArchitecture.ARM:
-                    targetArchitectureName = "arm";
                     possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.ARM_GDBPaths();
                     break;
 
                 case MICore.TargetArchitecture.ARM64:
-                    targetArchitectureName = "arm64";
                     possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.ARM64_GDBPaths();
                     break;
 
@@ -103,23 +99,32 @@ namespace AndroidDebugLauncher
                     throw new InvalidOperationException();
             }
 
-            INDKFilePath matchedPath;
+            INDKFilePath gdbMatchedPath;
             result.GDBPath = GetNDKFilePath(
                 string.Concat("Android-", targetArchitectureName, "-GDBPath"),
                 ndkRoot,
                 possibleGDBPaths,
-                out matchedPath
+                out gdbMatchedPath
                 );
-            if (launchOptions.TargetArchitecture == MICore.TargetArchitecture.X86 && matchedPath != null)
+            if (launchOptions.TargetArchitecture == MICore.TargetArchitecture.X86 && gdbMatchedPath != null)
             {
                 var r10b = new NdkReleaseId(10, 'b');
 
                 // Before r10b, the 'windows-x86_64' ndk didn't support x86 debugging
-                if (ndkReleaseId.IsValid && ndkReleaseId.CompareVersion(r10b) < 0 && matchedPath.PartialFilePath.Contains(@"\windows-x86_64\"))
+                if (ndkReleaseId.IsValid && ndkReleaseId.CompareVersion(r10b) < 0 && gdbMatchedPath.PartialFilePath.Contains(@"\windows-x86_64\"))
                 {
                     throw new LauncherException(Telemetry.LaunchFailureCode.NoReport, LauncherResources.Error_64BitNDKNotSupportedForX86);
                 }
             }
+
+            IEnumerable<INDKFilePath> gdbServerPath = NDKPrebuiltFilePath.GDBServerPaths(targetArchitectureName);
+            INDKFilePath gdbServerMatchedPath;
+            result.GDBServerPath = GetNDKFilePath(
+                string.Concat("Android-", targetArchitectureName, "-GDBServerPath"),
+                ndkRoot,
+                gdbServerPath,
+                out gdbServerMatchedPath // not used
+                );
 
             token.ThrowIfCancellationRequested();
 
@@ -139,6 +144,15 @@ namespace AndroidDebugLauncher
         /// [Required] Path to GDB
         /// </summary>
         public string GDBPath
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// [Required] Path to GDBServer
+        /// </summary>
+        public string GDBServerPath
         {
             get;
             private set;
