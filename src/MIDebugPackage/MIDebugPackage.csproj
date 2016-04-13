@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
+  <Import Project="..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -139,6 +140,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -161,33 +163,11 @@
     <GlassDirCopy Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(ToolsHome)\InstallToVSCode\coreclr\package.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(ToolsHome)\InstallToVSCode\coreclr\coreclr.ad7Engine.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
     <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
@@ -248,12 +228,19 @@
   <Import Project="..\..\build\DropFiles.targets" />
   <Import Project="..\..\build\PackageNuGet.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
+    <Error Condition="!Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
+  </Target>
+  <Import Project="..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
   <!--
   Target to drop the built files into a directory.
   For the official build, we need to drop files to the build share
   For normal builds, we drop files to <enlistment-root>\bin\debug\drop for easy sharing
   -->
-  
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

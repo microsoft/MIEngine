@@ -52,6 +52,8 @@ namespace Microsoft.MIDebugEngine
 
         private HostConfigurationStore _configStore;
 
+        public Logger Logger { private set; get; }
+
         private IDebugSettingsCallback110 _settingsCallback;
 
         public AD7Engine()
@@ -135,7 +137,7 @@ namespace Microsoft.MIDebugEngine
                 if (_pollThread == null)
                 {
                     // We are being asked to debug a process when we currently aren't debugging anything
-                    _pollThread = new WorkerThread();
+                    _pollThread = new WorkerThread(Logger);
 
                     _engineCallback = new EngineCallback(this, ad7Callback);
 
@@ -166,7 +168,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting:true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting:true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -347,7 +349,7 @@ namespace Microsoft.MIDebugEngine
         int IDebugEngine2.SetRegistryRoot(string registryRoot)
         {
             _configStore = new HostConfigurationStore(registryRoot, EngineConstants.EngineId);
-            Logger.EnsureInitialized(_configStore);
+            Logger = Logger.EnsureInitialized(_configStore);
             return Constants.S_OK;
         }
 
@@ -396,10 +398,10 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 // Note: LaunchOptions.GetInstance can be an expensive operation and may push a wait message loop
-                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, _engineCallback, TargetEngine.Native);
+                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, _engineCallback, TargetEngine.Native, Logger);
 
                 // We are being asked to debug a process when we currently aren't debugging anything
-                _pollThread = new WorkerThread();
+                _pollThread = new WorkerThread(Logger);
                 var cancellationTokenSource = new CancellationTokenSource();
 
                 using (cancellationTokenSource)
@@ -430,7 +432,7 @@ namespace Microsoft.MIDebugEngine
 
                 return Constants.S_OK;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
                 exception = e;
                 // Return from the catch block so that we can let the exception unwind - the stack can get kind of big
@@ -511,7 +513,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -534,7 +536,16 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 _pollThread.RunOperation(() => _debuggedProcess.CmdTerminate());
-                _debuggedProcess.Terminate();
+
+                if (_debuggedProcess.MICommandFactory.Mode != MIMode.Clrdbg)
+                {
+                    _debuggedProcess.Terminate();
+                }
+                else
+                {
+                    // Clrdbg issues a proper exit event on CmdTerminate call, don't call _debuggedProcess.Terminate() which 
+                    // simply sends a fake exit event that overrides the exit code of the real one
+                }
             }
             catch (ObjectDisposedException)
             {
@@ -572,13 +583,20 @@ namespace Microsoft.MIDebugEngine
             // VS Code currently isn't providing a thread Id in certain cases. Work around this by handling null values.
             AD7Thread thread = pThread as AD7Thread;
 
-            if (_pollThread.IsPollThread())
+            try
             {
-                _debuggedProcess.Continue(thread?.GetDebuggedThread());
+                if (_pollThread.IsPollThread())
+                {
+                    _debuggedProcess.Continue(thread?.GetDebuggedThread());
+                }
+                else
+                {
+                    _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+                }
             }
-            else
+            catch (InvalidCoreDumpOperationException)
             {
-                _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
             }
 
             return Constants.S_OK;
@@ -590,10 +608,7 @@ namespace Microsoft.MIDebugEngine
         {
             _breakpointManager.ClearBoundBreakpoints();
 
-            _pollThread.RunOperation(new Operation(delegate
-            {
-                _debuggedProcess.Detach();
-            }));
+            _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
 
             return Constants.S_OK;
         }
@@ -750,7 +765,14 @@ namespace Microsoft.MIDebugEngine
         {
             AD7Thread thread = (AD7Thread)pThread;
 
-            _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
+            try
+            {
+                _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
+            }
+            catch (InvalidCoreDumpOperationException)
+            {
+                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+            }
 
             return Constants.S_OK;
         }
@@ -780,7 +802,14 @@ namespace Microsoft.MIDebugEngine
         {
             AD7Thread thread = (AD7Thread)pThread;
 
-            _pollThread.RunOperation(() => _debuggedProcess.Execute(thread.GetDebuggedThread()));
+            try
+            {
+                _pollThread.RunOperation(() => _debuggedProcess.Execute(thread.GetDebuggedThread()));
+            }
+            catch (InvalidCoreDumpOperationException)
+            {
+                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+            }
 
             return Constants.S_OK;
         }

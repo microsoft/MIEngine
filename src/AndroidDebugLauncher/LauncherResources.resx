@@ -169,6 +169,9 @@ Value name: {1}</value>
   <data name="Error_PackageIsNotRunning" xml:space="preserve">
     <value>Cannot Attach. The package '{0}' is not running on the device or emulator.</value>
   </data>
+  <data name="Error_RunAsNonDebuggablePackage" xml:space="preserve">
+    <value>Non-debuggable application installed on the target device. Please reinstall the debuggable version.</value>
+  </data>
   <data name="Error_RunAsUnknownPackage" xml:space="preserve">
     <value>Troubleshooting steps:
 - Try launching the app from the app list. If the app is not in the app list, or cannot be started, this may indicate a problem with the app deployment.

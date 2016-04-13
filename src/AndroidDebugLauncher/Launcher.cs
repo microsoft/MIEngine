@@ -6,6 +6,7 @@ using libadb;
 using JDbg;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -40,6 +41,7 @@ namespace AndroidDebugLauncher
 
         private const string LogcatServiceMessage_SourceId = "1CED0608-638C-4B00-A1D2-CE56B1B672FA";
         private const int LogcatServiceMessage_NewProcess = 0;
+        private MICore.Logger Logger { get; set; }
 
         void IPlatformAppLauncher.Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback)
         {
@@ -50,6 +52,7 @@ namespace AndroidDebugLauncher
 
             _eventCallback = eventCallback;
             RegistryRoot.Set(configStore.RegistryRoot);
+            Logger = MICore.Logger.EnsureInitialized(configStore);
         }
 
         void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
@@ -174,7 +177,7 @@ namespace AndroidDebugLauncher
 
                 actions.Add(new NamedAction(LauncherResources.Step_ResolveInstallPaths, () =>
                 {
-                    _installPaths = InstallPaths.Resolve(token, _launchOptions);
+                    _installPaths = InstallPaths.Resolve(token, _launchOptions, Logger);
                 }));
 
                 actions.Add(new NamedAction(LauncherResources.Step_ConnectToDevice, () =>
@@ -288,7 +291,7 @@ namespace AndroidDebugLauncher
                         string pwdCommand = string.Concat("run-as ", _launchOptions.Package, " /system/bin/sh -c pwd");
                         ExecCommand(pwdCommand);
                         workingDirectory = PwdOutputParser.ExtractWorkingDirectory(_shell.Out, _launchOptions.Package);
-                        gdbServerRemotePath = GetGdbServerPath(workingDirectory);
+                        gdbServerRemotePath = GetGdbServerPath(workingDirectory, device);
 
                         KillOldInstances(gdbServerRemotePath);
                     }
@@ -433,12 +436,21 @@ namespace AndroidDebugLauncher
                 }
 
                 launchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
+                launchOptions.AbsolutePrefixSOLibSearchPath = _launchOptions.AbsolutePrefixSOLibSearchPath;
+
+                // The default ABI is 'Cygwin' in the Android NDK >= r11 for Windows.
+                launchOptions.SetupCommands = new ReadOnlyCollection<LaunchCommand>( new LaunchCommand[]
+                {
+                    new LaunchCommand("-gdb-set osabi GNU/Linux")
+                });
+
                 launchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
                 launchOptions.WorkingDirectory = _launchOptions.IntermediateDirectory;
 
                 launchOptions.DebuggerMIMode = MIMode.Gdb;
 
                 launchOptions.VisualizerFile = "Microsoft.Android.natvis";
+                launchOptions.WaitDynamicLibLoad = _launchOptions.WaitDynamicLibLoad;
 
                 return launchOptions;
             }
@@ -544,37 +556,62 @@ namespace AndroidDebugLauncher
             }
         }
 
-        private string GetGdbServerPath(string workingDirectory)
+        private string GetGdbServerPath(string workingDirectory, Device device)
         {
-            // On the android device, the gdbserver and native shared objects of an ndk app can be out /data/data/<appname>/lib/*
-            // The lib directory symlinks to somewhere else on the file system, for example /data/data/<appname>/lib/ -> /data/app-lib/<appname>-1/lib
-            // On 64 bit, this symlink is broken (I think this is a bug in 64 bit android).
-            // We must attempt to find the gdbserver path manually then. 
+            // On Android, the files of an application are extracted to the system owned directory /data/app/<appname>-<int>/lib
+            // For 32-bit shared libraries, Android will create a symlink from the app owned directory /data/data/<appname>/lib
+            // to maintain backwards compatibility with previous API versions.
 
-            // Android issue: https://code.google.com/p/android/issues/detail?id=186010&thanks=186010&ts=1441922626
+            // There is no such symlink for 64-bit libraries, since Android only supports 64-bit since API 21, at which point
+            // the app owned directory was no longer used for libs.
 
-            //check the correct location for x86/arm/arm64
+            // check the legacy location for 32-bit libs
             string gdbServerPath = workingDirectory + "/lib/gdbserver";
 
             string lsCommand = string.Format(CultureInfo.InvariantCulture, "ls {0}", gdbServerPath);
             string output = ExecCommand(lsCommand);
-            if (string.Compare(output, gdbServerPath, StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Compare(output, gdbServerPath, StringComparison.Ordinal) != 0)
             {
-                //gdbserver is symlinked correctly
-                return gdbServerPath;
+                // <app data>/lib is not symlinked to system's app data directory (/data/app/<app package>/lib). 
+                // We copy gdbserver ourselves because of 2 reasons:
+                // 1. the app user doesn't have permissions on /data/app/<app package>-<suffix>/lib (it's owned by system)
+                // 2. we can't deterministically figure out the location where gdbserver is in /data/app because of the suffix,
+                //    which is used by Android to have multiple copies of the APK extracted in the system.
+                string tmpGDBServer = string.Format(CultureInfo.InvariantCulture, "/data/local/tmp/gdbserver");
+
+                device.FileSystem.Upload(_installPaths.GDBServerPath, tmpGDBServer, true);
+
+                // Files can't be executed from /data/local/tmp
+                string dest = string.Format(CultureInfo.InvariantCulture, "{0}/gdbserver", workingDirectory);
+
+                // Can't use cp since shell doesn't have permissions to /data/data/<app>
+                // and the app uid doesn't have permissions to /data/local/tmp
+                string copyGDBServerCommand = string.Format(CultureInfo.InvariantCulture,
+                    "cat {0} | run-as {1} /system/bin/sh -c \"cat > {2}\"", tmpGDBServer, _launchOptions.Package, dest);
+                int rc = ExecCommand(copyGDBServerCommand, out output);
+                RunAsOutputParser.ThrowIfRunAsErrors(output, _launchOptions.Package);
+                if (rc != 0)
+                {
+                    throw new LauncherException(
+                        Telemetry.LaunchFailureCode.NoGdbServer,
+                        string.Format(CultureInfo.InvariantCulture, LauncherResources.Error_ShellCommandFailed, copyGDBServerCommand, output));
+                }
+
+                string chmodGDBServerCommand = string.Format(CultureInfo.InvariantCulture,
+                    "run-as {0} chmod 700 {1}", _launchOptions.Package, dest);
+                rc = ExecCommand(chmodGDBServerCommand, out output);
+                RunAsOutputParser.ThrowIfRunAsErrors(output, _launchOptions.Package);
+                if (rc != 0)
+                {
+                    throw new LauncherException(
+                        Telemetry.LaunchFailureCode.NoGdbServer,
+                        string.Format(CultureInfo.InvariantCulture, LauncherResources.Error_ShellCommandFailed, chmodGDBServerCommand, output));
+                }
+
+                gdbServerPath = dest;
             }
-            else if (_launchOptions.TargetArchitecture == TargetArchitecture.X64)
-            {
-                //start looking other places, only do this on 64 bit
-                //TODO: This needs some additional testsing
-                lsCommand = string.Format(CultureInfo.InvariantCulture, "ls /data/app/{0}*/lib/x86_64/gdbserver", _launchOptions.Package);
-                output = ExecCommand(lsCommand);
-                return output;
-            }
-            else
-            {
-                throw new LauncherException(Telemetry.LaunchFailureCode.NoGdbServer, string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_NoGdbServer, gdbServerPath));
-            }
+
+            return gdbServerPath;
         }
 
         private static bool DoesDeviceSupportAnyAbi(Device device, DeviceAbi[] allowedAbis)
@@ -752,6 +789,26 @@ namespace AndroidDebugLauncher
             }
         }
 
+        private int ExecCommand(string command, out string response)
+        {
+            const string resultCodeSeparator = "rc=";
+            string resultCodeCheck = string.Format(CultureInfo.InvariantCulture, "; echo {0}$?", resultCodeSeparator);
+
+            response = ExecCommand(string.Concat(command, resultCodeCheck));
+
+            int resultCodeIndex = response.LastIndexOf(resultCodeSeparator, StringComparison.Ordinal);
+            if (resultCodeIndex < 0)
+            {
+                // Didn't find "rc=". This shouldn't happen. Report it as a general error.
+                return 1;
+            }
+
+            int resultCode = int.Parse(response.Substring(resultCodeIndex + resultCodeSeparator.Length), CultureInfo.InvariantCulture);
+
+            response = response.Substring(0, resultCodeIndex);
+            return resultCode;
+        }
+
         private string ExecCommand(string command)
         {
             Debug.Assert(_shell != null, "ExecCommand called before m_shell is set");
@@ -806,7 +863,7 @@ namespace AndroidDebugLauncher
                     }
                     catch (JDbg.JdwpException e)
                     {
-                        MICore.Logger.WriteLine("JdwpException: {0}", e.Message);
+                        Logger.WriteLine("JdwpException: {0}", e.Message);
 
                         string message = LauncherResources.Warning_JDbgResumeFailure;
 

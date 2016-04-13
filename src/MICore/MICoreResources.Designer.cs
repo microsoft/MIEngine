@@ -71,6 +71,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Both &apos;{0}&apos; and &apos;{1}&apos; cannot be specified at the same time..
+        /// </summary>
+        public static string Error_CannotSpecifyBoth {
+            get {
+                return ResourceManager.GetString("Error_CannotSpecifyBoth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal error in MIEngine. Exception of type &apos;{0}&apos; was thrown.
         ///
         ///{1}.
@@ -82,7 +91,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to establish a connection to {0}. Go to the &apos;Debug&apos; pane of the Visual Studio output window for more information..
+        ///   Looks up a localized string similar to Unable to establish a connection to {0}. Debug output may contain more information..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_NoStdErr {
             get {
@@ -158,11 +167,29 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists on the Visual Studio computer..
+        ///   Looks up a localized string similar to Invalid path to core dump file &apos;{0}&apos;. File must be a valid file name that exists on the computer..
+        /// </summary>
+        public static string Error_InvalidLocalCoreDumpPath {
+            get {
+                return ResourceManager.GetString("Error_InvalidLocalCoreDumpPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists..
         /// </summary>
         public static string Error_InvalidLocalExePath {
             get {
                 return ResourceManager.GetString("Error_InvalidLocalExePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value of miDebuggerPath is invalid.
+        /// </summary>
+        public static string Error_InvalidMiDebuggerPath {
+            get {
+                return ResourceManager.GetString("Error_InvalidMiDebuggerPath", resourceCulture);
             }
         }
         

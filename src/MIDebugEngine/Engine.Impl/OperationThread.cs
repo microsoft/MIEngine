@@ -71,8 +71,11 @@ namespace Microsoft.MIDebugEngine
         private Thread _thread;
         private volatile bool _isClosed;
 
-        public WorkerThread()
+        public Logger Logger { get; private set; }
+
+        public WorkerThread(Logger logger)
         {
+            Logger = logger;
             _opSet = new AutoResetEvent(false);
             _runningOpCompleteEvent = new ManualResetEvent(true);
             _postedOperations = new Queue<Operation>();
@@ -301,7 +304,7 @@ namespace Microsoft.MIDebugEngine
                             {
                                 syncOp();
                             }
-                            catch (Exception opException) when (ExceptionHelper.BeforeCatch(opException, reportOnlyCorrupting: true))
+                            catch (Exception opException) when (ExceptionHelper.BeforeCatch(opException, Logger, reportOnlyCorrupting: true))
                             {
                                 runningOp.ExceptionDispatchInfo = ExceptionDispatchInfo.Capture(opException);
                             }
@@ -314,7 +317,7 @@ namespace Microsoft.MIDebugEngine
                             {
                                 runningOp.Task = asyncOp();
                             }
-                            catch (Exception opException) when (ExceptionHelper.BeforeCatch(opException, reportOnlyCorrupting: true))
+                            catch (Exception opException) when (ExceptionHelper.BeforeCatch(opException, Logger, reportOnlyCorrupting: true))
                             {
                                 runningOp.ExceptionDispatchInfo = ExceptionDispatchInfo.Capture(opException);
                             }
@@ -354,7 +357,7 @@ namespace Microsoft.MIDebugEngine
                         {
                             postedOperation();
                         }
-                        catch (Exception e) when (ExceptionHelper.BeforeCatch(e, reportOnlyCorrupting: false))
+                        catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: false))
                         {
                             if (PostedOperationErrorEvent != null)
                             {

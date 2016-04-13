@@ -17,9 +17,16 @@ namespace MICore
         private ITransportCallback _callback;
         private Thread _thread;
         private bool _bQuit;
+        private CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
         protected StreamReader _reader;
         protected StreamWriter _writer;
-        bool _filterStdout;
+        private bool _filterStdout;
+        private Object _locker = new object();
+
+        protected Logger Logger
+        {
+            get; private set;
+        }
 
         protected StreamTransport()
         { }
@@ -32,14 +39,15 @@ namespace MICore
         public abstract void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer);
         protected virtual string GetThreadName() { return "MI.StreamTransport"; }
 
-        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options)
+        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
         {
+            Logger = logger;
             _callback = transportCallback;
             InitStreams(options, out _reader, out _writer);
             StartThread(GetThreadName());
         }
 
-        public void StartThread(string name)
+        private void StartThread(string name)
         {
             _thread = new Thread(TransportLoop);
             _thread.Name = name;
@@ -53,37 +61,65 @@ namespace MICore
 
         private void TransportLoop()
         {
-            string line;
-
-            while (!_bQuit)
+            try
             {
-                line = GetLine();
-                if (line == null)
-                    break;
-
-                line = line.TrimEnd();
-                Logger.WriteLine("->" + line);
-
-                try
+                while (!_bQuit)
                 {
-                    if (_filterStdout)
+                    string line = GetLine();
+                    if (line == null)
+                        break;
+
+                    line = line.TrimEnd();
+                    Logger?.WriteLine("->" + line);
+                    Logger?.Flush();
+
+                    try
                     {
-                        line = FilterLine(line);
+                        if (_filterStdout)
+                        {
+                            line = FilterLine(line);
+                        }
+                        if (!String.IsNullOrWhiteSpace(line) && !line.StartsWith("-", StringComparison.Ordinal))
+                        {
+                            _callback.OnStdOutLine(line);
+                        }
                     }
-                    if (!String.IsNullOrWhiteSpace(line) && !line.StartsWith("-", StringComparison.Ordinal))
+                    catch (ObjectDisposedException)
                     {
-                        _callback.OnStdOutLine(line);
+                        Debug.Assert(_bQuit);
+                        break;
                     }
                 }
-                catch (ObjectDisposedException)
+                if (!_bQuit)
                 {
-                    Debug.Assert(_bQuit);
-                    break;
+                    OnReadStreamAborted();
                 }
             }
-            if (!_bQuit)
+            finally
             {
-                OnReadStreamAborted();
+                lock (_locker)
+                {
+                    _bQuit = true;
+                    _streamReadCancellationTokenSource.Dispose();
+                    _reader.Dispose();
+
+                    try
+                    {
+                        _writer.Dispose();
+                    }
+                    catch
+                    {
+                        // This can fail flush side effects if the debugger goes down. When this happens we don't want
+                        // to crash OpenDebugAD7/VS. Stack:
+                        //   System.IO.UnixFileStream.WriteNative(Byte[] array, Int32 offset, Int32 count)
+                        //   System.IO.UnixFileStream.FlushWriteBuffer()
+                        //   System.IO.UnixFileStream.Dispose(Boolean disposing)
+                        //   System.IO.FileStream.Dispose(Boolean disposing)
+                        //   System.IO.Stream.Close()
+                        //   System.IO.StreamWriter.Dispose(Boolean disposing)
+                        //   System.IO.TextWriter.Dispose()
+                    }
+                }
             }
         }
 
@@ -100,7 +136,8 @@ namespace MICore
         }
         protected void Echo(string cmd)
         {
-            Logger.WriteLine("<-" + cmd);
+            Logger?.WriteLine("<-" + cmd);
+            Logger?.Flush();
             _writer.WriteLine(cmd);
             _writer.Flush();
         }
@@ -109,7 +146,17 @@ namespace MICore
         {
             try
             {
-                return _reader.ReadLine();
+                Task<string> task = _reader.ReadLineAsync();
+                task.Wait(_streamReadCancellationTokenSource.Token);
+                return task.Result;
+            }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
+            catch (ObjectDisposedException)
+            {
+                return null;
             }
             // I have seen the StreamReader throw both an ObjectDisposedException (which makes sense) and a NullReferenceException
             // (which seems like a bug) after it is closed. Since we have no exception back stop here, we are catching all exceptions
@@ -128,11 +175,13 @@ namespace MICore
 
         public virtual void Close()
         {
-            _bQuit = true;
-            if (_reader != null)
+            lock (_locker)
             {
-                _reader.Dispose(); // close the stream. This usually, but not always, causes the OS to give back our reader thread.
-                _reader = null;
+                if (!_bQuit)
+                {
+                    _bQuit = true;
+                    _streamReadCancellationTokenSource.Cancel();
+                }
             }
         }
 
@@ -147,4 +196,3 @@ namespace MICore
         }
     }
 }
-

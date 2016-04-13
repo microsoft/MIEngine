@@ -98,7 +98,7 @@ namespace Microsoft.MIDebugEngine
             }
             catch (UnexpectedMIResultException)
             {
-                Logger.WriteLine("Stack walk failed on thread: " + thread.TargetId);
+                _debugger.Logger.WriteLine("Stack walk failed on thread: " + thread.TargetId);
                 _stateChange = true;   // thread may have been deleted. Force a resync
             }
             lock (_threadList)
@@ -153,7 +153,7 @@ namespace Microsoft.MIDebugEngine
             TupleValue[] frameinfo = await _debugger.MICommandFactory.StackListFrames(thread.Id, 0, 1000);
             if (frameinfo == null)
             {
-                Logger.WriteLine("Failed to get frame info");
+                _debugger.Logger.WriteLine("Failed to get frame info");
             }
             else
             {

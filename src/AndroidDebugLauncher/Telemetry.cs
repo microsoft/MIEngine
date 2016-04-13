@@ -30,7 +30,7 @@ namespace AndroidDebugLauncher
             NoReport,
 
             /// <summary>
-            /// run-as returned 'Package 'bla' is unknown'
+            /// run-as returned 'Package 'package' is unknown'
             /// </summary>
             RunAsPackageUnknown,
 
@@ -38,6 +38,11 @@ namespace AndroidDebugLauncher
             /// run-as failed in some other way
             /// </summary>
             RunAsFailure,
+
+            /// <summary>
+            /// run-as returned 'Package 'package' is not debuggable'
+            /// </summary>
+            RunAsPackageNotDebuggable,
 
             /// <summary>
             /// We didn't understand the pwd output, but it doesn't look like a run-as failure.

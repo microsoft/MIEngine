@@ -111,7 +111,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="True">
-      <BoundBreakpoint>24,0 to 24,0 in [Unknown]!break_test_1()</BoundBreakpoint>
+      <BoundBreakpoint RegEx="^24,0 to 24,0 in (\[Unknown\]|libbreakpoint.so)!break_test_1\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />

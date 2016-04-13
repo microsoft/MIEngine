@@ -15,7 +15,7 @@ using System.Globalization;
 
 namespace Microsoft.MIDebugEngine
 {
-    internal interface IVariableInformation
+    internal interface IVariableInformation : IDisposable
     {
         string Name { get; }
         string Value { get; }
@@ -173,6 +173,11 @@ namespace Microsoft.MIDebugEngine
             _attribsFetched = false;
             Access = enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_NONE;
             _fullname = null;
+
+            lock(this._debuggedProcess.ActiveVariables)
+            {
+                this._debuggedProcess.ActiveVariables.Add(this);
+            }
         }
 
         //this constructor is used to create root nodes (local/params)
@@ -234,7 +239,7 @@ namespace Microsoft.MIDebugEngine
             {
                 // base classes show up with no value and exp==type 
                 // (sometimes underlying debugger does not follow this convention, when using typedefs in templated types so look for "::" in the field name too)
-                Name = "base";
+                Name = TypeName + " (base)";
                 Value = TypeName;
                 VariableNodeType = NodeType.BaseClass;
             }
@@ -261,23 +266,6 @@ namespace Microsoft.MIDebugEngine
         {
             _attribsFetched = true;  // read-only attribute is passed in at construction
             _isReadonly = ro;
-        }
-
-        ~VariableInformation()
-        {
-            //mi -var-delete deletes all children, so only top level variables should be added to the delete list
-            //Additionally, we create variables for anything we try to evaluate. Only succesful evaluations get internal names, 
-            //so look for that.
-            if (!IsChild && !string.IsNullOrWhiteSpace(_internalName))
-            {
-                if (!_debuggedProcess.IsClosed)
-                {
-                    lock (_debuggedProcess.VariablesToDelete)
-                    {
-                        _debuggedProcess.VariablesToDelete.Add(_internalName);
-                    }
-                }
-            }
         }
 
         public ThreadContext ThreadContext { get { return _ctx; } }
@@ -403,6 +391,8 @@ namespace Microsoft.MIDebugEngine
 
         public string EvalDependentExpression(string expr)
         {
+            this.VerifyNotDisposed();
+
             string val = null;
             Task eval = Task.Run(async () =>
             {
@@ -414,6 +404,8 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task Eval(enum_EVALFLAGS dwFlags = 0)
         {
+            this.VerifyNotDisposed();
+
             _engine.CurrentRadix();    // ensure the radix value is up-to-date
 
             string execCommandString = "-exec ";
@@ -425,7 +417,7 @@ namespace Microsoft.MIDebugEngine
 
                 try
                 {
-                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand);
+                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess);
                     Value = String.Empty;
                     this.TypeName = null;
                 }
@@ -510,6 +502,8 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task Format()
         {
+            this.VerifyNotDisposed();
+
             Debug.Assert(_internalName != null);
             Debug.Assert(_format != null);
             Results results = await _engine.DebuggedProcess.MICommandFactory.VarSetFormat(_internalName, _format, ResultClass.None);
@@ -545,6 +539,8 @@ namespace Microsoft.MIDebugEngine
         }
         private async Task InternalFetchChildren()
         {
+            this.VerifyNotDisposed();
+
             Results results = await _engine.DebuggedProcess.MICommandFactory.VarListChildren(_internalName, PropertyInfoFlags, ResultClass.None);
 
             if (results.ResultClass == ResultClass.done)
@@ -682,6 +678,8 @@ namespace Microsoft.MIDebugEngine
                     return true;
                 }
 
+                this.VerifyNotDisposed();
+
                 string attribute = string.Empty;
 
                 _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
@@ -697,11 +695,58 @@ namespace Microsoft.MIDebugEngine
 
         public void Assign(string expression)
         {
+            this.VerifyNotDisposed();
+
             _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
                 _engine.DebuggedProcess.FlushBreakStateData();
                 Value = await _engine.DebuggedProcess.MICommandFactory.VarAssign(_internalName, expression);
             });
         }
+
+        #region IDisposable Implementation
+
+        private bool _isDisposed = false;
+
+        private void VerifyNotDisposed()
+        {
+            if (this._isDisposed)
+            {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool isDisposing)
+        {
+            this._isDisposed = true;
+
+            //mi -var-delete deletes all children, so only top level variables should be added to the delete list
+            //Additionally, we create variables for anything we try to evaluate. Only succesful evaluations get internal names, 
+            //so look for that.
+            if (!IsChild && !string.IsNullOrWhiteSpace(_internalName))
+            {
+                if (!_debuggedProcess.IsClosed)
+                {
+                    lock (_debuggedProcess.VariablesToDelete)
+                    {
+                        _debuggedProcess.VariablesToDelete.Add(_internalName);
+                    }
+                }
+            }
+        }
+
+        ~VariableInformation()
+        {
+            this.Dispose(false);
+        }
+
+        #endregion
     }
 }

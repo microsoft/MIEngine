@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using MICore;
@@ -24,8 +25,8 @@ namespace Microsoft.MIDebugEngine
     };
     internal class DisassemblyBlock
     {
-        static private ulong s_touchCount = 0;
-        internal ulong Touch;
+        static private long s_touchCount = 0;
+        internal long Touch;
 
         private readonly DisasmInstruction[] _instructions;
 
@@ -49,7 +50,7 @@ namespace Microsoft.MIDebugEngine
                 return false;
             }
             i += cnt;
-            Touch = ++s_touchCount;
+            Touch = Interlocked.Increment(ref s_touchCount);
             return 0 <= i && i <= _instructions.Length;
         }
 
@@ -147,7 +148,7 @@ namespace Microsoft.MIDebugEngine
                     DeleteRangeFromCache(block);    // removes any entry with the same key
                     if (_disassemlyCache.Count >= cacheSize)
                     {
-                        ulong max = 0;
+                        long max = 0;
                         int toDelete = -1;
                         for (int i = 0; i < _disassemlyCache.Count; ++i)
                         {
