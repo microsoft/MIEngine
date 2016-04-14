@@ -18,6 +18,8 @@ using System.IO;
 using Microsoft.DebugEngineHost;
 using System.Reflection;
 
+using Logger = MICore.Logger;
+
 namespace Microsoft.MIDebugEngine.Natvis
 {
     internal class SimpleWrapper : IVariableInformation
