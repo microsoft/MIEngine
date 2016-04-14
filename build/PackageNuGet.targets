@@ -4,7 +4,7 @@
     <PropertyGroup>
         <NuGetPath>$(ToolsHome)\nuget\nuget.exe</NuGetPath>
         <NuGetPrerelease Condition="'$(NuGetPrerelease)'==''">true</NuGetPrerelease>
-        <NuGetVersionPrereleaseTag Condition="'$(NuGetPrerelease)'=='true'">-pb-$(BuildNumberMinor)</NuGetVersionPrereleaseTag>
+        <NuGetVersionPrereleaseTag Condition="'$(NuGetPrerelease)'=='true'">-preview-$(BuildNumberMinor)</NuGetVersionPrereleaseTag>
         <NuGetPackageVersion Condition="'$(NuGetPackageVersion)'==''">$(MajorVersion).$(MinorVersion).$(BuildNumberMajor)$(NuGetVersionPrereleaseTag)</NuGetPackageVersion>
         <NuGetPackageSuffix Condition="$(Configuration.Contains('Debug'))">.dev</NuGetPackageSuffix>
         <NuGetArguments>-NoPackageAnalysis -NonInteractive -BasePath $(OutDir) -OutputDirectory $(DropDir) -Version $(NuGetPackageVersion) -Properties suffix=$(NuGetPackageSuffix)</NuGetArguments>

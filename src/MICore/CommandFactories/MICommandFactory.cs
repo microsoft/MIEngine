@@ -320,7 +320,8 @@ namespace MICore
 
         public virtual async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-list-children --simple-values \"{0}\"", variableReference);
+            // Limit the number of children expanded to 1000 in case memory is uninitialized
+            string command = string.Format("-var-list-children --simple-values \"{0}\" 0 1000", variableReference);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
@@ -503,7 +504,7 @@ namespace MICore
 
         #endregion
 
-        #region Abstract Methods
+        #region Other
 
         abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
@@ -523,12 +524,23 @@ namespace MICore
             return (results.TryFindString("reason") == "signal-received" && results.TryFindString("signal-name") == "SIGINT");
         }
 
+        /// <summary>
+        /// Determines if a new external console should be spawned on non-Windows platforms for the debugger+app
+        /// </summary>
+        /// <param name="localLaunchOptions">[required] local launch options</param>
+        /// <returns>True if an external console should be used</returns>
+        public virtual bool UseExternalConsoleForLocalLaunch(LocalLaunchOptions localLaunchOptions)
+        {
+            return localLaunchOptions.UseExternalConsole && String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
+        }
+
         public Results IsModuleLoad(string cmd)
         {
             Results results = null;
             if (cmd.StartsWith("library-loaded,", StringComparison.Ordinal))
             {
-                results = MIResults.ParseResultList(cmd.Substring(15));
+                MIResults res = new MIResults(_debugger.Logger);
+                results = res.ParseResultList(cmd.Substring(15));
             }
             return results;
         }
@@ -544,421 +556,5 @@ namespace MICore
         abstract public Task EnableTargetAsyncOption();
 
         #endregion
-    }
-
-    internal class GdbMICommandFactory : MICommandFactory
-    {
-        private int _currentThreadId = 0;
-        private uint _currentFrameLevel = 0;
-
-        public override string Name
-        {
-            get { return "GDB"; }
-        }
-
-        public override void DefineCurrentThread(int threadId)
-        {
-            _currentThreadId = threadId;
-        }
-
-        public override bool SupportsStopOnDynamicLibLoad()
-        {
-            return true;
-        }
-
-        public override bool AllowCommandsWhileRunning()
-        {
-            return false;
-        }
-
-        protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
-        {
-            // first aquire an exclusive lock. This is used as we don't want to fight with other commands that also require the current
-            // thread to be set to a particular value
-            ExclusiveLockToken lockToken = await _debugger.CommandLock.AquireExclusive();
-
-            try
-            {
-                await ThreadSelect(threadId, lockToken);
-                await StackSelectFrame(frameLevel, lockToken);
-
-                // Before we execute the provided command, we need to switch to a shared lock. This is because the provided
-                // command may be an expression evaluation command which could be long running, and we don't want to hold the
-                // exclusive lock during this.
-                lockToken.ConvertToSharedLock();
-                lockToken = null;
-
-                return await _debugger.CmdAsync(command, expectedResultClass);
-            }
-            finally
-            {
-                if (lockToken != null)
-                {
-                    // finally is executing before we called 'ConvertToSharedLock'
-                    lockToken.Close();
-                }
-                else
-                {
-                    // finally is called after we called ConvertToSharedLock, we need to decerement the shared lock count
-                    _debugger.CommandLock.ReleaseShared();
-                }
-            }
-        }
-
-        protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
-        {
-            // first aquire an exclusive lock. This is used as we don't want to fight with other commands that also require the current
-            // thread to be set to a particular value
-            ExclusiveLockToken lockToken = await _debugger.CommandLock.AquireExclusive();
-
-            try
-            {
-                await ThreadSelect(threadId, lockToken);
-
-                // Before we execute the provided command, we need to switch to a shared lock. This is because the provided
-                // command may be an expression evaluation command which could be long running, and we don't want to hold the
-                // exclusive lock during this.
-                lockToken.ConvertToSharedLock();
-                lockToken = null;
-
-                return await _debugger.CmdAsync(command, expectedResultClass);
-            }
-            finally
-            {
-                if (lockToken != null)
-                {
-                    // finally is executing before we called 'ConvertToSharedLock'
-                    lockToken.Close();
-                }
-                else
-                {
-                    // finally is called after we called ConvertToSharedLock, we need to decerement the shared lock count
-                    _debugger.CommandLock.ReleaseShared();
-                }
-            }
-        }
-
-        private async Task ThreadSelect(int threadId, ExclusiveLockToken lockToken)
-        {
-            if (ExclusiveLockToken.IsNullOrClosed(lockToken))
-            {
-                throw new ArgumentNullException("lockToken");
-            }
-
-            if (threadId != _currentThreadId)
-            {
-                string command = string.Format("-thread-select {0}", threadId);
-                await _debugger.ExclusiveCmdAsync(command, ResultClass.done, lockToken);
-                _currentThreadId = threadId;
-                _currentFrameLevel = 0;
-            }
-        }
-
-        private async Task StackSelectFrame(uint frameLevel, ExclusiveLockToken lockToken)
-        {
-            if (ExclusiveLockToken.IsNullOrClosed(lockToken))
-            {
-                throw new ArgumentNullException("lockToken");
-            }
-
-            if (frameLevel != _currentFrameLevel)
-            {
-                string command = string.Format("-stack-select-frame {0}", frameLevel);
-                await _debugger.ExclusiveCmdAsync(command, ResultClass.done, lockToken);
-                _currentFrameLevel = frameLevel;
-            }
-        }
-        public override async Task<Results> ThreadInfo()
-        {
-            Results results = await base.ThreadInfo();
-            if (results.ResultClass == ResultClass.done && results.Contains("current-thread-id"))
-            {
-                _currentThreadId = results.FindInt("current-thread-id");
-            }
-            return results;
-        }
-        public override async Task<List<ulong>> StartAddressesForLine(string file, uint line)
-        {
-            string cmd = "info line " + file + ":" + line;
-            var result = await _debugger.ConsoleCmdAsync(cmd);
-            List<ulong> addresses = new List<ulong>();
-            using (StringReader stringReader = new StringReader(result))
-            {
-                while (true)
-                {
-                    string resultLine = stringReader.ReadLine();
-                    if (resultLine == null)
-                        break;
-
-                    int pos = resultLine.IndexOf("starts at address ");
-                    if (pos > 0)
-                    {
-                        ulong address;
-                        string addrStr = resultLine.Substring(pos + 18);
-                        if (MICommandFactory.SpanNextAddr(addrStr, out address) != null)
-                        {
-                            addresses.Add(address);
-                        }
-                    }
-                }
-            }
-            return addresses;
-        }
-
-        public override Task EnableTargetAsyncOption()
-        {
-            // Linux attach TODO: GDB will fail this command when attaching. This is worked around
-            // by using signals for that case.
-            return _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
-        }
-
-        public override async Task Terminate()
-        {
-            // Although the mi documentation states that the correct command to terminate is -exec-abort
-            // that isn't actually supported by gdb. 
-            await _debugger.CmdAsync("kill", ResultClass.None);
-        }
-    }
-
-    internal class LlldbMICommandFactory : MICommandFactory
-    {
-        public override string Name
-        {
-            get { return "LLDB"; }
-        }
-
-        public override bool SupportsStopOnDynamicLibLoad()
-        {
-            return false;
-        }
-
-        public override bool AllowCommandsWhileRunning()
-        {
-            return false;
-        }
-
-        public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
-        {
-            string command = string.Format("-var-create - - \"{0}\"", expression);  // use '-' to indicate that "--frame" should be used to determine the frame number
-            Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
-
-            return results;
-        }
-
-        protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel)
-        {
-            string threadFrameCommand = string.Format(@"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
-
-            return await _debugger.CmdAsync(threadFrameCommand, exepctedResultClass);
-        }
-
-        protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
-        {
-            string threadCommand = string.Format(@"{0} --thread {1}", command, threadId);
-
-            return await _debugger.CmdAsync(threadCommand, expectedResultClass);
-        }
-        public override Task<List<ulong>> StartAddressesForLine(string file, uint line)
-        {
-            return Task.FromResult<List<ulong>>(null);
-        }
-
-        public override Task EnableTargetAsyncOption()
-        {
-            // lldb-mi doesn't support target-async mode, and doesn't seem to need to
-            return Task.FromResult((object)null);
-        }
-    }
-
-
-    internal class ClrdbgMICommandFactory : MICommandFactory
-    {
-        private readonly static Guid s_exceptionCategory_CLR = new Guid("449EC4CC-30D2-4032-9256-EE18EB41B62B");
-        private readonly static Guid s_exceptionCategory_MDA = new Guid("6ECE07A9-0EDE-45C4-8296-818D8FC401D4");
-        private readonly static ReadOnlyCollection<Guid> s_exceptionCategories = new ReadOnlyCollection<Guid>(new Guid[] { s_exceptionCategory_CLR, s_exceptionCategory_MDA });
-
-        public override string Name
-        {
-            get { return "CLRDBG"; }
-        }
-
-        public override bool SupportsStopOnDynamicLibLoad()
-        {
-            return false;
-        }
-
-        // CLRDBG supports frame formatting itself
-        override public bool SupportsFrameFormatting
-        {
-            get { return true; }
-        }
-
-        public override bool AllowCommandsWhileRunning()
-        {
-            return true;
-        }
-
-        public override async Task<bool> SetJustMyCode(bool enabled)
-        {
-            string command = "-gdb-set just-my-code " + (enabled ? "1" : "0");
-            Results results = await _debugger.CmdAsync(command, ResultClass.None);
-            return results.ResultClass == ResultClass.done;
-        }
-
-        public override Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
-        {
-            // CLRDBG supports stack frame formatting, so this should not be used
-            throw new NotImplementedException();
-        }
-
-        protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
-        {
-            string threadFrameCommand = string.Format(@"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
-
-            return await _debugger.CmdAsync(threadFrameCommand, expectedResultClass);
-        }
-
-        protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
-        {
-            string threadCommand = string.Format(@"{0} --thread {1}", command, threadId);
-
-            return await _debugger.CmdAsync(threadCommand, expectedResultClass);
-        }
-        public override Task<List<ulong>> StartAddressesForLine(string file, uint line)
-        {
-            return Task.FromResult<List<ulong>>(null);
-        }
-
-        public override Task EnableTargetAsyncOption()
-        {
-            // clrdbg is always in target-async mode
-            return Task.FromResult((object)null);
-        }
-
-        public override IEnumerable<Guid> GetSupportedExceptionCategories()
-        {
-            return s_exceptionCategories;
-        }
-
-        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
-        {
-            List<string> commandTokens = new List<string>();
-            commandTokens.Add("-break-exception-insert");
-
-            if (exceptionCategory == s_exceptionCategory_MDA)
-            {
-                commandTokens.Add("--mda");
-            }
-            else if (exceptionCategory != s_exceptionCategory_CLR)
-            {
-                throw new ArgumentOutOfRangeException("exceptionCategory");
-            }
-
-            if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakThrown))
-            {
-                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakUserHandled))
-                    commandTokens.Add("throw+user-unhandled");
-                else
-                    commandTokens.Add("throw");
-            }
-            else
-            {
-                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakUserHandled))
-                    commandTokens.Add("user-unhandled");
-                else
-                    commandTokens.Add("unhandled");
-            }
-
-            if (exceptionNames == null)
-                commandTokens.Add("*");
-            else
-                commandTokens.AddRange(exceptionNames);
-
-            string command = string.Join(" ", commandTokens);
-
-            Results results = await _debugger.CmdAsync(command, ResultClass.done);
-            ResultValue bkpt;
-            if (results.TryFind("bkpt", out bkpt))
-            {
-                if (bkpt is ValueListValue)
-                {
-                    MICore.ValueListValue list = bkpt as MICore.ValueListValue;
-                    return list.Content.Select((x) => x.FindAddr("number"));
-                }
-                else
-                {
-                    return new ulong[1] { bkpt.FindAddr("number") };
-                }
-            }
-            else
-            {
-                return new ulong[0];
-            }
-        }
-
-        public override Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpointIds)
-        {
-            string breakpointIds = string.Join(" ", exceptionBreakpointIds.Select(x => x.ToString(CultureInfo.InvariantCulture)));
-
-            string command = "-break-exception-delete " + breakpointIds;
-            return _debugger.CmdAsync(command, ResultClass.done);
-        }
-
-        public override void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointState state)
-        {
-            string category = miExceptionResult.FindString("exception-category");
-            if (category == "mda")
-            {
-                exceptionCategory = s_exceptionCategory_MDA;
-            }
-            else
-            {
-                Debug.Assert(category == "clr");
-                exceptionCategory = s_exceptionCategory_CLR;
-            }
-
-            string stage = miExceptionResult.FindString("exception-stage");
-            switch (stage)
-            {
-                case "throw":
-                    state = ExceptionBreakpointState.BreakThrown;
-                    break;
-
-                case "user-unhandled":
-                    state = ExceptionBreakpointState.BreakUserHandled;
-                    break;
-
-                case "unhandled":
-                    state = ExceptionBreakpointState.None;
-                    break;
-
-                default:
-                    Debug.Fail("Unknown exception-stage value");
-                    state = ExceptionBreakpointState.None;
-                    break;
-            }
-        }
-
-        override public async Task Terminate()
-        {
-            string command = "-exec-abort";
-            await _debugger.CmdAsync(command, ResultClass.done);
-        }
-
-        public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
-        {
-            string command = string.Format("-var-create - * \"{0}\" --evalFlags {1}", expression, (uint)dwFlags);
-            Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
-
-            return results;
-        }
-
-        public override async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
-        {
-            string command = string.Format("-var-list-children --simple-values \"{0}\" --propertyInfoFlags {1}", variableReference, (uint)dwFlags);
-            Results results = await _debugger.CmdAsync(command, resultClass);
-
-            return results;
-        }
     }
 }

@@ -151,25 +151,25 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>31,0 to 31,0 in [Unknown]!SimpleClass::TestMe()</BoundBreakpoint>
+      <BoundBreakpoint RegEx="^31,0 to 31,0 in (\[Unknown\]|liblocals.so)!SimpleClass::TestMe\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>48,0 to 48,0 in [Unknown]!DerivedClass::DerivedClass(int, int)</BoundBreakpoint>
+      <BoundBreakpoint RegEx="^48,0 to 48,0 in (\[Unknown\]|liblocals.so)!DerivedClass::DerivedClass\(int, int\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>65,0 to 65,0 in [Unknown]!DerivedClass::TestMe()</BoundBreakpoint>
+      <BoundBreakpoint RegEx="^65,0 to 65,0 in (\[Unknown\]|liblocals.so)!DerivedClass::TestMe\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>116,0 to 116,0 in [Unknown]!android_main(android_app*)</BoundBreakpoint>
+      <BoundBreakpoint RegEx="^116,0 to 116,0 in (\[Unknown\]|liblocals.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>73,0 to 73,0 in [Unknown]!x_2()</BoundBreakpoint>
+      <BoundBreakpoint RegEx="^73,0 to 73,0 in (\[Unknown\]|liblocals.so)!x_2\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>80,0 to 80,0 in [Unknown]!x_1()</BoundBreakpoint>
+      <BoundBreakpoint RegEx="^80,0 to 80,0 in (\[Unknown\]|liblocals.so)!x_1\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>84,0 to 84,0 in [Unknown]!x_1()</BoundBreakpoint>
+      <BoundBreakpoint RegEx="^84,0 to 84,0 in (\[Unknown\]|liblocals.so)!x_1\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -265,11 +265,11 @@
     <LocalType>DerivedClass *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str.?1&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 &lt;.L.str.1&gt; "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>const_escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str.?1&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 &lt;.L.str.1&gt; "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>state</Local>
@@ -339,11 +339,11 @@
     <LocalType>DerivedClass *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str.?1&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 &lt;.L.str.1&gt; "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>const_escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str1&gt; &quot;Hello\\n\tWorld!\\n&quot;">0xa1b7fc26 &lt;.L.str1&gt; "Hello\n	World!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.L.str.?1&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 &lt;.L.str.1&gt; "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>state</Local>

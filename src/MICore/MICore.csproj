@@ -79,9 +79,14 @@
     <None Include="PostProcessXsdOutput.cmd" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandFactories\clrdbg.cs" />
+    <Compile Include="CommandFactories\gdb.cs" />
+    <Compile Include="CommandFactories\lldb.cs" />
+    <Compile Include="CommandFactories\MICommandFactory.cs" />
     <Compile Include="CommandLock.cs" />
     <Compile Include="Debugger.cs" />
     <Compile Include="ExceptionHelper.cs" />
+    <Compile Include="InvalidCoreDumpOperationException.cs" />
     <Compile Include="InvalidLaunchOptionsException.cs" />
     <Compile Include="LaunchCommand.cs" />
     <Compile Include="LaunchOptions.cs" />
@@ -90,7 +95,6 @@
       <DependentUpon>LaunchOptions.xsd</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
-    <Compile Include="MICommandFactory.cs" />
     <Compile Include="MICoreResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -122,7 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
-    <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" />
+    <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" Condition="'$(Configuration)'!='Debug-PortablePDB'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
@@ -155,8 +159,10 @@
     <Exec Command="ValidateDesignerFile.cmd LaunchOptions.xsd.types.desginer.cs $(IntermediateOutputPath)LaunchOptions.xsd.types.desginer-candidate.cs &quot;$(IntermediateOutputPath)&quot;" />
   </Target>
   <!--This target is used to generate an XML serializers assembly for the types in LaunchOptions.xsd. We can't embed these types
-  into MICore as CoreCLR doesn't expose the types needed to make that code work.-->
-  <Target Name="GenerateXmlSerializersAssembly" AfterTargets="Compile" Inputs="LaunchOptions.xsd.types.desginer.cs;$(AssemblyOriginatorKeyFile)" Outputs="$(IntermediateOutputPath)sgen\$(AssemblyName).XmlSerializers.dll">
+  into MICore as CoreCLR doesn't expose the types needed to make that code work.
+  NOTE: We don't do this in the Debug-PortablePDB configuration as having this file messes up unix, and when we use 'InstallToVSCode link'
+  the CLR will try and load the assembly directly from the output directory.-->
+  <Target Name="GenerateXmlSerializersAssembly" AfterTargets="Compile" Inputs="LaunchOptions.xsd.types.desginer.cs;$(AssemblyOriginatorKeyFile)" Condition="'$(Configuration)'!='Debug-PortablePDB'" Outputs="$(IntermediateOutputPath)sgen\$(AssemblyName).XmlSerializers.dll">
     <PropertyGroup>
       <SereializationSigningCompilerOptions>/keyfile:$(AssemblyOriginatorKeyFile)</SereializationSigningCompilerOptions>
       <SereializationSigningCompilerOptions Condition="'$(DelaySign)'=='true'">$(SereializationSigningCompilerOptions) /delaysign</SereializationSigningCompilerOptions>
@@ -176,7 +182,7 @@
   which adds the XmlSerializers as if it was a source item in our project with a 'CopyToOutputDirectory' child
   node. See the 'GetCopyToOutputDirectoryItems' target in C:\Program Files (x86)\MSBuild\14.0\Bin\Microsoft.Common.CurrentVersion.targets
   for more info.-->
-  <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems">
+  <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="'$(Configuration)'!='Debug-PortablePDB'">
     <ItemGroup>
       <_GenerateXmlSerializersAssemblyOutput Include="$(IntermediateOutputPath)sgen\$(AssemblyName).XmlSerializers.dll" />
       <_SourceItemsToCopyToOutputDirectoryAlways Include="@(_GenerateXmlSerializersAssemblyOutput->'%(FullPath)')">
