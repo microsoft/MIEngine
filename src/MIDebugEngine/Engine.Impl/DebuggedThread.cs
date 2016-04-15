@@ -171,7 +171,15 @@ namespace Microsoft.MIDebugEngine
             ulong? pc = frame.TryFindAddr("addr");
             MITextPosition textPosition = MITextPosition.TryParse(frame);
             string func = frame.TryFindString("func");
-            uint level = frame.FindUint("level");
+            uint level;
+            try
+            {
+                level = frame.FindUint("level");
+            }
+            catch (MIResultFormatException)
+            {
+                level = 0;
+            }
             string from = frame.TryFindString("from");
 
             return new ThreadContext(pc, textPosition, func, level, from);
