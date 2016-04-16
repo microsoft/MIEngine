@@ -80,7 +80,11 @@ goto :NextArg
 
 :SetNdkRoot
 shift /1
-set _NdkRoot=%~1
+if "%~1" == "10" (
+	set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+) else (
+	set _NdkRoot=%~1
+)
 goto :NextArg
 
 :SetLoop
@@ -131,6 +135,7 @@ for /f "tokens=1,6" %%i in ('platform-tools\adb devices -l ^| find /i "VS Emulat
     popd
     exit /b 0
 )
+exit /b -1
 
 :RunAll
     set FAILED_TESTS=
