@@ -7,7 +7,47 @@
 
   <PropertyGroup>
     <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+    <BuildDependsOn Condition="'$(IsCoreClr)' == 'false'">DetermineCompilerBinary;$(BuildDependsOn)</BuildDependsOn>
   </PropertyGroup>
+
+  <UsingTask TaskName="GetRuntime" 
+             TaskFactory="CodeTaskFactory" 
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >
+    <ParameterGroup>
+      <IsMonoRuntime ParameterType="System.Boolean" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        IsMonoRuntime = System.Type.GetType("Mono.Runtime") != null;
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="DetermineCompilerBinary">
+    <GetRuntime>
+      <Output PropertyName="IsMonoRuntime" TaskParameter="IsMonoRuntime" />
+    </GetRuntime>
+
+    <Exec Condition="'$(IsMonoRuntime)' == 'true'"
+          ConsoleToMsBuild="true"
+          Command="dirname `which mcs`">
+      <Output TaskParameter="ConsoleOutput" PropertyName="McsPath" />
+    </Exec>
+
+    <PropertyGroup Condition="'$(IsMonoRuntime)' == 'true'">
+      <!-- If we're running on Mono, Roslyn will fail to sign the binaries, so use mcs instead -->      
+      <CscToolExe>mcs</CscToolExe>
+      <CscToolPath>$(McsPath)/</CscToolPath>
+    </PropertyGroup>
+  </Target>
+  
+  <Target Name="RestoreDesktopPackages">
+      <!-- Restore from packages.config instead of project.json when building for desktop -->
+    <Exec Condition="'$(IsCoreClr)' == 'false'" 
+          Command="&quot;$(MIEngineRoot)tools/NuGet/NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(ProjectDir)packages.config&quot;" />
+  </Target>
   
   <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != ''" AfterTargets="Build">
 	<MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />

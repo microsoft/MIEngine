@@ -17,6 +17,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.DebugEngineHost;
 
+using Logger = MICore.Logger;
+
 namespace Microsoft.MIDebugEngine
 {
     internal class DebuggedProcess : MICore.Debugger
@@ -166,7 +168,7 @@ namespace Microsoft.MIDebugEngine
 
                 ITransport localTransport = null;
                 // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && // TODO: Support OSX also
+                if (PlatformUtilities.IsLinux() && // TODO: Support OSX also
                     this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions)
                     )
                 {
@@ -580,9 +582,9 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     // On Windows, with CLRDBG, if we should launch a new console, set the TTY
-                    if (localLaunchOptions != null && 
+                    if (localLaunchOptions != null &&
                         this.MICommandFactory.Mode == MIMode.Clrdbg &&
-                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                        PlatformUtilities.IsWindows() &&
                         this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
                     {
                         commands.Add(new LaunchCommand("-inferior-tty-set <new-console>"));

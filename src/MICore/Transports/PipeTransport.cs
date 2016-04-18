@@ -90,8 +90,8 @@ namespace MICore
 
         private void KillProcess(Process p)
         {
-            bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-            bool isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            bool isLinux = PlatformUtilities.IsLinux();
+            bool isOSX = PlatformUtilities.IsOSX();
             if (isLinux || isOSX)
             {
                 // On linux run 'ps -x -o "%p %P"' (similarly on Mac), which generates a list of the process ids (%p) and parent process ids (%P).

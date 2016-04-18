@@ -2,6 +2,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
   <Import Project="..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="..\..\build\miengine.settings.targets" />
+  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
@@ -9,6 +10,25 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <TargetFrameworkProfile />
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -26,6 +46,25 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug.Desktop|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release.Desktop|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\RequiredNetFX46FacadeAssemblies.targets" />
@@ -51,25 +90,6 @@
     <StartAction>Program</StartAction>
     <StartProgram>$(ProgramFiles)\Microsoft Visual Studio 14.0\Common7\IDE\devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -232,10 +252,10 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
-    <Error Condition="!Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
+    <Error Condition="!Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
+    <Error Condition="!Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
   </Target>
-  <Import Project="..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
+  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
   <!--
   Target to drop the built files into a directory.
   For the official build, we need to drop files to the build share

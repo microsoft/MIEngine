@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using Microsoft.DebugEngineHost;
 using MICore;
+using Logger = MICore.Logger;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -25,6 +26,7 @@ namespace Microsoft.MIDebugEngine
     {
         private readonly AutoResetEvent _opSet;
         private readonly ManualResetEvent _runningOpCompleteEvent; // fired when either m_syncOp finishes, or the kick off of m_async
+        private readonly Object _eventLock = new object(); // Locking on an event directly can hang in Mono
         private readonly Queue<Operation> _postedOperations; // queue of fire-and-forget operations
 
         public event EventHandler<Exception> PostedOperationErrorEvent;
@@ -138,7 +140,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     _runningOpCompleteEvent.WaitOne();
 
-                    lock (_runningOpCompleteEvent)
+                    lock (_eventLock)
                     {
                         if (_runningOp == null)
                         {
@@ -210,7 +212,7 @@ namespace Microsoft.MIDebugEngine
 
         private bool TrySetOperationInternal(Delegate op)
         {
-            lock (_runningOpCompleteEvent)
+            lock (_eventLock)
             {
                 if (_isClosed)
                     throw new ObjectDisposedException("WorkerThread");
@@ -244,7 +246,7 @@ namespace Microsoft.MIDebugEngine
         {
             var waitLoop = new HostWaitLoop(text);
 
-            lock (_runningOpCompleteEvent)
+            lock (_eventLock)
             {
                 if (_isClosed)
                     throw new ObjectDisposedException("WorkerThread");
