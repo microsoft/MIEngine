@@ -33,14 +33,14 @@ namespace MICore
             if (PlatformUtilities.IsWindows() &&
                 options.DebuggerMIMode == MIMode.Gdb)
             {
-                string path = processStartInfo.GetEnvironmentVariable("PATH");
+                string path = proc.StartInfo.GetEnvironmentVariable("PATH");
                 path = (string.IsNullOrEmpty(path) ? miDebuggerDir : path + ";" + miDebuggerDir);
-                processStartInfo.SetEnvironmentVariable("PATH", path);
+                proc.StartInfo.SetEnvironmentVariable("PATH", path);
             }
 
             foreach (EnvironmentEntry entry in localOptions.Environment)
             {
-                processStartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+                proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
             }
 
             InitProcess(proc, out reader, out writer);
