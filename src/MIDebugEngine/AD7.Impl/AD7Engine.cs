@@ -13,6 +13,8 @@ using MICore;
 using System.Globalization;
 using Microsoft.DebugEngineHost;
 
+using Logger = MICore.Logger;
+
 namespace Microsoft.MIDebugEngine
 {
     // AD7Engine is the primary entrypoint object for the sample engine. 

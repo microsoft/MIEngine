@@ -18,15 +18,22 @@
     <AssemblyName>Microsoft.DebugEngineHost</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <!--NOTE: This does NOT go to the same output directory as the rest of the MIEngine project as this is just the stub (contract) definition
     of DebugEngineHost, so we don't want to conflict with the real version. -->
     <OutputPath>bin\$(Configuration)</OutputPath>
     <DocumentationFile>$(DropRootDir)\ReferenceAssemblies\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
+    <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsCoreClr)' == 'false'">
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -38,6 +45,23 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>Contract.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
@@ -67,9 +91,20 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(IsCoreClr)' == 'true'">
     <None Include="project.json" />
     <!-- A reference to the entire .NET Framework is automatically included -->
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
+    <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\prebuild\prebuild.csproj">
+      <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
+      <Name>Prebuild</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DebugEngineHost.ref.cs" />
@@ -81,7 +116,8 @@
   <ItemGroup>
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\DropFiles.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

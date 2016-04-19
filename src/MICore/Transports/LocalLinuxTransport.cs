@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-
+using System.Text;
 
 namespace MICore
 {
@@ -157,9 +157,10 @@ namespace MICore
 
             if (localOptions.Environment != null)
             {
+                ProcessStartInfo processStartInfo = terminalProcess.StartInfo;
                 foreach (EnvironmentEntry entry in localOptions.Environment)
                 {
-                    terminalProcess.StartInfo.Environment.Add(entry.Name, entry.Value);
+                    processStartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
                 }
             }
 
@@ -168,8 +169,9 @@ namespace MICore
             // The in/out names are confusing in this case as they are relative to gdb.
             // What that means is the names are backwards wrt miengine hence the reader
             // being the writer and vice-versa
-            writer = new StreamWriter(gdbStdInStream);
-            reader = new StreamReader(gdbStdOutStream);
+            // Mono seems to hang when the debugger sends a large response unless we specify a larger buffer here
+            writer = new StreamWriter(gdbStdInStream, new UTF8Encoding(false, true), 1024 * 4);
+            reader = new StreamReader(gdbStdOutStream, Encoding.UTF8, true, 1024 * 4);
         }
 
         private void FifoWatcher_Deleted(object sender, FileSystemEventArgs e)
@@ -199,7 +201,7 @@ namespace MICore
                     return true; // Attaching to any non-child process requires root
                 }
             }
-            
+
             // TODO: detect if the target is under a different user and if so return true
             return false;
         }

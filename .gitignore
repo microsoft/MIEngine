@@ -5,6 +5,7 @@ obj
 *.orig
 *.sdf
 *.opensdf
+*.userprefs
 ipch
 debug/
 release/
@@ -19,6 +20,7 @@ intermediate
 *.tmp
 *.VC.opendb
 packages/
+packages.Desktop/
 .vs/
 Microsoft.VisualStudio.Glass
 project.lock.json

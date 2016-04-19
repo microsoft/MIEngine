@@ -487,7 +487,7 @@ namespace MICore
             {
                 if (this is LocalLaunchOptions)
                 {
-                    return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                    return !PlatformUtilities.IsWindows();
                 }
                 else
                 {
