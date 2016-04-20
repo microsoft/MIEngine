@@ -27,7 +27,9 @@ namespace MICore
         {
             // Mod is normally in octal, but C# has no octal values. This is 384 (rw owner, no rights anyone else)
             const int rw_owner = 384;
-            int result = LinuxNativeMethods.MkFifo(path, rw_owner);
+            byte[] pathAsBytes = new byte[Encoding.UTF8.GetByteCount(path) + 1];
+            Encoding.UTF8.GetBytes(path, 0, path.Length, pathAsBytes, 0);
+            int result = LinuxNativeMethods.MkFifo(pathAsBytes, rw_owner);
 
             if (result != 0)
             {
