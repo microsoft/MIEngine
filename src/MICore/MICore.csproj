@@ -20,6 +20,7 @@
     for all its methods, but it is also not a public assembly, and adding XML documentation for all its methods
     would take a fair amount of work.-->
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
     <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
