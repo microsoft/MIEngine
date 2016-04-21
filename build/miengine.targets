@@ -8,6 +8,7 @@
   <PropertyGroup>
     <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <BuildDependsOn Condition="'$(IsCoreClr)' == 'false'">DetermineCompilerBinary;$(BuildDependsOn)</BuildDependsOn>
+    <BuildDependsOn>$(BuildDependsOn);GenerateMonoSymbols</BuildDependsOn>
   </PropertyGroup>
 
   <UsingTask TaskName="GetRuntime" 
@@ -48,7 +49,13 @@
     <Exec Condition="'$(IsCoreClr)' == 'false'" 
           Command="&quot;$(MIEngineRoot)tools/NuGet/NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(ProjectDir)packages.config&quot;" />
   </Target>
-  
+
+  <Target Name="GenerateMonoSymbols"
+          Condition="'$(IsCoreClr)' == 'false' AND '$(IsMonoRuntime)' == 'false' AND '$(ShouldGenerateMonoSymbols)' == 'true'">
+    <!-- If we're building the Desktop config on Windows, run pdb2mdb to generate Mono symbols as well -->
+    <Exec Command="&quot;$(NugetPackagesDirectory)\Mono.Unofficial.pdb2mdb.4.2.3.4\tools\pdb2mdb.exe&quot; &quot;$(TargetPath)&quot;" />
+  </Target>
+
   <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != ''" AfterTargets="Build">
 	<MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />
 	<Copy SourceFiles="@(GlassDirCopy)" DestinationFolder="$(GlassDir)" />
