@@ -21,9 +21,15 @@
     </GenerateAssembly>
   </ItemGroup>
   <Target Name="GenerateAssemblies" Condition="'@(GenerateAssembly)' != ''" Inputs="@(GenerateAssembly)" Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')" AfterTargets="Build">
+    <Exec Condition="'$(IsMonoRuntime)' == 'true'"
+          ConsoleToMsBuild="true"
+          Command="dirname `which ilasm`">
+      <Output TaskParameter="ConsoleOutput" PropertyName="IlAsmPath" />
+    </Exec>
+
     <PropertyGroup>
       <IlAsmCommand Condition="'$(IsMonoRuntime)' == 'false'">"$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe"</IlAsmCommand>
-      <IlAsmCommand Condition="'$(IsMonoRuntime)' == 'true'">/usr/bin/ilasm</IlAsmCommand>
+      <IlAsmCommand Condition="'$(IsMonoRuntime)' == 'true'">$(IlAsmPath)/ilasm</IlAsmCommand>
       <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
     </PropertyGroup>
     <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
