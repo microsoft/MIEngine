@@ -14,7 +14,7 @@ namespace MICore
         internal static extern int Kill(int pid, int mode);
 
         [DllImport(Libc, EntryPoint = "mkfifo", SetLastError = true)]
-        internal static extern int MkFifo(string name, int mode);
+        internal static extern int MkFifo(byte[] name, int mode);
 
         [DllImport(Libc, EntryPoint = "geteuid", SetLastError = true)]
         internal static extern uint GetEUid();

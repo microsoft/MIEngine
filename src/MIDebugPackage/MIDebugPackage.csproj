@@ -268,4 +268,6 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <!-- Extra empty msbuild targets to make it happy -->
+  <Target Name="SetDevPathEnvironment" />
 </Project>
