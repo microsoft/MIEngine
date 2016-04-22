@@ -233,6 +233,12 @@ namespace MICore
             await ThreadCmdAsync(command, resultClass, threadId);
         }
 
+        public async Task ExecNextInstruction(int threadId, ResultClass resultClass = ResultClass.running)
+        {
+            string command = "-exec-next-instruction";
+            await ThreadCmdAsync(command, resultClass, threadId);
+        }
+
         /// <summary>
         /// Tells GDB to spawn a target process previous setup with -file-exec-and-symbols or similar
         /// </summary>

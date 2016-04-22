@@ -980,7 +980,20 @@ namespace Microsoft.MIDebugEngine
             }
             else if (unit == enum_STEPUNIT.STEP_INSTRUCTION)
             {
-                await MICommandFactory.ExecStepInstruction(threadId);
+                switch (kind)
+                {
+                    case enum_STEPKIND.STEP_INTO:
+                        await MICommandFactory.ExecStepInstruction(threadId);
+                        break;
+                    case enum_STEPKIND.STEP_OVER:
+                        await MICommandFactory.ExecNextInstruction(threadId);
+                        break;
+                    case enum_STEPKIND.STEP_OUT:
+                        await MICommandFactory.ExecFinish(threadId);
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
             }
             else
             {
