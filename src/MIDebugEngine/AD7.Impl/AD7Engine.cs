@@ -564,8 +564,8 @@ namespace Microsoft.MIDebugEngine
         // Determines if a debug engine (DE) can detach from the program.
         public int CanDetach()
         {
-            // The sample engine always supports detach
-            return Constants.S_OK;
+            bool canDetach = _debuggedProcess != null && _debuggedProcess.MICommandFactory.CanDetach();
+            return canDetach ? Constants.S_OK : Constants.S_FALSE;
         }
 
         // The debugger calls CauseBreak when the user clicks on the pause button in VS. The debugger should respond by entering

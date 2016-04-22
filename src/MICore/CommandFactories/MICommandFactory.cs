@@ -547,6 +547,11 @@ namespace MICore
 
         abstract public bool AllowCommandsWhileRunning();
 
+        public virtual bool CanDetach()
+        {
+            return true;
+        }
+
         abstract public Task<List<ulong>> StartAddressesForLine(string file, uint line);
 
         /// <summary>
