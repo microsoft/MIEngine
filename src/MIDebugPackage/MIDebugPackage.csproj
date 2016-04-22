@@ -211,6 +211,10 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreCLR)' == 'false'">
+      <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
+      <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AndroidDebugLauncher\AndroidDebugLauncher.csproj">
       <Project>{e0844bff-2d67-4cb0-8e2a-e9cd888f2eb0}</Project>
