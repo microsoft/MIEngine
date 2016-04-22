@@ -38,6 +38,7 @@ namespace MICore
         public event EventHandler BreakCreatedEvent; // a breakpoint was created
         public event EventHandler ThreadCreatedEvent;
         public event EventHandler ThreadExitedEvent;
+        public event EventHandler ThreadGroupExitedEvent;
         public event EventHandler<ResultEventArgs> MessageEvent;
         public event EventHandler<ResultEventArgs> TelemetryEvent;
         private int _exiting;
@@ -543,12 +544,21 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
+<<<<<<< 17d1f39a11034234966c6bc4ddf9dc41d6c51d85
             this.VerifyNotDebuggingCoreDump();
 
             // TODO May need to fix attach on windows.
             // Note that interrupt doesn't work when attached on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
             if (IsLocalGdb() && (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX()))
+=======
+            if (ProcessState != ProcessState.Running)
+            {
+                return Task.CompletedTask;
+            }
+            //TODO May need to fix attach on windows and osx.
+            if (IsLocalGdbAttach() && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+>>>>>>> Save per-thread forking state, interrupt over the pipe rat6her than using the mi
             {
                 // for local linux debugging, send a signal to one of the debuggee processes rather than
                 // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
@@ -568,6 +578,13 @@ namespace MICore
                 if (useSignal)
                 {
                     return CmdUnixBreak(debuggeePid, ResultClass.done);
+                }
+            }
+            else if (_transport is PipeTransport)
+            {
+                if (((PipeTransport)_transport).Interrupt(PidByInferior("i1")))
+                {
+                    return Task.FromResult<Results>(new Results(ResultClass.done));
                 }
             }
 
@@ -1140,6 +1157,7 @@ namespace MICore
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-group-exited,".Length));
                 HandleThreadGroupExited(results);
+                ThreadGroupExitedEvent(this, new ResultEventArgs(results, 0));
             }
             else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
             {
@@ -1230,19 +1248,29 @@ namespace MICore
             {
                 if ( grp.Value == pid)
                 {
-                    // Inferior names are of the form "iX" where X in the inferior number
-                    string name = grp.Key;
-                    if (name[0] == 'i')
-                    {
-                        uint id;
-                        if (UInt32.TryParse(name.Substring(1), out id))
-                        {
-                            return id;
-                        }
-                    }
+                    return InferiorNumber(grp.Key);
                 }
             }
             return 0;
+        }
+
+        public int PidByInferior(string inf)
+        {
+            return _debuggeePids[inf];
+        }
+
+        public uint InferiorNumber(string groupId)
+        {
+            // Inferior names are of the form "iX" where X in the inferior number
+            if (groupId.Length >= 2 && groupId[0] == 'i')
+            {
+                uint id;
+                if (UInt32.TryParse(groupId.Substring(1), out id))
+                {
+                    return id;
+                }
+            }
+            return 1;   // default to the first inferior if group-id not understood
         }
 
         private void HandleThreadGroupExited(Results results)

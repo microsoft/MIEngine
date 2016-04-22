@@ -23,12 +23,40 @@ namespace MICore
         private ManualResetEvent _allReadersDone = new ManualResetEvent(false);
         private bool _killOnClose;
         private bool _filterStderr;
+<<<<<<< 17d1f39a11034234966c6bc4ddf9dc41d6c51d85
         private int _debuggerPid = -1;
+=======
+        private string _pipePath;
+        private string _cmdArgs;
+>>>>>>> Save per-thread forking state, interrupt over the pipe rat6her than using the mi
 
         public PipeTransport(bool killOnClose = false, bool filterStderr = false, bool filterStdout = false) : base(filterStdout)
         {
             _killOnClose = killOnClose;
             _filterStderr = filterStderr;
+        }
+
+        public bool Interrupt(int pid)
+        {
+            if (_cmdArgs == null)
+            {
+                return false;
+            }
+
+            Process proc = new Process();
+            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
+            proc.StartInfo.FileName = _pipePath;
+            proc.StartInfo.Arguments = string.Format(CultureInfo.InvariantCulture, _cmdArgs, killCmd);
+            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
+            proc.EnableRaisingEvents = false;
+            proc.StartInfo.RedirectStandardInput = false;
+            proc.StartInfo.RedirectStandardOutput = false;
+            proc.StartInfo.RedirectStandardError = false;
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.CreateNoWindow = true;
+            proc.Start();
+            proc.WaitForExit();
+            return true;
         }
 
         protected override string GetThreadName()
@@ -76,12 +104,14 @@ namespace MICore
             }
         }
 
-
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
             PipeLaunchOptions pipeOptions = (PipeLaunchOptions)options;
 
+            _cmdArgs = pipeOptions.PipeCommandArguments;
+
             Process proc = new Process();
+            _pipePath = pipeOptions.PipePath;
             proc.StartInfo.FileName = pipeOptions.PipePath;
             proc.StartInfo.Arguments = pipeOptions.PipeArguments;
             proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(pipeOptions.PipePath);

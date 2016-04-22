@@ -290,6 +290,11 @@
               <xs:documentation>Any arguments to pass to this program.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="PipeCommandArguments" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>Arguments to pass to the PipePath program that include a format specifier ('{0}') for a custom command.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
@@ -320,7 +325,8 @@
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
-  <!--base type for LocalLaunchOptions, PipeLaunchOptions, and TcpLaunchOptions -->
+
+<!--base type for LocalLaunchOptions, PipeLaunchOptions, and TcpLaunchOptions -->
   <xs:complexType name="BaseLaunchOptions">
     <xs:sequence>
       <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">

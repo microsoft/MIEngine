@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio;
@@ -15,9 +18,9 @@ namespace Microsoft.DebugEngineHost
     public static class HostDebugger
     {
         /// <summary>
-        /// Attach to a process using the provided options
+        /// Ask the host to async spin up a new instance of the debug engine and go through the launch sequence using the specified options
         /// </summary>
-        public static void Attach(string filePath, string options, Guid engineId)
+        public static void StartDebugChildProcess(string filePath, string options, Guid engineId)
         {
             try
             {

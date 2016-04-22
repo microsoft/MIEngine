@@ -63,18 +63,19 @@ namespace MICore
     /// </summary>
     public sealed class PipeLaunchOptions : LaunchOptions
     {
-        public PipeLaunchOptions(string PipePath, string PipeArguments)
+        public PipeLaunchOptions(string PipePath, string PipeArguments, string PipeCommandArguments)
         {
             if (string.IsNullOrEmpty(PipePath))
                 throw new ArgumentNullException("PipePath");
 
             this.PipePath = PipePath;
             this.PipeArguments = PipeArguments;
+            this.PipeCommandArguments = PipeCommandArguments;
         }
 
         static internal PipeLaunchOptions CreateFromXml(Xml.LaunchOptions.PipeLaunchOptions source)
         {
-            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments);
+            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments, source.PipeCommandArguments);
             options.InitializeCommonOptions(source);
 
             return options;
@@ -88,7 +89,13 @@ namespace MICore
         /// <summary>
         /// [Optional] Arguments to pass to the pipe executable.
         /// </summary>
+        /// 
         public string PipeArguments { get; private set; }
+
+        /// <summary>
+        /// [Optional] Arguments to pass to the PipePath program that include a format specifier ('{0}') for a custom command.
+        /// </summary>
+        public string PipeCommandArguments { get; private set; }
     }
 
     public sealed class TcpLaunchOptions : LaunchOptions
@@ -283,24 +290,6 @@ namespace MICore
         public string MIDebuggerServerAddress { get; private set; }
 
         /// <summary>
-        /// [Required] Path to the executable file. This path must exist on the Visual Studio computer.
-        /// </summary>
-        public override string ExePath
-        {
-            get
-            {
-                return base.ExePath;
-            }
-            set
-            {
-                if (String.IsNullOrEmpty(value) || !LocalLaunchOptions.CheckPath(value))
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, value));
-
-                base.ExePath = value;
-            }
-        }
-
-        /// <summary>
         /// [Optional] List of environment variables to add to the launched process
         /// </summary>
         public ReadOnlyCollection<EnvironmentEntry> Environment { get; private set; }
@@ -397,12 +386,24 @@ namespace MICore
 
         public MIMode DebuggerMIMode { get; set; }
 
-        private string _exePath;
-
+        private Xml.LaunchOptions.BaseLaunchOptions _baseOptions;
         /// <summary>
         /// Hold on to options in serializable form to support child process debugging
         /// </summary>
-        public Xml.LaunchOptions.BaseLaunchOptions BaseOptions { get; set; }
+        public Xml.LaunchOptions.BaseLaunchOptions BaseOptions
+        {
+            get { return _baseOptions; }
+            protected set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("BaseOptions");
+                VerifyCanModifyProperty("BaseOptions");
+
+                _baseOptions = value;
+            }
+        }
+
+        private string _exePath;
 
         /// <summary>
         /// [Required] Path to the executable file. This could be a path on the remote machine (for Pipe transport)
@@ -435,10 +436,20 @@ namespace MICore
             }
         }
 
+        private int _processId;
+
         /// <summary>
         /// [Optional] If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.
         /// </summary>
-        public int ProcessId { get; set; }
+        public int ProcessId
+        {
+            get { return _processId; }
+            protected set
+            {
+                VerifyCanModifyProperty("ProcessId");
+                _processId = value;
+            }
+        }
 
         private string _coreDumpPath;
         /// <summary>
@@ -450,8 +461,10 @@ namespace MICore
             {
                 return _coreDumpPath;
             }
-            set
+            protected set
             {
+                VerifyCanModifyProperty("CoreDumpPath");
+
                 // CoreDumpPath is allowed to be null/empty
                 _coreDumpPath = value;
             }
@@ -615,9 +628,19 @@ namespace MICore
             }
         }
 
-        public bool DebugChildProcesses { get; set; }
+        private bool _debugChildProcesses;
 
-        public static string GetOptionsString(object o)
+        public bool DebugChildProcesses
+        {
+            get { return _debugChildProcesses; }
+            protected set
+            {
+                VerifyCanModifyProperty("DebugChildProcesses");
+                _debugChildProcesses = value;
+            }
+        }
+
+        public string GetOptionsString()
         {
             try
             {
@@ -625,20 +648,20 @@ namespace MICore
                 XmlSerializer serializer;
                 using (XmlWriter writer = XmlWriter.Create(strWriter))
                 {
-                    if (o is Xml.LaunchOptions.LocalLaunchOptions)
+                    if (BaseOptions is Xml.LaunchOptions.LocalLaunchOptions)
                     {
                         serializer = new XmlSerializer(typeof(Xml.LaunchOptions.LocalLaunchOptions));
-                        Serialize(serializer, writer, o);
+                        Serialize(serializer, writer, BaseOptions);
                     }
-                    else if (o is Xml.LaunchOptions.PipeLaunchOptions)
+                    else if (BaseOptions is Xml.LaunchOptions.PipeLaunchOptions)
                     {
                         serializer = new XmlSerializer(typeof(Xml.LaunchOptions.PipeLaunchOptions));
-                        Serialize(serializer, writer, o);
+                        Serialize(serializer, writer, BaseOptions);
                     }
-                    else if (o is Xml.LaunchOptions.TcpLaunchOptions)
+                    else if (BaseOptions is Xml.LaunchOptions.TcpLaunchOptions)
                     {
                         serializer = new XmlSerializer(typeof(Xml.LaunchOptions.TcpLaunchOptions));
-                        Serialize(serializer, writer, o);
+                        Serialize(serializer, writer, BaseOptions);
                     }
                     else
                     {
@@ -835,7 +858,7 @@ namespace MICore
             }
         }
 
-        public static void Serialize(XmlSerializer serializer, XmlWriter writer, object o)
+        private static void Serialize(XmlSerializer serializer, XmlWriter writer, object o)
         {
             try
             {
@@ -950,8 +973,11 @@ namespace MICore
                 else
                     this.AdditionalSOLibSearchPath = string.Concat(this.AdditionalSOLibSearchPath, ";", additionalSOLibSearchPath);
             }
+<<<<<<< 17d1f39a11034234966c6bc4ddf9dc41d6c51d85
             if (string.IsNullOrEmpty(this.AbsolutePrefixSOLibSearchPath))
                 this.AbsolutePrefixSOLibSearchPath = source.AbsolutePrefixSOLibSearchPath;
+=======
+>>>>>>> Save per-thread forking state, interrupt over the pipe rat6her than using the mi
 
             this.ProcessId = source.ProcessId;
             this.CoreDumpPath = source.CoreDumpPath;

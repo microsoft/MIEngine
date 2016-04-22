@@ -58,11 +58,11 @@ namespace Microsoft.MIDebugEngine
 
         private IDebugSettingsCallback110 _settingsCallback;
 
-        public static List<int> ChildProcessLaunch;
+        private static List<int> _childProcessLaunch;
 
         static AD7Engine()
         {
-            ChildProcessLaunch = new List<int>();
+            _childProcessLaunch = new List<int>();
         }
 
         public AD7Engine()
@@ -77,6 +77,22 @@ namespace Microsoft.MIDebugEngine
             if (_pollThread != null)
             {
                 _pollThread.Close();
+            }
+        }
+
+        internal static void AddChildProcess(int processId)
+        {
+            lock(_childProcessLaunch)
+            {
+                _childProcessLaunch.Add(processId);
+            }
+        }
+
+        internal static bool RemoveChildProcess(int processId)
+        {
+            lock(_childProcessLaunch)
+            {
+                return _childProcessLaunch.Remove(processId);
             }
         }
 
@@ -844,6 +860,7 @@ namespace Microsoft.MIDebugEngine
             {
                 await _debuggedProcess.CmdBreak();
             });
+            // TODO: this should be returning S_ASYNC_STOP
             return Constants.S_OK;
         }
 

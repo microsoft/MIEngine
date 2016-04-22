@@ -49,8 +49,12 @@ namespace Microsoft.MIDebugEngine
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
         private bool _needTerminalReset;
+<<<<<<< 17d1f39a11034234966c6bc4ddf9dc41d6c51d85
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _inProgress;
+=======
+        private ProcessSequence _childProcessHandler;
+>>>>>>> Save per-thread forking state, interrupt over the pipe rat6her than using the mi
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
         {
@@ -374,13 +378,20 @@ namespace Microsoft.MIDebugEngine
             ThreadCreatedEvent += delegate (object o, EventArgs args)
             {
                 ResultEventArgs result = (ResultEventArgs)args;
-                ThreadCache.ThreadEvent(result.Results.FindInt("id"), /*deleted */false);
+                ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
+                _childProcessHandler?.ThreadCreatedEvent(result.Results);
             };
 
             ThreadExitedEvent += delegate (object o, EventArgs args)
             {
                 ResultEventArgs result = (ResultEventArgs)args;
-                ThreadCache.ThreadEvent(result.Results.FindInt("id"), /*deleted*/true);
+                ThreadCache.ThreadExitedEvent(result.Results.FindInt("id"));
+            };
+
+            ThreadGroupExitedEvent += delegate (object o, EventArgs args)
+            {
+                ResultEventArgs result = (ResultEventArgs)args;
+                ThreadCache.ThreadGroupExitedEvent(result.Results.FindString("id"));
             };
 
             MessageEvent += (object o, ResultEventArgs args) =>
@@ -403,12 +414,6 @@ namespace Microsoft.MIDebugEngine
             };
 
             BreakChangeEvent += _breakpointManager.BreakpointModified;
-
-            BreakCreatedEvent += (object o, EventArgs args) =>
-            {
-                ResultEventArgs result = (ResultEventArgs)args;
-                _inProgress?.BreakpointCreated(result.Results);
-            };
         }
 
         private async Task EnsureModulesLoaded()
@@ -463,7 +468,7 @@ namespace Microsoft.MIDebugEngine
             {
                 await this.MICommandFactory.EnableTargetAsyncOption();
                 List<LaunchCommand> commands = GetInitializeCommands();
-                _inProgress?.Enable(true);
+                _childProcessHandler?.Enable();
 
                 total = commands.Count();
                 var i = 0;
@@ -581,7 +586,7 @@ namespace Microsoft.MIDebugEngine
             {
                 if (_launchOptions.DebugChildProcesses)
                 {
-                    _inProgress = new DebugUnixChild(this, this._launchOptions);  // TODO: let the user enable/disable this functionality
+                    _childProcessHandler = new DebugUnixChild(this, this._launchOptions);  // TODO: let the user enable/disable this functionality
                 }
             }
 
@@ -736,11 +741,6 @@ namespace Microsoft.MIDebugEngine
 
         private async Task HandleBreakModeEvent(ResultEventArgs results)
         {
-            if (_inProgress != null && await _inProgress.Stopped(results.Results))
-            {
-                return;
-            }
-
             string reason = results.Results.TryFindString("reason");
             int tid;
             if (!results.Results.Contains("thread-id"))
@@ -751,6 +751,11 @@ namespace Microsoft.MIDebugEngine
             else
             {
                 tid = results.Results.FindInt("thread-id");
+            }
+
+            if (_childProcessHandler != null && await _childProcessHandler.Stopped(results.Results, tid))
+            {
+                return;
             }
 
             // Any existing variable objects at this point are from the last time we were in break mode, and are
@@ -928,20 +933,16 @@ namespace Microsoft.MIDebugEngine
                     {
                         code = EngineUtils.SignalMap.Instance[sigName];
                     }
-                    bool _stoppedAtSIGSTOP = false;
+                    bool stoppedAtSIGSTOP = false;
                     if (sigName == "SIGSTOP")
                     {
-                        lock (AD7Engine.ChildProcessLaunch)
+                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId))
                         {
-                            if (AD7Engine.ChildProcessLaunch.Contains(_launchOptions.ProcessId))
-                            {
-                                AD7Engine.ChildProcessLaunch.Remove(_launchOptions.ProcessId);
-                                _stoppedAtSIGSTOP = true;
-                            }
+                            stoppedAtSIGSTOP = true;
                         }
                     }
                     string message = results.Results.TryFindString("signal-meaning");
-                    if (_stoppedAtSIGSTOP)
+                    if (stoppedAtSIGSTOP)
                     {
                         await MICommandFactory.Signal("SIGCONT");
                     }
