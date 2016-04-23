@@ -455,11 +455,10 @@ namespace MICore
         }
 
 
-        private bool IsLocalGdbAttach()
+        private bool IsLocalGdb()
         {
             if (this.MICommandFactory.Mode == MIMode.Gdb &&
                this._launchOptions is LocalLaunchOptions &&
-               ((LocalLaunchOptions)this._launchOptions).ProcessId != 0 &&
                String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
                )
             {
@@ -504,11 +503,11 @@ namespace MICore
         public Task CmdBreakInternal()
         {
             //TODO May need to fix attach on windows and osx.
-            if (IsLocalGdbAttach() && PlatformUtilities.IsLinux())
+            if (IsLocalGdb() && PlatformUtilities.IsLinux())
             {
-                // for local linux debugging with attach, send a signal to one of the debugee processes rather than
-                // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
-                // deadlocks or missed bps (since binding in runtime requires break state).
+                // for local linux debugging, send a signal to one of the debuggee processes rather than
+                // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
+                // End result is either deadlocks or missed bps (since binding in runtime requires break state).
                 // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
                 bool useSignal = false;
                 int debuggeePid = 0;
