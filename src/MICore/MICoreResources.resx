@@ -213,4 +213,7 @@ Error: {1}</value>
   <data name="Error_InvalidMiDebuggerPath" xml:space="preserve">
     <value>The value of miDebuggerPath is invalid</value>
   </data>
+  <data name="Error_NoTerminalAvailable_Linux" xml:space="preserve">
+    <value>No terminal is available to launch the debugger.  Please install Gnome Terminal or XTerm.</value>
+  </data>
 </root>

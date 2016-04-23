@@ -239,6 +239,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No terminal is available to launch the debugger.  Please install Gnome Terminal or XTerm..
+        /// </summary>
+        public static string Error_NoTerminalAvailable_Linux {
+            get {
+                return ResourceManager.GetString("Error_NoTerminalAvailable_Linux", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Commands are only accepted when the process is stopped..
         /// </summary>
         public static string Error_ProcessMustBeStopped {

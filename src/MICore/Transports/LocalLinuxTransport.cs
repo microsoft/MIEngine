@@ -105,10 +105,14 @@ namespace MICore
                 terminalCmd = GnomeTerminalPath;
                 bashCommandPrefix = "--title DebuggerTerminal -x";
             }
-            else
+            else if (File.Exists(XTermPath))
             {
                 terminalCmd = XTermPath;
                 bashCommandPrefix = "-title DebuggerTerminal -e";
+            }
+            else
+            {
+                throw new FileNotFoundException(MICoreResources.Error_NoTerminalAvailable_Linux);
             }
 
             // Spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it
