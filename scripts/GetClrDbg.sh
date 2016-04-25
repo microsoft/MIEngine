@@ -93,10 +93,10 @@ fi
 version_string="$(echo $1 | awk '{print tolower($0)}')"
 case $version_string in
     latest)
-        __ClrDbgVersion=14.0.25214-preview-2934931
+        __ClrDbgVersion=14.0.25225-preview-2954453
         ;;
     vs2015u2)
-        __ClrDbgVersion=14.0.25214-preview-2934931
+        __ClrDbgVersion=14.0.25225-preview-2954453
         ;;
     *)
         simpleVersionRegex="^[0-9].*"
