@@ -502,6 +502,8 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
+            this.VerifyNotDebuggingCoreDump();
+
             //TODO May need to fix attach on windows and osx.
             if (IsLocalGdb() && PlatformUtilities.IsLinux())
             {
