@@ -242,6 +242,17 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Obtain a string from a BSTR
+        /// </summary>
+        /// <param name="stringId"></param>
+        /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ForInt")]
+        public static string GetStringForIntPtr(IntPtr stringId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
         /// <param name="ad7Callback">The underlying event call back which was obtained from the port</param>

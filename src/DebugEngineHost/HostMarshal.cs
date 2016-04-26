@@ -59,6 +59,16 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Obtain a string from a BSTR
+        /// </summary>
+        /// <param name="stringId"></param>
+        /// <returns></returns>
+        public static string GetStringForIntPtr(IntPtr stringId)
+        {
+            return (string)Marshal.PtrToStringBSTR(stringId);
+        }
+
+        /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
         /// <param name="ad7Callback">The underlying event call back which was obtained from the port</param>
