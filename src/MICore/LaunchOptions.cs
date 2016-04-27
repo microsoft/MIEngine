@@ -211,8 +211,36 @@ namespace MICore
 
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
+            string miDebuggerPath = source.MIDebuggerPath;
+
+            // If no path to the debugger was specified, look for the proper binary in the user's $PATH
+            if (String.IsNullOrEmpty(miDebuggerPath))
+            {
+                string debuggerBinary = null;
+                switch (source.MIMode)
+                {
+                    case Xml.LaunchOptions.MIMode.gdb:
+                        debuggerBinary = "gdb";
+                        break;
+
+                    case Xml.LaunchOptions.MIMode.lldb:
+                        debuggerBinary = "lldb-mi";
+                        break;
+                }
+
+                if (!String.IsNullOrEmpty(debuggerBinary))
+                {
+                    miDebuggerPath = LocalLaunchOptions.ResolveFromPath(debuggerBinary);
+                }
+
+                if (String.IsNullOrEmpty(miDebuggerPath))
+                {
+                    throw new InvalidLaunchOptionsException(MICoreResources.Error_NoMiDebuggerPath);
+                }
+            }
+
             var options = new LocalLaunchOptions(
-                RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"),
+                RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
                 source.MIDebuggerServerAddress,
                 source.ProcessId,
                 source.Environment);
@@ -226,6 +254,25 @@ namespace MICore
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
 
             return options;
+        }
+
+        private static string ResolveFromPath(string command)
+        {
+            string pathVar = System.Environment.GetEnvironmentVariable("PATH");
+
+            // Check each portion of the PATH environment variable to see if it contains the requested file
+            foreach (string pathPart in pathVar.Split(Path.PathSeparator))
+            {
+                string candidate = Path.Combine(pathPart, command);
+
+                // If the file exists, use it
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

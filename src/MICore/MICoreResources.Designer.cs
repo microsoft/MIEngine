@@ -230,6 +230,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to determine path to debugger.  Please specify the &quot;MIDebuggerPath&quot; option..
+        /// </summary>
+        public static string Error_NoMiDebuggerPath {
+            get {
+                return ResourceManager.GetString("Error_NoMiDebuggerPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to execute command. The MIEngine is not currently debugging any process..
         /// </summary>
         public static string Error_NoMIDebuggerProcess {
