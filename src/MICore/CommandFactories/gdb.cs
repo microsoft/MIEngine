@@ -217,5 +217,6 @@ namespace MICore
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
+        public override bool SupportsDataBreakpoints { get { return true; } }
     }
 }

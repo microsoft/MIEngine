@@ -425,6 +425,8 @@ namespace MICore
             throw new NotImplementedException();
         }
 
+        public virtual bool SupportsDataBreakpoints { get { return false; } }
+
         public virtual async Task<TupleValue> BreakInfo(string bkptno)
         {
             Results bindResult = await _debugger.CmdAsync("-break-info " + bkptno, ResultClass.None);

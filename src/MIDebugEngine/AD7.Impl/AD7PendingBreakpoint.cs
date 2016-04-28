@@ -41,6 +41,8 @@ namespace Microsoft.MIDebugEngine
         internal bool Deleted { get { return _deleted; } }
         internal bool PendingDelete { get { return _pendingDelete; } }
 
+        internal bool IsDataBreakpoint {  get { return _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING; } }
+
         internal PendingBreakpoint PendingBreakpoint { get { return _bp; } }
 
         public AD7PendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, AD7Engine engine, BreakpointManager bpManager)
@@ -81,7 +83,7 @@ namespace Microsoft.MIDebugEngine
             if (_deleted ||
                 (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE
                 && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET
-                && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING))
+                && (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING || !_engine.DebuggedProcess.MICommandFactory.SupportsDataBreakpoints)))
             {
                 _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
                 return false;
@@ -247,7 +249,7 @@ namespace Microsoft.MIDebugEngine
                                 }
                             case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
                                 {
-                                    address = HostMarshal.GetStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
                                     size = (uint)_bpRequestInfo.bpLocation.unionmember4;
                                     if (condition != null)
                                     {
@@ -306,12 +308,12 @@ namespace Microsoft.MIDebugEngine
         {
             lock (_boundBreakpoints)
             {
-                if (_boundBreakpoints.Find((b) => b.Addr == bp.Addr) != null)
+                if (!IsDataBreakpoint && _boundBreakpoints.Find((b) => b.Addr == bp.Addr) != null)
                 {
                     return null;   // already bound to this breakpoint
                 }
-                AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, bp.Addr, bp.FunctionName, bp.DocumentContext(_engine));
-                AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp.Addr, this, breakpointResolution, bp);
+                AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, IsDataBreakpoint, bp.Addr, bp.FunctionName, bp.DocumentContext(_engine));
+                AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, this, breakpointResolution, bp);
                 //check can bind one last time. If the pending breakpoint was deleted before now, we need to clean up gdb side
                 if (CanBind())
                 {
@@ -472,7 +474,7 @@ namespace Microsoft.MIDebugEngine
             PendingBreakpoint bp = null;
             lock (_boundBreakpoints)
             {
-                if (!VerifyCondition(bpCondition))
+                if (!VerifyCondition(bpCondition) || IsDataBreakpoint)
                 {
                     _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
                     _engine.Callback.OnBreakpointError(_BPError);

@@ -242,12 +242,22 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Obtain a string from a BSTR
+        /// Obtain the string expression from the bpLocation union for a BPLT_DATA_STRING breakpoint.
         /// </summary>
         /// <param name="stringId"></param>
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ForInt")]
-        public static string GetStringForIntPtr(IntPtr stringId)
+        public static string GetDataBreakpointStringForIntPtr(IntPtr stringId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Return the string form of the address of a bound data breakpoint 
+        /// </summary>
+        /// <param name="address">address string</param>
+        /// <returns>IntPtr to a BSTR which can be returned to VS.</returns>
+        public static IntPtr GetIntPtrForDataBreakpointAddress(string address)
         {
             throw new NotImplementedException();
         }

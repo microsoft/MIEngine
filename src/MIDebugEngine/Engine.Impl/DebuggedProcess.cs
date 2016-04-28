@@ -780,12 +780,11 @@ namespace Microsoft.MIDebugEngine
                 ulong addr = cxt.pc ?? 0;
 
                 bool fContinue;
-                TupleValue frame = wpt.TryFind<TupleValue>("frame");
-                AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
+                AD7BoundBreakpoint bkpt = _breakpointManager.FindHitWatchpoint(bkptno, out fContinue);
                 if (bkpt != null)
                 {
                     List<object> bplist = new List<object>();
-                    bplist.AddRange(bkpt);
+                    bplist.Add(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
                 else

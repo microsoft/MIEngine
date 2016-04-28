@@ -353,6 +353,7 @@ namespace Microsoft.MIDebugEngine
         /*OPTIONAL*/
         public string FunctionName { get; private set; }
         internal uint HitCount { get; private set; }
+        internal bool IsDataBreakpoint { get { return _parent.AD7breakpoint.IsDataBreakpoint; } }
         private MITextPosition _textPosition;
 
         internal BoundBreakpoint(PendingBreakpoint parent, TupleValue bindinfo)
