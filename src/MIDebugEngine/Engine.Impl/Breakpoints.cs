@@ -91,6 +91,13 @@ namespace Microsoft.MIDebugEngine
             return EvalBindResult(await process.MICommandFactory.BreakInsert(functionName, condition, ResultClass.None), pbreak);
         }
 
+        internal static async Task<BindResult> Bind(ulong codeAddress, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
+        {
+            process.VerifyNotDebuggingCoreDump();
+
+            return EvalBindResult(await process.MICommandFactory.BreakInsert(codeAddress, condition, ResultClass.None), pbreak);
+        }
+
         internal static async Task<BindResult> Bind(string address, uint size, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
         {
             process.VerifyNotDebuggingCoreDump();

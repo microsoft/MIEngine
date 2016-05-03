@@ -263,6 +263,18 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Obtains a code context interface given the specified IntPtr of the location.
+        /// </summary>
+        /// <param name="contextId">In VS, the IUnknown pointer to QI for a code context. In VS Code,
+        /// the identifier for the code context</param>
+        /// <returns>code context object</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ForInt")]
+        public static IDebugCodeContext2 GetDebugCodeContextForIntPtr(IntPtr contextId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
         /// <param name="ad7Callback">The underlying event call back which was obtained from the port</param>

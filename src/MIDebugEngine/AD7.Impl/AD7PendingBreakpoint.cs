@@ -83,6 +83,7 @@ namespace Microsoft.MIDebugEngine
             if (_deleted ||
                 (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE
                 && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET
+                && _bpRequestInfo.bpLocation.bpLocationType !=  (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT
                 && (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING || !_engine.DebuggedProcess.MICommandFactory.SupportsDataBreakpoints)))
             {
                 _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
@@ -212,6 +213,7 @@ namespace Microsoft.MIDebugEngine
                 TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
                 string condition = null;
                 string address = null;
+                ulong codeAddress = 0;
                 uint size = 0;
 
                 lock (_boundBreakpoints)
@@ -234,6 +236,16 @@ namespace Microsoft.MIDebugEngine
                                 {
                                     IDebugFunctionPosition2 functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
                                     EngineUtils.CheckOk(functionPosition.GetFunctionName(out functionName));
+                                    break;
+                                }
+                            case enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT:
+                                {
+                                    IDebugCodeContext2 codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_bpRequestInfo.bpLocation.unionmember1);
+                                    if (!(codePosition is AD7MemoryAddress))
+                                    {
+                                        goto default;   // context is not from this engine
+                                    }
+                                    codeAddress = ((AD7MemoryAddress)codePosition).Address;
                                     break;
                                 }
                             case enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE:
@@ -275,6 +287,10 @@ namespace Microsoft.MIDebugEngine
                 else if (functionName != null)
                 {
                     bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, this);
+                }
+                else if (codeAddress != 0)
+                {
+                    bindResult = await PendingBreakpoint.Bind(codeAddress, _engine.DebuggedProcess, condition, this);
                 }
                 else
                 {
