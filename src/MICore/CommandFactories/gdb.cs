@@ -194,5 +194,29 @@ namespace MICore
             // that isn't actually supported by gdb. 
             await _debugger.CmdAsync("kill", ResultClass.None);
         }
+        private static string TypeBySize(uint size)
+        {
+            switch (size)
+            {
+                case 1:
+                    return "char";
+                case 2:
+                    return "short";
+                case 4:
+                    return "int";
+                case 8:
+                    return "double";
+                default:
+                    throw new ArgumentException("size");
+            }
+        }
+
+        public override async Task<Results> BreakWatch(string address, uint size, ResultClass resultClass = ResultClass.done)
+        {
+            string cmd = string.Format(CultureInfo.InvariantCulture, "-break-watch *({0}*)({1})", TypeBySize(size), address);
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
+        }
+
+        public override bool SupportsDataBreakpoints { get { return true; } }
     }
 }

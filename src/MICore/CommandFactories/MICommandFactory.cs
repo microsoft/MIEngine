@@ -420,6 +420,13 @@ namespace MICore
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
+        public virtual Task<Results> BreakWatch(string address, uint size, ResultClass resultClass = ResultClass.done)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual bool SupportsDataBreakpoints { get { return false; } }
+
         public virtual async Task<TupleValue> BreakInfo(string bkptno)
         {
             Results bindResult = await _debugger.CmdAsync("-break-info " + bkptno, ResultClass.None);

@@ -59,6 +59,26 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Obtain the string expression from the bpLocation union for a BPLT_DATA_STRING breakpoint.
+        /// </summary>
+        /// <param name="stringId"></param>
+        /// <returns></returns>
+        public static string GetDataBreakpointStringForIntPtr(IntPtr stringId)
+        {
+            return (string)Marshal.PtrToStringBSTR(stringId);
+        }
+
+        /// <summary>
+        /// Return the string form of the address of a bound data breakpoint 
+        /// </summary>
+        /// <param name="address">address string</param>
+        /// <returns>IntPtr to a BSTR which can be returned to VS.</returns>
+        public static IntPtr GetIntPtrForDataBreakpointAddress(string address)
+        {
+            return Marshal.StringToBSTR(address);
+        }
+
+        /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
         /// <param name="ad7Callback">The underlying event call back which was obtained from the port</param>

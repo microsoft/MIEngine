@@ -773,6 +773,35 @@ namespace Microsoft.MIDebugEngine
                     }
                 }
             }
+            else if (reason == "watchpoint-trigger")
+            {
+                var wpt = results.Results.Find("wpt");
+                string bkptno = wpt.FindString("number");
+                ulong addr = cxt.pc ?? 0;
+
+                bool fContinue;
+                AD7BoundBreakpoint bkpt = _breakpointManager.FindHitWatchpoint(bkptno, out fContinue);
+                if (bkpt != null)
+                {
+                    List<object> bplist = new List<object>();
+                    bplist.Add(bkpt);
+                    _callback.OnBreakpoint(thread, bplist.AsReadOnly());
+                }
+                else
+                {
+                    if (fContinue)
+                    {
+                        //we hit a bp pending deletion
+                        //post the CmdContinueAsync operation so it does not happen until we have deleted all the pending deletes
+                        CmdContinueAsync();
+                    }
+                    else
+                    {
+                        // not one of our breakpoints, so stop with a message
+                        _callback.OnException(thread, "Unknown watchpoint", "", 0);
+                    }
+                }
+            }
             else if (reason == "end-stepping-range" || reason == "function-finished")
             {
                 _callback.OnStepComplete(thread);

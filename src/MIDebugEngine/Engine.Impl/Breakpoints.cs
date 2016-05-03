@@ -91,6 +91,13 @@ namespace Microsoft.MIDebugEngine
             return EvalBindResult(await process.MICommandFactory.BreakInsert(functionName, condition, ResultClass.None), pbreak);
         }
 
+        internal static async Task<BindResult> Bind(string address, uint size, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
+        {
+            process.VerifyNotDebuggingCoreDump();
+
+            return EvalBindWatchResult(await process.MICommandFactory.BreakWatch(address, size, ResultClass.None), pbreak, address, size);
+        }
+
         internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
         {
             process.VerifyNotDebuggingCoreDump();
@@ -181,6 +188,47 @@ namespace Microsoft.MIDebugEngine
                 return res;
             }
         }
+
+        private static BindResult EvalBindWatchResult(Results bindResult, AD7PendingBreakpoint pbreak, string address, uint size)
+        {
+            string errormsg = "Unknown error";
+            if (bindResult.ResultClass == ResultClass.error)
+            {
+                if (bindResult.Contains("msg"))
+                {
+                    errormsg = bindResult.FindString("msg");
+                }
+                if (String.IsNullOrWhiteSpace(errormsg))
+                {
+                    errormsg = "Unknown error";
+                }
+                return new BindResult(errormsg);
+            }
+            else if (bindResult.ResultClass != ResultClass.done)
+            {
+                return new BindResult(errormsg);
+            }
+            TupleValue bkpt = null;
+            if (bindResult.Contains("wpt"))
+            {
+                ResultValue b = bindResult.Find("wpt");
+                if (b is TupleValue)
+                {
+                    bkpt = b as TupleValue;
+                }
+            }
+            else
+            {
+                return new BindResult(errormsg);
+            }
+
+            string number = bkpt.FindString("number");
+
+            PendingBreakpoint bp = new PendingBreakpoint(pbreak, number, MIBreakpointState.Single);
+            BoundBreakpoint bbp = new BoundBreakpoint(bp, MICore.Debugger.ParseAddr(address), size);
+            return new BindResult(bp, bbp);
+        }
+
 
         /// <summary>
         /// Decode the mi results and create a bound breakpoint from it. 
@@ -305,6 +353,7 @@ namespace Microsoft.MIDebugEngine
         /*OPTIONAL*/
         public string FunctionName { get; private set; }
         internal uint HitCount { get; private set; }
+        internal bool IsDataBreakpoint { get { return _parent.AD7breakpoint.IsDataBreakpoint; } }
         private MITextPosition _textPosition;
 
         internal BoundBreakpoint(PendingBreakpoint parent, TupleValue bindinfo)
@@ -327,6 +376,12 @@ namespace Microsoft.MIDebugEngine
                 this.FunctionName = frame.TryFindString("func");
                 _textPosition = MITextPosition.TryParse(frame);
             }
+        }
+
+        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, uint size)
+        {
+            Addr = addr;
+            _parent = parent;
         }
 
         internal AD7DocumentContext DocumentContext(AD7Engine engine)
