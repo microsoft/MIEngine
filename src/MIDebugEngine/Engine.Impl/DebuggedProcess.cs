@@ -172,14 +172,15 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 ITransport localTransport = null;
-                // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
-                if (PlatformUtilities.IsLinux() && // TODO: Support OSX also
-                    this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions)
+                // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
+                // uses fifos for debugger (e.g., gdb) communication.
+                if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
+                    (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                     )
                 {
-                    localTransport = new LocalLinuxTransport();
+                    localTransport = new LocalUnixTransport();
 
-                    // Only need to clear terminal for linux local launch
+                    // Only need to clear terminal for Linux and OS X local launch
                     _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);
                 }
                 else
