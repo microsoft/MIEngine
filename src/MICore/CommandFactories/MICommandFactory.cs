@@ -420,6 +420,14 @@ namespace MICore
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
+        public virtual async Task<Results> BreakInsert(ulong codeAddress, string condition, ResultClass resultClass = ResultClass.done)
+        {
+            StringBuilder cmd = BuildBreakInsert(condition);
+            cmd.Append('*');
+            cmd.Append(codeAddress);
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
+        }
+
         public virtual Task<Results> BreakWatch(string address, uint size, ResultClass resultClass = ResultClass.done)
         {
             throw new NotImplementedException();
