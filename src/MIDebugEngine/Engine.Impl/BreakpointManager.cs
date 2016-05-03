@@ -24,24 +24,24 @@ namespace Microsoft.MIDebugEngine
             _pendingBreakpoints = new System.Collections.Generic.List<AD7PendingBreakpoint>();
         }
 
-        private IEnumerable<AD7PendingBreakpoint> CodeBreakpoints
+        private List<AD7PendingBreakpoint> CodeBreakpoints
         {
             get
             {
                 lock (_pendingBreakpoints)
                 {
-                    return _pendingBreakpoints.FindAll((b) => !b.IsDataBreakpoint);
+                    return _pendingBreakpoints.FindAll((b) => !b.IsDataBreakpoint).ToList();
                 }
             }
         }
 
-        private IEnumerable<AD7PendingBreakpoint> DataBreakpoints
+        private List<AD7PendingBreakpoint> DataBreakpoints
         {
             get
             {
                 lock (_pendingBreakpoints)
                 {
-                    return _pendingBreakpoints.FindAll((b) => b.IsDataBreakpoint);
+                    return _pendingBreakpoints.FindAll((b) => b.IsDataBreakpoint).ToList();
                 }
             }
         }
