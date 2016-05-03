@@ -669,7 +669,7 @@ namespace MICore
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             const int sigint = 2;
-            LinuxNativeMethods.Kill(debugeePid, sigint);
+            UnixNativeMethods.Kill(debugeePid, sigint);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
