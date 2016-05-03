@@ -19,34 +19,9 @@ namespace MICore
         {
         }
 
-        private bool IsValidMiDebuggerPath(string debuggerPath)
-        {
-            if (!File.Exists(debuggerPath))
-            {
-                return false;
-            }
-            else
-            {
-                // Verify the target is a file and not a directory
-                FileAttributes attr = File.GetAttributes(debuggerPath);
-                if ((attr & FileAttributes.Directory) != 0)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
             LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
-
-            if (!this.IsValidMiDebuggerPath(localOptions.MIDebuggerPath))
-            {
-                throw new Exception(MICoreResources.Error_InvalidMiDebuggerPath);
-            }
-
             string miDebuggerDir = System.IO.Path.GetDirectoryName(localOptions.MIDebuggerPath);
 
             Process proc = new Process();

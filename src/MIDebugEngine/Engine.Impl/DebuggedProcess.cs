@@ -166,6 +166,11 @@ namespace Microsoft.MIDebugEngine
             {
                 LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
 
+                if (!localLaunchOptions.IsValidMiDebuggerPath())
+                {
+                    throw new Exception(MICoreResources.Error_InvalidMiDebuggerPath);
+                }
+
                 ITransport localTransport = null;
                 // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
                 if (PlatformUtilities.IsLinux() && // TODO: Support OSX also
