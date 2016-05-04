@@ -587,13 +587,11 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
                     }
 
-                    // On Windows, with CLRDBG, if we should launch a new console, set the TTY
                     if (localLaunchOptions != null &&
-                        this.MICommandFactory.Mode == MIMode.Clrdbg &&
                         PlatformUtilities.IsWindows() &&
                         this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
                     {
-                        commands.Add(new LaunchCommand("-inferior-tty-set <new-console>"));
+                        commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures:true));
                     }
 
                     // Send client version to clrdbg to set the capabilities appropriately
