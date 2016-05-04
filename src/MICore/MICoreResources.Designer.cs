@@ -158,6 +158,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal file &quot;{0}&quot; could not be found..
+        /// </summary>
+        public static string Error_InternalFileMissing {
+            get {
+                return ResourceManager.GetString("Error_InternalFileMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launch options string provided by the project system is invalid. {0}.
         /// </summary>
         public static string Error_InvalidLaunchOptions {

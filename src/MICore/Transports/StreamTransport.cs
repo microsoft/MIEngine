@@ -101,6 +101,23 @@ namespace MICore
                 {
                     _bQuit = true;
                     _streamReadCancellationTokenSource.Dispose();
+
+                    // If we are shutting down without notice from the debugger (e.g., the terminal
+                    // where the debugger was hosted was closed), at this point it's possible that
+                    // there is a thread blocked doing a read() syscall. Disposing _reader will cause
+                    // a syscall to close() on the file descriptor for the FIFO. The behavior on OS X
+                    // is that close() blocks because there is a pending read(). Therefore, we write
+                    // a byte to unblock the read() and allow close() to succeed.
+
+                    // TODO edmunoz Uncomment this when the race condition with the fake ^exit has been fixed
+                    // try
+                    // {
+                    //     _reader.BaseStream.WriteByte(0);
+                    // }
+                    // catch
+                    // {
+                    // }
+
                     _reader.Dispose();
 
                     try

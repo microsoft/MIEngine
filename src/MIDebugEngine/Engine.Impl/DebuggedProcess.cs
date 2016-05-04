@@ -166,15 +166,21 @@ namespace Microsoft.MIDebugEngine
             {
                 LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
 
+                if (!localLaunchOptions.IsValidMiDebuggerPath())
+                {
+                    throw new Exception(MICoreResources.Error_InvalidMiDebuggerPath);
+                }
+
                 ITransport localTransport = null;
-                // For local linux launch, use the local linux transport which creates a new terminal and uses fifos for gdb communication.
-                if (PlatformUtilities.IsLinux() && // TODO: Support OSX also
-                    this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions)
+                // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
+                // uses fifos for debugger (e.g., gdb) communication.
+                if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
+                    (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                     )
                 {
-                    localTransport = new LocalLinuxTransport();
+                    localTransport = new LocalUnixTerminalTransport();
 
-                    // Only need to clear terminal for linux local launch
+                    // Only need to clear terminal for Linux and OS X local launch
                     _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);
                 }
                 else
@@ -289,7 +295,7 @@ namespace Microsoft.MIDebugEngine
                     // This is to work around a GDB bug of warning "Failed to set controlling terminal: Operation not permitted"
                     // Reset debuggee terminal after the first module load.
                     // The clear is done by sending reset string (ESC, c) to terminal STDERR
-                    await ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");                    
+                    await ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
                 }
 
                 if (this.MICommandFactory.SupportsStopOnDynamicLibLoad() && !_launchOptions.WaitDynamicLibLoad)

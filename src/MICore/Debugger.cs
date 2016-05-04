@@ -504,8 +504,10 @@ namespace MICore
         {
             this.VerifyNotDebuggingCoreDump();
 
-            //TODO May need to fix attach on windows and osx.
-            if (IsLocalGdb() && PlatformUtilities.IsLinux())
+            // TODO May need to fix attach on windows.
+            // Note that interrupt doesn't work on OS X with gdb:
+            // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
+            if (IsLocalGdb() && (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX()))
             {
                 // for local linux debugging, send a signal to one of the debuggee processes rather than
                 // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
@@ -669,7 +671,7 @@ namespace MICore
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             const int sigint = 2;
-            LinuxNativeMethods.Kill(debugeePid, sigint);
+            UnixNativeMethods.Kill(debugeePid, sigint);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }

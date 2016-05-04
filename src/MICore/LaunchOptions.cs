@@ -209,6 +209,11 @@ namespace MICore
             return !string.IsNullOrWhiteSpace(DebugServer);
         }
 
+        public bool IsValidMiDebuggerPath()
+        {
+            return File.Exists(MIDebuggerPath);
+        }
+
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
             string miDebuggerPath = source.MIDebuggerPath;
