@@ -178,7 +178,7 @@ namespace Microsoft.MIDebugEngine
                     (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                     )
                 {
-                    localTransport = new LocalUnixTransport();
+                    localTransport = new LocalUnixTerminalTransport();
 
                     // Only need to clear terminal for Linux and OS X local launch
                     _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);

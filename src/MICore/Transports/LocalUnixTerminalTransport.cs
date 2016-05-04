@@ -2,13 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Text;
 
 namespace MICore
 {
-    public class LocalUnixTransport : StreamTransport
+    public class LocalUnixTerminalTransport : StreamTransport
     {
         private string _dbgStdInName;
         private string _dbgStdOutName;
@@ -22,7 +21,7 @@ namespace MICore
             string debuggeeDir;
             if (Path.IsPathRooted(options.ExePath) && File.Exists(options.ExePath))
             {
-                debuggeeDir = System.IO.Path.GetDirectoryName(options.ExePath);
+                debuggeeDir = Path.GetDirectoryName(options.ExePath);
             }
             else
             {
@@ -41,8 +40,8 @@ namespace MICore
             _fifoWatcher.EnableRaisingEvents = true;
 
             // Setup the streams on the fifos as soon as possible.
-            System.IO.FileStream dbgStdInStream = new FileStream(_dbgStdInName, FileMode.Open);
-            System.IO.FileStream dbgStdOutStream = new FileStream(_dbgStdOutName, FileMode.Open);
+            FileStream dbgStdInStream = new FileStream(_dbgStdInName, FileMode.Open);
+            FileStream dbgStdOutStream = new FileStream(_dbgStdOutName, FileMode.Open);
 
             string debuggerCmd = UnixUtilities.GetDebuggerCommand(localOptions);
             string launchDebuggerCommand = UnixUtilities.LaunchLocalDebuggerCommand(
@@ -82,7 +81,7 @@ namespace MICore
 
         protected override string GetThreadName()
         {
-            return "MI.LocalUnixTransport";
+            return "MI.LocalUnixTerminalTransport";
         }
 
         public override void Close()

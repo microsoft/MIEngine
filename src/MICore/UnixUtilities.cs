@@ -14,8 +14,10 @@ namespace MICore
     {
         internal const string FifoPrefix = "Microsoft-MIEngine-fifo-";
         internal const string SudoPath = "/usr/bin/sudo";
-        private const string PtraceScopePath = "/proc/sys/kernel/yama/ptrace_scope";
         private const string PKExecPath = "/usr/bin/pkexec";
+
+        // Linux specific
+        private const string PtraceScopePath = "/proc/sys/kernel/yama/ptrace_scope";
 
         /// <summary>
         /// Launch a new terminal, spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it.
@@ -99,7 +101,7 @@ namespace MICore
             if (mode != MIMode.Clrdbg)
             {
                 // If "ptrace_scope" is a value other than 0, only root can attach to arbitrary processes
-                if (getPtraceScope() != 0)
+                if (GetPtraceScope() != 0)
                 {
                     return true; // Attaching to any non-child process requires root
                 }
@@ -108,7 +110,7 @@ namespace MICore
             return false;
         }
 
-        private static int getPtraceScope()
+        private static int GetPtraceScope()
         {
             // See: https://www.kernel.org/doc/Documentation/security/Yama.txt
             if (!File.Exists(UnixUtilities.PtraceScopePath))

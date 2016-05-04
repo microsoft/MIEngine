@@ -158,7 +158,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An internal file could not be found..
+        ///   Looks up a localized string similar to Internal file &quot;{0}&quot; could not be found..
         /// </summary>
         public static string Error_InternalFileMissing {
             get {

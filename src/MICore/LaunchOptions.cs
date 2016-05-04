@@ -211,21 +211,7 @@ namespace MICore
 
         public bool IsValidMiDebuggerPath()
         {
-            if (!File.Exists(MIDebuggerPath))
-            {
-                return false;
-            }
-            else
-            {
-                // Verify the target is a file and not a directory
-                FileAttributes attr = File.GetAttributes(MIDebuggerPath);
-                if ((attr & FileAttributes.Directory) != 0)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return File.Exists(MIDebuggerPath);
         }
 
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)

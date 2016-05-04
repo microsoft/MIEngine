@@ -102,7 +102,8 @@ namespace MICore
             string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), LaunchTerminalScript);
             if (!File.Exists(launchScript))
             {
-                throw new FileNotFoundException(MICoreResources.Error_InternalFileMissing);
+                string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchScript);
+                throw new FileNotFoundException(message);
             }
 
             return string.Format(CultureInfo.InvariantCulture, "{0} \"{1}\" \"{2}\"", launchScript, _title, _initScript);
