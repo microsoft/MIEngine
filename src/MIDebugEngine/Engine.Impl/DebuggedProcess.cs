@@ -1167,7 +1167,12 @@ namespace Microsoft.MIDebugEngine
             ScheduleStdOutProcessing(@"*stopped,reason=""exited"",exit-code=""42""");
         }
 
-        public void Detach() { }
+        public void Detach()
+        {
+            // Fake stopped message to send ProgramDestroyEvent.
+            ScheduleStdOutProcessing(@"*stopped,reason=""disconnected""");
+        }
+
         public DebuggedModule[] GetModules()
         {
             lock (_moduleList)
