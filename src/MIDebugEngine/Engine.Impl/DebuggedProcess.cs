@@ -1169,8 +1169,13 @@ namespace Microsoft.MIDebugEngine
 
         public void Detach()
         {
-            // Fake stopped message to send ProgramDestroyEvent.
-            ScheduleStdOutProcessing(@"*stopped,reason=""disconnected""");
+            // Special casing sending the fake stopped event for clrdbg. 
+            // GDB prints out thread group exit events on mi command "-target-detach" which is handed by method HandleThreadGroupExited
+            // GDB or the debuggee can terminate and those are handled by Terminate and TerminateProcess methods.
+            if (MICommandFactory.Mode != MIMode.Clrdbg)
+            {
+                ScheduleStdOutProcessing(@"*stopped,reason=""disconnected""");
+            }
         }
 
         public DebuggedModule[] GetModules()
