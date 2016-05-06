@@ -49,6 +49,7 @@ namespace Microsoft.MIDebugEngine
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
         private bool _needTerminalReset;
+        private HashSet<Tuple<string, string>> _fileTimestampWarnings;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
         {
@@ -79,6 +80,7 @@ namespace Microsoft.MIDebugEngine
 
             VariablesToDelete = new List<string>();
             this.ActiveVariables = new List<IVariableInformation>();
+            this._fileTimestampWarnings = new HashSet<Tuple<string, string>>();
 
             OutputStringEvent += delegate (object o, string message)
             {
@@ -303,42 +305,9 @@ namespace Microsoft.MIDebugEngine
                     await CmdAsync("-gdb-set stop-on-solib-events 0", ResultClass.None);
                 }
 
-                if (_libraryLoaded.Count != 0)
-                {
-                    string moduleNames = string.Join(", ", _libraryLoaded);
+                await this.EnsureModulesLoaded();
 
-                    try
-                    {
-                        _libraryLoaded.Clear();
-                        SourceLineCache.OnLibraryLoad();
 
-                        await _breakpointManager.BindAsync();
-                        await CheckModules();
-
-                        _bLastModuleLoadFailed = false;
-                    }
-                    catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
-                    {
-                        if (this.ProcessState == MICore.ProcessState.Exited)
-                        {
-                            return; // ignore exceptions after the process has exited
-                        }
-
-                        string exceptionDescription = EngineUtils.GetExceptionDescription(e);
-                        string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_ExceptionProcessingModules, moduleNames, exceptionDescription);
-
-                        // to avoid spamming the user, if the last module failed, we send the next failure to the output windiw instead of a message box
-                        if (!_bLastModuleLoadFailed)
-                        {
-                            _callback.OnError(message);
-                            _bLastModuleLoadFailed = true;
-                        }
-                        else
-                        {
-                            _callback.OnOutputMessage(new OutputMessage(message, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
-                        }
-                    }
-                }
                 if (_waitDialog != null)
                 {
                     _waitDialog.EndWaitDialog();
@@ -429,6 +398,46 @@ namespace Microsoft.MIDebugEngine
             };
 
             BreakChangeEvent += _breakpointManager.BreakpointModified;
+        }
+
+        private async Task EnsureModulesLoaded()
+        {
+            if (_libraryLoaded.Count != 0)
+            {
+                string moduleNames = string.Join(", ", _libraryLoaded);
+
+                try
+                {
+                    _libraryLoaded.Clear();
+                    SourceLineCache.OnLibraryLoad();
+
+                    await _breakpointManager.BindAsync();
+                    await CheckModules();
+
+                    _bLastModuleLoadFailed = false;
+                }
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
+                {
+                    if (this.ProcessState == MICore.ProcessState.Exited)
+                    {
+                        return; // ignore exceptions after the process has exited
+                    }
+
+                    string exceptionDescription = EngineUtils.GetExceptionDescription(e);
+                    string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_ExceptionProcessingModules, moduleNames, exceptionDescription);
+
+                    // to avoid spamming the user, if the last module failed, we send the next failure to the output windiw instead of a message box
+                    if (!_bLastModuleLoadFailed)
+                    {
+                        _callback.OnError(message);
+                        _bLastModuleLoadFailed = true;
+                    }
+                    else
+                    {
+                        _callback.OnOutputMessage(new OutputMessage(message, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
+                    }
+                }
+            }
         }
 
         public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
@@ -744,8 +753,17 @@ namespace Microsoft.MIDebugEngine
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
 
-                bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
+                if (frame != null && addr != 0)
+                {
+                    string sourceFile = frame.TryFindString("fullname");
+                    if (!String.IsNullOrEmpty(sourceFile))
+                    {
+                        await this.VerifySourceFileTimestamp(addr, sourceFile);
+                    }
+                }
+
+                bool fContinue;
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
                 if (bkpt != null)
                 {
@@ -855,6 +873,40 @@ namespace Microsoft.MIDebugEngine
             {
                 Debug.Fail("Unknown stopping reason");
                 _callback.OnException(thread, "Unknown", "Unknown stopping event", 0);
+            }
+        }
+
+        private async Task VerifySourceFileTimestamp(ulong addr, string sourceFilePath)
+        {
+            await this.EnsureModulesLoaded();
+
+            string targetModulePath = this._launchOptions.ExePath;
+            DebuggedModule targetModule = this._moduleList.FirstOrDefault(m => m.AddressInModule(addr));
+            if (targetModule != null)
+            {
+                targetModulePath = targetModule.Name;
+            }
+
+            if (!File.Exists(sourceFilePath) || !File.Exists(targetModulePath))
+            {
+                return;
+            }
+
+            DateTime sourceFileTimestamp = File.GetLastWriteTimeUtc(sourceFilePath);
+            DateTime moduleFileTimestamp = File.GetLastWriteTimeUtc(targetModulePath);
+
+            if (sourceFileTimestamp > moduleFileTimestamp)
+            {
+                // Source file is newer than the module - warn the user if we haven't already
+				Tuple<string, string> key = Tuple.Create(sourceFilePath, targetModulePath);
+
+                if (!this._fileTimestampWarnings.Contains(key))
+                {
+                    this._fileTimestampWarnings.Add(key);
+
+                    string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_SourceFileOutOfDate_Arg2, sourceFilePath, targetModulePath);
+                    this._callback.OnOutputMessage(new OutputMessage(message + Environment.NewLine, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
+                }
             }
         }
 
