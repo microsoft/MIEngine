@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{dce7bf95-7f39-478e-90ea-5e7f2f61c5eb}</ProjectGuid>
+    <ProjectGuid>{8f518f6b-9a1d-490c-8c04-f104fcb71152}</ProjectGuid>
     <Keyword>Android</Keyword>
-    <RootNamespace>Stepping</RootNamespace>
+    <RootNamespace>BreakPointEnableAndDisable</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ApplicationType>Android</ApplicationType>
@@ -204,7 +204,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Header1.h" />
-    <ClInclude Include="Header2.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="android_native_app_glue.h" />
   </ItemGroup>
@@ -212,7 +211,6 @@
     <ClCompile Include="android_native_app_glue.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source1.cpp" />
-    <ClCompile Include="Source2.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

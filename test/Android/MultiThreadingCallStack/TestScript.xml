@@ -6,7 +6,10 @@
   <Command name="SetLaunchOptionsString @LaunchOptions.xml">
     <Duration Volatile="True">00:00:00.0001066</Duration>
   </Command>
-  <Command name="bp main.cpp 292">
+  <Command name="bp Source1.cpp 26">
+    <Duration Volatile="True">00:00:00.0050582</Duration>
+  </Command>
+   <Command name="bp Source1.cpp 16">
     <Duration Volatile="True">00:00:00.0050582</Duration>
   </Command>
   <Command name="launch MIEngine app_process">
@@ -116,7 +119,10 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^291,0 to 291,0 in (\[Unknown\]|libstepping.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
+      <BoundBreakpoint RegEx="^25,0 to 25,0 in (\[Unknown\]|libMultiThreadingCallStack.so)!func5\(\)$"></BoundBreakpoint>
+    </Event>
+     <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint RegEx="^15,0 to 15,0 in (\[Unknown\]|libMultiThreadingCallStack.so)!func3\(int, int\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -124,122 +130,93 @@
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugBreakpointEvent2" expected="True">
-      <functionName>android_main</functionName>
-      <function>android_main(android_app * state)</function>
-      <file>main.cpp</file>
-      <line>292</line>
-      <col>0</col>
-    </Event>
-  </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0149998</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func1</functionName>
-      <function>func1()</function>
+      <functionName>func5</functionName>
+      <function>func5()</function>
       <file>Source1.cpp</file>
-      <line>6</line>
+      <line>26</line>
       <col>0</col>
     </Event>
+   </Command>
+   <Command name="callstack 8">
+    <Frame> func5() ***</Frame>
+    <Frame> func4()</Frame>
+    <Frame> func()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
   </Command>
-  <Command name="step over">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0217211</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func1</functionName>
-      <function>func1()</function>
-      <file>Source1.cpp</file>
-      <line>7</line>
-      <col>0</col>
-    </Event>
-  </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0171611</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func2</functionName>
-      <function>func2()</function>
-      <file>Source1.cpp</file>
-      <line>13</line>
-      <col>0</col>
-    </Event>
-  </Command>
-  <Command name="step over">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0262903</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func2</functionName>
-      <function>func2()</function>
-      <file>Source1.cpp</file>
-      <line>14</line>
-      <col>0</col>
-    </Event>
-  </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func2</functionName>
-      <function>func2()</function>
+  <!--Break in a new thread then verify its call stack and each frame's corresponding locals-->
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>func3</functionName>
+      <function>func3(int x, int y)</function>
       <file>Source1.cpp</file>
       <line>16</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func3</functionName>
-      <function>func3()</function>
-      <file>Source2.cpp</file>
-      <line>5</line>
-      <col>0</col>
-    </Event>
+  <Command name="callstack 6">
+    <Frame> func3(int x, int y) ***</Frame>
+    <Frame> func2(int x)</Frame>
+    <Frame> func1()</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
   </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func4</functionName>
-      <function>func4()</function>
-      <file>Source2.cpp</file>
-      <line>11</line>
-      <col>0</col>
-    </Event>
+  <Command name="list locals">
+    <Local>z</Local>
+    <LocalValue Volatile="true">-1217632150</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Local>x</Local>
+    <LocalValue>2</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Local>y</Local>
+    <LocalValue>3</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
   </Command>
-  <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func3</functionName>
-      <function>func3()</function>
-      <file>Source2.cpp</file>
-      <line>7</line>
-      <col>0</col>
-    </Event>
+  <Command name="down 1">
+    <functionName>func2</functionName>
+    <file>Source1.cpp</file>
+    <line>10</line>
+    <col>0</col>
   </Command>
-  <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func2</functionName>
-      <function>func2()</function>
-      <file>Source1.cpp</file>
-      <line>18</line>
-      <col>0</col>
-    </Event>
+  <Command name="list locals">
+    <Local>x</Local>
+    <LocalValue>1</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
   </Command>
-  <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func1</functionName>
-      <function>func1()</function>
-      <file>Source1.cpp</file>
-      <line>9</line>
-      <col>0</col>
-    </Event>
+  <Command name="down 1">
+    <functionName>func1</functionName>
+    <file>Source1.cpp</file>
+    <line>6</line>
+    <col>0</col>
+  </Command>
+  <Command name="list locals" />
+  <Command name="up 2">
+    <functionName>func3</functionName>
+    <file>Source1.cpp</file>
+    <line>16</line>
+    <col>0</col>
+  </Command>
+  <Command name="list locals">
+    <Local>z</Local>
+    <LocalValue Volatile="true">-1217632150</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Local>x</Local>
+    <LocalValue>2</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
+    <Local>y</Local>
+    <LocalValue>3</LocalValue>
+    <LocalType>int</LocalType>
+    <LocalIsExpandable>False</LocalIsExpandable>
   </Command>
   <Command name="stopdebugging">
     <Event name="IDebugOutputStringEvent2" expected="False" />

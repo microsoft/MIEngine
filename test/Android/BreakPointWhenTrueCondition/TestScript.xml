@@ -6,7 +6,7 @@
   <Command name="SetLaunchOptionsString @LaunchOptions.xml">
     <Duration Volatile="True">00:00:00.0001066</Duration>
   </Command>
-  <Command name="bp main.cpp 292">
+  <Command name="bp Source1.cpp 20 when_true i==1">
     <Duration Volatile="True">00:00:00.0050582</Duration>
   </Command>
   <Command name="launch MIEngine app_process">
@@ -116,7 +116,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^291,0 to 291,0 in (\[Unknown\]|libstepping.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
+      <BoundBreakpoint RegEx="^19,0 to 19,0 in (\[Unknown\]|libBreakPointWhenTrueCondition.so)!Func1\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -124,120 +124,205 @@
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugBreakpointEvent2" expected="True">
-      <functionName>android_main</functionName>
-      <function>android_main(android_app * state)</function>
-      <file>main.cpp</file>
-      <line>292</line>
-      <col>0</col>
-    </Event>
-  </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0149998</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func1</functionName>
-      <function>func1()</function>
+      <functionName>Func1</functionName>
+      <function>Func1()</function>
       <file>Source1.cpp</file>
-      <line>6</line>
+      <line>20</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step over">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0217211</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func1</functionName>
-      <function>func1()</function>
+  <!--Verify when true condition in a function-->
+  <Command name="eval i">
+    <EvalResult>1</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 20 when_true i&lt;3" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func1</functionName>
+      <function>Func1()</function>
       <file>Source1.cpp</file>
-      <line>7</line>
+      <line>20</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0171611</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func2</functionName>
-      <function>func2()</function>
+  <Command name="eval i">
+    <EvalResult>2</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 20 when_true i&lt;=3" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func1</functionName>
+      <function>Func1()</function>
       <file>Source1.cpp</file>
-      <line>13</line>
+      <line>20</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step over">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0262903</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func2</functionName>
-      <function>func2()</function>
+  <Command name="eval i">
+    <EvalResult>3</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 20 when_true i&gt;5" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func1</functionName>
+      <function>Func1()</function>
       <file>Source1.cpp</file>
-      <line>14</line>
+      <line>20</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func2</functionName>
-      <function>func2()</function>
+  <Command name="eval i">
+    <EvalResult>6</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 20 when_true i&gt;=7" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func1</functionName>
+      <function>Func1()</function>
       <file>Source1.cpp</file>
-      <line>16</line>
+      <line>20</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func3</functionName>
-      <function>func3()</function>
-      <file>Source2.cpp</file>
-      <line>5</line>
-      <col>0</col>
-    </Event>
+  <Command name="eval i">
+    <EvalResult>7</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
   </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func4</functionName>
-      <function>func4()</function>
-      <file>Source2.cpp</file>
-      <line>11</line>
-      <col>0</col>
-    </Event>
-  </Command>
-  <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func3</functionName>
-      <function>func3()</function>
-      <file>Source2.cpp</file>
-      <line>7</line>
-      <col>0</col>
-    </Event>
-  </Command>
-  <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func2</functionName>
-      <function>func2()</function>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 20 when_true i&gt;10" />
+  <Command name="bp Source1.cpp 29" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func</functionName>
+      <function>Func()</function>
       <file>Source1.cpp</file>
-      <line>18</line>
+      <line>29</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func1</functionName>
-      <function>func1()</function>
+  <!--Verify when true condition in a class member function-->
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 9 when_true i==1" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>MyClass::Func</functionName>
+      <function>MyClass::Func(MyClass * this)</function>
       <file>Source1.cpp</file>
       <line>9</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval i">
+    <EvalResult>1</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 9 when_true i&lt;3" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>MyClass::Func</functionName>
+      <function>MyClass::Func(MyClass * this)</function>
+      <file>Source1.cpp</file>
+      <line>9</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval i">
+    <EvalResult>2</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 9 when_true i&lt;=3" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>MyClass::Func</functionName>
+      <function>MyClass::Func(MyClass * this)</function>
+      <file>Source1.cpp</file>
+      <line>9</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval i">
+    <EvalResult>3</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 9 when_true i&gt;5" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>MyClass::Func</functionName>
+      <function>MyClass::Func(MyClass * this)</function>
+      <file>Source1.cpp</file>
+      <line>9</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval i">
+    <EvalResult>6</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 9 when_true i&gt;=7" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>MyClass::Func</functionName>
+      <function>MyClass::Func(MyClass * this)</function>
+      <file>Source1.cpp</file>
+      <line>9</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval i">
+    <EvalResult>7</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="delbps" />
+  <Command name="bp Source1.cpp 31" />
+  <Command name="bp Source1.cpp 9 when_true i&gt;10" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func</functionName>
+      <function>Func()</function>
+      <file>Source1.cpp</file>
+      <line>31</line>
       <col>0</col>
     </Event>
   </Command>

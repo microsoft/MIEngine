@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{dce7bf95-7f39-478e-90ea-5e7f2f61c5eb}</ProjectGuid>
+    <ProjectGuid>{d69b1e0c-34cd-417e-b3f1-6c08f4ccd9dd}</ProjectGuid>
     <Keyword>Android</Keyword>
-    <RootNamespace>Stepping</RootNamespace>
+    <RootNamespace>CallStack</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ApplicationType>Android</ApplicationType>

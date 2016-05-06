@@ -4,12 +4,10 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="android_native_app_glue.h" />
     <ClInclude Include="Header1.h" />
-    <ClInclude Include="Header2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="android_native_app_glue.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source1.cpp" />
-    <ClCompile Include="Source2.cpp" />
   </ItemGroup>
 </Project>

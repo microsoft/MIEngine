@@ -35,10 +35,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <RootNamespace>Stepping</RootNamespace>
+    <RootNamespace>BreakPointWhenTrueCondition</RootNamespace>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ProjectVersion>1.0</ProjectVersion>
-    <ProjectGuid>{66daa4aa-8443-4cb4-a9e2-b96a714de177}</ProjectGuid>
+    <ProjectGuid>{97d19de9-2a27-4bce-91b7-542a25333dcf}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(AndroidTargetsPath)\Android.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
@@ -117,8 +117,8 @@
     <AntProjectPropertiesFile Include="project.properties" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Stepping.NativeActivity\Stepping.NativeActivity.vcxproj">
-      <Project>{dce7bf95-7f39-478e-90ea-5e7f2f61c5eb}</Project>
+    <ProjectReference Include="..\BreakPointWhenTrueCondition.NativeActivity\BreakPointWhenTrueCondition.NativeActivity.vcxproj">
+      <Project>{be803582-7bd1-4c17-91e6-7ba03e98874a}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(AndroidTargetsPath)\Android.targets" />

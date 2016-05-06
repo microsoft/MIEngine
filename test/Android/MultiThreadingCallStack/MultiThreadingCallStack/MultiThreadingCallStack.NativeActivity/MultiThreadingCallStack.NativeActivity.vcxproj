@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{dce7bf95-7f39-478e-90ea-5e7f2f61c5eb}</ProjectGuid>
+    <ProjectGuid>{6e5f6974-257c-4ec7-ac4d-d7cf69c037ca}</ProjectGuid>
     <Keyword>Android</Keyword>
-    <RootNamespace>Stepping</RootNamespace>
+    <RootNamespace>MultiThreadingCallStack</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ApplicationType>Android</ApplicationType>
@@ -187,6 +187,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
+      <CppLanguageStandard>c++11</CppLanguageStandard>
     </ClCompile>
     <Link>
       <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
@@ -204,7 +205,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Header1.h" />
-    <ClInclude Include="Header2.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="android_native_app_glue.h" />
   </ItemGroup>
@@ -212,7 +212,6 @@
     <ClCompile Include="android_native_app_glue.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source1.cpp" />
-    <ClCompile Include="Source2.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

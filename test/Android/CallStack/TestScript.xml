@@ -6,7 +6,7 @@
   <Command name="SetLaunchOptionsString @LaunchOptions.xml">
     <Duration Volatile="True">00:00:00.0001066</Duration>
   </Command>
-  <Command name="bp main.cpp 292">
+  <Command name="bp main.cpp 293">
     <Duration Volatile="True">00:00:00.0050582</Duration>
   </Command>
   <Command name="launch MIEngine app_process">
@@ -116,7 +116,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^291,0 to 291,0 in (\[Unknown\]|libstepping.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
+      <BoundBreakpoint RegEx="^292,0 to 292,0 in (\[Unknown\]|libCallStack.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -127,119 +127,292 @@
       <functionName>android_main</functionName>
       <function>android_main(android_app * state)</function>
       <file>main.cpp</file>
-      <line>292</line>
+      <line>293</line>
       <col>0</col>
     </Event>
   </Command>
   <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
     <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func1</functionName>
       <function>func1()</function>
       <file>Source1.cpp</file>
-      <line>6</line>
+      <line>22</line>
       <col>0</col>
     </Event>
   </Command>
+  <Command name="callstack 6">
+    <Frame> func1() ***</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
   <Command name="step over">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0217211</Duration>
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func1</functionName>
       <function>func1()</function>
       <file>Source1.cpp</file>
-      <line>7</line>
+      <line>24</line>
       <col>0</col>
     </Event>
   </Command>
   <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0171611</Duration>
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func2</functionName>
-      <function>func2()</function>
+      <function>func2(int x, int y)</function>
       <file>Source1.cpp</file>
       <line>13</line>
       <col>0</col>
     </Event>
   </Command>
+  <Command name="callstack 7">
+    <Frame> func2(int x, int y) ***</Frame>
+    <Frame> func1()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
   <Command name="step over">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0262903</Duration>
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func2</functionName>
-      <function>func2()</function>
+      <function>func2(int x, int y)</function>
       <file>Source1.cpp</file>
       <line>14</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
+  <Command name="step over">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func2</functionName>
-      <function>func2()</function>
+      <function>func2(int x, int y)</function>
       <file>Source1.cpp</file>
       <line>16</line>
       <col>0</col>
     </Event>
   </Command>
   <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func3</functionName>
-      <function>func3()</function>
-      <file>Source2.cpp</file>
-      <line>5</line>
+      <function>func3(int * x, int * y)</function>
+      <file>Source1.cpp</file>
+      <line>6</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step into">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func4</functionName>
-      <function>func4()</function>
-      <file>Source2.cpp</file>
-      <line>11</line>
-      <col>0</col>
-    </Event>
-  </Command>
-  <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func3</functionName>
-      <function>func3()</function>
-      <file>Source2.cpp</file>
-      <line>7</line>
-      <col>0</col>
-    </Event>
+  <Command name="callstack 8">
+    <Frame> func3(int * x, int * y) ***</Frame>
+    <Frame> func2(int x, int y)</Frame>
+    <Frame> func1()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
   </Command>
   <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func2</functionName>
-      <function>func2()</function>
+      <function>func2(int x, int y)</function>
       <file>Source1.cpp</file>
       <line>18</line>
       <col>0</col>
     </Event>
   </Command>
+  <Command name="callstack 7">
+    <Frame> func2(int x, int y) ***</Frame>
+    <Frame> func1()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
   <Command name="step out">
-    <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.0233561</Duration>
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func1</functionName>
       <function>func1()</function>
       <file>Source1.cpp</file>
-      <line>9</line>
+      <line>24</line>
       <col>0</col>
     </Event>
+  </Command>
+  <Command name="callstack 6">
+    <Frame> func1() ***</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
+  <Command name="step over">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func1</functionName>
+      <function>func1()</function>
+      <file>Source1.cpp</file>
+      <line>25</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="callstack 6">
+    <Frame> func1() ***</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
+  <Command name="step into">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func6</functionName>
+      <function>func6(func4 f4, func5 f5)</function>
+      <file>Source2.cpp</file>
+      <line>6</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="callstack 7">
+    <Frame> func6(func4 f4, func5 f5) ***</Frame>
+    <Frame> func1()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
+  <Command name="step into">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func7</functionName>
+      <function>func7()</function>
+      <file>Source2.cpp</file>
+      <line>13</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="callstack 8">
+    <Frame> func7() ***</Frame>
+    <Frame> func6(func4 f4, func5 f5)</Frame>
+    <Frame> func1()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
+  <Command name="step out">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func6</functionName>
+      <function>func6(func4 f4, func5 f5)</function>
+      <file>Source2.cpp</file>
+      <line>6</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="callstack 7">
+    <Frame> func6(func4 f4, func5 f5) ***</Frame>
+    <Frame> func1()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
+  <Command name="step over">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func6</functionName>
+      <function>func6(func4 f4, func5 f5)</function>
+      <file>Source2.cpp</file>
+      <line>7</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="step into">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func8</functionName>
+      <function>func8(int x, int y)</function>
+      <file>Source2.cpp</file>
+      <line>19</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="callstack 8">
+    <Frame> func8(int x, int y) ***</Frame>
+    <Frame> func6(func4 f4, func5 f5)</Frame>
+    <Frame> func1()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
+  <Command name="step out">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func6</functionName>
+      <function>func6(func4 f4, func5 f5)</function>
+      <file>Source2.cpp</file>
+      <line>7</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="callstack 7">
+    <Frame> func6(func4 f4, func5 f5) ***</Frame>
+    <Frame> func1()</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
+  </Command>
+  <Command name="step out">
+    <Event name="IDebugProcessContinueEvent100" expected="True" />
+    <Duration Volatile="True">00:00:00.0149998</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func1</functionName>
+      <function>func1()</function>
+      <file>Source1.cpp</file>
+      <line>27</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="callstack 6">
+    <Frame> func1() ***</Frame>
+    <Frame> android_main(android_app * state)</Frame>
+    <Frame> android_app_entry(void * param)</Frame>
+    <Frame> libc.so!__pthread_start(void*)</Frame>
+    <Frame> libc.so!__start_thread</Frame>
+    <Frame> libc.so!__bionic_clone</Frame>
   </Command>
   <Command name="stopdebugging">
     <Event name="IDebugOutputStringEvent2" expected="False" />

@@ -17,6 +17,7 @@
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
+
 #include "Header1.h"
 /**
 * Our saved state data.
@@ -289,7 +290,7 @@ void android_main(struct android_app* state) {
 			// is no need to do timing here.
 			engine_draw_frame(&engine);
 
-			func1();
+			func();
 		}
 	}
 }

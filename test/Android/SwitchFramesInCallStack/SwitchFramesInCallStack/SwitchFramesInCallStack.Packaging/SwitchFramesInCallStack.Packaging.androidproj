@@ -35,10 +35,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <RootNamespace>Stepping</RootNamespace>
+    <RootNamespace>SwitchFramesInCallStack</RootNamespace>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ProjectVersion>1.0</ProjectVersion>
-    <ProjectGuid>{66daa4aa-8443-4cb4-a9e2-b96a714de177}</ProjectGuid>
+    <ProjectGuid>{faff8deb-ab58-4ae6-9846-1924ac82283f}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(AndroidTargetsPath)\Android.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
@@ -117,8 +117,8 @@
     <AntProjectPropertiesFile Include="project.properties" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Stepping.NativeActivity\Stepping.NativeActivity.vcxproj">
-      <Project>{dce7bf95-7f39-478e-90ea-5e7f2f61c5eb}</Project>
+    <ProjectReference Include="..\SwitchFramesInCallStack.NativeActivity\SwitchFramesInCallStack.NativeActivity.vcxproj">
+      <Project>{20ca182a-2d22-4610-9b7f-53e4b629132f}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(AndroidTargetsPath)\Android.targets" />

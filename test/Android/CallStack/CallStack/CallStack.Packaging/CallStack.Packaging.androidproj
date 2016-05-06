@@ -35,10 +35,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <RootNamespace>Stepping</RootNamespace>
+    <RootNamespace>CallStack</RootNamespace>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ProjectVersion>1.0</ProjectVersion>
-    <ProjectGuid>{66daa4aa-8443-4cb4-a9e2-b96a714de177}</ProjectGuid>
+    <ProjectGuid>{a63da136-199a-4f24-bd62-835934113732}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(AndroidTargetsPath)\Android.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
@@ -117,8 +117,8 @@
     <AntProjectPropertiesFile Include="project.properties" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Stepping.NativeActivity\Stepping.NativeActivity.vcxproj">
-      <Project>{dce7bf95-7f39-478e-90ea-5e7f2f61c5eb}</Project>
+    <ProjectReference Include="..\CallStack.NativeActivity\CallStack.NativeActivity.vcxproj">
+      <Project>{d69b1e0c-34cd-417e-b3f1-6c08f4ccd9dd}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(AndroidTargetsPath)\Android.targets" />

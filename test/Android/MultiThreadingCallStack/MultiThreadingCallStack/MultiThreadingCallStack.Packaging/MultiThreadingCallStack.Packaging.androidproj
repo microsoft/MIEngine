@@ -35,10 +35,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <RootNamespace>Stepping</RootNamespace>
+    <RootNamespace>MultiThreadingCallStack</RootNamespace>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <ProjectVersion>1.0</ProjectVersion>
-    <ProjectGuid>{66daa4aa-8443-4cb4-a9e2-b96a714de177}</ProjectGuid>
+    <ProjectGuid>{1b7cbc0b-0547-4ee1-b42e-e6b321825dba}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(AndroidTargetsPath)\Android.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
@@ -117,8 +117,8 @@
     <AntProjectPropertiesFile Include="project.properties" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Stepping.NativeActivity\Stepping.NativeActivity.vcxproj">
-      <Project>{dce7bf95-7f39-478e-90ea-5e7f2f61c5eb}</Project>
+    <ProjectReference Include="..\MultiThreadingCallStack.NativeActivity\MultiThreadingCallStack.NativeActivity.vcxproj">
+      <Project>{6e5f6974-257c-4ec7-ac4d-d7cf69c037ca}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(AndroidTargetsPath)\Android.targets" />
