@@ -175,7 +175,7 @@ namespace MICore
         {
             string reason = results.TryFindString("reason");
 
-            if (reason.StartsWith("exited") || reason.StartsWith("disconnected"))
+            if (reason.StartsWith("exited"))
             {
                 if (this.ProcessState != ProcessState.Exited)
                 {

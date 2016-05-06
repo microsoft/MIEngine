@@ -611,7 +611,7 @@ namespace Microsoft.MIDebugEngine
             _breakpointManager.ClearBoundBreakpoints();
 
             _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
-            _debuggedProcess.Detach();
+
             return Constants.S_OK;
         }
 
