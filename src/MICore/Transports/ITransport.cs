@@ -16,6 +16,12 @@ namespace MICore
         void Send(string cmd);
         void Close();
         bool IsClosed { get; }
+
+        /// <summary>
+        /// It is used to know whether to fake a response from the debugger
+        /// acknowledging that it has exited
+        /// </summary>
+        int DebuggerPid { get; }
     }
     public interface ISignalingTransport: ITransport
     {

@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MICore
 {
@@ -11,7 +13,15 @@ namespace MICore
     {
         private string _dbgStdInName;
         private string _dbgStdOutName;
-        private FileSystemWatcher _fifoWatcher;
+        private int _debuggerPid = -1;
+
+        /// <summary>
+        /// When the debugger exits, it will write into the fifo associated with this reader.
+        /// This is useful in the case of attach when the root password is required, but the
+        /// request is canceled. In that case, the debugger won't have started yet (so no messages
+        /// will be processed from it), but the trap will execute and write into this fifo.
+        /// </summary>
+        private StreamReader _exitReader;
 
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
@@ -33,49 +43,59 @@ namespace MICore
 
             _dbgStdInName = UnixUtilities.MakeFifo(Logger);
             _dbgStdOutName = UnixUtilities.MakeFifo(Logger);
-
-            string watcherDirectory = _dbgStdInName.Substring(0, _dbgStdInName.IndexOf(UnixUtilities.FifoPrefix, StringComparison.OrdinalIgnoreCase));
-            _fifoWatcher = new FileSystemWatcher(watcherDirectory, UnixUtilities.FifoPrefix + "*");
-            _fifoWatcher.Deleted += FifoWatcher_Deleted;
-            _fifoWatcher.EnableRaisingEvents = true;
+            string pidFifo = UnixUtilities.MakeFifo(Logger);
+            string exitFifo = UnixUtilities.MakeFifo(Logger);
 
             // Setup the streams on the fifos as soon as possible.
             FileStream dbgStdInStream = new FileStream(_dbgStdInName, FileMode.Open);
             FileStream dbgStdOutStream = new FileStream(_dbgStdOutName, FileMode.Open);
+            FileStream pidStream = new FileStream(pidFifo, FileMode.Open);
+            FileStream exitStream = new FileStream(exitFifo, FileMode.Open);
 
             string debuggerCmd = UnixUtilities.GetDebuggerCommand(localOptions);
             string launchDebuggerCommand = UnixUtilities.LaunchLocalDebuggerCommand(
                 debuggeeDir,
-                debuggerCmd,
+                exitFifo,
                 _dbgStdInName,
-                _dbgStdOutName
-                );
+                _dbgStdOutName,
+                pidFifo,
+                debuggerCmd);
 
             TerminalLauncher terminal = TerminalLauncher.MakeTerminal("DebuggerTerminal", launchDebuggerCommand, localOptions.Environment);
             terminal.Launch(debuggeeDir);
+
+            using (StreamReader pidReader = new StreamReader(pidStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize))
+            {
+                _debuggerPid = int.Parse(pidReader.ReadLine(), CultureInfo.InvariantCulture);
+            }
+
+            _exitReader = new StreamReader(exitStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize);
+            Task<string> task = _exitReader.ReadLineAsync();
+            task.ContinueWith(DebuggerExited, TaskContinuationOptions.OnlyOnRanToCompletion);
 
             // The in/out names are confusing in this case as they are relative to gdb.
             // What that means is the names are backwards wrt miengine hence the reader
             // being the writer and vice-versa
             // Mono seems to hang when the debugger sends a large response unless we specify a larger buffer here
-            writer = new StreamWriter(dbgStdInStream, new UTF8Encoding(false, true), 1024 * 4);
-            reader = new StreamReader(dbgStdOutStream, Encoding.UTF8, true, 1024 * 4);
+            writer = new StreamWriter(dbgStdInStream, new UTF8Encoding(false, true), UnixUtilities.StreamBufferSize);
+            reader = new StreamReader(dbgStdOutStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize);
         }
 
-        private void FifoWatcher_Deleted(object sender, FileSystemEventArgs e)
+        private void DebuggerExited(Task<string> task)
         {
-            try
+            if (task.Result == UnixUtilities.ExitString)
             {
-                if (e.FullPath == _dbgStdInName || e.FullPath == _dbgStdOutName)
-                {
-                    Logger?.WriteLine("Fifo deleted, stop debugging");
-                    _fifoWatcher.Deleted -= FifoWatcher_Deleted;
-                    this.Callback.OnDebuggerProcessExit(null);
-                }
+                Logger?.WriteLine("Debugger exited, stop debugging");
+                _exitReader?.Dispose();
+                this.Callback.OnDebuggerProcessExit(null);
             }
-            catch
+        }
+
+        public override int DebuggerPid
+        {
+            get
             {
-                // Don't take down OpenDebugAD7 if the file watcher handler failed
+                return _debuggerPid;
             }
         }
 
@@ -88,10 +108,9 @@ namespace MICore
         {
             base.Close();
 
-            if (_fifoWatcher != null)
-            {
-                _fifoWatcher.Deleted -= FifoWatcher_Deleted;
-            }
+            // If we are shutting down before the _exitReader has read a line it's possible that
+            // there is a thread blocked doing a read() syscall. 
+            ForceDisposeStreamReader(_exitReader);
         }
     }
 }

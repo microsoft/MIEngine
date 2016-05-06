@@ -104,21 +104,8 @@ namespace MICore
 
                     // If we are shutting down without notice from the debugger (e.g., the terminal
                     // where the debugger was hosted was closed), at this point it's possible that
-                    // there is a thread blocked doing a read() syscall. Disposing _reader will cause
-                    // a syscall to close() on the file descriptor for the FIFO. The behavior on OS X
-                    // is that close() blocks because there is a pending read(). Therefore, we write
-                    // a byte to unblock the read() and allow close() to succeed.
-
-                    // TODO edmunoz Uncomment this when the race condition with the fake ^exit has been fixed
-                    // try
-                    // {
-                    //     _reader.BaseStream.WriteByte(0);
-                    // }
-                    // catch
-                    // {
-                    // }
-
-                    _reader.Dispose();
+                    // there is a thread blocked doing a read() syscall.
+                    ForceDisposeStreamReader(_reader);
 
                     try
                     {
@@ -207,9 +194,34 @@ namespace MICore
             get { return _bQuit; }
         }
 
+        public virtual int DebuggerPid
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         protected ITransportCallback Callback
         {
             get { return _callback; }
+        }
+
+        /// <summary>
+        /// In some scenarios, a StreamReader will be blocked on read() when trying to dispose it.
+        /// On OS X under mono, read() will block any close() syscalls on the file descriptor for the stream.
+        /// Therefore, we write a byte to unblock the read() and allow close() to succeed.
+        /// Callers to this function should document why read() might be blocked.
+        /// </summary>
+        /// <param name="reader">The StreamReader to forcibly dispose</param>
+        protected static void ForceDisposeStreamReader(StreamReader reader)
+        {
+            try
+            {
+                reader?.BaseStream.WriteByte(0);
+            }
+            catch
+            {
+            }
+
+            reader?.Dispose();
         }
     }
 }

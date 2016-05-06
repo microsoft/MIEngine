@@ -55,6 +55,22 @@ namespace MICore
             }
         }
 
+        public bool IsDebuggerRunning
+        {
+            get
+            {
+                if (_localDebuggerPid > 0)
+                {
+                    if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                    {
+                        return UnixNativeMethods.Kill(_localDebuggerPid, 0) == 0;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         public uint MaxInstructionSize { get; private set; }
         public bool Is64BitArch { get; private set; }
         public CommandLock CommandLock { get { return _commandLock; } }
@@ -72,6 +88,7 @@ namespace MICore
         private LinkedList<string> _initialErrors = new LinkedList<string>();
 
         protected bool _connected;
+        protected int _localDebuggerPid = -1;
 
         public class ResultEventArgs : EventArgs
         {
@@ -1176,10 +1193,13 @@ namespace MICore
             {
                 ScheduleStdOutProcessing(@"*stopped,reason=""exited""");
 
-                // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
-                //  the debugger process is already gone (e.g. because the terminal window was closed), we won't get
-                //  a response, so queue a fake "exit" event for processing as well, just to be sure.
-                ScheduleStdOutProcessing("^exit");
+                if (!IsDebuggerRunning)
+                {
+                    // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
+                    // the debugger process is already gone (e.g. because the terminal window was closed), we won't get
+                    // a response, so queue a fake "exit" event for processing as well.
+                    ScheduleStdOutProcessing("^exit");
+                }
             }
         }
 

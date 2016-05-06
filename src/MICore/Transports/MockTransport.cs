@@ -62,6 +62,11 @@ namespace MICore
 
         public bool IsClosed { get { return _bQuit; } }
 
+        public int DebuggerPid
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         private void TransportLoop()
         {
             _lineNumber = 0;
