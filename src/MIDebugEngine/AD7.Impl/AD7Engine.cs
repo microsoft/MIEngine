@@ -170,7 +170,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting:true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -769,6 +769,11 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
+                if (null == thread || null == thread.GetDebuggedThread())
+                {
+                    return Constants.E_FAIL;
+                }
+
                 _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
             }
             catch (InvalidCoreDumpOperationException)
