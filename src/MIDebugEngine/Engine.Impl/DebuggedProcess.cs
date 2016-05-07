@@ -289,7 +289,7 @@ namespace Microsoft.MIDebugEngine
             ModuleLoadEvent += async delegate (object o, EventArgs args)
             {
                 // NOTE: This is an async void method, so make sure exceptions are caught and somehow reported
-                
+
                 if (_needTerminalReset)
                 {
                     _needTerminalReset = false;
@@ -517,7 +517,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     // Do not place quotes around so paths for gdb
                     commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escappedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
-                    
+
                 }
                 else
                 {
@@ -600,7 +600,7 @@ namespace Microsoft.MIDebugEngine
                         PlatformUtilities.IsWindows() &&
                         this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
                     {
-                        commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures:true));
+                        commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
 
                     // Send client version to clrdbg to set the capabilities appropriately
@@ -608,7 +608,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         string version = string.Empty;
                         var attribute = this.GetType().GetTypeInfo().Assembly.GetCustomAttribute(typeof(System.Reflection.AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
-                        
+
                         if (attribute != null)
                         {
                             version = attribute.Version;
@@ -644,7 +644,7 @@ namespace Microsoft.MIDebugEngine
                 throw new LaunchErrorException(message);
             };
 
-            commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures:false, failureHandler:failureHandler));
+            commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures: false, failureHandler: failureHandler));
         }
 
         public override void FlushBreakStateData()
@@ -683,7 +683,7 @@ namespace Microsoft.MIDebugEngine
 
             // Any existing variable objects at this point are from the last time we were in break mode, and are
             //  therefore invalid.  Dispose them so they're marked for cleanup.
-            lock(this.ActiveVariables)
+            lock (this.ActiveVariables)
             {
                 foreach (IVariableInformation varInfo in this.ActiveVariables)
                 {
@@ -753,20 +753,20 @@ namespace Microsoft.MIDebugEngine
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
 
-                TupleValue frame = results.Results.TryFind<TupleValue>("frame");
-                if (frame != null && addr != 0)
-                {
-                    string sourceFile = frame.TryFindString("fullname");
-                    if (!String.IsNullOrEmpty(sourceFile))
-                    {
-                        await this.VerifySourceFileTimestamp(addr, sourceFile);
-                    }
-                }
-
                 bool fContinue;
+                TupleValue frame = results.Results.TryFind<TupleValue>("frame");
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
                 if (bkpt != null)
                 {
+                    if (frame != null && addr != 0)
+                    {
+                        string sourceFile = frame.TryFindString("fullname");
+                        if (!String.IsNullOrEmpty(sourceFile))
+                        {
+                            await this.VerifySourceFileTimestamp(addr, sourceFile);
+                        }
+                    }
+
                     List<object> bplist = new List<object>();
                     bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
@@ -887,26 +887,35 @@ namespace Microsoft.MIDebugEngine
                 targetModulePath = targetModule.Name;
             }
 
-            if (!File.Exists(sourceFilePath) || !File.Exists(targetModulePath))
+            Tuple<string, string> key = Tuple.Create(sourceFilePath, targetModulePath);
+            if (this._fileTimestampWarnings.Contains(key))
             {
+                // We've already warned about this file
                 return;
             }
 
-            DateTime sourceFileTimestamp = File.GetLastWriteTimeUtc(sourceFilePath);
-            DateTime moduleFileTimestamp = File.GetLastWriteTimeUtc(targetModulePath);
-
-            if (sourceFileTimestamp > moduleFileTimestamp)
+            try
             {
-                // Source file is newer than the module - warn the user if we haven't already
-				Tuple<string, string> key = Tuple.Create(sourceFilePath, targetModulePath);
-
-                if (!this._fileTimestampWarnings.Contains(key))
+                if (!File.Exists(sourceFilePath) || !File.Exists(targetModulePath))
                 {
+                    return;
+                }
+
+                DateTime sourceFileTimestamp = File.GetLastWriteTimeUtc(sourceFilePath);
+                DateTime moduleFileTimestamp = File.GetLastWriteTimeUtc(targetModulePath);
+
+                if (sourceFileTimestamp > moduleFileTimestamp)
+                {
+                    // Source file is newer than the module - warn the user
                     this._fileTimestampWarnings.Add(key);
 
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_SourceFileOutOfDate_Arg2, sourceFilePath, targetModulePath);
                     this._callback.OnOutputMessage(new OutputMessage(message + Environment.NewLine, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
                 }
+            }
+            catch (IOException)
+            {
+                // Ignore exceptions related to getting file information
             }
         }
 
