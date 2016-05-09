@@ -194,10 +194,7 @@ namespace MICore
             get { return _bQuit; }
         }
 
-        public virtual int DebuggerPid
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public abstract int DebuggerPid { get; }
 
         protected ITransportCallback Callback
         {

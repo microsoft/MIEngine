@@ -66,7 +66,17 @@ namespace MICore
 
             using (StreamReader pidReader = new StreamReader(pidStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize))
             {
-                _debuggerPid = int.Parse(pidReader.ReadLine(), CultureInfo.InvariantCulture);
+                Task<string> readPidTask = pidReader.ReadLineAsync();
+                if (readPidTask.Wait(TimeSpan.FromSeconds(10)))
+                {
+                    _debuggerPid = int.Parse(readPidTask.Result, CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    // Something is wrong because we didn't get the pid of the debugger
+                    ForceDisposeStreamReader(pidReader);
+                    this.Callback.OnDebuggerProcessExit(null);
+                }
             }
 
             _exitReader = new StreamReader(exitStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize);

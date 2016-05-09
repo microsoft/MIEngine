@@ -18,8 +18,11 @@ namespace MICore
         bool IsClosed { get; }
 
         /// <summary>
+        /// Process ID of the debugger process (clrdbg/lldb/gdb).
+        /// This value is only valid when using local launch options. When using non-local
+        /// options this may throw (e.g., TcpTransport) or provide bogus data (e.g., PipeTransport).
         /// It is used to know whether to fake a response from the debugger
-        /// acknowledging that it has exited
+        /// acknowledging that it has exited.
         /// </summary>
         int DebuggerPid { get; }
     }

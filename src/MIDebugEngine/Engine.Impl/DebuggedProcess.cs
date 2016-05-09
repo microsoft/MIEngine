@@ -209,11 +209,7 @@ namespace Microsoft.MIDebugEngine
                 // Only need to know the debugger pid on Linux and OS X local launch to detect whether
                 // the debugger is closed. If the debugger is not running anymore, the response (^exit)
                 // to the -gdb-exit command is faked to allow MIEngine to shut down.
-                _localDebuggerPid = localTransport.DebuggerPid;
-
-                // We are launching the debugger in the background, so the console will have
-                // "[job number] pid". So we clear that.
-                ResetConsole();
+                SetDebuggerPid(localTransport.DebuggerPid);
             }
             else if (_launchOptions is PipeLaunchOptions)
             {
@@ -307,7 +303,6 @@ namespace Microsoft.MIDebugEngine
 
                     // This is to work around a GDB bug of warning "Failed to set controlling terminal: Operation not permitted"
                     // Reset debuggee terminal after the first module load.
-                    // The clear is done by sending reset string (ESC, c) to terminal STDERR
                     await ResetConsole();
                 }
 
@@ -1650,6 +1645,10 @@ namespace Microsoft.MIDebugEngine
             return addresses;
         }
 
+        /// <summary>
+        /// The clear is done by sending reset string (ESC, c) to terminal STDERR
+        /// </summary>
+        /// <returns></returns>
         private Task<string> ResetConsole()
         {
             return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");

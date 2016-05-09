@@ -36,6 +36,10 @@ namespace MICore
             return "MI.PipeTransport";
         }
 
+        /// <summary>
+        /// The value of this property reflects the pid for the debugger running
+        /// locally.
+        /// </summary>
         public override int DebuggerPid
         {
             get

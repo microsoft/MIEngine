@@ -46,8 +46,10 @@ namespace MICore
             return string.Format(CultureInfo.InvariantCulture,
                "cd {0}; " +
                "DbgTerm=`tty`; " +
-               "trap 'echo {1} > {2}; rm {2}; rm {3}; rm {4}; rm {5}' EXIT; " +
+               "trap 'echo {1} > {2}; rm {2} {3} {4} {5}' EXIT; " +
                "{6} --interpreter=mi --tty=$DbgTerm < {3} > {4} & " +
+               // Clear the output of executing a process in the background: [job number] pid
+               "clear; " +
                "pid=$! ; " +
                "echo $pid > {5}; " +
                "wait $pid; ",
