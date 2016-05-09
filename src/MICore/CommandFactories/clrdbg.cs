@@ -41,11 +41,6 @@ namespace MICore
             return true;
         }
 
-        public override bool CanDetach()
-        {
-            return true;
-        }
-
         public override async Task<bool> SetJustMyCode(bool enabled)
         {
             string command = "-gdb-set just-my-code " + (enabled ? "1" : "0");
