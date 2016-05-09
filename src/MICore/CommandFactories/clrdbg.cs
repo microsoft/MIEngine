@@ -43,8 +43,7 @@ namespace MICore
 
         public override bool CanDetach()
         {
-            // clrdbg doesn't support detach yet
-            return false;
+            return true;
         }
 
         public override async Task<bool> SetJustMyCode(bool enabled)
