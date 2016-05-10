@@ -7,8 +7,7 @@ on run argv
    set debuggerTitle to (item 1 of argv)
    set executeCommand to (item 2 of argv)
    -- Note: if other tabs are open in the terminal window that is opened by this script, this won't behave properly.
-   set command to "clear; " & ¬
-                  executeCommand & ¬
+   set command to executeCommand & ¬
                   "osascript -e 'tell application \"Terminal\" to close (every window whose tty is \"'\"$(tty)\"'\")' & exit"
 
     tell application "Terminal"

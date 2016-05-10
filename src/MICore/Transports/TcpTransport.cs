@@ -72,6 +72,13 @@ namespace MICore
             }
         }
 
+        public override int DebuggerPid {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public override void Close()
         {
             base.Close();

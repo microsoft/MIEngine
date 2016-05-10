@@ -70,6 +70,7 @@ namespace MICore
         private TaskCompletionSource<object> _consoleDebuggerInitializeCompletionSource = new TaskCompletionSource<object>();
         private LinkedList<string> _initializationLog = new LinkedList<string>();
         private LinkedList<string> _initialErrors = new LinkedList<string>();
+        private int _localDebuggerPid = -1;
 
         protected bool _connected;
 
@@ -120,6 +121,32 @@ namespace MICore
             _debuggeePids = new Dictionary<string, int>();
             Logger = logger;
             _miResults = new MIResults(logger);
+        }
+
+        protected void SetDebuggerPid(int debuggerPid)
+        {
+            _localDebuggerPid = debuggerPid;
+        }
+
+        /// <summary>
+        /// Check if the local debugger process is running.
+        /// For Windows, it returns False always to avoid shortcuts taken when it returns True.
+        /// </summary>
+        /// <returns>True if the local debugger process is running and the platform is Linux or OS X.
+        /// False otherwise.</returns>
+        private bool IsUnixDebuggerRunning()
+        {
+            if (_localDebuggerPid > 0)
+            {
+                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                {
+                    // When 0 is passed as the signal to send in kill,
+                    // it will check the validity of the pid (e.g., does the pid exist?)
+                    return UnixNativeMethods.Kill(_localDebuggerPid, 0) == 0;
+                }
+            }
+
+            return false;
         }
 
         private void RetryBreak(object o)
@@ -1176,10 +1203,13 @@ namespace MICore
             {
                 ScheduleStdOutProcessing(@"*stopped,reason=""exited""");
 
-                // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
-                //  the debugger process is already gone (e.g. because the terminal window was closed), we won't get
-                //  a response, so queue a fake "exit" event for processing as well, just to be sure.
-                ScheduleStdOutProcessing("^exit");
+                if (!IsUnixDebuggerRunning())
+                {
+                    // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
+                    // the debugger process is already gone (e.g. because the terminal window was closed), we won't get
+                    // a response, so queue a fake "exit" event for processing as well.
+                    ScheduleStdOutProcessing("^exit");
+                }
             }
         }
 
