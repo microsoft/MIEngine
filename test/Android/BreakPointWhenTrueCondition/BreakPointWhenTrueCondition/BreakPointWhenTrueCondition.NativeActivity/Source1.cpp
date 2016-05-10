@@ -1,20 +1,11 @@
 
 #include "Header1.h"
 
-int MyClass :: Func() {
-	int i = 1;
-	int sum = 0;
-
-	for (; i < 10; i++) {
-		sum = sum + i;
-	}
-
-	return sum;
-}
-
 int Func1() {
 	int i = 1;
 	int sum = 0;
+	MyClass myClass;
+	myClass.isTrue = true;
 
 	for (; i < 10; i++) {
 		sum = sum + i;
@@ -25,8 +16,6 @@ int Func1() {
 
 void Func() {
 	Func1();
-	MyClass myClass;
-	myClass.Func();
 
 	return;
 }
