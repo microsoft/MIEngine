@@ -32,6 +32,8 @@ namespace Microsoft.MIDebugEngine
         public ThreadCache ThreadCache { get; private set; }
         public Disassembly Disassembly { get; private set; }
         public ExceptionManager ExceptionManager { get; private set; }
+        public bool IsCygwin { get; private set; }
+        public CygwinFilePathMapper CygwinFilePathMapper { get; private set; }
 
         private List<DebuggedModule> _moduleList;
         private ISampleEngineCallback _callback;
@@ -474,10 +476,21 @@ namespace Microsoft.MIDebugEngine
                                 throw new UnexpectedMIResultException(MICommandFactory.Name, command.CommandText, miError);
                             }
                         }
+                        else
+                        {
+                            if (command.SuccessHandler != null)
+                            {
+                                command.SuccessHandler(results.ToString());
+                            }
+                        }
                     }
                     else
                     {
-                        await ConsoleCmdAsync(command.CommandText);
+                        string resultString = await ConsoleCmdAsync(command.CommandText, command.IgnoreFailures);
+                        if (command.SuccessHandler != null)
+                        {
+                            command.SuccessHandler(resultString);
+                        }
                     }
                 }
 
@@ -601,6 +614,20 @@ namespace Microsoft.MIDebugEngine
                         this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
+                    }
+
+                    // If running locally on windows, determine if gdb is running from cygwin
+                    if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
+                    {
+                        // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
+                        LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, new Action<string>((string resStr) => {
+                                if (resStr.Contains("cygwin"))
+                                {
+                                    this.IsCygwin = true;
+                                    this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
+                                }
+                        }));
+                        commands.Add(lc);
                     }
 
                     // Send client version to clrdbg to set the capabilities appropriately
@@ -1203,7 +1230,7 @@ namespace Microsoft.MIDebugEngine
             TupleValue currentFrame = currentThread.Find<TupleValue>("frame");
 
             // Collect the addr, func, and args fields from the current frame as they are required.
-            // Collect the file, fullname, and line fileds if they are available. They may be missing if the frame is for
+            // Collect the file, fullname, and line fields if they are available. They may be missing if the frame is for
             // a binary that does not have symbols.
             TupleValue newFrame = currentFrame.Subset(
                 new string[] { "addr", "func", "args" },

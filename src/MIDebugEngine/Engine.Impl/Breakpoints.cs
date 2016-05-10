@@ -399,7 +399,7 @@ namespace Microsoft.MIDebugEngine
                 return _parent.AD7breakpoint.GetDocumentContext(this.Addr, this.FunctionName);
             }
 
-            return new AD7DocumentContext(_textPosition, new AD7MemoryAddress(engine, Addr, this.FunctionName));
+            return new AD7DocumentContext(_textPosition, new AD7MemoryAddress(engine, Addr, this.FunctionName), engine.DebuggedProcess);
         }
 
         /// <summary>
