@@ -63,6 +63,7 @@ namespace MICore
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         protected readonly LaunchOptions _launchOptions;
+        public LaunchOptions LaunchOptions { get { return this._launchOptions; } }
 
         private Queue<Func<Task>> _internalBreakActions = new Queue<Func<Task>>();
         private TaskCompletionSource<object> _internalBreakActionCompletionSource;
@@ -574,7 +575,7 @@ namespace MICore
             return outStr.ToString();
         }
 
-        public async Task<string> ConsoleCmdAsync(string cmd)
+        public async Task<string> ConsoleCmdAsync(string cmd, bool ignoreFailures = false)
         {
             if (this.ProcessState != ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
             {
@@ -608,7 +609,7 @@ namespace MICore
 
                 try
                 {
-                    await ExclusiveCmdAsync("-interpreter-exec console \"" + Escape(cmd) + "\"", ResultClass.done, lockToken);
+                    await ExclusiveCmdAsync("-interpreter-exec console \"" + Escape(cmd) + "\"", ignoreFailures ? ResultClass.None : ResultClass.done, lockToken);
 
                     return _consoleCommandOutput.ToString();
                 }
