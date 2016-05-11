@@ -591,6 +591,8 @@ namespace Microsoft.MIDebugEngine
                     int pid = localLaunchOptions.ProcessId;
                     commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
 
+                    CheckCygwin(commands, localLaunchOptions);
+
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
                         // LLDB finishes attach in break mode. Gdb does finishes in run mode. Issue a continue in lldb to match the gdb behavior
@@ -620,19 +622,7 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
 
-                    // If running locally on windows, determine if gdb is running from cygwin
-                    if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
-                    {
-                        // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
-                        LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, new Action<string>((string resStr) => {
-                                if (resStr.Contains("cygwin"))
-                                {
-                                    this.IsCygwin = true;
-                                    this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
-                                }
-                        }));
-                        commands.Add(lc);
-                    }
+                    CheckCygwin(commands, localLaunchOptions);
 
                     // Send client version to clrdbg to set the capabilities appropriately
                     if (this.MICommandFactory.Mode == MIMode.Clrdbg)
@@ -663,6 +653,24 @@ namespace Microsoft.MIDebugEngine
             }
 
             return commands;
+        }
+
+        private void CheckCygwin(List<LaunchCommand> commands, LocalLaunchOptions localLaunchOptions)
+        {
+            // If running locally on windows, determine if gdb is running from cygwin
+            if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
+            {
+                // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
+                LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, new Action<string>((string resStr) =>
+                {
+                    if (resStr.Contains("cygwin"))
+                    {
+                        this.IsCygwin = true;
+                        this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
+                    }
+                }));
+                commands.Add(lc);
+            }
         }
 
         private void AddExecutablePathCommand(IList<LaunchCommand> commands)
