@@ -354,5 +354,14 @@ namespace MICore {
                 return ResourceManager.GetString("Status_BreakpointPending", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Superuser access is required to attach to a process. Attaching as superuser can potentially harm your computer. Do you want to continue? [y/N].
+        /// </summary>
+        public static string Warn_AttachAsRootProcess {
+            get {
+                return ResourceManager.GetString("Warn_AttachAsRootProcess", resourceCulture);
+            }
+        }
     }
 }
