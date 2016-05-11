@@ -32,7 +32,6 @@ namespace Microsoft.MIDebugEngine
         public ThreadCache ThreadCache { get; private set; }
         public Disassembly Disassembly { get; private set; }
         public ExceptionManager ExceptionManager { get; private set; }
-        public bool IsCygwin { get; private set; }
         public CygwinFilePathMapper CygwinFilePathMapper { get; private set; }
 
         private List<DebuggedModule> _moduleList;

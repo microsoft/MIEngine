@@ -42,6 +42,7 @@ namespace MICore
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
         private MIResults _miResults;
+        public bool IsCygwin { get; protected set; }
 
         public virtual void FlushBreakStateData()
         {
@@ -1060,6 +1061,27 @@ namespace MICore
             {
                 string status = _miResults.ParseCString(cmd.Substring(8));
                 OnStateChanged("stopped", status);
+            }
+            else if (cmd.StartsWith("stopped", StringComparison.Ordinal))
+            {
+                if (PlatformUtilities.IsWindows() &&
+                    this.LaunchOptions is LocalLaunchOptions &&
+                    ((LocalLaunchOptions)this.LaunchOptions).ProcessId != 0 &&
+                    this.MICommandFactory.Mode == MIMode.Gdb &&
+                    !this.IsCygwin
+                    )
+                {
+                    // mingw enters break mode with no status during attach. All of the processing 
+                    // for *stopped expects status or it will assume the event is a module load.
+                    // to avoid regressing that code path, manufacture a fake frame. This will not
+                    // be seen by the user as it is continued during attach.
+                    string fakeMingwAttachFrame = "frame={addr=\"0x0000000000000000\",func=\"fakemodule!fakeMingwAttachFrame\"},thread-id=\"1\",stopped-threads=\"all\"";
+                    OnStateChanged("stopped", fakeMingwAttachFrame);
+                }
+                else
+                {
+                    Debug.Fail("Unknown out-of-band msg: " + cmd);
+                }
             }
             else if (cmd.StartsWith("running,", StringComparison.Ordinal))
             {
