@@ -40,7 +40,6 @@ namespace Microsoft.MIDebugEngine
         private StringBuilder _pendingMessages;
         private WorkerThread _worker;
         private BreakpointManager _breakpointManager;
-        private bool _bEntrypointHit;
         private ResultEventArgs _initialBreakArgs;
         private List<string> _libraryLoaded;   // unprocessed library loaded messages
         private uint _loadOrder;
@@ -775,15 +774,15 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
-            if (String.IsNullOrWhiteSpace(reason) && !_bEntrypointHit)
+            if (String.IsNullOrWhiteSpace(reason) && !this.EntrypointHit)
             {
-                _bEntrypointHit = true;
+                this.EntrypointHit = true;
                 CmdContinueAsync();
                 FireDeviceAppLauncherResume();
             }
             else if (reason == "entry-point-hit")
             {
-                _bEntrypointHit = true;
+                this.EntrypointHit = true;
                 _callback.OnEntryPoint(thread);
             }
             else if (reason == "breakpoint-hit")
@@ -805,13 +804,16 @@ namespace Microsoft.MIDebugEngine
                         }
                     }
 
+                    // Hitting a bp before the entrypoint overrules entrypoint processing.
+                    this.EntrypointHit = true;
+
                     List<object> bplist = new List<object>();
                     bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
-                else if (!_bEntrypointHit)
+                else if (!this.EntrypointHit)
                 {
-                    _bEntrypointHit = true;
+                    this.EntrypointHit = true;
                     _callback.OnEntryPoint(thread);
                 }
                 else if (bkptno == "<EMBEDDED>")
