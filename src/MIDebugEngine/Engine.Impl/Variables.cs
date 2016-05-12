@@ -417,7 +417,7 @@ namespace Microsoft.MIDebugEngine
 
                 try
                 {
-                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess);
+                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures:true);
                     Value = String.Empty;
                     this.TypeName = null;
                 }

@@ -43,6 +43,10 @@ namespace MICore
         public ProcessState ProcessState { get; private set; }
         private MIResults _miResults;
 
+        public bool EntrypointHit { get; protected set; }
+
+        public bool IsCygwin { get; protected set; }
+
         public virtual void FlushBreakStateData()
         {
         }
@@ -1060,6 +1064,26 @@ namespace MICore
             {
                 string status = _miResults.ParseCString(cmd.Substring(8));
                 OnStateChanged("stopped", status);
+            }
+            else if (cmd.StartsWith("stopped", StringComparison.Ordinal))
+            {
+                if (PlatformUtilities.IsWindows() &&
+                    this.LaunchOptions is LocalLaunchOptions &&
+                    ((LocalLaunchOptions)this.LaunchOptions).ProcessId != 0 &&
+                    this.MICommandFactory.Mode == MIMode.Gdb &&
+                    !this.IsCygwin
+                    )
+                {
+                    // mingw enters break mode with no status flags on the mi response during attach.
+                    // In order to keey the entrypoint state correct, set it to true and continue
+                    // the break.
+                    this.EntrypointHit = true;
+                    CmdContinueAsync();
+                }
+                else
+                {
+                    Debug.Fail("Unknown out-of-band msg: " + cmd);
+                }
             }
             else if (cmd.StartsWith("running,", StringComparison.Ordinal))
             {
