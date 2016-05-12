@@ -523,6 +523,11 @@ namespace MICore
 
         #region Helpers
 
+        public virtual Task<TargetArchitecture> GetTargetArchitecture()
+        {
+            return Task.FromResult(TargetArchitecture.Unknown);
+        }
+
         #endregion
 
         #region Other

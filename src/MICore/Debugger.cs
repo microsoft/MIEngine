@@ -379,8 +379,11 @@ namespace MICore
             FlushBreakStateData();
 
             _transport.Init(this, options, Logger);
+        }
 
-            switch (options.TargetArchitecture)
+        public void SetTargetArch(TargetArchitecture arch)
+        {
+            switch (arch)
             {
                 case TargetArchitecture.ARM:
                     MaxInstructionSize = 4;
