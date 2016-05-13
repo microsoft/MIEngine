@@ -25,13 +25,17 @@ namespace Microsoft.MIDebugEngine
 
         internal bool Enabled { get { return _enabled; } }
         internal bool Deleted { get { return _deleted; } }
-        internal ulong Addr { get; private set; }
+        internal ulong Addr
+        {
+            get
+            { return _bp.Addr; }
+        }
         internal AD7PendingBreakpoint PendingBreakpoint { get { return _pendingBreakpoint; } }
+        internal bool IsDataBreakpoint { get { return PendingBreakpoint.IsDataBreakpoint; } }
 
-        public AD7BoundBreakpoint(AD7Engine engine, ulong address, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution, BoundBreakpoint bp)
+        public AD7BoundBreakpoint(AD7Engine engine, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution, BoundBreakpoint bp)
         {
             _engine = engine;
-            Addr = address;
             _pendingBreakpoint = pendingBreakpoint;
             _breakpointResolution = breakpointResolution;
             _enabled = true;
@@ -138,7 +142,6 @@ namespace Microsoft.MIDebugEngine
 
         internal void UpdateAddr(ulong addr)
         {
-            Addr = addr;
             _bp.Addr = addr;
             _breakpointResolution.Addr = addr;
             if (!_deleted)

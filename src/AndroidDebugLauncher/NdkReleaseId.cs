@@ -26,12 +26,7 @@ namespace AndroidDebugLauncher
         /// </summary>
         public readonly char SubRelease;
 
-        /// <summary>
-        /// Indicates if the NDK is 32-bit or 64-bit
-        /// </summary>
-        public bool Is32Bit;
-
-        public NdkReleaseId(uint releaseNumber, char subRelease, bool is32Bit)
+        public NdkReleaseId(uint releaseNumber, char subRelease)
         {
             if (releaseNumber == 0)
             {
@@ -40,12 +35,94 @@ namespace AndroidDebugLauncher
 
             this.ReleaseNumber = releaseNumber;
             this.SubRelease = subRelease;
-            this.Is32Bit = is32Bit;
         }
 
         public bool IsValid
         {
             get { return this.ReleaseNumber != 0; }
+        }
+
+        /// <summary>
+        /// Try to parse the revision from the ndk source.properties file
+        /// </summary>
+        /// <param name="ndkSourcePropertiesFilePath">[Required] path to the NDK source.properties file. This file must exist</param>
+        /// <param name="result"></param>
+        /// <returns>true if successful</returns>
+        public static bool TryParsePropertiesFile(string ndkSourcePropertiesFilePath, out NdkReleaseId result)
+        {
+            result = new NdkReleaseId();
+
+            using (StreamReader reader = File.OpenText(ndkSourcePropertiesFilePath))
+            {
+                Dictionary<string, string> properties = new Dictionary<string, string>();
+                while (true)
+                {
+                    string line = reader.ReadLine();
+                    if (line == null)
+                        break; // end of file
+
+                    line = line.Trim();
+                    if (line.Length == 0)
+                        continue; // ignore any blank lines. I don't expect there to be any, but it seems reasonable to do
+
+                    // .properties files can theoretically have '=' characters in the value portion,
+                    // but I don't expect this will happen and our parsing logic below can't handle it anyway
+                    string[] keyValue = line.Split('=');
+                    if (keyValue.Length != 2)
+                    {
+                        return false;
+                    }
+
+                    properties.Add(keyValue[0].Trim(), keyValue[1].Trim());
+                }
+
+                string revision;
+                if (properties.TryGetValue("Pkg.Revision", out revision))
+                {
+                    return TryParseRevision(revision, out result);
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Try to parse the revision from the ndk
+        /// </summary>
+        /// <param name="revision">[Required] revision of the ndk in the format major.hotfix.build</param>
+        /// <param name="result">On success, a valid version</param>
+        /// <returns>true if successful</returns>
+        public static bool TryParseRevision(string revision, out NdkReleaseId result)
+        {
+            result = new NdkReleaseId();
+
+            string[] numbers = revision.Split('.');
+            if (numbers.Length != 3)
+            {
+                return false;
+            }
+
+            string releaseString = numbers[0];
+            uint releaseNumber;
+
+            if (!uint.TryParse(releaseString, NumberStyles.None, CultureInfo.InvariantCulture, out releaseNumber) ||
+                releaseNumber == 0)
+            {
+                return false;
+            }
+
+            string subReleaseString = numbers[1];
+            char subReleaseChar = 'a';
+            int subReleaseNumber;
+            if (!int.TryParse(subReleaseString, out subReleaseNumber))
+            {
+                return false;
+            }
+
+            subReleaseChar += Convert.ToChar(subReleaseNumber);
+
+            result = new NdkReleaseId(releaseNumber, subReleaseChar);
+            return true;
         }
 
         /// <summary>
@@ -112,7 +189,6 @@ namespace AndroidDebugLauncher
             }
 
             char subRelease = (char)0;
-            bool is32bit = true;
 
             if (currentPosition < value.Length)
             {
@@ -121,26 +197,9 @@ namespace AndroidDebugLauncher
 
                 if (subRelease < 'a' || subRelease > 'z')
                     return false;
-
-                // skip past any spaces
-                while (currentPosition < value.Length && value[currentPosition] == ' ')
-                {
-                    currentPosition++;
-                }
-
-                if (currentPosition < value.Length)
-                {
-                    string suffix = value.Substring(currentPosition);
-                    if (!suffix.Equals("(64-bit)", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return false;
-                    }
-
-                    is32bit = false;
-                }
             }
 
-            result = new NdkReleaseId(releaseNumber, subRelease, is32bit);
+            result = new NdkReleaseId(releaseNumber, subRelease);
             return true;
         }
 
@@ -182,17 +241,11 @@ namespace AndroidDebugLauncher
             }
             else
             {
-                string suffix = string.Empty;
-                if (!this.Is32Bit)
-                {
-                    suffix = " (64-bit)";
-                }
-
                 object subRelease = string.Empty;
-                if (this.SubRelease != (char)0)
+                if (this.SubRelease != (char)0 && this.SubRelease != 'a')
                     subRelease = this.SubRelease;
 
-                return string.Format(CultureInfo.InvariantCulture, "r{0}{1}{2}", this.ReleaseNumber, subRelease, suffix);
+                return string.Format(CultureInfo.InvariantCulture, "r{0}{1}", this.ReleaseNumber, subRelease);
             }
         }
     }

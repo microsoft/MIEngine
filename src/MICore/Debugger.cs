@@ -63,12 +63,14 @@ namespace MICore
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         protected readonly LaunchOptions _launchOptions;
+        public LaunchOptions LaunchOptions { get { return this._launchOptions; } }
 
         private Queue<Func<Task>> _internalBreakActions = new Queue<Func<Task>>();
         private TaskCompletionSource<object> _internalBreakActionCompletionSource;
         private TaskCompletionSource<object> _consoleDebuggerInitializeCompletionSource = new TaskCompletionSource<object>();
         private LinkedList<string> _initializationLog = new LinkedList<string>();
         private LinkedList<string> _initialErrors = new LinkedList<string>();
+        private int _localDebuggerPid = -1;
 
         protected bool _connected;
 
@@ -119,6 +121,32 @@ namespace MICore
             _debuggeePids = new Dictionary<string, int>();
             Logger = logger;
             _miResults = new MIResults(logger);
+        }
+
+        protected void SetDebuggerPid(int debuggerPid)
+        {
+            _localDebuggerPid = debuggerPid;
+        }
+
+        /// <summary>
+        /// Check if the local debugger process is running.
+        /// For Windows, it returns False always to avoid shortcuts taken when it returns True.
+        /// </summary>
+        /// <returns>True if the local debugger process is running and the platform is Linux or OS X.
+        /// False otherwise.</returns>
+        private bool IsUnixDebuggerRunning()
+        {
+            if (_localDebuggerPid > 0)
+            {
+                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                {
+                    // When 0 is passed as the signal to send in kill,
+                    // it will check the validity of the pid (e.g., does the pid exist?)
+                    return UnixNativeMethods.Kill(_localDebuggerPid, 0) == 0;
+                }
+            }
+
+            return false;
         }
 
         private void RetryBreak(object o)
@@ -175,7 +203,7 @@ namespace MICore
         {
             string reason = results.TryFindString("reason");
 
-            if (reason.StartsWith("exited"))
+            if (reason.StartsWith("exited") || reason.StartsWith("disconnected"))
             {
                 if (this.ProcessState != ProcessState.Exited)
                 {
@@ -189,16 +217,17 @@ namespace MICore
             }
 
             //if this is an exception reported from LLDB, it will not currently contain a frame object in the MI
-            //if we don't have a frame, check if this is an excpetion and retrieve the frame
+            //if we don't have a frame, check if this is an exception and retrieve the frame
             if (!results.Contains("frame") &&
-                string.Compare(reason, "exception-received", StringComparison.OrdinalIgnoreCase) == 0
+                (string.Compare(reason, "exception-received", StringComparison.OrdinalIgnoreCase) == 0 ||
+                string.Compare(reason, "signal-received", StringComparison.OrdinalIgnoreCase) == 0)
                 )
             {
                 //get the info for the current frame
                 Results frameResult = await MICommandFactory.StackInfoFrame();
 
                 //add the frame to the stopping results
-                results.Add("frame", frameResult.Find("frame"));
+                results = results.Add("frame", frameResult.Find("frame"));
             }
 
             bool fIsAsyncBreak = MICommandFactory.IsAsyncBreakSignal(results);
@@ -454,11 +483,10 @@ namespace MICore
         }
 
 
-        private bool IsLocalGdbAttach()
+        private bool IsLocalGdb()
         {
             if (this.MICommandFactory.Mode == MIMode.Gdb &&
                this._launchOptions is LocalLaunchOptions &&
-               ((LocalLaunchOptions)this._launchOptions).ProcessId != 0 &&
                String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
                )
             {
@@ -502,12 +530,16 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
-            //TODO May need to fix attach on windows and osx.
-            if (IsLocalGdbAttach() && PlatformUtilities.IsLinux())
+            this.VerifyNotDebuggingCoreDump();
+
+            // TODO May need to fix attach on windows.
+            // Note that interrupt doesn't work on OS X with gdb:
+            // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
+            if (IsLocalGdb() && (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX()))
             {
-                // for local linux debugging with attach, send a signal to one of the debugee processes rather than
-                // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
-                // deadlocks or missed bps (since binding in runtime requires break state).
+                // for local linux debugging, send a signal to one of the debuggee processes rather than
+                // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
+                // End result is either deadlocks or missed bps (since binding in runtime requires break state).
                 // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
                 bool useSignal = false;
                 int debuggeePid = 0;
@@ -570,7 +602,7 @@ namespace MICore
             return outStr.ToString();
         }
 
-        public async Task<string> ConsoleCmdAsync(string cmd)
+        public async Task<string> ConsoleCmdAsync(string cmd, bool ignoreFailures = false)
         {
             if (this.ProcessState != ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
             {
@@ -604,7 +636,7 @@ namespace MICore
 
                 try
                 {
-                    await ExclusiveCmdAsync("-interpreter-exec console \"" + Escape(cmd) + "\"", ResultClass.done, lockToken);
+                    await ExclusiveCmdAsync("-interpreter-exec console \"" + Escape(cmd) + "\"", ignoreFailures ? ResultClass.None : ResultClass.done, lockToken);
 
                     return _consoleCommandOutput.ToString();
                 }
@@ -667,7 +699,7 @@ namespace MICore
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             const int sigint = 2;
-            LinuxNativeMethods.Kill(debugeePid, sigint);
+            UnixNativeMethods.Kill(debugeePid, sigint);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
@@ -1171,10 +1203,13 @@ namespace MICore
             {
                 ScheduleStdOutProcessing(@"*stopped,reason=""exited""");
 
-                // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
-                //  the debugger process is already gone (e.g. because the terminal window was closed), we won't get
-                //  a response, so queue a fake "exit" event for processing as well, just to be sure.
-                ScheduleStdOutProcessing("^exit");
+                if (!IsUnixDebuggerRunning())
+                {
+                    // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
+                    // the debugger process is already gone (e.g. because the terminal window was closed), we won't get
+                    // a response, so queue a fake "exit" event for processing as well.
+                    ScheduleStdOutProcessing("^exit");
+                }
             }
         }
 

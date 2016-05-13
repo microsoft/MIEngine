@@ -158,6 +158,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal file &quot;{0}&quot; could not be found..
+        /// </summary>
+        public static string Error_InternalFileMissing {
+            get {
+                return ResourceManager.GetString("Error_InternalFileMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launch options string provided by the project system is invalid. {0}.
         /// </summary>
         public static string Error_InvalidLaunchOptions {
@@ -230,11 +239,29 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to determine path to debugger.  Please specify the &quot;MIDebuggerPath&quot; option..
+        /// </summary>
+        public static string Error_NoMiDebuggerPath {
+            get {
+                return ResourceManager.GetString("Error_NoMiDebuggerPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to execute command. The MIEngine is not currently debugging any process..
         /// </summary>
         public static string Error_NoMIDebuggerProcess {
             get {
                 return ResourceManager.GetString("Error_NoMIDebuggerProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No terminal is available to launch the debugger.  Please install Gnome Terminal or XTerm..
+        /// </summary>
+        public static string Error_NoTerminalAvailable_Linux {
+            get {
+                return ResourceManager.GetString("Error_NoTerminalAvailable_Linux", resourceCulture);
             }
         }
         

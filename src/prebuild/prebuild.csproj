@@ -13,17 +13,23 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug-PortablePDB|AnyCPU'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug.Desktop|AnyCPU'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release.Desktop|AnyCPU'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'" />
   <ItemGroup>
     <GenerateAssembly Include="$(ILDir)*.il">
       <Visible>false</Visible>
     </GenerateAssembly>
   </ItemGroup>
   <Target Name="GenerateAssemblies" Condition="'@(GenerateAssembly)' != ''" Inputs="@(GenerateAssembly)" Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')" AfterTargets="Build">
+    <Exec Condition="'$(IsMonoRuntime)' == 'true'"
+          ConsoleToMsBuild="true"
+          Command="dirname `which ilasm`">
+      <Output TaskParameter="ConsoleOutput" PropertyName="IlAsmPath" />
+    </Exec>
+
     <PropertyGroup>
       <IlAsmCommand Condition="'$(IsMonoRuntime)' == 'false'">"$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe"</IlAsmCommand>
-      <IlAsmCommand Condition="'$(IsMonoRuntime)' == 'true'">/usr/bin/ilasm</IlAsmCommand>
+      <IlAsmCommand Condition="'$(IsMonoRuntime)' == 'true'">$(IlAsmPath)/ilasm</IlAsmCommand>
       <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
     </PropertyGroup>
     <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
@@ -39,13 +45,16 @@
           Condition="'$(IsCoreClr)' == 'false'">
     <!-- For desktop, we need to install packages from packages.config, so run NuGet for each project separately -->
     <ItemGroup>
-      <DesktopProjects Include="../IOSDebugLauncher/IOSDebugLauncher.csproj" />
       <DesktopProjects Include="../MICore/MICore.csproj" />
-      <DesktopProjects Include="../MICoreUnitTests/MICoreUnitTests.csproj" />
       <DesktopProjects Include="../MIDebugEngine/MIDebugEngine.csproj" />
+      <DesktopProjects Include="../DebugEngineHost.Stub/DebugEngineHost.stub.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(IsMonoRuntime)'=='false'">
+      <DesktopProjects Include="../IOSDebugLauncher/IOSDebugLauncher.csproj" />
+      <DesktopProjects Include="../MICoreUnitTests/MICoreUnitTests.csproj" />
       <DesktopProjects Include="../JDbgUnitTests/JDbgUnitTests.csproj" />
       <DesktopProjects Include="../MIDebugPackage/MIDebugPackage.csproj" />
-      <DesktopProjects Include="../DebugEngineHost.Stub/DebugEngineHost.stub.csproj" />
     </ItemGroup>
 
     <MsBuild Projects="@(DesktopProjects)"

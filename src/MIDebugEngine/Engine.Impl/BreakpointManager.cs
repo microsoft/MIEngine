@@ -24,6 +24,28 @@ namespace Microsoft.MIDebugEngine
             _pendingBreakpoints = new System.Collections.Generic.List<AD7PendingBreakpoint>();
         }
 
+        private List<AD7PendingBreakpoint> CodeBreakpoints
+        {
+            get
+            {
+                lock (_pendingBreakpoints)
+                {
+                    return _pendingBreakpoints.FindAll((b) => !b.IsDataBreakpoint).ToList();
+                }
+            }
+        }
+
+        private List<AD7PendingBreakpoint> DataBreakpoints
+        {
+            get
+            {
+                lock (_pendingBreakpoints)
+                {
+                    return _pendingBreakpoints.FindAll((b) => b.IsDataBreakpoint).ToList();
+                }
+            }
+        }
+
         /// <summary>
         /// Handle a modified breakpoint event. Only handles address changes.
         /// </summary>
@@ -50,7 +72,7 @@ namespace Microsoft.MIDebugEngine
             {
                 bkptId = bkpt.FindString("number");
             }
-            AD7PendingBreakpoint pending = _pendingBreakpoints.Find((p) => { return p.BreakpointId == bkptId; });
+            AD7PendingBreakpoint pending = CodeBreakpoints.FirstOrDefault((p) => { return p.BreakpointId == bkptId; });
             if (pending == null)
             {
                 return;
@@ -61,11 +83,7 @@ namespace Microsoft.MIDebugEngine
 
         public async Task BindAsync()
         {
-            List<AD7PendingBreakpoint> breakpointsToBind;
-            lock (_pendingBreakpoints)
-            {
-                breakpointsToBind = _pendingBreakpoints.FindAll((b) => b.PendingBreakpoint != null && b.PendingBreakpoint.IsPending);
-            }
+            var breakpointsToBind = CodeBreakpoints.Where((b) => b.PendingBreakpoint != null && b.PendingBreakpoint.IsPending);
 
             if (breakpointsToBind != null)
             {
@@ -101,7 +119,10 @@ namespace Microsoft.MIDebugEngine
         {
             AD7PendingBreakpoint pendingBreakpoint = new AD7PendingBreakpoint(pBPRequest, _engine, this);
             ppPendingBP = (IDebugPendingBreakpoint2)pendingBreakpoint;
-            _pendingBreakpoints.Add(pendingBreakpoint);
+            lock (_pendingBreakpoints)
+            {
+                _pendingBreakpoints.Add(pendingBreakpoint);
+            }
         }
 
         // Called from the engine's detach method to remove the debugger's breakpoint instructions.
@@ -119,7 +140,7 @@ namespace Microsoft.MIDebugEngine
         private AD7PendingBreakpoint BindToAddress(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame, out AD7BoundBreakpoint bbp)
         {
             bbp = null;
-            AD7PendingBreakpoint pending = _pendingBreakpoints.Find((p) => { return p.BreakpointId == bkptno; });
+            AD7PendingBreakpoint pending = CodeBreakpoints.FirstOrDefault((p) => { return p.BreakpointId == bkptno; });
             if (pending == null)
             {
                 return null;
@@ -148,25 +169,22 @@ namespace Microsoft.MIDebugEngine
         // the engine can do
         AD7BoundBreakpoint[] FindBoundBreakpointsAtAddress(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame)
         {
-            lock (_pendingBreakpoints)
-            { 
-                // Add all bound bps whose address match
-                List<AD7BoundBreakpoint> matchingBoundBreakpoints = new List<AD7BoundBreakpoint>();
-                foreach (AD7PendingBreakpoint currPending in _pendingBreakpoints)
-                {
-                    matchingBoundBreakpoints.AddRange(Array.FindAll(currPending.EnumBoundBreakpoints(), (b) => b.Addr != 0 && b.Addr == addr));
-                }
-
-                // Include the bp whose bkptno matches
-                AD7BoundBreakpoint bbp;
-                BindToAddress(bkptno, addr, frame, out bbp);
-                if (bbp != null)
-                {
-                    matchingBoundBreakpoints.Add(bbp);
-                }
-
-                return matchingBoundBreakpoints.Distinct().ToArray();
+            // Add all bound bps whose address match
+            List<AD7BoundBreakpoint> matchingBoundBreakpoints = new List<AD7BoundBreakpoint>();
+            foreach (AD7PendingBreakpoint currPending in CodeBreakpoints)
+            {
+                matchingBoundBreakpoints.AddRange(Array.FindAll(currPending.EnumBoundBreakpoints(), (b) => b.Addr != 0 && b.Addr == addr));
             }
+
+            // Include the bp whose bkptno matches
+            AD7BoundBreakpoint bbp;
+            BindToAddress(bkptno, addr, frame, out bbp);
+            if (bbp != null)
+            {
+                matchingBoundBreakpoints.Add(bbp);
+            }
+
+            return matchingBoundBreakpoints.Distinct().ToArray();
         }
 
 
@@ -174,35 +192,64 @@ namespace Microsoft.MIDebugEngine
         {
             fContinue = false;
             List<AD7BoundBreakpoint> hitBoundBreakpoints = new List<AD7BoundBreakpoint>();
-            lock (_pendingBreakpoints)
+            // match based on address and bkptno since there are many
+            // cases where gdb doesn't provide the breakpoint address (multple binds to the same location)
+            // This will cause the engine to send a breakpoint event accounting for all known breakpoints
+            // that are hit. 
+            // Clrdbg does not support addresses on its breakpoints, so the bkptno code path is the only 
+            // supported path in that case
+            AD7BoundBreakpoint[] hitBps = FindBoundBreakpointsAtAddress(bkptno, addr, frame);
+
+            foreach (AD7BoundBreakpoint currBoundBp in hitBps)
             {
-                // match based on address and bkptno since there are many
-                // cases where gdb doesn't provide the breakpoint address (multple binds to the same location)
-                // This will cause the engine to send a breakpoint event accounting for all known breakpoints
-                // that are hit. 
-                // Clrdbg does not support addresses on its breakpoints, so the bkptno code path is the only 
-                // supported path in that case
-                AD7BoundBreakpoint[] hitBps = FindBoundBreakpointsAtAddress(bkptno, addr, frame);
-
-                foreach (AD7BoundBreakpoint currBoundBp in hitBps)
+                if (!currBoundBp.Enabled || currBoundBp.Deleted)
                 {
-                    if (!currBoundBp.Enabled || currBoundBp.Deleted)
-                    {
-                        continue;
-                    }
-
-                    if (!currBoundBp.PendingBreakpoint.Enabled || currBoundBp.PendingBreakpoint.Deleted || currBoundBp.PendingBreakpoint.PendingDelete)
-                    {
-                        continue;
-                    }
-
-                    hitBoundBreakpoints.Add(currBoundBp);
+                    continue;
                 }
 
+                if (!currBoundBp.PendingBreakpoint.Enabled || currBoundBp.PendingBreakpoint.Deleted || currBoundBp.PendingBreakpoint.PendingDelete)
+                {
+                    continue;
+                }
+
+                hitBoundBreakpoints.Add(currBoundBp);
             }
+
+
 
             fContinue = (hitBoundBreakpoints.Count == 0);
             return hitBoundBreakpoints.Count != 0 ? hitBoundBreakpoints.ToArray() : null;
+        }
+
+        public AD7BoundBreakpoint FindHitWatchpoint(string bkptno, out bool fContinue)
+        {
+            fContinue = false;
+            var pending = DataBreakpoints.FirstOrDefault((b) => b.BreakpointId == bkptno);
+            if (pending == null)
+            {
+                return null;
+            }
+            var bound = pending.EnumBoundBreakpoints().FirstOrDefault();
+            if (bound == null)
+            {
+                return null;
+            }
+            //
+            // return fContinue == true if this watchpoint has been disabled or deleted
+            //
+            fContinue = true;
+            if (!bound.Enabled || bound.Deleted)
+            {
+                return null;
+            }
+
+            if (!pending.Enabled || pending.Deleted || pending.PendingDelete)
+            {
+                return null;
+            }
+            // should stop at this watchpoint
+            fContinue = false;
+            return bound;
         }
 
         public async Task DeleteBreakpointsPendingDeletion()

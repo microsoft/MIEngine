@@ -15,12 +15,11 @@ if not defined VisualStudioVersion (
 set _DeviceId=
 set _Platform=
 set _SdkRoot=%ProgramFiles(x86)%\Android\android-sdk
-set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r11c
 set _LoopCount=
 set _Verbose=
 set _TestsToRun=
 
-if "%~1"=="" goto Help
 if "%~1"=="-?" goto Help
 if "%~1"=="/?" goto Help
 
@@ -61,36 +60,40 @@ if /i "%~1"=="/Tests"       goto SetTests
 echo ERROR: Unknown argument '%~1'.&exit /b -1
 
 :NextArg
-shift
+shift /1
 goto ArgLoopStart
 
 :SetDeviceId
-shift
+shift /1
 set _DeviceId=%~1
 goto :NextArg
 
 :SetPlatform
-shift
+shift /1
 set _Platform=%~1&
 goto :NextArg
 
 :SetSdkRoot
-shift
+shift /1
 set _SdkRoot=%~1
 goto :NextArg
 
 :SetNdkRoot
-shift
-set _NdkRoot=%~1
+shift /1
+if "%~1" == "10" (
+	set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+) else (
+	set _NdkRoot=%~1
+)
 goto :NextArg
 
 :SetLoop
-shift
+shift /1
 set _LoopCount=%~1
 goto :NextArg
 
 :SetTests
-shift
+shift /1
 if "%~1"=="" goto SetTestsDone
 set _TestsToRun="%~1" %_TestsToRun%
 goto SetTests
@@ -102,8 +105,8 @@ goto ArgLoopEnd
 if NOT exist "%_SdkRoot%" echo ERROR: Android SDK does not exist at "%_SdkRoot%".& exit /b -1
 if NOT exist "%_NdkRoot%" echo ERROR: Android NDK does not exist at "%_NdkRoot%".& exit /b -1
 
+if "%_DeviceId%"=="" call :FindDeviceId
 if "%_DeviceId%"=="" echo ERROR: DeviceId must be specified. Possible devices are:& "%_AdbExe%" devices &goto Help
-if "%_Platform%"=="" echo ERROR: Platform must be specified.& goto Help
 
 set _GlassFlags=-f TestScript.xml -e ErrorLog.xml -s SessionLog.xml -err -nodefaultsetup -nodvt
 if not "%_Verbose%"=="1" set _GlassFlags=%_GlassFlags% -q
@@ -123,10 +126,21 @@ if "%_Verbose%"=="1" (
 if "%_TestsToRun%"=="" goto RunAll
 goto RunArgs
 
+:FindDeviceId
+if "%_Platform%"=="" set _Platform=x86
+pushd %_SdkRoot%
+for /f "tokens=1,6" %%i in ('platform-tools\adb devices -l ^| find /i "VS Emulator"') do (
+    echo Run on device: %%i %%j
+    set _DeviceId=%%i
+    popd
+    exit /b 0
+)
+exit /b -1
+
 :RunAll
     set FAILED_TESTS=
     
-    pushd %~dp0\
+    pushd %~dp0
     for /d %%t in (*) do if exist "%%t\TestScript.xml" call :RunSingleTest "%%t"
     goto ReportResults
 
@@ -181,7 +195,7 @@ goto RunArgs
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to build %~1. See build.log for more information.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Deploy the app
-    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% install -r %_Platform%\Debug\%~1.apk > adb.log
+    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% install -r %_Platform%\Debug\%~1.apk > adb.log 2>&1
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: adb failed for one reason or another.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Create temp directory
@@ -195,6 +209,9 @@ goto RunArgs
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: Test failed. See ErrorLog.xml for more information.& set FAILED_TESTS="%~1" %FAILED_TESTS%& goto RunSingleTestDone
 
     set LastTestSucceeded=true
+    
+    :: remove installed package
+    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% shell pm uninstall -k com.%~1  > adb.log
     
     :RunSingleTestDone
     popd

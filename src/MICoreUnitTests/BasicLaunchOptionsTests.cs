@@ -33,6 +33,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.ExePath, fakeFilePath);
             Assert.Equal(options.TargetArchitecture, TargetArchitecture.ARM);
             Assert.True(string.IsNullOrEmpty(options.AdditionalSOLibSearchPath));
+            Assert.True(string.IsNullOrEmpty(options.AbsolutePrefixSOLibSearchPath));
             Assert.Equal(options.DebuggerMIMode, MIMode.Gdb);
             Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecRun);
             Assert.Null(options.CustomLaunchSetupCommands);
@@ -67,6 +68,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.ExePath, fakeFilePath);
             Assert.Equal(options.TargetArchitecture, TargetArchitecture.ARM);
             Assert.True(string.IsNullOrEmpty(options.AdditionalSOLibSearchPath));
+            Assert.True(string.IsNullOrEmpty(options.AbsolutePrefixSOLibSearchPath));
             Assert.Equal(options.DebuggerMIMode, MIMode.Clrdbg);
             Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecRun);
             Assert.True(options.CustomLaunchSetupCommands != null && options.CustomLaunchSetupCommands.Count == 0);
@@ -127,6 +129,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.ExeArguments, "arg1 arg2");
             Assert.Equal(options.TargetArchitecture, TargetArchitecture.X64);
             Assert.True(string.IsNullOrEmpty(options.AdditionalSOLibSearchPath));
+            Assert.True(string.IsNullOrEmpty(options.AbsolutePrefixSOLibSearchPath));
             Assert.Equal(options.DebuggerMIMode, MIMode.Gdb);
             Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecRun);
             Assert.True(options.CustomLaunchSetupCommands == null);
@@ -149,6 +152,7 @@ namespace MICoreUnitTests
                 "PipePath=\"", fakeFilePath, "\"\n",
                 "ExePath=\"/home/user/myname/foo\"\n",
                 "TargetArchitecture=\"x86_64\"\n",
+                "AbsolutePrefixSOLibSearchPath='/system/bin'\n",
                 "AdditionalSOLibSearchPath='/a/b/c;/a/b/c'\n",
                 "MIMode='lldb'\n",
                 ">\n",
@@ -165,6 +169,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.PipePath, fakeFilePath);
             Assert.Equal(options.ExePath, "/home/user/myname/foo");
             Assert.Equal(options.TargetArchitecture, TargetArchitecture.X64);
+            Assert.Equal(options.AbsolutePrefixSOLibSearchPath, "/system/bin");
             string[] searchPaths = options.GetSOLibSearchPath().ToArray();
             Assert.Equal(searchPaths.Length, 2);
             Assert.Equal(searchPaths[0], "/home/user/myname");

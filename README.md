@@ -2,7 +2,7 @@
 
 ||Debug|Release|
 |:--:|:--:|:--:|
-|**master**|[![Build Status](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_debug/badge/icon)](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_debug)|[![Build Status](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_release/badge/icon)](http://dotnet-ci.cloudapp.net/job/microsoft_miengine_release)|
+|**master**|[![Build Status](http://dotnet-ci.cloudapp.net/job/Microsoft_MIEngine/job/master/job/debug/badge/icon)](http://dotnet-ci.cloudapp.net/job/Microsoft_MIEngine/job/master/job/debug/)|[![Build Status](http://dotnet-ci.cloudapp.net/job/Microsoft_MIEngine/job/master/job/release/badge/icon)](http://dotnet-ci.cloudapp.net/job/Microsoft_MIEngine/job/master/job/release/)|
 
 The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with debuggers that support the gdb Machine Interface ("MI")
 specification such as [GDB](http://www.gnu.org/software/gdb/), [LLDB](http://lldb.llvm.org/), and [CLRDBG](https://github.com/Microsoft/MIEngine/wiki/What-is-CLRDBG).
@@ -29,7 +29,7 @@ MIEngine requires [Visual Studio 2015](https://www.visualstudio.com/downloads/do
 
 ### Get Started
 * Clone the sources: `git clone https://github.com/Microsoft/MIEngine.git`
-* Open [MIDebugEngine.sln](https://github.com/Microsoft/MIEngine/blob/master/MIDebugEngine.sln) in Visual Studio.
+* Open [src/MIDebugEngine.sln](https://github.com/Microsoft/MIEngine/blob/master/src/MIDebugEngine.sln) in Visual Studio.
 * Debug -> Start Debugging (or F5) to to build, deploy, and start debugging the [Experimental Instance of Visual Studio](https://msdn.microsoft.com/en-us/library/bb166560.aspx).
 * See the [wiki](https://github.com/Microsoft/MIEngine/wiki) for more info.
 

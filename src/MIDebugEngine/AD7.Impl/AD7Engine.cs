@@ -170,7 +170,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting:true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -564,8 +564,8 @@ namespace Microsoft.MIDebugEngine
         // Determines if a debug engine (DE) can detach from the program.
         public int CanDetach()
         {
-            // The sample engine always supports detach
-            return Constants.S_OK;
+            bool canDetach = _debuggedProcess != null && _debuggedProcess.MICommandFactory.CanDetach();
+            return canDetach ? Constants.S_OK : Constants.S_FALSE;
         }
 
         // The debugger calls CauseBreak when the user clicks on the pause button in VS. The debugger should respond by entering
@@ -611,7 +611,7 @@ namespace Microsoft.MIDebugEngine
             _breakpointManager.ClearBoundBreakpoints();
 
             _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
-
+            _debuggedProcess.Detach();
             return Constants.S_OK;
         }
 
@@ -643,7 +643,7 @@ namespace Microsoft.MIDebugEngine
                     pos.dwLine = line;
                     pos.dwColumn = 0;
                     MITextPosition textPosition = new MITextPosition(documentName, pos, pos);
-                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt));
+                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt, this.DebuggedProcess));
                     codeContexts.Add(codeCxt);
                 }
                 if (codeContexts.Count > 0)
@@ -769,6 +769,11 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
+                if (null == thread || null == thread.GetDebuggedThread())
+                {
+                    return Constants.E_FAIL;
+                }
+
                 _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
             }
             catch (InvalidCoreDumpOperationException)

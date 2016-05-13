@@ -209,10 +209,43 @@ namespace MICore
             return !string.IsNullOrWhiteSpace(DebugServer);
         }
 
+        public bool IsValidMiDebuggerPath()
+        {
+            return File.Exists(MIDebuggerPath);
+        }
+
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
+            string miDebuggerPath = source.MIDebuggerPath;
+
+            // If no path to the debugger was specified, look for the proper binary in the user's $PATH
+            if (String.IsNullOrEmpty(miDebuggerPath))
+            {
+                string debuggerBinary = null;
+                switch (source.MIMode)
+                {
+                    case Xml.LaunchOptions.MIMode.gdb:
+                        debuggerBinary = "gdb";
+                        break;
+
+                    case Xml.LaunchOptions.MIMode.lldb:
+                        debuggerBinary = "lldb-mi";
+                        break;
+                }
+
+                if (!String.IsNullOrEmpty(debuggerBinary))
+                {
+                    miDebuggerPath = LocalLaunchOptions.ResolveFromPath(debuggerBinary);
+                }
+
+                if (String.IsNullOrEmpty(miDebuggerPath))
+                {
+                    throw new InvalidLaunchOptionsException(MICoreResources.Error_NoMiDebuggerPath);
+                }
+            }
+
             var options = new LocalLaunchOptions(
-                RequireAttribute(source.MIDebuggerPath, "MIDebuggerPath"),
+                RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
                 source.MIDebuggerServerAddress,
                 source.ProcessId,
                 source.Environment);
@@ -226,6 +259,25 @@ namespace MICore
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
 
             return options;
+        }
+
+        private static string ResolveFromPath(string command)
+        {
+            string pathVar = System.Environment.GetEnvironmentVariable("PATH");
+
+            // Check each portion of the PATH environment variable to see if it contains the requested file
+            foreach (string pathPart in pathVar.Split(Path.PathSeparator))
+            {
+                string candidate = Path.Combine(pathPart, command);
+
+                // If the file exists, use it
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -402,6 +454,20 @@ namespace MICore
             {
                 VerifyCanModifyProperty("WorkingDirectory");
                 _workingDirectory = value;
+            }
+        }
+
+        private string _absolutePrefixSoLibSearchPath;
+        /// <summary>
+        /// [Optional] Absolute prefix for directories to search for shared library symbols
+        /// </summary>
+        public string AbsolutePrefixSOLibSearchPath
+        {
+            get { return _absolutePrefixSoLibSearchPath; }
+            set
+            {
+                VerifyCanModifyProperty("AbsolutePrefixSOLibSearchPath");
+                _absolutePrefixSoLibSearchPath = value;
             }
         }
 
@@ -809,6 +875,9 @@ namespace MICore
                 else
                     this.AdditionalSOLibSearchPath = string.Concat(this.AdditionalSOLibSearchPath, ";", additionalSOLibSearchPath);
             }
+
+            if (string.IsNullOrEmpty(this.AbsolutePrefixSOLibSearchPath))
+                this.AbsolutePrefixSOLibSearchPath = source.AbsolutePrefixSOLibSearchPath;
         }
 
         public static string RequireAttribute(string attributeValue, string attributeName)

@@ -233,6 +233,12 @@ namespace MICore
             await ThreadCmdAsync(command, resultClass, threadId);
         }
 
+        public async Task ExecNextInstruction(int threadId, ResultClass resultClass = ResultClass.running)
+        {
+            string command = "-exec-next-instruction";
+            await ThreadCmdAsync(command, resultClass, threadId);
+        }
+
         /// <summary>
         /// Tells GDB to spawn a target process previous setup with -file-exec-and-symbols or similar
         /// </summary>
@@ -414,6 +420,21 @@ namespace MICore
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
+        public virtual async Task<Results> BreakInsert(ulong codeAddress, string condition, ResultClass resultClass = ResultClass.done)
+        {
+            StringBuilder cmd = BuildBreakInsert(condition);
+            cmd.Append('*');
+            cmd.Append(codeAddress);
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
+        }
+
+        public virtual Task<Results> BreakWatch(string address, uint size, ResultClass resultClass = ResultClass.done)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual bool SupportsDataBreakpoints { get { return false; } }
+
         public virtual async Task<TupleValue> BreakInfo(string bkptno)
         {
             Results bindResult = await _debugger.CmdAsync("-break-info " + bkptno, ResultClass.None);
@@ -546,6 +567,11 @@ namespace MICore
         }
 
         abstract public bool AllowCommandsWhileRunning();
+
+        public virtual bool CanDetach()
+        {
+            return true;
+        }
 
         abstract public Task<List<ulong>> StartAddressesForLine(string file, uint line);
 

@@ -24,7 +24,7 @@
   </Choose>
   
   <Choose>
-    <When Condition="$(Configuration.Contains('.Desktop'))">
+    <When Condition="$(Configuration.Contains('Desktop'))">
       <PropertyGroup>
         <IsCoreClr>false</IsCoreClr>
         <NugetPackagesDirectory>$(NugetPackagesDirectory).Desktop</NugetPackagesDirectory>

@@ -296,5 +296,14 @@ namespace Microsoft.MIDebugEngine {
                 return ResourceManager.GetString("VisualizingExpressionMessage", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Source file &apos;{0}&apos; is newer than module file &apos;{1}&apos;..
+        /// </summary>
+        internal static string Warning_SourceFileOutOfDate_Arg2 {
+            get {
+                return ResourceManager.GetString("Warning_SourceFileOutOfDate_Arg2", resourceCulture);
+            }
+        }
     }
 }

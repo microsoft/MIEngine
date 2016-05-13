@@ -14,9 +14,9 @@
     <SourceHome Condition=" '$(SourceHome)'=='' ">$(MSBuildThisFileDirectory)src\</SourceHome>
     <ToolsHome Condition=" '$(ToolsHome)'=='' ">$(MSBuildThisFileDirectory)tools\</ToolsHome>
 	
-	<!--Don't run unit tests for lab builds (or Desktop builds, yet) -->
+	<!--Don't run unit tests for lab builds -->
 	<TargetsToRun>Build;Test</TargetsToRun>
-	<TargetsToRun Condition="'$(Lab)' == 'true' OR $(Configuration.Contains('Desktop'))">Build</TargetsToRun>
+	<TargetsToRun Condition="'$(Lab)' == 'true'">Build</TargetsToRun>
   </PropertyGroup>
 
   <ItemGroup>

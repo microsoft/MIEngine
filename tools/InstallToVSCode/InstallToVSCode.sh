@@ -1,10 +1,9 @@
 #!/bin/bash
-
 script_dir=`dirname $0`
 
 print_help()
 {
-    echo 'InstallToVSCode.sh <link|copy> <alpha|insider|stable> <open-debug-ad7-dir> -d <clrdbg-binaries>'
+    echo 'InstallToVSCode.sh <link|copy> <alpha|insiders|stable> <open-debug-ad7-dir> -d <clrdbg-binaries>'
     echo ''
     echo 'This script is used to copy files needed to enable MIEngine based debugging'
     echo 'into VS Code.'
@@ -16,7 +15,7 @@ print_help()
     echo ' copy : Copy files to the output directory'
     echo ''
     echo ' alpha: Install to VSCode alpha'
-    echo ' insider: Install to VSCode insider'
+    echo ' insiders: Install to VSCode insiders'
     echo ' stable: Install to VSCode stable'
     echo ''
     echo ' open-debug-ad7-dir : Root of the OpenDebugAD7 repo'
@@ -144,12 +143,12 @@ fi
 VSCodeDirName=
 if [ "$2" == "alpha" ]; then
     VSCodeDirName=".vscode-alpha"
-elif [ "$2" == "insider" ]; then
-    VSCodeDirName=".vscode-insider"
+elif [ "$2" == "insiders" ]; then
+    VSCodeDirName=".vscode-insiders"
 elif [ "$2" == "stable" ]; then
     VSCodeDirName=".vscode"
 else
-    echo "ERROR: Unexpected second argument '$2'. Expected 'alpha', 'insider' or 'stable'."
+    echo "ERROR: Unexpected second argument '$2'. Expected 'alpha', 'insiders' or 'stable'."
     exit 1
 fi
 
@@ -199,8 +198,25 @@ hash dotnet 2>/dev/null
 SetupSymLink "$CSharpExtensionRoot/coreclr-debug/debugAdapters" "$DESTDIR"
 [ $? -ne 0 ] && echo "ERROR: Unable to link $CSharpExtensionRoot/coreclr-debug/debugAdapters to $DESTDIR" && exit 1
 
-pushd $script_dir/CLRDependencies 1>/dev/null 2>/dev/null
-[ $? -ne 0 ] && echo "ERROR: Unable to find CLRDependencies directory???" && exit 1
+mkdir -p "$DESTDIR/CLRDependencies"
+[ $? -ne 0 ] && echo "ERROR: unable to create destination directory '$DESTDIR/CLRDependencies'." && exit 1
+
+cp -r $script_dir/CLRDependencies/* $DESTDIR/CLRDependencies
+[ $? -ne 0 ] && echo "ERROR: unable to create destination copy CLRDependencies directory." && exit 1
+
+pushd $DESTDIR/CLRDependencies 1>/dev/null 2>/dev/null
+[ $? -ne 0 ] && echo "ERROR: Unable to change to CLRDependencies directory???" && exit 1
+
+# This code will --
+# 1. Call 'dotnet --info'
+# 2. There should be one line that starts with 'RID:'. Filter to that.
+# 3. Remove the whitespace from the line
+# 4. Split the line in two at the colon character, grab the second colom
+runtime_id=`dotnet --info | grep RID: | tr -d ' ' | cut -f2 -d:`
+[ "$runtime_id" == "" ] && echo "ERROR: Cannot determine the runtime id. Ensure that .NET CLI build 2173+ is installed." && exit 1
+
+sed s/@current-OS@/\ \ \ \ \"${runtime_id}\":{}/ project.json.template>project.json
+[ $? -ne 0 ] && echo "ERROR: sed failed." && exit 1
 
 dotnet restore
 [ $? -ne 0 ] && echo "ERROR: dotnet restore failed." && exit 1
@@ -249,6 +265,7 @@ for directory in $(ls -d $CLRDBGBITSDIR/*/); do
 done
 
 install_file "$script_dir/coreclr/coreclr.ad7Engine.json"
+install_file "$DropDir/osxlaunchhelper.scpt"
 
 for dll in Microsoft.MICore.dll Microsoft.MIDebugEngine.dll
 do 

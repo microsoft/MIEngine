@@ -24,9 +24,9 @@ echo ERROR: Unexpected second argument '%~2'. Expected 'portable' or 'debug'.& e
 
 set VSCodeDirName=.vscode-%3
 if "%~3"=="alpha" goto VSCodeDirNameSet
-if "%~3"=="insider" goto VSCodeDirNameSet
+if "%~3"=="insiders" goto VSCodeDirNameSet
 if "%~3"=="stable" set VSCodeDirName=.vscode& goto VSCodeDirNameSet
-echo ERROR: Unexpected third argument '%~3'. Expected 'alpha', 'insider' or 'stable'.& exit /b -1
+echo ERROR: Unexpected third argument '%~3'. Expected 'alpha', 'insiders' or 'stable'.& exit /b -1
 :VSCodeDirNameSet
 
 set OpenDebugAD7Dir=%~4
@@ -63,8 +63,16 @@ if "%CSharpExtensionRoot%"=="" echo ERROR: C# extension is not installed in VS C
 call :SetupSymLink %CSharpExtensionRoot%\coreclr-debug\debugAdapters
 if NOT "%InstallError%"=="" exit /b -1
 
-pushd %~dp0CLRDependencies
-if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to find CLRDependencies directory???& exit /b -1
+mkdir "%DESTDIR%\CLRDependencies"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: unable to create directory '%DESTDIR%\CLRDependencies'. &exit /b -1
+
+xcopy /s %~dp0CLRDependencies "%DESTDIR%\CLRDependencies"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy CLRDependencies directory???& exit /b -1
+
+pushd "%DESTDIR%\CLRDependencies"
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to change to CLRDependencies directory???& exit /b -1
+
+for /f "tokens=1 delims=" %%l in (project.json.template) do if NOT "%%l"=="@current-OS@" (echo %%l>>project.json) else (echo     "win7-x64":{}>>project.json)
 
 dotnet restore
 if NOT "%ERRORLEVEL%"=="0" echo "ERROR: 'dotnet restore' failed." & exit /b -1
@@ -152,7 +160,7 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: mklink failed. Ensure this script is runn
 goto eof
 
 :Help
-echo InstallToVSCode ^<link^|copy^> ^<portable^|debug^> ^<alpha^|insider^|stable^> ^<open-debug-ad7-dir^> -d ^<clrdbg-binaries^>
+echo InstallToVSCode ^<link^|copy^> ^<portable^|debug^> ^<alpha^|insiders^|stable^> ^<open-debug-ad7-dir^> -d ^<clrdbg-binaries^>
 echo.
 echo This script is used to copy files needed to enable MIEngine based debugging 
 echo into VS Code.
@@ -166,7 +174,7 @@ echo   portable: Use portable PDBs (Debug-PortablePDB solution configuration)
 echo   debug: Use debug configuration
 echo.
 echo   alpha: Install to VSCode alpha
-echo   insider: Install to VSCode insider
+echo   insiders: Install to VSCode insiders
 echo   stable: Install to VSCode stable
 echo.
 echo  open-debug-ad7-dir : Root of the OpenDebugAD7 repo

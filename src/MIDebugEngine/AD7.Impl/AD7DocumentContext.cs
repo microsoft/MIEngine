@@ -15,12 +15,14 @@ namespace Microsoft.MIDebugEngine
     {
         private readonly MITextPosition _textPosition;
         private AD7MemoryAddress _codeContext;
+        private readonly DebuggedProcess _debuggedProcess;
 
 
-        public AD7DocumentContext(MITextPosition textPosition, AD7MemoryAddress codeContext)
+        public AD7DocumentContext(MITextPosition textPosition, AD7MemoryAddress codeContext, DebuggedProcess debuggedProcess)
         {
             _textPosition = textPosition;
             _codeContext = codeContext;
+            _debuggedProcess = debuggedProcess;
         }
 
         #region IDebugDocumentContext2 Members
@@ -40,6 +42,12 @@ namespace Microsoft.MIDebugEngine
         int IDebugDocumentContext2.EnumCodeContexts(out IEnumDebugCodeContexts2 ppEnumCodeCxts)
         {
             ppEnumCodeCxts = null;
+
+            if (_codeContext == null)
+            {
+                return Constants.E_FAIL;
+            }
+
             try
             {
                 AD7MemoryAddress[] codeContexts = new AD7MemoryAddress[1];
@@ -96,7 +104,15 @@ namespace Microsoft.MIDebugEngine
         // Gets the displayable name of the document that contains this document context.
         int IDebugDocumentContext2.GetName(enum_GETNAME_TYPE gnType, out string pbstrFileName)
         {
-            pbstrFileName = _textPosition.FileName;
+            if (_debuggedProcess.IsCygwin)
+            {
+                pbstrFileName = _debuggedProcess.CygwinFilePathMapper.MapCygwinToWindows(_textPosition.FileName);
+            }
+            else
+            {
+                pbstrFileName = _textPosition.FileName;
+            }
+            
             return Constants.S_OK;
         }
 

@@ -242,6 +242,39 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Obtain the string expression from the bpLocation union for a BPLT_DATA_STRING breakpoint.
+        /// </summary>
+        /// <param name="stringId"></param>
+        /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ForInt")]
+        public static string GetDataBreakpointStringForIntPtr(IntPtr stringId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Return the string form of the address of a bound data breakpoint 
+        /// </summary>
+        /// <param name="address">address string</param>
+        /// <returns>IntPtr to a BSTR which can be returned to VS.</returns>
+        public static IntPtr GetIntPtrForDataBreakpointAddress(string address)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Obtains a code context interface given the specified IntPtr of the location.
+        /// </summary>
+        /// <param name="contextId">In VS, the IUnknown pointer to QI for a code context. In VS Code,
+        /// the identifier for the code context</param>
+        /// <returns>code context object</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ForInt")]
+        public static IDebugCodeContext2 GetDebugCodeContextForIntPtr(IntPtr contextId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
         /// <param name="ad7Callback">The underlying event call back which was obtained from the port</param>

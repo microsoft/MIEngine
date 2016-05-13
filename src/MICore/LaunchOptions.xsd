@@ -190,6 +190,11 @@
   </xs:complexType>
   <xs:attributeGroup name="CommonAttributes">
     <xs:attribute name="TargetArchitecture" use="required" type="TargetArchitecture"/>
+    <xs:attribute name="AbsolutePrefixSOLibSearchPath" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>Absolute prefix for directories to search for shared library symbols</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attribute name="AdditionalSOLibSearchPath" type="xs:string" use="optional">
       <xs:annotation>
         <xs:documentation>Semicolon separated list of directories to use to search for .so files. Example: 'c:\dir1;c:\dir2'</xs:documentation>
