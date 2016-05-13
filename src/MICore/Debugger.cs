@@ -140,9 +140,7 @@ namespace MICore
             {
                 if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                 {
-                    // When 0 is passed as the signal to send in kill,
-                    // it will check the validity of the pid (e.g., does the pid exist?)
-                    return UnixNativeMethods.Kill(_localDebuggerPid, 0) == 0;
+                    return UnixUtilities.IsProcessRunning(_localDebuggerPid);
                 }
             }
 

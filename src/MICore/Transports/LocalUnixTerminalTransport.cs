@@ -5,6 +5,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MICore
@@ -14,14 +15,8 @@ namespace MICore
         private string _dbgStdInName;
         private string _dbgStdOutName;
         private int _debuggerPid = -1;
-
-        /// <summary>
-        /// When the debugger exits, it will write into the fifo associated with this reader.
-        /// This is useful in the case of attach when the root password is required, but the
-        /// request is canceled. In that case, the debugger won't have started yet (so no messages
-        /// will be processed from it), but the trap will execute and write into this fifo.
-        /// </summary>
-        private StreamReader _exitReader;
+        private ProcessMonitor _shellProcessMonitor;
+        private CancellationTokenSource _streamReadPidCancellationTokenSource = new CancellationTokenSource();
 
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
@@ -44,18 +39,15 @@ namespace MICore
             _dbgStdInName = UnixUtilities.MakeFifo(Logger);
             _dbgStdOutName = UnixUtilities.MakeFifo(Logger);
             string pidFifo = UnixUtilities.MakeFifo(Logger);
-            string exitFifo = UnixUtilities.MakeFifo(Logger);
 
             // Setup the streams on the fifos as soon as possible.
             FileStream dbgStdInStream = new FileStream(_dbgStdInName, FileMode.Open);
             FileStream dbgStdOutStream = new FileStream(_dbgStdOutName, FileMode.Open);
             FileStream pidStream = new FileStream(pidFifo, FileMode.Open);
-            FileStream exitStream = new FileStream(exitFifo, FileMode.Open);
 
             string debuggerCmd = UnixUtilities.GetDebuggerCommand(localOptions);
             string launchDebuggerCommand = UnixUtilities.LaunchLocalDebuggerCommand(
                 debuggeeDir,
-                exitFifo,
                 _dbgStdInName,
                 _dbgStdOutName,
                 pidFifo,
@@ -64,24 +56,38 @@ namespace MICore
             TerminalLauncher terminal = TerminalLauncher.MakeTerminal("DebuggerTerminal", launchDebuggerCommand, localOptions.Environment);
             terminal.Launch(debuggeeDir);
 
+            int shellPid = -1;
+
             using (StreamReader pidReader = new StreamReader(pidStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize))
             {
-                Task<string> readPidTask = pidReader.ReadLineAsync();
-                if (readPidTask.Wait(TimeSpan.FromSeconds(10)))
+                Task<string> readShellPidTask = pidReader.ReadLineAsync();
+                if (readShellPidTask.Wait(TimeSpan.FromSeconds(5)))
                 {
-                    _debuggerPid = int.Parse(readPidTask.Result, CultureInfo.InvariantCulture);
+                    shellPid = int.Parse(readShellPidTask.Result, CultureInfo.InvariantCulture);
                 }
                 else
                 {
-                    // Something is wrong because we didn't get the pid of the debugger
+                    // Something is wrong because we didn't get the pid of shell
                     ForceDisposeStreamReader(pidReader);
                     this.Callback.OnDebuggerProcessExit(null);
                 }
-            }
 
-            _exitReader = new StreamReader(exitStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize);
-            Task<string> task = _exitReader.ReadLineAsync();
-            task.ContinueWith(DebuggerExited, TaskContinuationOptions.OnlyOnRanToCompletion);
+                _shellProcessMonitor = new ProcessMonitor(shellPid);
+                _shellProcessMonitor.ProcessExited += ShellExited;
+                _shellProcessMonitor.Start();
+
+                Task<string> readDebuggerPidTask = pidReader.ReadLineAsync();
+                try
+                {
+                    readDebuggerPidTask.Wait(_streamReadPidCancellationTokenSource.Token);
+                    _debuggerPid = int.Parse(readDebuggerPidTask.Result, CultureInfo.InvariantCulture);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Something is wrong because we didn't get the pid of the debugger
+                    ForceDisposeStreamReader(pidReader);
+                }
+            }
 
             // The in/out names are confusing in this case as they are relative to gdb.
             // What that means is the names are backwards wrt miengine hence the reader
@@ -91,14 +97,11 @@ namespace MICore
             reader = new StreamReader(dbgStdOutStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize);
         }
 
-        private void DebuggerExited(Task<string> task)
+        private void ShellExited(object sender, EventArgs e)
         {
-            if (task.Result == UnixUtilities.ExitString)
-            {
-                Logger?.WriteLine("Debugger exited, stop debugging");
-                _exitReader?.Dispose();
-                this.Callback.OnDebuggerProcessExit(null);
-            }
+            _shellProcessMonitor.ProcessExited -= ShellExited;
+            Logger?.WriteLine("Shell exited, stop debugging");
+            this.Callback.OnDebuggerProcessExit(null);
         }
 
         public override int DebuggerPid
@@ -118,9 +121,9 @@ namespace MICore
         {
             base.Close();
 
-            // If we are shutting down before the _exitReader has read a line it's possible that
-            // there is a thread blocked doing a read() syscall. 
-            ForceDisposeStreamReader(_exitReader);
+            _shellProcessMonitor.Dispose();
+            _streamReadPidCancellationTokenSource.Cancel();
+            _streamReadPidCancellationTokenSource.Dispose();
         }
     }
 }

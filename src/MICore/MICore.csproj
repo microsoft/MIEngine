@@ -156,6 +156,7 @@
     <Compile Include="MIException.cs" />
     <Compile Include="MIResults.cs" />
     <Compile Include="PlatformUtilities.cs" />
+    <Compile Include="ProcessMonitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TerminalLauncher.cs" />
     <Compile Include="Transports\ClientServerTransport.cs" />
