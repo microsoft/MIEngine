@@ -71,9 +71,7 @@ generate_nuget_config()
     echo "<configuration>"                                                                                      >> NuGet.config
     echo "  <packageSources>"                                                                                   >> NuGet.config
     echo "      <clear />"                                                                                      >> NuGet.config
-    echo "      <add key=\"dotnet-core\" value=\"https://www.myget.org/F/dotnet-core/api/v3/index.json\" />"    >> NuGet.config
     echo "      <add key=\"api.nuget.org\" value=\"https://api.nuget.org/v3/index.json\" />"                    >> NuGet.config
-    echo "      <add key=\"coreclr-debug\" value=\"https://www.myget.org/F/coreclr-debug/api/v3/index.json\" />" >> NuGet.config
     echo "  </packageSources>"                                                                                  >> NuGet.config
     echo "</configuration>"                                                                                     >> NuGet.config
 }

@@ -82,9 +82,7 @@ function GenerateNuGetConfig() {
 <configuration>
   <packageSources>
       <clear />
-      <add key=`"dotnet-core`" value=`"https://www.myget.org/F/dotnet-core/api/v3/index.json`" />
       <add key=`"api.nuget.org`" value=`"https://api.nuget.org/v3/index.json`" />
-      <add key=`"coreclr-debug`" value=`"https://www.myget.org/F/coreclr-debug/api/v3/index.json`" />
   </packageSources>
 </configuration>"
 
