@@ -499,10 +499,18 @@ namespace Microsoft.MIDebugEngine
                 var arch = await MICommandFactory.GetTargetArchitecture();
                 if (arch == TargetArchitecture.Unknown)
                 {
-                    arch = TargetArchitecture.X64;  // use as default
+                    if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
+                    {
+                        arch = LaunchOptions.TargetArchitecture;
+                    }
+                    else
+                    {
+                        WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
+                        arch = TargetArchitecture.X64;  // use as default
+                    }
                 }
                 SetTargetArch(arch);
-            
+
                 success = true;
             }
             finally
