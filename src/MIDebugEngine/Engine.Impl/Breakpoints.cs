@@ -111,7 +111,28 @@ namespace Microsoft.MIDebugEngine
 
             string basename = System.IO.Path.GetFileName(documentName);     // get basename from Windows path
             basename = process.EscapePath(basename);
-            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(basename, line, condition, ResultClass.None), pbreak);
+
+            Checksum[] checksums = null;
+#if CORECLR
+            if (process.MICommandFactory.SupportsBreakpointChecksums())
+            {
+                // TODO: This will need to be configurable in the future somehow
+                // TODO: We might want the MICommandFactory to return the algorithm we should use
+                // TODO: But HashAlgorithmID is not part of MICore becuase it uses AD7Guids
+                HashAlgorithmId[] hashAlgorithmIds = { HashAlgorithmId.SHA1Normalized };
+
+                try
+                {
+                    checksums = pbreak.GetChecksums(hashAlgorithmIds);
+                }
+                catch (Exception)
+                {
+                    // If we fail to get a checksum there's nothing else we can do
+                }
+            }
+#endif
+
+            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(basename, line, condition, checksums, ResultClass.None), pbreak);
 
             // On GDB, the returned line information is from the pending breakpoint instead of the bound breakpoint.
             // Check the address mapping to make sure the line info is correct.

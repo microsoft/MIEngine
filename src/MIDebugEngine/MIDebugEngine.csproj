@@ -141,6 +141,7 @@
     <Compile Include="Engine.Impl\EngineCallback.cs" />
     <Compile Include="Engine.Impl\EngineUtils.cs" />
     <Compile Include="Engine.Impl\ExceptionManager.cs" />
+    <Compile Include="AD7.Impl\HashAlgorithmId.cs" />
     <Compile Include="Engine.Impl\LaunchErrorException.cs" />
     <Compile Include="Engine.Impl\MITextPosition.cs" />
     <Compile Include="Engine.Impl\OperationThread.cs" />

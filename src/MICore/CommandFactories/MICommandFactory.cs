@@ -415,12 +415,22 @@ namespace MICore
             return cmd;
         }
 
-        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
         {
             StringBuilder cmd = BuildBreakInsert(condition);
+
+#if CORECLR
+            if (checksums != null)
+            {
+                cmd.Append(Checksum.GetMIString(checksums));
+                cmd.Append(" ");
+            }
+#endif
+
             cmd.Append(filename);
             cmd.Append(":");
             cmd.Append(line.ToString());
+
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
@@ -533,9 +543,9 @@ namespace MICore
             state = ExceptionBreakpointState.None;
         }
 
-        #endregion
+#endregion
 
-        #region Helpers
+#region Helpers
 
         public virtual Task<TargetArchitecture> GetTargetArchitecture()
         {
@@ -551,9 +561,9 @@ namespace MICore
         }
 
 
-        #endregion
+#endregion
 
-        #region Other
+#region Other
 
         abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
@@ -642,6 +652,11 @@ namespace MICore
         /// <returns>[Required] Task to track when this is complete</returns>
         abstract public Task EnableTargetAsyncOption();
 
-        #endregion
+        public virtual bool SupportsBreakpointChecksums()
+        {
+            return false;
+        }
+
+#endregion
     }
 }

@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using MICore;
 using System.Diagnostics;
 using Microsoft.DebugEngineHost;
+using System.Globalization;
+using System.Linq;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -257,6 +259,7 @@ namespace Microsoft.MIDebugEngine
 
                                     // Get the location in the document that the breakpoint is in.
                                     EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+
                                     break;
                                 }
                             case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
@@ -558,6 +561,74 @@ namespace Microsoft.MIDebugEngine
                 await _bp.EnableAsync(true, _engine.DebuggedProcess);
             }
         }
+
+#if CORECLR
+        /// <summary>
+        /// Get the checksums associated with this pending breakpoint in order to verify the source file
+        /// </summary>
+        /// <param name="hashAlgorithmId">The HashAlgorithmId to use to calculate checksums</param>
+        /// <returns>
+        /// Checksums calculated using the given HashAlgorithmId against the source file represented in this pending breakpoint.
+        /// If no checksums can be calculated, returns null
+        /// </returns>
+        internal Checksum[] GetChecksum(HashAlgorithmId hashAlgorithmId)
+        {
+            IDebugBreakpointChecksumRequest2 checksumRequest = _pBPRequest as IDebugBreakpointChecksumRequest2;
+            if (checksumRequest == null)
+            {
+                return null;
+            }
+
+            int hr = Constants.S_OK;
+
+            int checksumEnabled;
+            hr = checksumRequest.IsChecksumEnabled(out checksumEnabled);
+            if (hr != Constants.S_OK || checksumEnabled == 0)
+            {
+                return null;
+            }
+
+            Guid guidAlgorithm = hashAlgorithmId.AD7GuidHashAlgorithm;
+            uint checksumSize = hashAlgorithmId.HashSize;
+
+            CHECKSUM_DATA[] checksumDataArr = new CHECKSUM_DATA[1];
+            hr = checksumRequest.GetChecksum(ref guidAlgorithm, checksumDataArr);
+            if (hr != Constants.S_OK)
+            {
+                return null;
+            }
+            CHECKSUM_DATA checksumData = checksumDataArr[0];
+
+            Debug.Assert(checksumData.ByteCount % checksumSize == 0);
+            uint countChecksums = checksumData.ByteCount / checksumSize;
+            if (countChecksums == 0)
+            {
+                return null;
+            }
+
+            byte[] allChecksumBytes = new byte[checksumData.ByteCount];
+            System.Runtime.InteropServices.Marshal.Copy(checksumData.pBytes, allChecksumBytes, 0, allChecksumBytes.Length);
+            System.Runtime.InteropServices.Marshal.FreeCoTaskMem(checksumData.pBytes);
+
+            Checksum[] checksums = new Checksum[countChecksums];
+            for (uint i = 0; i < countChecksums; i++)
+            {
+                checksums[i] = Checksum.FromBytes(hashAlgorithmId.HashAlgorithmName, allChecksumBytes.Skip((int)(i * checksumSize)).Take((int)checksumSize).ToArray());
+            }
+
+            return checksums;
+        }
+
+        internal Checksum[] GetChecksums(IEnumerable<HashAlgorithmId> hashAlgorithmIds)
+        {
+            var checksumsList = new List<Checksum>();
+            foreach (HashAlgorithmId algorithm in hashAlgorithmIds)
+            {
+                checksumsList.AddRange(GetChecksum(algorithm));
+            }
+            return checksumsList.ToArray();
+        }
+#endif
     }
 
     internal class AD7ErrorBreakpoint : IDebugErrorBreakpoint2
@@ -573,7 +644,7 @@ namespace Microsoft.MIDebugEngine
             _errorType = errorType;
         }
 
-        #region IDebugErrorBreakpoint2 Members
+#region IDebugErrorBreakpoint2 Members
 
         public int GetBreakpointResolution(out IDebugErrorBreakpointResolution2 ppErrorResolution)
         {
@@ -587,6 +658,6 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        #endregion
+#endregion
     }
 }
