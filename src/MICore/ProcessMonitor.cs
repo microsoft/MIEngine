@@ -38,14 +38,14 @@ namespace MICore
         {
             if (HasExited())
             {
-                _exitMonitorTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                _exitMonitorTimer.Dispose();
                 ProcessExited?.Invoke(this, null);
             }
         }
 
         public void Dispose()
         {
-            _exitMonitorTimer.Dispose();
+            _exitMonitorTimer?.Dispose();
         }
     }
 }

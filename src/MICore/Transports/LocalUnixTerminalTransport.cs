@@ -61,7 +61,7 @@ namespace MICore
             using (StreamReader pidReader = new StreamReader(pidStream, Encoding.UTF8, true, UnixUtilities.StreamBufferSize))
             {
                 Task<string> readShellPidTask = pidReader.ReadLineAsync();
-                if (readShellPidTask.Wait(TimeSpan.FromSeconds(5)))
+                if (readShellPidTask.Wait(TimeSpan.FromSeconds(10)))
                 {
                     shellPid = int.Parse(readShellPidTask.Result, CultureInfo.InvariantCulture);
                 }
