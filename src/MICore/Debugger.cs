@@ -129,6 +129,8 @@ namespace MICore
 
         protected void SetDebuggerPid(int debuggerPid)
         {
+            // Used for testing
+            Logger.WriteLine(string.Concat("DebuggerPid=", debuggerPid));
             _localDebuggerPid = debuggerPid;
         }
 

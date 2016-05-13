@@ -40,6 +40,11 @@ namespace MICore
             _dbgStdOutName = UnixUtilities.MakeFifo(Logger);
             string pidFifo = UnixUtilities.MakeFifo(Logger);
 
+            // Used for testing
+            Logger?.WriteLine(string.Concat("TempFile=", _dbgStdInName));
+            Logger?.WriteLine(string.Concat("TempFile=", _dbgStdOutName));
+            Logger?.WriteLine(string.Concat("TempFile=", pidFifo));
+
             // Setup the streams on the fifos as soon as possible.
             FileStream dbgStdInStream = new FileStream(_dbgStdInName, FileMode.Open);
             FileStream dbgStdOutStream = new FileStream(_dbgStdOutName, FileMode.Open);
@@ -64,6 +69,8 @@ namespace MICore
                 if (readShellPidTask.Wait(TimeSpan.FromSeconds(10)))
                 {
                     shellPid = int.Parse(readShellPidTask.Result, CultureInfo.InvariantCulture);
+                    // Used for testing
+                    Logger?.WriteLine(string.Concat("ShellPid=", shellPid));
                 }
                 else
                 {
