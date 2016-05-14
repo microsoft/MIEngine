@@ -18,5 +18,8 @@ namespace MICore
 
         [DllImport(Libc, EntryPoint = "geteuid", SetLastError = true)]
         internal static extern uint GetEUid();
+
+        [DllImport(Libc, EntryPoint = "getpgid", SetLastError = true)]
+        internal static extern int GetPGid(int pid);
     }
 }
