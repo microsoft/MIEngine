@@ -517,6 +517,11 @@ namespace MICore
 
         public async Task<Results> CmdTerminate()
         {
+            if (ProcessState == ProcessState.Running)
+            {
+                await CmdBreak();
+            }
+
             await MICommandFactory.Terminate();
 
             return new Results(ResultClass.done);
@@ -538,7 +543,7 @@ namespace MICore
             this.VerifyNotDebuggingCoreDump();
 
             // TODO May need to fix attach on windows.
-            // Note that interrupt doesn't work on OS X with gdb:
+            // Note that interrupt doesn't work when attached on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
             if (IsLocalGdb() && (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX()))
             {
@@ -559,7 +564,7 @@ namespace MICore
 
                 if (useSignal)
                 {
-                    return CmdLinuxBreak(debuggeePid, ResultClass.done);
+                    return CmdUnixBreak(debuggeePid, ResultClass.done);
                 }
             }
 
@@ -698,7 +703,7 @@ namespace MICore
             return waitingOperation.Task;
         }
 
-        private Task<Results> CmdLinuxBreak(int debugeePid, ResultClass expectedResultClass)
+        private Task<Results> CmdUnixBreak(int debugeePid, ResultClass expectedResultClass)
         {
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
