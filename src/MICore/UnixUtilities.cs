@@ -66,6 +66,7 @@ namespace MICore
             if (PlatformUtilities.IsLinux())
             {
                 string debuggerPathCorrectElevation = localOptions.MIDebuggerPath;
+                string prompt = string.Empty;
 
                 // If running as root, make sure the new console is also root. 
                 bool isRoot = UnixNativeMethods.GetEUid() == 0;
@@ -73,6 +74,8 @@ namespace MICore
                 // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
                 if (localOptions.ProcessId != 0 && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
                 {
+                    prompt = String.Format(CultureInfo.CurrentCulture, "read -n 1 -p \\\"{0}\\\" yn; if [[ ! $yn =~ ^[Yy]$ ]] ; then exit 0; fi; ", MICoreResources.Warn_AttachAsRootProcess);
+
                     // Prefer pkexec for a nice graphical prompt, but fall back to sudo if it's not available
                     if (File.Exists(UnixUtilities.PKExecPath))
                     {
@@ -88,7 +91,7 @@ namespace MICore
                     }
                 }
 
-                return debuggerPathCorrectElevation;
+                return String.Concat(prompt, debuggerPathCorrectElevation);
             }
             else
             {
