@@ -62,5 +62,43 @@ namespace MICore
             // lldb-mi doesn't support target-async mode, and doesn't seem to need to
             return Task.FromResult((object)null);
         }
+
+        public override async Task<TargetArchitecture> GetTargetArchitecture()
+        {
+            string cmd = "platform status";
+            var result = await _debugger.ConsoleCmdAsync(cmd);
+            using (StringReader stringReader = new StringReader(result))
+            {
+                while (true)
+                {
+                    string resultLine = stringReader.ReadLine();
+                    if (resultLine == null)
+                        break;
+
+                    if (resultLine.IndexOf("Triple:", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        if (resultLine.IndexOf("x86_64", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            return TargetArchitecture.X64;
+                        }
+                        else if (resultLine.IndexOf("x86", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            return TargetArchitecture.X86;
+                        }
+                        else if (resultLine.IndexOf("aarch64", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            return TargetArchitecture.ARM64;
+                        }
+                        else if (resultLine.IndexOf("arm", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            return TargetArchitecture.ARM;
+                        }
+                        break;
+                    }
+                }
+            }
+            return TargetArchitecture.Unknown;
+        }
+
     }
 }
