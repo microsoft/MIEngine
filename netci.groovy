@@ -6,7 +6,7 @@ def project = GithubProject
 def branch = GithubBranchName
 
 [true, false].each { isPR ->
-    ['Debug', 'Release', 'Desktop.Debug', 'Desktop.Release'].each { configuration ->
+    ['Lab.Debug', 'Lab.Release', 'Desktop.Debug', 'Desktop.Release'].each { configuration ->
         def newJob = job(Utilities.getFullJobName(project, configuration.toLowerCase(), isPR)) {
             steps {
                 batchFile("\"C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat\" x86 && build.cmd /p:Configuration=${configuration}")
