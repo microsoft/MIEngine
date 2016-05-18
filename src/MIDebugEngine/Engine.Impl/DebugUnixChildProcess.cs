@@ -23,20 +23,11 @@ namespace Microsoft.MIDebugEngine
         /// <param name="tid"></param>
         /// <returns>true if stopping event was consumed (process must be running), false otherwise (indicting the debugger should process the event)</returns>
         Task<bool> Stopped(Results debugEvent, int tid);
-        /// <summary>
-        /// Handle breakpoint created events
-        /// </summary>
-        /// <param name="debugEvent"></param>
-        /// <returns>true if event was consumed, false otherwise (indicting the debugger should process the event)</returns>
-        bool BreakpointCreated(Results debugEvent);
         void ThreadCreatedEvent(Results results);
     }
 
     class DebugUnixChild : ProcessSequence
     {
-        private string _forkBp;
-        private string _vforkBp;
-
         private enum State
         {
             AtFork,
@@ -243,7 +234,7 @@ namespace Microsoft.MIDebugEngine
                         // sometimes gdb misses the breakpoint at exec and execution will proceed to a breakpoint in the child
                         _process.Logger.WriteLine("Missed catching the exec after vfork. Spawning the child's debugger.");
                         s.State = State.AtExec;
-                        goto missedExec;
+                       goto missedExec;
                     }
                     break;
                 case State.AtSignal:    // both child and parent are stopped
@@ -273,32 +264,6 @@ namespace Microsoft.MIDebugEngine
                     return false;
             }
             return true;
-        }
-
-        public bool BreakpointCreated(Results debugEvent)
-        {
-            if (debugEvent.Contains("bkpt"))
-            {
-                ResultValue b = debugEvent.Find("bkpt");
-                if (b is TupleValue)
-                {
-                    TupleValue bkpt = b as TupleValue;
-                    string type = bkpt.TryFindString("type");
-                    string ctype = bkpt.TryFindString("catch-type");
-                    string num = bkpt.TryFindString("number");
-                    if (type == "catch" && ctype == "fork")
-                    {
-                        _forkBp = num;
-                        return true;
-                    }
-                    else if (type == "catch" && ctype == "vfork")
-                    {
-                        _vforkBp = num;
-                        return true;
-                    }
-                }
-            }
-            return false;
         }
     }
 }
