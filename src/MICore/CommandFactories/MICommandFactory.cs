@@ -257,6 +257,18 @@ namespace MICore
             await _debugger.CmdAsync(command, ResultClass.running);
         }
 
+        /// <summary>
+        /// Deliver signal to the process. Continue running the process. [Optional]
+        /// </summary>
+        /// <param name="sig">The signal to deliver, e.g. "SIGSTOP"</param>
+        /// <returns></returns>
+        public abstract Task Signal(string sig);
+
+        public async Task TargetDetach()
+        {
+            await _debugger.CmdAsync("-target-detach", ResultClass.done);
+        }
+
         #endregion
 
         #region Data Manipulation
@@ -478,6 +490,8 @@ namespace MICore
             return new Guid[0];
         }
 
+        public abstract Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done);
+
         /// <summary>
         /// Adds a breakpoint which will be triggered when an exception is thrown and/or goes user-unhandled
         /// </summary>
@@ -528,6 +542,15 @@ namespace MICore
             return Task.FromResult(TargetArchitecture.Unknown);
         }
 
+        public virtual async Task<Results> SetOption(string variable, string value, ResultClass resultClass = ResultClass.done)
+        {
+            string command = string.Format("-gdb-set {0} {1}", variable, value);
+            Results results = await _debugger.CmdAsync(command, resultClass);
+
+            return results;
+        }
+
+
         #endregion
 
         #region Other
@@ -536,6 +559,8 @@ namespace MICore
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
 
         abstract public bool SupportsStopOnDynamicLibLoad();
+
+        abstract public bool SupportsChildProcessDebugging();
 
         /// <summary>
         /// True if the underlying debugger can format frames itself

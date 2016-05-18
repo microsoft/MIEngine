@@ -50,6 +50,7 @@ namespace Microsoft.MIDebugEngine
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
         private bool _needTerminalReset;
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
+        private ProcessSequence _childProcessHandler;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
         {
@@ -373,13 +374,20 @@ namespace Microsoft.MIDebugEngine
             ThreadCreatedEvent += delegate (object o, EventArgs args)
             {
                 ResultEventArgs result = (ResultEventArgs)args;
-                ThreadCache.ThreadEvent(result.Results.FindInt("id"), /*deleted */false);
+                ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
+                _childProcessHandler?.ThreadCreatedEvent(result.Results);
             };
 
             ThreadExitedEvent += delegate (object o, EventArgs args)
             {
                 ResultEventArgs result = (ResultEventArgs)args;
-                ThreadCache.ThreadEvent(result.Results.FindInt("id"), /*deleted*/true);
+                ThreadCache.ThreadExitedEvent(result.Results.FindInt("id"));
+            };
+
+            ThreadGroupExitedEvent += delegate (object o, EventArgs args)
+            {
+                ResultEventArgs result = (ResultEventArgs)args;
+                ThreadCache.ThreadGroupExitedEvent(result.Results.FindString("id"));
             };
 
             MessageEvent += (object o, ResultEventArgs args) =>
@@ -456,6 +464,7 @@ namespace Microsoft.MIDebugEngine
             {
                 await this.MICommandFactory.EnableTargetAsyncOption();
                 List<LaunchCommand> commands = GetInitializeCommands();
+                _childProcessHandler?.Enable();
 
                 total = commands.Count();
                 var i = 0;
@@ -569,6 +578,14 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
+            if (MICommandFactory.SupportsChildProcessDebugging())
+            {
+                if (_launchOptions.DebugChildProcesses)
+                {
+                    _childProcessHandler = new DebugUnixChild(this, this._launchOptions);  // TODO: let the user enable/disable this functionality
+                }
+            }
+
             // Custom launch options replace the built in launch steps. This is used on iOS
             // and Linux attach scenarios.
             if (_launchOptions.CustomLaunchSetupCommands != null)
@@ -584,23 +601,23 @@ namespace Microsoft.MIDebugEngine
                     this.AddExecutablePathCommand(commands);
 
                     // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
-                    string coreDump = _launchOptions.UseUnixSymbolPaths ? localLaunchOptions.CoreDumpPath : EscapePath(localLaunchOptions.CoreDumpPath);
+                    string coreDump = _launchOptions.UseUnixSymbolPaths ? _launchOptions.CoreDumpPath : EscapePath(_launchOptions.CoreDumpPath);
                     string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
-                    string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, localLaunchOptions.CoreDumpPath);
-                    commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
+                    string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
+                   commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
-                else if (null != localLaunchOptions && localLaunchOptions.ProcessId != 0)
+                else if (_launchOptions.ProcessId != 0)
                 {
                     // This is an attach
 
                     // check for remote
-                    string destination = localLaunchOptions.MIDebuggerServerAddress;
+                    string destination = localLaunchOptions?.MIDebuggerServerAddress;
                     if (!string.IsNullOrEmpty(destination))
                     {
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
 
-                    int pid = localLaunchOptions.ProcessId;
+                    int pid = _launchOptions.ProcessId;
                     commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
 
                     CheckCygwin(commands, localLaunchOptions);
@@ -730,6 +747,11 @@ namespace Microsoft.MIDebugEngine
             else
             {
                 tid = results.Results.FindInt("thread-id");
+            }
+
+            if (_childProcessHandler != null && await _childProcessHandler.Stopped(results.Results, tid))
+            {
+                return;
             }
 
             // Any existing variable objects at this point are from the last time we were in break mode, and are
@@ -907,7 +929,23 @@ namespace Microsoft.MIDebugEngine
                     {
                         code = EngineUtils.SignalMap.Instance[sigName];
                     }
-                    _callback.OnException(thread, sigName, results.Results.TryFindString("signal-meaning"), code);
+                    bool stoppedAtSIGSTOP = false;
+                    if (sigName == "SIGSTOP")
+                    {
+                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId))
+                        {
+                            stoppedAtSIGSTOP = true;
+                        }
+                    }
+                    string message = results.Results.TryFindString("signal-meaning");
+                    if (stoppedAtSIGSTOP)
+                    {
+                        await MICommandFactory.Signal("SIGCONT");
+                    }
+                    else
+                    {
+                        _callback.OnException(thread, sigName, message, code);
+                    }
                 }
             }
             else if (reason == "exception-received")
@@ -1194,14 +1232,10 @@ namespace Microsoft.MIDebugEngine
             else
             {
                 bool attach = false;
-                int attachPid = 0;
-                if (_launchOptions is LocalLaunchOptions)
+                int attachPid = _launchOptions.ProcessId;
+                if (attachPid != 0)
                 {
-                    attachPid = ((LocalLaunchOptions)_launchOptions).ProcessId;
-                    if (attachPid != 0)
-                    {
-                        attach = true;
-                    }
+                    attach = true;
                 }
 
                 if (!attach)
