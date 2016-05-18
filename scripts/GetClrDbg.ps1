@@ -104,13 +104,20 @@ if (-not $RuntimeID) {
 }
 Write-Host "Info: Using Runtime ID '$RuntimeID'"
 
-# create the install folder if it does not exist
-if (-not (Test-Path -Path $InstallPath -PathType Container)) {
-    New-Item -ItemType Directory -Force -Path $InstallPath
+# create the temp folder if it does not exist
+$GuidString = [System.Guid]::NewGuid()
+$TempPath = Join-Path -Path $env:TEMP -ChildPath $GuidString
+if (-not (Test-Path -Path $TempPath -PathType Container)) {
+    New-Item -ItemType Directory -Force -Path $TempPath
 }
-$InstallPath = Resolve-Path -Path $InstallPath -ErrorAction Stop
+$TempPath = Resolve-Path -Path $TempPath -ErrorAction Stop
 
-Push-Location $InstallPath -ErrorAction Stop
+# if we were given a relative path, assume its relative to the script directory and create an absolute path
+if (-not([System.IO.Path]::IsPathRooted($InstallPath))) {
+    $InstallPath = Join-Path -Path (Split-Path -Path $MyInvocation.MyCommand.Definition) -ChildPath $InstallPath
+}
+
+Push-Location $TempPath -ErrorAction Stop
 
 Write-Host "Info: Generating project.json"
 GenerateProjectJson $VersionNumber $RuntimeID
@@ -125,5 +132,7 @@ Write-Host "Info: Executing dotnet publish"
 dotnet publish -r $RuntimeID -o $InstallPath
 
 Pop-Location
+
+Remove-Item -Path $TempPath -Recurse -Force
 
 Write-Host "Successfully installed clrdbg at '$InstallPath'"
