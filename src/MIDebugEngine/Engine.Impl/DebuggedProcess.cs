@@ -173,6 +173,17 @@ namespace Microsoft.MIDebugEngine
                     throw new Exception(MICoreResources.Error_InvalidMiDebuggerPath);
                 }
 
+                if (PlatformUtilities.IsOSX() &&
+                    localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
+                    !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath))
+                {
+                    string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_DarwinDebuggerUnsigned, localLaunchOptions.MIDebuggerPath);
+                    _callback.OnOutputMessage(new OutputMessage(
+                        message + Environment.NewLine,
+                        enum_MESSAGETYPE.MT_MESSAGEBOX,
+                        OutputMessage.Severity.Warning));
+                }
+
                 ITransport localTransport = null;
                 // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
                 // uses fifos for debugger (e.g., gdb) communication.
