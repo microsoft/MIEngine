@@ -544,21 +544,12 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
-<<<<<<< 17d1f39a11034234966c6bc4ddf9dc41d6c51d85
             this.VerifyNotDebuggingCoreDump();
 
             // TODO May need to fix attach on windows.
             // Note that interrupt doesn't work when attached on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
             if (IsLocalGdb() && (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX()))
-=======
-            if (ProcessState != ProcessState.Running)
-            {
-                return Task.CompletedTask;
-            }
-            //TODO May need to fix attach on windows and osx.
-            if (IsLocalGdbAttach() && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
->>>>>>> Save per-thread forking state, interrupt over the pipe rat6her than using the mi
             {
                 // for local linux debugging, send a signal to one of the debuggee processes rather than
                 // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 

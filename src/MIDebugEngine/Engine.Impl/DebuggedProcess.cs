@@ -49,12 +49,8 @@ namespace Microsoft.MIDebugEngine
         private ReadOnlyCollection<RegisterGroup> _registerGroups;
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
         private bool _needTerminalReset;
-<<<<<<< 17d1f39a11034234966c6bc4ddf9dc41d6c51d85
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
-        private ProcessSequence _inProgress;
-=======
         private ProcessSequence _childProcessHandler;
->>>>>>> Save per-thread forking state, interrupt over the pipe rat6her than using the mi
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
         {

@@ -973,11 +973,13 @@ namespace MICore
                 else
                     this.AdditionalSOLibSearchPath = string.Concat(this.AdditionalSOLibSearchPath, ";", additionalSOLibSearchPath);
             }
-<<<<<<< 17d1f39a11034234966c6bc4ddf9dc41d6c51d85
             if (string.IsNullOrEmpty(this.AbsolutePrefixSOLibSearchPath))
                 this.AbsolutePrefixSOLibSearchPath = source.AbsolutePrefixSOLibSearchPath;
-=======
->>>>>>> Save per-thread forking state, interrupt over the pipe rat6her than using the mi
+
+            if (source.DebugChildProcessesSpecified)
+            {
+                this.DebugChildProcesses = source.DebugChildProcesses;
+            }
 
             this.ProcessId = source.ProcessId;
             this.CoreDumpPath = source.CoreDumpPath;

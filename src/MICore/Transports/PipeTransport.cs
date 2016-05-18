@@ -23,12 +23,9 @@ namespace MICore
         private ManualResetEvent _allReadersDone = new ManualResetEvent(false);
         private bool _killOnClose;
         private bool _filterStderr;
-<<<<<<< 17d1f39a11034234966c6bc4ddf9dc41d6c51d85
         private int _debuggerPid = -1;
-=======
         private string _pipePath;
         private string _cmdArgs;
->>>>>>> Save per-thread forking state, interrupt over the pipe rat6her than using the mi
 
         public PipeTransport(bool killOnClose = false, bool filterStderr = false, bool filterStdout = false) : base(filterStdout)
         {
