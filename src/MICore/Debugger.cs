@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace MICore
 {
@@ -42,6 +43,10 @@ namespace MICore
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
         private MIResults _miResults;
+
+        public bool EntrypointHit { get; protected set; }
+
+        public bool IsCygwin { get; protected set; }
 
         public virtual void FlushBreakStateData()
         {
@@ -106,6 +111,14 @@ namespace MICore
         private StringBuilder _consoleCommandOutput;
 
         private bool _pendingInternalBreak;
+        internal bool IsRequestingInternalAsyncBreak
+        {
+            get
+            {
+                return _pendingInternalBreak;
+            }
+        }
+
         private bool _waitingToStop;
         private Timer _breakTimer = null;
         private int _retryCount;
@@ -125,6 +138,8 @@ namespace MICore
 
         protected void SetDebuggerPid(int debuggerPid)
         {
+            // Used for testing
+            Logger.WriteLine(string.Concat("DebuggerPid=", debuggerPid));
             _localDebuggerPid = debuggerPid;
         }
 
@@ -140,9 +155,7 @@ namespace MICore
             {
                 if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                 {
-                    // When 0 is passed as the signal to send in kill,
-                    // it will check the validity of the pid (e.g., does the pid exist?)
-                    return UnixNativeMethods.Kill(_localDebuggerPid, 0) == 0;
+                    return UnixUtilities.IsProcessRunning(_localDebuggerPid);
                 }
             }
 
@@ -192,7 +205,14 @@ namespace MICore
                         CmdBreakInternal();
                         _retryCount = 0;
                         _waitingToStop = true;
-                        _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
+
+                        // When using signals to stop the proces, do not kick off another break attempt. The debug break injection and
+                        // signal based models are reliable so no retries are needed. Cygwin can't currently async-break reliably, so
+                        // use retries there.
+                        if (!IsLocalGdb() && !this.IsCygwin)
+                        {
+                            _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
+                        }
                     }
                     return _internalBreakActionCompletionSource.Task;
                 }
@@ -375,8 +395,11 @@ namespace MICore
             FlushBreakStateData();
 
             _transport.Init(this, options, Logger);
+        }
 
-            switch (options.TargetArchitecture)
+        public void SetTargetArch(TargetArchitecture arch)
+        {
+            switch (arch)
             {
                 case TargetArchitecture.ARM:
                     MaxInstructionSize = 4;
@@ -476,6 +499,14 @@ namespace MICore
         }
 
         protected bool _requestingRealAsyncBreak = false;
+        internal bool IsRequestingRealAsyncBreak
+        {
+            get
+            {
+                return _requestingRealAsyncBreak;
+            }
+        }
+
         public Task CmdBreak()
         {
             _requestingRealAsyncBreak = true;
@@ -483,7 +514,7 @@ namespace MICore
         }
 
 
-        private bool IsLocalGdb()
+        internal bool IsLocalGdb()
         {
             if (this.MICommandFactory.Mode == MIMode.Gdb &&
                this._launchOptions is LocalLaunchOptions &&
@@ -512,6 +543,11 @@ namespace MICore
 
         public async Task<Results> CmdTerminate()
         {
+            if (ProcessState == ProcessState.Running)
+            {
+                await CmdBreak();
+            }
+
             await MICommandFactory.Terminate();
 
             return new Results(ResultClass.done);
@@ -532,15 +568,10 @@ namespace MICore
         {
             this.VerifyNotDebuggingCoreDump();
 
-            // TODO May need to fix attach on windows.
             // Note that interrupt doesn't work on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
-            if (IsLocalGdb() && (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX()))
+            if (IsLocalGdb())
             {
-                // for local linux debugging, send a signal to one of the debuggee processes rather than
-                // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
-                // End result is either deadlocks or missed bps (since binding in runtime requires break state).
-                // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
                 bool useSignal = false;
                 int debuggeePid = 0;
                 lock (_debuggeePids)
@@ -552,9 +583,23 @@ namespace MICore
                     }
                 }
 
-                if (useSignal)
+                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                 {
-                    return CmdLinuxBreak(debuggeePid, ResultClass.done);
+                    // for local linux debugging, send a signal to one of the debuggee processes rather than
+                    // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
+                    // End result is either deadlocks or missed bps (since binding in runtime requires break state).
+                    // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
+                    if (useSignal)
+                    {
+                        return CmdBreakUnix(debuggeePid, ResultClass.done);
+                    }
+                }
+                else if (PlatformUtilities.IsWindows() && !this.IsCygwin)
+                {
+                    if (useSignal)
+                    {
+                        return CmdBreakWindows(debuggeePid, ResultClass.done);
+                    }
                 }
             }
 
@@ -571,7 +616,6 @@ namespace MICore
         public void CmdContinueAsync()
         {
             this.VerifyNotDebuggingCoreDump();
-
             PostCommand("-exec-continue");
         }
 
@@ -693,7 +737,7 @@ namespace MICore
             return waitingOperation.Task;
         }
 
-        private Task<Results> CmdLinuxBreak(int debugeePid, ResultClass expectedResultClass)
+        private Task<Results> CmdBreakUnix(int debugeePid, ResultClass expectedResultClass)
         {
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
@@ -704,7 +748,36 @@ namespace MICore
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
 
-        #region ITransportCallback implementation
+        private Task<Results> CmdBreakWindows(int debugeePid, ResultClass expectedResultClass)
+        {
+            lock (this._debuggeePids)
+            {
+                foreach (int pid in this._debuggeePids.Values)
+                {
+                    try
+                    {
+                        // Mingw has no kill utility. Instead, use kernel32!DebugBreakProcess. Note that this
+                        // can deadlock if the loader lock is taken by a suspended thread. This approach does
+                        // not work in cygwin
+                        Process p = Process.GetProcessById(pid);
+
+#if CORECLR
+                        WindowsNativeMethods.DebugBreakProcess(p.SafeHandle);
+#else
+                        WindowsNativeMethods.DebugBreakProcess(p.Handle);
+#endif
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+
+            return Task.FromResult<Results>(new Results(ResultClass.done));
+        }
+
+#region ITransportCallback implementation
         // Note: this can be called from any thread
         void ITransportCallback.OnStdOutLine(string line)
         {
@@ -811,7 +884,7 @@ namespace MICore
             }
         }
 
-        #endregion
+#endregion
 
         // inherited classes can override this for thread marshalling etc
         protected virtual void ScheduleStdOutProcessing(string line)
@@ -1060,6 +1133,26 @@ namespace MICore
             {
                 string status = _miResults.ParseCString(cmd.Substring(8));
                 OnStateChanged("stopped", status);
+            }
+            else if (cmd.StartsWith("stopped", StringComparison.Ordinal))
+            {
+                if (PlatformUtilities.IsWindows() &&
+                    this.LaunchOptions is LocalLaunchOptions &&
+                    ((LocalLaunchOptions)this.LaunchOptions).ProcessId != 0 &&
+                    this.MICommandFactory.Mode == MIMode.Gdb &&
+                    !this.IsCygwin
+                    )
+                {
+                    // mingw enters break mode with no status flags on the mi response during attach.
+                    // In order to keey the entrypoint state correct, set it to true and continue
+                    // the break.
+                    this.EntrypointHit = true;
+                    CmdContinueAsync();
+                }
+                else
+                {
+                    Debug.Fail("Unknown out-of-band msg: " + cmd);
+                }
             }
             else if (cmd.StartsWith("running,", StringComparison.Ordinal))
             {

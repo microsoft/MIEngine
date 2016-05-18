@@ -222,4 +222,7 @@ Error: {1}</value>
   <data name="Error_InternalFileMissing" xml:space="preserve">
     <value>Internal file "{0}" could not be found.</value>
   </data>
+  <data name="Warn_AttachAsRootProcess" xml:space="preserve">
+    <value>Superuser access is required to attach to a process. Attaching as superuser can potentially harm your computer. Do you want to continue? [y/N]</value>
+  </data>
 </root>

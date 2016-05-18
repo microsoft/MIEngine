@@ -3,7 +3,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -12,7 +11,6 @@ namespace MICore
 {
     public static class UnixUtilities
     {
-        internal const string ExitString = "exit";
         internal const string FifoPrefix = "Microsoft-MIEngine-fifo-";
         internal const string SudoPath = "/usr/bin/sudo";
         // Mono seems to hang when the is a large response unless we specify a larger buffer here
@@ -29,7 +27,6 @@ namespace MICore
         /// signal handler for SIGHUP on the console (executing the two rm commands)
         /// </summary>
         /// <param name="debuggeeDir">Path to the debuggee directory</param>
-        /// <param name="exitFifo">File where the exit event is written to</param>
         /// <param name="dbgStdInName">File where the stdin for the debugger process is redirected to</param>
         /// <param name="dbgStdOutName">File where the stdout for the debugger process is redirected to</param>
         /// <param name="pidFifo">File where the debugger pid is written to</param>
@@ -37,30 +34,31 @@ namespace MICore
         /// <returns></returns>
         internal static string LaunchLocalDebuggerCommand(
             string debuggeeDir,
-            string exitFifo,
             string dbgStdInName,
             string dbgStdOutName,
             string pidFifo,
             string debuggerCmd)
         {
             return string.Format(CultureInfo.InvariantCulture,
-               "cd {0}; " +
-               "DbgTerm=`tty`; " +
-               "trap 'echo {1} > {2}; rm {2} {3} {4} {5}' EXIT; " +
-               "{6} --interpreter=mi --tty=$DbgTerm < {3} > {4} & " +
-               // Clear the output of executing a process in the background: [job number] pid
-               "clear; " +
-               "pid=$! ; " +
-               "echo $pid > {5}; " +
-               "wait $pid; ",
-               debuggeeDir,
-               ExitString,
-               exitFifo,
-               dbgStdInName,
-               dbgStdOutName,
-               pidFifo,
-               debuggerCmd
-               );
+                // echo the shell pid so that we can monitor it
+                "echo $$ > {3}; " +
+                "cd {0}; " +
+                "DbgTerm=`tty`; " +
+                "trap 'rm {1} {2} {3}' EXIT; " +
+                "{4} --interpreter=mi --tty=$DbgTerm < {1} > {2} & " +
+                // Clear the output of executing a process in the background: [job number] pid
+                "clear; " +
+                // echo and wait the debugger pid to know whether
+                // we need to fake an exit by the debugger
+                "pid=$! ; " +
+                "echo $pid > {3}; " +
+                "wait $pid; ",
+                debuggeeDir,
+                dbgStdInName,
+                dbgStdOutName,
+                pidFifo,
+                debuggerCmd
+                );
         }
 
         internal static string GetDebuggerCommand(LocalLaunchOptions localOptions)
@@ -68,6 +66,7 @@ namespace MICore
             if (PlatformUtilities.IsLinux())
             {
                 string debuggerPathCorrectElevation = localOptions.MIDebuggerPath;
+                string prompt = string.Empty;
 
                 // If running as root, make sure the new console is also root. 
                 bool isRoot = UnixNativeMethods.GetEUid() == 0;
@@ -75,6 +74,8 @@ namespace MICore
                 // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
                 if (localOptions.ProcessId != 0 && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
                 {
+                    prompt = String.Format(CultureInfo.CurrentCulture, "read -n 1 -p \\\"{0}\\\" yn; if [[ ! $yn =~ ^[Yy]$ ]] ; then exit 0; fi; ", MICoreResources.Warn_AttachAsRootProcess);
+
                     // Prefer pkexec for a nice graphical prompt, but fall back to sudo if it's not available
                     if (File.Exists(UnixUtilities.PKExecPath))
                     {
@@ -90,7 +91,7 @@ namespace MICore
                     }
                 }
 
-                return debuggerPathCorrectElevation;
+                return String.Concat(prompt, debuggerPathCorrectElevation);
             }
             else
             {
@@ -151,6 +152,13 @@ namespace MICore
                 // If we were unable to determine the current scope setting, assume we need root
                 return -1;
             }
+        }
+
+        internal static bool IsProcessRunning(int processId)
+        {
+            // When getting the process group ID, getpgid will return -1
+            // if there is no process with the ID specified.
+            return UnixNativeMethods.GetPGid(processId) >= 0;
         }
     }
 }

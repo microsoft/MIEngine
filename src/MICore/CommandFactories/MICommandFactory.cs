@@ -523,6 +523,11 @@ namespace MICore
 
         #region Helpers
 
+        public virtual Task<TargetArchitecture> GetTargetArchitecture()
+        {
+            return Task.FromResult(TargetArchitecture.Unknown);
+        }
+
         #endregion
 
         #region Other
@@ -542,7 +547,38 @@ namespace MICore
 
         public virtual bool IsAsyncBreakSignal(Results results)
         {
-            return (results.TryFindString("reason") == "signal-received" && results.TryFindString("signal-name") == "SIGINT");
+            bool isAsyncBreak = false;
+            
+            if (results.TryFindString("reason") == "signal-received")
+            {
+                if (results.TryFindString("signal-name") == "SIGINT")
+                {
+                    isAsyncBreak = true;
+                }
+                else if (results.TryFindString("signal-name") == "SIGTRAP")
+                {
+                    // Mingw has no way to send the sigint and using windows console control won't work with the debuggee
+                    // redirected. This means mingw will see SIGTRAP on async-break.
+                    if (this._debugger.IsRequestingInternalAsyncBreak || this._debugger.IsRequestingRealAsyncBreak)
+                    {
+                        if (this._debugger.IsLocalGdb() && PlatformUtilities.IsWindows() && !this._debugger.IsCygwin)
+                        {
+                            ResultValue frameResult;
+                            if (results.TryFind("frame", out frameResult))
+                            {
+                                // The top frame will be in an unknown function for break injected bps since it is actually
+                                // an injected frame in ntdll doing a debug break.
+                                // NOTE: if it were possible to get the windows stack that shows the inserted break frames,
+                                // it would be better. Unfornately, gdb doesn't show them. Perhaps check if the address
+                                // lands in ntdll or kernel32?
+                                isAsyncBreak = frameResult.TryFindString("func") == "??";
+                            }
+                        }
+                    }
+                }
+            }
+
+            return isAsyncBreak;
         }
 
         /// <summary>

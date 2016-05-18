@@ -38,7 +38,7 @@ namespace MICore
             throw new MIResultFormatException(name, this);
         }
 
-        public virtual bool TryFind(string name, ResultValue result)
+        public virtual bool TryFind(string name, out ResultValue result)
         {
             if (Contains(name))
             {

@@ -225,5 +225,38 @@ namespace MICore
         }
 
         public override bool SupportsDataBreakpoints { get { return true; } }
+
+        public override async Task<TargetArchitecture> GetTargetArchitecture()
+        {
+            string cmd = "show architecture";
+            var result = await _debugger.ConsoleCmdAsync(cmd);
+            using (StringReader stringReader = new StringReader(result))
+            {
+                while (true)
+                {
+                    string resultLine = stringReader.ReadLine();
+                    if (resultLine == null)
+                        break;
+
+                    if (resultLine.IndexOf("x86-64", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.X64;
+                    }
+                    else if (resultLine.IndexOf("i386", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.X86;
+                    }
+                    else if (resultLine.IndexOf("arm64", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.ARM64;
+                    }
+                    else if (resultLine.IndexOf("arm", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.ARM;
+                    }
+                }
+            }
+            return TargetArchitecture.Unknown;
+        }
     }
 }

@@ -204,4 +204,7 @@
     <value>Warning: Source file '{0}' is newer than module file '{1}'.</value>
     <comment>0 = source file path, 1 = module file path</comment>
   </data>
+  <data name="Warning_UsingDefaultArchitecture" xml:space="preserve">
+    <value>Warning: Debuggee TargetArchitecture not detected, assuming x86_64.</value>
+  </data>
 </root>

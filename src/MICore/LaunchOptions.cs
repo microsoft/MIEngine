@@ -833,7 +833,7 @@ namespace MICore
                 }
             }
 
-            if (this.TargetArchitecture == TargetArchitecture.Unknown)
+            if (this.TargetArchitecture == TargetArchitecture.Unknown && source.TargetArchitectureSpecified)
             {
                 this.TargetArchitecture = ConvertTargetArchitectureAttribute(source.TargetArchitecture);
             }
