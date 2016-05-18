@@ -76,7 +76,8 @@ namespace MICore
                 {
                     // Something is wrong because we didn't get the pid of shell
                     ForceDisposeStreamReader(pidReader);
-                    this.Callback.OnDebuggerProcessExit(null);
+                    Close();
+                    throw new TimeoutException(MICoreResources.Error_LocalUnixTerminalDebuggerInitializationFailed);
                 }
 
                 _shellProcessMonitor = new ProcessMonitor(shellPid);
@@ -93,6 +94,8 @@ namespace MICore
                 {
                     // Something is wrong because we didn't get the pid of the debugger
                     ForceDisposeStreamReader(pidReader);
+                    Close();
+                    throw new OperationCanceledException(MICoreResources.Error_LocalUnixTerminalDebuggerInitializationFailed);
                 }
             }
 
@@ -128,7 +131,7 @@ namespace MICore
         {
             base.Close();
 
-            _shellProcessMonitor.Dispose();
+            _shellProcessMonitor?.Dispose();
             _streamReadPidCancellationTokenSource.Cancel();
             _streamReadPidCancellationTokenSource.Dispose();
         }
