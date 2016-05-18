@@ -20,6 +20,9 @@ namespace MICore
         // Linux specific
         private const string PtraceScopePath = "/proc/sys/kernel/yama/ptrace_scope";
 
+        // OS X specific
+        private const string CodeSignPath = "/usr/bin/codesign";
+
         /// <summary>
         /// Launch a new terminal, spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it.
         /// Start the debugger in mi mode setting the tty to the terminal defined earlier and redirect stdin/stdout
@@ -159,6 +162,29 @@ namespace MICore
             // When getting the process group ID, getpgid will return -1
             // if there is no process with the ID specified.
             return UnixNativeMethods.GetPGid(processId) >= 0;
+        }
+
+        public static bool IsBinarySigned(string filePath)
+        {
+            if (!PlatformUtilities.IsOSX())
+            {
+                throw new NotImplementedException();
+            }
+
+            Process p = new Process
+            {
+                StartInfo =
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = true,
+                    FileName = CodeSignPath,
+                    Arguments = "-d " + filePath
+                 }
+            };
+
+            p.Start();
+            p.WaitForExit();
+            return p.ExitCode == 0;
         }
     }
 }

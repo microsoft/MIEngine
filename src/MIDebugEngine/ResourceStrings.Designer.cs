@@ -11,7 +11,7 @@
 namespace Microsoft.MIDebugEngine {
     using System;
     using System.Reflection;
-
+    
     
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
@@ -294,6 +294,15 @@ namespace Microsoft.MIDebugEngine {
         internal static string VisualizingExpressionMessage {
             get {
                 return ResourceManager.GetString("VisualizingExpressionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugger executable &apos;{0}&apos; is not signed. Debugging may not work..
+        /// </summary>
+        internal static string Warning_DarwinDebuggerUnsigned {
+            get {
+                return ResourceManager.GetString("Warning_DarwinDebuggerUnsigned", resourceCulture);
             }
         }
         
