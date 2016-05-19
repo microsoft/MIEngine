@@ -536,15 +536,10 @@ namespace MICore
         {
             this.VerifyNotDebuggingCoreDump();
 
-            // TODO May need to fix attach on windows.
             // Note that interrupt doesn't work on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
-            if (IsLocalGdb() && (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX()))
+            if (IsLocalGdb())
             {
-                // for local linux debugging, send a signal to one of the debuggee processes rather than
-                // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
-                // End result is either deadlocks or missed bps (since binding in runtime requires break state).
-                // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
                 bool useSignal = false;
                 int debuggeePid = 0;
                 lock (_debuggeePids)
@@ -556,9 +551,23 @@ namespace MICore
                     }
                 }
 
-                if (useSignal)
+                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                 {
-                    return CmdLinuxBreak(debuggeePid, ResultClass.done);
+                    // for local linux debugging, send a signal to one of the debuggee processes rather than
+                    // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
+                    // End result is either deadlocks or missed bps (since binding in runtime requires break state).
+                    // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
+                    if (useSignal)
+                    {
+                        return CmdBreakUnix(debuggeePid, ResultClass.done);
+                    }
+                }
+                else if (PlatformUtilities.IsWindows() && _transport is LocalCygwinTransport)
+                {
+                    if (useSignal)
+                    {
+                        return CmdBreakWindows(debuggeePid, ResultClass.done);
+                    }
                 }
             }
 
@@ -697,13 +706,24 @@ namespace MICore
             return waitingOperation.Task;
         }
 
-        private Task<Results> CmdLinuxBreak(int debugeePid, ResultClass expectedResultClass)
+        private Task<Results> CmdBreakUnix(int debugeePid, ResultClass expectedResultClass)
         {
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             const int sigint = 2;
             UnixNativeMethods.Kill(debugeePid, sigint);
+
+            return Task.FromResult<Results>(new Results(ResultClass.done));
+        }
+
+        private Task<Results> CmdBreakWindows(int debugeePid, ResultClass expectedResultClass)
+        {
+            LocalCygwinTransport windowsTransport = this._transport as LocalCygwinTransport;
+            if (windowsTransport != null)
+            {
+                windowsTransport.BreakProcess();
+            }
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }

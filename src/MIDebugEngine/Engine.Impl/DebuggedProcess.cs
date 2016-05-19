@@ -167,6 +167,7 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions is LocalLaunchOptions)
             {
                 LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_launchOptions;
+                CheckCygwin(localLaunchOptions);
 
                 if (!localLaunchOptions.IsValidMiDebuggerPath())
                 {
@@ -174,16 +175,28 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 ITransport localTransport = null;
-                // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
-                // uses fifos for debugger (e.g., gdb) communication.
-                if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                    (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
-                    )
+               
+                if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
                 {
-                    localTransport = new LocalUnixTerminalTransport();
+                    if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                    {
+                        // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
+                        // uses fifos for debugger (e.g., gdb) communication.
 
-                    // Only need to clear terminal for Linux and OS X local launch
-                    _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                        localTransport = new LocalUnixTerminalTransport();
+
+                        // Only need to clear terminal for Linux and OS X local launch
+                        _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                    }
+                    else if (PlatformUtilities.IsWindows() && _launchOptions.DebuggerMIMode == MIMode.Gdb && this.IsCygwin)
+                    {
+                        // For cygwin gdb, use the local windows transport which launches GDB in the same terminal group as vscode so ctrl-break can be sent to it.
+                        localTransport = new LocalCygwinTransport();
+                    }
+                    else
+                    {
+                        localTransport = new LocalTransport();
+                    }
                 }
                 else
                 {
@@ -589,7 +602,7 @@ namespace Microsoft.MIDebugEngine
                     int pid = localLaunchOptions.ProcessId;
                     commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
 
-                    CheckCygwin(commands, localLaunchOptions);
+                    CheckCygwin(localLaunchOptions);
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -613,14 +626,22 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
                     }
 
+                    CheckCygwin(localLaunchOptions);
+
+                    if (IsCygwin)
+                    {
+                        this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
+                    }
+
+                    // Don't do this for cygwin. It blocks the debug console proxy
                     if (localLaunchOptions != null &&
                         PlatformUtilities.IsWindows() &&
-                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
+                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
+                        !this.IsCygwin                        
+                        )
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
-
-                    CheckCygwin(commands, localLaunchOptions);
 
                     // Send client version to clrdbg to set the capabilities appropriately
                     if (this.MICommandFactory.Mode == MIMode.Clrdbg)
@@ -653,21 +674,15 @@ namespace Microsoft.MIDebugEngine
             return commands;
         }
 
-        private void CheckCygwin(List<LaunchCommand> commands, LocalLaunchOptions localLaunchOptions)
+        private void CheckCygwin(LocalLaunchOptions localLaunchOptions)
         {
             // If running locally on windows, determine if gdb is running from cygwin
             if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
             {
-                // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
-                LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, new Action<string>((string resStr) =>
+                if (localLaunchOptions.MIDebuggerPath.IndexOf("cygwin", StringComparison.OrdinalIgnoreCase) > -1)
                 {
-                    if (resStr.Contains("cygwin"))
-                    {
-                        this.IsCygwin = true;
-                        this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
-                    }
-                }));
-                commands.Add(lc);
+                    this.IsCygwin = true;
+                }
             }
         }
 
