@@ -604,6 +604,8 @@ namespace Microsoft.MIDebugEngine
                 {
                     // This is an attach
 
+                    CheckCygwin(commands, localLaunchOptions);
+
                     // check for remote
                     string destination = localLaunchOptions.MIDebuggerServerAddress;
                     if (!string.IsNullOrEmpty(destination))
@@ -612,9 +614,7 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     int pid = localLaunchOptions.ProcessId;
-                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
-
-                    CheckCygwin(commands, localLaunchOptions);
+                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));                    
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
