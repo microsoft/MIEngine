@@ -265,6 +265,7 @@ for directory in $(ls -d $CLRDBGBITSDIR/*/); do
 done
 
 install_file "$script_dir/coreclr/coreclr.ad7Engine.json"
+install_file "$DropDir/osxlaunchhelper.scpt"
 
 for dll in Microsoft.MICore.dll Microsoft.MIDebugEngine.dll
 do 

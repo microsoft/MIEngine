@@ -21,6 +21,11 @@ namespace Microsoft.MIDebugEngine
         {
             base.Add(addr, new SourceLine(line, addr));
         }
+
+        public void Replace(ulong addr, uint line)
+        {
+            base[addr] = new SourceLine(line, addr);
+        }
     }
 
     public struct SourceLine
@@ -92,7 +97,24 @@ namespace Microsoft.MIDebugEngine
             {
                 ulong addr = lines.Content[i].FindAddr("pc");
                 uint line = lines.Content[i].FindUint("line");
-                linesMap.Add(addr, line);
+
+                if (linesMap.ContainsKey(addr))
+                {
+                    // It is actually fairly common for an address to map to more than one line. For instance,
+                    // in debug builds destructors can have an entry to line 0 as well as one to the correct line.
+                    // Release builds with inlining will hit this very often.
+                    // Unforunately, without more context, it is impossible to know which line is the "right" line.
+                    // For the inline case, any line will be acceptable. For the destructor case, we should prefer
+                    // a non-zero line.
+                    if (linesMap[addr].Line == 0)
+                    {
+                        linesMap.Replace(addr, line);
+                    }
+                }
+                else
+                {
+                    linesMap.Add(addr, line);
+                }
             }
             return linesMap;
         }

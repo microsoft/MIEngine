@@ -8,7 +8,7 @@
   <Import Project="version.settings.targets" />
 
   <Choose>
-    <When Condition="'$(Configuration)' == 'Lab.Debug' Or '$(Configuration)' == 'Lab.Release'">
+    <When Condition="'$(Lab)' == 'true'">
         <PropertyGroup>
             <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
             <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
@@ -23,13 +23,31 @@
     </Otherwise>
   </Choose>
   
+  <Choose>
+    <When Condition="$(Configuration.Contains('Desktop'))">
+      <PropertyGroup>
+        <IsCoreClr>false</IsCoreClr>
+        <NugetPackagesDirectory>$(NugetPackagesDirectory).Desktop</NugetPackagesDirectory>
+        <!-- Skip resolution from project.json -->
+        <ResolveNuGetPackages>false</ResolveNuGetPackages>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <DefineConstants>$(DefineConstants);CORECLR</DefineConstants>
+        <IsCoreClr>true</IsCoreClr>
+        <IsMonoRuntime>false</IsMonoRuntime>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+  
   <PropertyGroup>
     <SignAssembly>True</SignAssembly>
     <GlassDir>$(MSBuildThisFileDirectory)..\Microsoft.VisualStudio.Glass\</GlassDir>
     <DropConfigurationName>$(Configuration)</DropConfigurationName>
-    <DefineConstants Condition="'$(Configuration)' == 'Lab.Debug' or '$(Configuration)' == 'Lab.Release'">$(DefineConstants);LAB</DefineConstants>
-    <DropConfigurationName Condition="'$(Configuration)' == 'Lab.Debug'">Debug</DropConfigurationName>
-    <DropConfigurationName Condition="'$(Configuration)' == 'Lab.Release'">Release</DropConfigurationName>
+    <DefineConstants Condition="'$(Lab)' == 'true'">$(DefineConstants);LAB</DefineConstants>
+    <DropConfigurationName Condition="'$(Lab)' == 'true' AND $(Configuration.Contains('Debug'))">Debug</DropConfigurationName>
+    <DropConfigurationName Condition="'$(Lab)' == 'true' AND $(Configuration.Contains('Release'))">Release</DropConfigurationName>
     <DropRootDir Condition="'$(TF_BUILD_BINARIESDIRECTORY)'!=''">$(TF_BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropRootDir>
     <DropRootDir Condition="'$(BUILD_BINARIESDIRECTORY)'!=''">$(BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropRootDir>
     <DropRootDir Condition="'$(DropRootDir)'==''">$(MIEngineRoot)bin\$(DropConfigurationName)\drop</DropRootDir>

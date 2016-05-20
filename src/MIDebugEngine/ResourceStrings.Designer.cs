@@ -11,7 +11,7 @@
 namespace Microsoft.MIDebugEngine {
     using System;
     using System.Reflection;
-    
+
     
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
@@ -294,6 +294,24 @@ namespace Microsoft.MIDebugEngine {
         internal static string VisualizingExpressionMessage {
             get {
                 return ResourceManager.GetString("VisualizingExpressionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Source file &apos;{0}&apos; is newer than module file &apos;{1}&apos;..
+        /// </summary>
+        internal static string Warning_SourceFileOutOfDate_Arg2 {
+            get {
+                return ResourceManager.GetString("Warning_SourceFileOutOfDate_Arg2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Debuggee TargetArchitecture not detected, assuming x86_64..
+        /// </summary>
+        internal static string Warning_UsingDefaultArchitecture {
+            get {
+                return ResourceManager.GetString("Warning_UsingDefaultArchitecture", resourceCulture);
             }
         }
     }

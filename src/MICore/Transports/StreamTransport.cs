@@ -101,7 +101,11 @@ namespace MICore
                 {
                     _bQuit = true;
                     _streamReadCancellationTokenSource.Dispose();
-                    _reader.Dispose();
+
+                    // If we are shutting down without notice from the debugger (e.g., the terminal
+                    // where the debugger was hosted was closed), at this point it's possible that
+                    // there is a thread blocked doing a read() syscall.
+                    ForceDisposeStreamReader(_reader);
 
                     try
                     {
@@ -190,9 +194,31 @@ namespace MICore
             get { return _bQuit; }
         }
 
+        public abstract int DebuggerPid { get; }
+
         protected ITransportCallback Callback
         {
             get { return _callback; }
+        }
+
+        /// <summary>
+        /// In some scenarios, a StreamReader will be blocked on read() when trying to dispose it.
+        /// On OS X under mono, read() will block any close() syscalls on the file descriptor for the stream.
+        /// Therefore, we write a byte to unblock the read() and allow close() to succeed.
+        /// Callers to this function should document why read() might be blocked.
+        /// </summary>
+        /// <param name="reader">The StreamReader to forcibly dispose</param>
+        protected static void ForceDisposeStreamReader(StreamReader reader)
+        {
+            try
+            {
+                reader?.BaseStream.WriteByte(0);
+            }
+            catch
+            {
+            }
+
+            reader?.Dispose();
         }
     }
 }

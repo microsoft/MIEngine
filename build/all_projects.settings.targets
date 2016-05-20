@@ -5,6 +5,12 @@
   the few special projects (prebuild.csproj, some unit tests) include it directly.
   -->
   
+  <!-- Determine whether or not this is a lab build -->
+  <PropertyGroup Condition="'$(Lab)' == ''">
+    <Lab>false</Lab>
+    <Lab Condition="$(Configuration.Contains('Lab'))">true</Lab>
+  </PropertyGroup>
+
   <PropertyGroup>
     <MIEngineRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))\</MIEngineRoot>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>

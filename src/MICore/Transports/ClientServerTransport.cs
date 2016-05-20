@@ -53,6 +53,14 @@ namespace MICore
 
         public bool IsClosed { get { return _clientTransport.IsClosed; } }
 
+        public int DebuggerPid
+        {
+            get
+            {
+                return _clientTransport.DebuggerPid;
+            }
+        }
+
         public void Send(string cmd)
         {
             _clientTransport.Send(cmd);

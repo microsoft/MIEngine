@@ -7,8 +7,55 @@
 
   <PropertyGroup>
     <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+    <BuildDependsOn Condition="'$(IsCoreClr)' == 'false'">DetermineCompilerBinary;$(BuildDependsOn)</BuildDependsOn>
+    <BuildDependsOn>$(BuildDependsOn);GenerateMonoSymbols</BuildDependsOn>
   </PropertyGroup>
+
+  <UsingTask TaskName="GetRuntime" 
+             TaskFactory="CodeTaskFactory" 
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >
+    <ParameterGroup>
+      <IsMonoRuntime ParameterType="System.Boolean" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        IsMonoRuntime = System.Type.GetType("Mono.Runtime") != null;
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="DetermineCompilerBinary">
+    <GetRuntime>
+      <Output PropertyName="IsMonoRuntime" TaskParameter="IsMonoRuntime" />
+    </GetRuntime>
+
+    <Exec Condition="'$(IsMonoRuntime)' == 'true'"
+          ConsoleToMsBuild="true"
+          Command="dirname `which mcs`">
+      <Output TaskParameter="ConsoleOutput" PropertyName="McsPath" />
+    </Exec>
+
+    <PropertyGroup Condition="'$(IsMonoRuntime)' == 'true'">
+      <!-- If we're running on Mono, Roslyn will fail to sign the binaries, so use mcs instead -->      
+      <CscToolExe>mcs</CscToolExe>
+      <CscToolPath>$(McsPath)/</CscToolPath>
+    </PropertyGroup>
+  </Target>
   
+  <Target Name="RestoreDesktopPackages">
+      <!-- Restore from packages.config instead of project.json when building for desktop -->
+    <Exec Condition="'$(IsCoreClr)' == 'false'" 
+          Command="&quot;$(MIEngineRoot)tools/NuGet/NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(ProjectDir)packages.config&quot;" />
+  </Target>
+
+  <Target Name="GenerateMonoSymbols"
+          Condition="'$(IsCoreClr)' == 'false' AND '$(IsMonoRuntime)' == 'false' AND '$(ShouldGenerateMonoSymbols)' == 'true'">
+    <!-- If we're building the Desktop config on Windows, run pdb2mdb to generate Mono symbols as well -->
+    <Exec Command="&quot;$(NugetPackagesDirectory)\Mono.Unofficial.pdb2mdb.4.2.3.4\tools\pdb2mdb.exe&quot; &quot;$(TargetPath)&quot;" />
+  </Target>
+
   <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != ''" AfterTargets="Build">
 	<MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />
 	<Copy SourceFiles="@(GlassDirCopy)" DestinationFolder="$(GlassDir)" />

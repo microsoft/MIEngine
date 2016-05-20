@@ -40,11 +40,18 @@ namespace MICore
 
         public override bool UseExternalConsoleForLocalLaunch(LocalLaunchOptions localLaunchOptions)
         {
-            // NOTE: On Linux at least, there are issues if we try to have GDB launch the process as a child of VS 
+            // NOTE: On Linux, there are issues if we try to have GDB launch the process as a child of VS 
             // code -- it will cause a deadlock during debuggee launch. So we always use the external console 
-            // unless we are in a scenario where the debuggee will not be a child process. In the future we 
-            // might want to change this for other OSs.
-            return String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
+            // unless we are in a scenario where the debuggee will not be a child process.
+            if (PlatformUtilities.IsLinux())
+            {
+                return String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
+            }
+            else
+            {
+                return base.UseExternalConsoleForLocalLaunch(localLaunchOptions);
+            }
+
         }
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
@@ -193,6 +200,63 @@ namespace MICore
             // Although the mi documentation states that the correct command to terminate is -exec-abort
             // that isn't actually supported by gdb. 
             await _debugger.CmdAsync("kill", ResultClass.None);
+        }
+        private static string TypeBySize(uint size)
+        {
+            switch (size)
+            {
+                case 1:
+                    return "char";
+                case 2:
+                    return "short";
+                case 4:
+                    return "int";
+                case 8:
+                    return "double";
+                default:
+                    throw new ArgumentException("size");
+            }
+        }
+
+        public override async Task<Results> BreakWatch(string address, uint size, ResultClass resultClass = ResultClass.done)
+        {
+            string cmd = string.Format(CultureInfo.InvariantCulture, "-break-watch *({0}*)({1})", TypeBySize(size), address);
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
+        }
+
+        public override bool SupportsDataBreakpoints { get { return true; } }
+
+        public override async Task<TargetArchitecture> GetTargetArchitecture()
+        {
+            string cmd = "show architecture";
+            var result = await _debugger.ConsoleCmdAsync(cmd);
+            using (StringReader stringReader = new StringReader(result))
+            {
+                while (true)
+                {
+                    string resultLine = stringReader.ReadLine();
+                    if (resultLine == null)
+                        break;
+
+                    if (resultLine.IndexOf("x86-64", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.X64;
+                    }
+                    else if (resultLine.IndexOf("i386", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.X86;
+                    }
+                    else if (resultLine.IndexOf("arm64", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.ARM64;
+                    }
+                    else if (resultLine.IndexOf("arm", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.ARM;
+                    }
+                }
+            }
+            return TargetArchitecture.Unknown;
         }
     }
 }

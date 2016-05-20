@@ -13,6 +13,8 @@ using MICore;
 using System.Globalization;
 using Microsoft.DebugEngineHost;
 
+using Logger = MICore.Logger;
+
 namespace Microsoft.MIDebugEngine
 {
     // AD7Engine is the primary entrypoint object for the sample engine. 
@@ -168,7 +170,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return e.HResult;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting:true))
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
                 return EngineUtils.UnexpectedException(e);
             }
@@ -609,7 +611,7 @@ namespace Microsoft.MIDebugEngine
             _breakpointManager.ClearBoundBreakpoints();
 
             _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
-
+            _debuggedProcess.Detach();
             return Constants.S_OK;
         }
 
@@ -641,7 +643,7 @@ namespace Microsoft.MIDebugEngine
                     pos.dwLine = line;
                     pos.dwColumn = 0;
                     MITextPosition textPosition = new MITextPosition(documentName, pos, pos);
-                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt));
+                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt, this.DebuggedProcess));
                     codeContexts.Add(codeCxt);
                 }
                 if (codeContexts.Count > 0)
@@ -767,6 +769,11 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
+                if (null == thread || null == thread.GetDebuggedThread())
+                {
+                    return Constants.E_FAIL;
+                }
+
                 _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
             }
             catch (InvalidCoreDumpOperationException)

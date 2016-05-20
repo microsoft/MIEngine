@@ -23,6 +23,7 @@ namespace MICore
         private ManualResetEvent _allReadersDone = new ManualResetEvent(false);
         private bool _killOnClose;
         private bool _filterStderr;
+        private int _debuggerPid = -1;
 
         public PipeTransport(bool killOnClose = false, bool filterStderr = false, bool filterStdout = false) : base(filterStdout)
         {
@@ -33,6 +34,18 @@ namespace MICore
         protected override string GetThreadName()
         {
             return "MI.PipeTransport";
+        }
+
+        /// <summary>
+        /// The value of this property reflects the pid for the debugger running
+        /// locally.
+        /// </summary>
+        public override int DebuggerPid
+        {
+            get
+            {
+                return _debuggerPid;
+            }
         }
 
         protected virtual void InitProcess(Process proc, out StreamReader stdout, out StreamWriter stdin)
@@ -53,6 +66,7 @@ namespace MICore
                 this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "Starting: \"{0}\" {1}", _process.StartInfo.FileName, _process.StartInfo.Arguments));
                 _process.Start();
 
+                _debuggerPid = _process.Id;
                 stdout = _process.StandardOutput;
                 stdin = _process.StandardInput;
                 _stdErrReader = _process.StandardError;
@@ -90,8 +104,8 @@ namespace MICore
 
         private void KillProcess(Process p)
         {
-            bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-            bool isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            bool isLinux = PlatformUtilities.IsLinux();
+            bool isOSX = PlatformUtilities.IsOSX();
             if (isLinux || isOSX)
             {
                 // On linux run 'ps -x -o "%p %P"' (similarly on Mac), which generates a list of the process ids (%p) and parent process ids (%P).

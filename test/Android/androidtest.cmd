@@ -80,7 +80,11 @@ goto :NextArg
 
 :SetNdkRoot
 shift /1
-set _NdkRoot=%~1
+if "%~1" == "10" (
+	set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+) else (
+	set _NdkRoot=%~1
+)
 goto :NextArg
 
 :SetLoop
@@ -131,6 +135,7 @@ for /f "tokens=1,6" %%i in ('platform-tools\adb devices -l ^| find /i "VS Emulat
     popd
     exit /b 0
 )
+exit /b -1
 
 :RunAll
     set FAILED_TESTS=
@@ -190,7 +195,7 @@ for /f "tokens=1,6" %%i in ('platform-tools\adb devices -l ^| find /i "VS Emulat
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to build %~1. See build.log for more information.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Deploy the app
-    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% install -r %_Platform%\Debug\%~1.apk > adb.log
+    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% install -r %_Platform%\Debug\%~1.apk > adb.log 2>&1
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: adb failed for one reason or another.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Create temp directory

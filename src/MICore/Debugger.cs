@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace MICore
 {
@@ -43,6 +44,10 @@ namespace MICore
         public ProcessState ProcessState { get; private set; }
         private MIResults _miResults;
 
+        public bool EntrypointHit { get; protected set; }
+
+        public bool IsCygwin { get; protected set; }
+
         public virtual void FlushBreakStateData()
         {
         }
@@ -63,12 +68,14 @@ namespace MICore
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         protected readonly LaunchOptions _launchOptions;
+        public LaunchOptions LaunchOptions { get { return this._launchOptions; } }
 
         private Queue<Func<Task>> _internalBreakActions = new Queue<Func<Task>>();
         private TaskCompletionSource<object> _internalBreakActionCompletionSource;
         private TaskCompletionSource<object> _consoleDebuggerInitializeCompletionSource = new TaskCompletionSource<object>();
         private LinkedList<string> _initializationLog = new LinkedList<string>();
         private LinkedList<string> _initialErrors = new LinkedList<string>();
+        private int _localDebuggerPid = -1;
 
         protected bool _connected;
 
@@ -91,7 +98,6 @@ namespace MICore
         private ITransport _transport;
         private CommandLock _commandLock = new CommandLock();
 
-        private string _lastResult;
         /// <summary>
         /// The last command we sent over the transport. This includes both the command name and arguments.
         /// </summary>
@@ -105,6 +111,14 @@ namespace MICore
         private StringBuilder _consoleCommandOutput;
 
         private bool _pendingInternalBreak;
+        internal bool IsRequestingInternalAsyncBreak
+        {
+            get
+            {
+                return _pendingInternalBreak;
+            }
+        }
+
         private bool _waitingToStop;
         private Timer _breakTimer = null;
         private int _retryCount;
@@ -120,6 +134,32 @@ namespace MICore
             _debuggeePids = new Dictionary<string, int>();
             Logger = logger;
             _miResults = new MIResults(logger);
+        }
+
+        protected void SetDebuggerPid(int debuggerPid)
+        {
+            // Used for testing
+            Logger.WriteLine(string.Concat("DebuggerPid=", debuggerPid));
+            _localDebuggerPid = debuggerPid;
+        }
+
+        /// <summary>
+        /// Check if the local debugger process is running.
+        /// For Windows, it returns False always to avoid shortcuts taken when it returns True.
+        /// </summary>
+        /// <returns>True if the local debugger process is running and the platform is Linux or OS X.
+        /// False otherwise.</returns>
+        private bool IsUnixDebuggerRunning()
+        {
+            if (_localDebuggerPid > 0)
+            {
+                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                {
+                    return UnixUtilities.IsProcessRunning(_localDebuggerPid);
+                }
+            }
+
+            return false;
         }
 
         private void RetryBreak(object o)
@@ -165,7 +205,14 @@ namespace MICore
                         CmdBreakInternal();
                         _retryCount = 0;
                         _waitingToStop = true;
-                        _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
+
+                        // When using signals to stop the proces, do not kick off another break attempt. The debug break injection and
+                        // signal based models are reliable so no retries are needed. Cygwin can't currently async-break reliably, so
+                        // use retries there.
+                        if (!IsLocalGdb() && !this.IsCygwin)
+                        {
+                            _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
+                        }
                     }
                     return _internalBreakActionCompletionSource.Task;
                 }
@@ -176,7 +223,7 @@ namespace MICore
         {
             string reason = results.TryFindString("reason");
 
-            if (reason.StartsWith("exited"))
+            if (reason.StartsWith("exited") || reason.StartsWith("disconnected"))
             {
                 if (this.ProcessState != ProcessState.Exited)
                 {
@@ -348,8 +395,11 @@ namespace MICore
             FlushBreakStateData();
 
             _transport.Init(this, options, Logger);
+        }
 
-            switch (options.TargetArchitecture)
+        public void SetTargetArch(TargetArchitecture arch)
+        {
+            switch (arch)
             {
                 case TargetArchitecture.ARM:
                     MaxInstructionSize = 4;
@@ -449,6 +499,14 @@ namespace MICore
         }
 
         protected bool _requestingRealAsyncBreak = false;
+        internal bool IsRequestingRealAsyncBreak
+        {
+            get
+            {
+                return _requestingRealAsyncBreak;
+            }
+        }
+
         public Task CmdBreak()
         {
             _requestingRealAsyncBreak = true;
@@ -456,11 +514,10 @@ namespace MICore
         }
 
 
-        private bool IsLocalGdbAttach()
+        internal bool IsLocalGdb()
         {
             if (this.MICommandFactory.Mode == MIMode.Gdb &&
                this._launchOptions is LocalLaunchOptions &&
-               ((LocalLaunchOptions)this._launchOptions).ProcessId != 0 &&
                String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
                )
             {
@@ -486,6 +543,11 @@ namespace MICore
 
         public async Task<Results> CmdTerminate()
         {
+            if (ProcessState == ProcessState.Running)
+            {
+                await CmdBreak();
+            }
+
             await MICommandFactory.Terminate();
 
             return new Results(ResultClass.done);
@@ -504,13 +566,12 @@ namespace MICore
 
         public Task CmdBreakInternal()
         {
-            //TODO May need to fix attach on windows and osx.
-            if (IsLocalGdbAttach() && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            this.VerifyNotDebuggingCoreDump();
+
+            // Note that interrupt doesn't work on OS X with gdb:
+            // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
+            if (IsLocalGdb())
             {
-                // for local linux debugging with attach, send a signal to one of the debugee processes rather than
-                // using -exec-interrupt. -exec-interrupt does not work with attach. End result is either
-                // deadlocks or missed bps (since binding in runtime requires break state).
-                // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
                 bool useSignal = false;
                 int debuggeePid = 0;
                 lock (_debuggeePids)
@@ -522,9 +583,23 @@ namespace MICore
                     }
                 }
 
-                if (useSignal)
+                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                 {
-                    return CmdLinuxBreak(debuggeePid, ResultClass.done);
+                    // for local linux debugging, send a signal to one of the debuggee processes rather than
+                    // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
+                    // End result is either deadlocks or missed bps (since binding in runtime requires break state).
+                    // NOTE: this is not required for remote. Remote will not be using LocalLinuxTransport
+                    if (useSignal)
+                    {
+                        return CmdBreakUnix(debuggeePid, ResultClass.done);
+                    }
+                }
+                else if (PlatformUtilities.IsWindows() && !this.IsCygwin)
+                {
+                    if (useSignal)
+                    {
+                        return CmdBreakWindows(debuggeePid, ResultClass.done);
+                    }
                 }
             }
 
@@ -541,7 +616,6 @@ namespace MICore
         public void CmdContinueAsync()
         {
             this.VerifyNotDebuggingCoreDump();
-
             PostCommand("-exec-continue");
         }
 
@@ -572,7 +646,7 @@ namespace MICore
             return outStr.ToString();
         }
 
-        public async Task<string> ConsoleCmdAsync(string cmd)
+        public async Task<string> ConsoleCmdAsync(string cmd, bool ignoreFailures = false)
         {
             if (this.ProcessState != ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
             {
@@ -606,7 +680,7 @@ namespace MICore
 
                 try
                 {
-                    await ExclusiveCmdAsync("-interpreter-exec console \"" + Escape(cmd) + "\"", ResultClass.done, lockToken);
+                    await ExclusiveCmdAsync("-interpreter-exec console \"" + Escape(cmd) + "\"", ignoreFailures ? ResultClass.None : ResultClass.done, lockToken);
 
                     return _consoleCommandOutput.ToString();
                 }
@@ -663,18 +737,47 @@ namespace MICore
             return waitingOperation.Task;
         }
 
-        private Task<Results> CmdLinuxBreak(int debugeePid, ResultClass expectedResultClass)
+        private Task<Results> CmdBreakUnix(int debugeePid, ResultClass expectedResultClass)
         {
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             const int sigint = 2;
-            LinuxNativeMethods.Kill(debugeePid, sigint);
+            UnixNativeMethods.Kill(debugeePid, sigint);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
 
-        #region ITransportCallback implementation
+        private Task<Results> CmdBreakWindows(int debugeePid, ResultClass expectedResultClass)
+        {
+            lock (this._debuggeePids)
+            {
+                foreach (int pid in this._debuggeePids.Values)
+                {
+                    try
+                    {
+                        // Mingw has no kill utility. Instead, use kernel32!DebugBreakProcess. Note that this
+                        // can deadlock if the loader lock is taken by a suspended thread. This approach does
+                        // not work in cygwin
+                        Process p = Process.GetProcessById(pid);
+
+#if CORECLR
+                        WindowsNativeMethods.DebugBreakProcess(p.SafeHandle);
+#else
+                        WindowsNativeMethods.DebugBreakProcess(p.Handle);
+#endif
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+
+            return Task.FromResult<Results>(new Results(ResultClass.done));
+        }
+
+#region ITransportCallback implementation
         // Note: this can be called from any thread
         void ITransportCallback.OnStdOutLine(string line)
         {
@@ -781,7 +884,7 @@ namespace MICore
             }
         }
 
-        #endregion
+#endregion
 
         // inherited classes can override this for thread marshalling etc
         protected virtual void ScheduleStdOutProcessing(string line)
@@ -964,7 +1067,6 @@ namespace MICore
         private void OnResult(string cmd, string token)
         {
             uint id = token != null ? uint.Parse(token, CultureInfo.InvariantCulture) : 0;
-            _lastResult = cmd;
             Results results = _miResults.ParseCommandOutput(cmd);
 
             if (results.ResultClass == ResultClass.done)
@@ -1031,6 +1133,26 @@ namespace MICore
             {
                 string status = _miResults.ParseCString(cmd.Substring(8));
                 OnStateChanged("stopped", status);
+            }
+            else if (cmd.StartsWith("stopped", StringComparison.Ordinal))
+            {
+                if (PlatformUtilities.IsWindows() &&
+                    this.LaunchOptions is LocalLaunchOptions &&
+                    ((LocalLaunchOptions)this.LaunchOptions).ProcessId != 0 &&
+                    this.MICommandFactory.Mode == MIMode.Gdb &&
+                    !this.IsCygwin
+                    )
+                {
+                    // mingw enters break mode with no status flags on the mi response during attach.
+                    // In order to keey the entrypoint state correct, set it to true and continue
+                    // the break.
+                    this.EntrypointHit = true;
+                    CmdContinueAsync();
+                }
+                else
+                {
+                    Debug.Fail("Unknown out-of-band msg: " + cmd);
+                }
             }
             else if (cmd.StartsWith("running,", StringComparison.Ordinal))
             {
@@ -1174,10 +1296,13 @@ namespace MICore
             {
                 ScheduleStdOutProcessing(@"*stopped,reason=""exited""");
 
-                // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
-                //  the debugger process is already gone (e.g. because the terminal window was closed), we won't get
-                //  a response, so queue a fake "exit" event for processing as well, just to be sure.
-                ScheduleStdOutProcessing("^exit");
+                if (!IsUnixDebuggerRunning())
+                {
+                    // Processing the fake "stopped" event sent above will normally cause the debugger to close, but if
+                    // the debugger process is already gone (e.g. because the terminal window was closed), we won't get
+                    // a response, so queue a fake "exit" event for processing as well.
+                    ScheduleStdOutProcessing("^exit");
+                }
             }
         }
 
