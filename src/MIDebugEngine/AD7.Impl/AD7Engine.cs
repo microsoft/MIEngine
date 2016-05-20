@@ -595,7 +595,7 @@ namespace Microsoft.MIDebugEngine
         // breakmode. 
         public int CauseBreak()
         {
-            _pollThread.RunOperation(() => _debuggedProcess.CmdBreak());
+            _pollThread.RunOperation(() => _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Async));
 
             return Constants.S_OK;
         }
@@ -858,10 +858,9 @@ namespace Microsoft.MIDebugEngine
         {
             DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
-                await _debuggedProcess.CmdBreak();
+                await _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Stop);
             });
-            // TODO: this should be returning S_ASYNC_STOP
-            return Constants.S_OK;
+            return _debuggedProcess.ProcessState == ProcessState.Running ? Constants.S_ASYNC_STOP : Constants.S_OK;
         }
 
         // WatchForExpressionEvaluationOnThread is used to cooperate between two different engines debugging 

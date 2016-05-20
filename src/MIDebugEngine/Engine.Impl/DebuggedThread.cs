@@ -44,6 +44,7 @@ namespace Microsoft.MIDebugEngine
         private List<DebuggedThread> _newThreads;
         private Dictionary<string, List<int>> _threadGroups;
         private static uint s_targetId;
+        private static string s_defaultGroupId = "i1";  // gdb's default group id, also used for any process without group ids
 
         static ThreadCache()
         {
@@ -56,7 +57,7 @@ namespace Microsoft.MIDebugEngine
             _stackFrames = new Dictionary<int, List<ThreadContext>>();
             _topContext = new Dictionary<int, ThreadContext>();
             _threadGroups = new Dictionary<string, List<int>>();
-            _threadGroups["i1"] = new List<int>();  // initialize the processes thread group
+            _threadGroups[s_defaultGroupId] = new List<int>();  // initialize the processes thread group
             _stateChange = true;
             _callback = callback;
             _debugger = debugger;
@@ -155,6 +156,10 @@ namespace Microsoft.MIDebugEngine
                 {
                     _stateChange = true;
                 }
+                if (string.IsNullOrEmpty(groupId))
+                {
+                    groupId = s_defaultGroupId;
+                }
                 if (!_threadGroups.ContainsKey(groupId))
                 {
                     _threadGroups[groupId] = new List<int>();
@@ -187,17 +192,14 @@ namespace Microsoft.MIDebugEngine
         {
             lock (_threadList)
             {
-                if (_threadGroups.ContainsKey(groupId))
-                {
-                    _threadGroups.Remove(groupId);
-                }
+                _threadGroups.Remove(groupId);
             }
         }
 
         private bool IsInParent(int tid)
         {
-            // only those threads in the "i1" threadgroup are in the debugee, others are transient while attaching to a child process
-            return _threadGroups["i1"].Contains(tid);
+            // only those threads in the s_defaultGroupId threadgroup are in the debugee, others are transient while attaching to a child process
+            return _threadGroups[s_defaultGroupId].Contains(tid);
         }
 
         private async Task<List<ThreadContext>> WalkStack(DebuggedThread thread)

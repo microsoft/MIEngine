@@ -102,12 +102,14 @@ namespace Microsoft.MIDebugEngine
         void OnSymbolSearch(DebuggedModule module, string status, uint dwStatsFlags);
         void OnBreakpointBound(Object objPendingBreakpoint);
         void OnEntryPoint(DebuggedThread thread);
+        void OnStopComplete();
     };
 
     public class Constants
     {
         public const int S_OK = 0;
         public const int S_FALSE = 1;
+        public const int S_ASYNC_STOP = 0x40B02;
         public const int E_NOTIMPL = unchecked((int)0x80004001);
         public const int E_FAIL = unchecked((int)0x80004005);
         public const int E_ABORT = unchecked((int)(0x80004004));

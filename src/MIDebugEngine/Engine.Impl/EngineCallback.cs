@@ -288,6 +288,12 @@ namespace Microsoft.MIDebugEngine
             Send(eventObject, AD7CustomDebugEvent.IID, null);
         }
 
+        public void OnStopComplete()
+        {
+            var eventObject = new AD7StopCompleteEvent();
+            Send(eventObject, AD7StopCompleteEvent.IID, null);
+        }
+
         private void SendMessage(string message, OutputMessage.Severity severity, bool isAsync)
         {
             try

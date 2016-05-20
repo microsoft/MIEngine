@@ -96,6 +96,18 @@ namespace MICore
             public uint Id { get; private set; }
         };
 
+        public class StoppingEventArgs: ResultEventArgs
+        {
+            public readonly BreakRequest AsyncRequest;
+            public StoppingEventArgs(Results results, uint id, BreakRequest asyncRequest = BreakRequest.None) : base(results, id)
+            {
+                AsyncRequest = asyncRequest;
+            }
+
+            public StoppingEventArgs(Results results, BreakRequest asyncRequest = BreakRequest.None) : this(results, 0, asyncRequest)
+            { }
+        }
+
         private ITransport _transport;
         private CommandLock _commandLock = new CommandLock();
 
@@ -162,7 +174,7 @@ namespace MICore
                 if (_waitingToStop && _retryCount < BREAK_RETRY_MAX)
                 {
                     Logger.WriteLine("Debugger failed to break. Trying again.");
-                    CmdBreakInternal();
+                    CmdBreak(BreakRequest.Internal);
                     _retryCount++;
                 }
                 else
@@ -195,7 +207,7 @@ namespace MICore
                     if (!_pendingInternalBreak)
                     {
                         _pendingInternalBreak = true;
-                        CmdBreakInternal();
+                        CmdBreak(BreakRequest.Internal);
                         _retryCount = 0;
                         _waitingToStop = true;
                         _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
@@ -254,8 +266,16 @@ namespace MICore
             }
             else if (BreakModeEvent != null)
             {
-                if (fIsAsyncBreak) { _requestingRealAsyncBreak = false; }
-                BreakModeEvent(this, new ResultEventArgs(results));
+                if (fIsAsyncBreak)
+                {
+                    BreakRequest request = _requestingRealAsyncBreak;
+                    _requestingRealAsyncBreak = BreakRequest.None;
+                    BreakModeEvent(this, new StoppingEventArgs(results, request));
+                }
+                else
+                {
+                    BreakModeEvent(this, new StoppingEventArgs(results));
+                }
             }
         }
 
@@ -354,7 +374,7 @@ namespace MICore
                 }
                 else
                 {
-                    if (!_requestingRealAsyncBreak && fIsAsyncBreak)
+                    if (_requestingRealAsyncBreak == BreakRequest.Internal && fIsAsyncBreak)
                     {
                         CmdContinueAsync();
                         processContinued = true;
@@ -484,10 +504,17 @@ namespace MICore
             return CmdAsync("-exec-run", ResultClass.running);
         }
 
-        protected bool _requestingRealAsyncBreak = false;
-        public Task CmdBreak()
+        public enum BreakRequest
         {
-            _requestingRealAsyncBreak = true;
+            None,
+            Async,
+            Stop,
+            Internal
+        }
+        protected BreakRequest _requestingRealAsyncBreak = BreakRequest.None;
+        public Task CmdBreak(BreakRequest request)
+        {
+            _requestingRealAsyncBreak = request;
             return CmdBreakInternal();
         }
 
@@ -507,6 +534,12 @@ namespace MICore
             }
         }
 
+        private bool IsRemoteGdb()
+        {
+            return this.MICommandFactory.Mode == MIMode.Gdb &&
+               this._launchOptions is PipeLaunchOptions;
+        }
+
         protected bool IsCoreDump
         {
             get
@@ -523,7 +556,7 @@ namespace MICore
         {
             if (ProcessState == ProcessState.Running)
             {
-                await CmdBreak();
+                await CmdBreak(BreakRequest.Async);
             }
 
             await MICommandFactory.Terminate();
@@ -535,7 +568,7 @@ namespace MICore
         {
             if (ProcessState == ProcessState.Running)
             {
-                await CmdBreak();
+                await CmdBreak(BreakRequest.Async);
             }
             await CmdAsync("-target-detach", ResultClass.done);
 
@@ -545,6 +578,7 @@ namespace MICore
         public Task CmdBreakInternal()
         {
             this.VerifyNotDebuggingCoreDump();
+            Debug.Assert(_requestingRealAsyncBreak != BreakRequest.None);
 
             // TODO May need to fix attach on windows.
             // Note that interrupt doesn't work when attached on OS X with gdb:
@@ -571,9 +605,10 @@ namespace MICore
                     return CmdUnixBreak(debuggeePid, ResultClass.done);
                 }
             }
-            else if (_transport is PipeTransport)
+            else if (IsRemoteGdb() && _transport is PipeTransport)
             {
-                if (((PipeTransport)_transport).Interrupt(PidByInferior("i1")))
+                int pid = PidByInferior("i1");
+                if (pid != 0 && ((PipeTransport)_transport).Interrupt(pid))
                 {
                     return Task.FromResult<Results>(new Results(ResultClass.done));
                 }
@@ -1148,7 +1183,10 @@ namespace MICore
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-group-exited,".Length));
                 HandleThreadGroupExited(results);
-                ThreadGroupExitedEvent(this, new ResultEventArgs(results, 0));
+                if (ThreadGroupExitedEvent != null)
+                {
+                    ThreadGroupExitedEvent(this, new ResultEventArgs(results, 0));
+                }
             }
             else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
             {
@@ -1247,7 +1285,11 @@ namespace MICore
 
         public int PidByInferior(string inf)
         {
-            return _debuggeePids[inf];
+            if (_debuggeePids.ContainsKey(inf))
+            {
+                return _debuggeePids[inf];
+            }
+            return 0;
         }
 
         public uint InferiorNumber(string groupId)

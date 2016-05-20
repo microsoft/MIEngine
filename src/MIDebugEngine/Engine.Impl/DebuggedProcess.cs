@@ -332,7 +332,7 @@ namespace Microsoft.MIDebugEngine
             {
                 // NOTE: This is an async void method, so make sure exceptions are caught and somehow reported
 
-                ResultEventArgs results = args as MICore.Debugger.ResultEventArgs;
+                StoppingEventArgs results = args as MICore.Debugger.StoppingEventArgs;
                 if (_waitDialog != null)
                 {
                     _waitDialog.EndWaitDialog();
@@ -347,6 +347,10 @@ namespace Microsoft.MIDebugEngine
                 try
                 {
                     await HandleBreakModeEvent(results);
+                    if (results.AsyncRequest == BreakRequest.Stop)
+                    {
+                        _callback.OnStopComplete();
+                    }
                 }
                 catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
@@ -1709,6 +1713,11 @@ namespace Microsoft.MIDebugEngine
         private Task<string> ResetConsole()
         {
             return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
+        }
+
+        public void SendStopComplete()
+        {
+            _callback.OnStopComplete();
         }
     }
 }

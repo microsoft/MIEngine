@@ -40,19 +40,36 @@ namespace MICore
                 return false;
             }
 
-            Process proc = new Process();
-            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
-            proc.StartInfo.FileName = _pipePath;
-            proc.StartInfo.Arguments = string.Format(CultureInfo.InvariantCulture, _cmdArgs, killCmd);
-            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
-            proc.EnableRaisingEvents = false;
-            proc.StartInfo.RedirectStandardInput = false;
-            proc.StartInfo.RedirectStandardOutput = false;
-            proc.StartInfo.RedirectStandardError = false;
-            proc.StartInfo.UseShellExecute = false;
-            proc.StartInfo.CreateNoWindow = true;
-            proc.Start();
-            proc.WaitForExit();
+            try
+            {
+                Process proc = new Process();
+                string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
+                proc.StartInfo.FileName = _pipePath;
+                proc.StartInfo.Arguments = string.Format(CultureInfo.InvariantCulture, _cmdArgs, killCmd);
+                proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
+                proc.EnableRaisingEvents = false;
+                proc.StartInfo.RedirectStandardInput = false;
+                proc.StartInfo.RedirectStandardOutput = true;
+                proc.StartInfo.RedirectStandardError = true;
+                proc.StartInfo.UseShellExecute = false;
+                proc.StartInfo.CreateNoWindow = true;
+                proc.Start();
+                Task.Run(() =>
+                {
+                    AsyncReadFromStream(proc.StandardOutput, (s) => { if (!string.IsNullOrWhiteSpace(s)) this.Callback.OnStdOutLine(s); });
+                    AsyncReadFromStream(proc.StandardError, (s) => { if (!string.IsNullOrWhiteSpace(s)) this.Callback.OnStdErrorLine(s); });
+                });
+                proc.WaitForExit();
+                if (proc.ExitCode != 0)
+                {
+                    this.Callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessExit, _pipePath, proc.ExitCode));
+                }
+            }
+            catch (Exception e)
+            {
+                this.Callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessException, _pipePath, e.Message));
+                return false;
+            }
             return true;
         }
 
@@ -225,6 +242,25 @@ namespace MICore
             }
 
             base.OnReadStreamAborted();
+        }
+
+        private async void AsyncReadFromStream(StreamReader stream, Action<string> lineHandler)
+        {
+            try
+            {
+                while (true)
+                {
+                    string line = await stream.ReadLineAsync();
+                    if (line == null)
+                        break;
+
+                    lineHandler(line);
+                }
+            }
+            catch (Exception)
+            {
+                // If anything goes wrong, don't crash VS
+            }
         }
 
         private async void AsyncReadFromStdError()

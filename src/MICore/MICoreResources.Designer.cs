@@ -10,7 +10,6 @@
 
 namespace MICore {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace MICore {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MICore.MICoreResources", typeof(MICoreResources).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MICore.MICoreResources", typeof(MICoreResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -370,6 +369,24 @@ namespace MICore {
         public static string Warn_AttachAsRootProcess {
             get {
                 return ResourceManager.GetString("Warn_AttachAsRootProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to execute {0} failed with exception {1}.
+        /// </summary>
+        public static string Warn_ProcessException {
+            get {
+                return ResourceManager.GetString("Warn_ProcessException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} exited with exit code {1}.
+        /// </summary>
+        public static string Warn_ProcessExit {
+            get {
+                return ResourceManager.GetString("Warn_ProcessExit", resourceCulture);
             }
         }
     }
