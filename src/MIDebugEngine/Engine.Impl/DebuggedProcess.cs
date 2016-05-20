@@ -690,6 +690,13 @@ namespace Microsoft.MIDebugEngine
                     {
                         this.IsCygwin = true;
                         this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
+
+                        this._engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
+                    }
+                    else
+                    {
+                        // Gdb on windows and not cygwin implies mingw
+                        this._engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
                     }
                 }));
                 commands.Add(lc);
