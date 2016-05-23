@@ -266,16 +266,9 @@ namespace MICore
             }
             else if (BreakModeEvent != null)
             {
-                if (fIsAsyncBreak)
-                {
-                    BreakRequest request = _requestingRealAsyncBreak;
-                    _requestingRealAsyncBreak = BreakRequest.None;
-                    BreakModeEvent(this, new StoppingEventArgs(results, request));
-                }
-                else
-                {
-                    BreakModeEvent(this, new StoppingEventArgs(results));
-                }
+                BreakRequest request = _requestingRealAsyncBreak;
+                _requestingRealAsyncBreak = BreakRequest.None;
+                BreakModeEvent(this, new StoppingEventArgs(results, request));
             }
         }
 

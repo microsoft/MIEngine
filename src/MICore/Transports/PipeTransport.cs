@@ -54,11 +54,8 @@ namespace MICore
                 proc.StartInfo.UseShellExecute = false;
                 proc.StartInfo.CreateNoWindow = true;
                 proc.Start();
-                Task.Run(() =>
-                {
-                    AsyncReadFromStream(proc.StandardOutput, (s) => { if (!string.IsNullOrWhiteSpace(s)) this.Callback.OnStdOutLine(s); });
-                    AsyncReadFromStream(proc.StandardError, (s) => { if (!string.IsNullOrWhiteSpace(s)) this.Callback.OnStdErrorLine(s); });
-                });
+                AsyncReadFromStream(proc.StandardOutput, (s) => { if (!string.IsNullOrWhiteSpace(s)) this.Callback.OnStdOutLine(s); });
+                AsyncReadFromStream(proc.StandardError, (s) => { if (!string.IsNullOrWhiteSpace(s)) this.Callback.OnStdErrorLine(s); });
                 proc.WaitForExit();
                 if (proc.ExitCode != 0)
                 {

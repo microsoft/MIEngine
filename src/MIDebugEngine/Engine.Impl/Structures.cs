@@ -102,7 +102,7 @@ namespace Microsoft.MIDebugEngine
         void OnSymbolSearch(DebuggedModule module, string status, uint dwStatsFlags);
         void OnBreakpointBound(Object objPendingBreakpoint);
         void OnEntryPoint(DebuggedThread thread);
-        void OnStopComplete();
+        void OnStopComplete(DebuggedThread thread);
     };
 
     public class Constants

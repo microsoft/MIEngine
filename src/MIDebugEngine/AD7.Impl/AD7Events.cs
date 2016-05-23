@@ -564,7 +564,7 @@ namespace Microsoft.MIDebugEngine
         #endregion
     }
 
-    internal sealed class AD7StopCompleteEvent: AD7AsynchronousEvent, IDebugStopCompleteEvent2
+    internal sealed class AD7StopCompleteEvent: AD7StoppingEvent, IDebugStopCompleteEvent2
     {
         public const string IID = "3DCA9DCD-FB09-4AF1-A926-45F293D48B2D";
     }

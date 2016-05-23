@@ -346,11 +346,7 @@ namespace Microsoft.MIDebugEngine
 
                 try
                 {
-                    await HandleBreakModeEvent(results);
-                    if (results.AsyncRequest == BreakRequest.Stop)
-                    {
-                        _callback.OnStopComplete();
-                    }
+                    await HandleBreakModeEvent(results, results.AsyncRequest);
                 }
                 catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
@@ -739,7 +735,7 @@ namespace Microsoft.MIDebugEngine
             Logger.Flush();
         }
 
-        private async Task HandleBreakModeEvent(ResultEventArgs results)
+        private async Task HandleBreakModeEvent(ResultEventArgs results, BreakRequest breakRequest)
         {
             string reason = results.Results.TryFindString("reason");
             int tid;
@@ -816,6 +812,7 @@ namespace Microsoft.MIDebugEngine
 
             if (String.IsNullOrWhiteSpace(reason) && !this.EntrypointHit)
             {
+                breakRequest = BreakRequest.None;   // don't let stopping interfere with launch processing
                 this.EntrypointHit = true;
                 CmdContinueAsync();
                 FireDeviceAppLauncherResume();
@@ -866,7 +863,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         //we hit a bp pending deletion
                         //post the CmdContinueAsync operation so it does not happen until we have deleted all the pending deletes
-                        CmdContinueAsync();
+                        CmdContinueAsyncConditional(breakRequest);
                     }
                     else
                     {
@@ -895,7 +892,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         //we hit a bp pending deletion
                         //post the CmdContinueAsync operation so it does not happen until we have deleted all the pending deletes
-                        CmdContinueAsync();
+                        CmdContinueAsyncConditional(breakRequest);
                     }
                     else
                     {
@@ -914,7 +911,7 @@ namespace Microsoft.MIDebugEngine
                 if ((name == "SIG32") || (name == "SIG33"))
                 {
                     // we are going to ignore these (Sigma) signals for now
-                    CmdContinueAsync();
+                    CmdContinueAsyncConditional(breakRequest);
                 }
                 else if (MICommandFactory.IsAsyncBreakSignal(results.Results))
                 {
@@ -967,8 +964,23 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                Debug.Fail("Unknown stopping reason");
-                _callback.OnException(thread, "Unknown", "Unknown stopping event", 0);
+                if (breakRequest == BreakRequest.None)
+                {
+                    Debug.Fail("Unknown stopping reason");
+                    _callback.OnException(thread, "Unknown", "Unknown stopping event", 0);
+                }
+            }
+            if (breakRequest != BreakRequest.None)
+            {
+                _callback.OnStopComplete(thread);
+            }
+        }
+
+        private void CmdContinueAsyncConditional(BreakRequest request)
+        {
+            if (request != BreakRequest.None)
+            {
+                CmdContinueAsync();
             }
         }
 
@@ -1225,7 +1237,7 @@ namespace Microsoft.MIDebugEngine
             {
                 await CheckModules();
                 _libraryLoaded.Clear();
-                await HandleBreakModeEvent(_initialBreakArgs);
+                await HandleBreakModeEvent(_initialBreakArgs, BreakRequest.None);
                 _initialBreakArgs = null;
             }
             else if (this.IsCoreDump)
@@ -1713,11 +1725,6 @@ namespace Microsoft.MIDebugEngine
         private Task<string> ResetConsole()
         {
             return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
-        }
-
-        public void SendStopComplete()
-        {
-            _callback.OnStopComplete();
         }
     }
 }
