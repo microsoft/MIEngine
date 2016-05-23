@@ -10,6 +10,7 @@
 
 namespace MICore {
     using System;
+    using System.Reflection;
     
     
     /// <summary>
@@ -39,7 +40,7 @@ namespace MICore {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MICore.MICoreResources", typeof(MICoreResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MICore.MICoreResources", typeof(MICoreResources).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
