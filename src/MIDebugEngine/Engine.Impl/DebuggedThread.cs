@@ -44,7 +44,7 @@ namespace Microsoft.MIDebugEngine
         private List<DebuggedThread> _newThreads;
         private Dictionary<string, List<int>> _threadGroups;
         private static uint s_targetId;
-        private static string s_defaultGroupId = "i1";  // gdb's default group id, also used for any process without group ids
+        private const string c_defaultGroupId = "i1";  // gdb's default group id, also used for any process without group ids
 
         static ThreadCache()
         {
@@ -57,7 +57,7 @@ namespace Microsoft.MIDebugEngine
             _stackFrames = new Dictionary<int, List<ThreadContext>>();
             _topContext = new Dictionary<int, ThreadContext>();
             _threadGroups = new Dictionary<string, List<int>>();
-            _threadGroups[s_defaultGroupId] = new List<int>();  // initialize the processes thread group
+            _threadGroups[c_defaultGroupId] = new List<int>();  // initialize the processes thread group
             _stateChange = true;
             _callback = callback;
             _debugger = debugger;
@@ -158,7 +158,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 if (string.IsNullOrEmpty(groupId))
                 {
-                    groupId = s_defaultGroupId;
+                    groupId = c_defaultGroupId;
                 }
                 if (!_threadGroups.ContainsKey(groupId))
                 {
@@ -199,7 +199,7 @@ namespace Microsoft.MIDebugEngine
         private bool IsInParent(int tid)
         {
             // only those threads in the s_defaultGroupId threadgroup are in the debugee, others are transient while attaching to a child process
-            return _threadGroups[s_defaultGroupId].Contains(tid);
+            return _threadGroups[c_defaultGroupId].Contains(tid);
         }
 
         private async Task<List<ThreadContext>> WalkStack(DebuggedThread thread)
