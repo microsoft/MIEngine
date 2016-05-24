@@ -225,4 +225,13 @@ Error: {1}</value>
   <data name="Warn_AttachAsRootProcess" xml:space="preserve">
     <value>Superuser access is required to attach to a process. Attaching as superuser can potentially harm your computer. Do you want to continue? [y/N]</value>
   </data>
+  <data name="Error_UnknownLaunchOptions" xml:space="preserve">
+    <value>Internal error: unable to serialize launch options.</value>
+  </data>
+  <data name="Warn_ProcessException" xml:space="preserve">
+    <value>Attempt to execute {0} failed with exception {1}</value>
+  </data>
+  <data name="Warn_ProcessExit" xml:space="preserve">
+    <value>{0} exited with exit code {1}</value>
+  </data>
 </root>
