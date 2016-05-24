@@ -497,17 +497,20 @@ namespace MICore
             return CmdAsync("-exec-run", ResultClass.running);
         }
 
-        public enum BreakRequest
+        public enum BreakRequest    // order is important so a stop request doesn't get overridden by an internal request
         {
             None,
+            Internal,
             Async,
-            Stop,
-            Internal
+            Stop
         }
         protected BreakRequest _requestingRealAsyncBreak = BreakRequest.None;
         public Task CmdBreak(BreakRequest request)
         {
-            _requestingRealAsyncBreak = request;
+            if (request > _requestingRealAsyncBreak)
+            {
+                _requestingRealAsyncBreak = request;
+            }
             return CmdBreakInternal();
         }
 
