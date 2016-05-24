@@ -260,6 +260,26 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int ProcessId;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ProcessIdSpecified;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string CoreDumpPath;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool DebugChildProcesses;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool DebugChildProcessesSpecified;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public TargetArchitecture TargetArchitecture;
         
         /// <remarks/>
@@ -419,14 +439,6 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int ProcessId;
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool ProcessIdSpecified;
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string DebugServer;
         
         /// <remarks/>
@@ -463,10 +475,6 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string CoreDumpPath;
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
         public bool ExternalConsole;
         
         /// <remarks/>
@@ -488,6 +496,10 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string PipeArguments;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string PipeCommandArguments;
     }
     
     /// <remarks/>

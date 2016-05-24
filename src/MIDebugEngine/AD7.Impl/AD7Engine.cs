@@ -58,6 +58,13 @@ namespace Microsoft.MIDebugEngine
 
         private IDebugSettingsCallback110 _settingsCallback;
 
+        private static List<int> _childProcessLaunch;
+
+        static AD7Engine()
+        {
+            _childProcessLaunch = new List<int>();
+        }
+
         public AD7Engine()
         {
             Host.EnsureMainThreadInitialized();
@@ -70,6 +77,22 @@ namespace Microsoft.MIDebugEngine
             if (_pollThread != null)
             {
                 _pollThread.Close();
+            }
+        }
+
+        internal static void AddChildProcess(int processId)
+        {
+            lock(_childProcessLaunch)
+            {
+                _childProcessLaunch.Add(processId);
+            }
+        }
+
+        internal static bool RemoveChildProcess(int processId)
+        {
+            lock(_childProcessLaunch)
+            {
+                return _childProcessLaunch.Remove(processId);
             }
         }
 
@@ -572,7 +595,7 @@ namespace Microsoft.MIDebugEngine
         // breakmode. 
         public int CauseBreak()
         {
-            _pollThread.RunOperation(() => _debuggedProcess.CmdBreak());
+            _pollThread.RunOperation(() => _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Async));
 
             return Constants.S_OK;
         }
@@ -811,7 +834,7 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                _pollThread.RunOperation(() => _debuggedProcess.Execute(thread.GetDebuggedThread()));
+                _pollThread.RunOperation(() => _debuggedProcess.Execute(thread?.GetDebuggedThread()));
             }
             catch (InvalidCoreDumpOperationException)
             {
@@ -831,10 +854,13 @@ namespace Microsoft.MIDebugEngine
         // that is, not all threads should be required to be stopped before this method returns. The implementation of this method may be 
         // as simple as calling the IDebugProgram2::CauseBreak method on this program.
         //
-        // The sample engine only supports debugging native applications and therefore only has one program per-process
         public int Stop()
         {
-            throw new NotImplementedException();
+            DebuggedProcess.WorkerThread.RunOperation(async () =>
+            {
+                await _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Stop);
+            });
+            return _debuggedProcess.ProcessState == ProcessState.Running ? Constants.S_ASYNC_STOP : Constants.S_OK;
         }
 
         // WatchForExpressionEvaluationOnThread is used to cooperate between two different engines debugging 

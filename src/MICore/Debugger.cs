@@ -36,8 +36,10 @@ namespace MICore
         public event EventHandler ModuleLoadEvent;  // occurs when stopped after a libraryLoadEvent
         public event EventHandler LibraryLoadEvent; // a shared library was loaded
         public event EventHandler BreakChangeEvent; // a breakpoint was changed
+        public event EventHandler BreakCreatedEvent; // a breakpoint was created
         public event EventHandler ThreadCreatedEvent;
         public event EventHandler ThreadExitedEvent;
+        public event EventHandler ThreadGroupExitedEvent;
         public event EventHandler<ResultEventArgs> MessageEvent;
         public event EventHandler<ResultEventArgs> TelemetryEvent;
         private int _exiting;
@@ -94,6 +96,18 @@ namespace MICore
             public ResultClass ResultClass { get { return Results.ResultClass; } }
             public uint Id { get; private set; }
         };
+
+        public class StoppingEventArgs: ResultEventArgs
+        {
+            public readonly BreakRequest AsyncRequest;
+            public StoppingEventArgs(Results results, uint id, BreakRequest asyncRequest = BreakRequest.None) : base(results, id)
+            {
+                AsyncRequest = asyncRequest;
+            }
+
+            public StoppingEventArgs(Results results, BreakRequest asyncRequest = BreakRequest.None) : this(results, 0, asyncRequest)
+            { }
+        }
 
         private ITransport _transport;
         private CommandLock _commandLock = new CommandLock();
@@ -169,7 +183,7 @@ namespace MICore
                 if (_waitingToStop && _retryCount < BREAK_RETRY_MAX)
                 {
                     Logger.WriteLine("Debugger failed to break. Trying again.");
-                    CmdBreakInternal();
+                    CmdBreak(BreakRequest.Internal);
                     _retryCount++;
                 }
                 else
@@ -202,7 +216,7 @@ namespace MICore
                     if (!_pendingInternalBreak)
                     {
                         _pendingInternalBreak = true;
-                        CmdBreakInternal();
+                        CmdBreak(BreakRequest.Internal);
                         _retryCount = 0;
                         _waitingToStop = true;
 
@@ -268,8 +282,9 @@ namespace MICore
             }
             else if (BreakModeEvent != null)
             {
-                if (fIsAsyncBreak) { _requestingRealAsyncBreak = false; }
-                BreakModeEvent(this, new ResultEventArgs(results));
+                BreakRequest request = _requestingRealAsyncBreak;
+                _requestingRealAsyncBreak = BreakRequest.None;
+                BreakModeEvent(this, new StoppingEventArgs(results, request));
             }
         }
 
@@ -368,7 +383,7 @@ namespace MICore
                 }
                 else
                 {
-                    if (!_requestingRealAsyncBreak && fIsAsyncBreak)
+                    if (_requestingRealAsyncBreak == BreakRequest.Internal && fIsAsyncBreak)
                     {
                         CmdContinueAsync();
                         processContinued = true;
@@ -498,18 +513,28 @@ namespace MICore
             return CmdAsync("-exec-run", ResultClass.running);
         }
 
-        protected bool _requestingRealAsyncBreak = false;
         internal bool IsRequestingRealAsyncBreak
         {
             get
             {
-                return _requestingRealAsyncBreak;
+                return _requestingRealAsyncBreak != BreakRequest.None;
             }
         }
 
-        public Task CmdBreak()
+        public enum BreakRequest    // order is important so a stop request doesn't get overridden by an internal request
         {
-            _requestingRealAsyncBreak = true;
+            None,
+            Internal,
+            Async,
+            Stop
+        }
+        protected BreakRequest _requestingRealAsyncBreak = BreakRequest.None;
+        public Task CmdBreak(BreakRequest request)
+        {
+            if (request > _requestingRealAsyncBreak)
+            {
+                _requestingRealAsyncBreak = request;
+            }
             return CmdBreakInternal();
         }
 
@@ -529,6 +554,12 @@ namespace MICore
             }
         }
 
+        private bool IsRemoteGdb()
+        {
+            return this.MICommandFactory.Mode == MIMode.Gdb &&
+               this._launchOptions is PipeLaunchOptions;
+        }
+
         protected bool IsCoreDump
         {
             get
@@ -545,7 +576,7 @@ namespace MICore
         {
             if (ProcessState == ProcessState.Running)
             {
-                await CmdBreak();
+                await CmdBreak(BreakRequest.Async);
             }
 
             await MICommandFactory.Terminate();
@@ -557,7 +588,7 @@ namespace MICore
         {
             if (ProcessState == ProcessState.Running)
             {
-                await CmdBreak();
+                await CmdBreak(BreakRequest.Async);
             }
             await CmdAsync("-target-detach", ResultClass.done);
 
@@ -567,6 +598,7 @@ namespace MICore
         public Task CmdBreakInternal()
         {
             this.VerifyNotDebuggingCoreDump();
+            Debug.Assert(_requestingRealAsyncBreak != BreakRequest.None);
 
             // Note that interrupt doesn't work on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
@@ -600,6 +632,14 @@ namespace MICore
                     {
                         return CmdBreakWindows(debuggeePid, ResultClass.done);
                     }
+                }
+            }
+            else if (IsRemoteGdb() && _transport is PipeTransport)
+            {
+                int pid = PidByInferior("i1");
+                if (pid != 0 && ((PipeTransport)_transport).Interrupt(pid))
+                {
+                    return Task.FromResult<Results>(new Results(ResultClass.done));
                 }
             }
 
@@ -1183,6 +1223,14 @@ namespace MICore
                     BreakChangeEvent(this, new ResultEventArgs(results));
                 }
             }
+            else if (cmd.StartsWith("breakpoint-created,", StringComparison.Ordinal))
+            {
+                results = _miResults.ParseResultList(cmd.Substring("breakpoint-created,".Length));
+                if (BreakCreatedEvent != null)
+                {
+                    BreakCreatedEvent(this, new ResultEventArgs(results));
+                }
+            }
             else if (cmd.StartsWith("thread-group-started,", StringComparison.Ordinal))
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-group-started,".Length));
@@ -1192,6 +1240,10 @@ namespace MICore
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-group-exited,".Length));
                 HandleThreadGroupExited(results);
+                if (ThreadGroupExitedEvent != null)
+                {
+                    ThreadGroupExitedEvent(this, new ResultEventArgs(results, 0));
+                }
             }
             else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
             {
@@ -1274,6 +1326,41 @@ namespace MICore
                     _debuggeePids.Add(threadGroupId, pid);
                 }
             }
+        }
+
+        public uint InferiorByPid(int pid)
+        {
+            foreach (var grp in _debuggeePids)
+            {
+                if ( grp.Value == pid)
+                {
+                    return InferiorNumber(grp.Key);
+                }
+            }
+            return 0;
+        }
+
+        public int PidByInferior(string inf)
+        {
+            if (_debuggeePids.ContainsKey(inf))
+            {
+                return _debuggeePids[inf];
+            }
+            return 0;
+        }
+
+        public uint InferiorNumber(string groupId)
+        {
+            // Inferior names are of the form "iX" where X in the inferior number
+            if (groupId.Length >= 2 && groupId[0] == 'i')
+            {
+                uint id;
+                if (UInt32.TryParse(groupId.Substring(1), out id))
+                {
+                    return id;
+                }
+            }
+            return 1;   // default to the first inferior if group-id not understood
         }
 
         private void HandleThreadGroupExited(Results results)
