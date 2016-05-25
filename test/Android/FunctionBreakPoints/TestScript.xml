@@ -9,10 +9,10 @@
   <Command name="bp Source1.cpp 33">
     <Duration Volatile="True">00:00:00.0050582</Duration>
   </Command>
-  <Command name="bpfunc Func1 {3a12d0b7-c26c-11d0-b442-00a0244a1dd2}">
+  <Command name="bpfunc Func1() {3a12d0b7-c26c-11d0-b442-00a0244a1dd2}">
     <Duration Volatile="True">00:00:00.0050582</Duration>
   </Command>
-  <Command name="bpfunc MyClass::Func {3a12d0b7-c26c-11d0-b442-00a0244a1dd2}">
+  <Command name="bpfunc MyClass::Func() {3a12d0b7-c26c-11d0-b442-00a0244a1dd2}">
     <Duration Volatile="True">00:00:00.0050582</Duration>
   </Command>
   <Command name="launch MIEngine app_process">
@@ -151,7 +151,7 @@
     <Event name="" expected="False"/>
     <Event name="IDebugBreakpointEvent2" expected="True">
       <functionName>MyClass::Func</functionName>
-      <function>MyClass::Func()</function>
+      <function>MyClass::Func(MyClass * this)</function>
       <file>Source1.cpp</file>
       <line>5</line>
       <col>0</col>

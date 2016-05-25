@@ -19,5 +19,6 @@ void Func() {
 	double dx = 1.50;
 	string str = "hello, world";
 
+	x = 1;
 	return;
 }
