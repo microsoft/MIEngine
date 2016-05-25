@@ -676,7 +676,7 @@ namespace MICore
             }
         }
 
-        // Kofe debubgger depends on this method to generate LaunchOptions
+        // Kofe debugger depends on this method to generate LaunchOptions
         public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
             return GetInstance(configStore, exePath, args, dir, options, eventCallback, targetEngine, null);
