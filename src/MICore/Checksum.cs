@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,20 +13,27 @@ using System.Threading.Tasks;
 
 namespace MICore
 {
+    public enum MIHashAlgorithmName
+    {
+        MD5,
+        SHA1,
+        SHA256
+    }
+
     public class Checksum
     {
-#if CORECLR
         private string _checksumString = null;
-        public byte[] Bytes { get; private set; } = null;
-        public readonly HashAlgorithmName HashAlgorithmName;
+        private byte[] _bytes = null;
 
-        private Checksum(HashAlgorithmName hashAlgorithmName, byte[] checksumBytes)
+        public readonly MIHashAlgorithmName MIHashAlgorithmName;
+
+        private Checksum(MIHashAlgorithmName hashAlgorithmName, byte[] checksumBytes)
         {
-            HashAlgorithmName = hashAlgorithmName;
-            Bytes = checksumBytes;
+            MIHashAlgorithmName = hashAlgorithmName;
+            _bytes = checksumBytes;
         }
 
-        public static Checksum FromBytes(HashAlgorithmName hashAlgorithmName, byte[] checksumBytes)
+        public static Checksum FromBytes(MIHashAlgorithmName hashAlgorithmName, byte[] checksumBytes)
         {
             if (checksumBytes == null)
             {
@@ -39,7 +49,7 @@ namespace MICore
         /// <param name="hashAlgorithmName">The name of the hash algorithm used to calculate the hash bytes.</param>
         /// <param name="checksumString">Hex String representation of hash bytse. Example: "A0B1C2D3E4F5A6B7C8D9E0F1A2B3C4D5"</param>
         /// <returns></returns>
-        public static Checksum FromString(HashAlgorithmName hashAlgorithmName, string checksumString)
+        public static Checksum FromString(MIHashAlgorithmName hashAlgorithmName, string checksumString)
         {
             if (checksumString == null)
             {
@@ -51,11 +61,16 @@ namespace MICore
             return checksum;
         }
 
+        public byte[] GetBytes()
+        {
+            return _bytes;
+        }
+
         public override string ToString()
         {
             if (_checksumString == null)
             {
-                _checksumString = BytesToString(Bytes);
+                _checksumString = BytesToString(_bytes);
             }
             return _checksumString;
         }
@@ -89,35 +104,30 @@ namespace MICore
 
         public string ToMIString()
         {
-            return FormattableString.Invariant($"--{HashAlgorithmName.Name}checksum {ToString()}");
+            return string.Format(CultureInfo.InvariantCulture, "--{0}checksum {1}", MIHashAlgorithmName.ToString(), this.ToString());
         }
 
         public static string GetMIString(IEnumerable<Checksum> checksums)
         {
             if (checksums == null)
             {
-                return "";
+                return string.Empty;
             }
 
-            IEnumerable<IGrouping<HashAlgorithmName, string>> checksumGroups = checksums.GroupBy(checksum => checksum.HashAlgorithmName, checksum => checksum.ToString());
+            IEnumerable<IGrouping<MIHashAlgorithmName, string>> checksumGroups = checksums.GroupBy(checksum => checksum.MIHashAlgorithmName, checksum => checksum.ToString());
 
             StringBuilder builder = new StringBuilder();
-            foreach (IGrouping<HashAlgorithmName, string> group in checksumGroups)
+            foreach (IGrouping<MIHashAlgorithmName, string> group in checksumGroups)
             {
-                builder.Append(FormattableString.Invariant($"--{group.Key.Name}checksum "));
+                if (builder.Length > 0)
+                {
+                    builder.Append(" ");
+                }
+                builder.Append(string.Format(CultureInfo.InvariantCulture, "--{0}checksum ", group.Key.ToString()));
                 builder.Append(string.Join(",", group));
-                builder.Append(" ");
             }
 
-            return builder.ToString().Trim(); ;
+            return builder.ToString();
         }
-#else
-        /// <summary>
-        /// Dummy concstrutor for non coreclr scnearios
-        /// </summary>
-        public Checksum()
-        {
-        }
-#endif
     }
 }

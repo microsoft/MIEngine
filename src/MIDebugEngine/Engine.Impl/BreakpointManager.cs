@@ -77,8 +77,17 @@ namespace Microsoft.MIDebugEngine
             {
                 return;
             }
-            var bindList = pending.PendingBreakpoint.BindAddresses(bkpt);
-            RebindAddresses(pending, bindList);
+
+            string warning = bkpt.TryFindString("warning");
+            if (!string.IsNullOrEmpty(warning))
+            {
+                pending.SetError(new AD7ErrorBreakpoint(pending, warning), true);
+            }
+            else
+            {
+                var bindList = pending.PendingBreakpoint.BindAddresses(bkpt);
+                RebindAddresses(pending, bindList);
+            }
         }
 
         public async Task BindAsync()
