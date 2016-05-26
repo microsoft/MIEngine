@@ -212,6 +212,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to initialize debugger terminal..
+        /// </summary>
+        public static string Error_LocalUnixTerminalDebuggerInitializationFailed {
+            get {
+                return ResourceManager.GetString("Error_LocalUnixTerminalDebuggerInitializationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} exited unexpectedly. Debugging will now abort..
         /// </summary>
         public static string Error_MIDebuggerExited_UnknownCode {

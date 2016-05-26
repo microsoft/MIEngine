@@ -6,12 +6,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Text;
 using System.Diagnostics;
-using System.Collections;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.IO;
+using Microsoft.Win32.SafeHandles;
 
 namespace MICore
 {
@@ -626,13 +624,6 @@ namespace MICore
                         return CmdBreakUnix(debuggeePid, ResultClass.done);
                     }
                 }
-                else if (PlatformUtilities.IsWindows() && !this.IsCygwin)
-                {
-                    if (useSignal)
-                    {
-                        return CmdBreakWindows(debuggeePid, ResultClass.done);
-                    }
-                }
             }
             else if (IsRemoteGdb() && _transport is PipeTransport)
             {
@@ -784,35 +775,6 @@ namespace MICore
             // when attached.
             const int sigint = 2;
             UnixNativeMethods.Kill(debugeePid, sigint);
-
-            return Task.FromResult<Results>(new Results(ResultClass.done));
-        }
-
-        private Task<Results> CmdBreakWindows(int debugeePid, ResultClass expectedResultClass)
-        {
-            lock (this._debuggeePids)
-            {
-                foreach (int pid in this._debuggeePids.Values)
-                {
-                    try
-                    {
-                        // Mingw has no kill utility. Instead, use kernel32!DebugBreakProcess. Note that this
-                        // can deadlock if the loader lock is taken by a suspended thread. This approach does
-                        // not work in cygwin
-                        Process p = Process.GetProcessById(pid);
-
-#if CORECLR
-                        WindowsNativeMethods.DebugBreakProcess(p.SafeHandle);
-#else
-                        WindowsNativeMethods.DebugBreakProcess(p.Handle);
-#endif
-                    }
-                    catch
-                    {
-
-                    }
-                }
-            }
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
