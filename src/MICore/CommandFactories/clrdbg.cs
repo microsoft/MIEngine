@@ -217,5 +217,11 @@ namespace MICore
         {
             throw new NotImplementedException("clrdbg catch command");
         }
+
+        public override Task<TargetArchitecture> GetTargetArchitecture()
+        {
+            // CLRDBG only support x64 now.
+            return Task.FromResult(TargetArchitecture.X64);
+        }
     }
 }
