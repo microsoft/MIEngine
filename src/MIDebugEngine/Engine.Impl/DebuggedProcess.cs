@@ -174,6 +174,17 @@ namespace Microsoft.MIDebugEngine
                     throw new Exception(MICoreResources.Error_InvalidMiDebuggerPath);
                 }
 
+                if (PlatformUtilities.IsOSX() &&
+                    localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
+                    !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath))
+                {
+                    string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_DarwinDebuggerUnsigned, localLaunchOptions.MIDebuggerPath);
+                    _callback.OnOutputMessage(new OutputMessage(
+                        message + Environment.NewLine,
+                        enum_MESSAGETYPE.MT_MESSAGEBOX,
+                        OutputMessage.Severity.Warning));
+                }
+
                 ITransport localTransport = null;
                 // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
                 // uses fifos for debugger (e.g., gdb) communication.
@@ -610,6 +621,8 @@ namespace Microsoft.MIDebugEngine
                 {
                     // This is an attach
 
+                    CheckCygwin(commands, localLaunchOptions);
+
                     // check for remote
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
                     if (!string.IsNullOrEmpty(destination))
@@ -617,10 +630,8 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
 
-                    int pid = _launchOptions.ProcessId;
-                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
-
-                    CheckCygwin(commands, localLaunchOptions);
+                    int pid = localLaunchOptions.ProcessId;
+                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));                    
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -696,6 +707,13 @@ namespace Microsoft.MIDebugEngine
                     {
                         this.IsCygwin = true;
                         this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
+
+                        this._engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
+                    }
+                    else
+                    {
+                        // Gdb on windows and not cygwin implies mingw
+                        this._engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
                     }
                 }));
                 commands.Add(lc);
