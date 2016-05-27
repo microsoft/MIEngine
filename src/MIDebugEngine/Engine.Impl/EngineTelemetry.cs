@@ -14,7 +14,12 @@ namespace Microsoft.MIDebugEngine
         private const string Property_DebuggerName = @"VS.Diagnostics.Debugger.MIEngine.DebuggerName";
         private const string Property_LastSentCommandName = @"VS.Diagnostics.Debugger.MIEngine.LastSentCommandName";
         private const string Property_DebuggerExitCode = @"VS.Diagnostics.Debugger.MIEngine.DebuggerExitCode";
-        
+        private const string Windows_Runtime_Environment = @"VS/Diagnostics/Debugger/MIEngine/WindowsRuntime";
+        private const string Property_Windows_Runtime_Environment = @"VS.Diagnostics.Debugger.MIEngine.WindowsRuntime";
+        private const string Value_Windows_Runtime_Environment_Cygwin = "Cygwin";
+        private const string Value_Windows_Runtime_Environment_MinGW = "MinGW";
+
+
         KeyValuePair<string, object>[] _clrdbgProcessCreateProperties;
 
         public bool DecodeTelemetryEvent(Results results, out string eventName, out KeyValuePair<string, object>[] properties)
@@ -91,6 +96,29 @@ namespace Microsoft.MIDebugEngine
             }
 
             HostTelemetry.SendEvent(Event_DebuggerAborted, eventProperties.ToArray());
+        }
+
+        public enum WindowsRuntimeEnvironment
+        {
+            Cygwin,
+            MinGW
+        }
+        public void SendWindowsRuntimeEnvironment(WindowsRuntimeEnvironment environment)
+        {
+            string envValue;
+            if (environment == WindowsRuntimeEnvironment.Cygwin)
+            {
+                envValue = Value_Windows_Runtime_Environment_Cygwin;
+            }
+            else
+            {
+                envValue = Value_Windows_Runtime_Environment_MinGW;
+            }
+
+            HostTelemetry.SendEvent(
+                           Windows_Runtime_Environment,
+                           new KeyValuePair<string, object>(Property_Windows_Runtime_Environment,
+                           envValue));       
         }
     }
 }

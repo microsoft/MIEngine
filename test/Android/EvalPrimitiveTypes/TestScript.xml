@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GlassEventLog>
+  <Command name="setmode ShowParameterValues off">
+    <Duration Volatile="True">00:00:00.0082231</Duration>
+  </Command>
+  <Command name="SetLaunchOptionsString @LaunchOptions.xml">
+    <Duration Volatile="True">00:00:00.0001066</Duration>
+  </Command>
+  <Command name="bp Source1.cpp 24">
+    <Duration Volatile="True">00:00:00.0050582</Duration>
+  </Command>
+  <Command name="launch MIEngine app_process">
+    <Event name="IDebugSessionCreateEvent2" expected="False" />
+    <Event name="IDebugProcessCreateEvent2" expected="False" />
+    <Duration Volatile="True">00:00:01.4321154</Duration>
+    <Event name="IDebugProgramCreateEvent2" expected="False" />
+    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+      <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
+    </Event>
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint RegEx="^23,0 to 23,0 in (\[Unknown\]|libEvalPrimitiveTypes.so)!Func\(\)$"></BoundBreakpoint>
+    </Event>
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func</functionName>
+      <function>Func()</function>
+      <file>Source1.cpp</file>
+      <line>24</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval _bool">
+    <EvalResult>true</EvalResult>
+    <EvalType>bool</EvalType>
+    <EvalName>_bool</EvalName>
+    <EvalFullName>_bool</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _bool,x">
+    <EvalResult>0x1</EvalResult>
+    <EvalType>bool</EvalType>
+    <EvalName>_bool,x</EvalName>
+    <EvalFullName>_bool</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _char">
+    <EvalResult>97 'a'</EvalResult>
+    <EvalType>char</EvalType>
+    <EvalName>_char</EvalName>
+    <EvalFullName>_char</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _char,x">
+    <EvalResult>0x61</EvalResult>
+    <EvalType>char</EvalType>
+    <EvalName>_char,x</EvalName>
+    <EvalFullName>_char</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _unsignedchar">
+    <EvalResult>98 'b'</EvalResult>
+    <EvalType>unsigned char</EvalType>
+    <EvalName>_unsignedchar</EvalName>
+    <EvalFullName>_unsignedchar</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _unsignedchar,x">
+    <EvalResult>0x62</EvalResult>
+    <EvalType>unsigned char</EvalType>
+    <EvalName>_unsignedchar,x</EvalName>
+    <EvalFullName>_unsignedchar</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _signedchar">
+    <EvalResult>99 'c'</EvalResult>
+    <EvalType>signed char</EvalType>
+    <EvalName>_signedchar</EvalName>
+    <EvalFullName>_signedchar</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+   <Command name="eval _signedchar,x">
+    <EvalResult>0x63</EvalResult>
+    <EvalType>signed char</EvalType>
+    <EvalName>_signedchar,x</EvalName>
+    <EvalFullName>_signedchar</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _shortint">
+    <EvalResult>1</EvalResult>
+    <EvalType>short</EvalType>
+    <EvalName>_shortint</EvalName>
+    <EvalFullName>_shortint</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _shortint,x">
+    <EvalResult>0x1</EvalResult>
+    <EvalType>short</EvalType>
+    <EvalName>_shortint,x</EvalName>
+    <EvalFullName>_shortint</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _unsignedshort">
+    <EvalResult>16</EvalResult>
+    <EvalType>unsigned short</EvalType>
+    <EvalName>_unsignedshort</EvalName>
+    <EvalFullName>_unsignedshort</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _unsignedshort,x">
+    <EvalResult>0x10</EvalResult>
+    <EvalType>unsigned short</EvalType>
+    <EvalName>_unsignedshort,x</EvalName>
+    <EvalFullName>_unsignedshort</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _wchar_t">
+    <EvalResult>100 L'd\000\000\000'</EvalResult>
+    <EvalType>wchar_t</EvalType>
+    <EvalName>_wchar_t</EvalName>
+    <EvalFullName>_wchar_t</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _wchar_t,x">
+    <EvalResult>0x64</EvalResult>
+    <EvalType>wchar_t</EvalType>
+    <EvalName>_wchar_t,x</EvalName>
+    <EvalFullName>_wchar_t</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _float">
+    <EvalResult>1.00999999</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalName>_float</EvalName>
+    <EvalFullName>_float</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _float,x">
+    <EvalResult>0x1</EvalResult>
+    <EvalType>float</EvalType>
+    <EvalName>_float,x</EvalName>
+    <EvalFullName>_float</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _int">
+    <EvalResult>32</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>_int</EvalName>
+    <EvalFullName>_int</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _int,x">
+    <EvalResult>0x20</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>_int,x</EvalName>
+    <EvalFullName>_int</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _unsignedint">
+    <EvalResult>64</EvalResult>
+    <EvalType>unsigned int</EvalType>
+    <EvalName>_unsignedint</EvalName>
+    <EvalFullName>_unsignedint</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+   <Command name="eval _unsignedint,x">
+    <EvalResult>0x40</EvalResult>
+    <EvalType>unsigned int</EvalType>
+    <EvalName>_unsignedint,x</EvalName>
+    <EvalFullName>_unsignedint</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _long">
+    <EvalResult>80</EvalResult>
+    <EvalType>long</EvalType>
+    <EvalName>_long</EvalName>
+    <EvalFullName>_long</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _long,x">
+    <EvalResult>0x50</EvalResult>
+    <EvalType>long</EvalType>
+    <EvalName>_long,x</EvalName>
+    <EvalFullName>_long</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _unsignedlong">
+    <EvalResult>80</EvalResult>
+    <EvalType>unsigned long</EvalType>
+    <EvalName>_unsignedlong</EvalName>
+    <EvalFullName>_unsignedlong</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _unsignedlong,x">
+    <EvalResult>0x50</EvalResult>
+    <EvalType>unsigned long</EvalType>
+    <EvalName>_unsignedlong,x</EvalName>
+    <EvalFullName>_unsignedlong</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _double">
+    <EvalResult>17</EvalResult>
+    <EvalType>double</EvalType>
+    <EvalName>_double</EvalName>
+    <EvalFullName>_double</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+    <Command name="eval _double,x">
+    <EvalResult>0x11</EvalResult>
+    <EvalType>double</EvalType>
+    <EvalName>_double,x</EvalName>
+    <EvalFullName>_double</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _longdouble">
+    <EvalResult>18</EvalResult>
+    <EvalType>long double</EvalType>
+    <EvalName>_longdouble</EvalName>
+    <EvalFullName>_longdouble</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _longdouble,x">
+    <EvalResult>0x12</EvalResult>
+    <EvalType>long double</EvalType>
+    <EvalName>_longdouble,x</EvalName>
+    <EvalFullName>_longdouble</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _longlong">
+    <EvalResult>19</EvalResult>
+    <EvalType>long long</EvalType>
+    <EvalName>_longlong</EvalName>
+    <EvalFullName>_longlong</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="eval _longlong,x">
+    <EvalResult>0x13</EvalResult>
+    <EvalType>long long</EvalType>
+    <EvalName>_longlong,x</EvalName>
+    <EvalFullName>_longlong</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="stopdebugging">
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugProgramDestroyEvent2" expected="False" />
+    <Event name="IDebugProcessDestroyEvent2" expected="False" />
+    <Event name="IDebugSessionDestroyEvent2" expected="True" />
+    <Duration Volatile="True">00:00:00.7905758</Duration>
+  </Command>
+  <Command name="quit">
+    <Duration Volatile="True">00:00:00.0075690</Duration>
+  </Command>
+</GlassEventLog>

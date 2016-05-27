@@ -30,6 +30,11 @@ namespace MICore
             return false;
         }
 
+        public override bool SupportsChildProcessDebugging()
+        {
+            return false;
+        }
+
         // CLRDBG supports frame formatting itself
         override public bool SupportsFrameFormatting
         {
@@ -203,6 +208,20 @@ namespace MICore
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
+        }
+        public override Task Signal(string sig)
+        {
+            throw new NotImplementedException("clrdbg signal command");
+        }
+        public override Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done)
+        {
+            throw new NotImplementedException("clrdbg catch command");
+        }
+
+        public override Task<TargetArchitecture> GetTargetArchitecture()
+        {
+            // CLRDBG only support x64 now.
+            return Task.FromResult(TargetArchitecture.X64);
         }
     }
 }

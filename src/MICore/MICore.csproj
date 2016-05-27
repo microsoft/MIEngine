@@ -170,7 +170,6 @@
     <Compile Include="Transports\TcpTransport.cs" />
     <Compile Include="UnixNativeMethods.cs" />
     <Compile Include="UnixUtilities.cs" />
-    <Compile Include="WindowsNativeMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ExampleLaunchOptions.xml" />

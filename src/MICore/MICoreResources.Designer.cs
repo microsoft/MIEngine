@@ -212,6 +212,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to initialize debugger terminal..
+        /// </summary>
+        public static string Error_LocalUnixTerminalDebuggerInitializationFailed {
+            get {
+                return ResourceManager.GetString("Error_LocalUnixTerminalDebuggerInitializationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} exited unexpectedly. Debugging will now abort..
         /// </summary>
         public static string Error_MIDebuggerExited_UnknownCode {
@@ -329,6 +338,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal error: unable to serialize launch options..
+        /// </summary>
+        public static string Error_UnknownLaunchOptions {
+            get {
+                return ResourceManager.GetString("Error_UnknownLaunchOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown or unsupported target architecture &apos;{0}&apos;..
         /// </summary>
         public static string Error_UnknownTargetArchitecture {
@@ -361,6 +379,24 @@ namespace MICore {
         public static string Warn_AttachAsRootProcess {
             get {
                 return ResourceManager.GetString("Warn_AttachAsRootProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to execute {0} failed with exception {1}.
+        /// </summary>
+        public static string Warn_ProcessException {
+            get {
+                return ResourceManager.GetString("Warn_ProcessException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} exited with exit code {1}.
+        /// </summary>
+        public static string Warn_ProcessExit {
+            get {
+                return ResourceManager.GetString("Warn_ProcessExit", resourceCulture);
             }
         }
     }

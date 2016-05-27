@@ -207,4 +207,8 @@
   <data name="Warning_UsingDefaultArchitecture" xml:space="preserve">
     <value>Warning: Debuggee TargetArchitecture not detected, assuming x86_64.</value>
   </data>
+  <data name="Warning_DarwinDebuggerUnsigned" xml:space="preserve">
+    <value>Debugger executable '{0}' is not signed. As a result, debugging may not work properly.</value>
+    <comment>0 = debugger path</comment>
+  </data>
 </root>

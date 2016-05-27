@@ -136,6 +136,7 @@
     <Compile Include="Engine.Impl\DebuggedModule.cs" />
     <Compile Include="Engine.Impl\DebuggedProcess.cs" />
     <Compile Include="Engine.Impl\DebuggedThread.cs" />
+    <Compile Include="Engine.Impl\DebugUnixChildProcess.cs" />
     <Compile Include="Engine.Impl\Disassembly.cs" />
     <Compile Include="Engine.Impl\EngineCallback.cs" />
     <Compile Include="Engine.Impl\EngineUtils.cs" />

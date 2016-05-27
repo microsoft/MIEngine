@@ -312,6 +312,20 @@ namespace Microsoft.DebugEngineHost
     }
 
     /// <summary>
+    /// Provides interactions with the host's debugger
+    /// </summary>
+    public static class HostDebugger
+    {
+        /// <summary>
+        /// Ask the host to async spin up a new instance of the debug engine and go through the launch sequence using the specified options
+        /// </summary>
+        public static void StartDebugChildProcess(string filePath, string options, Guid engineId)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
     /// Provides direct access to the underlying output window without going through debug events
     /// </summary>
     public static class HostOutputWindow

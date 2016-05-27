@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GlassEventLog>
+  <Command name="setmode ShowParameterValues off">
+    <Duration Volatile="True">00:00:00.0082231</Duration>
+  </Command>
+  <Command name="SetLaunchOptionsString @LaunchOptions.xml">
+    <Duration Volatile="True">00:00:00.0001066</Duration>
+  </Command>
+  <Command name="bp Source1.cpp 11 when_true i==1">
+    <Duration Volatile="True">00:00:00.0050582</Duration>
+  </Command>
+  <Command name="launch MIEngine app_process">
+    <Event name="IDebugSessionCreateEvent2" expected="False" />
+    <Event name="IDebugProcessCreateEvent2" expected="False" />
+    <Duration Volatile="True">00:00:01.4321154</Duration>
+    <Event name="IDebugProgramCreateEvent2" expected="False" />
+    <Event name="IDebugBreakpointErrorEvent2" expected="False">
+      <WarningMessage>module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</WarningMessage>
+    </Event>
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugBreakpointBoundEvent2" expected="False">
+      <BoundBreakpoint RegEx="^10,0 to 10,0 in (\[Unknown\]|libBreakPointWhenTrueCondition.so)!Func1\(\)$"></BoundBreakpoint>
+    </Event>
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func1</functionName>
+      <function>Func1()</function>
+      <file>Source1.cpp</file>
+      <line>11</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval i">
+    <EvalResult>1</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="bp Source1.cpp 11 when_true i+1&gt;i%2" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func1</functionName>
+      <function>Func1()</function>
+      <file>Source1.cpp</file>
+      <line>11</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval i">
+    <EvalResult>2</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="bp Source1.cpp 11 when_true (i&gt;=3)==myClass.isTrue" />
+  <Command name="go">
+    <Event name="IDebugBreakpointEvent2" expected="True">
+      <functionName>Func1</functionName>
+      <function>Func1()</function>
+      <file>Source1.cpp</file>
+      <line>11</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="eval i">
+    <EvalResult>3</EvalResult>
+    <EvalType>int</EvalType>
+    <EvalName>i</EvalName>
+    <EvalFullName>i</EvalFullName>
+    <EvalIsExpandable>False</EvalIsExpandable>
+  </Command>
+  <Command name="stopdebugging">
+    <Event name="IDebugOutputStringEvent2" expected="False" />
+    <Event name="IDebugProgramDestroyEvent2" expected="False" />
+    <Event name="IDebugProcessDestroyEvent2" expected="False" />
+    <Event name="IDebugSessionDestroyEvent2" expected="True" />
+    <Duration Volatile="True">00:00:00.7905758</Duration>
+  </Command>
+  <Command name="quit">
+    <Duration Volatile="True">00:00:00.0075690</Duration>
+  </Command>
+</GlassEventLog>

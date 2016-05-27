@@ -474,6 +474,16 @@ namespace MICore.Xml.LaunchOptions {
         
         private bool showDisplayStringFieldSpecified;
         
+        private int processIdField;
+        
+        private bool processIdFieldSpecified;
+        
+        private string coreDumpPathField;
+        
+        private bool debugChildProcessesField;
+        
+        private bool debugChildProcessesFieldSpecified;
+        
         private TargetArchitecture targetArchitectureField;
         
         private bool targetArchitectureFieldSpecified;
@@ -598,6 +608,61 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.showDisplayStringFieldSpecified = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int ProcessId {
+            get {
+                return this.processIdField;
+            }
+            set {
+                this.processIdField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ProcessIdSpecified {
+            get {
+                return this.processIdFieldSpecified;
+            }
+            set {
+                this.processIdFieldSpecified = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string CoreDumpPath {
+            get {
+                return this.coreDumpPathField;
+            }
+            set {
+                this.coreDumpPathField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool DebugChildProcesses {
+            get {
+                return this.debugChildProcessesField;
+            }
+            set {
+                this.debugChildProcessesField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool DebugChildProcessesSpecified {
+            get {
+                return this.debugChildProcessesFieldSpecified;
+            }
+            set {
+                this.debugChildProcessesFieldSpecified = value;
             }
         }
         
@@ -923,10 +988,6 @@ namespace MICore.Xml.LaunchOptions {
         
         private string mIDebuggerServerAddressField;
         
-        private int processIdField;
-        
-        private bool processIdFieldSpecified;
-        
         private string debugServerField;
         
         private string debugServerArgsField;
@@ -944,8 +1005,6 @@ namespace MICore.Xml.LaunchOptions {
         private int serverLaunchTimeoutField;
         
         private bool serverLaunchTimeoutFieldSpecified;
-        
-        private string coreDumpPathField;
         
         private bool externalConsoleField;
         
@@ -981,28 +1040,6 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.mIDebuggerServerAddressField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int ProcessId {
-            get {
-                return this.processIdField;
-            }
-            set {
-                this.processIdField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool ProcessIdSpecified {
-            get {
-                return this.processIdFieldSpecified;
-            }
-            set {
-                this.processIdFieldSpecified = value;
             }
         }
         
@@ -1107,17 +1144,6 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string CoreDumpPath {
-            get {
-                return this.coreDumpPathField;
-            }
-            set {
-                this.coreDumpPathField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
         public bool ExternalConsole {
             get {
                 return this.externalConsoleField;
@@ -1152,6 +1178,8 @@ namespace MICore.Xml.LaunchOptions {
         
         private string pipeArgumentsField;
         
+        private string pipeCommandArgumentsField;
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string PipePath {
@@ -1171,6 +1199,17 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.pipeArgumentsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string PipeCommandArguments {
+            get {
+                return this.pipeCommandArgumentsField;
+            }
+            set {
+                this.pipeCommandArgumentsField = value;
             }
         }
     }
