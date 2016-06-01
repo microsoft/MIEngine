@@ -132,6 +132,7 @@
     </ContentWithTargetPath>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Checksum.cs" />
     <Compile Include="CommandFactories\clrdbg.cs" />
     <Compile Include="CommandFactories\gdb.cs" />
     <Compile Include="CommandFactories\lldb.cs" />

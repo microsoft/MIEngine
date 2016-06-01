@@ -105,13 +105,14 @@ namespace Microsoft.MIDebugEngine
             return EvalBindWatchResult(await process.MICommandFactory.BreakWatch(address, size, ResultClass.None), pbreak, address, size);
         }
 
-        internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
+        internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, string condition, IEnumerable<Checksum> checksums, AD7PendingBreakpoint pbreak)
         {
             process.VerifyNotDebuggingCoreDump();
 
             string basename = System.IO.Path.GetFileName(documentName);     // get basename from Windows path
             basename = process.EscapePath(basename);
-            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(basename, line, condition, ResultClass.None), pbreak);
+
+            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(basename, line, condition, checksums, ResultClass.None), pbreak);
 
             // On GDB, the returned line information is from the pending breakpoint instead of the bound breakpoint.
             // Check the address mapping to make sure the line info is correct.
@@ -171,9 +172,16 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(bkpt.FindString("type") == "breakpoint");
 
             string number = bkpt.FindString("number");
+            string warning = bkpt.TryFindString("warning");
             string addr = bkpt.TryFindString("addr");
 
-            PendingBreakpoint bp = new PendingBreakpoint(pbreak, number, StringToBreakpointState(addr));
+            PendingBreakpoint bp;
+            if (!string.IsNullOrEmpty(warning))
+            {
+                Debug.Assert(string.IsNullOrEmpty(addr));
+                return new BindResult(new PendingBreakpoint(pbreak, number, MIBreakpointState.Pending), warning);
+            }
+            bp = new PendingBreakpoint(pbreak, number, StringToBreakpointState(addr));
             if (list == null)   // single breakpoint
             {
                 BoundBreakpoint bbp = bp.GetBoundBreakpoint(bkpt);
