@@ -143,9 +143,9 @@
     <Frame> func()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <!--Break in a new thread then verify its call stack and each frame's corresponding locals-->
   <Command name="go">
@@ -161,9 +161,9 @@
     <Frame> func3(int x, int y) ***</Frame>
     <Frame> func2(int x)</Frame>
     <Frame> func1()</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="list locals">
     <Local>z</Local>
