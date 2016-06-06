@@ -146,9 +146,9 @@
     <Frame> func1() ***</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step over">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -177,9 +177,9 @@
     <Frame> func1()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step over">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -220,9 +220,9 @@
     <Frame> func1()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step out">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -240,9 +240,9 @@
     <Frame> func1()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step out">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -259,9 +259,9 @@
     <Frame> func1() ***</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step over">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -278,9 +278,9 @@
     <Frame> func1() ***</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step into">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -298,9 +298,9 @@
     <Frame> func1()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step into">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -319,9 +319,9 @@
     <Frame> func1()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step out">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -339,9 +339,9 @@
     <Frame> func1()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step over">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -371,9 +371,9 @@
     <Frame> func1()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step out">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -391,9 +391,9 @@
     <Frame> func1()</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="step out">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -410,9 +410,9 @@
     <Frame> func1() ***</Frame>
     <Frame> android_main(android_app * state)</Frame>
     <Frame> android_app_entry(void * param)</Frame>
-    <Frame> libc.so!__pthread_start(void*)</Frame>
-    <Frame> libc.so!__start_thread</Frame>
-    <Frame> libc.so!__bionic_clone</Frame>
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
+    <Frame RegEx="^[\s\S]+$" />
   </Command>
   <Command name="stopdebugging">
     <Event name="IDebugOutputStringEvent2" expected="False" />

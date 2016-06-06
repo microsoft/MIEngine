@@ -154,7 +154,7 @@
   </Command>
   <Command name="list locals">
     <Local>ret</Local>
-    <LocalValue>0</LocalValue>
+    <LocalValue Volatile="True">0</LocalValue>
     <LocalType>int</LocalType>
     <LocalIsExpandable>False</LocalIsExpandable>
     <Local>f4</Local>
