@@ -7,16 +7,17 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace MICore
 {
     internal abstract class TerminalLauncher
     {
-        private ReadOnlyCollection<EnvironmentEntry> _environment;
         private Process _terminalProcess;
         protected string _title;
         protected string _initScript;
         protected bool _isRoot;
+        protected ReadOnlyCollection<EnvironmentEntry> _environment;
 
         public static TerminalLauncher MakeTerminal(string title, string initScript, ReadOnlyCollection<EnvironmentEntry> environment)
         {
@@ -40,6 +41,7 @@ namespace MICore
 
         protected abstract string GetProcessExecutable();
         protected abstract string GetProcessArgs();
+        protected abstract void SetNewProcessEnvironment(ProcessStartInfo processStartInfo);
 
         protected TerminalLauncher(string title, string initScript, ReadOnlyCollection<EnvironmentEntry> environment)
         {
@@ -63,23 +65,10 @@ namespace MICore
                 }
             };
 
-            CopyEnvironment();
+            SetNewProcessEnvironment(_terminalProcess.StartInfo);
             _terminalProcess.Start();
         }
 
-        private void CopyEnvironment()
-        {
-            if (_environment == null)
-            {
-                return;
-            }
-
-            ProcessStartInfo processStartInfo = _terminalProcess.StartInfo;
-            foreach (EnvironmentEntry entry in _environment)
-            {
-                processStartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
-            }
-        }
     }
 
     internal class MacTerminalLauncher : TerminalLauncher
@@ -106,7 +95,59 @@ namespace MICore
                 throw new FileNotFoundException(message);
             }
 
-            return string.Format(CultureInfo.InvariantCulture, "{0} \"{1}\" \"{2}\"", launchScript, _title, _initScript);
+            // NOTE: setEnvironmentScript will either be the empty string or end in a space, so '{2}' and '{3}' can be next to each other.
+            string setEnvironmentScript = GetSetEnvironmentScript();
+            return string.Format(CultureInfo.InvariantCulture, "{0} \"{1}\" \"{2}{3}\"", launchScript, _title, setEnvironmentScript, _initScript);
+        }
+
+        private string GetSetEnvironmentScript()
+        {
+            if (_environment == null)
+            {
+                return string.Empty;
+            }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (EnvironmentEntry entry in _environment)
+            {
+                stringBuilder.Append("export ");
+                stringBuilder.Append(entry.Name);
+                stringBuilder.Append("='");
+
+                // If the value doesn't contain single quote characters ('), we can just drop it in
+                if (entry.Value.IndexOf('\'') < 0)
+                {
+                    stringBuilder.Append(entry.Value);
+                }
+                else
+                {
+                    // otherwise we need to escape the single quotes
+                    foreach (char c in entry.Value)
+                    {
+                        if (c != '\'')
+                        {
+                            stringBuilder.Append(c);
+                        }
+                        else
+                        {
+                            // We need to:
+                            // 1. End the single quoted string we are in (the one started with "...='"), 
+                            // 2. Add a single quote character
+                            // 3. Restart the single quoted string
+                            stringBuilder.Append(@"'\''");
+                        }
+                    }
+                }
+
+                stringBuilder.Append("'; ");
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        protected override void SetNewProcessEnvironment(ProcessStartInfo processStartInfo)
+        {
+            // Nothing to do. Environment is set via the init script
         }
     }
 
@@ -148,6 +189,19 @@ namespace MICore
         {
             string terminalArguments = String.Format(CultureInfo.InvariantCulture, "{0} bash -c \"{1}\"", _bashCommandPrefix, _initScript);
             return !_isRoot ? terminalArguments : String.Concat(_terminalPath, " ", terminalArguments);
+        }
+
+        protected override void SetNewProcessEnvironment(ProcessStartInfo processStartInfo)
+        {
+            if (_environment == null)
+            {
+                return;
+            }
+
+            foreach (EnvironmentEntry entry in _environment)
+            {
+                processStartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+            }
         }
     }
 }
