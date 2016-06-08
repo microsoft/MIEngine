@@ -63,7 +63,7 @@ namespace MICore
     /// </summary>
     public sealed class PipeLaunchOptions : LaunchOptions
     {
-        public PipeLaunchOptions(string PipePath, string PipeArguments, string PipeCommandArguments)
+        public PipeLaunchOptions(string PipePath, string PipeArguments, string PipeCommandArguments, string PipeCwd)
         {
             if (string.IsNullOrEmpty(PipePath))
                 throw new ArgumentNullException("PipePath");
@@ -71,11 +71,19 @@ namespace MICore
             this.PipePath = PipePath;
             this.PipeArguments = PipeArguments;
             this.PipeCommandArguments = PipeCommandArguments;
+            if (!String.IsNullOrWhiteSpace(PipeCwd))
+            {
+                this.PipeCwd = PipeCwd;
+            }
+            else
+            {
+                this.PipeCwd = Path.GetDirectoryName(PipePath);
+            }
         }
 
         static internal PipeLaunchOptions CreateFromXml(Xml.LaunchOptions.PipeLaunchOptions source)
         {
-            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments, source.PipeCommandArguments);
+            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments, source.PipeCommandArguments, source.PipeCwd);
             options.InitializeCommonOptions(source);
 
             return options;
@@ -96,6 +104,11 @@ namespace MICore
         /// [Optional] Arguments to pass to the PipePath program that include a format specifier ('{0}') for a custom command.
         /// </summary>
         public string PipeCommandArguments { get; private set; }
+
+        /// <summary>
+        /// [Optional] Current working directory when the pipe program is invoked.
+        /// </summary>
+        public string PipeCwd { get; private set; }
     }
 
     public sealed class TcpLaunchOptions : LaunchOptions

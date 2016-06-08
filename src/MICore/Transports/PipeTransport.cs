@@ -125,7 +125,7 @@ namespace MICore
             _pipePath = pipeOptions.PipePath;
             proc.StartInfo.FileName = pipeOptions.PipePath;
             proc.StartInfo.Arguments = pipeOptions.PipeArguments;
-            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(pipeOptions.PipePath);
+            proc.StartInfo.WorkingDirectory = pipeOptions.PipeCwd;
 
             InitProcess(proc, out reader, out writer);
         }
