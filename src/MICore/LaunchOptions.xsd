@@ -297,7 +297,7 @@
           </xs:attribute>
           <xs:attribute name="PipeCwd" type="xs:string" use="optional">
             <xs:annotation>
-              <xs:documentation>Current workding directory of when the pipe program is executed.</xs:documentation>
+              <xs:documentation>The fully qualified path to the working directory for the pipe program.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
         </xs:extension>
