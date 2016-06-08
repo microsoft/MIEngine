@@ -1180,6 +1180,8 @@ namespace MICore.Xml.LaunchOptions {
         
         private string pipeCommandArgumentsField;
         
+        private string pipeCwdField;
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string PipePath {
@@ -1210,6 +1212,17 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.pipeCommandArgumentsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string PipeCwd {
+            get {
+                return this.pipeCwdField;
+            }
+            set {
+                this.pipeCwdField = value;
             }
         }
     }
