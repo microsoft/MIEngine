@@ -119,13 +119,23 @@ namespace MICore
         {
             PipeLaunchOptions pipeOptions = (PipeLaunchOptions)options;
 
+            if (!LocalLaunchOptions.CheckDirectoryPath(pipeOptions.PipeCwd))
+            {
+                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalDirectoryPath, pipeOptions.PipeCwd));
+            }
+
+            if (!LocalLaunchOptions.CheckFilePath(pipeOptions.PipePath))
+            {
+                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, pipeOptions.PipePath));
+            }
+
             _cmdArgs = pipeOptions.PipeCommandArguments;
 
             Process proc = new Process();
             _pipePath = pipeOptions.PipePath;
             proc.StartInfo.FileName = pipeOptions.PipePath;
             proc.StartInfo.Arguments = pipeOptions.PipeArguments;
-            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(pipeOptions.PipePath);
+            proc.StartInfo.WorkingDirectory = pipeOptions.PipeCwd;
 
             InitProcess(proc, out reader, out writer);
         }

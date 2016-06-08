@@ -125,6 +125,7 @@ namespace MICoreUnitTests
             var options = (PipeLaunchOptions)baseOptions;
 
             Assert.Equal(options.PipePath, fakeFilePath);
+            Assert.Equal(options.PipeCwd, System.IO.Path.GetDirectoryName(fakeFilePath));
             Assert.Equal(options.ExePath, "/home/user/myname/foo");
             Assert.Equal(options.ExeArguments, "arg1 arg2");
             Assert.Equal(options.TargetArchitecture, TargetArchitecture.X64);
@@ -150,6 +151,7 @@ namespace MICoreUnitTests
             string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
             string content = string.Concat("<PipeLaunchOptions xmlns=\"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014\"\n",
                 "PipePath=\"", fakeFilePath, "\"\n",
+                "PipeCwd=\"/home/user/my program/src\"\n",
                 "ExePath=\"/home/user/myname/foo\"\n",
                 "TargetArchitecture=\"x86_64\"\n",
                 "AbsolutePrefixSOLibSearchPath='/system/bin'\n",
@@ -167,6 +169,7 @@ namespace MICoreUnitTests
             var options = (PipeLaunchOptions)baseOptions;
 
             Assert.Equal(options.PipePath, fakeFilePath);
+            Assert.Equal(options.PipeCwd, "/home/user/my program/src");
             Assert.Equal(options.ExePath, "/home/user/myname/foo");
             Assert.Equal(options.TargetArchitecture, TargetArchitecture.X64);
             Assert.Equal(options.AbsolutePrefixSOLibSearchPath, "/system/bin");

@@ -63,7 +63,7 @@ namespace MICore
     /// </summary>
     public sealed class PipeLaunchOptions : LaunchOptions
     {
-        public PipeLaunchOptions(string PipePath, string PipeArguments, string PipeCommandArguments)
+        public PipeLaunchOptions(string PipePath, string PipeArguments, string PipeCommandArguments, string PipeCwd)
         {
             if (string.IsNullOrEmpty(PipePath))
                 throw new ArgumentNullException("PipePath");
@@ -71,11 +71,19 @@ namespace MICore
             this.PipePath = PipePath;
             this.PipeArguments = PipeArguments;
             this.PipeCommandArguments = PipeCommandArguments;
+            if (!String.IsNullOrWhiteSpace(PipeCwd))
+            {
+                this.PipeCwd = PipeCwd;
+            }
+            else
+            {
+                this.PipeCwd = Path.GetDirectoryName(PipePath);
+            }
         }
 
         static internal PipeLaunchOptions CreateFromXml(Xml.LaunchOptions.PipeLaunchOptions source)
         {
-            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments, source.PipeCommandArguments);
+            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments, source.PipeCommandArguments, source.PipeCwd);
             options.InitializeCommonOptions(source);
 
             return options;
@@ -96,6 +104,11 @@ namespace MICore
         /// [Optional] Arguments to pass to the PipePath program that include a format specifier ('{0}') for a custom command.
         /// </summary>
         public string PipeCommandArguments { get; private set; }
+
+        /// <summary>
+        /// [Optional] Current working directory when the pipe program is invoked.
+        /// </summary>
+        public string PipeCwd { get; private set; }
     }
 
     public sealed class TcpLaunchOptions : LaunchOptions
@@ -198,11 +211,19 @@ namespace MICore
         }
 
         /// <summary>
-        /// Checks that the path is valid, exists, and is rooted.
+        /// Checks that the file path is valid, exists, and is rooted.
         /// </summary>
-        private static bool CheckPath(string path)
+        public static bool CheckFilePath(string path)
         {
             return path.IndexOfAny(Path.GetInvalidPathChars()) < 0 && File.Exists(path) && Path.IsPathRooted(path);
+        }
+
+        /// <summary>
+        /// Checks that if the directory path is valid, exists and is rooted.
+        /// </summary>
+        public static bool CheckDirectoryPath(string path)
+        {
+            return path.IndexOfAny(Path.GetInvalidPathChars()) < 0 && Directory.Exists(path) && Path.IsPathRooted(path);
         }
 
         public bool ShouldStartServer()
@@ -254,7 +275,7 @@ namespace MICore
             options._useExternalConsole = source.ExternalConsole;
 
             // when using local options the core dump path must check out
-            if (options.IsCoreDump && !LocalLaunchOptions.CheckPath(options.CoreDumpPath))
+            if (options.IsCoreDump && !LocalLaunchOptions.CheckFilePath(options.CoreDumpPath))
                 throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, options.CoreDumpPath));
 
             return options;
