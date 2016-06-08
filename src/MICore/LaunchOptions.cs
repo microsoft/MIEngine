@@ -211,11 +211,19 @@ namespace MICore
         }
 
         /// <summary>
-        /// Checks that the path is valid, exists, and is rooted.
+        /// Checks that the file path is valid, exists, and is rooted.
         /// </summary>
-        private static bool CheckPath(string path)
+        public static bool CheckFilePath(string path)
         {
             return path.IndexOfAny(Path.GetInvalidPathChars()) < 0 && File.Exists(path) && Path.IsPathRooted(path);
+        }
+
+        /// <summary>
+        /// Checks that if the directory path is valid, exists and is rooted.
+        /// </summary>
+        public static bool CheckDirectoryPath(string path)
+        {
+            return path.IndexOfAny(Path.GetInvalidPathChars()) < 0 && Directory.Exists(path) && Path.IsPathRooted(path);
         }
 
         public bool ShouldStartServer()
@@ -267,7 +275,7 @@ namespace MICore
             options._useExternalConsole = source.ExternalConsole;
 
             // when using local options the core dump path must check out
-            if (options.IsCoreDump && !LocalLaunchOptions.CheckPath(options.CoreDumpPath))
+            if (options.IsCoreDump && !LocalLaunchOptions.CheckFilePath(options.CoreDumpPath))
                 throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, options.CoreDumpPath));
 
             return options;
