@@ -280,6 +280,13 @@
     <xs:complexType>
       <xs:complexContent>
         <xs:extension base="BaseLaunchOptions">
+          <xs:sequence>
+            <xs:element name="PipeEnvironment" minOccurs="0" maxOccurs="1" type="EnvironmentEntryList">
+              <xs:annotation>
+                <xs:documentation>Option list of environment variables to set for pipe program.</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:sequence>
           <xs:attribute name="PipePath" type="xs:string" use="required">
             <xs:annotation>
               <xs:documentation>Path on the VS computer to an executable to run to establish a standard input/output pipe to the target computer.</xs:documentation>

@@ -490,6 +490,10 @@ namespace MICore.Xml.LaunchOptions {
     public partial class PipeLaunchOptions : BaseLaunchOptions {
         
         /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public EnvironmentEntry[] PipeEnvironment;
+        
+        /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string PipePath;
         
