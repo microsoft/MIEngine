@@ -6,7 +6,7 @@ Downloads the given $Version of clrdbg for the given $RuntimeID and installs it 
 The following script will generate a project.json and NuGet.config and use dotnet restore and publish to install clrdbg, the .NET Core Debugger
 
 .PARAMETER Version
-Specifies the version of clrdbg to install. Can be 'latest', VS2015U2, or a specific version string i.e. 14.0.25229-preview-2963841
+Specifies the version of clrdbg to install. Can be 'latest', VS2015U2, or a specific version string i.e. 14.0.25406-preview-3044032
 
 .PARAMETER RuntimeID
 Specifies the .NET Runtime ID of the clrdbg that will be downloaded. Example: ubuntu.14.04-x64. Defaults to the Runtime ID of the current machine.
@@ -93,9 +93,9 @@ function GenerateNuGetConfig() {
 # 'latest' version may be updated
 # all other version constants i.e. 'vs2015u2' may not be updated after they are finalized
 if ($Version -eq "latest") {
-    $VersionNumber = "14.0.25229-preview-2963841"
+    $VersionNumber = "14.0.25406-preview-3044032"
 } elseif ($Version -eq "vs2015u2") {
-    $VersionNumber = "14.0.25229-preview-2963841"
+    $VersionNumber = "14.0.25406-preview-3044032"
 }
 Write-Host "Info: Using clrdbg version '$VersionNumber'"
 
