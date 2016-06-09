@@ -116,7 +116,7 @@ namespace MICore
         /// <summary>
         /// [Optional] Enviroment variables for the pipe program.
         /// </summary>
-        public EnvironmentEntry[] PipeEnvironment { get; private set; }
+        public IReadOnlyCollection<EnvironmentEntry> PipeEnvironment { get; private set; }
     }
 
     public sealed class TcpLaunchOptions : LaunchOptions

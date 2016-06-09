@@ -139,7 +139,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.SetupCommands[0].CommandText, "-gdb-set my-example-setting on");
             Assert.True(options.SetupCommands[0].Description.Contains("gdb-set"));
             Assert.False(options.SetupCommands[0].IgnoreFailures);
-            Assert.True(options.PipeEnvironment.Length == 0);
+            Assert.True(options.PipeEnvironment.Count() == 0);
         }
 
         [Fact]
@@ -189,8 +189,8 @@ namespace MICoreUnitTests
             Assert.Equal(command.CommandText, "Example command");
             Assert.Equal(command.Description, "Example description");
             Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.None);
-            Assert.Equal(options.PipeEnvironment[0].Name, "PipeVar1");
-            Assert.Equal(options.PipeEnvironment[0].Value, "PipeValue1");
+            Assert.Equal(options.PipeEnvironment.First().Name, "PipeVar1");
+            Assert.Equal(options.PipeEnvironment.First().Value, "PipeValue1");
         }
 
         // TODO this test is broken by a bug: the assembly binder only searches the unit test
