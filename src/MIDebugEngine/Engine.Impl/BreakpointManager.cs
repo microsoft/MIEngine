@@ -197,9 +197,8 @@ namespace Microsoft.MIDebugEngine
         }
 
 
-        public AD7BoundBreakpoint[] FindHitBreakpoints(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame, out bool fContinue)
+        public async Task<Tuple<AD7BoundBreakpoint[], bool>> FindHitBreakpoints(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame)
         {
-            fContinue = false;
             List<AD7BoundBreakpoint> hitBoundBreakpoints = new List<AD7BoundBreakpoint>();
             // match based on address and bkptno since there are many
             // cases where gdb doesn't provide the breakpoint address (multple binds to the same location)
@@ -221,13 +220,23 @@ namespace Microsoft.MIDebugEngine
                     continue;
                 }
 
+                string currBkptNo = currBoundBp.PendingBreakpoint.BreakpointId;
+                TupleValue bkpt = await _engine.DebuggedProcess.MICommandFactory.BreakInfo(currBkptNo);
+                uint? hitTimes = bkpt.TryFindUint("times");
+
+                if (hitTimes == 0)
+                {
+                    // Breakpoint hasn't been hit, so skip it
+                    continue;
+                }
+
                 hitBoundBreakpoints.Add(currBoundBp);
             }
 
-
-
-            fContinue = (hitBoundBreakpoints.Count == 0);
-            return hitBoundBreakpoints.Count != 0 ? hitBoundBreakpoints.ToArray() : null;
+            bool fContinue = (hitBoundBreakpoints.Count == 0);
+            return hitBoundBreakpoints.Count != 0 ?
+                Tuple.Create(hitBoundBreakpoints.ToArray(), fContinue) :
+                Tuple.Create<AD7BoundBreakpoint[], bool>(null, fContinue);
         }
 
         public AD7BoundBreakpoint FindHitWatchpoint(string bkptno, out bool fContinue)
