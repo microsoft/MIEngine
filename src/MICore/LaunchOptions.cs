@@ -63,27 +63,30 @@ namespace MICore
     /// </summary>
     public sealed class PipeLaunchOptions : LaunchOptions
     {
-        public PipeLaunchOptions(string PipePath, string PipeArguments, string PipeCommandArguments, string PipeCwd)
+        public PipeLaunchOptions(string pipePath, string pipeArguments, string pipeCommandArguments, string pipeCwd, MICore.Xml.LaunchOptions.EnvironmentEntry[] pipeEnvironment)
         {
-            if (string.IsNullOrEmpty(PipePath))
+            if (string.IsNullOrEmpty(pipePath))
                 throw new ArgumentNullException("PipePath");
 
-            this.PipePath = PipePath;
-            this.PipeArguments = PipeArguments;
-            this.PipeCommandArguments = PipeCommandArguments;
-            if (!String.IsNullOrWhiteSpace(PipeCwd))
+            this.PipePath = pipePath;
+            this.PipeArguments = pipeArguments;
+            this.PipeCommandArguments = pipeCommandArguments;
+            
+            if (!String.IsNullOrWhiteSpace(pipeCwd))
             {
-                this.PipeCwd = PipeCwd;
+                this.PipeCwd = pipeCwd;
             }
             else
             {
-                this.PipeCwd = Path.GetDirectoryName(PipePath);
+                this.PipeCwd = Path.GetDirectoryName(pipePath);
             }
+
+            this.PipeEnvironment = (pipeEnvironment != null) ? pipeEnvironment.Select(e => new EnvironmentEntry(e)).ToArray() : new EnvironmentEntry[] { };
         }
 
         static internal PipeLaunchOptions CreateFromXml(Xml.LaunchOptions.PipeLaunchOptions source)
         {
-            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments, source.PipeCommandArguments, source.PipeCwd);
+            var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments, source.PipeCommandArguments, source.PipeCwd, source.PipeEnvironment);
             options.InitializeCommonOptions(source);
 
             return options;
@@ -109,6 +112,11 @@ namespace MICore
         /// [Optional] Current working directory when the pipe program is invoked.
         /// </summary>
         public string PipeCwd { get; private set; }
+        
+        /// <summary>
+        /// [Optional] Enviroment variables for the pipe program.
+        /// </summary>
+        public EnvironmentEntry[] PipeEnvironment { get; private set; }
     }
 
     public sealed class TcpLaunchOptions : LaunchOptions

@@ -137,6 +137,11 @@ namespace MICore
             proc.StartInfo.Arguments = pipeOptions.PipeArguments;
             proc.StartInfo.WorkingDirectory = pipeOptions.PipeCwd;
 
+            foreach (EnvironmentEntry entry in pipeOptions.PipeEnvironment)
+            {
+                proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+            }
+
             InitProcess(proc, out reader, out writer);
         }
 

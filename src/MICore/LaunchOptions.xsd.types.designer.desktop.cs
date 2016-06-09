@@ -1174,6 +1174,8 @@ namespace MICore.Xml.LaunchOptions {
     [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
     public partial class PipeLaunchOptions : BaseLaunchOptions {
         
+        private EnvironmentEntry[] pipeEnvironmentField;
+        
         private string pipePathField;
         
         private string pipeArgumentsField;
@@ -1181,6 +1183,17 @@ namespace MICore.Xml.LaunchOptions {
         private string pipeCommandArgumentsField;
         
         private string pipeCwdField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public EnvironmentEntry[] PipeEnvironment {
+            get {
+                return this.pipeEnvironmentField;
+            }
+            set {
+                this.pipeEnvironmentField = value;
+            }
+        }
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
