@@ -435,6 +435,9 @@ namespace Microsoft.MIDebugEngine
                     {
                         try
                         {
+                            // Check if the logger was enabled late.
+                            Logger.LoadMIDebugLogger(_configStore);
+
                             _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore);
                         }
                         finally
