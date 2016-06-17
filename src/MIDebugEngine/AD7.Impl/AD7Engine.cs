@@ -414,6 +414,9 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_debuggedProcess == null);
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
+            // Check if the logger was enabled late.
+            Logger.LoadMIDebugLogger(_configStore);
+
             process = null;
 
             _engineCallback = new EngineCallback(this, ad7Callback);

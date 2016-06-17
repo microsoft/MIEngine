@@ -41,11 +41,7 @@ namespace MICore
                 s_isInitialized = true;
                 s_initTime = DateTime.Now;
 
-                s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
-                if (s_logger != null)
-                {
-                    s_isEnabled = true;
-                }
+                LoadMIDebugLogger(configStore);
                 res.WriteLine("Initialized log at: " + s_initTime);
             }
 
@@ -56,6 +52,18 @@ namespace MICore
             }
 #endif
             return res;
+        }
+
+        public static void LoadMIDebugLogger(HostConfigurationStore configStore)
+        {
+            if (s_logger == null)
+            {
+                s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
+                if (s_logger != null)
+                {
+                    s_isEnabled = true;
+                }
+            }
         }
 
         /// <summary>
