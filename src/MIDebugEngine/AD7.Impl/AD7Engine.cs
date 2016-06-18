@@ -33,7 +33,7 @@ namespace Microsoft.MIDebugEngine
 
     [System.Runtime.InteropServices.ComVisible(true)]
     [System.Runtime.InteropServices.Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
-    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110
+    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugEngine3, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110
     {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private EngineCallback _engineCallback;
@@ -48,6 +48,8 @@ namespace Microsoft.MIDebugEngine
 
         // This object manages breakpoints in the sample engine.
         private BreakpointManager _breakpointManager;
+
+        private Guid _engineGuid = new Guid(EngineConstants.EngineId);
 
         // A unique identifier for the program being debugged.
         private Guid _ad7ProgramId;
@@ -141,7 +143,7 @@ namespace Microsoft.MIDebugEngine
         #region IDebugEngine2 Members
 
         // Attach the debug engine to a program. 
-        int IDebugEngine2.Attach(IDebugProgram2[] rgpPrograms, IDebugProgramNode2[] rgpProgramNodes, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason)
+        public int Attach(IDebugProgram2[] rgpPrograms, IDebugProgramNode2[] rgpProgramNodes, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason)
         {
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
@@ -199,18 +201,10 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        // Requests that all programs being debugged by this DE stop execution the next time one of their threads attempts to run.
-        // This is normally called in response to the user clicking on the pause button in the debugger.
-        // When the break is complete, an AsyncBreakComplete event will be sent back to the debugger.
-        int IDebugEngine2.CauseBreak()
-        {
-            return ((IDebugProgram2)this).CauseBreak();
-        }
-
         // Called by the SDM to indicate that a synchronous debug event, previously sent by the DE to the SDM,
         // was received and processed. The only event the sample engine sends in this fashion is Program Destroy.
         // It responds to that event by shutting down the engine.
-        int IDebugEngine2.ContinueFromSynchronousEvent(IDebugEvent2 eventObject)
+        public int ContinueFromSynchronousEvent(IDebugEvent2 eventObject)
         {
             try
             {
@@ -275,7 +269,7 @@ namespace Microsoft.MIDebugEngine
 
         // Creates a pending breakpoint in the engine. A pending breakpoint is contains all the information needed to bind a breakpoint to 
         // a location in the debuggee.
-        int IDebugEngine2.CreatePendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, out IDebugPendingBreakpoint2 ppPendingBP)
+        public int CreatePendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, out IDebugPendingBreakpoint2 ppPendingBP)
         {
             Debug.Assert(_breakpointManager != null);
             ppPendingBP = null;
@@ -294,7 +288,7 @@ namespace Microsoft.MIDebugEngine
 
         // Informs a DE that the program specified has been atypically terminated and that the DE should 
         // clean up all references to the program and send a program destroy event.
-        int IDebugEngine2.DestroyProgram(IDebugProgram2 pProgram)
+        public int DestroyProgram(IDebugProgram2 pProgram)
         {
             // Tell the SDM that the engine knows that the program is exiting, and that the
             // engine will send a program destroy. We do this because the Win32 debug api will always
@@ -304,14 +298,14 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Gets the GUID of the DE.
-        int IDebugEngine2.GetEngineId(out Guid guidEngine)
+        public int GetEngineId(out Guid guidEngine)
         {
-            guidEngine = new Guid(EngineConstants.EngineId);
+            guidEngine = _engineGuid;
             return Constants.S_OK;
         }
 
         // Removes the list of exceptions the IDE has set for a particular run-time architecture or language.
-        int IDebugEngine2.RemoveAllSetExceptions(ref Guid guidType)
+        public int RemoveAllSetExceptions(ref Guid guidType)
         {
             _debuggedProcess?.ExceptionManager.RemoveAllSetExceptions(guidType);
             return Constants.S_OK;
@@ -319,7 +313,7 @@ namespace Microsoft.MIDebugEngine
 
         // Removes the specified exception so it is no longer handled by the debug engine.
         // The sample engine does not support exceptions in the debuggee so this method is not actually implemented.       
-        int IDebugEngine2.RemoveSetException(EXCEPTION_INFO[] pException)
+        public int RemoveSetException(EXCEPTION_INFO[] pException)
         {
             _debuggedProcess?.ExceptionManager.RemoveSetException(ref pException[0]);
             return Constants.S_OK;
@@ -327,7 +321,7 @@ namespace Microsoft.MIDebugEngine
 
         // Specifies how the DE should handle a given exception.
         // The sample engine does not support exceptions in the debuggee so this method is not actually implemented.
-        int IDebugEngine2.SetException(EXCEPTION_INFO[] pException)
+        public int SetException(EXCEPTION_INFO[] pException)
         {
             _debuggedProcess?.ExceptionManager.SetException(ref pException[0]);
             return Constants.S_OK;
@@ -336,14 +330,14 @@ namespace Microsoft.MIDebugEngine
         // Sets the locale of the DE.
         // This method is called by the session debug manager (SDM) to propagate the locale settings of the IDE so that
         // strings returned by the DE are properly localized. The sample engine is not localized so this is not implemented.
-        int IDebugEngine2.SetLocale(ushort wLangID)
+        public int SetLocale(ushort wLangID)
         {
             return Constants.S_OK;
         }
 
         // A metric is a registry value used to change a debug engine's behavior or to advertise supported functionality. 
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
-        int IDebugEngine2.SetMetric(string pszMetric, object varValue)
+        public int SetMetric(string pszMetric, object varValue)
         {
             if (string.CompareOrdinal(pszMetric, "JustMyCodeStepping") == 0)
             {
@@ -371,9 +365,9 @@ namespace Microsoft.MIDebugEngine
 
         // Sets the registry root currently in use by the DE. Different installations of Visual Studio can change where their registry information is stored
         // This allows the debugger to tell the engine where that location is.
-        int IDebugEngine2.SetRegistryRoot(string registryRoot)
+        public int SetRegistryRoot(string registryRoot)
         {
-            _configStore = new HostConfigurationStore(registryRoot, EngineConstants.EngineId);
+            _configStore = new HostConfigurationStore(registryRoot);
             Logger = Logger.EnsureInitialized(_configStore);
             return Constants.S_OK;
         }
@@ -522,7 +516,7 @@ namespace Microsoft.MIDebugEngine
                 IDebugPortNotify2 portNotify;
                 EngineUtils.RequireOk(defaultPort.GetPortNotify(out portNotify));
 
-                EngineUtils.RequireOk(portNotify.AddProgramNode(new AD7ProgramNode(_debuggedProcess.Id)));
+                EngineUtils.RequireOk(portNotify.AddProgramNode(new AD7ProgramNode(_debuggedProcess.Id, _engineGuid)));
 
                 if (_ad7ProgramId == Guid.Empty)
                 {
@@ -577,6 +571,38 @@ namespace Microsoft.MIDebugEngine
                 // Ignore failures caused by the connection already being dead.
             }
 
+            return Constants.S_OK;
+        }
+
+        #endregion
+
+        #region IDebugEngine3 Members
+
+        public int SetSymbolPath(string szSymbolSearchPath, string szSymbolCachePath, uint Flags)
+        {
+            return Constants.S_OK;
+        }
+
+        public int LoadSymbols()
+        {
+            return Constants.S_FALSE; // indicate that we didn't load symbols for anything
+        }
+
+        public int SetJustMyCodeState(int fUpdate, uint dwModules, JMC_CODE_SPEC[] rgJMCSpec)
+        {
+            return Constants.S_OK;
+        }
+
+        public int SetEngineGuid(ref Guid guidEngine)
+        {
+            _engineGuid = guidEngine;
+            _configStore.SetEngineGuid(_engineGuid);
+            return Constants.S_OK;
+        }
+
+        public int SetAllExceptions(enum_EXCEPTION_STATE dwState)
+        {
+            _debuggedProcess?.ExceptionManager.SetAllExceptions(dwState);
             return Constants.S_OK;
         }
 
@@ -754,7 +780,7 @@ namespace Microsoft.MIDebugEngine
         public int GetEngineInfo(out string engineName, out Guid engineGuid)
         {
             engineName = ResourceStrings.EngineName;
-            engineGuid = new Guid(EngineConstants.EngineId);
+            engineGuid = _engineGuid;
             return Constants.S_OK;
         }
 
@@ -946,7 +972,7 @@ namespace Microsoft.MIDebugEngine
         #region Deprecated interface methods
         // These methods are not called by the Visual Studio debugger, so they don't need to be implemented
 
-        int IDebugEngine2.EnumPrograms(out IEnumDebugPrograms2 programs)
+        public int EnumPrograms(out IEnumDebugPrograms2 programs)
         {
             Debug.Fail("This function is not called by the debugger");
 

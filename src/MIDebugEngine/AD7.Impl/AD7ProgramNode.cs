@@ -15,10 +15,12 @@ namespace Microsoft.MIDebugEngine
     internal class AD7ProgramNode : IDebugProgramNode2
     {
         private readonly AD_PROCESS_ID _processId;
+        private readonly Guid _engineGuid;
 
-        public AD7ProgramNode(AD_PROCESS_ID processId)
+        public AD7ProgramNode(AD_PROCESS_ID processId, Guid engineGuid)
         {
             _processId = processId;
+            _engineGuid = engineGuid;
         }
 
         #region IDebugProgramNode2 Members
@@ -27,7 +29,7 @@ namespace Microsoft.MIDebugEngine
         int IDebugProgramNode2.GetEngineInfo(out string engineName, out Guid engineGuid)
         {
             engineName = ResourceStrings.EngineName;
-            engineGuid = new Guid(EngineConstants.EngineId);
+            engineGuid = _engineGuid;
 
             return Constants.S_OK;
         }
