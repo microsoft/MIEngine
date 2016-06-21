@@ -160,7 +160,7 @@
     <value>Symbols loaded - {0}</value>
   </data>
   <data name="ModuleLoadedWithoutSymbols" xml:space="preserve">
-    <value>Cannot find or open the PDB file.</value>
+    <value>Cannot find or open the symbol file.</value>
   </data>
   <data name="SymbolsNotLoadedInfo" xml:space="preserve">
     <value>Symbols not loaded</value>

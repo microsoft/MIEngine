@@ -199,7 +199,7 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot find or open the PDB file..
+        ///   Looks up a localized string similar to Cannot find or open the symbol file..
         /// </summary>
         internal static string ModuleLoadedWithoutSymbols {
             get {
