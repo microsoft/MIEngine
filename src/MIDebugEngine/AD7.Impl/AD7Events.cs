@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using MICore;
 using System.Diagnostics;
+using System.Globalization;
 
 // This file contains the various event objects that are sent to the debugger from the sample engine via IDebugEventCallback2::Event.
 // These are used in EngineCallback.cs.
@@ -124,12 +125,16 @@ namespace Microsoft.MIDebugEngine
 
             if (_fLoad)
             {
-                debugMessage = String.Concat("Loaded '", _module.DebuggedModule.Name, "'");
+                string symbolLoadStatus = _module.DebuggedModule.SymbolsLoaded ?
+                    ResourceStrings.ModuleLoadedWithSymbols :
+                    ResourceStrings.ModuleLoadedWithoutSymbols;
+
+                debugMessage = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ModuleLoadMessage, _module.DebuggedModule.Name, symbolLoadStatus);
                 fIsLoad = 1;
             }
             else
             {
-                debugMessage = String.Concat("Unloaded '", _module.DebuggedModule.Name, "'");
+                debugMessage = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ModuleUnloadMessage, _module.DebuggedModule.Name);
                 fIsLoad = 0;
             }
 
