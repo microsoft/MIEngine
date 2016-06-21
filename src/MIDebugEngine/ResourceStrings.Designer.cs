@@ -199,6 +199,42 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find or open the PDB file..
+        /// </summary>
+        internal static string ModuleLoadedWithoutSymbols {
+            get {
+                return ResourceManager.GetString("ModuleLoadedWithoutSymbols", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols loaded..
+        /// </summary>
+        internal static string ModuleLoadedWithSymbols {
+            get {
+                return ResourceManager.GetString("ModuleLoadedWithSymbols", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loaded &apos;{0}&apos;. {1}.
+        /// </summary>
+        internal static string ModuleLoadMessage {
+            get {
+                return ResourceManager.GetString("ModuleLoadMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unloaded &apos;{0}&apos;..
+        /// </summary>
+        internal static string ModuleUnloadMessage {
+            get {
+                return ResourceManager.GetString("ModuleUnloadMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit refresh required for visualized expressions.
         /// </summary>
         internal static string NoSideEffectsVisualizerMessage {
@@ -222,6 +258,24 @@ namespace Microsoft.MIDebugEngine {
         internal static string SettingSymbolSearchPath {
             get {
                 return ResourceManager.GetString("SettingSymbolSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols loaded - {0}.
+        /// </summary>
+        internal static string SymbolsLoadedInfo {
+            get {
+                return ResourceManager.GetString("SymbolsLoadedInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols not loaded.
+        /// </summary>
+        internal static string SymbolsNotLoadedInfo {
+            get {
+                return ResourceManager.GetString("SymbolsNotLoadedInfo", resourceCulture);
             }
         }
         
