@@ -676,6 +676,7 @@ namespace Microsoft.MIDebugEngine
                         }
 
                         commands.Add(new LaunchCommand("-gdb-set client-version \"" + version + "\""));
+                        commands.Add(new LaunchCommand("-gdb-set client-ui \"" + Host.GetHostUIIdentifier().ToString() + "\""));
                     }
 
                     this.AddExecutablePathCommand(commands);
