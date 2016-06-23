@@ -250,12 +250,7 @@ namespace Microsoft.MIDebugEngine
             {
                 // Setting the exception category will clear all the existing rules in that category
 
-                using (var settingsUpdateHolder = categorySettings.GetSettingsUpdate())
-                {
-                    settingsUpdateHolder.Value.NewCategoryState = newState;
-                    settingsUpdateHolder.Value.RulesToAdd.Clear();
-                    settingsUpdateHolder.Value.RulesToRemove.Clear();
-                }
+                SetCategory(categorySettings, newState);
             }
             else
             {
@@ -271,6 +266,26 @@ namespace Microsoft.MIDebugEngine
                     settingsUpdateHolder.Value.RulesToRemove.Remove(exceptionName);
                     settingsUpdateHolder.Value.RulesToAdd[exceptionName] = newState;
                 }
+            }
+        }
+        
+        public void SetAllExceptions(enum_EXCEPTION_STATE dwState)
+        {
+            var newState = ToExceptionBreakpointState(dwState);
+
+            foreach (var pair in _categoryMap)
+            {
+                SetCategory(pair.Value, newState);
+            }
+        }
+
+        private static void SetCategory(ExceptionCategorySettings categorySettings, ExceptionBreakpointState newState)
+        {
+            using (var settingsUpdateHolder = categorySettings.GetSettingsUpdate())
+            {
+                settingsUpdateHolder.Value.NewCategoryState = newState;
+                settingsUpdateHolder.Value.RulesToAdd.Clear();
+                settingsUpdateHolder.Value.RulesToRemove.Clear();
             }
         }
 
@@ -526,5 +541,6 @@ namespace Microsoft.MIDebugEngine
             // For C++, we have a bunch of C++ projection exceptions that we will not want to send down to GDB. Ignore these.
             return valueName.IndexOf('^') < 0;
         }
+
     }
 }

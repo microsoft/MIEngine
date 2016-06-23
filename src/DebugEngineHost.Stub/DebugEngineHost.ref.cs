@@ -116,8 +116,16 @@ namespace Microsoft.DebugEngineHost
         /// In Visual Studio, this will be something like 'Software\\Microsoft\\VisualStudio\\14.0'.
         /// In VS Code this will not really be a registry value but rather a key used to
         /// find the right configuration file.</param>
-        /// <param name="engineId">The engine id of this engine.</param>
-        public HostConfigurationStore(string registryRoot, string engineId)
+        public HostConfigurationStore(string registryRoot)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Sets the Guid of the engine being hosted. This should only be set once for each HostConfigurationStore instance.
+        /// </summary>
+        /// <param name="value">The new engine GUID to set</param>
+        public void SetEngineGuid(Guid value)
         {
             throw new NotImplementedException();
         }

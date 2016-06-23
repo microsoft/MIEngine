@@ -21,7 +21,7 @@ namespace Microsoft.DebugEngineHost
         private string _registryRoot;
         private RegistryKey _configKey;
 
-        public HostConfigurationStore(string registryRoot, string engineId)
+        public HostConfigurationStore(string registryRoot)
         {
             if (string.IsNullOrEmpty(registryRoot))
                 throw new ArgumentNullException("registryRoot");
@@ -29,12 +29,25 @@ namespace Microsoft.DebugEngineHost
                 throw new ArgumentNullException("engineId");
 
             _registryRoot = registryRoot;
-            _engineId = engineId;
             _configKey = Registry.LocalMachine.OpenSubKey(registryRoot);
             if (_configKey == null)
             {
                 throw new HostConfigurationException(registryRoot);
             }
+        }
+
+        /// <summary>
+        /// Sets the Guid of the engine being hosted. This should only be set once for each HostConfigurationStore instance.
+        /// </summary>
+        /// <param name="value">The new engine GUID to set</param>
+        public void SetEngineGuid(Guid value)
+        {
+            if (_engineId != null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            _engineId = value.ToString("B", CultureInfo.InvariantCulture);
         }
 
         // TODO: This should be removed. It is here only to make the Android launcher work for now
@@ -48,7 +61,12 @@ namespace Microsoft.DebugEngineHost
 
         public object GetEngineMetric(string metric)
         {
-            return GetOptionalValue(@"AD7Metrics\Engine\" + _engineId.ToUpper(CultureInfo.InvariantCulture), metric);
+            if (_engineId == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            return GetOptionalValue(@"AD7Metrics\Engine\" + _engineId, metric);
         }
 
         public void GetExceptionCategorySettings(Guid categoryId, out HostConfigurationSection categoryConfigSection, out string categoryName)
