@@ -71,11 +71,14 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB) != 0)
             {
-                // don't check readonly attribute, it doubles the eval time for a variable
-                //if (this.m_variableInformation.IsReadOnly())
-                //{
-                //    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY;
-                //}
+                // Only check this property if we're running under clrdbg, other engines double the eval time.
+                if (_engine.DebuggedProcess.MICommandFactory.Mode == MICore.MIMode.Clrdbg)
+                {
+                    if (variable.IsReadOnly())
+                    {
+                        propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY;
+                    }
+                }
 
                 if (variable.CountChildren != 0)
                 {
