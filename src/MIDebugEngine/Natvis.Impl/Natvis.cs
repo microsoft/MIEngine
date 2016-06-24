@@ -42,28 +42,24 @@ namespace Microsoft.MIDebugEngine.Natvis
         public AD7Thread Client { get { return Parent.Client; } }
         public bool Error { get { return Parent.Error; } }
         public uint CountChildren { get { return Parent.CountChildren; } }
-        public bool IsChild { get { return Parent.IsChild; } set {; } }
+        public bool IsChild { get { return Parent.IsChild; } set { Parent.IsChild = value; } }
         public enum_DBG_ATTRIB_FLAGS Access { get { return Parent.Access; } }
-        public virtual string FullName()
-        {
-            return Name;
-        }
         public bool IsStringType { get { return Parent.IsStringType; } }
-        public void EnsureChildren()
-        {
-            Parent.EnsureChildren();
-        }
+        public ThreadContext ThreadContext { get { return Parent.ThreadContext; } }
+        public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
+        public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
+        public virtual bool IsReadOnly { get { return Parent.IsReadOnly; } }
+
+        public VariableInformation FindChildByName(string name) => Parent.FindChildByName(name);
+        public string EvalDependentExpression(string expr) => Parent.EvalDependentExpression(expr);
+        public void AsyncEval(IDebugEventCallback2 pExprCallback) => Parent.AsyncEval(pExprCallback);
+        public void SyncEval(enum_EVALFLAGS dwFlags) => Parent.SyncEval(dwFlags);
+        public virtual string FullName() => Name;
+        public void EnsureChildren() => Parent.EnsureChildren();
         public void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error)
         {
             VariableInformation.AsyncErrorImpl(pExprCallback != null ? new EngineCallback(_engine, pExprCallback) : _engine.Callback, this, error);
         }
-        public void AsyncEval(IDebugEventCallback2 pExprCallback) { Parent.AsyncEval(pExprCallback); }
-        public void SyncEval(enum_EVALFLAGS dwFlags) { Parent.SyncEval(dwFlags); }
-        public ThreadContext ThreadContext { get { return Parent.ThreadContext; } }
-        public VariableInformation FindChildByName(string name) { return Parent.FindChildByName(name); }
-        public string EvalDependentExpression(string expr) { return Parent.EvalDependentExpression(expr); }
-        public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
-        public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
 
         public void Dispose()
         {
