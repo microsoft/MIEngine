@@ -71,7 +71,8 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB) != 0)
             {
-                // Only check this property if we're running under clrdbg, other engines double the eval time.
+                // Only check this property if we're running under clrdbg, other engines require
+                // double the mi messages since var-show-attributes is a separate call.
                 if (_engine.DebuggedProcess.MICommandFactory.Mode == MICore.MIMode.Clrdbg)
                 {
                     if (variable.IsReadOnly)
