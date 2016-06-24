@@ -42,7 +42,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         public AD7Thread Client { get { return Parent.Client; } }
         public bool Error { get { return Parent.Error; } }
         public uint CountChildren { get { return Parent.CountChildren; } }
-        public bool IsChild { get { return Parent.IsChild; } set { ; } }
+        public bool IsChild { get { return Parent.IsChild; } set { Parent.IsChild = value; } }
         public enum_DBG_ATTRIB_FLAGS Access { get { return Parent.Access; } }
         public bool IsStringType { get { return Parent.IsStringType; } }
         public ThreadContext ThreadContext { get { return Parent.ThreadContext; } }
