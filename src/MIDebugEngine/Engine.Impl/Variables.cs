@@ -37,7 +37,7 @@ namespace Microsoft.MIDebugEngine
         VariableInformation FindChildByName(string name);
         string EvalDependentExpression(string expr);
         bool IsVisualized { get; }
-        bool IsReadOnly();
+        bool IsReadOnly { get; }
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
     }
 
@@ -233,6 +233,15 @@ namespace Microsoft.MIDebugEngine
             {
                 DisplayHint = results.FindString("displayhint");
             }
+            if (results.Contains("attributes"))
+            {
+                _isReadonly = false;
+                if (results.FindString("attributes") == "noneditable")
+                {
+                    _isReadonly = true;
+                }
+                _attribsFetched = true;
+            }
 
             int index;
 
@@ -260,13 +269,6 @@ namespace Microsoft.MIDebugEngine
             _format = parent._format; // inherit formatting
             _parent = parent.VariableNodeType == NodeType.AccessQualifier ? parent._parent : parent;
             this.PropertyInfoFlags = parent.PropertyInfoFlags;
-        }
-
-        private VariableInformation(TupleValue results, VariableInformation parent, bool ro)
-            : this(results, parent)
-        {
-            _attribsFetched = true;  // read-only attribute is passed in at construction
-            _isReadonly = ro;
         }
 
         public ThreadContext ThreadContext { get { return _ctx; } }
@@ -551,22 +553,13 @@ namespace Microsoft.MIDebugEngine
                     : new TupleValue[0];
                 int i = 0;
                 bool isArray = IsArrayType();
-                bool elementIsReadonly = false;
                 if (isArray)
                 {
                     CountChildren = results.FindUint("numchild");
                     Children = new VariableInformation[CountChildren];
-                    //if (k.Length > 0)    // perform attrib check on first array child, apply to all elements
-                    //{
-                    //    MICore.Debugger.Results childResults = MICore.Debugger.DecodeResults(k[0]);
-                    //    string name = childResults.Find("name");
-                    //    Debug.Assert(!string.IsNullOrEmpty(name));
-                    //    string attribute = await m_engine.DebuggedProcess.MICommandFactory.VarShowAttributes(name);
-                    //    elementIsReadonly = (attribute != "editable");
-                    //}
                     foreach (var c in children)
                     {
-                        Children[i] = new VariableInformation(c, this, elementIsReadonly);
+                        Children[i] = new VariableInformation(c, this);
                         i++;
                     }
                 }
@@ -670,28 +663,32 @@ namespace Microsoft.MIDebugEngine
             return DisplayHint == "map";
         }
 
-        public bool IsReadOnly()
+        public bool IsReadOnly
         {
-            if (!_attribsFetched)
+            get
             {
-                if (string.IsNullOrEmpty(_internalName))
+                if (!_attribsFetched)
                 {
-                    return true;
+                    if (string.IsNullOrEmpty(_internalName))
+                    {
+                        return true;
+                    }
+
+                    this.VerifyNotDisposed();
+
+                    string attribute = string.Empty;
+
+                    _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                    {
+                        attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
+                    });
+
+                    _isReadonly = (attribute != "editable");
+                    _attribsFetched = true;
                 }
 
-                this.VerifyNotDisposed();
-
-                string attribute = string.Empty;
-
-                _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
-                {
-                    attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
-                });
-
-                _isReadonly = (attribute != "editable");
-                _attribsFetched = true;
+                return _isReadonly;
             }
-            return _isReadonly;
         }
 
         public void Assign(string expression)

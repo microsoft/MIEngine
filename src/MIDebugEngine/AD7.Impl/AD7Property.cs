@@ -74,7 +74,7 @@ namespace Microsoft.MIDebugEngine
                 // Only check this property if we're running under clrdbg, other engines double the eval time.
                 if (_engine.DebuggedProcess.MICommandFactory.Mode == MICore.MIMode.Clrdbg)
                 {
-                    if (variable.IsReadOnly())
+                    if (variable.IsReadOnly)
                     {
                         propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY;
                     }
