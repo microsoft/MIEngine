@@ -1,4 +1,5 @@
 ﻿[$RootKey$\AD7Metrics\Engine\{EA6637C6-17DF-45B5-A183-0951C54243BC}]
+@="MI Debug Engine"
 ; "AddressBP"=dword:00000001
 "AlwaysLoadLocal"=dword:00000001
 "AlwaysLoadProgramProviderLocal"=dword:00000001
@@ -15,7 +16,6 @@
 "SetNextStatement"=dword:00000001
 ; "SuspendThread"=dword:00000001
 "CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
-@="MI Debug Engine"
 "GlobalVisualizersDirectory"="$PackageFolder$"
 
 [$RootKey$\CLSID\{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}]
@@ -23,3 +23,54 @@
 "Class"="Microsoft.MIDebugEngine.AD7Engine"
 "InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
 "CodeBase"="$PackageFolder$\Microsoft.MIDebugEngine.dll"
+
+;******************************************************************************
+; SSH registration
+
+; Registration to use clrdbg with the SSH port supplier
+[$RootKey$\AD7Metrics\Engine\{6B320935-1391-433A-A8B6-898D0F03164A}]
+@="MI Debug Engine - clrdbg+SSH"
+"PortSupplier"="{3FDDF14E-E758-4695-BE0C-7509920432C9}"
+"Attach"=dword:00000001
+; "AddressBP"=dword:00000001
+"AlwaysLoadLocal"=dword:00000001
+; "CallStackBP"=dword:00000001
+; "ConditionalBP"=dword:00000001
+; "Disassembly"=dword:00000001
+"EnginePriority"=dword:00000050
+"Exceptions"=dword:00000001
+; "FunctionBP"=dword:00000001
+; "HitCountBP"=dword:00000001
+; "JustMyCodeStepping"=dword:00000001
+"Name"="Managed (.NET Core for Unix)"
+; "SetNextStatement"=dword:00000001
+; "SuspendThread"=dword:00000001
+"CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
+
+[$RootKey$\AD7Metrics\Engine\{6B320935-1391-433A-A8B6-898D0F03164A}\IncompatibleList]
+"gdb"="{91744D97-430F-42C1-9779-A5813EBD6AB2}"
+
+; Registration to use gdb with the SSH port supplier
+[$RootKey$\AD7Metrics\Engine\{91744D97-430F-42C1-9779-A5813EBD6AB2}]
+@="MI Debug Engine - gdb+SSH"
+"PortSupplier"="{3FDDF14E-E758-4695-BE0C-7509920432C9}"
+"Attach"=dword:00000001
+; "AddressBP"=dword:00000001
+"AlwaysLoadLocal"=dword:00000001
+; "CallStackBP"=dword:00000001
+; "ConditionalBP"=dword:00000001
+"DataBP"=dword:00000001
+"Disassembly"=dword:00000001
+"EnginePriority"=dword:00000050
+"Exceptions"=dword:00000001
+; "FunctionBP"=dword:00000001
+; "HitCountBP"=dword:00000001
+; "JustMyCodeStepping"=dword:00000001
+"Name"="Native (GDB)"
+"SetNextStatement"=dword:00000001
+; "SuspendThread"=dword:00000001
+"CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
+"GlobalVisualizersDirectory"="$PackageFolder$"
+
+[$RootKey$\AD7Metrics\Engine\{91744D97-430F-42C1-9779-A5813EBD6AB2}\IncompatibleList]
+"clrdbg"="{6B320935-1391-433A-A8B6-898D0F03164A}"

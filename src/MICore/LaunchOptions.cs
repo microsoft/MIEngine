@@ -398,6 +398,27 @@ namespace MICore
         public string ProcessName { get; private set; }
     }
 
+    /// <summary>
+    /// Launch options used when launching through IDebugUnixShellPort (SSH, and possible other things in the future).
+    /// </summary>
+    public sealed class UnixShellPortLaunchOptions : LaunchOptions
+    {
+        public string StartRemoteDebuggerComand { get; private set; }
+        public Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort UnixPort { get; private set; }
+
+        public UnixShellPortLaunchOptions(string startRemoteDebuggerComand, Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, int? processId, MIMode miMode)
+        {
+            this.StartRemoteDebuggerComand = startRemoteDebuggerComand;
+            this.UnixPort = unixPort;
+            if (processId.HasValue)
+            {
+                this.ProcessId = processId.Value;
+            }
+            this.DebuggerMIMode = miMode;
+            this.SetupCommands = new ReadOnlyCollection<LaunchCommand>(Array.Empty<LaunchCommand>());
+            SetInitializationComplete();
+        }
+    }
 
     /// <summary>
     /// Base launch options class
@@ -407,13 +428,22 @@ namespace MICore
         private const string XmlNamespace = "http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014";
         private static Lazy<Assembly> s_serializationAssembly = new Lazy<Assembly>(LoadSerializationAssembly, LazyThreadSafetyMode.ExecutionAndPublication);
         private bool _initializationComplete;
+        private MIMode _miMode;
 
         /// <summary>
         /// [Optional] Launcher used to start the application on the device
         /// </summary>
         public IPlatformAppLauncher DeviceAppLauncher { get; private set; }
 
-        public MIMode DebuggerMIMode { get; set; }
+        public MIMode DebuggerMIMode
+        {
+            get { return _miMode; }
+            set
+            {
+                VerifyCanModifyProperty("DebuggerMIMode");
+                _miMode = value;
+            }
+        }
 
         private Xml.LaunchOptions.BaseLaunchOptions _baseOptions;
         /// <summary>
@@ -811,7 +841,7 @@ namespace MICore
             if (launchOptions._setupCommands == null)
                 launchOptions._setupCommands = new List<LaunchCommand>(capacity: 0).AsReadOnly();
 
-            launchOptions._initializationComplete = true;
+            launchOptions.SetInitializationComplete();
             return launchOptions;
         }
 
@@ -1118,6 +1148,10 @@ namespace MICore
             return Assembly.Load(new AssemblyName(thisModuleName + ".XmlSerializers"));
         }
 
+        protected void SetInitializationComplete()
+        {
+            _initializationComplete = true;
+        }
 
         private void VerifyCanModifyProperty(string propertyName)
         {

@@ -229,6 +229,10 @@ namespace Microsoft.MIDebugEngine
             {
                 this.Init(new MICore.TcpTransport(), _launchOptions);
             }
+            else if (_launchOptions is UnixShellPortLaunchOptions)
+            {
+                this.Init(new MICore.UnixShellPortTransport(), _launchOptions);
+            }
             else
             {
                 throw new ArgumentOutOfRangeException("LaunchInfo.options");
@@ -630,7 +634,7 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
 
-                    int pid = localLaunchOptions.ProcessId;
+                    int pid = _launchOptions.ProcessId;
                     commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));                    
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
