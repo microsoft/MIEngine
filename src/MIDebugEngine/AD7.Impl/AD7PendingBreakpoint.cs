@@ -432,12 +432,14 @@ namespace Microsoft.MIDebugEngine
         // Toggles the enabled state of this pending breakpoint.
         int IDebugPendingBreakpoint2.Enable(int fEnable)
         {
-            lock (_boundBreakpoints)
+            bool newValue = fEnable == 0 ? false : true;
+            if (_enabled != newValue)
             {
-                _enabled = fEnable == 0 ? false : true;
-                if (_bp != null)
+                _enabled = newValue;
+                PendingBreakpoint bp = _bp;
+                if (bp != null)
                 {
-                    _bp.Enable(_enabled, _engine.DebuggedProcess);
+                    bp.Enable(_enabled, _engine.DebuggedProcess);
                 }
             }
 
