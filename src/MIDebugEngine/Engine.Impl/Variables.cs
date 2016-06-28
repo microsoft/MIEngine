@@ -172,6 +172,7 @@ namespace Microsoft.MIDebugEngine
             IsParameter = false;
             IsChild = false;
             _attribsFetched = false;
+            _isReadonly = false;
             Access = enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_NONE;
             _fullname = null;
 
@@ -235,7 +236,6 @@ namespace Microsoft.MIDebugEngine
             }
             if (results.Contains("attributes"))
             {
-                _isReadonly = false;
                 if (results.FindString("attributes") == "noneditable")
                 {
                     _isReadonly = true;
@@ -468,7 +468,6 @@ namespace Microsoft.MIDebugEngine
                     }
                     if (results.Contains("attributes"))
                     {
-                        _isReadonly = false;
                         if (results.FindString("attributes") == "noneditable")
                         {
                             _isReadonly = true;
