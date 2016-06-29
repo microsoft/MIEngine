@@ -172,6 +172,7 @@ namespace Microsoft.MIDebugEngine
             IsParameter = false;
             IsChild = false;
             _attribsFetched = false;
+            _isReadonly = false;
             Access = enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_NONE;
             _fullname = null;
 
@@ -235,7 +236,6 @@ namespace Microsoft.MIDebugEngine
             }
             if (results.Contains("attributes"))
             {
-                _isReadonly = false;
                 if (results.FindString("attributes") == "noneditable")
                 {
                     _isReadonly = true;
@@ -466,6 +466,14 @@ namespace Microsoft.MIDebugEngine
                     {
                         DisplayHint = results.FindString("displayhint");
                     }
+                    if (results.Contains("attributes"))
+                    {
+                        if (results.FindString("attributes") == "noneditable")
+                        {
+                            _isReadonly = true;
+                        }
+                        _attribsFetched = true;
+                    }
                     Value = results.TryFindString("value");
                     if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
                     {
@@ -683,7 +691,7 @@ namespace Microsoft.MIDebugEngine
                         attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
                     });
 
-                    _isReadonly = (attribute != "editable");
+                    _isReadonly = (attribute == "noneditable");
                     _attribsFetched = true;
                 }
 
