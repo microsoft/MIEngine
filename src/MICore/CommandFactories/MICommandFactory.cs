@@ -313,6 +313,12 @@ namespace MICore
             return Task.FromResult<bool>(true);
         }
 
+        public virtual Task<bool> SetStepFiltering(bool enabled)
+        {
+            // See comment on Just My Code
+            return Task.FromResult<bool>(true);
+        }
+
         public uint Radix { get; protected set; }
 
 
@@ -504,19 +510,19 @@ namespace MICore
         /// Adds a breakpoint which will be triggered when an exception is thrown and/or goes user-unhandled
         /// </summary>
         /// <param name="exceptionCategory">AD7 category for the execption</param>
-        /// <param name="exceptionNames">[Optional] names of the exceptions to set a breakpoint on. If null, this sets an breakpoint for all 
+        /// <param name="exceptionNames">[Optional] names of the exceptions to set a breakpoint on. If null, this sets an breakpoint for all
         /// exceptions in the category. Note that this clear all previous exception breakpoints set in this category.</param>
         /// <param name="exceptionBreakpointState">Indicates when the exception breakpoint should fire</param>
         /// <returns>Task containing the exception breakpoint id's for the various set exceptions</returns>
         public virtual Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
         {
-            // NOTES: 
+            // NOTES:
             // GDB /MI has no support for exceptions. Though they do have it through the non-MI through a 'catch' command. Example:
             //   catch throw MyException
             //   Catchpoint 3 (throw)
             //   =breakpoint-created,bkpt={number="3",type="breakpoint",disp="keep",enabled="y",addr="0xa1b5f830",what="exception throw",catch-type="throw",thread-groups=["i1"],regexp="MyException",times="0"}
             // Documentation: http://www.sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html#Set-Catchpoints
-            // 
+            //
             // LLDB-MI has no support for exceptions. Though they do have it through the non-MI breakpoint command. Example:
             //   break set -F std::range_error
             // And they do have it in their API:
@@ -581,7 +587,7 @@ namespace MICore
         public virtual bool IsAsyncBreakSignal(Results results)
         {
             bool isAsyncBreak = false;
-            
+
             if (results.TryFindString("reason") == "signal-received")
             {
                 if (results.TryFindString("signal-name") == "SIGINT")
