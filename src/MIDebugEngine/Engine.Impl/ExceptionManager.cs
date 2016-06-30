@@ -95,7 +95,7 @@ namespace Microsoft.MIDebugEngine
             public readonly ExceptionBreakpointState DefaultCategoryState;
             public readonly ReadOnlyDictionary<string, ExceptionBreakpointState> DefaultRules;
 
-            // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCatagory), and we 
+            // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCatagory), and we
             // guarantee that there will only be one active FlushSettingsUpdates task at a time
             public ExceptionBreakpointState CategoryState;
             public readonly Dictionary<string, ulong> CurrentRules = new Dictionary<string, ulong>();
@@ -268,7 +268,7 @@ namespace Microsoft.MIDebugEngine
                 }
             }
         }
-        
+
         public void SetAllExceptions(enum_EXCEPTION_STATE dwState)
         {
             var newState = ToExceptionBreakpointState(dwState);
@@ -541,6 +541,5 @@ namespace Microsoft.MIDebugEngine
             // For C++, we have a bunch of C++ projection exceptions that we will not want to send down to GDB. Ignore these.
             return valueName.IndexOf('^') < 0;
         }
-
     }
 }

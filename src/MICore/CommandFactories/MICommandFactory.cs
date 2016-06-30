@@ -541,9 +541,9 @@ namespace MICore
             state = ExceptionBreakpointState.None;
         }
 
-#endregion
+        #endregion
 
-#region Helpers
+        #region Helpers
 
         public virtual Task<TargetArchitecture> GetTargetArchitecture()
         {
@@ -559,9 +559,9 @@ namespace MICore
         }
 
 
-#endregion
+        #endregion
 
-#region Other
+        #region Other
 
         abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
@@ -581,7 +581,7 @@ namespace MICore
         public virtual bool IsAsyncBreakSignal(Results results)
         {
             bool isAsyncBreak = false;
-            
+
             if (results.TryFindString("reason") == "signal-received")
             {
                 if (results.TryFindString("signal-name") == "SIGINT")
@@ -634,6 +634,6 @@ namespace MICore
             return false;
         }
 
-#endregion
+        #endregion
     }
 }

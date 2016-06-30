@@ -26,7 +26,7 @@ namespace Microsoft.MIDebugEngine
         void ThreadCreatedEvent(Results results);
     }
 
-    class DebugUnixChild : ProcessSequence
+    internal class DebugUnixChild : ProcessSequence
     {
         private enum State
         {
@@ -234,14 +234,14 @@ namespace Microsoft.MIDebugEngine
                         // sometimes gdb misses the breakpoint at exec and execution will proceed to a breakpoint in the child
                         _process.Logger.WriteLine("Missed catching the exec after vfork. Spawning the child's debugger.");
                         s.State = State.AtExec;
-                       goto missedExec;
+                        goto missedExec;
                     }
                     break;
                 case State.AtSignal:    // both child and parent are stopped
                     s.State = State.Complete;
                     return await DetachAndContinue(s);
                 case State.AtExec:
-                    missedExec:
+                missedExec:
                     if (tid == s.Newtid)    // stopped in the child
                     {
                         await ProcessChild(s);

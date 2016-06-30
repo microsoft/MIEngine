@@ -95,7 +95,7 @@ namespace MICore
             public uint Id { get; private set; }
         };
 
-        public class StoppingEventArgs: ResultEventArgs
+        public class StoppingEventArgs : ResultEventArgs
         {
             public readonly BreakRequest AsyncRequest;
             public StoppingEventArgs(Results results, uint id, BreakRequest asyncRequest = BreakRequest.None) : base(results, id)
@@ -779,7 +779,7 @@ namespace MICore
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
 
-#region ITransportCallback implementation
+        #region ITransportCallback implementation
         // Note: this can be called from any thread
         void ITransportCallback.OnStdOutLine(string line)
         {
@@ -886,7 +886,7 @@ namespace MICore
             }
         }
 
-#endregion
+        #endregion
 
         // inherited classes can override this for thread marshalling etc
         protected virtual void ScheduleStdOutProcessing(string line)
@@ -1294,7 +1294,7 @@ namespace MICore
         {
             foreach (var grp in _debuggeePids)
             {
-                if ( grp.Value == pid)
+                if (grp.Value == pid)
                 {
                     return InferiorNumber(grp.Key);
                 }

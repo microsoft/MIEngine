@@ -60,11 +60,11 @@ namespace Microsoft.MIDebugEngine
 
         private IDebugSettingsCallback110 _settingsCallback;
 
-        private static List<int> _childProcessLaunch;
+        private static List<int> s_childProcessLaunch;
 
         static AD7Engine()
         {
-            _childProcessLaunch = new List<int>();
+            s_childProcessLaunch = new List<int>();
         }
 
         public AD7Engine()
@@ -84,17 +84,17 @@ namespace Microsoft.MIDebugEngine
 
         internal static void AddChildProcess(int processId)
         {
-            lock(_childProcessLaunch)
+            lock (s_childProcessLaunch)
             {
-                _childProcessLaunch.Add(processId);
+                s_childProcessLaunch.Add(processId);
             }
         }
 
         internal static bool RemoveChildProcess(int processId)
         {
-            lock(_childProcessLaunch)
+            lock (s_childProcessLaunch)
             {
-                return _childProcessLaunch.Remove(processId);
+                return s_childProcessLaunch.Remove(processId);
             }
         }
 

@@ -72,7 +72,8 @@ namespace MICore
             }
         }
 
-        public override int DebuggerPid {
+        public override int DebuggerPid
+        {
             get
             {
                 throw new NotImplementedException();

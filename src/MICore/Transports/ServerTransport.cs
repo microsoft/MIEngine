@@ -22,7 +22,7 @@ namespace MICore
 
         public ManualResetEvent StartedEvent { get; }
 
-        public ServerTransport(bool killOnClose, bool filterStderr = false, bool filterStdout = false) 
+        public ServerTransport(bool killOnClose, bool filterStderr = false, bool filterStdout = false)
             : base(killOnClose, filterStderr, filterStdout)
         {
             StartedEvent = new ManualResetEvent(false);
@@ -38,7 +38,7 @@ namespace MICore
             proc.StartInfo.Arguments = localOptions.DebugServerArgs;
             proc.StartInfo.WorkingDirectory = miDebuggerDir;
             _startPattern = localOptions.ServerStarted;
-            _messagePrefix = Path.GetFileNameWithoutExtension(localOptions.DebugServer);  
+            _messagePrefix = Path.GetFileNameWithoutExtension(localOptions.DebugServer);
 
             InitProcess(proc, out reader, out writer);
         }

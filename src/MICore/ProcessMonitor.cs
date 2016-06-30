@@ -6,9 +6,9 @@ using System.Threading;
 
 namespace MICore
 {
-    public class ProcessMonitor: IDisposable
+    public class ProcessMonitor : IDisposable
     {
-        private readonly TimeSpan EXIT_POLL_DELTA = TimeSpan.FromMilliseconds(200);
+        private readonly TimeSpan _EXIT_POLL_DELTA = TimeSpan.FromMilliseconds(200);
         private int _processId;
         private Timer _exitMonitorTimer;
 
@@ -24,7 +24,7 @@ namespace MICore
 
         public void Start()
         {
-            _exitMonitorTimer = new Timer(MonitorForExit, null, TimeSpan.FromMilliseconds(0), EXIT_POLL_DELTA);
+            _exitMonitorTimer = new Timer(MonitorForExit, null, TimeSpan.FromMilliseconds(0), _EXIT_POLL_DELTA);
         }
 
         public event EventHandler ProcessExited;

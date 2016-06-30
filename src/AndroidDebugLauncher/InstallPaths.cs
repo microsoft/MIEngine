@@ -79,7 +79,7 @@ namespace AndroidDebugLauncher
             switch (launchOptions.TargetArchitecture)
             {
                 case MICore.TargetArchitecture.X86:
-                    possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath: NDKToolChainFilePath.x86_GDBPaths();
+                    possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.x86_GDBPaths();
                     break;
 
                 case MICore.TargetArchitecture.X64:

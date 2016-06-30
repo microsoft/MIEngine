@@ -112,7 +112,7 @@ namespace Microsoft.MIDebugEngine
             {
                 pbstrFileName = _textPosition.FileName;
             }
-            
+
             return Constants.S_OK;
         }
 

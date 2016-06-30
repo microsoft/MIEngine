@@ -71,7 +71,7 @@ namespace MICore
             this.PipePath = pipePath;
             this.PipeArguments = pipeArguments;
             this.PipeCommandArguments = pipeCommandArguments;
-            
+
             if (!String.IsNullOrWhiteSpace(pipeCwd))
             {
                 this.PipeCwd = pipeCwd;
@@ -112,7 +112,7 @@ namespace MICore
         /// [Optional] Current working directory when the pipe program is invoked.
         /// </summary>
         public string PipeCwd { get; private set; }
-        
+
         /// <summary>
         /// [Optional] Enviroment variables for the pipe program.
         /// </summary>
@@ -176,7 +176,6 @@ namespace MICore
     /// </summary>
     public sealed class LocalLaunchOptions : LaunchOptions
     {
-
         private bool _useExternalConsole;
 
         private const int DefaultLaunchTimeout = 10 * 1000; // 10 seconds
