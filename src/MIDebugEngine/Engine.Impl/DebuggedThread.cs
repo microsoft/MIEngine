@@ -226,6 +226,18 @@ namespace Microsoft.MIDebugEngine
             ulong? pc = frame.TryFindAddr("addr");
             MITextPosition textPosition = MITextPosition.TryParse(frame);
             string func = frame.TryFindString("func");
+
+            if (this._debugger.MICommandFactory.Mode == MIMode.Lldb)
+            {
+                if (func.Contains("("))
+                {
+                    // LLDB adds the types of variables to the func. This doesn't conform 
+                    // the mi protocol and results in duplicate data when the ad7 stackframe
+                    // object does the same thing. 
+                    func = func.Substring(0, func.IndexOf('('));
+                }
+            }
+
             uint level = frame.FindUint("level");
             string from = frame.TryFindString("from");
 
