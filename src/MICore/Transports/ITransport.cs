@@ -26,7 +26,7 @@ namespace MICore
         /// </summary>
         int DebuggerPid { get; }
     }
-    public interface ISignalingTransport: ITransport
+    public interface ISignalingTransport : ITransport
     {
         ManualResetEvent StartedEvent { get; }
     }

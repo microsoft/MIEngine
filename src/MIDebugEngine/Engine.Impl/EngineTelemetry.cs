@@ -20,7 +20,7 @@ namespace Microsoft.MIDebugEngine
         private const string Value_Windows_Runtime_Environment_MinGW = "MinGW";
 
 
-        KeyValuePair<string, object>[] _clrdbgProcessCreateProperties;
+        private KeyValuePair<string, object>[] _clrdbgProcessCreateProperties;
 
         public bool DecodeTelemetryEvent(Results results, out string eventName, out KeyValuePair<string, object>[] properties)
         {
@@ -118,7 +118,7 @@ namespace Microsoft.MIDebugEngine
             HostTelemetry.SendEvent(
                            Windows_Runtime_Environment,
                            new KeyValuePair<string, object>(Property_Windows_Runtime_Environment,
-                           envValue));       
+                           envValue));
         }
     }
 }

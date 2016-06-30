@@ -81,7 +81,7 @@ namespace Microsoft.MIDebugEngine
 
             VariablesToDelete = new List<string>();
             this.ActiveVariables = new List<IVariableInformation>();
-            this._fileTimestampWarnings = new HashSet<Tuple<string, string>>();
+            _fileTimestampWarnings = new HashSet<Tuple<string, string>>();
 
             OutputStringEvent += delegate (object o, string message)
             {
@@ -566,7 +566,6 @@ namespace Microsoft.MIDebugEngine
                 {
                     // Do not place quotes around so paths for gdb
                     commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escappedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
-
                 }
                 else
                 {
@@ -615,7 +614,7 @@ namespace Microsoft.MIDebugEngine
                     string coreDump = _launchOptions.UseUnixSymbolPaths ? _launchOptions.CoreDumpPath : EscapePath(_launchOptions.CoreDumpPath);
                     string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
-                   commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
+                    commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
                 else if (_launchOptions.ProcessId != 0)
                 {
@@ -631,7 +630,7 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     int pid = localLaunchOptions.ProcessId;
-                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));                    
+                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -709,12 +708,12 @@ namespace Microsoft.MIDebugEngine
                         this.IsCygwin = true;
                         this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
 
-                        this._engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
+                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
                     }
                     else
                     {
                         // Gdb on windows and not cygwin implies mingw
-                        this._engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
+                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
                     }
                 }));
                 commands.Add(lc);
@@ -1008,14 +1007,14 @@ namespace Microsoft.MIDebugEngine
             await this.EnsureModulesLoaded();
 
             string targetModulePath = this._launchOptions.ExePath;
-            DebuggedModule targetModule = this._moduleList.FirstOrDefault(m => m.AddressInModule(addr));
+            DebuggedModule targetModule = _moduleList.FirstOrDefault(m => m.AddressInModule(addr));
             if (targetModule != null)
             {
                 targetModulePath = targetModule.Name;
             }
 
             Tuple<string, string> key = Tuple.Create(sourceFilePath, targetModulePath);
-            if (this._fileTimestampWarnings.Contains(key))
+            if (_fileTimestampWarnings.Contains(key))
             {
                 // We've already warned about this file
                 return;
@@ -1034,10 +1033,10 @@ namespace Microsoft.MIDebugEngine
                 if (sourceFileTimestamp > moduleFileTimestamp)
                 {
                     // Source file is newer than the module - warn the user
-                    this._fileTimestampWarnings.Add(key);
+                    _fileTimestampWarnings.Add(key);
 
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_SourceFileOutOfDate_Arg2, sourceFilePath, targetModulePath);
-                    this._callback.OnOutputMessage(new OutputMessage(message + Environment.NewLine, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
+                    _callback.OnOutputMessage(new OutputMessage(message + Environment.NewLine, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
                 }
             }
             catch (IOException)
