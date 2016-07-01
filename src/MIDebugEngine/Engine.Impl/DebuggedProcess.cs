@@ -189,8 +189,7 @@ namespace Microsoft.MIDebugEngine
                 // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
                 // uses fifos for debugger (e.g., gdb) communication.
                 if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                    (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
-                    )
+                    (PlatformUtilities.IsLinux() || (PlatformUtilities.IsOSX() && localLaunchOptions.DebuggerMIMode != MIMode.Lldb)))
                 {
                     localTransport = new LocalUnixTerminalTransport();
 
@@ -650,9 +649,10 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
                     }
 
+                    // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
                     if (localLaunchOptions != null &&
-                        PlatformUtilities.IsWindows() &&
-                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
+                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && 
+                        (PlatformUtilities.IsWindows() || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
@@ -888,6 +888,15 @@ namespace Microsoft.MIDebugEngine
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
+
+                    if (this.MICommandFactory.Mode == MIMode.Lldb)
+                    {
+                        // When the terminal window is closed, a SIGHUP is sent to lldb-mi and LLDB's default is to stop.
+                        // We want to not stop (break) when this happens and the SIGHUP to be sent to the debuggee process.
+                        // LLDB requires this command to be issued after the process has started.
+                        await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
+                    }
+
                     _callback.OnEntryPoint(thread);
                 }
                 else if (bkptno == "<EMBEDDED>")
