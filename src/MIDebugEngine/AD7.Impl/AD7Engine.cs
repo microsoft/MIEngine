@@ -17,16 +17,16 @@ using Logger = MICore.Logger;
 
 namespace Microsoft.MIDebugEngine
 {
-    // AD7Engine is the primary entrypoint object for the sample engine. 
+    // AD7Engine is the primary entrypoint object for the sample engine.
     //
     // It implements:
     //
-    // IDebugEngine2: This interface represents a debug engine (DE). It is used to manage various aspects of a debugging session, 
+    // IDebugEngine2: This interface represents a debug engine (DE). It is used to manage various aspects of a debugging session,
     // from creating breakpoints to setting and clearing exceptions.
     //
     // IDebugEngineLaunch2: Used by a debug engine (DE) to launch and terminate programs.
     //
-    // IDebugProgram3: This interface represents a program that is running in a process. Since this engine only debugs one process at a time and each 
+    // IDebugProgram3: This interface represents a program that is running in a process. Since this engine only debugs one process at a time and each
     // process only contains one program, it is implemented on the engine.
     //
     // IDebugEngineProgram2: This interface provides simultanious debugging of multiple threads in a debuggee.
@@ -142,7 +142,7 @@ namespace Microsoft.MIDebugEngine
 
         #region IDebugEngine2 Members
 
-        // Attach the debug engine to a program. 
+        // Attach the debug engine to a program.
         public int Attach(IDebugProgram2[] rgpPrograms, IDebugProgramNode2[] rgpProgramNodes, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason)
         {
             Debug.Assert(_ad7ProgramId == Guid.Empty);
@@ -267,7 +267,7 @@ namespace Microsoft.MIDebugEngine
             pollThread?.Close();
         }
 
-        // Creates a pending breakpoint in the engine. A pending breakpoint is contains all the information needed to bind a breakpoint to 
+        // Creates a pending breakpoint in the engine. A pending breakpoint is contains all the information needed to bind a breakpoint to
         // a location in the debuggee.
         public int CreatePendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, out IDebugPendingBreakpoint2 ppPendingBP)
         {
@@ -286,7 +286,7 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // Informs a DE that the program specified has been atypically terminated and that the DE should 
+        // Informs a DE that the program specified has been atypically terminated and that the DE should
         // clean up all references to the program and send a program destroy event.
         public int DestroyProgram(IDebugProgram2 pProgram)
         {
@@ -312,7 +312,7 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Removes the specified exception so it is no longer handled by the debug engine.
-        // The sample engine does not support exceptions in the debuggee so this method is not actually implemented.       
+        // The sample engine does not support exceptions in the debuggee so this method is not actually implemented.
         public int RemoveSetException(EXCEPTION_INFO[] pException)
         {
             _debuggedProcess?.ExceptionManager.RemoveSetException(ref pException[0]);
@@ -335,7 +335,7 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // A metric is a registry value used to change a debug engine's behavior or to advertise supported functionality. 
+        // A metric is a registry value used to change a debug engine's behavior or to advertise supported functionality.
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
         public int SetMetric(string pszMetric, object varValue)
         {
@@ -357,6 +357,26 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 _pollThread.RunOperation(new Operation(() => { _debuggedProcess.MICommandFactory.SetJustMyCode(optJustMyCode); }));
+                return Constants.S_OK;
+            }
+            else if (string.CompareOrdinal(pszMetric, "EnableStepFiltering") == 0)
+            {
+                string enableStepFiltering = varValue.ToString();
+                bool optStepFiltering;
+                if (string.CompareOrdinal(enableStepFiltering, "0") == 0)
+                {
+                    optStepFiltering = false;
+                }
+                else if (string.CompareOrdinal(enableStepFiltering, "1") == 0)
+                {
+                    optStepFiltering = true;
+                }
+                else
+                {
+                    return Constants.E_FAIL;
+                }
+
+                _pollThread.RunOperation(new Operation(() => { _debuggedProcess.MICommandFactory.SetStepFiltering(optStepFiltering); }));
                 return Constants.S_OK;
             }
 
@@ -396,9 +416,9 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Launches a process by means of the debug engine.
-        // Normally, Visual Studio launches a program using the IDebugPortEx2::LaunchSuspended method and then attaches the debugger 
-        // to the suspended program. However, there are circumstances in which the debug engine may need to launch a program 
-        // (for example, if the debug engine is part of an interpreter and the program being debugged is an interpreted language), 
+        // Normally, Visual Studio launches a program using the IDebugPortEx2::LaunchSuspended method and then attaches the debugger
+        // to the suspended program. However, there are circumstances in which the debug engine may need to launch a program
+        // (for example, if the debug engine is part of an interpreter and the program being debugged is an interpreted language),
         // in which case Visual Studio uses the IDebugEngineLaunch2::LaunchSuspended method
         // The IDebugEngineLaunch2::ResumeProcess method is called to start the process after the process has been successfully launched in a suspended state.
         int IDebugEngineLaunch2.LaunchSuspended(string pszServer, IDebugPort2 port, string exe, string args, string dir, string env, string options, enum_LAUNCH_FLAGS launchFlags, uint hStdInput, uint hStdOutput, uint hStdError, IDebugEventCallback2 ad7Callback, out IDebugProcess2 process)
@@ -565,7 +585,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    // Clrdbg issues a proper exit event on CmdTerminate call, don't call _debuggedProcess.Terminate() which 
+                    // Clrdbg issues a proper exit event on CmdTerminate call, don't call _debuggedProcess.Terminate() which
                     // simply sends a fake exit event that overrides the exit code of the real one
                 }
             }
@@ -621,7 +641,7 @@ namespace Microsoft.MIDebugEngine
         }
 
         // The debugger calls CauseBreak when the user clicks on the pause button in VS. The debugger should respond by entering
-        // breakmode. 
+        // breakmode.
         public int CauseBreak()
         {
             _pollThread.RunOperation(() => _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Async));
@@ -630,7 +650,7 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Continue is called from the SDM when it wants execution to continue in the debugee
-        // but have stepping state remain. An example is when a tracepoint is executed, 
+        // but have stepping state remain. An example is when a tracepoint is executed,
         // and the debugger does not want to actually enter break mode.
         public int Continue(IDebugThread2 pThread)
         {
@@ -751,10 +771,10 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // The properties returned by this method are specific to the program. If the program needs to return more than one property, 
-        // then the IDebugProperty2 object returned by this method is a container of additional properties and calling the 
+        // The properties returned by this method are specific to the program. If the program needs to return more than one property,
+        // then the IDebugProperty2 object returned by this method is a container of additional properties and calling the
         // IDebugProperty2::EnumChildren method returns a list of all properties.
-        // A program may expose any number and type of additional properties that can be described through the IDebugProperty2 interface. 
+        // A program may expose any number and type of additional properties that can be described through the IDebugProperty2 interface.
         // An IDE might display the additional program properties through a generic property browser user interface.
         // The sample engine does not support this
         public int GetDebugProperty(out IDebugProperty2 ppProperty)
@@ -787,7 +807,7 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // The memory bytes as represented by the IDebugMemoryBytes2 object is for the program's image in memory and not any memory 
+        // The memory bytes as represented by the IDebugMemoryBytes2 object is for the program's image in memory and not any memory
         // that was allocated when the program was executed.
         public int GetMemoryBytes(out IDebugMemoryBytes2 ppMemoryBytes)
         {
@@ -855,7 +875,7 @@ namespace Microsoft.MIDebugEngine
 
         #region IDebugProgram3 Members
 
-        // ExecuteOnThread is called when the SDM wants execution to continue and have 
+        // ExecuteOnThread is called when the SDM wants execution to continue and have
         // stepping state cleared.
         public int ExecuteOnThread(IDebugThread2 pThread)
         {
@@ -878,9 +898,9 @@ namespace Microsoft.MIDebugEngine
         #region IDebugEngineProgram2 Members
 
         // Stops all threads running in this program.
-        // This method is called when this program is being debugged in a multi-program environment. When a stopping event from some other program 
-        // is received, this method is called on this program. The implementation of this method should be asynchronous; 
-        // that is, not all threads should be required to be stopped before this method returns. The implementation of this method may be 
+        // This method is called when this program is being debugged in a multi-program environment. When a stopping event from some other program
+        // is received, this method is called on this program. The implementation of this method should be asynchronous;
+        // that is, not all threads should be required to be stopped before this method returns. The implementation of this method may be
         // as simple as calling the IDebugProgram2::CauseBreak method on this program.
         //
         public int Stop()
@@ -892,7 +912,7 @@ namespace Microsoft.MIDebugEngine
             return _debuggedProcess.ProcessState == ProcessState.Running ? Constants.S_ASYNC_STOP : Constants.S_OK;
         }
 
-        // WatchForExpressionEvaluationOnThread is used to cooperate between two different engines debugging 
+        // WatchForExpressionEvaluationOnThread is used to cooperate between two different engines debugging
         // the same process. The sample engine doesn't cooperate with other engines, so it has nothing
         // to do here.
         public int WatchForExpressionEvaluationOnThread(IDebugProgram2 pOriginatingProgram, uint dwTid, uint dwEvalFlags, IDebugEventCallback2 pExprCallback, int fWatch)
@@ -1005,5 +1025,6 @@ namespace Microsoft.MIDebugEngine
         }
 
         #endregion
+
     }
 }
