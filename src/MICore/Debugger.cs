@@ -572,7 +572,7 @@ namespace MICore
 
         public async Task<Results> CmdTerminate()
         {
-            if (ProcessState == ProcessState.Running)
+            if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
             {
                 await CmdBreak(BreakRequest.Async);
             }
