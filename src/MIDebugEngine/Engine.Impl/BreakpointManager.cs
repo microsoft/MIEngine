@@ -176,7 +176,7 @@ namespace Microsoft.MIDebugEngine
         // Note that there are still cases where gdb won't return the address for a breakpoint 
         // (breakpoint that binds to multiple locations) in which case the bktpno is the best match
         // the engine can do
-        AD7BoundBreakpoint[] FindBoundBreakpointsAtAddress(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame)
+        private AD7BoundBreakpoint[] FindBoundBreakpointsAtAddress(string bkptno, ulong addr, /*OPTIONAL*/ TupleValue frame)
         {
             // Add all bound bps whose address match
             List<AD7BoundBreakpoint> matchingBoundBreakpoints = new List<AD7BoundBreakpoint>();

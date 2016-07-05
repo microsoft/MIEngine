@@ -56,7 +56,6 @@ namespace MICore
             {
                 return base.UseExternalConsoleForLocalLaunch(localLaunchOptions);
             }
-
         }
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)

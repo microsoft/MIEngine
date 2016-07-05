@@ -68,7 +68,6 @@ namespace MICore
             SetNewProcessEnvironment(_terminalProcess.StartInfo);
             _terminalProcess.Start();
         }
-
     }
 
     internal class MacTerminalLauncher : TerminalLauncher
@@ -151,7 +150,7 @@ namespace MICore
         }
     }
 
-    internal class LinuxTerminalLauncher: TerminalLauncher
+    internal class LinuxTerminalLauncher : TerminalLauncher
     {
         private const string GnomeTerminalPath = "/usr/bin/gnome-terminal";
         private const string XTermPath = "/usr/bin/xterm";

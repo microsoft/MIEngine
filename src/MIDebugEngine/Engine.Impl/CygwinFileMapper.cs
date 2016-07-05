@@ -18,8 +18,8 @@ namespace Microsoft.MIDebugEngine
 
         public CygwinFilePathMapper(DebuggedProcess debuggedProcess)
         {
-            this._debuggedProcess = debuggedProcess;
-            this._cygwinToWindows = new Dictionary<string, string>();
+            _debuggedProcess = debuggedProcess;
+            _cygwinToWindows = new Dictionary<string, string>();
         }
 
         public string MapCygwinToWindows(string origCygwinPath)
@@ -35,16 +35,16 @@ namespace Microsoft.MIDebugEngine
 
             string windowsPath = cygwinPath;
 
-            lock (this._cygwinToWindows)
+            lock (_cygwinToWindows)
             {
-                if (!this._cygwinToWindows.TryGetValue(cygwinPath, out windowsPath))
+                if (!_cygwinToWindows.TryGetValue(cygwinPath, out windowsPath))
                 {
                     if (!LaunchCygPathAndReadResult(cygwinPath, localLaunchOptions.MIDebuggerPath, out windowsPath))
                     {
                         return origCygwinPath;
                     }
 
-                    this._cygwinToWindows.Add(cygwinPath, windowsPath);
+                    _cygwinToWindows.Add(cygwinPath, windowsPath);
                 }
             }
 
@@ -59,7 +59,7 @@ namespace Microsoft.MIDebugEngine
         private bool LaunchCygPathAndReadResult(string cygwinPath, string miDebuggerPath, out string windowsPath)
         {
             windowsPath = "";
-            
+
             if (String.IsNullOrEmpty(miDebuggerPath))
             {
                 return false;
@@ -218,7 +218,7 @@ namespace Microsoft.MIDebugEngine
         private struct SECURITY_ATTRIBUTES
         {
             public int nLength;
-            IntPtr lpSecurityDescriptor;
+            private IntPtr _lpSecurityDescriptor;
             public int bInheritHandle;
         }
 
@@ -237,7 +237,7 @@ namespace Microsoft.MIDebugEngine
         private static extern bool DuplicateHandle(SafeFileHandle hSourceProcessHandle, SafeFileHandle hSourceHandle, SafeFileHandle hTargetProcessHandle, out SafeFileHandle lpTargetHandle, uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwOptions);
 
         [Flags]
-        enum HANDLE_FLAGS : uint
+        private enum HANDLE_FLAGS : uint
         {
             None = 0,
             INHERIT = 1,
@@ -245,7 +245,7 @@ namespace Microsoft.MIDebugEngine
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool SetHandleInformation(SafeFileHandle hObject, HANDLE_FLAGS dwMask, uint flags);
+        private static extern bool SetHandleInformation(SafeFileHandle hObject, HANDLE_FLAGS dwMask, uint flags);
         #endregion
     }
 }

@@ -20,15 +20,15 @@ namespace MICore
             Unix,
         }
 
-        private static RuntimePlatform _runtimePlatform;
+        private static RuntimePlatform s_runtimePlatform;
 
         private static RuntimePlatform GetRuntimePlatform()
         {
-            if (_runtimePlatform == RuntimePlatform.Unset)
+            if (s_runtimePlatform == RuntimePlatform.Unset)
             {
-                _runtimePlatform = CalculateRuntimePlatform();
+                s_runtimePlatform = CalculateRuntimePlatform();
             }
-            return _runtimePlatform;
+            return s_runtimePlatform;
         }
 
 #if !CORECLR

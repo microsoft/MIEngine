@@ -58,6 +58,13 @@ namespace MICore
             return results.ResultClass == ResultClass.done;
         }
 
+        public override async Task<bool> SetStepFiltering(bool enabled)
+        {
+            string command = "-gdb-set enable-step-filtering " + (enabled ? "1" : "0");
+            Results results = await _debugger.CmdAsync(command, ResultClass.None);
+            return results.ResultClass == ResultClass.done;
+        }
+
         public override Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
             // CLRDBG supports stack frame formatting, so this should not be used
