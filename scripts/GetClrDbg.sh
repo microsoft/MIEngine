@@ -54,7 +54,7 @@ generate_project_json()
     echo "       \"Microsoft.VisualStudio.clrdbg\": \"$__ClrDbgVersion\""   >> project.json
     echo "   },"                                                            >> project.json
     echo "   \"frameworks\": {"                                             >> project.json
-    echo "       \"netstandardapp1.5\": {"                                  >> project.json
+    echo "       \"netcoreapp1.0\": {"                                      >> project.json
     echo "          \"imports\": [ \"dnxcore50\", \"portable-net45+win8\" ]" >> project.json
     echo "       }"                                                         >> project.json
     echo "   },"                                                            >> project.json
@@ -91,10 +91,10 @@ fi
 version_string="$(echo $1 | awk '{print tolower($0)}')"
 case $version_string in
     latest)
-        __ClrDbgVersion=14.0.25406-preview-3044032
+        __ClrDbgVersion=14.0.25430-preview-3098923
         ;;
     vs2015u2)
-        __ClrDbgVersion=14.0.25406-preview-3044032
+        __ClrDbgVersion=14.0.25430-preview-3098923
         ;;
     *)
         simpleVersionRegex="^[0-9].*"
