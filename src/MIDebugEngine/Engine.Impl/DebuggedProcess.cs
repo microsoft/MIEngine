@@ -787,6 +787,14 @@ namespace Microsoft.MIDebugEngine
             MICommandFactory.DefineCurrentThread(tid);
 
             DebuggedThread thread = await ThreadCache.GetThread(tid);
+            if (thread == null)
+            {
+                // It's possible that the stop event happens during stop debugging and the thread cache has been cleaned up
+                // See https://devdiv.visualstudio.com/DevDiv/VS%20Diag%20IntelliTrace/_workItems?_a=edit&id=236275&triage=true
+                // for a repro
+                return;
+            }
+
             await ThreadCache.StackFrames(thread);  // prepopulate the break thread in the thread cache
             ThreadContext cxt = await ThreadCache.GetThreadContext(thread);
 
