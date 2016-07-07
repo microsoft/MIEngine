@@ -643,10 +643,6 @@ namespace Microsoft.MIDebugEngine
                 else
                 {
                     // The default launch is to start a new process
-                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
-                    {
-                        commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
-                    }
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
@@ -679,6 +675,13 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     this.AddExecutablePathCommand(commands);
+
+                    // LLDB requires -exec-arguments after -file-exec-and-symbols has been run, or else it errors
+                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
+                    {
+                        commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
+                    }
+
                     commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
 
                     if (null != localLaunchOptions)
