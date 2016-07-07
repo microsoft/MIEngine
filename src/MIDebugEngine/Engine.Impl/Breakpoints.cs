@@ -315,14 +315,6 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        internal void Enable(bool bEnable, DebuggedProcess process)
-        {
-            process.WorkerThread.RunOperation(async () =>
-            {
-                await EnableInternal(bEnable, process);
-            });
-        }
-
         internal async Task EnableAsync(bool bEnable, DebuggedProcess process)
         {
             await EnableInternal(bEnable, process);
