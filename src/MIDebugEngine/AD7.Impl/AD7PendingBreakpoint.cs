@@ -310,15 +310,15 @@ namespace Microsoft.MIDebugEngine
                 // Bind all breakpoints that match this source and line number.
                 if (documentName != null)
                 {
-                    bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, checksums, this);
+                    bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, _enabled, checksums, this);
                 }
                 else if (functionName != null)
                 {
-                    bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, this);
+                    bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, _enabled, this);
                 }
                 else if (codeAddress != 0)
                 {
-                    bindResult = await PendingBreakpoint.Bind(codeAddress, _engine.DebuggedProcess, condition, this);
+                    bindResult = await PendingBreakpoint.Bind(codeAddress, _engine.DebuggedProcess, condition, _enabled, this);
                 }
                 else
                 {

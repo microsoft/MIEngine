@@ -409,7 +409,7 @@ namespace MICore
 
         #region Breakpoints
 
-        protected virtual StringBuilder BuildBreakInsert(string condition)
+        protected virtual StringBuilder BuildBreakInsert(string condition, bool enabled)
         {
             StringBuilder cmd = new StringBuilder("-break-insert -f ");
             if (condition != null)
@@ -418,12 +418,16 @@ namespace MICore
                 cmd.Append(condition);
                 cmd.Append("\" ");
             }
+            if (!enabled)
+            {
+                cmd.Append("-d ");
+            }
             return cmd;
         }
 
-        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, bool enabled, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition);
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
 
             if (checksums != null && checksums.Count() != 0)
             {
@@ -438,17 +442,17 @@ namespace MICore
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
-        public virtual async Task<Results> BreakInsert(string functionName, string condition, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string functionName, string condition, bool enabled, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition);
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
             // TODO: Add support of break function type filename:function locations
             cmd.Append(functionName);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
-        public virtual async Task<Results> BreakInsert(ulong codeAddress, string condition, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(ulong codeAddress, string condition, bool enabled, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition);
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
             cmd.Append('*');
             cmd.Append(codeAddress);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);

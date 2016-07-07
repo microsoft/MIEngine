@@ -84,18 +84,18 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        internal static async Task<BindResult> Bind(string functionName, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
+        internal static async Task<BindResult> Bind(string functionName, DebuggedProcess process, string condition, bool enabled, AD7PendingBreakpoint pbreak)
         {
             process.VerifyNotDebuggingCoreDump();
 
-            return EvalBindResult(await process.MICommandFactory.BreakInsert(functionName, condition, ResultClass.None), pbreak);
+            return EvalBindResult(await process.MICommandFactory.BreakInsert(functionName, condition, enabled, ResultClass.None), pbreak);
         }
 
-        internal static async Task<BindResult> Bind(ulong codeAddress, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
+        internal static async Task<BindResult> Bind(ulong codeAddress, DebuggedProcess process, string condition, bool enabled, AD7PendingBreakpoint pbreak)
         {
             process.VerifyNotDebuggingCoreDump();
 
-            return EvalBindResult(await process.MICommandFactory.BreakInsert(codeAddress, condition, ResultClass.None), pbreak);
+            return EvalBindResult(await process.MICommandFactory.BreakInsert(codeAddress, condition, enabled, ResultClass.None), pbreak);
         }
 
         internal static async Task<BindResult> Bind(string address, uint size, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
@@ -105,14 +105,14 @@ namespace Microsoft.MIDebugEngine
             return EvalBindWatchResult(await process.MICommandFactory.BreakWatch(address, size, ResultClass.None), pbreak, address, size);
         }
 
-        internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, string condition, IEnumerable<Checksum> checksums, AD7PendingBreakpoint pbreak)
+        internal static async Task<BindResult> Bind(string documentName, uint line, uint column, DebuggedProcess process, string condition, bool enabled, IEnumerable<Checksum> checksums, AD7PendingBreakpoint pbreak)
         {
             process.VerifyNotDebuggingCoreDump();
 
             string basename = System.IO.Path.GetFileName(documentName);     // get basename from Windows path
             basename = process.EscapePath(basename);
 
-            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(basename, line, condition, checksums, ResultClass.None), pbreak);
+            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(basename, line, condition, enabled, checksums, ResultClass.None), pbreak);
 
             // On GDB, the returned line information is from the pending breakpoint instead of the bound breakpoint.
             // Check the address mapping to make sure the line info is correct.
@@ -360,6 +360,7 @@ namespace Microsoft.MIDebugEngine
         /*OPTIONAL*/
         public string FunctionName { get; private set; }
         internal uint HitCount { get; private set; }
+        internal bool Enabled { get; set; }
         internal bool IsDataBreakpoint { get { return _parent.AD7breakpoint.IsDataBreakpoint; } }
         private MITextPosition _textPosition;
 
@@ -368,14 +369,17 @@ namespace Microsoft.MIDebugEngine
             // CLRDBG TODO: Support clr addresses for breakpoints
             this.Addr = bindinfo.TryFindAddr("addr") ?? 0;
             this.FunctionName = bindinfo.TryFindString("func");
+            this.Enabled = bindinfo.TryFindString("enabled") == "n" ? false : true;
             this.HitCount = 0;
             _parent = parent;
             _textPosition = MITextPosition.TryParse(bindinfo);
         }
+
         internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, /*optional*/ TupleValue frame)
         {
             Addr = addr;
             HitCount = 0;
+            Enabled = true;
             _parent = parent;
 
             if (frame != null)
@@ -388,6 +392,7 @@ namespace Microsoft.MIDebugEngine
         internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, uint size)
         {
             Addr = addr;
+            Enabled = true;
             _parent = parent;
         }
 

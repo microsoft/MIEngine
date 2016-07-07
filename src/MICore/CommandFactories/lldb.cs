@@ -46,7 +46,7 @@ namespace MICore
             }
         }
 
-        protected override StringBuilder BuildBreakInsert(string condition)
+        protected override StringBuilder BuildBreakInsert(string condition, bool enabled)
         {
             // LLDB's use of the pending flag requires an optional parameter or else it fails.
             // We will use "on" for now. 
@@ -61,6 +61,10 @@ namespace MICore
                 cmd.Append("-c \"");
                 cmd.Append(condition);
                 cmd.Append("\" ");
+            }
+            if (!enabled)
+            {
+                cmd.Append("-d ");
             }
             return cmd;
         }

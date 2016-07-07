@@ -130,7 +130,7 @@ namespace Microsoft.MIDebugEngine
 
         public async Task SetBreakAtMain()
         {
-            Results results = await _process.MICommandFactory.BreakInsert("main", null);
+            Results results = await _process.MICommandFactory.BreakInsert("main", condition: null, enabled: true);
             var bkpt = results.Find("bkpt");
             if (bkpt is ValueListValue)
             {
