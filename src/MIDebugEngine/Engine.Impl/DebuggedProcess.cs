@@ -790,6 +790,22 @@ namespace Microsoft.MIDebugEngine
             MICommandFactory.DefineCurrentThread(tid);
 
             DebuggedThread thread = await ThreadCache.GetThread(tid);
+            if (thread == null)
+            {
+                if (!_terminating)
+                {
+                    Debug.Fail("Failed to find thread on break event.");
+                    throw new Exception(String.Format(CultureInfo.CurrentUICulture, ResourceStrings.MissingThreadBreakEvent, tid));
+                }
+                else
+                {
+                    // It's possible that the SIGINT was sent because GDB is trying to terminate a running debuggee and stop debugging
+                    // See https://devdiv.visualstudio.com/DevDiv/VS%20Diag%20IntelliTrace/_workItems?_a=edit&id=236275&triage=true
+                    // for a repro
+                    return;
+                }
+            }
+
             await ThreadCache.StackFrames(thread);  // prepopulate the break thread in the thread cache
             ThreadContext cxt = await ThreadCache.GetThreadContext(thread);
 
