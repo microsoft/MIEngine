@@ -1445,7 +1445,7 @@ namespace Microsoft.MIDebugEngine
             return variables;
         }
 
-        //This method gets the value/type info for the method parameters without creating an MI debugger varialbe for them. For use in the callstack window
+        //This method gets the value/type info for the method parameters without creating an MI debugger variable for them. For use in the callstack window
         //NOTE: eval is not called
         public async Task<List<SimpleVariableInformation>> GetParameterInfoOnly(AD7Thread thread, ThreadContext ctx)
         {
@@ -1461,7 +1461,7 @@ namespace Microsoft.MIDebugEngine
             return parameters;
         }
 
-        //This method gets the value/type info for the method parameters of all frames without creating an mi debugger varialbe for them. For use in the callstack window
+        //This method gets the value/type info for the method parameters of all frames without creating an mi debugger variable for them. For use in the callstack window
         //NOTE: eval is not called
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {
