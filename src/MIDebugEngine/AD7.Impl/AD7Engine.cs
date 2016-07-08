@@ -218,17 +218,13 @@ namespace Microsoft.MIDebugEngine
             var unixPort = port as IDebugUnixShellPort;
             if (unixPort != null)
             {
-                string startRemoteDebuggerCommand;
                 MIMode miMode;
                 if (_engineGuid == EngineConstants.ClrdbgEngine)
                 {
-                    // TODO: Replace with a set of commands for downloading clrdbg from the web if it isn't already present
-                    startRemoteDebuggerCommand = "~/clrdbg/out/Linux/bin/x64.Debug/clrdbg/clrdbg --interpreter=mi";
                     miMode = MIMode.Clrdbg;
                 }
                 else if (_engineGuid == EngineConstants.GdbEngine)
                 {
-                    startRemoteDebuggerCommand = "gdb --interpreter=mi";
                     miMode = MIMode.Gdb;
                 }
                 else
@@ -242,7 +238,7 @@ namespace Microsoft.MIDebugEngine
                     throw new ArgumentOutOfRangeException("processId");
                 }
 
-                launchOptions = new UnixShellPortLaunchOptions(startRemoteDebuggerCommand, unixPort, (int)processId, miMode);
+                launchOptions = UnixShellPortLaunchOptions.CreateForAttachRequest(unixPort, (int)processId, miMode);
 
                 // TODO: Add a tools option page for:
                 // AdditionalSOLibSearchPath

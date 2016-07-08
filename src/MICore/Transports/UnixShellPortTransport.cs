@@ -29,7 +29,7 @@ namespace MICore
             UnixShellPortLaunchOptions launchOptions = (UnixShellPortLaunchOptions)options;
             _callback = transportCallback;
             _logger = logger;
-            _startRemoteDebuggerCommand = launchOptions.StartRemoteDebuggerComand;
+            _startRemoteDebuggerCommand = launchOptions.StartRemoteDebuggerCommand;
 
             _callback.AppendToInitializationLog("Starting unix command: " + _startRemoteDebuggerCommand);
             launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, this, out _asyncCommand);

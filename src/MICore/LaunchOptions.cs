@@ -403,20 +403,53 @@ namespace MICore
     /// </summary>
     public sealed class UnixShellPortLaunchOptions : LaunchOptions
     {
-        public string StartRemoteDebuggerComand { get; private set; }
+        public string StartRemoteDebuggerCommand { get; private set; }
         public Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort UnixPort { get; private set; }
 
-        public UnixShellPortLaunchOptions(string startRemoteDebuggerComand, Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, int? processId, MIMode miMode)
+        public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand, Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, MIMode miMode, BaseLaunchOptions baseLaunchOptions)
         {
-            this.StartRemoteDebuggerComand = startRemoteDebuggerComand;
             this.UnixPort = unixPort;
-            if (processId.HasValue)
-            {
-                this.ProcessId = processId.Value;
-            }
             this.DebuggerMIMode = miMode;
-            this.SetupCommands = new ReadOnlyCollection<LaunchCommand>(Array.Empty<LaunchCommand>());
-            SetInitializationComplete();
+
+            if (string.IsNullOrEmpty(startRemoteDebuggerCommand))
+            {
+                switch (miMode)
+                {
+                    case MIMode.Gdb:
+                        startRemoteDebuggerCommand = "gdb --interpreter=mi";
+                        break;
+                    case MIMode.Lldb:
+                        // TODO: Someday we should likely use a download script here too
+                        startRemoteDebuggerCommand = "lldb-mi --interpreter=mi";
+                        break;
+                    case MIMode.Clrdbg:
+                        // TODO: Replace with a set of commands for downloading clrdbg from the web if it isn't already present
+                        startRemoteDebuggerCommand = "~/clrdbg/out/Linux/bin/x64.Debug/clrdbg/clrdbg --interpreter=mi";
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException("miMode");
+                }
+            }
+
+            this.StartRemoteDebuggerCommand = startRemoteDebuggerCommand;
+
+            if (baseLaunchOptions != null)
+            {
+                this.InitializeCommonOptions(baseLaunchOptions);
+                this.BaseOptions = baseLaunchOptions;
+            }
+        }
+
+        public static UnixShellPortLaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, int processId, MIMode miMode)
+        {
+            var @this = new UnixShellPortLaunchOptions(/*startRemoteDebuggerCommand*/null, unixPort, miMode, baseLaunchOptions:null);
+
+            @this.ProcessId = processId;
+            @this.SetupCommands = new ReadOnlyCollection<LaunchCommand>(Array.Empty<LaunchCommand>());
+            @this.SetInitializationComplete();
+
+            return @this;
         }
     }
 
@@ -805,6 +838,14 @@ namespace MICore
                             }
                             break;
 
+                        case "SSHLaunchOptions":
+                            {
+                                serializer = GetXmlSerializer(typeof(SSHLaunchOptions));
+                                launcherXmlOptions = Deserialize(serializer, reader);
+                                clsidLauncher = new Guid("7E3052B2-FB42-4E38-B22C-1FD281BD4413");
+                            }
+                            break;
+
                         default:
                             {
                                 throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
@@ -1001,10 +1042,7 @@ namespace MICore
                 this.TargetArchitecture = ConvertTargetArchitectureAttribute(source.TargetArchitecture);
             }
 
-            Debug.Assert((uint)MIMode.Gdb == (uint)Xml.LaunchOptions.MIMode.gdb, "Enum values don't line up!");
-            Debug.Assert((uint)MIMode.Lldb == (uint)Xml.LaunchOptions.MIMode.lldb, "Enum values don't line up!");
-            Debug.Assert((uint)MIMode.Clrdbg == (uint)Xml.LaunchOptions.MIMode.clrdbg, "Enum values don't line up!");
-            this.DebuggerMIMode = (MIMode)source.MIMode;
+            this.DebuggerMIMode = ConvertMIModeAttribute(source.MIMode);
 
             if (string.IsNullOrEmpty(this.ExeArguments))
                 this.ExeArguments = source.ExeArguments;
@@ -1053,7 +1091,7 @@ namespace MICore
             if (!String.IsNullOrEmpty(source.CoreDumpPath) && source.ProcessIdSpecified)
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
         }
-
+        
         public static string RequireAttribute(string attributeValue, string attributeName)
         {
             if (string.IsNullOrWhiteSpace(attributeValue))
@@ -1190,6 +1228,14 @@ namespace MICore
                 default:
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownTargetArchitecture, source.ToString()));
             }
+        }
+
+        public static MIMode ConvertMIModeAttribute(Xml.LaunchOptions.MIMode source)
+        {
+            Debug.Assert((uint)MIMode.Gdb == (uint)Xml.LaunchOptions.MIMode.gdb, "Enum values don't line up!");
+            Debug.Assert((uint)MIMode.Lldb == (uint)Xml.LaunchOptions.MIMode.lldb, "Enum values don't line up!");
+            Debug.Assert((uint)MIMode.Clrdbg == (uint)Xml.LaunchOptions.MIMode.clrdbg, "Enum values don't line up!");
+            return (MIMode)source;
         }
     }
 

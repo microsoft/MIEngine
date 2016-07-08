@@ -40,12 +40,6 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// from the command</param>
         /// <param name="asyncCommand">Returned command object</param>
         void BeginExecuteAsyncCommand(string commandText, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand);
-
-        /// <summary>
-        /// In launch scenarios, used to add a program node to a process. This will trigger the SDM to attach to the process.
-        /// </summary>
-        /// <param name="programNode">program node to add</param>
-        void AddProgramNode(IDebugProgramNode2 programNode);
     }
 
     /// <summary>
