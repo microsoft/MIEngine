@@ -36,6 +36,16 @@ namespace MICore
             return false;
         }
 
+        public override bool SupportsFrameFormatting
+        {
+            get
+            {
+                // LLDB already adds the parameter list to the function name when a -stack-list-frame or -stack-info-frame
+                // call is made so setting this to true so we don't append the parameters on stack frames.
+                return true;
+            }
+        }
+
         public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             string command = string.Format("-var-create - - \"{0}\"", expression);  // use '-' to indicate that "--frame" should be used to determine the frame number
