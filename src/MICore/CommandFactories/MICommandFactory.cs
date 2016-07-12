@@ -409,7 +409,7 @@ namespace MICore
 
         #region Breakpoints
 
-        private StringBuilder BuildBreakInsert(string condition)
+        protected virtual StringBuilder BuildBreakInsert(string condition)
         {
             StringBuilder cmd = new StringBuilder("-break-insert -f ");
             if (condition != null)
