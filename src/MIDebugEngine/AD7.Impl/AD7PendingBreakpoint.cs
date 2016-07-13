@@ -43,7 +43,7 @@ namespace Microsoft.MIDebugEngine
         internal bool Deleted { get { return _deleted; } }
         internal bool PendingDelete { get { return _pendingDelete; } }
 
-        internal bool IsDataBreakpoint {  get { return _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING; } }
+        internal bool IsDataBreakpoint { get { return _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING; } }
 
         internal PendingBreakpoint PendingBreakpoint { get { return _bp; } }
 
@@ -85,7 +85,7 @@ namespace Microsoft.MIDebugEngine
             if (_deleted ||
                 (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE
                 && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET
-                && _bpRequestInfo.bpLocation.bpLocationType !=  (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT
+                && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT
                 && (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING || !_engine.DebuggedProcess.MICommandFactory.SupportsDataBreakpoints)))
             {
                 SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
@@ -125,7 +125,7 @@ namespace Microsoft.MIDebugEngine
 
                 AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, address, functionName);
 
-                return new AD7DocumentContext(new MITextPosition(documentName, startPosition[0], startPosition[0]), codeContext, this._engine.DebuggedProcess);
+                return new AD7DocumentContext(new MITextPosition(documentName, startPosition[0], startPosition[0]), codeContext, _engine.DebuggedProcess);
             }
             else
             {
@@ -685,7 +685,7 @@ namespace Microsoft.MIDebugEngine
             _errorType = errorType;
         }
 
-#region IDebugErrorBreakpoint2 Members
+        #region IDebugErrorBreakpoint2 Members
 
         public int GetBreakpointResolution(out IDebugErrorBreakpointResolution2 ppErrorResolution)
         {
@@ -699,6 +699,6 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-#endregion
+        #endregion
     }
 }

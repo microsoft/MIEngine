@@ -78,6 +78,7 @@ namespace MICore
         private int _localDebuggerPid = -1;
 
         protected bool _connected;
+        protected bool _terminating;
 
         public class ResultEventArgs : EventArgs
         {
@@ -95,7 +96,7 @@ namespace MICore
             public uint Id { get; private set; }
         };
 
-        public class StoppingEventArgs: ResultEventArgs
+        public class StoppingEventArgs : ResultEventArgs
         {
             public readonly BreakRequest AsyncRequest;
             public StoppingEventArgs(Results results, uint id, BreakRequest asyncRequest = BreakRequest.None) : base(results, id)
@@ -572,12 +573,16 @@ namespace MICore
 
         public async Task<Results> CmdTerminate()
         {
-            if (ProcessState == ProcessState.Running)
+            if (!_terminating)
             {
-                await CmdBreak(BreakRequest.Async);
-            }
+                _terminating = true;
+                if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
+                {
+                    await CmdBreak(BreakRequest.Async);
+                }
 
-            await MICommandFactory.Terminate();
+                await MICommandFactory.Terminate();
+            }
 
             return new Results(ResultClass.done);
         }
@@ -779,7 +784,7 @@ namespace MICore
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
 
-#region ITransportCallback implementation
+        #region ITransportCallback implementation
         // Note: this can be called from any thread
         void ITransportCallback.OnStdOutLine(string line)
         {
@@ -886,7 +891,7 @@ namespace MICore
             }
         }
 
-#endregion
+        #endregion
 
         // inherited classes can override this for thread marshalling etc
         protected virtual void ScheduleStdOutProcessing(string line)
@@ -1294,7 +1299,7 @@ namespace MICore
         {
             foreach (var grp in _debuggeePids)
             {
-                if ( grp.Value == pid)
+                if (grp.Value == pid)
                 {
                     return InferiorNumber(grp.Key);
                 }

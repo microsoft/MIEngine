@@ -145,7 +145,7 @@ namespace MICore
             InitProcess(proc, out reader, out writer);
         }
 
-        private void KillChildren(List<Tuple<int,int>> processes, int pid)
+        private void KillChildren(List<Tuple<int, int>> processes, int pid)
         {
             processes.ForEach((p) =>
             {
@@ -168,7 +168,7 @@ namespace MICore
                 // Using this list, issue a 'kill' command for each child process. Kill the children (recursively) to eliminate
                 // the entire process tree rooted at p. 
                 Process ps = new Process();
-                ps.StartInfo.FileName ="/bin/ps";
+                ps.StartInfo.FileName = "/bin/ps";
                 ps.StartInfo.Arguments = isLinux ? "-x -o \"%p %P\"" : "-x -o \"pid ppid\"";
                 ps.StartInfo.RedirectStandardOutput = true;
                 ps.StartInfo.UseShellExecute = false;
@@ -223,7 +223,8 @@ namespace MICore
                 _process.Exited -= OnProcessExit;
                 if (_killOnClose && !_process.HasExited)
                 {
-                    try {
+                    try
+                    {
                         KillProcess(_process);
                     }
                     catch

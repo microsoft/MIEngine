@@ -81,7 +81,7 @@ namespace Microsoft.MIDebugEngine
 
             VariablesToDelete = new List<string>();
             this.ActiveVariables = new List<IVariableInformation>();
-            this._fileTimestampWarnings = new HashSet<Tuple<string, string>>();
+            _fileTimestampWarnings = new HashSet<Tuple<string, string>>();
 
             OutputStringEvent += delegate (object o, string message)
             {
@@ -176,6 +176,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (PlatformUtilities.IsOSX() &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
+                    localLaunchOptions.DebuggerMIMode != MIMode.Lldb && 
                     !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath))
                 {
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_DarwinDebuggerUnsigned, localLaunchOptions.MIDebuggerPath);
@@ -189,8 +190,7 @@ namespace Microsoft.MIDebugEngine
                 // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
                 // uses fifos for debugger (e.g., gdb) communication.
                 if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                    (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
-                    )
+                    (PlatformUtilities.IsLinux() || (PlatformUtilities.IsOSX() && localLaunchOptions.DebuggerMIMode != MIMode.Lldb)))
                 {
                     localTransport = new LocalUnixTerminalTransport();
 
@@ -566,7 +566,6 @@ namespace Microsoft.MIDebugEngine
                 {
                     // Do not place quotes around so paths for gdb
                     commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escappedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
-
                 }
                 else
                 {
@@ -615,7 +614,7 @@ namespace Microsoft.MIDebugEngine
                     string coreDump = _launchOptions.UseUnixSymbolPaths ? _launchOptions.CoreDumpPath : EscapePath(_launchOptions.CoreDumpPath);
                     string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
-                   commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
+                    commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
                 else if (_launchOptions.ProcessId != 0)
                 {
@@ -631,7 +630,7 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     int pid = localLaunchOptions.ProcessId;
-                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));                    
+                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -644,10 +643,6 @@ namespace Microsoft.MIDebugEngine
                 else
                 {
                     // The default launch is to start a new process
-                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
-                    {
-                        commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
-                    }
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
@@ -655,9 +650,10 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
                     }
 
+                    // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
                     if (localLaunchOptions != null &&
-                        PlatformUtilities.IsWindows() &&
-                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
+                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && 
+                        (PlatformUtilities.IsWindows() || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
@@ -680,6 +676,13 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     this.AddExecutablePathCommand(commands);
+
+                    // LLDB requires -exec-arguments after -file-exec-and-symbols has been run, or else it errors
+                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
+                    {
+                        commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
+                    }
+
                     commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
 
                     if (null != localLaunchOptions)
@@ -709,12 +712,12 @@ namespace Microsoft.MIDebugEngine
                         this.IsCygwin = true;
                         this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
 
-                        this._engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
+                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
                     }
                     else
                     {
                         // Gdb on windows and not cygwin implies mingw
-                        this._engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
+                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
                     }
                 }));
                 commands.Add(lc);
@@ -788,6 +791,22 @@ namespace Microsoft.MIDebugEngine
             MICommandFactory.DefineCurrentThread(tid);
 
             DebuggedThread thread = await ThreadCache.GetThread(tid);
+            if (thread == null)
+            {
+                if (!_terminating)
+                {
+                    Debug.Fail("Failed to find thread on break event.");
+                    throw new Exception(String.Format(CultureInfo.CurrentUICulture, ResourceStrings.MissingThreadBreakEvent, tid));
+                }
+                else
+                {
+                    // It's possible that the SIGINT was sent because GDB is trying to terminate a running debuggee and stop debugging
+                    // See https://devdiv.visualstudio.com/DevDiv/VS%20Diag%20IntelliTrace/_workItems?_a=edit&id=236275&triage=true
+                    // for a repro
+                    return;
+                }
+            }
+
             await ThreadCache.StackFrames(thread);  // prepopulate the break thread in the thread cache
             ThreadContext cxt = await ThreadCache.GetThreadContext(thread);
 
@@ -870,6 +889,15 @@ namespace Microsoft.MIDebugEngine
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
+
+                    if (this.MICommandFactory.Mode == MIMode.Lldb)
+                    {
+                        // When the terminal window is closed, a SIGHUP is sent to lldb-mi and LLDB's default is to stop.
+                        // We want to not stop (break) when this happens and the SIGHUP to be sent to the debuggee process.
+                        // LLDB requires this command to be issued after the process has started.
+                        await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
+                    }
+
                     _callback.OnEntryPoint(thread);
                 }
                 else if (bkptno == "<EMBEDDED>")
@@ -1008,14 +1036,14 @@ namespace Microsoft.MIDebugEngine
             await this.EnsureModulesLoaded();
 
             string targetModulePath = this._launchOptions.ExePath;
-            DebuggedModule targetModule = this._moduleList.FirstOrDefault(m => m.AddressInModule(addr));
+            DebuggedModule targetModule = _moduleList.FirstOrDefault(m => m.AddressInModule(addr));
             if (targetModule != null)
             {
                 targetModulePath = targetModule.Name;
             }
 
             Tuple<string, string> key = Tuple.Create(sourceFilePath, targetModulePath);
-            if (this._fileTimestampWarnings.Contains(key))
+            if (_fileTimestampWarnings.Contains(key))
             {
                 // We've already warned about this file
                 return;
@@ -1034,10 +1062,10 @@ namespace Microsoft.MIDebugEngine
                 if (sourceFileTimestamp > moduleFileTimestamp)
                 {
                     // Source file is newer than the module - warn the user
-                    this._fileTimestampWarnings.Add(key);
+                    _fileTimestampWarnings.Add(key);
 
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_SourceFileOutOfDate_Arg2, sourceFilePath, targetModulePath);
-                    this._callback.OnOutputMessage(new OutputMessage(message + Environment.NewLine, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
+                    _callback.OnOutputMessage(new OutputMessage(message + Environment.NewLine, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
                 }
             }
             catch (IOException)
@@ -1427,7 +1455,7 @@ namespace Microsoft.MIDebugEngine
             return variables;
         }
 
-        //This method gets the value/type info for the method parameters without creating an MI debugger varialbe for them. For use in the callstack window
+        //This method gets the value/type info for the method parameters without creating an MI debugger variable for them. For use in the callstack window
         //NOTE: eval is not called
         public async Task<List<SimpleVariableInformation>> GetParameterInfoOnly(AD7Thread thread, ThreadContext ctx)
         {
@@ -1443,7 +1471,7 @@ namespace Microsoft.MIDebugEngine
             return parameters;
         }
 
-        //This method gets the value/type info for the method parameters of all frames without creating an mi debugger varialbe for them. For use in the callstack window
+        //This method gets the value/type info for the method parameters of all frames without creating an mi debugger variable for them. For use in the callstack window
         //NOTE: eval is not called
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {

@@ -176,9 +176,9 @@ namespace Microsoft.MIDebugEngine
             Access = enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_NONE;
             _fullname = null;
 
-            lock(this._debuggedProcess.ActiveVariables)
+            lock (_debuggedProcess.ActiveVariables)
             {
-                this._debuggedProcess.ActiveVariables.Add(this);
+                _debuggedProcess.ActiveVariables.Add(this);
             }
         }
 
@@ -420,7 +420,7 @@ namespace Microsoft.MIDebugEngine
 
                 try
                 {
-                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures:true);
+                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures: true);
                     Value = String.Empty;
                     this.TypeName = null;
                 }
@@ -556,7 +556,7 @@ namespace Microsoft.MIDebugEngine
 
             if (results.ResultClass == ResultClass.done)
             {
-                TupleValue[] children = results.Contains("children") 
+                TupleValue[] children = results.Contains("children")
                     ? results.Find<ResultListValue>("children").FindAll<TupleValue>("child")
                     : new TupleValue[0];
                 int i = 0;
@@ -579,12 +579,12 @@ namespace Microsoft.MIDebugEngine
                     //      children of this value can be assumed to alternate between keys and values.'
                     //
                     List<VariableInformation> listChildren = new List<VariableInformation>();
-                    for(int p = 0; p+1 < children.Length; p+=2)
+                    for (int p = 0; p + 1 < children.Length; p += 2)
                     {
                         // One Variable is created for each pair returned with the first element (p) being the name of the child
                         // and the second element (p+1) becoming the value.
                         string name = children[p].FindString("value");
-                        var variable = new VariableInformation(children[p+1], this, '[' + name + ']');
+                        var variable = new VariableInformation(children[p + 1], this, '[' + name + ']');
                         listChildren.Add(variable);
                     }
                     Children = listChildren.ToArray();
@@ -716,7 +716,7 @@ namespace Microsoft.MIDebugEngine
 
         private void VerifyNotDisposed()
         {
-            if (this._isDisposed)
+            if (_isDisposed)
             {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -731,7 +731,7 @@ namespace Microsoft.MIDebugEngine
 
         private void Dispose(bool isDisposing)
         {
-            this._isDisposed = true;
+            _isDisposed = true;
 
             //mi -var-delete deletes all children, so only top level variables should be added to the delete list
             //Additionally, we create variables for anything we try to evaluate. Only succesful evaluations get internal names, 

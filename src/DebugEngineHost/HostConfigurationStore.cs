@@ -36,6 +36,12 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
+        // This is a legacy verion of this constructor which is used by Kofe
+        public HostConfigurationStore(string registryRoot, string engineId) : this(registryRoot)
+        {
+            SetEngineGuid(Guid.Parse(engineId));
+        }
+
         /// <summary>
         /// Sets the Guid of the engine being hosted. This should only be set once for each HostConfigurationStore instance.
         /// </summary>
