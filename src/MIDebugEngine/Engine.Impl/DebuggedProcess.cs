@@ -176,6 +176,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (PlatformUtilities.IsOSX() &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
+                    localLaunchOptions.DebuggerMIMode != MIMode.Lldb && 
                     !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath))
                 {
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_DarwinDebuggerUnsigned, localLaunchOptions.MIDebuggerPath);
@@ -189,8 +190,7 @@ namespace Microsoft.MIDebugEngine
                 // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
                 // uses fifos for debugger (e.g., gdb) communication.
                 if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                    (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
-                    )
+                    (PlatformUtilities.IsLinux() || (PlatformUtilities.IsOSX() && localLaunchOptions.DebuggerMIMode != MIMode.Lldb)))
                 {
                     localTransport = new LocalUnixTerminalTransport();
 
@@ -643,10 +643,6 @@ namespace Microsoft.MIDebugEngine
                 else
                 {
                     // The default launch is to start a new process
-                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
-                    {
-                        commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
-                    }
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
@@ -654,9 +650,10 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
                     }
 
+                    // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
                     if (localLaunchOptions != null &&
-                        PlatformUtilities.IsWindows() &&
-                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions))
+                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && 
+                        (PlatformUtilities.IsWindows() || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
@@ -679,6 +676,13 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     this.AddExecutablePathCommand(commands);
+
+                    // LLDB requires -exec-arguments after -file-exec-and-symbols has been run, or else it errors
+                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
+                    {
+                        commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
+                    }
+
                     commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
 
                     if (null != localLaunchOptions)
@@ -787,6 +791,22 @@ namespace Microsoft.MIDebugEngine
             MICommandFactory.DefineCurrentThread(tid);
 
             DebuggedThread thread = await ThreadCache.GetThread(tid);
+            if (thread == null)
+            {
+                if (!_terminating)
+                {
+                    Debug.Fail("Failed to find thread on break event.");
+                    throw new Exception(String.Format(CultureInfo.CurrentUICulture, ResourceStrings.MissingThreadBreakEvent, tid));
+                }
+                else
+                {
+                    // It's possible that the SIGINT was sent because GDB is trying to terminate a running debuggee and stop debugging
+                    // See https://devdiv.visualstudio.com/DevDiv/VS%20Diag%20IntelliTrace/_workItems?_a=edit&id=236275&triage=true
+                    // for a repro
+                    return;
+                }
+            }
+
             await ThreadCache.StackFrames(thread);  // prepopulate the break thread in the thread cache
             ThreadContext cxt = await ThreadCache.GetThreadContext(thread);
 
@@ -869,6 +889,15 @@ namespace Microsoft.MIDebugEngine
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
+
+                    if (this.MICommandFactory.Mode == MIMode.Lldb)
+                    {
+                        // When the terminal window is closed, a SIGHUP is sent to lldb-mi and LLDB's default is to stop.
+                        // We want to not stop (break) when this happens and the SIGHUP to be sent to the debuggee process.
+                        // LLDB requires this command to be issued after the process has started.
+                        await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
+                    }
+
                     _callback.OnEntryPoint(thread);
                 }
                 else if (bkptno == "<EMBEDDED>")
@@ -1426,7 +1455,7 @@ namespace Microsoft.MIDebugEngine
             return variables;
         }
 
-        //This method gets the value/type info for the method parameters without creating an MI debugger varialbe for them. For use in the callstack window
+        //This method gets the value/type info for the method parameters without creating an MI debugger variable for them. For use in the callstack window
         //NOTE: eval is not called
         public async Task<List<SimpleVariableInformation>> GetParameterInfoOnly(AD7Thread thread, ThreadContext ctx)
         {
@@ -1442,7 +1471,7 @@ namespace Microsoft.MIDebugEngine
             return parameters;
         }
 
-        //This method gets the value/type info for the method parameters of all frames without creating an mi debugger varialbe for them. For use in the callstack window
+        //This method gets the value/type info for the method parameters of all frames without creating an mi debugger variable for them. For use in the callstack window
         //NOTE: eval is not called
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {

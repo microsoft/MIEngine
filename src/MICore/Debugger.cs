@@ -78,6 +78,7 @@ namespace MICore
         private int _localDebuggerPid = -1;
 
         protected bool _connected;
+        protected bool _terminating;
 
         public class ResultEventArgs : EventArgs
         {
@@ -572,12 +573,16 @@ namespace MICore
 
         public async Task<Results> CmdTerminate()
         {
-            if (ProcessState == ProcessState.Running)
+            if (!_terminating)
             {
-                await CmdBreak(BreakRequest.Async);
-            }
+                _terminating = true;
+                if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
+                {
+                    await CmdBreak(BreakRequest.Async);
+                }
 
-            await MICommandFactory.Terminate();
+                await MICommandFactory.Terminate();
+            }
 
             return new Results(ResultClass.done);
         }
