@@ -3,7 +3,7 @@ script_dir=`dirname $0`
 
 print_help()
 {
-    echo 'InstallToVSCode.sh <link|copy> <alpha|insiders|stable> <open-debug-ad7-dir> -d <clrdbg-binaries>'
+    echo 'InstallToVSCode.sh <link|copy> <oss-dev|alpha|insiders|stable> <open-debug-ad7-dir> -d <clrdbg-binaries>'
     echo ''
     echo 'This script is used to copy files needed to enable MIEngine based debugging'
     echo 'into VS Code.'
@@ -145,10 +145,12 @@ if [ "$2" == "alpha" ]; then
     VSCodeDirName=".vscode-alpha"
 elif [ "$2" == "insiders" ]; then
     VSCodeDirName=".vscode-insiders"
+elif [ "$2" == "oss-dev" ]; then
+    VSCodeDirName=".vscode-oss-dev"
 elif [ "$2" == "stable" ]; then
     VSCodeDirName=".vscode"
 else
-    echo "ERROR: Unexpected second argument '$2'. Expected 'alpha', 'insiders' or 'stable'."
+    echo "ERROR: Unexpected second argument '$2'. Expected 'oss-dev', 'alpha', 'insiders' or 'stable'."
     exit 1
 fi
 
