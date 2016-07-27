@@ -196,6 +196,18 @@ namespace MICore
             }
         }
 
+        public void EnqueueInternalBreakAction(Func<Task> func)
+        {
+            lock (_internalBreakActions)
+            {
+                if (_internalBreakActionCompletionSource == null)
+                {
+                    _internalBreakActionCompletionSource = new TaskCompletionSource<object>();
+                }
+                _internalBreakActions.Enqueue(func);
+            }
+        }
+
         public Task AddInternalBreakAction(Func<Task> func)
         {
             if (this.ProcessState == ProcessState.Stopped || !_connected || this.MICommandFactory.AllowCommandsWhileRunning())
