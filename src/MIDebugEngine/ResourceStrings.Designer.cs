@@ -10,7 +10,6 @@
 
 namespace Microsoft.MIDebugEngine {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace Microsoft.MIDebugEngine {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.MIDebugEngine.ResourceStrings", typeof(ResourceStrings).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.MIDebugEngine.ResourceStrings", typeof(ResourceStrings).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -96,6 +95,15 @@ namespace Microsoft.MIDebugEngine {
         internal static string Error_ExePathInvalid {
             get {
                 return ResourceManager.GetString("Error_ExePathInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to obtain target architecture..
+        /// </summary>
+        internal static string Error_FailedToGetTargetArchitecture {
+            get {
+                return ResourceManager.GetString("Error_FailedToGetTargetArchitecture", resourceCulture);
             }
         }
         
