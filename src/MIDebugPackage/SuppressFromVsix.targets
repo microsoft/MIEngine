@@ -13,5 +13,6 @@
     <SuppressFromVsix Include="System.Numerics.dll"/>
     <SuppressFromVsix Include="System.Runtime.Serialization.dll"/>
     <SuppressFromVsix Include="Newtonsoft.Json.dll"/>
+    <SuppressFromVsix Include="liblinux.dll"/>
   </ItemGroup>
 </Project>
