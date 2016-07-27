@@ -551,10 +551,8 @@ namespace MICore
 
         #region Helpers
 
-        public virtual Task<TargetArchitecture> GetTargetArchitecture()
-        {
-            return Task.FromResult(TargetArchitecture.Unknown);
-        }
+        public abstract string GetTargetArchitectureCommand();
+        public abstract TargetArchitecture ParseTargetArchitectureResult(string result);
 
         public virtual async Task<Results> SetOption(string variable, string value, ResultClass resultClass = ResultClass.done)
         {
