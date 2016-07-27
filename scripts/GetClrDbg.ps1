@@ -93,9 +93,9 @@ function GenerateNuGetConfig() {
 # 'latest' version may be updated
 # all other version constants i.e. 'vs2015u2' may not be updated after they are finalized
 if ($Version -eq "latest") {
-    $VersionNumber = "14.0.25430-preview-3098923"
+    $VersionNumber = "14.0.25520-preview-3139256"
 } elseif ($Version -eq "vs2015u2") {
-    $VersionNumber = "14.0.25430-preview-3098923"
+    $VersionNumber = "14.0.25520-preview-3139256" # This version is now locked and should not be updated
 }
 Write-Host "Info: Using clrdbg version '$VersionNumber'"
 
