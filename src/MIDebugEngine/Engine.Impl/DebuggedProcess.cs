@@ -517,7 +517,7 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 // Must wait to get the target architecture until the first break event.
-				EnqueueInternalBreakAction(ObtainTargetArchitecture);
+                EnqueueInternalBreakAction(ObtainTargetArchitecture);
 
                 success = true;
             }
