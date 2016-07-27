@@ -516,20 +516,8 @@ namespace Microsoft.MIDebugEngine
                     }
                 }
 
-                var arch = await MICommandFactory.GetTargetArchitecture();
-                if (arch == TargetArchitecture.Unknown)
-                {
-                    if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
-                    {
-                        arch = LaunchOptions.TargetArchitecture;
-                    }
-                    else
-                    {
-                        WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
-                        arch = TargetArchitecture.X64;  // use as default
-                    }
-                }
-                SetTargetArch(arch);
+                // Must wait to get the target architecture until the first break event.
+				EnqueueInternalBreakAction(ObtainTargetArchitecture);
 
                 success = true;
             }
@@ -542,6 +530,24 @@ namespace Microsoft.MIDebugEngine
             }
             waitLoop.SetProgress(total, total, String.Empty);
             token.ThrowIfCancellationRequested();
+        }
+
+        internal async Task ObtainTargetArchitecture()
+        {
+            var arch = await MICommandFactory.GetTargetArchitecture();
+            if (arch == TargetArchitecture.Unknown)
+            {
+                if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
+                {
+                    arch = LaunchOptions.TargetArchitecture;
+                }
+                else
+                {
+                    WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
+                    arch = TargetArchitecture.X64;  // use as default
+                }
+            }
+            SetTargetArch(arch);
         }
 
         private List<LaunchCommand> GetInitializeCommands()
@@ -1381,10 +1387,10 @@ namespace Microsoft.MIDebugEngine
 
         public void Detach()
         {
-            // Special casing sending the fake stopped event for clrdbg. 
+            // Special casing sending the fake stopped event for clrdbg and lldb. 
             // GDB prints out thread group exit events on mi command "-target-detach" which is handed by method HandleThreadGroupExited
             // GDB or the debuggee can terminate and those are handled by Terminate and TerminateProcess methods.
-            if (MICommandFactory.Mode == MIMode.Clrdbg)
+            if (MICommandFactory.Mode == MIMode.Clrdbg || MICommandFactory.Mode == MIMode.Lldb)
             {
                 ScheduleStdOutProcessing(@"*stopped,reason=""disconnected""");
             }
