@@ -586,6 +586,8 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions.CustomLaunchSetupCommands != null)
             {
                 commands.AddRange(_launchOptions.CustomLaunchSetupCommands);
+
+                SetTargetArch(_launchOptions.TargetArchitecture);
             }
             else
             {
@@ -612,15 +614,15 @@ namespace Microsoft.MIDebugEngine
 
                     this.AddExecutablePathCommand(commands);
 
+                    // Important: this must occur after file-exec-and-symbols but before anything else.
+                    this.AddGetTargetArchitectureCommand(commands);
+
                     // check for remote
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
                     if (!string.IsNullOrEmpty(destination))
                     {
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
-
-                    // Important: this must occur after file-exec-and-symbols but before anything else.
-                    this.AddGetTargetArchitectureCommand(commands);
 
                     int pid = localLaunchOptions.ProcessId;
                     commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
@@ -736,39 +738,45 @@ namespace Microsoft.MIDebugEngine
 
         private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
         {
-            Action<string> failureHandler = (string miError) =>
+            if (_launchOptions.TargetArchitecture == TargetArchitecture.Unknown)
             {
-                // TODO: new failure message
-                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
-                throw new LaunchErrorException(message);
-            };
-
-            Action<string> successHandler = (string resultsStr) =>
-            {
-                TargetArchitecture arch = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
-
-                if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
+                Action<string> failureHandler = (string miError) =>
                 {
-                    arch = LaunchOptions.TargetArchitecture;
+                    string message = ResourceStrings.Error_FailedToGetTargetArchitecture;
+                    throw new LaunchErrorException(message);
+                };
+
+                Action<string> successHandler = (string resultsStr) =>
+                {
+                    TargetArchitecture arch = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
+
+                    if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
+                    {
+                        arch = LaunchOptions.TargetArchitecture;
+                    }
+                    else
+                    {
+                        WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
+                        arch = TargetArchitecture.X64;  // use as default
+                    }
+
+                    SetTargetArch(arch);
+                };
+
+                string cmd = MICommandFactory.GetTargetArchitectureCommand();
+
+                if (cmd != null)
+                {
+                    commands.Add(new LaunchCommand(cmd, ignoreFailures: false, successHandler: successHandler, failureHandler: failureHandler));
                 }
                 else
                 {
-                    WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
-                    arch = TargetArchitecture.X64;  // use as default
+                    SetTargetArch(MICommandFactory.ParseTargetArchitectureResult(""));
                 }
-
-                SetTargetArch(arch);
-            };
-
-            string cmd = MICommandFactory.GetTargetArchitectureCommand();
-
-            if (cmd != null)
-            {
-                commands.Add(new LaunchCommand(cmd, ignoreFailures: false, successHandler: successHandler, failureHandler: failureHandler));
             }
             else
             {
-                SetTargetArch(MICommandFactory.ParseTargetArchitectureResult(null));
+                SetTargetArch(_launchOptions.TargetArchitecture);
             }
         }
 
