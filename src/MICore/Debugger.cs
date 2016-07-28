@@ -661,7 +661,7 @@ namespace MICore
             PostCommand("-gdb-exit");
         }
 
-        private string Escape(string str)
+        protected string Escape(string str)
         {
             StringBuilder outStr = new StringBuilder();
             for (int i = 0; i < str.Length; ++i)
