@@ -33,7 +33,7 @@ namespace MICore
 
 
     /// <summary>
-    /// Interface implemented by the Debugger class to recieve notifications from the transport
+    /// Interface implemented by the Debugger class to receive notifications from the transport
     /// </summary>
     public interface ITransportCallback
     {
