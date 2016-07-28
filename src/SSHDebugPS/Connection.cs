@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System.IO;
 using System.Globalization;
+using liblinux;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -19,6 +20,14 @@ namespace Microsoft.SSHDebugPS
         public Connection(liblinux.UnixSystem remoteSystem)
         {
             _remoteSystem = remoteSystem;
+        }
+
+        internal ConnectionInfo ConnectionInfo
+        {
+            get
+            {
+                return this._remoteSystem.ConnectionInfo;
+            }
         }
 
         internal List<PSOutputParser.Process> ListProcesses()

@@ -2,13 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -38,7 +36,17 @@ namespace Microsoft.SSHDebugPS
 
         public int EnumPorts(out IEnumDebugPorts2 ppEnum)
         {
-            throw new NotImplementedException();
+            liblinux.Persistence.ConnectionInfoStore store = new liblinux.Persistence.ConnectionInfoStore();
+            IDebugPort2[] ports = new IDebugPort2[store.Connections.Count];
+
+            for (int i = 0; i < store.Connections.Count; i++)
+            {
+                string hostName = ((liblinux.ConnectionInfo)store.Connections[i]).HostNameOrAddress;
+                ports[i] = new AD7Port(this, hostName, isInAddPort: false);
+            }
+
+            ppEnum = new AD7PortEnum(ports);
+            return HR.S_OK;
         }
 
         public int GetPort(ref Guid guidPort, out IDebugPort2 ppPort)
@@ -48,6 +56,13 @@ namespace Microsoft.SSHDebugPS
 
         public int GetPortSupplierId(out Guid guidPortSupplier)
         {
+            guidPortSupplier = Guid.Empty;
+
+            // Check if liblinux exists in user's installation, if not, don't enable SSH port supplier
+            bool libLinuxLoaded = LocateAndLoadLibLinux();
+            if (!libLinuxLoaded)
+                return HR.E_FAIL; 
+
             guidPortSupplier = _Id;
             return HR.S_OK;
         }
@@ -65,8 +80,7 @@ namespace Microsoft.SSHDebugPS
 
         public int CanPersistPorts()
         {
-            // Tell the SDM that we would like it to keep an MRU of port names for us
-            return HR.S_FALSE;
+            return HR.S_OK;
         }
 
         public unsafe int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum)
@@ -88,6 +102,41 @@ namespace Microsoft.SSHDebugPS
         {
             text = StringResources.PSDescription;
             return HR.S_OK;
+        }
+
+        /// <summary>Locates and loads liblinux library</summary>
+        /// <returns>True, if liblinux is successfully loaded, false otherwise</returns>
+        /// <remarks>TODO: This should go away once the credential store + connection manager
+        /// components we use are properly componentized</remarks>
+        private bool LocateAndLoadLibLinux()
+        {
+            const int VSSPROPID_InstallRootDir = -9041; 
+            const string relativePath = @"Common7\IDE\CommonExtensions\Microsoft\Linux\Linux\liblinux.dll"; 
+
+            IVsShell shell = Package.GetGlobalService(typeof(SVsShell)) as IVsShell;
+
+            if (shell == null)
+                return false;
+
+            object pvar;
+            string libLinuxPath = null;
+            if (shell.GetProperty(VSSPROPID_InstallRootDir, out pvar) == HR.S_OK && pvar != null)
+            {
+                libLinuxPath = pvar.ToString();
+            }
+
+            libLinuxPath += relativePath;
+
+            try
+            {
+                Assembly.LoadFrom(libLinuxPath);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

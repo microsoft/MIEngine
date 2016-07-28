@@ -1,55 +1,21 @@
-// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
-//
-// This file is used to create a reference assembly for liblinux.dll. This reference dll is NOT runnable.
-// This is not currently a public API. This file is provided to allow the SSHDebugPS to build, but it isn't available for use outside of the MIDebugEngine
 .assembly extern System
 {
-  .publickeytoken = (B7 7A 5C 56 19 34 E0 89 )                         // .z\V.4..
-  .ver 4:0:0:0
+	.publickeytoken = (B7 7A 5C 56 19 34 E0 89)
+	.ver 4:0:0:0
 }
-.assembly extern System.Xml
+.assembly extern mscorlib
 {
-  .publickeytoken = (B7 7A 5C 56 19 34 E0 89 )                         // .z\V.4..
-  .ver 4:0:0:0
-}
-.assembly extern System.Core
-{
-  .publickeytoken = (B7 7A 5C 56 19 34 E0 89 )                         // .z\V.4..
-  .ver 4:0:0:0
-}
-.assembly extern System.Xml.Linq
-{
-  .publickeytoken = (B7 7A 5C 56 19 34 E0 89 )                         // .z\V.4..
-  .ver 4:0:0:0
-}
-.assembly extern Microsoft.CSharp
-{
-  .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A )                         // .?_....:
-  .ver 4:0:0:0
-}
-.assembly extern System.Security
-{
-  .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A )                         // .?_....:
-  .ver 4:0:0:0
+	.publickeytoken = (B7 7A 5C 56 19 34 E0 89)
+	.ver 4:0:0:0
 }
 .assembly liblinux
 {
 	.custom instance void [mscorlib]System.CLSCompliantAttribute::.ctor(bool) = { bool(true) }
 	.custom instance void [mscorlib]System.Runtime.CompilerServices.ExtensionAttribute::.ctor() = { }
 	.custom instance void [mscorlib]System.Runtime.InteropServices.ComVisibleAttribute::.ctor(bool) = { bool(false) }
-    .publickey = (00 24 00 00 04 80 00 00 94 00 00 00 06 02 00 00   // .$..............
-                00 24 00 00 52 53 41 31 00 04 00 00 01 00 01 00   // .$..RSA1........
-                07 D1 FA 57 C4 AE D9 F0 A3 2E 84 AA 0F AE FD 0D   // ...W............
-                E9 E8 FD 6A EC 8F 87 FB 03 76 6C 83 4C 99 92 1E   // ...j.....vl.L...
-                B2 3B E7 9A D9 D5 DC C1 DD 9A D2 36 13 21 02 90   // .;.........6.!..
-                0B 72 3C F9 80 95 7F C4 E1 77 10 8F C6 07 77 4F   // .r<......w....wO
-                29 E8 32 0E 92 EA 05 EC E4 E8 21 C0 A5 EF E8 F1   // ).2.......!.....
-                64 5C 4C 0C 93 C1 AB 99 28 5D 62 2C AA 65 2C 1D   // d\L.....(]b,.e,.
-                FA D6 3D 74 5D 6F 2D E5 F1 7E 5E AF 0F C4 96 3D   // ..=t]o-..~^....=
-                26 1C 8A 12 43 65 18 20 6D C0 93 34 4D 5A D2 93 ) // &...Ce. m..4MZ..
-
+	.publickey = (00 24 00 00 04 80 00 00 94 00 00 00 06 02 00 00 00 24 00 00 52 53 41 31 00 04 00 00 01 00 01 00 07 D1 FA 57 C4 AE D9 F0 A3 2E 84 AA 0F AE FD 0D E9 E8 FD 6A EC 8F 87 FB 03 76 6C 83 4C 99 92 1E B2 3B E7 9A D9 D5 DC C1 DD 9A D2 36 13 21 02 90 0B 72 3C F9 80 95 7F C4 E1 77 10 8F C6 07 77 4F 29 E8 32 0E 92 EA 05 EC E4 E8 21 C0 A5 EF E8 F1 64 5C 4C 0C 93 C1 AB 99 28 5D 62 2C AA 65 2C 1D FA D6 3D 74 5D 6F 2D E5 F1 7E 5E AF 0F C4 96 3D 26 1C 8A 12 43 65 18 20 6D C0 93 34 4D 5A D2 93)
 	.hash algorithm 0x00008004
-    .ver 15:0:0:0
+	.ver 14:0:0:0
 }
 .namespace liblinux
 {
@@ -1063,6 +1029,7 @@
 		}
 	}
 	.class public interface abstract IRemoteFileSystem
+		implements [mscorlib]System.IDisposable
 	{
 		.method public virtual hidebysig newslot abstract 
 			instance class 'liblinux.IO.RemoteFile' UploadFile(string localFileName, string remoteFileName)
@@ -1160,6 +1127,14 @@
 			instance class 'liblinux.IO.RemoteFileSystemInfo' Stat(string remotePath)
 		{
 		}
+		.method public virtual hidebysig newslot abstract 
+			instance void Disconnect()
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance void Close()
+		{
+		}
 	}
 	.class public RemoteDirectory
 		extends 'liblinux.IO.RemoteFileSystemInfo'
@@ -1210,6 +1185,335 @@
 		}
 		.method public hidebysig 
 			instance class [mscorlib]'System.IO.FileInfo' DownloadTo(string localPath)
+		{
+			ret
+		}
+	}
+	.class public RemoteFileSystem
+		extends [mscorlib]System.Object
+		implements 'liblinux.IO.IRemoteFileSystem', [mscorlib]System.IDisposable
+	{
+		.method public hidebysig specialname 
+			instance void .ctor(class liblinux.ConnectionInfo connectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, string userName, class [mscorlib]System.Security.SecureString password)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, int32 timeout, string userName, class [mscorlib]System.Security.SecureString password)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, valuetype [mscorlib]System.TimeSpan timeout, string userName, class [mscorlib]System.Security.SecureString password)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, int32 port, int32 timeout, string userName, class [mscorlib]System.Security.SecureString password)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, int32 port, valuetype [mscorlib]System.TimeSpan timeout, string userName, class [mscorlib]System.Security.SecureString password)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, string userName, string privateFileName, class [mscorlib]System.Security.SecureString passphrase)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, int32 timeout, string userName, string privateFileName, class [mscorlib]System.Security.SecureString passphrase)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, valuetype [mscorlib]System.TimeSpan timeout, string userName, string privateFileName, class [mscorlib]System.Security.SecureString passphrase)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, int32 port, int32 timeout, string userName, string privateFileName, class [mscorlib]System.Security.SecureString passphrase)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string hostNameOrAddress, int32 port, valuetype [mscorlib]System.TimeSpan timeout, string userName, string privateFileName, class [mscorlib]System.Security.SecureString passphrase)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteFile' UploadFile(string localFileName, string remoteFileName)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string remoteFileName, string localFileName)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteDirectory' CreateDirectory(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteDirectory' CreateDirectories(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteDirectory' UploadDirectory(string localPath, string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance bool Exists(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance bool IsDirectory(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance bool IsFile(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance bool IsSymbolicLink(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteFileSystemInfo' ResolvePath(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance string GetFullPath(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance string GetFileName(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance string GetDirectoryName(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.FilePermissions' GetPermissions(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance void Delete(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteFile'[] GetFiles(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories()
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteFile'[] GetFiles()
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteFile' GetFile(string remoteFileName)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(valuetype 'liblinux.IO.SpecialDirectory' directory)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance class 'liblinux.IO.RemoteFileSystemInfo' Stat(string remotePath)
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance void Dispose()
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance void Disconnect()
+		{
+			ret
+		}
+		.method public final virtual hidebysig newslot 
+			instance void Close()
+		{
+			ret
+		}
+	}
+	.class public abstract RemoteFileSystemBase
+		extends [mscorlib]System.Object
+		implements 'liblinux.IO.IRemoteFileSystem', [mscorlib]System.IDisposable
+	{
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteFile' UploadFile(string localFileName, string remoteFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string remoteFileName, string localFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteDirectory' CreateDirectory(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteDirectory' CreateDirectories(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteDirectory' UploadDirectory(string localPath, string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance bool Exists(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance bool IsDirectory(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance bool IsFile(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance bool IsSymbolicLink(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteFileSystemInfo' ResolvePath(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance string GetFullPath(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance string GetFileName(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance string GetDirectoryName(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.FilePermissions' GetPermissions(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance valuetype [mscorlib]System.DateTime GetDateModified(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance valuetype [mscorlib]System.DateTime GetDateAccessed(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance void DeleteDirectory(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance void DeleteFile(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance void Delete(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteFile'[] GetFiles(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories()
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteFile'[] GetFiles()
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteFile' GetFile(string remoteFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(valuetype 'liblinux.IO.SpecialDirectory' directory)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.RemoteFileSystemInfo' Stat(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance void Dispose()
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance void Disconnect()
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance void Close()
+		{
+		}
+		.method family hidebysig specialname 
+			instance void .ctor()
 		{
 			ret
 		}
@@ -1804,6 +2108,30 @@
 			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
 			ret
 		}
+		.method public virtual hidebysig newslot specialname 
+			instance void add_Closed(class liblinux.Shell.OnShellClosed 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
+		.method public virtual hidebysig newslot specialname 
+			instance void remove_Closed(class liblinux.Shell.OnShellClosed 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
+		.method public virtual hidebysig newslot specialname 
+			instance void add_ErrorOccured(class liblinux.Shell.OnShellErrorOccured 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
+		.method public virtual hidebysig newslot specialname 
+			instance void remove_ErrorOccured(class liblinux.Shell.OnShellErrorOccured 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
 		.method public final virtual hidebysig newslot specialname 
 			instance int64 get_Length()
 		{
@@ -1844,6 +2172,16 @@
 			instance void Flush()
 		{
 			ret
+		}
+		.event liblinux.Shell.OnShellClosed Closed
+		{
+			.addon instance void liblinux.Services.GdbServerShell::add_Closed(class liblinux.Shell.OnShellClosed)
+			.removeon instance void liblinux.Services.GdbServerShell::remove_Closed(class liblinux.Shell.OnShellClosed)
+		}
+		.event liblinux.Shell.OnShellErrorOccured ErrorOccured
+		{
+			.addon instance void liblinux.Services.GdbServerShell::add_ErrorOccured(class liblinux.Shell.OnShellErrorOccured)
+			.removeon instance void liblinux.Services.GdbServerShell::remove_ErrorOccured(class liblinux.Shell.OnShellErrorOccured)
 		}
 		.event liblinux.Shell.OnOutputReceived OutputReceived
 		{
@@ -2646,6 +2984,26 @@
 			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
 		}
 		.method public virtual hidebysig newslot abstract specialname 
+			instance void add_Closed(class liblinux.Shell.OnShellClosed 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+		}
+		.method public virtual hidebysig newslot abstract specialname 
+			instance void remove_Closed(class liblinux.Shell.OnShellClosed 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+		}
+		.method public virtual hidebysig newslot abstract specialname 
+			instance void add_ErrorOccured(class liblinux.Shell.OnShellErrorOccured 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+		}
+		.method public virtual hidebysig newslot abstract specialname 
+			instance void remove_ErrorOccured(class liblinux.Shell.OnShellErrorOccured 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+		}
+		.method public virtual hidebysig newslot abstract specialname 
 			instance int64 get_Length()
 		{
 		}
@@ -2672,6 +3030,16 @@
 		.method public virtual hidebysig newslot abstract 
 			instance void Flush()
 		{
+		}
+		.event liblinux.Shell.OnShellClosed Closed
+		{
+			.addon instance void liblinux.Shell.IShellStream::add_Closed(class liblinux.Shell.OnShellClosed)
+			.removeon instance void liblinux.Shell.IShellStream::remove_Closed(class liblinux.Shell.OnShellClosed)
+		}
+		.event liblinux.Shell.OnShellErrorOccured ErrorOccured
+		{
+			.addon instance void liblinux.Shell.IShellStream::add_ErrorOccured(class liblinux.Shell.OnShellErrorOccured)
+			.removeon instance void liblinux.Shell.IShellStream::remove_ErrorOccured(class liblinux.Shell.OnShellErrorOccured)
 		}
 		.event liblinux.Shell.OnOutputReceived OutputReceived
 		{
@@ -2884,6 +3252,54 @@
 		{
 		}
 	}
+	.class public sealed OnShellClosed
+		extends [mscorlib]System.MulticastDelegate
+	{
+		.method public hidebysig specialname 
+			instance void .ctor(object 'object', native int 'method')
+			runtime 
+		{
+		}
+		.method public virtual hidebysig newslot 
+			instance void Invoke(object sender)
+			runtime 
+		{
+		}
+		.method public virtual hidebysig newslot 
+			instance class [mscorlib]System.IAsyncResult BeginInvoke(object sender, class [mscorlib]System.AsyncCallback callback, object 'object')
+			runtime 
+		{
+		}
+		.method public virtual hidebysig newslot 
+			instance void EndInvoke(class [mscorlib]System.IAsyncResult result)
+			runtime 
+		{
+		}
+	}
+	.class public sealed OnShellErrorOccured
+		extends [mscorlib]System.MulticastDelegate
+	{
+		.method public hidebysig specialname 
+			instance void .ctor(object 'object', native int 'method')
+			runtime 
+		{
+		}
+		.method public virtual hidebysig newslot 
+			instance void Invoke(object sender)
+			runtime 
+		{
+		}
+		.method public virtual hidebysig newslot 
+			instance class [mscorlib]System.IAsyncResult BeginInvoke(object sender, class [mscorlib]System.AsyncCallback callback, object 'object')
+			runtime 
+		{
+		}
+		.method public virtual hidebysig newslot 
+			instance void EndInvoke(class [mscorlib]System.IAsyncResult result)
+			runtime 
+		{
+		}
+	}
 	.class public abstract SecurityContext
 		extends [mscorlib]System.Object
 	{
@@ -3055,6 +3471,30 @@
 			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
 			ret
 		}
+		.method public virtual hidebysig newslot specialname 
+			instance void add_Closed(class liblinux.Shell.OnShellClosed 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
+		.method public virtual hidebysig newslot specialname 
+			instance void remove_Closed(class liblinux.Shell.OnShellClosed 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
+		.method public virtual hidebysig newslot specialname 
+			instance void add_ErrorOccured(class liblinux.Shell.OnShellErrorOccured 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
+		.method public virtual hidebysig newslot specialname 
+			instance void remove_ErrorOccured(class liblinux.Shell.OnShellErrorOccured 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
 		.method public final virtual hidebysig newslot specialname 
 			instance int64 get_Length()
 		{
@@ -3094,6 +3534,16 @@
 			instance void Close()
 		{
 			ret
+		}
+		.event liblinux.Shell.OnShellClosed Closed
+		{
+			.addon instance void liblinux.Shell.ShellStream::add_Closed(class liblinux.Shell.OnShellClosed)
+			.removeon instance void liblinux.Shell.ShellStream::remove_Closed(class liblinux.Shell.OnShellClosed)
+		}
+		.event liblinux.Shell.OnShellErrorOccured ErrorOccured
+		{
+			.addon instance void liblinux.Shell.ShellStream::add_ErrorOccured(class liblinux.Shell.OnShellErrorOccured)
+			.removeon instance void liblinux.Shell.ShellStream::remove_ErrorOccured(class liblinux.Shell.OnShellErrorOccured)
 		}
 		.event liblinux.Shell.OnOutputReceived OutputReceived
 		{
