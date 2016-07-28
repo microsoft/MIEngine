@@ -229,4 +229,7 @@
     <value>Debugger executable '{0}' is not signed. As a result, debugging may not work properly.</value>
     <comment>0 = debugger path</comment>
   </data>
+  <data name="Error_FailedToGetTargetArchitecture" xml:space="preserve">
+    <value>Failed to obtain target architecture.</value>
+  </data>
 </root>
