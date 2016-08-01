@@ -31,8 +31,8 @@ namespace Microsoft.SSHDebugPS
             _beginMessage = string.Format("Begin:{0}", id);
             _exitMessagePrefix = string.Format("Exit:{0}-", id);
             _shellStream.OutputReceived += OnOutputReceived;
-            //_shellStream.Closed += OnClosed;
-            //_shellStream.ErrorOccured += OnError;
+            _shellStream.Closed += OnClosed;
+            _shellStream.ErrorOccured += OnError;
         }
 
         internal void Start(string commandText)
