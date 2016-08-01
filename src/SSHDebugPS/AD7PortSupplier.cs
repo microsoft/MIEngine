@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using liblinux;
+using liblinux.Persistence;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -36,13 +38,14 @@ namespace Microsoft.SSHDebugPS
 
         public int EnumPorts(out IEnumDebugPorts2 ppEnum)
         {
-            liblinux.Persistence.ConnectionInfoStore store = new liblinux.Persistence.ConnectionInfoStore();
+            ConnectionInfoStore store = new ConnectionInfoStore();
             IDebugPort2[] ports = new IDebugPort2[store.Connections.Count];
 
             for (int i = 0; i < store.Connections.Count; i++)
             {
-                string hostName = ((liblinux.ConnectionInfo)store.Connections[i]).HostNameOrAddress;
-                ports[i] = new AD7Port(this, hostName, isInAddPort: false);
+                ConnectionInfo connectionInfo = (ConnectionInfo)store.Connections[i];
+                string connectionName = connectionInfo.UserName + "@" + connectionInfo.HostNameOrAddress;
+                ports[i] = new AD7Port(this, connectionName, isInAddPort: false);
             }
 
             ppEnum = new AD7PortEnum(ports);

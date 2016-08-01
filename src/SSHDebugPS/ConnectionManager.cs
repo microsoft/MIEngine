@@ -9,6 +9,8 @@ using System.Globalization;
 using System.Linq;
 using liblinux;
 using liblinux.Persistence;
+using Microsoft.DebugEngineHost;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -18,8 +20,11 @@ namespace Microsoft.SSHDebugPS
         {
             UnixSystem remoteSystem = null;
             ConnectionInfoStore store = new ConnectionInfoStore();
-            StoredConnectionInfo storedConnectionInfo = store.Connections.FirstOrDefault(
-                connection => name.Equals(((ConnectionInfo)connection).HostNameOrAddress, StringComparison.OrdinalIgnoreCase));
+            StoredConnectionInfo storedConnectionInfo = store.Connections.FirstOrDefault(connection =>
+                {
+                    string connectionName = ((ConnectionInfo)connection).UserName + "@" + ((ConnectionInfo)connection).HostNameOrAddress;
+                    return name.Equals(connectionName, StringComparison.OrdinalIgnoreCase);
+                });
 
             if (storedConnectionInfo != null)
             {
