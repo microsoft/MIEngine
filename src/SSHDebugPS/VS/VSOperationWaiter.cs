@@ -32,10 +32,11 @@ namespace Microsoft.SSHDebugPS.VS
         {
             Task t = Task.Run(action);
 
-            WaiterImpl waiterImpl = null;
+            DebugEngineHost.HostWaitLoop waiterImpl = null;
+            
             try
             {
-                waiterImpl = WaiterImpl.TryCreate(actionName);
+                waiterImpl = new DebugEngineHost.HostWaitLoop(actionName);
             }
             catch (FileNotFoundException)
             {
@@ -44,118 +45,44 @@ namespace Microsoft.SSHDebugPS.VS
 
             if (waiterImpl != null)
             {
-                bool success = waiterImpl.Wait(t);
-                if (!success)
+                using (ManualResetEvent completeEvent = new ManualResetEvent(false))
                 {
-                    if (throwOnCancel)
-                    {
-                        throw new OperationCanceledException();
-                    }
-                    return false;
-                }
-            }
-            else
-            {
-                t.Wait();
-            }
+                    CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-            if (t.IsFaulted)
-            {
-                throw t.Exception.InnerException;
+                    t.ContinueWith((System.Threading.Tasks.Task unused) => completeEvent.Set(), TaskContinuationOptions.ExecuteSynchronously);
+
+                    try
+                    {
+                        waiterImpl.Wait(completeEvent, cancellationTokenSource);
+                    }
+                    catch (OperationCanceledException) // VS Wait dialog implementation always throws on cancel
+                    {
+                        if (throwOnCancel)
+                        {
+                            throw;
+                        }
+
+                        return false;
+                    }
+
+                    if (cancellationTokenSource.IsCancellationRequested)
+                    {
+                        if (throwOnCancel)
+                        {
+                            throw new OperationCanceledException();
+                        }
+
+                        return false;
+                    }
+
+                    if (t.IsFaulted)
+                    {
+                        throw t.Exception.InnerException;
+                    }
+                }
             }
 
             return true;
-        }
-
-        private class WaiterImpl
-        {
-            private readonly IVsCommonMessagePump _messagePump;
-
-            private WaiterImpl(string text)
-            {
-                int hr;
-
-                var messagePumpFactory = (IVsCommonMessagePumpFactory)Package.GetGlobalService(typeof(SVsCommonMessagePumpFactory));
-                if (messagePumpFactory == null)
-                {
-                    return; // normal case in glass
-                }
-
-                IVsCommonMessagePump messagePump;
-                hr = messagePumpFactory.CreateInstance(out messagePump);
-                if (hr != 0) return;
-
-                hr = messagePump.SetAllowCancel(true);
-                if (hr != 0) return;
-
-                hr = messagePump.SetWaitText(text);
-                if (hr != 0) return;
-
-                hr = messagePump.SetStatusBarText(string.Empty);
-                if (hr != 0) return;
-
-                _messagePump = messagePump;
-            }
-
-            static public WaiterImpl TryCreate(string text)
-            {
-                WaiterImpl waitLoop = new WaiterImpl(text);
-                if (waitLoop._messagePump == null)
-                    return null;
-
-                return waitLoop;
-            }
-
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Runtime.InteropServices.SafeHandle.DangerousGetHandle")]
-            public bool Wait(System.Threading.Tasks.Task task)
-            {
-                int hr;
-
-                ManualResetEvent completeEvent = new ManualResetEvent(initialState: false);
-
-                task.ContinueWith((System.Threading.Tasks.Task unused) => completeEvent.Set(), TaskContinuationOptions.ExecuteSynchronously);
-
-                SafeWaitHandle safeWaitHandle = completeEvent.SafeWaitHandle;
-                bool addRefSucceeded = false;
-
-                try
-                {
-                    safeWaitHandle.DangerousAddRef(ref addRefSucceeded);
-                    if (!addRefSucceeded)
-                    {
-                        throw new ObjectDisposedException("launchCompleteHandle");
-                    }
-
-                    IntPtr nativeHandle = safeWaitHandle.DangerousGetHandle();
-                    IntPtr[] handles = { nativeHandle };
-                    uint waitResult;
-
-                    hr = _messagePump.ModalWaitForObjects(handles, (uint)handles.Length, out waitResult);
-                    if (hr == 0)
-                    {
-                        return true;
-                    }
-                    else if (hr == VSConstants.E_PENDING || hr == VSConstants.E_ABORT)
-                    {
-                        // E_PENDING: user canceled
-                        // E_ABORT: application exit
-                        return false;
-                    }
-                    else
-                    {
-                        Debug.Fail("Unexpected result from ModalWaitForObjects");
-                        Marshal.ThrowExceptionForHR(hr);
-                        return false;
-                    }
-                }
-                finally
-                {
-                    if (addRefSucceeded)
-                    {
-                        safeWaitHandle.DangerousRelease();
-                    }
-                }
-            }
         }
     }
 }

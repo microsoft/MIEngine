@@ -445,7 +445,7 @@ namespace MICore
             var @this = new UnixShellPortLaunchOptions(/*startRemoteDebuggerCommand*/null, unixPort, miMode, baseLaunchOptions:null);
 
             @this.ProcessId = processId;
-            @this.SetupCommands = new ReadOnlyCollection<LaunchCommand>(Array.Empty<LaunchCommand>());
+            @this.SetupCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
             @this.SetInitializationComplete();
 
             return @this;

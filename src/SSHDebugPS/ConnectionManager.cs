@@ -9,6 +9,8 @@ using System.Globalization;
 using System.Linq;
 using liblinux;
 using liblinux.Persistence;
+using Microsoft.DebugEngineHost;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -16,36 +18,29 @@ namespace Microsoft.SSHDebugPS
     {
         internal static Connection GetInstance(string name, ConnectionReason reason)
         {
-            if (reason == ConnectionReason.AddPort)
-            {
-                Connection connection = VS.CredentialsDialog.Show(name, reason);
-                ConnectionInfoStore store = new ConnectionInfoStore();
-                store.Add(connection.ConnectionInfo);
-                return connection;
-            }
-            else
-            { 
-                UnixSystem remoteSystem = null;
-                ConnectionInfoStore store = new ConnectionInfoStore();
-                StoredConnectionInfo storedConnectionInfo = store.Connections.FirstOrDefault(
-                    connection => name.Equals(((ConnectionInfo)connection).HostNameOrAddress, StringComparison.OrdinalIgnoreCase));
-
-                if (storedConnectionInfo != null)
+            UnixSystem remoteSystem = null;
+            ConnectionInfoStore store = new ConnectionInfoStore();
+            StoredConnectionInfo storedConnectionInfo = store.Connections.FirstOrDefault(connection =>
                 {
-                    remoteSystem = new UnixSystem();
-                    try
+                    string connectionName = ((ConnectionInfo)connection).UserName + "@" + ((ConnectionInfo)connection).HostNameOrAddress;
+                    return name.Equals(connectionName, StringComparison.OrdinalIgnoreCase);
+                });
+
+            if (storedConnectionInfo != null)
+            {
+                remoteSystem = new UnixSystem();
+                try
+                {
+                    VSOperationWaiter.Wait(string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_Connecting, name), throwOnCancel: false, action: () =>
                     {
-                        VSOperationWaiter.Wait(string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_Connecting, name), throwOnCancel: false, action: () =>
-                        {
-                            remoteSystem.Connect((ConnectionInfo)storedConnectionInfo);
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, ex.Message, null, 
-                            OLEMSGICON.OLEMSGICON_CRITICAL, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                        return null;
-                    }
+                        remoteSystem.Connect((ConnectionInfo)storedConnectionInfo);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, ex.Message, null, 
+                        OLEMSGICON.OLEMSGICON_CRITICAL, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                    return null;
                 }
 
                 // NOTE: This will be null if connect is canceled
@@ -53,9 +48,26 @@ namespace Microsoft.SSHDebugPS
                 {
                     return new Connection(remoteSystem);
                 }
-
-                return null;
             }
+            else
+            {
+                // TODO: Replace this with credentials dialog from Linux extension
+                Connection connection = null;
+
+                try
+                {
+                    connection = VS.CredentialsDialog.Show(name, reason);
+                    store.Add(connection.ConnectionInfo);
+                }
+                catch (AD7ConnectCanceledException)
+                {
+                    return null;
+                }
+
+                return connection;
+            }
+
+            return null;
         }
     }
 }
