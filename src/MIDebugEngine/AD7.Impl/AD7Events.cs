@@ -388,7 +388,7 @@ namespace Microsoft.MIDebugEngine
             _name = name;
             _code = code;
             _description = description ?? name;
-            _category = exceptionCategory ?? new Guid(EngineConstants.EngineId);
+            _category = exceptionCategory ?? EngineConstants.EngineId;
 
             switch (state)
             {

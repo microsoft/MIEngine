@@ -211,10 +211,13 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
     <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
+    <DropSignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsCoreCLR)' == 'false'">
-      <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
-      <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AndroidDebugLauncher\AndroidDebugLauncher.csproj">
@@ -240,6 +243,11 @@
     <ProjectReference Include="..\MIDebugEngine\MIDebugEngine.csproj">
       <Project>{a8b0230c-7806-407c-af18-54b2ce21275e}</Project>
       <Name>MIDebugEngine</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
+    </ProjectReference>
+    <ProjectReference Include="..\SSHDebugPS\SSHDebugPS.csproj">
+      <Project>{15bcbef4-1c2b-412b-925b-34a049097e62}</Project>
+      <Name>SSHDebugPS</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
   </ItemGroup>

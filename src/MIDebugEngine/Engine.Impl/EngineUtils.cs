@@ -82,14 +82,6 @@ namespace Microsoft.MIDebugEngine
             return pid[0];
         }
 
-        public static AD_PROCESS_ID GetProcessId(IDebugProgram2 program)
-        {
-            IDebugProcess2 process;
-            RequireOk(program.GetProcess(out process));
-
-            return GetProcessId(process);
-        }
-
         public static int UnexpectedException(Exception e)
         {
             Debug.Fail("Unexpected exception during Attach");
