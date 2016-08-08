@@ -439,8 +439,10 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
+                bool noDebug = launchFlags.HasFlag(enum_LAUNCH_FLAGS.LAUNCH_NODEBUG);
+
                 // Note: LaunchOptions.GetInstance can be an expensive operation and may push a wait message loop
-                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, _engineCallback, TargetEngine.Native, Logger);
+                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, noDebug, _engineCallback, TargetEngine.Native, Logger);
 
                 // We are being asked to debug a process when we currently aren't debugging anything
                 _pollThread = new WorkerThread(Logger);
