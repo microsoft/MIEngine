@@ -27,8 +27,16 @@ namespace Microsoft.SSHDebugPS
             string name;
             HR.Check(request.GetPortName(out name));
 
-            port = new AD7Port(this, name, isInAddPort: true);
-            return HR.S_OK;
+            AD7Port newPort = new AD7Port(this, name, isInAddPort: true);
+
+            if (newPort.IsConnected)
+            {
+                port = newPort;
+                return HR.S_OK;
+            }
+
+            port = null;
+            return HR.E_REMOTE_CONNECT_USER_CANCELED;
         }
 
         public int CanAddPort()
@@ -44,8 +52,7 @@ namespace Microsoft.SSHDebugPS
             for (int i = 0; i < store.Connections.Count; i++)
             {
                 ConnectionInfo connectionInfo = (ConnectionInfo)store.Connections[i];
-                string connectionName = connectionInfo.UserName + "@" + connectionInfo.HostNameOrAddress;
-                ports[i] = new AD7Port(this, connectionName, isInAddPort: false);
+                ports[i] = new AD7Port(this, ConnectionManager.GetFormattedConnectionName(connectionInfo), isInAddPort: false);
             }
 
             ppEnum = new AD7PortEnum(ports);

@@ -11,6 +11,7 @@ using liblinux;
 using liblinux.Persistence;
 using Microsoft.DebugEngineHost;
 using Task = System.Threading.Tasks.Task;
+using Microsoft.VisualStudio.Linux.ConnectionManager;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -20,27 +21,87 @@ namespace Microsoft.SSHDebugPS
         {
             UnixSystem remoteSystem = null;
             ConnectionInfoStore store = new ConnectionInfoStore();
+            ConnectionInfo connectionInfo = null;
+
             StoredConnectionInfo storedConnectionInfo = store.Connections.FirstOrDefault(connection =>
                 {
-                    string connectionName = ((ConnectionInfo)connection).UserName + "@" + ((ConnectionInfo)connection).HostNameOrAddress;
-                    return name.Equals(connectionName, StringComparison.OrdinalIgnoreCase);
+                    return name.Equals(GetFormattedConnectionName((ConnectionInfo)connection), StringComparison.OrdinalIgnoreCase);
                 });
 
             if (storedConnectionInfo != null)
+                connectionInfo = (ConnectionInfo)storedConnectionInfo;
+            
+            if (connectionInfo == null)
+            {
+                IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
+
+                string userName;
+                string hostName;
+
+                int atSignIndex = name.IndexOf('@');
+                if (atSignIndex > 0)
+                {
+                    userName = name.Substring(0, atSignIndex);
+                    hostName = name.Substring(atSignIndex + 1);
+                }
+                else
+                {
+                    userName = string.Format(CultureInfo.CurrentCulture, StringResources.UserName_PlaceHolder);
+                    hostName = name;
+                }
+
+                PasswordConnectionInfo newConnectionInfo = new PasswordConnectionInfo(hostName, userName, new System.Security.SecureString());
+
+                IConnectionManagerResult result = connectionManager.ShowDialog(newConnectionInfo);
+
+                if (result.DialogResult == ConnectionManagerDialogResult.Succeeded)
+                {
+                    // Retrieve the newly added connection
+                    store.Load();
+                    connectionInfo = store.Connections.First(info => info.Id == result.StoredConnectionId);
+                }
+            }
+
+            if (connectionInfo != null)
             {
                 remoteSystem = new UnixSystem();
-                try
+
+                while (true)
                 {
-                    VSOperationWaiter.Wait(string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_Connecting, name), throwOnCancel: false, action: () =>
+                    try
                     {
-                        remoteSystem.Connect((ConnectionInfo)storedConnectionInfo);
-                    });
-                }
-                catch (Exception ex)
-                {
-                    VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, ex.Message, null, 
-                        OLEMSGICON.OLEMSGICON_CRITICAL, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                    return null;
+                        VSOperationWaiter.Wait(string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_Connecting, name), throwOnCancel: false, action: () =>
+                        {
+                            remoteSystem.Connect(connectionInfo);
+                        });
+                        break;
+                    }
+                    catch (RemoteAuthenticationException)
+                    {
+                        IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
+                        IConnectionManagerResult result = connectionManager.ShowDialog(StringResources.AuthenticationFailureHeader, StringResources.AuthenticationFailureDescription, connectionInfo);
+
+                        if (result.DialogResult == ConnectionManagerDialogResult.Succeeded)
+                        {
+                            // Update the credentials in the store
+                            store.Load();
+                            store.RemoveById(result.StoredConnectionId);
+                            store.Add(result.ConnectionInfo);
+                            store.Save();
+
+                            connectionInfo = result.ConnectionInfo;
+                        }
+                        else
+                        {
+                            return null; 
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, ex.Message, null,
+                            OLEMSGICON.OLEMSGICON_CRITICAL, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                        return null;
+                    }
                 }
 
                 // NOTE: This will be null if connect is canceled
@@ -49,25 +110,13 @@ namespace Microsoft.SSHDebugPS
                     return new Connection(remoteSystem);
                 }
             }
-            else
-            {
-                // TODO: Replace this with credentials dialog from Linux extension
-                Connection connection = null;
-
-                try
-                {
-                    connection = VS.CredentialsDialog.Show(name, reason);
-                    store.Add(connection.ConnectionInfo);
-                }
-                catch (AD7ConnectCanceledException)
-                {
-                    return null;
-                }
-
-                return connection;
-            }
-
+        
             return null;
+        }
+
+        internal static string GetFormattedConnectionName(ConnectionInfo connectionInfo)
+        {
+            return connectionInfo.UserName + "@" + connectionInfo.HostNameOrAddress;
         }
     }
 }

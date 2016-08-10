@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AuthenticationFailureDescription" xml:space="preserve">
+    <value>Connecting to the remote system failed due to authentication failure. Enter your updated connection info and try connecting again.</value>
+  </data>
+  <data name="AuthenticationFailureHeader" xml:space="preserve">
+    <value>Authentication Failure</value>
+  </data>
   <data name="Error_PSFailed" xml:space="preserve">
     <value>Unable to obtain process listing. 'ps' command failed.</value>
   </data>
@@ -126,6 +132,9 @@
   </data>
   <data name="PSDescription" xml:space="preserve">
     <value>SSH (Secure Shell) Transport allows connecting Visual Studio to computers running an SSH server with a bash-like shell (ex: Linux, macOS, etc).</value>
+  </data>
+  <data name="UserName_PlaceHolder" xml:space="preserve">
+    <value>&lt;username&gt;</value>
   </data>
   <data name="WaitingOp_Connecting" xml:space="preserve">
     <value>Connecting to {0}...</value>
