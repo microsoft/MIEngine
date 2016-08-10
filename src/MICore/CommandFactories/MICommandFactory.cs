@@ -242,7 +242,7 @@ namespace MICore
         /// <summary>
         /// Tells GDB to spawn a target process previous setup with -file-exec-and-symbols or similar
         /// </summary>
-        public async Task ExecRun()
+        public virtual async Task ExecRun()
         {
             string command = "-exec-run";
             await _debugger.CmdAsync(command, ResultClass.running);

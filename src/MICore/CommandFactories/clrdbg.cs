@@ -199,6 +199,13 @@ namespace MICore
             }
         }
 
+        public override async Task ExecRun()
+        {
+            string command = (_debugger.LaunchOptions.NoDebug) ? "-exec-run --noDebug" : "-exec-run";
+            _debugger.VerifyNotDebuggingCoreDump();
+            await _debugger.CmdAsync(command, ResultClass.running);
+        }
+
         override public async Task Terminate()
         {
             string command = "-exec-abort";
