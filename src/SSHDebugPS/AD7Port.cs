@@ -17,7 +17,7 @@ namespace Microsoft.SSHDebugPS
     {
         private readonly object _lock = new object();
         private readonly AD7PortSupplier _portSupplier;
-        private readonly string _name;
+        private string _name;
         private readonly Lazy<Guid> _id = new Lazy<Guid>(() => Guid.NewGuid(), LazyThreadSafetyMode.ExecutionAndPublication);
         private Connection _connection;
         private readonly Dictionary<uint, IDebugPortEvents2> _eventCallbacks = new Dictionary<uint, IDebugPortEvents2>();
@@ -39,6 +39,12 @@ namespace Microsoft.SSHDebugPS
             if (_connection == null)
             {
                 _connection = ConnectionManager.GetInstance(_name, reason);
+
+                if (_connection != null)
+                {
+                    // User might change connection details via credentials dialog in ConnectionManager.GetInstance, get updated name
+                    _name = ConnectionManager.GetFormattedConnectionName(_connection.ConnectionInfo);
+                }
             }
 
             return _connection;
@@ -49,10 +55,25 @@ namespace Microsoft.SSHDebugPS
             GetConnection(ConnectionReason.Deferred);
         }
 
+        public bool IsConnected
+        {
+            get
+            {
+                return _connection != null;
+            }
+        }
+
         public int EnumProcesses(out IEnumDebugProcesses2 processEnum)
         {
             IEnumDebugProcesses2 result = null;
             var connection = GetConnection(ConnectionReason.Deferred);
+
+            if (connection == null)
+            {
+                processEnum = null;
+                return HR.E_REMOTE_CONNECT_USER_CANCELED;
+            }
+
             VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: () =>
               {
                   List<PSOutputParser.Process> processList = connection.ListProcesses();

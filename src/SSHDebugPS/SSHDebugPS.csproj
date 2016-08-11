@@ -38,6 +38,10 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
     </Reference>
+    <!-- TODO: We will pull this down from NuGet -->
+    <Reference Include="Microsoft.VisualStudio.Linux.ConnectionManager.Contracts">
+      <HintPath>ref\Microsoft.VisualStudio.Linux.ConnectionManager.Contracts.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
     </Reference>
@@ -77,7 +81,6 @@
     <Compile Include="Connection.cs" />
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="PSOutputParser.cs" />
-    <Compile Include="VS\CredentialsDialogViewModel.cs" />
     <Compile Include="HR.cs" />
     <Compile Include="AD7Port.cs" />
     <Compile Include="AD7PortSupplier.cs" />
@@ -90,22 +93,12 @@
       <DependentUpon>StringResources.resx</DependentUpon>
     </Compile>
     <Compile Include="AD7UnixAsyncCommand.cs" />
-    <Compile Include="VS\VSOperationWaiter.cs" />
+    <Compile Include="VSOperationWaiter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Microsoft.SSHDebugPS.pkgdef">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="VS\CredentialsDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="VS\CredentialsDialog.xaml.cs">
-      <DependentUpon>CredentialsDialog.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="StringResources.resx">

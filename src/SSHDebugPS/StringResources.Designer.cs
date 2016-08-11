@@ -61,6 +61,24 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connecting to the remote system failed due to authentication failure. Enter your updated connection info and try connecting again..
+        /// </summary>
+        internal static string AuthenticationFailureDescription {
+            get {
+                return ResourceManager.GetString("AuthenticationFailureDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Authentication Failure.
+        /// </summary>
+        internal static string AuthenticationFailureHeader {
+            get {
+                return ResourceManager.GetString("AuthenticationFailureHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to obtain process listing. &apos;ps&apos; command failed..
         /// </summary>
         internal static string Error_PSFailed {
@@ -84,6 +102,15 @@ namespace Microsoft.SSHDebugPS {
         internal static string PSDescription {
             get {
                 return ResourceManager.GetString("PSDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;username&gt;.
+        /// </summary>
+        internal static string UserName_PlaceHolder {
+            get {
+                return ResourceManager.GetString("UserName_PlaceHolder", resourceCulture);
             }
         }
         
