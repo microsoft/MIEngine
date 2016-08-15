@@ -37,7 +37,7 @@ print_help()
     echo 'GetClrDbg.sh [-rsdh] -v V [-l L]'
     echo ''
     echo 'This script downloads and configures clrdbg, the Cross Platform .NET Debugger'
-    echo '-r    Deletes the existing installation of the debugger at the installation location. Can be used for a clean install of the debugger.'
+    echo '-r    Removes the existing installation before installing the specified version. Can be used for a clean install of the debugger.'
     echo '-s    Skips any steps which requires downloading from the internet.'
     echo '-d    Launches debugger after the script completion.'
     echo '-h    Prints usage information.'
@@ -118,7 +118,6 @@ generate_nuget_config()
 # Parses and populates the arguments
 parse_and_get_arguments()
 {
-    echo "Parsing Arguments..."
     while getopts "v:l:srhd" opt; do
         case $opt in
             v)
@@ -143,7 +142,13 @@ parse_and_get_arguments()
             \?)
                 echo "Error: Invalid Option: -$OPTARG"
                 print_help
-                exit 1;    
+                exit 1
+                ;;
+            :)
+                echo "Error: Option expected for -$OPTARG"
+                print_help
+                exit 1
+                ;;
         esac
     done
 }
@@ -151,7 +156,6 @@ parse_and_get_arguments()
 # Parses and populates the arguments for the legacy commandline.
 get_legacy_arguments()
 {
-    echo "Parsing Legacy Arguments... consider moving to using switches."
     if [ ! -z "$1" ]; then
         __ClrDbgMetaVersion=$1
     fi
