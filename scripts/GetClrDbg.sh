@@ -1,6 +1,7 @@
 #! /bin/bash
 
-script_dir="$( cd $( dirname "$0" ); pwd )"
+# Location of the script
+__ScriptDirectory=
 
 # ClrDbg Meta Version. It could be something like 'latest', 'vs2015', or a fully specified version. 
 __ClrDbgMetaVersion=
@@ -20,6 +21,17 @@ __RemoveExisting=false
 # Internal, fully specified version of the ClrDbg. Computed when the meta version is used.
 __ClrDbgVersion=
 
+
+# Gets the script directory
+get_script_directory()
+{
+    pushd $(dirname "$0") > /dev/null 2>&1
+    __ScriptDirectory=$(pwd)
+    popd > /dev/null 2>&1
+}
+
+get_script_directory
+
 print_help()
 {
     echo 'GetClrDbg.sh [-rsdh] -v V [-l L]'
@@ -30,7 +42,7 @@ print_help()
     echo '-d    Launches debugger after the script completion.'
     echo '-h    Prints usage information.'
     echo '-v V  Version V can be "latest" or a version number such as 14.0.25109-preview-2865786'
-    echo '-l L  Location L is relative location of where the debugger should be installed.'
+    echo '-l L  Location L where the debugger should be installed. Can be absolute or relative'
     echo ''
     echo 'Legacy commandline'
     echo '  GetClrDbg.sh <version> [<install path>]'   
@@ -162,6 +174,46 @@ print_and_verify_arguments()
         echo "Error: Version is not an optional parameter"
         exit 1
     fi
+
+    if [[ $__ClrDbgMetaVersion = \-* ]]; then
+        echo "Error: Version should not start with hyphen"
+        exit 1
+    fi
+
+    if [[ $__InstallLocation = \-* ]]; then
+        echo "Error: Location should not start with hyphen"
+        exit 1
+    fi
+
+    if [ "$__RemoveExisting" = true ]; then
+        echo "InstallLocation: $__InstallLocation"
+        echo "ScriptDirectory: $__ScriptDirectory"
+        if [ "$__InstallLocation" = "$__ScriptDirectory" ]; then
+            echo "Error: Cannot remove the directory which has the running script"
+            exit 1
+        fi
+    fi
+}
+
+# Prepares installation directory.
+prepare_install_location()
+{
+    if [ -z $__InstallLocation ]; then
+        echo "Error: Install location is not set"
+        exit 1
+    fi
+
+    if [ -f "$__InstallLocation" ]; then
+        echo "Error: Path '$2' points to a regular file and not a directory"
+        exit 1
+    elif [ ! -d "$__InstallLocation" ]; then
+        echo 'Info: Creating install directory'
+        mkdir -p $__InstallLocation
+        if [ "$?" -ne 0 ]; then
+            echo "Error: Unable to create install directory: '$2'"
+            exit 1
+        fi
+    fi   
 }
 
 # Converts relative location of the installation directory to absolute location.
@@ -170,7 +222,13 @@ convert_install_path_to_absolute()
     if [ -z $__InstallLocation ]; then
         __InstallLocation=$pwd
     else
-        __InstallLocation=$script_dir/$__InstallLocation
+        if [ ! -d $__InstallLocation ]; then
+            prepare_install_location            
+        fi
+
+        pushd $__InstallLocation > /dev/null 2>&1
+        __InstallLocation=$(pwd)
+        popd > /dev/null 2>&1
     fi    
 }
 
@@ -200,35 +258,15 @@ set_clrdbg_version()
     esac
 }
 
-# Prepares installation directory.
-prepare_install_location()
-{
-    if [ -z $__InstallLocation ]; then
-        echo "Error: Install location is not set"
-        exit 1
-    fi
-
-    if [ -f "$__InstallLocation" ]; then
-        echo "Error: Path '$2' points to a regular file and not a directory"
-        exit 1
-    elif [ ! -d "$__InstallLocation" ]; then
-        echo 'Info: Creating install directory'
-        mkdir -p $__InstallLocation
-        if [ "$?" -ne 0 ]; then
-            echo "Error: Unable to create install directory: '$2'"
-            exit 1
-        fi
-    fi   
-}
-
 # Removes installation directory if remove option is specified.
 process_removal()
 {
     if [ "$__RemoveExisting" = true ]; then
         echo "Info: Attempting to remove '$__InstallLocation'"
         if [ -d $__InstallLocation ]; then
-            lsof $__InstallLocation > /dev/null 2>&1
-            if [ "$?" -eq 0 ]; then
+            wcOutput=$(lsof +D $__InstallLocation | wc -l)
+
+            if [ "$wcOutput" -gt 0 ]; then
                 echo "Error: files are being used in location '$__InstallLocation'"
                 exit 1
             fi
@@ -239,6 +277,7 @@ process_removal()
                 exit 1
             fi
         fi
+        echo "Info: Removed directory '$__InstallLocation'"
     fi
 }
 
@@ -282,7 +321,6 @@ if [ "$__SkipDownloads" = true ]; then
     echo "Info: Skipping downloads"
 else
     prepare_install_location
-
     pushd $__InstallLocation > /dev/null 2>&1
     if [ "$?" -ne 0 ]; then
         echo "Error: Unable to cd to install directory '$__InstallLocation'"
@@ -291,7 +329,7 @@ else
 
     # For the rest of this script we can assume the working directory is the install path
 
-    echo 'Info: Determinig Runtime ID'
+    echo 'Info: Determining Runtime ID'
     __RuntimeID=
     get_dotnet_runtime_id
     if [ -z $__RuntimeID ]; then
@@ -333,6 +371,9 @@ fi
 
 
 if [ "$__LaunchClrDbg" = true ]; then
+    # Note: The following echo is a token to indicate the clrdbg is getting launched. 
+    # If you were to change or remove this echo make the necessary changes in the MIEngine
+    echo "Info: Launching clrdbg"
     "$__InstallLocation/clrdbg" "--interpreter=mi"
     exit $?
 fi
