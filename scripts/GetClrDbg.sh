@@ -16,7 +16,7 @@ __SkipDownloads=false
 __LaunchClrDbg=false
 
 # Removes existing installation of ClrDbg in the Install Location.
-__RemoveExisting=false
+__RemoveExistingOnUpgrade=false
 
 # Internal, fully specified version of the ClrDbg. Computed when the meta version is used.
 __ClrDbgVersion=
@@ -34,10 +34,10 @@ get_script_directory
 
 print_help()
 {
-    echo 'GetClrDbg.sh [-rsdh] -v V [-l L]'
+    echo 'GetClrDbg.sh [-usdh] -v V [-l L]'
     echo ''
     echo 'This script downloads and configures clrdbg, the Cross Platform .NET Debugger'
-    echo '-r    Removes the existing installation before installing the specified version. Can be used for a clean install of the debugger.'
+    echo '-u    Deletes the existing installation directory of the debugger before installing the current version.'
     echo '-s    Skips any steps which requires downloading from the internet.'
     echo '-d    Launches debugger after the script completion.'
     echo '-h    Prints usage information.'
@@ -118,7 +118,7 @@ generate_nuget_config()
 # Parses and populates the arguments
 parse_and_get_arguments()
 {
-    while getopts "v:l:srhd" opt; do
+    while getopts "v:l:suhd" opt; do
         case $opt in
             v)
                 __ClrDbgMetaVersion=$OPTARG;
@@ -126,8 +126,8 @@ parse_and_get_arguments()
             l)
                 __InstallLocation=$OPTARG
                 ;;
-            r)
-                __RemoveExisting=true
+            u)
+                __RemoveExistingOnUpgrade=true
                 ;;
             s)
                 __SkipDownloads=true
@@ -142,8 +142,8 @@ parse_and_get_arguments()
             \?)
                 echo "Error: Invalid Option: -$OPTARG"
                 print_help
-                exit 1
-                ;;
+                exit 1;
+				;;
             :)
                 echo "Error: Option expected for -$OPTARG"
                 print_help
@@ -172,7 +172,7 @@ print_and_verify_arguments()
     echo "    Location                   : '$__InstallLocation'"
     echo "    SkipDownloads              : '$__SkipDownloads'"
     echo "    LaunchClrDbgAfter          : '$__LaunchClrDbg'"
-    echo "    RemoveExistingInstallation : '$__RemoveExisting'"
+    echo "    RemoveExistingOnUpgrade    : '$__RemoveExistingOnUpgrade'"
 
     if [ -z $__ClrDbgMetaVersion ]; then
         echo "Error: Version is not an optional parameter"
@@ -189,11 +189,9 @@ print_and_verify_arguments()
         exit 1
     fi
 
-    if [ "$__RemoveExisting" = true ]; then
-        echo "InstallLocation: $__InstallLocation"
-        echo "ScriptDirectory: $__ScriptDirectory"
+    if [ "$__RemoveExistingOnUpgrade" = true ]; then
         if [ "$__InstallLocation" = "$__ScriptDirectory" ]; then
-            echo "Error: Cannot remove the directory which has the running script"
+            echo "Error: Cannot remove the directory which has the running script. InstallLocation: $__InstallLocation, ScriptDirectory: $__ScriptDirectory"
             exit 1
         fi
     fi
@@ -265,13 +263,20 @@ set_clrdbg_version()
 # Removes installation directory if remove option is specified.
 process_removal()
 {
-    if [ "$__RemoveExisting" = true ]; then
+    if [ "$__RemoveExistingOnUpgrade" = true ]; then
+    
+        if [ "$__InstallLocation" = "$HOME" ]; then
+            echo "Error: Cannot remove home ( $HOME ) directory."
+            exit 1
+        fi
+
         echo "Info: Attempting to remove '$__InstallLocation'"
+
         if [ -d $__InstallLocation ]; then
-            wcOutput=$(lsof +D $__InstallLocation | wc -l)
+            wcOutput=$(lsof $__InstallLocation/clrdbg | wc -l)
 
             if [ "$wcOutput" -gt 0 ]; then
-                echo "Error: files are being used in location '$__InstallLocation'"
+                echo "Error: clrdbg is being used in location '$__InstallLocation'"
                 exit 1
             fi
 
@@ -291,10 +296,12 @@ check_latest()
     __SuccessFile="$__InstallLocation/success.txt" 
     if [ -f "$__SuccessFile" ]; then
         __LastInstalled=$(cat "$__SuccessFile")
-        echo "Info: LastIntalled version of clrdbg is '$__LastInstalled'"
-        if [ "$__ClrDbgVersion"="__LastInstalled" ]; then
+        echo "Info: Last installed version of clrdbg is '$__LastInstalled'"
+        if [ "$__ClrDbgVersion" = "$__LastInstalled" ]; then
             __SkipDownloads=true
             echo "Info: ClrDbg is upto date"
+        else
+            process_removal
         fi
     else
         echo "Info: Previous installation at "$__InstallLocation" not found"
@@ -317,9 +324,7 @@ print_and_verify_arguments
 set_clrdbg_version "$__ClrDbgMetaVersion"
 echo "Info: Using clrdbg version '$__ClrDbgVersion'"
 
-process_removal
 check_latest
-
 
 if [ "$__SkipDownloads" = true ]; then
     echo "Info: Skipping downloads"
@@ -337,8 +342,7 @@ else
     __RuntimeID=
     get_dotnet_runtime_id
     if [ -z $__RuntimeID ]; then
-        echo "Error: Unable to determine dotnet Runtime ID"
-        echo "GetClrDbg.sh requires .NET CLI Tools version >= 1.0.0-beta-002173. Please make sure your install of .NET CLI is up to date"
+        echo "Error: Unable to determine dotnet Runtime ID. GetClrDbg.sh requires .NET CLI Tools version >= 1.0.0-beta-002173. Please make sure your install of .NET CLI is up to date"
         exit 1
     fi
     echo "Info: Using Runtime ID '$__RuntimeID'"
