@@ -242,7 +242,7 @@ namespace MICore
         /// <summary>
         /// Tells GDB to spawn a target process previous setup with -file-exec-and-symbols or similar
         /// </summary>
-        public async Task ExecRun()
+        public virtual async Task ExecRun()
         {
             string command = "-exec-run";
             await _debugger.CmdAsync(command, ResultClass.running);
@@ -551,10 +551,8 @@ namespace MICore
 
         #region Helpers
 
-        public virtual Task<TargetArchitecture> GetTargetArchitecture()
-        {
-            return Task.FromResult(TargetArchitecture.Unknown);
-        }
+        public abstract string GetTargetArchitectureCommand();
+        public abstract TargetArchitecture ParseTargetArchitectureResult(string result);
 
         public virtual async Task<Results> SetOption(string variable, string value, ResultClass resultClass = ResultClass.done)
         {

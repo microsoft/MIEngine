@@ -199,6 +199,13 @@ namespace MICore
             }
         }
 
+        public override async Task ExecRun()
+        {
+            string command = (_debugger.LaunchOptions.NoDebug) ? "-exec-run --noDebug" : "-exec-run";
+            _debugger.VerifyNotDebuggingCoreDump();
+            await _debugger.CmdAsync(command, ResultClass.running);
+        }
+
         override public async Task Terminate()
         {
             string command = "-exec-abort";
@@ -230,10 +237,15 @@ namespace MICore
             throw new NotImplementedException("clrdbg catch command");
         }
 
-        public override Task<TargetArchitecture> GetTargetArchitecture()
+        public override string GetTargetArchitectureCommand()
         {
+            return null;
+        }
+
+        public override TargetArchitecture ParseTargetArchitectureResult(string result)
+        { 
             // CLRDBG only support x64 now.
-            return Task.FromResult(TargetArchitecture.X64);
+            return TargetArchitecture.X64;
         }
     }
 }

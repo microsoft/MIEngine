@@ -98,10 +98,13 @@ namespace MICore
             return Task.FromResult((object)null);
         }
 
-        public override async Task<TargetArchitecture> GetTargetArchitecture()
+        public override string GetTargetArchitectureCommand()
         {
-            string cmd = "platform status";
-            var result = await _debugger.ConsoleCmdAsync(cmd);
+            return "platform status";
+        }
+
+        public override TargetArchitecture ParseTargetArchitectureResult(string result)
+        { 
             using (StringReader stringReader = new StringReader(result))
             {
                 while (true)

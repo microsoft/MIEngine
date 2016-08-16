@@ -520,21 +520,6 @@ namespace Microsoft.MIDebugEngine
                     }
                 }
 
-                var arch = await MICommandFactory.GetTargetArchitecture();
-                if (arch == TargetArchitecture.Unknown)
-                {
-                    if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
-                    {
-                        arch = LaunchOptions.TargetArchitecture;
-                    }
-                    else
-                    {
-                        WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
-                        arch = TargetArchitecture.X64;  // use as default
-                    }
-                }
-                SetTargetArch(arch);
-
                 success = true;
             }
             finally
@@ -605,6 +590,8 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions.CustomLaunchSetupCommands != null)
             {
                 commands.AddRange(_launchOptions.CustomLaunchSetupCommands);
+
+                SetTargetArch(_launchOptions.TargetArchitecture);
             }
             else
             {
@@ -613,6 +600,9 @@ namespace Microsoft.MIDebugEngine
                 {
                     // Add executable information
                     this.AddExecutablePathCommand(commands);
+
+                    // Important: this must occur after file-exec-and-symbols but before anything else.
+                    this.AddGetTargetArchitectureCommand(commands);
 
                     // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
                     string coreDump = _launchOptions.UseUnixSymbolPaths ? _launchOptions.CoreDumpPath : EscapePath(_launchOptions.CoreDumpPath);
@@ -625,6 +615,11 @@ namespace Microsoft.MIDebugEngine
                     // This is an attach
 
                     CheckCygwin(commands, localLaunchOptions);
+
+                    this.AddExecutablePathCommand(commands);
+
+                    // Important: this must occur after file-exec-and-symbols but before anything else.
+                    this.AddGetTargetArchitectureCommand(commands);
 
                     // check for remote
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
@@ -681,6 +676,9 @@ namespace Microsoft.MIDebugEngine
 
                     this.AddExecutablePathCommand(commands);
 
+                    // Important: this must occur after file-exec-and-symbols but before anything else.
+                    this.AddGetTargetArchitectureCommand(commands);
+
                     // LLDB requires -exec-arguments after -file-exec-and-symbols has been run, or else it errors
                     if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
                     {
@@ -732,6 +730,7 @@ namespace Microsoft.MIDebugEngine
         {
             string exe = EscapePath(_launchOptions.ExePath);
             string description = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath);
+
             Action<string> failureHandler = (string miError) =>
             {
                 string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
@@ -739,6 +738,50 @@ namespace Microsoft.MIDebugEngine
             };
 
             commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures: false, failureHandler: failureHandler));
+        }
+
+        private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
+        {
+            if (_launchOptions.TargetArchitecture == TargetArchitecture.Unknown)
+            {
+                Action<string> failureHandler = (string miError) =>
+                {
+                    string message = ResourceStrings.Error_FailedToGetTargetArchitecture;
+                    throw new LaunchErrorException(message);
+                };
+
+                Action<string> successHandler = (string resultsStr) =>
+                {
+                    TargetArchitecture arch = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
+
+                    if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
+                    {
+                        arch = LaunchOptions.TargetArchitecture;
+                    }
+                    else
+                    {
+                        WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
+                        arch = TargetArchitecture.X64;  // use as default
+                    }
+
+                    SetTargetArch(arch);
+                };
+
+                string cmd = MICommandFactory.GetTargetArchitectureCommand();
+
+                if (cmd != null)
+                {
+                    commands.Add(new LaunchCommand(cmd, ignoreFailures: false, successHandler: successHandler, failureHandler: failureHandler));
+                }
+                else
+                {
+                    SetTargetArch(MICommandFactory.ParseTargetArchitectureResult(""));
+                }
+            }
+            else
+            {
+                SetTargetArch(_launchOptions.TargetArchitecture);
+            }
         }
 
         public override void FlushBreakStateData()
@@ -1021,15 +1064,20 @@ namespace Microsoft.MIDebugEngine
                     _callback.OnException(thread, "Unknown", "Unknown stopping event", 0);
                 }
             }
-            if (breakRequest != BreakRequest.None)
+            if (IsExternalBreakRequest(breakRequest))
             {
                 _callback.OnStopComplete(thread);
             }
         }
 
+        private static bool IsExternalBreakRequest(BreakRequest breakRequest)
+        {
+            return breakRequest == BreakRequest.Async || breakRequest == BreakRequest.Stop;
+        }
+
         private void CmdContinueAsyncConditional(BreakRequest request)
         {
-            if (request != BreakRequest.None)
+            if (!IsExternalBreakRequest(request))
             {
                 CmdContinueAsync();
             }
@@ -1385,10 +1433,10 @@ namespace Microsoft.MIDebugEngine
 
         public void Detach()
         {
-            // Special casing sending the fake stopped event for clrdbg. 
+            // Special casing sending the fake stopped event for clrdbg and lldb. 
             // GDB prints out thread group exit events on mi command "-target-detach" which is handed by method HandleThreadGroupExited
             // GDB or the debuggee can terminate and those are handled by Terminate and TerminateProcess methods.
-            if (MICommandFactory.Mode == MIMode.Clrdbg)
+            if (MICommandFactory.Mode == MIMode.Clrdbg || MICommandFactory.Mode == MIMode.Lldb)
             {
                 ScheduleStdOutProcessing(@"*stopped,reason=""disconnected""");
             }

@@ -477,6 +477,8 @@ namespace MICore
             }
         }
 
+        public bool NoDebug { get; private set; } = false;
+
         private Xml.LaunchOptions.BaseLaunchOptions _baseOptions;
         /// <summary>
         /// Hold on to options in serializable form to support child process debugging
@@ -770,10 +772,10 @@ namespace MICore
         // Kofe debugger depends on this method to generate LaunchOptions
         public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine)
         {
-            return GetInstance(configStore, exePath, args, dir, options, eventCallback, targetEngine, null);
+            return GetInstance(configStore, exePath, args, dir, options, false, eventCallback, targetEngine, null);
         }
 
-        public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
+        public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, bool noDebug, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
         {
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
@@ -877,6 +879,8 @@ namespace MICore
 
             if (string.IsNullOrEmpty(launchOptions.WorkingDirectory))
                 launchOptions.WorkingDirectory = dir;
+
+            launchOptions.NoDebug = noDebug;
 
             if (launchOptions._setupCommands == null)
                 launchOptions._setupCommands = new List<LaunchCommand>(capacity: 0).AsReadOnly();
