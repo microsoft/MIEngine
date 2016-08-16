@@ -30,8 +30,6 @@ get_script_directory()
     popd > /dev/null 2>&1
 }
 
-get_script_directory
-
 print_help()
 {
     echo 'GetClrDbg.sh [-usdh] -v V [-l L]'
@@ -307,6 +305,8 @@ check_latest()
         echo "Info: Previous installation at "$__InstallLocation" not found"
     fi
 }
+
+get_script_directory
 
 if [ -z "$1" ]; then
     print_help
