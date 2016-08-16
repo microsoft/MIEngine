@@ -10,6 +10,7 @@ using System.IO;
 using System.Collections.Specialized;
 using System.Collections;
 using System.Text.RegularExpressions;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -26,14 +27,14 @@ namespace MICore
             _serverTransport = serverTransport;
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
         {
             _launchTimeout = ((LocalLaunchOptions)options).ServerLaunchTimeout;
-            _serverTransport.Init(transportCallback, options, logger);
+            _serverTransport.Init(transportCallback, options, logger, waitLoop);
             WaitForStart();
             if (!_clientTransport.IsClosed)
             {
-                _clientTransport.Init(transportCallback, options, logger);
+                _clientTransport.Init(transportCallback, options, logger, waitLoop);
             }
         }
 
