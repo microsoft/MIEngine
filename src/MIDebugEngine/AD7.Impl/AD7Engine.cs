@@ -539,7 +539,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     try
                     {
-                        _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore);
+                        _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore, waitLoop);
                     }
                     finally
                     {

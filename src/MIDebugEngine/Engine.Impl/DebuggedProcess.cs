@@ -51,8 +51,9 @@ namespace Microsoft.MIDebugEngine
         private bool _needTerminalReset;
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _childProcessHandler;
+        private HostWaitLoop _waitLoop;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
             uint processExitCode = 0;
             _pendingMessages = new StringBuilder(400);
@@ -61,6 +62,7 @@ namespace Microsoft.MIDebugEngine
             Engine = engine;
             _libraryLoaded = new List<string>();
             _loadOrder = 0;
+            _waitLoop = waitLoop;
             MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
             _waitDialog = (MICommandFactory.SupportsStopOnDynamicLibLoad() && launchOptions.WaitDynamicLibLoad) ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
             Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString);
@@ -231,7 +233,7 @@ namespace Microsoft.MIDebugEngine
             }
             else if (_launchOptions is UnixShellPortLaunchOptions)
             {
-                this.Init(new MICore.UnixShellPortTransport(), _launchOptions);
+                this.Init(new MICore.UnixShellPortTransport(), _launchOptions, _waitLoop);
             }
             else
             {
@@ -625,6 +627,11 @@ namespace Microsoft.MIDebugEngine
                     // This is an attach
 
                     CheckCygwin(commands, localLaunchOptions);
+
+                    if (this.MICommandFactory.Mode != MIMode.Clrdbg)
+                    {
+                        this.AddExecutablePathCommand(commands);
+                    }
 
                     // check for remote
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
