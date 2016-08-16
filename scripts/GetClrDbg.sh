@@ -310,6 +310,7 @@ check_latest()
 
 if [ -z "$1" ]; then
     print_help
+    echo "Error: Missing arguments for GetClrDbg.sh"
     exit 1
 else
     parse_and_get_arguments $@
@@ -360,14 +361,14 @@ else
     echo 'Info: Executing dotnet restore'
     dotnet restore > dotnet_restore.log 2>&1
     if [ $? -ne 0 ]; then
-        echo "dotnet restore failed"
+        echo "Error: dotnet restore failed"
         exit 1
     fi
 
     echo 'Info: Executing dotnet publish'
     dotnet publish -o . > dotnet_publish.log 2>&1
     if [ $? -ne 0 ]; then
-        echo "dotnet publish failed"
+        echo "Error: dotnet publish failed"
         exit 1
     fi
 
