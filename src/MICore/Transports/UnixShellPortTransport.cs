@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System.Globalization;
 
@@ -17,17 +18,24 @@ namespace MICore
         private string _startRemoteDebuggerCommand;
         private IDebugUnixShellAsyncCommand _asyncCommand;
         private bool _bQuit;
+        private bool _debuggerLaunched = false;
+        private HostWaitLoop _waitLoop;
+
+        private static string ErrorPrefix = "Error:";
 
         public UnixShellPortTransport()
         {
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
         {
             UnixShellPortLaunchOptions launchOptions = (UnixShellPortLaunchOptions)options;
             _callback = transportCallback;
             _logger = logger;
             _startRemoteDebuggerCommand = launchOptions.StartRemoteDebuggerCommand;
+            _waitLoop = waitLoop;
+
+            _waitLoop?.SetText(MICoreResources.Info_InstallingDebuggerOnRemote);
 
             _callback.AppendToInitializationLog("Starting unix command: " + _startRemoteDebuggerCommand);
             launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, this, out _asyncCommand);
@@ -67,6 +75,25 @@ namespace MICore
 
         void IDebugUnixShellCommandCallback.OnOutputLine(string line)
         {
+            if (!_debuggerLaunched)
+            {
+                if (line != null && line.StartsWith(ErrorPrefix, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
+                }
+                else
+                {
+                    _callback.OnStdOutLine(line);
+                }
+
+                if (line.Equals("Info: Launching clrdbg"))
+                {
+                    _debuggerLaunched = true;
+                    UnixShellPortLaunchOptions.LastDebuggerLaunchSuccessful = true;
+                    return;
+                }
+            }
+
             _logger?.WriteLine("->" + line);
             _logger?.Flush();
 

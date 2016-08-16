@@ -374,6 +374,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installing debugger on the remote machine..
+        /// </summary>
+        public static string Info_InstallingDebuggerOnRemote {
+            get {
+                return ResourceManager.GetString("Info_InstallingDebuggerOnRemote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained..
         /// </summary>
         public static string Status_BreakpointPending {

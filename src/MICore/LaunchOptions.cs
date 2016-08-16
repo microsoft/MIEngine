@@ -405,6 +405,13 @@ namespace MICore
         public string StartRemoteDebuggerCommand { get; private set; }
         public Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort UnixPort { get; private set; }
 
+        public static bool LastDebuggerLaunchSuccessful = false;
+
+        private static string GetClrDbgUrl = "https://raw.githubusercontent.com/Microsoft/MIEngine/dev/rajkumar42/updatescript/scripts/GetClrDbg.sh";
+        private static string DebugerInstallationDirectory = "~/.vs-debugger";
+        private static string DebuggerFirstLaunchCommand = "mkdir -p {0} && wget -q {1} -O {0}/GetClrDbg.sh && chmod +x {0}/GetClrDbg.sh && {0}/GetClrDbg.sh -v latest -l {0}/latest -d -u";
+        private static string DebuggerSubsequentLaunchCommand = "{0}/GetClrDbg.sh -v latest -l {0}/latest -d";
+
         public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand, Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, MIMode miMode, BaseLaunchOptions baseLaunchOptions)
         {
             this.UnixPort = unixPort;
@@ -422,8 +429,14 @@ namespace MICore
                         startRemoteDebuggerCommand = "lldb-mi --interpreter=mi";
                         break;
                     case MIMode.Clrdbg:
-                        // TODO: Replace with a set of commands for downloading clrdbg from the web if it isn't already present
-                        startRemoteDebuggerCommand = "~/clrdbg/out/Linux/bin/x64.Debug/clrdbg/clrdbg --interpreter=mi";
+                        if (!LastDebuggerLaunchSuccessful)
+                        {
+                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, DebuggerFirstLaunchCommand, DebugerInstallationDirectory, GetClrDbgUrl);
+                        }
+                        else
+                        {
+                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, DebuggerSubsequentLaunchCommand, DebugerInstallationDirectory);
+                        }
                         break;
 
                     default:

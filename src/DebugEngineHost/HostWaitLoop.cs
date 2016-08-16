@@ -29,6 +29,15 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Sets the text of the dialog without changing the progress.
+        /// </summary>
+        /// <param name="text">Text to set.</param>
+        public void SetText(string text)
+        {
+            _vsWaitLoop.SetText(text);
+        }
+
+        /// <summary>
         /// Waits on the specified handle. This method should be called only once.
         /// </summary>
         /// <param name="launchCompleteHandle">[Required] handle to wait on</param>
