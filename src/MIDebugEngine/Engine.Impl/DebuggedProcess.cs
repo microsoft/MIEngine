@@ -1060,15 +1060,20 @@ namespace Microsoft.MIDebugEngine
                     _callback.OnException(thread, "Unknown", "Unknown stopping event", 0);
                 }
             }
-            if (breakRequest != BreakRequest.None)
+            if (IsExternalBreakRequest(breakRequest))
             {
                 _callback.OnStopComplete(thread);
             }
         }
 
+        private static bool IsExternalBreakRequest(BreakRequest breakRequest)
+        {
+            return breakRequest == BreakRequest.Async || breakRequest == BreakRequest.Stop;
+        }
+
         private void CmdContinueAsyncConditional(BreakRequest request)
         {
-            if (request != BreakRequest.None)
+            if (!IsExternalBreakRequest(request))
             {
                 CmdContinueAsync();
             }
