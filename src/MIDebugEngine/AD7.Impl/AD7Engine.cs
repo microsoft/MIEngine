@@ -238,7 +238,18 @@ namespace Microsoft.MIDebugEngine
                     throw new ArgumentOutOfRangeException("processId");
                 }
 
-                launchOptions = UnixShellPortLaunchOptions.CreateForAttachRequest(unixPort, (int)processId, miMode);
+                string getClrDbgUrl = GetMetric("GetClrDbgUrl") as string;
+                string remoteDebuggerInstallationDirectory = GetMetric("RemoteInstallationDirectory") as string;
+                string remoteDebuggerInstallationSubDirectory = GetMetric("RemoteInstallationSubDirectory") as string;
+                string clrDbgVersion = GetMetric("ClrDbgVersion") as string;
+
+                launchOptions = UnixShellPortLaunchOptions.CreateForAttachRequest(unixPort, 
+                                                                                (int)processId,
+                                                                                miMode,
+                                                                                getClrDbgUrl, 
+                                                                                remoteDebuggerInstallationDirectory,
+                                                                                remoteDebuggerInstallationSubDirectory,
+                                                                                clrDbgVersion);
 
                 // TODO: Add a tools option page for:
                 // AdditionalSOLibSearchPath

@@ -61,7 +61,10 @@ namespace Microsoft.SSHDebugPS
             // NOTE: this may put up a dialog and/or throw an AD7ConnectCanceledException
             port.EnsureConnected();
 
-            debuggerLaunchOptions = new UnixShellPortLaunchOptions(_launchOptions.StartRemoteDebuggerCommand, port, LaunchOptions.ConvertMIModeAttribute(_launchOptions.MIMode), _launchOptions);
+            debuggerLaunchOptions = new UnixShellPortLaunchOptions(_launchOptions.StartRemoteDebuggerCommand, 
+                                                                    port, 
+                                                                    LaunchOptions.ConvertMIModeAttribute(_launchOptions.MIMode), 
+                                                                    _launchOptions);
         }
 
         void IPlatformAppLauncher.Terminate()

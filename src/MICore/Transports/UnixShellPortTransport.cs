@@ -19,7 +19,7 @@ namespace MICore
         private IDebugUnixShellAsyncCommand _asyncCommand;
         private bool _bQuit;
         private bool _debuggerLaunched = false;
-        private HostWaitLoop _waitLoop;
+        private UnixShellPortLaunchOptions _launchOptions;
 
         private static string ErrorPrefix = "Error:";
 
@@ -29,16 +29,15 @@ namespace MICore
 
         public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
         {
-            UnixShellPortLaunchOptions launchOptions = (UnixShellPortLaunchOptions)options;
+            _launchOptions = (UnixShellPortLaunchOptions)options;
             _callback = transportCallback;
             _logger = logger;
-            _startRemoteDebuggerCommand = launchOptions.StartRemoteDebuggerCommand;
-            _waitLoop = waitLoop;
+            _startRemoteDebuggerCommand = _launchOptions.StartRemoteDebuggerCommand;
 
-            _waitLoop?.SetText(MICoreResources.Info_InstallingDebuggerOnRemote);
+            waitLoop?.SetText(MICoreResources.Info_InstallingDebuggerOnRemote);
 
             _callback.AppendToInitializationLog("Starting unix command: " + _startRemoteDebuggerCommand);
-            launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, this, out _asyncCommand);
+            _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, this, out _asyncCommand);
         }
         
         public void Close()
@@ -89,7 +88,7 @@ namespace MICore
                 if (line.Equals("Info: Launching clrdbg"))
                 {
                     _debuggerLaunched = true;
-                    UnixShellPortLaunchOptions.LastDebuggerLaunchSuccessful = true;
+                    UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);
                     return;
                 }
             }

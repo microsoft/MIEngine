@@ -18,6 +18,7 @@ using System.Diagnostics;
 using Microsoft.DebugEngineHost;
 using MICore.Xml.LaunchOptions;
 using System.Reflection;
+using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace MICore
 {
@@ -405,17 +406,100 @@ namespace MICore
         public string StartRemoteDebuggerCommand { get; private set; }
         public Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort UnixPort { get; private set; }
 
-        public static bool LastDebuggerLaunchSuccessful = false;
+        /// <summary>
+        /// After a successful launch of ClrDbg from a VS session, the subsequent debugging in the same VS will not attempt to download ClrDbg on the remote machine.
+        /// This keeps track of the ports where the debugger was successfully launched.
+        /// </summary>
+        private static HashSet<string> s_LaunchSuccessSet = new HashSet<string>();
 
-        private static string GetClrDbgUrl = "https://raw.githubusercontent.com/Microsoft/MIEngine/dev/rajkumar42/updatescript/scripts/GetClrDbg.sh";
-        private static string DebugerInstallationDirectory = "~/.vs-debugger";
-        private static string DebuggerFirstLaunchCommand = "mkdir -p {0} && wget -q {1} -O {0}/GetClrDbg.sh && chmod +x {0}/GetClrDbg.sh && {0}/GetClrDbg.sh -v latest -l {0}/latest -d -u";
-        private static string DebuggerSubsequentLaunchCommand = "{0}/GetClrDbg.sh -v latest -l {0}/latest -d";
+        /// <summary>
+        /// Url to get the GetClrDbg.sh script from.
+        /// TODO: janraj, placeholder should point to azure blob storage.
+        /// </summary>
+        public string GetClrDbgUrl { get; private set; } = "https://raw.githubusercontent.com/Microsoft/MIEngine/dev/rajkumar42/updatescript/scripts/GetClrDbg.sh";
 
-        public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand, Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, MIMode miMode, BaseLaunchOptions baseLaunchOptions)
+        /// <summary>
+        /// Default location of the debugger on the remote machine.
+        /// </summary>
+        public string DebuggerInstallationDirectory { get; private set; } = "~/.vs-debugger";
+
+        /// <summary>
+        /// Meta version of the clrdbg.
+        /// </summary>
+        /// TODO: janraj, placeholder. Needs to be fixed in the pkgdef as well.
+        public string ClrDbgVersion { get; private set; } = "latest";
+
+        /// <summary>
+        /// Sub directory where the clrdbg should be downloaded relative to <see name="DebuggerInstallationDirectory"/>
+        /// </summary>
+        public string ClrDbgInstallationSubDirectory { get; private set; } = "vs2015u3";
+
+        /// <summary>
+        /// Shell command invoked first time when a ClrDbg debug session is launched.
+        /// Downloads and launches clrdbg on the remote machine.
+        /// </summary>
+        /// <remarks>
+        /// {0} - DebuggerInstallationDirectory
+        /// {1} - GetClrDbg.sh url.
+        /// {2} - ClrDbg version.
+        /// {3} - Subdirectory where clrdbg should be installed.
+        /// </remarks>
+        private const string ClrdbgFirstLaunchCommand = 
+            "(" +
+                "mkdir -p {0} && " +
+                "echo \"Info: Downloading GetClrDbgScript from {1}\" && " +
+                "wget -q {1} -O {0}/GetClrDbg.download && " +
+                "mv {0}/GetClrDbg.download {0}/GetClrDbg.sh && " + 
+                "chmod +x {0}/GetClrDbg.sh && " +
+                "echo \"Info: Downloading and setting up GetClrDbg.sh script was successful.\" " +
+            ");" + 
+            "(" +
+                "echo \"Info: Launching GetClrDbg.sh\" && " +
+                "{0}/GetClrDbg.sh -v {2} -l {0}/{3} -d -u" +
+            ")";
+
+        /// <summary>
+        /// Shell command invoked after a successful launch of clrdbg. 
+        /// Launches the existing clrdbg.
+        /// </summary>
+        /// /// <remarks>
+        /// {0} - DebuggerInstallationDirectory
+        /// {1} - GetClrDbg.sh url.
+        /// {2} - Subdirectory where clrdbg should be installed.
+        /// </remarks>
+        private const string ClrdbgSubsequentLaunchCommand = "{0}/GetClrDbg.sh -v {1} -l {0}/{2} -d -s";
+
+        public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand, 
+                Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, 
+                MIMode miMode, 
+                BaseLaunchOptions baseLaunchOptions,
+                string getClrDbgUrl = null,
+                string remoteDebuggerInstallationDirectory = null,
+                string remoteDebuggerInstallationSubDirectory = null,
+                string clrdbgVersion = null)
         {
             this.UnixPort = unixPort;
             this.DebuggerMIMode = miMode;
+
+            if (!string.IsNullOrWhiteSpace(getClrDbgUrl))
+            {
+                GetClrDbgUrl = getClrDbgUrl;
+            }
+
+            if (!string.IsNullOrWhiteSpace(remoteDebuggerInstallationDirectory))
+            {
+                DebuggerInstallationDirectory = remoteDebuggerInstallationDirectory;
+            }
+
+            if (!string.IsNullOrWhiteSpace(remoteDebuggerInstallationSubDirectory))
+            {
+                ClrDbgInstallationSubDirectory = remoteDebuggerInstallationSubDirectory;
+            }
+
+            if (!string.IsNullOrWhiteSpace(clrdbgVersion))
+            {
+                ClrDbgVersion = clrdbgVersion;
+            }
 
             if (string.IsNullOrEmpty(startRemoteDebuggerCommand))
             {
@@ -429,13 +513,13 @@ namespace MICore
                         startRemoteDebuggerCommand = "lldb-mi --interpreter=mi";
                         break;
                     case MIMode.Clrdbg:
-                        if (!LastDebuggerLaunchSuccessful)
+                        if (!HasSuccessfulPreviousLaunch(this))
                         {
-                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, DebuggerFirstLaunchCommand, DebugerInstallationDirectory, GetClrDbgUrl);
+                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgFirstLaunchCommand, DebuggerInstallationDirectory, GetClrDbgUrl, ClrDbgVersion, ClrDbgInstallationSubDirectory);
                         }
                         else
                         {
-                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, DebuggerSubsequentLaunchCommand, DebugerInstallationDirectory);
+                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgSubsequentLaunchCommand, DebuggerInstallationDirectory, ClrDbgVersion, ClrDbgInstallationSubDirectory);
                         }
                         break;
 
@@ -453,15 +537,76 @@ namespace MICore
             }
         }
 
-        public static UnixShellPortLaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, int processId, MIMode miMode)
+        public static UnixShellPortLaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, 
+            int processId, 
+            MIMode miMode,
+            string getClrDbgUrl,
+            string remoteDebuggingDirectory,
+            string remoteDebuggingSubDirectory,
+            string debuggerVersion)
         {
-            var @this = new UnixShellPortLaunchOptions(/*startRemoteDebuggerCommand*/null, unixPort, miMode, baseLaunchOptions:null);
+            var @this = new UnixShellPortLaunchOptions(startRemoteDebuggerCommand: null, 
+                                                       unixPort: unixPort, 
+                                                       miMode: miMode,
+                                                       baseLaunchOptions: null,
+                                                       getClrDbgUrl: getClrDbgUrl,
+                                                       remoteDebuggerInstallationDirectory: remoteDebuggingDirectory,
+                                                       remoteDebuggerInstallationSubDirectory: remoteDebuggingSubDirectory,
+                                                       clrdbgVersion: debuggerVersion);
 
             @this.ProcessId = processId;
             @this.SetupCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
             @this.SetInitializationComplete();
 
             return @this;
+        }
+
+        /// <summary>
+        /// Records for a specific portname, the remote launch was successful.
+        /// </summary>
+        /// <param name="launchOptions">launch options</param>
+        public static void SetSuccessfulLaunch(UnixShellPortLaunchOptions launchOptions)
+        {
+            IDebugPort2 debugPort = launchOptions.UnixPort as IDebugPort2;
+            if (debugPort != null)
+            {
+                string portName = null;
+                debugPort.GetPortName(out portName);
+                if (!string.IsNullOrWhiteSpace(portName))
+                {
+                    lock (s_LaunchSuccessSet)
+                    {
+                        // If it is successful once, we expect the clrdbg launch to be successful atleast till the end of the current VS session. 
+                        // The portname will not be removed from the list.
+                        s_LaunchSuccessSet.Add(portName);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the previous launch was ever successful on the same session false otherwise.
+        /// </summary>
+        /// <param name="launchOptions">launch options</param>
+        private static bool HasSuccessfulPreviousLaunch(UnixShellPortLaunchOptions launchOptions)
+        {
+            IDebugPort2 debugPort = launchOptions.UnixPort as IDebugPort2;
+            if (debugPort != null)
+            {
+                string portName = null;
+                debugPort.GetPortName(out portName);
+                if (!string.IsNullOrWhiteSpace(portName))
+                {
+                    lock (s_LaunchSuccessSet)
+                    {
+                        // If it is successful once, we expect the clrdbg launch to be successful atleast till the end of the current VS session. 
+                        // The portname will not be removed from the list.
+                        return s_LaunchSuccessSet.Contains(portName);
+                    }
+                }
+            }
+
+            return false;
         }
     }
 
