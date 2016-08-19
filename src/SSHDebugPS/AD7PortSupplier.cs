@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using liblinux;
 using liblinux.Persistence;
+using Microsoft.VisualStudio.Linux.ConnectionManager;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -69,7 +70,7 @@ namespace Microsoft.SSHDebugPS
             guidPortSupplier = Guid.Empty;
 
             // Check if liblinux exists in user's installation, if not, don't enable SSH port supplier
-            bool libLinuxLoaded = LocateAndLoadLibLinux();
+            bool libLinuxLoaded = IsLibLinuxAvailable();
             if (!libLinuxLoaded)
                 return HR.E_FAIL; 
 
@@ -114,39 +115,18 @@ namespace Microsoft.SSHDebugPS
             return HR.S_OK;
         }
 
-        /// <summary>Locates and loads liblinux library</summary>
-        /// <returns>True, if liblinux is successfully loaded, false otherwise</returns>
-        /// <remarks>TODO: This should go away once the credential store + connection manager
-        /// components we use are properly componentized</remarks>
-        private bool LocateAndLoadLibLinux()
+        /// <summary>
+        /// Checks if LibLinux is available by getting IVsConnectionManager service.
+        /// </summary>
+        /// <returns>True if LibLinux is available, false otherwise.</returns>
+        private bool IsLibLinuxAvailable()
         {
-            const int VSSPROPID_InstallRootDir = -9041; 
-            const string relativePath = @"Common7\IDE\CommonExtensions\Microsoft\Linux\Linux\liblinux.dll"; 
-
             IVsShell shell = Package.GetGlobalService(typeof(SVsShell)) as IVsShell;
 
             if (shell == null)
                 return false;
 
-            object pvar;
-            string libLinuxPath = null;
-            if (shell.GetProperty(VSSPROPID_InstallRootDir, out pvar) == HR.S_OK && pvar != null)
-            {
-                libLinuxPath = pvar.ToString();
-            }
-
-            libLinuxPath += relativePath;
-
-            try
-            {
-                Assembly.LoadFrom(libLinuxPath);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
+            return ((IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager))) != null;
         }
     }
 }
