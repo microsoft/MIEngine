@@ -52,7 +52,7 @@ namespace Microsoft.MIDebugEngine
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _childProcessHandler;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
             uint processExitCode = 0;
             _pendingMessages = new StringBuilder(400);
@@ -231,7 +231,7 @@ namespace Microsoft.MIDebugEngine
             }
             else if (_launchOptions is UnixShellPortLaunchOptions)
             {
-                this.Init(new MICore.UnixShellPortTransport(), _launchOptions);
+                this.Init(new MICore.UnixShellPortTransport(), _launchOptions, waitLoop);
             }
             else
             {
@@ -616,7 +616,11 @@ namespace Microsoft.MIDebugEngine
 
                     CheckCygwin(commands, localLaunchOptions);
 
-                    this.AddExecutablePathCommand(commands);
+                    // ClrDbg doesn't need it.
+                    if (this.MICommandFactory.Mode != MIMode.Clrdbg)
+                    {
+                        this.AddExecutablePathCommand(commands);
+                    }
 
                     // Important: this must occur after file-exec-and-symbols but before anything else.
                     this.AddGetTargetArchitectureCommand(commands);

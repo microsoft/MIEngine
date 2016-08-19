@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
 using Microsoft.Win32.SafeHandles;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -402,13 +403,13 @@ namespace MICore
             return processContinued;
         }
 
-        public void Init(ITransport transport, LaunchOptions options)
+        public void Init(ITransport transport, LaunchOptions options, HostWaitLoop waitLoop = null)
         {
             _lastCommandId = 1000;
             _transport = transport;
             FlushBreakStateData();
 
-            _transport.Init(this, options, Logger);
+            _transport.Init(this, options, Logger, waitLoop);
         }
 
         public void SetTargetArch(TargetArchitecture arch)
