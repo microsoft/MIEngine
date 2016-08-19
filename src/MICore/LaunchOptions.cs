@@ -414,9 +414,9 @@ namespace MICore
 
         /// <summary>
         /// Url to get the GetClrDbg.sh script from.
-        /// TODO: janraj, placeholder should point to azure blob storage.
+        /// TODO: rajkumar42, placeholder should point to azure blob storage.
         /// </summary>
-        public string GetClrDbgUrl { get; private set; } = "https://raw.githubusercontent.com/Microsoft/MIEngine/dev/rajkumar42/updatescript/scripts/GetClrDbg.sh";
+        public string GetClrDbgUrl { get; private set; } = "https://raw.githubusercontent.com/Microsoft/MIEngine/master/scripts/GetClrDbg.sh";
 
         /// <summary>
         /// Default location of the debugger on the remote machine.
@@ -426,13 +426,13 @@ namespace MICore
         /// <summary>
         /// Meta version of the clrdbg.
         /// </summary>
-        /// TODO: janraj, placeholder. Needs to be fixed in the pkgdef as well.
-        public string ClrDbgVersion { get; private set; } = "latest";
+        /// TODO: rajkumar42, placeholder. Needs to be fixed in the pkgdef as well.
+        public string ClrDbgVersion { get; private set; } = "vs2015u2";
 
         /// <summary>
         /// Sub directory where the clrdbg should be downloaded relative to <see name="DebuggerInstallationDirectory"/>
         /// </summary>
-        public string ClrDbgInstallationSubDirectory { get; private set; } = "vs2015u3";
+        public string ClrDbgInstallationSubDirectory { get; private set; } = "vs2015u2";
 
         /// <summary>
         /// Shell command invoked first time when a ClrDbg debug session is launched.

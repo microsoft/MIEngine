@@ -47,10 +47,10 @@
 ; "SuspendThread"=dword:00000001
 "CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
 "RemoteInstallationDirectory"="~/.vs-debugger"
-; Following are placeholders, needs to be fixed.
-"GetClrDbgUrl"="https://raw.githubusercontent.com/Microsoft/MIEngine/dev/rajkumar42/updatescript/scripts/GetClrDbg.sh"
-"RemoteInstallationSubDirectory"="latest"
-"ClrDbgVersion"="latest"
+"RemoteInstallationSubDirectory"="vs2015u2"
+"ClrDbgVersion"="vs2015u2"
+; Following is a placeholder, needs to be fixed.
+"GetClrDbgUrl"="https://raw.githubusercontent.com/Microsoft/MIEngine/master/scripts/GetClrDbg.sh"
 
 [$RootKey$\AD7Metrics\Engine\{6B320935-1391-433A-A8B6-898D0F03164A}\IncompatibleList]
 "gdb"="{91744D97-430F-42C1-9779-A5813EBD6AB2}"
