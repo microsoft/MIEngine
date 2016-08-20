@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using liblinux;
 using liblinux.Persistence;
 using Microsoft.VisualStudio.Linux.ConnectionManager;
+using System.IO;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -70,9 +71,20 @@ namespace Microsoft.SSHDebugPS
             guidPortSupplier = Guid.Empty;
 
             // Check if liblinux exists in user's installation, if not, don't enable SSH port supplier
-            bool libLinuxLoaded = IsLibLinuxAvailable();
-            if (!libLinuxLoaded)
-                return HR.E_FAIL; 
+            try
+            {
+                // If Microsoft.VisualStudio.Linux.ConnectionManager.Contracts.dll, which is installed with liblinux, is not available FileNotFoundException will be thrown.
+                bool libLinuxLoaded = IsLibLinuxAvailable();
+                if (!libLinuxLoaded)
+                {
+                    return HR.E_FAIL;
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                return HR.E_FAIL;
+            }
+            
 
             guidPortSupplier = _Id;
             return HR.S_OK;
