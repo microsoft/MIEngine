@@ -14,5 +14,6 @@
     <SuppressFromVsix Include="System.Runtime.Serialization.dll"/>
     <SuppressFromVsix Include="Newtonsoft.Json.dll"/>
     <SuppressFromVsix Include="liblinux.dll"/>
+    <SuppressFromVsix Include="Microsoft.VisualStudio.Linux.ConnectionManager.Contracts.dll"/>
   </ItemGroup>
 </Project>
