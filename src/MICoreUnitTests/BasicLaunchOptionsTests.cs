@@ -311,7 +311,7 @@ namespace MICoreUnitTests
 
         private LaunchOptions GetLaunchOptions(string content)
         {
-            return LaunchOptions.GetInstance(null, "bogus-exe-path", null, null, content, null, TargetEngine.Native, null);
+            return LaunchOptions.GetInstance(null, "bogus-exe-path", null, null, content, false, null, TargetEngine.Native, null);
         }
     }
 }

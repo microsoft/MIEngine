@@ -242,7 +242,7 @@ namespace MICore
         /// <summary>
         /// Tells GDB to spawn a target process previous setup with -file-exec-and-symbols or similar
         /// </summary>
-        public async Task ExecRun()
+        public virtual async Task ExecRun()
         {
             string command = "-exec-run";
             await _debugger.CmdAsync(command, ResultClass.running);
@@ -409,7 +409,7 @@ namespace MICore
 
         #region Breakpoints
 
-        protected virtual StringBuilder BuildBreakInsert(string condition)
+        protected virtual StringBuilder BuildBreakInsert(string condition, bool enabled)
         {
             StringBuilder cmd = new StringBuilder("-break-insert -f ");
             if (condition != null)
@@ -418,12 +418,16 @@ namespace MICore
                 cmd.Append(condition);
                 cmd.Append("\" ");
             }
+            if (!enabled)
+            {
+                cmd.Append("-d ");
+            }
             return cmd;
         }
 
-        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, bool enabled, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition);
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
 
             if (checksums != null && checksums.Count() != 0)
             {
@@ -438,17 +442,17 @@ namespace MICore
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
-        public virtual async Task<Results> BreakInsert(string functionName, string condition, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string functionName, string condition, bool enabled, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition);
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
             // TODO: Add support of break function type filename:function locations
             cmd.Append(functionName);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
-        public virtual async Task<Results> BreakInsert(ulong codeAddress, string condition, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(ulong codeAddress, string condition, bool enabled, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition);
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
             cmd.Append('*');
             cmd.Append(codeAddress);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
@@ -551,10 +555,8 @@ namespace MICore
 
         #region Helpers
 
-        public virtual Task<TargetArchitecture> GetTargetArchitecture()
-        {
-            return Task.FromResult(TargetArchitecture.Unknown);
-        }
+        public abstract string GetTargetArchitectureCommand();
+        public abstract TargetArchitecture ParseTargetArchitectureResult(string result);
 
         public virtual async Task<Results> SetOption(string variable, string value, ResultClass resultClass = ResultClass.done)
         {

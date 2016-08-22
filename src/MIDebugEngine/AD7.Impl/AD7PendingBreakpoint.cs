@@ -310,15 +310,15 @@ namespace Microsoft.MIDebugEngine
                 // Bind all breakpoints that match this source and line number.
                 if (documentName != null)
                 {
-                    bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, checksums, this);
+                    bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, _enabled, checksums, this);
                 }
                 else if (functionName != null)
                 {
-                    bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, this);
+                    bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, _enabled, this);
                 }
                 else if (codeAddress != 0)
                 {
-                    bindResult = await PendingBreakpoint.Bind(codeAddress, _engine.DebuggedProcess, condition, this);
+                    bindResult = await PendingBreakpoint.Bind(codeAddress, _engine.DebuggedProcess, condition, _enabled, this);
                 }
                 else
                 {
@@ -439,7 +439,12 @@ namespace Microsoft.MIDebugEngine
                 PendingBreakpoint bp = _bp;
                 if (bp != null)
                 {
-                    bp.Enable(_enabled, _engine.DebuggedProcess);
+                    _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+                    {
+                        _engine.DebuggedProcess.AddInternalBreakAction(
+                            () => bp.EnableAsync(_enabled, _engine.DebuggedProcess)
+                        );
+                    });
                 }
             }
 
@@ -543,7 +548,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     _engine.DebuggedProcess.AddInternalBreakAction(
                         () => bp.SetConditionAsync(bpCondition.bstrCondition, _engine.DebuggedProcess)
-                            );
+                    );
                 });
             }
             return Constants.S_OK;
@@ -580,7 +585,7 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task EnableAfterFuncEvalAsync()
         {
-            if (_enabled && _bp != null)
+            if (!_enabled && _bp != null)
             {
                 await _bp.EnableAsync(true, _engine.DebuggedProcess);
             }

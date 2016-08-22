@@ -230,10 +230,13 @@ namespace MICore
 
         public override bool SupportsDataBreakpoints { get { return true; } }
 
-        public override async Task<TargetArchitecture> GetTargetArchitecture()
+        public override string GetTargetArchitectureCommand()
         {
-            string cmd = "show architecture";
-            var result = await _debugger.ConsoleCmdAsync(cmd);
+            return "show architecture";
+        }
+
+        public override TargetArchitecture ParseTargetArchitectureResult(string result)
+        { 
             using (StringReader stringReader = new StringReader(result))
             {
                 while (true)

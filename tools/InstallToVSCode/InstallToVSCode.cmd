@@ -25,8 +25,9 @@ echo ERROR: Unexpected second argument '%~2'. Expected 'portable' or 'debug'.& e
 set VSCodeDirName=.vscode-%3
 if "%~3"=="alpha" goto VSCodeDirNameSet
 if "%~3"=="insiders" goto VSCodeDirNameSet
+if "%~3"=="oss-dev" goto VSCodeDirNameSet
 if "%~3"=="stable" set VSCodeDirName=.vscode& goto VSCodeDirNameSet
-echo ERROR: Unexpected third argument '%~3'. Expected 'alpha', 'insiders' or 'stable'.& exit /b -1
+echo ERROR: Unexpected third argument '%~3'. Expected 'oss-dev', 'alpha', 'insiders' or 'stable'.& exit /b -1
 :VSCodeDirNameSet
 
 set OpenDebugAD7Dir=%~4
@@ -160,7 +161,7 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: mklink failed. Ensure this script is runn
 goto eof
 
 :Help
-echo InstallToVSCode ^<link^|copy^> ^<portable^|debug^> ^<alpha^|insiders^|stable^> ^<open-debug-ad7-dir^> -d ^<clrdbg-binaries^>
+echo InstallToVSCode ^<link^|copy^> ^<portable^|debug^> ^<oss-dev^|alpha^|insiders^|stable^> ^<open-debug-ad7-dir^> -d ^<clrdbg-binaries^>
 echo.
 echo This script is used to copy files needed to enable MIEngine based debugging 
 echo into VS Code.
