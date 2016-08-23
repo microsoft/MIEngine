@@ -113,12 +113,12 @@ namespace MICore
                 _lockStatus = StatusClosed;
                 if (_waitingSharedLockSource != null)
                 {
-                    _waitingSharedLockSource.SetException(new ObjectDisposedException("Debugger"));
+                    _waitingSharedLockSource.SetException(new DebuggerDisposedException());
                     _waitingSharedLockSource = null;
                 }
                 foreach (TaskCompletionSource<ExclusiveLockToken> completionSource in _waitingExclusiveLockRequests)
                 {
-                    completionSource.SetException(new ObjectDisposedException("Debugger"));
+                    completionSource.SetException(new DebuggerDisposedException());
                 }
                 _waitingExclusiveLockRequests.Clear();
             }
@@ -134,7 +134,7 @@ namespace MICore
             {
                 if (_lockStatus == StatusClosed)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException();
                 }
 
                 if (_lockStatus == StatusFree)
@@ -160,7 +160,7 @@ namespace MICore
             {
                 if (_lockStatus == StatusClosed)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException();
                 }
 
                 if (_lockStatus >= 0)

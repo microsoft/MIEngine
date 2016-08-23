@@ -771,7 +771,19 @@ namespace Microsoft.MIDebugEngine
         {
             _breakpointManager.ClearBoundBreakpoints();
 
-            _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
+            try
+            {
+                _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
+            }
+            catch (DebuggerDisposedException e)
+            {
+                // Detach command could cause DebuggerDisposedException and we ignore that.
+                if (e.AbortedCommand != "-target-detach")
+                {
+                    throw;
+                }
+            }
+            
             _debuggedProcess.Detach();
             return Constants.S_OK;
         }

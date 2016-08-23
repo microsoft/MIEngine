@@ -379,7 +379,7 @@ namespace MICore
             {
                 if (_isClosed)
                 {
-                    source.SetException(new ObjectDisposedException("Debugger"));
+                    source.SetException(new DebuggerDisposedException());
                 }
                 else
                 {
@@ -493,7 +493,7 @@ namespace MICore
             {
                 if (_internalBreakActionCompletionSource != null)
                 {
-                    _internalBreakActionCompletionSource.SetException(new ObjectDisposedException("Debugger"));
+                    _internalBreakActionCompletionSource.SetException(new DebuggerDisposedException());
                 }
                 _internalBreakActions.Clear();
             }
@@ -689,7 +689,7 @@ namespace MICore
             {
                 if (this.ProcessState == MICore.ProcessState.Exited)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException();
                 }
                 else
                 {
@@ -704,7 +704,7 @@ namespace MICore
                 {
                     if (this.ProcessState == MICore.ProcessState.Exited)
                     {
-                        throw new ObjectDisposedException("Debugger");
+                        throw new DebuggerDisposedException();
                     }
                     else
                     {
@@ -761,7 +761,7 @@ namespace MICore
             {
                 if (_isClosed)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException();
                 }
 
                 id = ++_lastCommandId;
@@ -971,11 +971,26 @@ namespace MICore
 
             internal void Abort()
             {
-                _completionSource.SetException(new ObjectDisposedException("Debugger"));
+                _completionSource.SetException(new DebuggerDisposedException(Command));
             }
         }
 
         private readonly Dictionary<uint, WaitingOperationDescriptor> _waitingOperations = new Dictionary<uint, WaitingOperationDescriptor>();
+
+        /// <summary>
+        /// Returns true it is a (gdb) prompt.
+        /// </summary>
+        /// <param name="prompt">The prompt from the debugger</param>
+        /// <returns>True if (gdb) prompt, false otherwise</returns>
+        /// <remarks>For SSH transport connecting to gdb, the (gdb) prompt string as a following space following it.</remarks>
+        private static bool IsGdbPrompt(string prompt)
+        {
+            const string gdbPrompt = "(gdb)";
+
+            return 
+                prompt.StartsWith(gdbPrompt, StringComparison.Ordinal) && 
+                prompt.Trim().Length == gdbPrompt.Length;
+        }
 
         public void ProcessStdOutLine(string line)
         {
@@ -983,7 +998,7 @@ namespace MICore
             {
                 return;
             }
-            else if (line == "(gdb)")
+            else if (IsGdbPrompt(line))
             {
                 if (_consoleDebuggerInitializeCompletionSource != null)
                 {

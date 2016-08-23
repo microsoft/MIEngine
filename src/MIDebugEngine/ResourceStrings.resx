@@ -232,4 +232,8 @@
   <data name="Error_FailedToGetTargetArchitecture" xml:space="preserve">
     <value>Failed to obtain target architecture.</value>
   </data>
+  <data name="Error_FailedToGetExePath" xml:space="preserve">
+    <value>Failed to get executable path with error '{0}'.</value>
+    <comment>0 = failure message</comment>
+  </data>
 </root>
