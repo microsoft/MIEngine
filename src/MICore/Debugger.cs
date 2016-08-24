@@ -982,7 +982,7 @@ namespace MICore
         /// </summary>
         /// <param name="prompt">The prompt from the debugger</param>
         /// <returns>True if (gdb) prompt, false otherwise</returns>
-        /// <remarks>For SSH transport connecting to gdb, the (gdb) prompt string as a following space following it.</remarks>
+        /// <remarks>For SSH transport connecting to gdb, it has a trailing space following the prompt like "(gdb) ".</remarks>
         private static bool IsGdbPrompt(string prompt)
         {
             const string gdbPrompt = "(gdb)";

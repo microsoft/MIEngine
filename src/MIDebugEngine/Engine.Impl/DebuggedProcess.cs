@@ -621,6 +621,8 @@ namespace Microsoft.MIDebugEngine
                     {
                         if (_launchOptions is UnixShellPortLaunchOptions)
                         {
+                            // This code path is probably applicable when the ExePath is not specified and can be used to determine the full executable path.
+                            // For now it is limited to Linux and debugger running on remote machine.
                             Debug.Assert(_launchOptions.ExePath == null);
 
                             DetermineAndAddExecutablePathCommand(commands);
@@ -755,6 +757,10 @@ namespace Microsoft.MIDebugEngine
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands)
         {
+            // TODO: rajkumar42, make it robust, either use the liblinux api or fallback shell commands available in other distros.
+            // TODO: rajkumar42, -target-attach can fail with gdb if ptrace>=1, elevate permission with liblinux and retry, display error on second failure.
+            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet.
+
             // Runs a shell command to get the full path of the exe.
             string absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
 
