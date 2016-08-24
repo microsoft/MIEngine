@@ -328,7 +328,8 @@ namespace MICore
 
         public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-create - * \"{0}\"", expression);
+            string quoteEscapedExpression = EscapeQuotes(expression);
+            string command = string.Format("-var-create - * \"{0}\"", quoteEscapedExpression);
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
             return results;
@@ -566,6 +567,10 @@ namespace MICore
             return results;
         }
 
+        internal string EscapeQuotes(string str)
+        {
+            return str.Replace("\"", "\\\"");
+        }
 
         #endregion
 
