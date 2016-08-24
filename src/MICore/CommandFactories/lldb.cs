@@ -71,7 +71,8 @@ namespace MICore
 
         public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-create - - \"{0}\"", expression);  // use '-' to indicate that "--frame" should be used to determine the frame number
+            string quoteEscapedExpression = EscapeQuotes(expression);
+            string command = string.Format("-var-create - - \"{0}\"", quoteEscapedExpression);  // use '-' to indicate that "--frame" should be used to determine the frame number
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
             return results;
