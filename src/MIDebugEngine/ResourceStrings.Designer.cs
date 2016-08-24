@@ -10,7 +10,7 @@
 
 namespace Microsoft.MIDebugEngine {
     using System;
-	using System.Reflection;
+    using System.Reflection;
     
     
     /// <summary>
@@ -96,6 +96,15 @@ namespace Microsoft.MIDebugEngine {
         internal static string Error_ExePathInvalid {
             get {
                 return ResourceManager.GetString("Error_ExePathInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get executable path with error &apos;{0}&apos;..
+        /// </summary>
+        internal static string Error_FailedToGetExePath {
+            get {
+                return ResourceManager.GetString("Error_FailedToGetExePath", resourceCulture);
             }
         }
         

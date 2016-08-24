@@ -145,6 +145,7 @@
     <Compile Include="CommandFactories\MICommandFactory.cs" />
     <Compile Include="CommandLock.cs" />
     <Compile Include="Debugger.cs" />
+    <Compile Include="DebuggerDisposedException.cs" />
     <Compile Include="ExceptionHelper.cs" />
     <Compile Include="InvalidCoreDumpOperationException.cs" />
     <Compile Include="InvalidLaunchOptionsException.cs" />

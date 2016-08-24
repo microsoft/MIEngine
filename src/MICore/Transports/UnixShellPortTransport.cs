@@ -76,20 +76,27 @@ namespace MICore
         {
             if (!_debuggerLaunched)
             {
-                if (line != null && line.StartsWith(ErrorPrefix, System.StringComparison.OrdinalIgnoreCase))
+                if (_launchOptions.DebuggerMIMode != MIMode.Clrdbg)
                 {
-                    _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
+                    _debuggerLaunched = true;
                 }
                 else
                 {
-                    _callback.OnStdOutLine(line);
-                }
+                    if (line != null && line.StartsWith(ErrorPrefix, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
+                    }
+                    else
+                    {
+                        _callback.OnStdOutLine(line);
+                    }
 
-                if (line.Equals("Info: Launching clrdbg"))
-                {
-                    _debuggerLaunched = true;
-                    UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);
-                    return;
+                    if (line.Equals("Info: Launching clrdbg"))
+                    {
+                        _debuggerLaunched = true;
+                        UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);
+                        return;
+                    }
                 }
             }
 
