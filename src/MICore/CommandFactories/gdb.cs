@@ -236,7 +236,7 @@ namespace MICore
         }
 
         public override TargetArchitecture ParseTargetArchitectureResult(string result)
-        { 
+        {
             using (StringReader stringReader = new StringReader(result))
             {
                 while (true)

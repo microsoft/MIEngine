@@ -987,8 +987,8 @@ namespace MICore
         {
             const string gdbPrompt = "(gdb)";
 
-            return 
-                prompt.StartsWith(gdbPrompt, StringComparison.Ordinal) && 
+            return
+                prompt.StartsWith(gdbPrompt, StringComparison.Ordinal) &&
                 prompt.Trim().Length == gdbPrompt.Length;
         }
 

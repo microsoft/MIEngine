@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS
     [Guid("7E3052B2-FB42-4E38-B22C-1FD281BD4413")]
     sealed public class MIEngineLauncher : IPlatformAppLauncher
     {
-        SSHLaunchOptions _launchOptions;
+        private SSHLaunchOptions _launchOptions;
 
         void IDisposable.Dispose()
         {
@@ -61,9 +61,9 @@ namespace Microsoft.SSHDebugPS
             // NOTE: this may put up a dialog and/or throw an AD7ConnectCanceledException
             port.EnsureConnected();
 
-            debuggerLaunchOptions = new UnixShellPortLaunchOptions(_launchOptions.StartRemoteDebuggerCommand, 
-                                                                    port, 
-                                                                    LaunchOptions.ConvertMIModeAttribute(_launchOptions.MIMode), 
+            debuggerLaunchOptions = new UnixShellPortLaunchOptions(_launchOptions.StartRemoteDebuggerCommand,
+                                                                    port,
+                                                                    LaunchOptions.ConvertMIModeAttribute(_launchOptions.MIMode),
                                                                     _launchOptions);
         }
 

@@ -26,7 +26,7 @@ namespace Microsoft.SSHDebugPS
         {
             get
             {
-                return this._remoteSystem.ConnectionInfo;
+                return _remoteSystem.ConnectionInfo;
             }
         }
 

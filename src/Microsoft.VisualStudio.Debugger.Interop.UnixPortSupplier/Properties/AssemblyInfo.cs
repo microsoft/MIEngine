@@ -20,7 +20,7 @@ using System;
 [assembly: Guid("b4cbcd8e-52fe-430b-9cf1-82053b53bbea")]
 
 // Add the PrimaryInteropAssemblyAttribute so that this assembly can be used with 'Embed Interop Types'
-[assembly: System.Runtime.InteropServices.PrimaryInteropAssemblyAttribute(1,0)]
+[assembly: System.Runtime.InteropServices.PrimaryInteropAssemblyAttribute(1, 0)]
 
 #if CORECLR
 // There is no portable definition for PrimaryInteropAssemblyAttribute, so define our own here to make the C# compiler happy
@@ -28,7 +28,7 @@ namespace System.Runtime.InteropServices
 {
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
     [System.Runtime.InteropServices.ComVisible(true)]
-    sealed class PrimaryInteropAssemblyAttribute : Attribute
+    internal sealed class PrimaryInteropAssemblyAttribute : Attribute
     {
         internal int _major;
         internal int _minor;
