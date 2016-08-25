@@ -211,6 +211,8 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
     <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
     <DropSignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
@@ -245,6 +247,8 @@
       <Name>MIDebugEngine</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
     <ProjectReference Include="..\SSHDebugPS\SSHDebugPS.csproj">
       <Project>{15bcbef4-1c2b-412b-925b-34a049097e62}</Project>
       <Name>SSHDebugPS</Name>
