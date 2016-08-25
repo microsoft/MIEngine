@@ -38,9 +38,8 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
     </Reference>
-    <!-- TODO: We will pull this down from NuGet -->
     <Reference Include="Microsoft.VisualStudio.Linux.ConnectionManager.Contracts">
-      <HintPath>ref\Microsoft.VisualStudio.Linux.ConnectionManager.Contracts.dll</HintPath>
+      <HintPath>$(GeneratedAssembliesDir)Microsoft.VisualStudio.Linux.ConnectionManager.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
