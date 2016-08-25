@@ -337,6 +337,27 @@
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
+  <xs:element name="SSHLaunchOptions">
+    <xs:annotation>
+      <xs:documentation>Instructs the debugger to connect to a remote debugger over SSH.</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="BaseLaunchOptions">
+          <xs:attribute name="TargetMachine" type="xs:string" use="required">
+            <xs:annotation>
+              <xs:documentation>Network hostname or IP address to connect to.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="StartRemoteDebuggerCommand" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Command to execute on the target machine to launch the remote debugger. If not specified, a default value will be selected for the MIMode.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
 
 <!--base type for LocalLaunchOptions, PipeLaunchOptions, and TcpLaunchOptions -->
   <xs:complexType name="BaseLaunchOptions">

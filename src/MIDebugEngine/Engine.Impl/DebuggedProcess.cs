@@ -52,7 +52,7 @@ namespace Microsoft.MIDebugEngine
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _childProcessHandler;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
             uint processExitCode = 0;
             _pendingMessages = new StringBuilder(400);
@@ -228,6 +228,10 @@ namespace Microsoft.MIDebugEngine
             else if (_launchOptions is TcpLaunchOptions)
             {
                 this.Init(new MICore.TcpTransport(), _launchOptions);
+            }
+            else if (_launchOptions is UnixShellPortLaunchOptions)
+            {
+                this.Init(new MICore.UnixShellPortTransport(), _launchOptions, waitLoop);
             }
             else
             {
@@ -612,7 +616,22 @@ namespace Microsoft.MIDebugEngine
 
                     CheckCygwin(commands, localLaunchOptions);
 
-                    this.AddExecutablePathCommand(commands);
+                    // ClrDbg doesn't need -file-exec-and-symbols set.
+                    if (this.MICommandFactory.Mode == MIMode.Gdb)
+                    {
+                        if (_launchOptions is UnixShellPortLaunchOptions)
+                        {
+                            // This code path is probably applicable when the ExePath is not specified and can be used to determine the full executable path.
+                            // For now it is limited to Linux and debugger running on remote machine.
+                            Debug.Assert(_launchOptions.ExePath == null);
+
+                            DetermineAndAddExecutablePathCommand(commands);
+                        }
+                        else
+                        {
+                            this.AddExecutablePathCommand(commands);
+                        }
+                    }
 
                     // Important: this must occur after file-exec-and-symbols but before anything else.
                     this.AddGetTargetArchitectureCommand(commands);
@@ -624,7 +643,7 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
 
-                    int pid = localLaunchOptions.ProcessId;
+                    int pid = _launchOptions.ProcessId;
                     commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
@@ -734,6 +753,38 @@ namespace Microsoft.MIDebugEngine
             };
 
             commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures: false, failureHandler: failureHandler));
+        }
+
+        private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands)
+        {
+            // TODO: rajkumar42, make it robust, either use the liblinux api or fallback shell commands available in other distros.
+            // TODO: rajkumar42, -target-attach can fail with gdb if ptrace>=1, elevate permission with liblinux and retry, display error on second failure.
+            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet.
+
+            // Runs a shell command to get the full path of the exe.
+            string absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
+
+            Action<string> failureHandler = (string miError) =>
+            {
+                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_FailedToGetExePath, miError);
+                throw new LaunchErrorException(message);
+            };
+
+            Action<string> successHandler = async (string exePath) =>
+            {
+                string trimmedExePath = exePath.Trim();
+                try
+                {
+                    await CmdAsync("-file-exec-and-symbols " + trimmedExePath, ResultClass.done);
+                }
+                catch (UnexpectedMIResultException miException)
+                {
+                    string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, trimmedExePath, MICommandFactory.Name, miException.MIError);
+                    throw new LaunchErrorException(message);
+                }
+            };
+
+            commands.Add(new LaunchCommand(absoluteExePath, ignoreFailures: false, failureHandler: failureHandler, successHandler: successHandler));
         }
 
         private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)

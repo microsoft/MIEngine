@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.ExceptionServices;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ namespace Microsoft.MIDebugEngine
         // This object manages breakpoints in the sample engine.
         private BreakpointManager _breakpointManager;
 
-        private Guid _engineGuid = new Guid(EngineConstants.EngineId);
+        private Guid _engineGuid = EngineConstants.EngineId;
 
         // A unique identifier for the program being debugged.
         private Guid _ad7ProgramId;
@@ -143,7 +144,7 @@ namespace Microsoft.MIDebugEngine
         #region IDebugEngine2 Members
 
         // Attach the debug engine to a program.
-        public int Attach(IDebugProgram2[] rgpPrograms, IDebugProgramNode2[] rgpProgramNodes, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason)
+        public int Attach(IDebugProgram2[] portProgramArray, IDebugProgramNode2[] programNodeArray, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason)
         {
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
@@ -152,29 +153,37 @@ namespace Microsoft.MIDebugEngine
                 Debug.Fail("SampleEngine only expects to see one program in a process");
                 throw new ArgumentException();
             }
+            IDebugProgram2 portProgram = portProgramArray[0];
 
+            Exception exception = null;
             try
             {
-                AD_PROCESS_ID processId = EngineUtils.GetProcessId(rgpPrograms[0]);
+                IDebugProcess2 process;
+                EngineUtils.RequireOk(portProgram.GetProcess(out process));
 
-                EngineUtils.RequireOk(rgpPrograms[0].GetProgramId(out _ad7ProgramId));
+                AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
+
+                EngineUtils.RequireOk(portProgram.GetProgramId(out _ad7ProgramId));
 
                 // Attach can either be called to attach to a new process, or to complete an attach
                 // to a launched process
                 if (_pollThread == null)
                 {
-                    // We are being asked to debug a process when we currently aren't debugging anything
-                    _pollThread = new WorkerThread(Logger);
+                    if (processId.ProcessIdType != (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM)
+                    {
+                        Debug.Fail("Invalid process to attach to");
+                        throw new ArgumentException();
+                    }
+
+                    IDebugPort2 port;
+                    EngineUtils.RequireOk(process.GetPort(out port));
+
+                    Debug.Assert(_engineCallback == null);
+                    Debug.Assert(_debuggedProcess == null);
 
                     _engineCallback = new EngineCallback(this, ad7Callback);
-
-                    // Complete the win32 attach on the poll thread
-                    _pollThread.RunOperation(new Operation(delegate
-                    {
-                        throw new NotImplementedException();
-                    }));
-
-                    _pollThread.PostedOperationErrorEvent += _debuggedProcess.OnPostedOperationError;
+                    LaunchOptions launchOptions = CreateAttachLaunchOptions(processId.dwProcessId, port);
+                    StartDebugging(launchOptions);
                 }
                 else
                 {
@@ -191,14 +200,79 @@ namespace Microsoft.MIDebugEngine
 
                 return Constants.S_OK;
             }
-            catch (MIException e)
-            {
-                return e.HResult;
-            }
             catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
-                return EngineUtils.UnexpectedException(e);
+                exception = e;
             }
+
+            // If we just return the exception as an HRESULT, we will loose our message, so we instead send up an error event, and
+            // return that the attach was canceled
+            OnStartDebuggingFailed(exception);
+            return AD7_HRESULT.E_ATTACH_USER_CANCELED;
+        }
+
+        private LaunchOptions CreateAttachLaunchOptions(uint processId, IDebugPort2 port)
+        {
+            LaunchOptions launchOptions;
+
+            var unixPort = port as IDebugUnixShellPort;
+            if (unixPort != null)
+            {
+                MIMode miMode;
+                if (_engineGuid == EngineConstants.ClrdbgEngine)
+                {
+                    miMode = MIMode.Clrdbg;
+                }
+                else if (_engineGuid == EngineConstants.GdbEngine)
+                {
+                    miMode = MIMode.Gdb;
+                }
+                else
+                {
+                    // TODO: LLDB support
+                    throw new NotImplementedException();
+                }
+
+                if (processId > int.MaxValue)
+                {
+                    throw new ArgumentOutOfRangeException("processId");
+                }
+
+                string getClrDbgUrl = GetMetric("GetClrDbgUrl") as string;
+                string remoteDebuggerInstallationDirectory = GetMetric("RemoteInstallationDirectory") as string;
+                string remoteDebuggerInstallationSubDirectory = GetMetric("RemoteInstallationSubDirectory") as string;
+                string clrDbgVersion = GetMetric("ClrDbgVersion") as string;
+
+                launchOptions = UnixShellPortLaunchOptions.CreateForAttachRequest(unixPort, 
+                                                                                (int)processId,
+                                                                                miMode,
+                                                                                getClrDbgUrl, 
+                                                                                remoteDebuggerInstallationDirectory,
+                                                                                remoteDebuggerInstallationSubDirectory,
+                                                                                clrDbgVersion);
+
+                // TODO: Add a tools option page for:
+                // AdditionalSOLibSearchPath
+                // VisualizerFile?
+            }
+            else
+            {
+                // TODO: when we have a tools options page, we can add support for the attach dialog here pretty easily:
+                //var defaultPort = port as IDebugDefaultPort2;
+                //if (defaultPort != null && defaultPort.QueryIsLocal() == Constants.S_OK)
+                //{
+                //    launchOptions = new LocalLaunchOptions(...);
+                //}
+                //else
+                //{
+                //    // Invalid port
+                //    throw new ArgumentException();
+                //}
+
+                throw new NotSupportedException();
+            }
+
+            return launchOptions;
         }
 
         // Called by the SDM to indicate that a synchronous debug event, previously sent by the DE to the SDM,
@@ -444,36 +518,9 @@ namespace Microsoft.MIDebugEngine
                 // Note: LaunchOptions.GetInstance can be an expensive operation and may push a wait message loop
                 LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, noDebug, _engineCallback, TargetEngine.Native, Logger);
 
-                // We are being asked to debug a process when we currently aren't debugging anything
-                _pollThread = new WorkerThread(Logger);
-                var cancellationTokenSource = new CancellationTokenSource();
-
-                using (cancellationTokenSource)
-                {
-                    _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (HostWaitLoop waitLoop) =>
-                    {
-                        try
-                        {
-                            _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore);
-                        }
-                        finally
-                        {
-                            // If there is an exception from the DebuggeedProcess constructor, it is our responsibility to dispose the DeviceAppLauncher,
-                            // otherwise the DebuggedProcess object takes ownership.
-                            if (_debuggedProcess == null && launchOptions.DeviceAppLauncher != null)
-                            {
-                                launchOptions.DeviceAppLauncher.Dispose();
-                            }
-                        }
-
-                        _pollThread.PostedOperationErrorEvent += _debuggedProcess.OnPostedOperationError;
-
-                        return _debuggedProcess.Initialize(waitLoop, cancellationTokenSource.Token);
-                    });
-                }
+                StartDebugging(launchOptions);
 
                 EngineUtils.RequireOk(port.GetProcess(_debuggedProcess.Id, out process));
-
                 return Constants.S_OK;
             }
             catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
@@ -484,12 +531,52 @@ namespace Microsoft.MIDebugEngine
 
             // If we just return the exception as an HRESULT, we will loose our message, so we instead send up an error event, and then
             // return E_ABORT.
+            OnStartDebuggingFailed(exception);
+
+            return Constants.E_ABORT;
+        }
+        
+        private void StartDebugging(LaunchOptions launchOptions)
+        {
+            Debug.Assert(_engineCallback != null);
+            Debug.Assert(_pollThread == null);
+            Debug.Assert(_debuggedProcess == null);
+
+            // We are being asked to debug a process when we currently aren't debugging anything
+            _pollThread = new WorkerThread(Logger);
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            using (cancellationTokenSource)
+            {
+                _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (HostWaitLoop waitLoop) =>
+                {
+                    try
+                    {
+                        _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore, waitLoop);
+                    }
+                    finally
+                    {
+                        // If there is an exception from the DebuggeedProcess constructor, it is our responsibility to dispose the DeviceAppLauncher,
+                        // otherwise the DebuggedProcess object takes ownership.
+                        if (_debuggedProcess == null && launchOptions.DeviceAppLauncher != null)
+                        {
+                            launchOptions.DeviceAppLauncher.Dispose();
+                        }
+                    }
+
+                    _pollThread.PostedOperationErrorEvent += _debuggedProcess.OnPostedOperationError;
+
+                    return _debuggedProcess.Initialize(waitLoop, cancellationTokenSource.Token);
+                });
+            }
+        }
+
+        private void OnStartDebuggingFailed(Exception exception)
+        {
             Logger.Flush();
             SendStartDebuggingError(exception);
 
             Dispose();
-
-            return Constants.E_ABORT;
         }
 
         private void SendStartDebuggingError(Exception exception)
@@ -684,7 +771,16 @@ namespace Microsoft.MIDebugEngine
         {
             _breakpointManager.ClearBoundBreakpoints();
 
-            _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
+            try
+            {
+                _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
+            }
+            catch (DebuggerDisposedException e) when (e.AbortedCommand != "-target-detach")
+            {
+                // Detach command could cause DebuggerDisposedException and we ignore that.
+                throw;
+            }
+            
             _debuggedProcess.Detach();
             return Constants.S_OK;
         }

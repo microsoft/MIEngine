@@ -437,6 +437,15 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Sets the text of the dialog without changing the progress.
+        /// </summary>
+        /// <param name="text">Text to set.</param>
+        public void SetText(string text)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Wait for the specified handle to be signaled.
         /// </summary>
         /// <param name="handle">Handle to wait on.</param>

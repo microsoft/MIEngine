@@ -186,9 +186,14 @@
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
       <Name>MICore</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.csproj">
+      <Project>{7654cfbb-30db-4c20-bde3-a960cba2036c}</Project>
+      <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </ProjectReference>
     <ProjectReference Include="..\prebuild\prebuild.csproj">
       <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
-      <Name>Prebuild</Name>
+      <Name>prebuild</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

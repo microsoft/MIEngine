@@ -162,7 +162,7 @@ namespace MICoreUnitTests
             foreach (Task t in pendingTasks)
             {
                 Assert.True(t.IsCompleted);
-                Assert.IsType(typeof(ObjectDisposedException), t.Exception.InnerException);
+                Assert.IsType(typeof(DebuggerDisposedException), t.Exception.InnerException);
             }
         }
     }
