@@ -88,6 +88,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Source file not found.
+        /// </summary>
+        internal static string Error_SourceFileNotFound {
+            get {
+                return ResourceManager.GetString("Error_SourceFileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enter credentials to connect to {0}.
         /// </summary>
         internal static string HeaderTextFormat {

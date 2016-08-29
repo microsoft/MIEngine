@@ -47,5 +47,43 @@ namespace Microsoft.SSHDebugPS
             command.Start(commandText);
             asyncCommand = command;
         }
+
+        /// <summary>
+        /// Copy a single file from the local machine to the remote machine.
+        /// </summary>
+        /// <param name="sourcePath">File on the local machine.</param>
+        /// <param name="destinationPath">Destination path on the remote machine.</param>
+        internal void CopyFile(string sourcePath, string destinationPath)
+        {
+            if (!string.IsNullOrEmpty(sourcePath))
+            {
+                throw new ArgumentNullException(sourcePath);
+            }
+
+            if (!File.Exists(sourcePath))
+            {
+                // TODO: Errors in resource
+                throw new FileNotFoundException(StringResources.Error_SourceFileNotFound, sourcePath);
+            }
+
+            _remoteSystem.FileSystem.UploadFile(sourcePath, destinationPath);
+        }
+
+        /// <summary>
+        /// Creates directory provided the path. Does not fail if the directory already exists.
+        /// </summary>
+        /// <param name="path">Path on the remote machine.</param>
+        /// <returns>Full path of the created directory.</returns>
+        internal string MakeDirectory(string path)
+        {
+            if (!_remoteSystem.FileSystem.IsDirectory(path))
+            {
+                return _remoteSystem.FileSystem.CreateDirectory(path).FullPath;
+            }
+            else
+            {
+                return _remoteSystem.FileSystem.GetDirectory(path).FullPath;
+            }
+        }
     }
 }

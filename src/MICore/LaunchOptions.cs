@@ -448,7 +448,22 @@ namespace MICore
             "(" +
                 "mkdir -p {0} && " +
                 "echo \"Info: Downloading GetClrDbgScript from {1}\" && " +
-                "wget -q {1} -O {0}/GetClrDbg.download && " +
+                "( " +
+                    "( " +
+                        "type wget > /dev/null 2>&1 && " +
+                        "wget -q {1} -O {0}/GetClrDbg.download && " +
+                        "echo Successfully downloaded GetClrDbg.sh" +
+                    ") || " +
+                    "( " +
+                        "type curl > /dev/null 2>&1 && " +
+                        "curl -s {1} -o {0}/GetClrDbg.download && " +
+                        "echo \"Info: Successfully downloaded GetClrDbg.sh\" " +
+                    ") || " +
+                    "( " +
+                        "echo \"Error: Failed to download GetClrDbg.sh. Commands wget and curl are not available. \" && " +
+                        "exit 1" +
+                    ") " +
+                ") && " +
                 "mv {0}/GetClrDbg.download {0}/GetClrDbg.sh && " + 
                 "chmod +x {0}/GetClrDbg.sh && " +
                 "echo \"Info: Downloading and setting up GetClrDbg.sh script was successful.\" " +

@@ -39,6 +39,12 @@ namespace MICore
             _callback.AppendToInitializationLog("Starting unix command: " + _startRemoteDebuggerCommand);
             _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, this, out _asyncCommand);
         }
+
+        private void DownloadAndCopyFileToRemote(string remoteDirectory)
+        {
+            string fullPath = _launchOptions.UnixPort.MakeDirectory(remoteDirectory);
+
+        }
         
         public void Close()
         {

@@ -40,6 +40,20 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// from the command</param>
         /// <param name="asyncCommand">Returned command object</param>
         void BeginExecuteAsyncCommand(string commandText, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand);
+
+        /// <summary>
+        /// Copy a single file from the local machine to the remote machine.
+        /// </summary>
+        /// <param name="sourcePath">File on the local machine.</param>
+        /// <param name="destinationPath">Destination path on the remote machine.</param>
+        void CopyFile(string sourcePath, string destinationPath);
+
+        /// <summary>
+        /// Creates directory provided the path. Does not fail if the directory already exists.
+        /// </summary>
+        /// <param name="path">Path on the remote machine.</param>
+        /// <returns>Full path of the created directory.</returns>
+        string MakeDirectory(string path);
     }
 
     /// <summary>

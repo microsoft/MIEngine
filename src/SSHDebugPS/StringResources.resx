@@ -126,6 +126,9 @@
   <data name="Error_PSFailed" xml:space="preserve">
     <value>Unable to obtain process listing. 'ps' command failed.</value>
   </data>
+  <data name="Error_SourceFileNotFound" xml:space="preserve">
+    <value>Source file not found</value>
+  </data>
   <data name="HeaderTextFormat" xml:space="preserve">
     <value>Enter credentials to connect to {0}</value>
     <comment>{0} is the network address being connected to</comment>
