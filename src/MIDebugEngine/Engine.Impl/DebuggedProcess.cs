@@ -762,7 +762,7 @@ namespace Microsoft.MIDebugEngine
             // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet.
 
             // Runs a shell command to get the full path of the exe.
-            string absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
+            string absoluteExePath = System.FormattableString.Invariant($"shell lsof -p {_launchOptions.ProcessId} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'");
 
             Action<string> failureHandler = (string miError) =>
             {
