@@ -176,7 +176,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (PlatformUtilities.IsOSX() &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
-                    localLaunchOptions.DebuggerMIMode != MIMode.Lldb && 
+                    localLaunchOptions.DebuggerMIMode != MIMode.Lldb &&
                     !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath))
                 {
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_DarwinDebuggerUnsigned, localLaunchOptions.MIDebuggerPath);
@@ -666,7 +666,7 @@ namespace Microsoft.MIDebugEngine
 
                     // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
                     if (localLaunchOptions != null &&
-                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && 
+                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
                         (PlatformUtilities.IsWindows() || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));

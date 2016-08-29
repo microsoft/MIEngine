@@ -444,15 +444,15 @@ namespace MICore
         /// {2} - ClrDbg version.
         /// {3} - Subdirectory where clrdbg should be installed.
         /// </remarks>
-        private const string ClrdbgFirstLaunchCommand = 
+        private const string ClrdbgFirstLaunchCommand =
             "(" +
                 "mkdir -p {0} && " +
                 "echo \"Info: Downloading GetClrDbgScript from {1}\" && " +
                 "wget -q {1} -O {0}/GetClrDbg.download && " +
-                "mv {0}/GetClrDbg.download {0}/GetClrDbg.sh && " + 
+                "mv {0}/GetClrDbg.download {0}/GetClrDbg.sh && " +
                 "chmod +x {0}/GetClrDbg.sh && " +
                 "echo \"Info: Downloading and setting up GetClrDbg.sh script was successful.\" " +
-            ");" + 
+            ");" +
             "(" +
                 "echo \"Info: Launching GetClrDbg.sh\" && " +
                 "{0}/GetClrDbg.sh -v {2} -l {0}/{3} -d -u" +
@@ -469,9 +469,9 @@ namespace MICore
         /// </remarks>
         private const string ClrdbgSubsequentLaunchCommand = "{0}/GetClrDbg.sh -v {1} -l {0}/{2} -d -s";
 
-        public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand, 
-                Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, 
-                MIMode miMode, 
+        public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand,
+                Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
+                MIMode miMode,
                 BaseLaunchOptions baseLaunchOptions,
                 string getClrDbgUrl = null,
                 string remoteDebuggerInstallationDirectory = null,
@@ -537,16 +537,16 @@ namespace MICore
             }
         }
 
-        public static UnixShellPortLaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, 
-            int processId, 
+        public static UnixShellPortLaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
+            int processId,
             MIMode miMode,
             string getClrDbgUrl,
             string remoteDebuggingDirectory,
             string remoteDebuggingSubDirectory,
             string debuggerVersion)
         {
-            var @this = new UnixShellPortLaunchOptions(startRemoteDebuggerCommand: null, 
-                                                       unixPort: unixPort, 
+            var @this = new UnixShellPortLaunchOptions(startRemoteDebuggerCommand: null,
+                                                       unixPort: unixPort,
                                                        miMode: miMode,
                                                        baseLaunchOptions: null,
                                                        getClrDbgUrl: getClrDbgUrl,
@@ -1252,7 +1252,7 @@ namespace MICore
             if (!String.IsNullOrEmpty(source.CoreDumpPath) && source.ProcessIdSpecified)
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
         }
-        
+
         public static string RequireAttribute(string attributeValue, string attributeName)
         {
             if (string.IsNullOrWhiteSpace(attributeValue))

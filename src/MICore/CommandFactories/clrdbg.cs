@@ -243,7 +243,7 @@ namespace MICore
         }
 
         public override TargetArchitecture ParseTargetArchitectureResult(string result)
-        { 
+        {
             // CLRDBG only support x64 now.
             return TargetArchitecture.X64;
         }

@@ -84,7 +84,7 @@ namespace Microsoft.SSHDebugPS
             {
                 return HR.E_FAIL;
             }
-            
+
 
             guidPortSupplier = _Id;
             return HR.S_OK;

@@ -30,7 +30,7 @@ namespace Microsoft.SSHDebugPS
 
             if (storedConnectionInfo != null)
                 connectionInfo = (ConnectionInfo)storedConnectionInfo;
-            
+
             if (connectionInfo == null)
             {
                 IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
@@ -93,7 +93,7 @@ namespace Microsoft.SSHDebugPS
                         }
                         else
                         {
-                            return null; 
+                            return null;
                         }
                     }
                     catch (Exception ex)
@@ -110,7 +110,7 @@ namespace Microsoft.SSHDebugPS
                     return new Connection(remoteSystem);
                 }
             }
-        
+
             return null;
         }
 

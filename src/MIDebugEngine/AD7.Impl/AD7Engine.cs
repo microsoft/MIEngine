@@ -243,10 +243,10 @@ namespace Microsoft.MIDebugEngine
                 string remoteDebuggerInstallationSubDirectory = GetMetric("RemoteInstallationSubDirectory") as string;
                 string clrDbgVersion = GetMetric("ClrDbgVersion") as string;
 
-                launchOptions = UnixShellPortLaunchOptions.CreateForAttachRequest(unixPort, 
+                launchOptions = UnixShellPortLaunchOptions.CreateForAttachRequest(unixPort,
                                                                                 (int)processId,
                                                                                 miMode,
-                                                                                getClrDbgUrl, 
+                                                                                getClrDbgUrl,
                                                                                 remoteDebuggerInstallationDirectory,
                                                                                 remoteDebuggerInstallationSubDirectory,
                                                                                 clrDbgVersion);
@@ -535,7 +535,7 @@ namespace Microsoft.MIDebugEngine
 
             return Constants.E_ABORT;
         }
-        
+
         private void StartDebugging(LaunchOptions launchOptions)
         {
             Debug.Assert(_engineCallback != null);
@@ -780,7 +780,7 @@ namespace Microsoft.MIDebugEngine
                 // Detach command could cause DebuggerDisposedException and we ignore that.
                 throw;
             }
-            
+
             _debuggedProcess.Detach();
             return Constants.S_OK;
         }
@@ -1123,6 +1123,5 @@ namespace Microsoft.MIDebugEngine
         }
 
         #endregion
-
     }
 }

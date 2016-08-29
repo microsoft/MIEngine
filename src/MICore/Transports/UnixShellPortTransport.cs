@@ -21,7 +21,7 @@ namespace MICore
         private bool _debuggerLaunched = false;
         private UnixShellPortLaunchOptions _launchOptions;
 
-        private static string ErrorPrefix = "Error:";
+        private static string s_errorPrefix = "Error:";
 
         public UnixShellPortTransport()
         {
@@ -39,7 +39,7 @@ namespace MICore
             _callback.AppendToInitializationLog("Starting unix command: " + _startRemoteDebuggerCommand);
             _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, this, out _asyncCommand);
         }
-        
+
         public void Close()
         {
             lock (_closeLock)
@@ -82,9 +82,9 @@ namespace MICore
                 }
                 else
                 {
-                    if (line != null && line.StartsWith(ErrorPrefix, System.StringComparison.OrdinalIgnoreCase))
+                    if (line != null && line.StartsWith(s_errorPrefix, System.StringComparison.OrdinalIgnoreCase))
                     {
-                        _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
+                        _callback.OnStdErrorLine(line.Substring(s_errorPrefix.Length).Trim());
                     }
                     else
                     {

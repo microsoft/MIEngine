@@ -33,7 +33,7 @@ namespace Microsoft.SSHDebugPS.VS
             Task t = Task.Run(action);
 
             DebugEngineHost.HostWaitLoop waiterImpl = null;
-            
+
             try
             {
                 waiterImpl = new DebugEngineHost.HostWaitLoop(actionName);
