@@ -38,9 +38,8 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
     </Reference>
-    <!-- TODO: We will pull this down from NuGet -->
     <Reference Include="Microsoft.VisualStudio.Linux.ConnectionManager.Contracts">
-      <HintPath>ref\Microsoft.VisualStudio.Linux.ConnectionManager.Contracts.dll</HintPath>
+      <HintPath>$(GeneratedAssembliesDir)Microsoft.VisualStudio.Linux.ConnectionManager.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
@@ -120,6 +119,11 @@
       <Project>{7654cfbb-30db-4c20-bde3-a960cba2036c}</Project>
       <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
       <EmbedInteropTypes>True</EmbedInteropTypes>
+    </ProjectReference>
+    <ProjectReference Include="..\prebuild\prebuild.csproj">
+      <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
+      <Name>prebuild</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
