@@ -136,6 +136,11 @@
       <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </ProjectReference>
+    <ProjectReference Include="..\prebuild\prebuild.csproj">
+      <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
+      <Name>prebuild</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
