@@ -411,7 +411,7 @@ namespace MICore
 
         protected virtual StringBuilder BuildBreakInsert(string condition, bool enabled)
         {
-            StringBuilder cmd = new StringBuilder("-break-insert -f ");
+            StringBuilder cmd = new StringBuilder("-break-insert ");
             if (condition != null)
             {
                 cmd.Append("-c \"");
@@ -435,6 +435,7 @@ namespace MICore
                 cmd.Append(" ");
             }
 
+            cmd.Append("-f ");
             cmd.Append(filename);
             cmd.Append(":");
             cmd.Append(line.ToString());
