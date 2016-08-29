@@ -119,18 +119,33 @@ namespace MICore
         {
             PipeLaunchOptions pipeOptions = (PipeLaunchOptions)options;
 
+            if (!LocalLaunchOptions.CheckDirectoryPath(pipeOptions.PipeCwd))
+            {
+                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalDirectoryPath, pipeOptions.PipeCwd));
+            }
+
+            if (!LocalLaunchOptions.CheckFilePath(pipeOptions.PipePath))
+            {
+                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, pipeOptions.PipePath));
+            }
+
             _cmdArgs = pipeOptions.PipeCommandArguments;
 
             Process proc = new Process();
             _pipePath = pipeOptions.PipePath;
             proc.StartInfo.FileName = pipeOptions.PipePath;
             proc.StartInfo.Arguments = pipeOptions.PipeArguments;
-            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(pipeOptions.PipePath);
+            proc.StartInfo.WorkingDirectory = pipeOptions.PipeCwd;
+
+            foreach (EnvironmentEntry entry in pipeOptions.PipeEnvironment)
+            {
+                proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+            }
 
             InitProcess(proc, out reader, out writer);
         }
 
-        private void KillChildren(List<Tuple<int,int>> processes, int pid)
+        private void KillChildren(List<Tuple<int, int>> processes, int pid)
         {
             processes.ForEach((p) =>
             {
@@ -153,7 +168,7 @@ namespace MICore
                 // Using this list, issue a 'kill' command for each child process. Kill the children (recursively) to eliminate
                 // the entire process tree rooted at p. 
                 Process ps = new Process();
-                ps.StartInfo.FileName ="/bin/ps";
+                ps.StartInfo.FileName = "/bin/ps";
                 ps.StartInfo.Arguments = isLinux ? "-x -o \"%p %P\"" : "-x -o \"pid ppid\"";
                 ps.StartInfo.RedirectStandardOutput = true;
                 ps.StartInfo.UseShellExecute = false;
@@ -208,7 +223,8 @@ namespace MICore
                 _process.Exited -= OnProcessExit;
                 if (_killOnClose && !_process.HasExited)
                 {
-                    try {
+                    try
+                    {
                         KillProcess(_process);
                     }
                     catch

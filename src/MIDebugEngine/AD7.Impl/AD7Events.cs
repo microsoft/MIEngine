@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using MICore;
 using System.Diagnostics;
+using System.Globalization;
 
 // This file contains the various event objects that are sent to the debugger from the sample engine via IDebugEventCallback2::Event.
 // These are used in EngineCallback.cs.
@@ -124,12 +125,16 @@ namespace Microsoft.MIDebugEngine
 
             if (_fLoad)
             {
-                debugMessage = String.Concat("Loaded '", _module.DebuggedModule.Name, "'");
+                string symbolLoadStatus = _module.DebuggedModule.SymbolsLoaded ?
+                    ResourceStrings.ModuleLoadedWithSymbols :
+                    ResourceStrings.ModuleLoadedWithoutSymbols;
+
+                debugMessage = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ModuleLoadMessage, _module.DebuggedModule.Name, symbolLoadStatus);
                 fIsLoad = 1;
             }
             else
             {
-                debugMessage = String.Concat("Unloaded '", _module.DebuggedModule.Name, "'");
+                debugMessage = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ModuleUnloadMessage, _module.DebuggedModule.Name);
                 fIsLoad = 0;
             }
 
@@ -383,7 +388,7 @@ namespace Microsoft.MIDebugEngine
             _name = name;
             _code = code;
             _description = description ?? name;
-            _category = exceptionCategory ?? new Guid(EngineConstants.EngineId);
+            _category = exceptionCategory ?? EngineConstants.EngineId;
 
             switch (state)
             {
@@ -564,7 +569,7 @@ namespace Microsoft.MIDebugEngine
         #endregion
     }
 
-    internal sealed class AD7StopCompleteEvent: AD7StoppingEvent, IDebugStopCompleteEvent2
+    internal sealed class AD7StopCompleteEvent : AD7StoppingEvent, IDebugStopCompleteEvent2
     {
         public const string IID = "3DCA9DCD-FB09-4AF1-A926-45F293D48B2D";
     }

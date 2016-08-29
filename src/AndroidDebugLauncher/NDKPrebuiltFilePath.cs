@@ -6,7 +6,7 @@ using System.IO;
 
 namespace AndroidDebugLauncher
 {
-    public class NDKPrebuiltFilePath: INDKFilePath
+    public class NDKPrebuiltFilePath : INDKFilePath
     {
         public string PartialFilePath { get; }
 

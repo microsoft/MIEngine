@@ -185,6 +185,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid path to directory path &apos;{0}&apos;. Directory must be a valid directory name that exists..
+        /// </summary>
+        public static string Error_InvalidLocalDirectoryPath {
+            get {
+                return ResourceManager.GetString("Error_InvalidLocalDirectoryPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists..
         /// </summary>
         public static string Error_InvalidLocalExePath {
@@ -208,6 +217,15 @@ namespace MICore {
         public static string Error_LauncherNotFound {
             get {
                 return ResourceManager.GetString("Error_LauncherNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to initialize debugger terminal..
+        /// </summary>
+        public static string Error_LocalUnixTerminalDebuggerInitializationFailed {
+            get {
+                return ResourceManager.GetString("Error_LocalUnixTerminalDebuggerInitializationFailed", resourceCulture);
             }
         }
         
@@ -352,6 +370,15 @@ namespace MICore {
         public static string Error_UnknownXmlElement {
             get {
                 return ResourceManager.GetString("Error_UnknownXmlElement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing debugger on the remote machine..
+        /// </summary>
+        public static string Info_InstallingDebuggerOnRemote {
+            get {
+                return ResourceManager.GetString("Info_InstallingDebuggerOnRemote", resourceCulture);
             }
         }
         

@@ -113,9 +113,15 @@
       <Name>DebugEngineHost.Stub</Name>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.csproj">
+      <Project>{7654cfbb-30db-4c20-bde3-a960cba2036c}</Project>
+      <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\prebuild\prebuild.csproj">
       <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
-      <Name>Prebuild</Name>
+      <Name>prebuild</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
@@ -132,12 +138,14 @@
     </ContentWithTargetPath>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Checksum.cs" />
     <Compile Include="CommandFactories\clrdbg.cs" />
     <Compile Include="CommandFactories\gdb.cs" />
     <Compile Include="CommandFactories\lldb.cs" />
     <Compile Include="CommandFactories\MICommandFactory.cs" />
     <Compile Include="CommandLock.cs" />
     <Compile Include="Debugger.cs" />
+    <Compile Include="DebuggerDisposedException.cs" />
     <Compile Include="ExceptionHelper.cs" />
     <Compile Include="InvalidCoreDumpOperationException.cs" />
     <Compile Include="InvalidLaunchOptionsException.cs" />
@@ -165,12 +173,12 @@
     <Compile Include="Transports\LocalUnixTerminalTransport.cs" />
     <Compile Include="Transports\MockTransport.cs" />
     <Compile Include="Transports\PipeTransport.cs" />
+    <Compile Include="Transports\UnixShellPortTransport.cs" />
     <Compile Include="Transports\ServerTransport.cs" />
     <Compile Include="Transports\StreamTransport.cs" />
     <Compile Include="Transports\TcpTransport.cs" />
     <Compile Include="UnixNativeMethods.cs" />
     <Compile Include="UnixUtilities.cs" />
-    <Compile Include="WindowsNativeMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ExampleLaunchOptions.xml" />

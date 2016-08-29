@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
 using System.Threading;
 using MICore;
+using System.Globalization;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -149,13 +150,11 @@ namespace Microsoft.MIDebugEngine
 
             if (this.DebuggedModule.SymbolsLoaded)
             {
-                string symbolPath = "Symbols Loaded - " + this.DebuggedModule.SymbolPath;
-                pinfo[0].bstrVerboseSearchInfo = symbolPath;
+                pinfo[0].bstrVerboseSearchInfo = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.SymbolsLoadedInfo, this.DebuggedModule.SymbolPath);
             }
             else
             {
-                string symbolsNotLoaded = "Symbols not loaded";
-                pinfo[0].bstrVerboseSearchInfo = symbolsNotLoaded;
+                pinfo[0].bstrVerboseSearchInfo = ResourceStrings.SymbolsNotLoadedInfo;
             }
             return Constants.S_OK;
         }

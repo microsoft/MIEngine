@@ -285,7 +285,7 @@ namespace Microsoft.MIDebugPackage
             debugTargets[0].dlo = (uint)DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
             debugTargets[0].bstrExe = filePath;
             debugTargets[0].bstrOptions = options;
-            debugTargets[0].guidLaunchDebugEngine = new Guid(Microsoft.MIDebugEngine.EngineConstants.EngineId);
+            debugTargets[0].guidLaunchDebugEngine = Microsoft.MIDebugEngine.EngineConstants.EngineId;
             VsDebugTargetProcessInfo[] processInfo = new VsDebugTargetProcessInfo[debugTargets.Length];
 
             debugger.LaunchDebugTargets4(1, debugTargets, processInfo);

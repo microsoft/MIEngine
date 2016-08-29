@@ -11,7 +11,7 @@
 namespace Microsoft.MIDebugEngine {
     using System;
     using System.Reflection;
-
+    
     
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
@@ -96,6 +96,24 @@ namespace Microsoft.MIDebugEngine {
         internal static string Error_ExePathInvalid {
             get {
                 return ResourceManager.GetString("Error_ExePathInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get executable path with error &apos;{0}&apos;..
+        /// </summary>
+        internal static string Error_FailedToGetExePath {
+            get {
+                return ResourceManager.GetString("Error_FailedToGetExePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to obtain target architecture..
+        /// </summary>
+        internal static string Error_FailedToGetTargetArchitecture {
+            get {
+                return ResourceManager.GetString("Error_FailedToGetTargetArchitecture", resourceCulture);
             }
         }
         
@@ -199,6 +217,42 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find or open the symbol file..
+        /// </summary>
+        internal static string ModuleLoadedWithoutSymbols {
+            get {
+                return ResourceManager.GetString("ModuleLoadedWithoutSymbols", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols loaded..
+        /// </summary>
+        internal static string ModuleLoadedWithSymbols {
+            get {
+                return ResourceManager.GetString("ModuleLoadedWithSymbols", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loaded &apos;{0}&apos;. {1}.
+        /// </summary>
+        internal static string ModuleLoadMessage {
+            get {
+                return ResourceManager.GetString("ModuleLoadMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unloaded &apos;{0}&apos;..
+        /// </summary>
+        internal static string ModuleUnloadMessage {
+            get {
+                return ResourceManager.GetString("ModuleUnloadMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit refresh required for visualized expressions.
         /// </summary>
         internal static string NoSideEffectsVisualizerMessage {
@@ -222,6 +276,24 @@ namespace Microsoft.MIDebugEngine {
         internal static string SettingSymbolSearchPath {
             get {
                 return ResourceManager.GetString("SettingSymbolSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols loaded - {0}.
+        /// </summary>
+        internal static string SymbolsLoadedInfo {
+            get {
+                return ResourceManager.GetString("SymbolsLoadedInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols not loaded.
+        /// </summary>
+        internal static string SymbolsNotLoadedInfo {
+            get {
+                return ResourceManager.GetString("SymbolsNotLoadedInfo", resourceCulture);
             }
         }
         
@@ -294,6 +366,15 @@ namespace Microsoft.MIDebugEngine {
         internal static string VisualizingExpressionMessage {
             get {
                 return ResourceManager.GetString("VisualizingExpressionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugger executable &apos;{0}&apos; is not signed. As a result, debugging may not work properly..
+        /// </summary>
+        internal static string Warning_DarwinDebuggerUnsigned {
+            get {
+                return ResourceManager.GetString("Warning_DarwinDebuggerUnsigned", resourceCulture);
             }
         }
         

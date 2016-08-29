@@ -280,6 +280,13 @@
     <xs:complexType>
       <xs:complexContent>
         <xs:extension base="BaseLaunchOptions">
+          <xs:sequence>
+            <xs:element name="PipeEnvironment" minOccurs="0" maxOccurs="1" type="EnvironmentEntryList">
+              <xs:annotation>
+                <xs:documentation>Option list of environment variables to set for pipe program.</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:sequence>
           <xs:attribute name="PipePath" type="xs:string" use="required">
             <xs:annotation>
               <xs:documentation>Path on the VS computer to an executable to run to establish a standard input/output pipe to the target computer.</xs:documentation>
@@ -293,6 +300,11 @@
           <xs:attribute name="PipeCommandArguments" type="xs:string" use="optional">
             <xs:annotation>
               <xs:documentation>Arguments passed to the pipe executable to run a remote Unix (ex: bash or similar) shell command. This is used for running 'kill' on the remote system, or other commands that the debugger may need. If not specified, the debugger will do its best without the shell. But some features, such as setting breakpoints in run mode, may not work. This string should contain the string '{0}' which will be replaced with the command to execute.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="PipeCwd" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>The fully qualified path to the working directory for the pipe program.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
         </xs:extension>
@@ -319,6 +331,27 @@
           <xs:attribute name="Secure" type="xs:boolean" use="optional">
             <xs:annotation>
               <xs:documentation>If true, use TSL security</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SSHLaunchOptions">
+    <xs:annotation>
+      <xs:documentation>Instructs the debugger to connect to a remote debugger over SSH.</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="BaseLaunchOptions">
+          <xs:attribute name="TargetMachine" type="xs:string" use="required">
+            <xs:annotation>
+              <xs:documentation>Network hostname or IP address to connect to.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="StartRemoteDebuggerCommand" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Command to execute on the target machine to launch the remote debugger. If not specified, a default value will be selected for the MIMode.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
         </xs:extension>

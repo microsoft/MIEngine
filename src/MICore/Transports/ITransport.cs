@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,7 +13,7 @@ namespace MICore
 
     public interface ITransport
     {
-        void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger);
+        void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null);
         void Send(string cmd);
         void Close();
         bool IsClosed { get; }
@@ -26,14 +27,14 @@ namespace MICore
         /// </summary>
         int DebuggerPid { get; }
     }
-    public interface ISignalingTransport: ITransport
+    public interface ISignalingTransport : ITransport
     {
         ManualResetEvent StartedEvent { get; }
     }
 
 
     /// <summary>
-    /// Interface implemented by the Debugger class to recieve notifications from the transport
+    /// Interface implemented by the Debugger class to receive notifications from the transport
     /// </summary>
     public interface ITransportCallback
     {

@@ -120,5 +120,10 @@ namespace Microsoft.DebugEngineHost.VSImpl
         {
             _messagePump.SetProgressInfo(totalSteps, currentStep, progressText);
         }
+
+        public void SetText(string text)
+        {
+            _messagePump.SetWaitText(text);
+        }
     }
 }

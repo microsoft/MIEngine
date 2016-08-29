@@ -37,6 +37,7 @@ namespace Microsoft.MIDebugEngine
         VariableInformation FindChildByName(string name);
         string EvalDependentExpression(string expr);
         bool IsVisualized { get; }
+        bool IsReadOnly { get; }
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
     }
 
@@ -171,12 +172,13 @@ namespace Microsoft.MIDebugEngine
             IsParameter = false;
             IsChild = false;
             _attribsFetched = false;
+            _isReadonly = false;
             Access = enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_NONE;
             _fullname = null;
 
-            lock(this._debuggedProcess.ActiveVariables)
+            lock (_debuggedProcess.ActiveVariables)
             {
-                this._debuggedProcess.ActiveVariables.Add(this);
+                _debuggedProcess.ActiveVariables.Add(this);
             }
         }
 
@@ -232,6 +234,14 @@ namespace Microsoft.MIDebugEngine
             {
                 DisplayHint = results.FindString("displayhint");
             }
+            if (results.Contains("attributes"))
+            {
+                if (results.FindString("attributes") == "noneditable")
+                {
+                    _isReadonly = true;
+                }
+                _attribsFetched = true;
+            }
 
             int index;
 
@@ -259,13 +269,6 @@ namespace Microsoft.MIDebugEngine
             _format = parent._format; // inherit formatting
             _parent = parent.VariableNodeType == NodeType.AccessQualifier ? parent._parent : parent;
             this.PropertyInfoFlags = parent.PropertyInfoFlags;
-        }
-
-        private VariableInformation(TupleValue results, VariableInformation parent, bool ro)
-            : this(results, parent)
-        {
-            _attribsFetched = true;  // read-only attribute is passed in at construction
-            _isReadonly = ro;
         }
 
         public ThreadContext ThreadContext { get { return _ctx; } }
@@ -417,7 +420,7 @@ namespace Microsoft.MIDebugEngine
 
                 try
                 {
-                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures:true);
+                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures: true);
                     Value = String.Empty;
                     this.TypeName = null;
                 }
@@ -462,6 +465,14 @@ namespace Microsoft.MIDebugEngine
                     if (results.Contains("displayhint"))
                     {
                         DisplayHint = results.FindString("displayhint");
+                    }
+                    if (results.Contains("attributes"))
+                    {
+                        if (results.FindString("attributes") == "noneditable")
+                        {
+                            _isReadonly = true;
+                        }
+                        _attribsFetched = true;
                     }
                     Value = results.TryFindString("value");
                     if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
@@ -545,27 +556,18 @@ namespace Microsoft.MIDebugEngine
 
             if (results.ResultClass == ResultClass.done)
             {
-                TupleValue[] children = results.Contains("children") 
+                TupleValue[] children = results.Contains("children")
                     ? results.Find<ResultListValue>("children").FindAll<TupleValue>("child")
                     : new TupleValue[0];
                 int i = 0;
                 bool isArray = IsArrayType();
-                bool elementIsReadonly = false;
                 if (isArray)
                 {
                     CountChildren = results.FindUint("numchild");
                     Children = new VariableInformation[CountChildren];
-                    //if (k.Length > 0)    // perform attrib check on first array child, apply to all elements
-                    //{
-                    //    MICore.Debugger.Results childResults = MICore.Debugger.DecodeResults(k[0]);
-                    //    string name = childResults.Find("name");
-                    //    Debug.Assert(!string.IsNullOrEmpty(name));
-                    //    string attribute = await m_engine.DebuggedProcess.MICommandFactory.VarShowAttributes(name);
-                    //    elementIsReadonly = (attribute != "editable");
-                    //}
                     foreach (var c in children)
                     {
-                        Children[i] = new VariableInformation(c, this, elementIsReadonly);
+                        Children[i] = new VariableInformation(c, this);
                         i++;
                     }
                 }
@@ -577,12 +579,12 @@ namespace Microsoft.MIDebugEngine
                     //      children of this value can be assumed to alternate between keys and values.'
                     //
                     List<VariableInformation> listChildren = new List<VariableInformation>();
-                    for(int p = 0; p+1 < children.Length; p+=2)
+                    for (int p = 0; p + 1 < children.Length; p += 2)
                     {
                         // One Variable is created for each pair returned with the first element (p) being the name of the child
                         // and the second element (p+1) becoming the value.
                         string name = children[p].FindString("value");
-                        var variable = new VariableInformation(children[p+1], this, '[' + name + ']');
+                        var variable = new VariableInformation(children[p + 1], this, '[' + name + ']');
                         listChildren.Add(variable);
                     }
                     Children = listChildren.ToArray();
@@ -669,28 +671,32 @@ namespace Microsoft.MIDebugEngine
             return DisplayHint == "map";
         }
 
-        public bool IsReadOnly()
+        public bool IsReadOnly
         {
-            if (!_attribsFetched)
+            get
             {
-                if (string.IsNullOrEmpty(_internalName))
+                if (!_attribsFetched)
                 {
-                    return true;
+                    if (string.IsNullOrEmpty(_internalName))
+                    {
+                        return true;
+                    }
+
+                    this.VerifyNotDisposed();
+
+                    string attribute = string.Empty;
+
+                    _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                    {
+                        attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
+                    });
+
+                    _isReadonly = (attribute == "noneditable");
+                    _attribsFetched = true;
                 }
 
-                this.VerifyNotDisposed();
-
-                string attribute = string.Empty;
-
-                _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
-                {
-                    attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
-                });
-
-                _isReadonly = (attribute != "editable");
-                _attribsFetched = true;
+                return _isReadonly;
             }
-            return _isReadonly;
         }
 
         public void Assign(string expression)
@@ -710,7 +716,7 @@ namespace Microsoft.MIDebugEngine
 
         private void VerifyNotDisposed()
         {
-            if (this._isDisposed)
+            if (_isDisposed)
             {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -725,7 +731,7 @@ namespace Microsoft.MIDebugEngine
 
         private void Dispose(bool isDisposing)
         {
-            this._isDisposed = true;
+            _isDisposed = true;
 
             //mi -var-delete deletes all children, so only top level variables should be added to the delete list
             //Additionally, we create variables for anything we try to evaluate. Only succesful evaluations get internal names, 

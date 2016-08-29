@@ -1,7 +1,7 @@
 ﻿{
   "engineAssemblyName": "Microsoft.MIDebugEngine",
   "engineClassName": "Microsoft.MIDebugEngine.AD7Engine",
-  "conditionalBP": false,
+  "conditionalBP": true,
   "functionBP": false,
   "exceptionSettings": {
     "categories": [

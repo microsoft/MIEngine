@@ -46,9 +46,21 @@ namespace MICore
             return true;
         }
 
+        public override bool SupportsBreakpointChecksums()
+        {
+            return true;
+        }
+
         public override async Task<bool> SetJustMyCode(bool enabled)
         {
             string command = "-gdb-set just-my-code " + (enabled ? "1" : "0");
+            Results results = await _debugger.CmdAsync(command, ResultClass.None);
+            return results.ResultClass == ResultClass.done;
+        }
+
+        public override async Task<bool> SetStepFiltering(bool enabled)
+        {
+            string command = "-gdb-set enable-step-filtering " + (enabled ? "1" : "0");
             Results results = await _debugger.CmdAsync(command, ResultClass.None);
             return results.ResultClass == ResultClass.done;
         }
@@ -187,6 +199,13 @@ namespace MICore
             }
         }
 
+        public override async Task ExecRun()
+        {
+            string command = (_debugger.LaunchOptions.NoDebug) ? "-exec-run --noDebug" : "-exec-run";
+            _debugger.VerifyNotDebuggingCoreDump();
+            await _debugger.CmdAsync(command, ResultClass.running);
+        }
+
         override public async Task Terminate()
         {
             string command = "-exec-abort";
@@ -216,6 +235,17 @@ namespace MICore
         public override Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done)
         {
             throw new NotImplementedException("clrdbg catch command");
+        }
+
+        public override string GetTargetArchitectureCommand()
+        {
+            return null;
+        }
+
+        public override TargetArchitecture ParseTargetArchitectureResult(string result)
+        {
+            // CLRDBG only support x64 now.
+            return TargetArchitecture.X64;
         }
     }
 }

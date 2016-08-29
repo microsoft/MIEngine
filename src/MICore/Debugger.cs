@@ -6,12 +6,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Text;
 using System.Diagnostics;
-using System.Collections;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.IO;
+using Microsoft.Win32.SafeHandles;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -80,6 +79,7 @@ namespace MICore
         private int _localDebuggerPid = -1;
 
         protected bool _connected;
+        protected bool _terminating;
 
         public class ResultEventArgs : EventArgs
         {
@@ -97,7 +97,7 @@ namespace MICore
             public uint Id { get; private set; }
         };
 
-        public class StoppingEventArgs: ResultEventArgs
+        public class StoppingEventArgs : ResultEventArgs
         {
             public readonly BreakRequest AsyncRequest;
             public StoppingEventArgs(Results results, uint id, BreakRequest asyncRequest = BreakRequest.None) : base(results, id)
@@ -379,7 +379,7 @@ namespace MICore
             {
                 if (_isClosed)
                 {
-                    source.SetException(new ObjectDisposedException("Debugger"));
+                    source.SetException(new DebuggerDisposedException());
                 }
                 else
                 {
@@ -403,13 +403,13 @@ namespace MICore
             return processContinued;
         }
 
-        public void Init(ITransport transport, LaunchOptions options)
+        public void Init(ITransport transport, LaunchOptions options, HostWaitLoop waitLoop = null)
         {
             _lastCommandId = 1000;
             _transport = transport;
             FlushBreakStateData();
 
-            _transport.Init(this, options, Logger);
+            _transport.Init(this, options, Logger, waitLoop);
         }
 
         public void SetTargetArch(TargetArchitecture arch)
@@ -493,7 +493,7 @@ namespace MICore
             {
                 if (_internalBreakActionCompletionSource != null)
                 {
-                    _internalBreakActionCompletionSource.SetException(new ObjectDisposedException("Debugger"));
+                    _internalBreakActionCompletionSource.SetException(new DebuggerDisposedException());
                 }
                 _internalBreakActions.Clear();
             }
@@ -574,12 +574,16 @@ namespace MICore
 
         public async Task<Results> CmdTerminate()
         {
-            if (ProcessState == ProcessState.Running)
+            if (!_terminating)
             {
-                await CmdBreak(BreakRequest.Async);
-            }
+                _terminating = true;
+                if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
+                {
+                    await CmdBreak(BreakRequest.Async);
+                }
 
-            await MICommandFactory.Terminate();
+                await MICommandFactory.Terminate();
+            }
 
             return new Results(ResultClass.done);
         }
@@ -624,13 +628,6 @@ namespace MICore
                     if (useSignal)
                     {
                         return CmdBreakUnix(debuggeePid, ResultClass.done);
-                    }
-                }
-                else if (PlatformUtilities.IsWindows() && !this.IsCygwin)
-                {
-                    if (useSignal)
-                    {
-                        return CmdBreakWindows(debuggeePid, ResultClass.done);
                     }
                 }
             }
@@ -692,7 +689,7 @@ namespace MICore
             {
                 if (this.ProcessState == MICore.ProcessState.Exited)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException();
                 }
                 else
                 {
@@ -707,7 +704,7 @@ namespace MICore
                 {
                     if (this.ProcessState == MICore.ProcessState.Exited)
                     {
-                        throw new ObjectDisposedException("Debugger");
+                        throw new DebuggerDisposedException();
                     }
                     else
                     {
@@ -764,7 +761,7 @@ namespace MICore
             {
                 if (_isClosed)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException();
                 }
 
                 id = ++_lastCommandId;
@@ -788,36 +785,7 @@ namespace MICore
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
 
-        private Task<Results> CmdBreakWindows(int debugeePid, ResultClass expectedResultClass)
-        {
-            lock (this._debuggeePids)
-            {
-                foreach (int pid in this._debuggeePids.Values)
-                {
-                    try
-                    {
-                        // Mingw has no kill utility. Instead, use kernel32!DebugBreakProcess. Note that this
-                        // can deadlock if the loader lock is taken by a suspended thread. This approach does
-                        // not work in cygwin
-                        Process p = Process.GetProcessById(pid);
-
-#if CORECLR
-                        WindowsNativeMethods.DebugBreakProcess(p.SafeHandle);
-#else
-                        WindowsNativeMethods.DebugBreakProcess(p.Handle);
-#endif
-                    }
-                    catch
-                    {
-
-                    }
-                }
-            }
-
-            return Task.FromResult<Results>(new Results(ResultClass.done));
-        }
-
-#region ITransportCallback implementation
+        #region ITransportCallback implementation
         // Note: this can be called from any thread
         void ITransportCallback.OnStdOutLine(string line)
         {
@@ -924,7 +892,7 @@ namespace MICore
             }
         }
 
-#endregion
+        #endregion
 
         // inherited classes can override this for thread marshalling etc
         protected virtual void ScheduleStdOutProcessing(string line)
@@ -1003,11 +971,26 @@ namespace MICore
 
             internal void Abort()
             {
-                _completionSource.SetException(new ObjectDisposedException("Debugger"));
+                _completionSource.SetException(new DebuggerDisposedException(Command));
             }
         }
 
         private readonly Dictionary<uint, WaitingOperationDescriptor> _waitingOperations = new Dictionary<uint, WaitingOperationDescriptor>();
+
+        /// <summary>
+        /// Returns true it is a (gdb) prompt.
+        /// </summary>
+        /// <param name="prompt">The prompt from the debugger</param>
+        /// <returns>True if (gdb) prompt, false otherwise</returns>
+        /// <remarks>For SSH transport connecting to gdb, it has a trailing space following the prompt like "(gdb) ".</remarks>
+        private static bool IsGdbPrompt(string prompt)
+        {
+            const string gdbPrompt = "(gdb)";
+
+            return
+                prompt.StartsWith(gdbPrompt, StringComparison.Ordinal) &&
+                prompt.Trim().Length == gdbPrompt.Length;
+        }
 
         public void ProcessStdOutLine(string line)
         {
@@ -1015,7 +998,7 @@ namespace MICore
             {
                 return;
             }
-            else if (line == "(gdb)")
+            else if (IsGdbPrompt(line))
             {
                 if (_consoleDebuggerInitializeCompletionSource != null)
                 {
@@ -1332,7 +1315,7 @@ namespace MICore
         {
             foreach (var grp in _debuggeePids)
             {
-                if ( grp.Value == pid)
+                if (grp.Value == pid)
                 {
                     return InferiorNumber(grp.Key);
                 }

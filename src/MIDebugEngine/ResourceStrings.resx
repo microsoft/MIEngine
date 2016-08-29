@@ -147,6 +147,24 @@
   <data name="LoadingSymbolMessage" xml:space="preserve">
     <value>Loading symbols for module {0}</value>
   </data>
+  <data name="ModuleLoadMessage" xml:space="preserve">
+    <value>Loaded '{0}'. {1}</value>
+  </data>
+  <data name="ModuleUnloadMessage" xml:space="preserve">
+    <value>Unloaded '{0}'.</value>
+  </data>
+  <data name="ModuleLoadedWithSymbols" xml:space="preserve">
+    <value>Symbols loaded.</value>
+  </data>
+  <data name="SymbolsLoadedInfo" xml:space="preserve">
+    <value>Symbols loaded - {0}</value>
+  </data>
+  <data name="ModuleLoadedWithoutSymbols" xml:space="preserve">
+    <value>Cannot find or open the symbol file.</value>
+  </data>
+  <data name="SymbolsNotLoadedInfo" xml:space="preserve">
+    <value>Symbols not loaded</value>
+  </data>
   <data name="LongBind" xml:space="preserve">
     <value>Attempting to bind the breakpoint....</value>
   </data>
@@ -206,5 +224,16 @@
   </data>
   <data name="Warning_UsingDefaultArchitecture" xml:space="preserve">
     <value>Warning: Debuggee TargetArchitecture not detected, assuming x86_64.</value>
+  </data>
+  <data name="Warning_DarwinDebuggerUnsigned" xml:space="preserve">
+    <value>Debugger executable '{0}' is not signed. As a result, debugging may not work properly.</value>
+    <comment>0 = debugger path</comment>
+  </data>
+  <data name="Error_FailedToGetTargetArchitecture" xml:space="preserve">
+    <value>Failed to obtain target architecture.</value>
+  </data>
+  <data name="Error_FailedToGetExePath" xml:space="preserve">
+    <value>Failed to get executable path with error '{0}'.</value>
+    <comment>0 = failure message</comment>
   </data>
 </root>

@@ -36,9 +36,43 @@ namespace MICore
             return false;
         }
 
+        public override bool SupportsFrameFormatting
+        {
+            get
+            {
+                // LLDB already adds the parameter list to the function name when a -stack-list-frame or -stack-info-frame
+                // call is made so setting this to true so we don't append the parameters on stack frames.
+                return true;
+            }
+        }
+
+        protected override StringBuilder BuildBreakInsert(string condition, bool enabled)
+        {
+            // LLDB's use of the pending flag requires an optional parameter or else it fails.
+            // We will use "on" for now. 
+            // TODO: Fix this on LLDB-MI's side
+            string pendingFlag = "-f on ";
+
+            StringBuilder cmd = new StringBuilder("-break-insert ");
+            cmd.Append(pendingFlag);
+
+            if (condition != null)
+            {
+                cmd.Append("-c \"");
+                cmd.Append(condition);
+                cmd.Append("\" ");
+            }
+            if (!enabled)
+            {
+                cmd.Append("-d ");
+            }
+            return cmd;
+        }
+
         public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-create - - \"{0}\"", expression);  // use '-' to indicate that "--frame" should be used to determine the frame number
+            string quoteEscapedExpression = EscapeQuotes(expression);
+            string command = string.Format("-var-create - - \"{0}\"", quoteEscapedExpression);  // use '-' to indicate that "--frame" should be used to determine the frame number
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
             return results;
@@ -57,6 +91,7 @@ namespace MICore
 
             return await _debugger.CmdAsync(threadCommand, expectedResultClass);
         }
+
         public override Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
             return Task.FromResult<List<ulong>>(null);
@@ -68,10 +103,13 @@ namespace MICore
             return Task.FromResult((object)null);
         }
 
-        public override async Task<TargetArchitecture> GetTargetArchitecture()
+        public override string GetTargetArchitectureCommand()
         {
-            string cmd = "platform status";
-            var result = await _debugger.ConsoleCmdAsync(cmd);
+            return "platform status";
+        }
+
+        public override TargetArchitecture ParseTargetArchitectureResult(string result)
+        {
             using (StringReader stringReader = new StringReader(result))
             {
                 while (true)

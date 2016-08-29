@@ -1174,11 +1174,26 @@ namespace MICore.Xml.LaunchOptions {
     [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
     public partial class PipeLaunchOptions : BaseLaunchOptions {
         
+        private EnvironmentEntry[] pipeEnvironmentField;
+        
         private string pipePathField;
         
         private string pipeArgumentsField;
         
         private string pipeCommandArgumentsField;
+        
+        private string pipeCwdField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public EnvironmentEntry[] PipeEnvironment {
+            get {
+                return this.pipeEnvironmentField;
+            }
+            set {
+                this.pipeEnvironmentField = value;
+            }
+        }
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -1210,6 +1225,17 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.pipeCommandArgumentsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string PipeCwd {
+            get {
+                return this.pipeCwdField;
+            }
+            set {
+                this.pipeCwdField = value;
             }
         }
     }
@@ -1272,6 +1298,42 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.secureFieldSpecified = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
+    public partial class SSHLaunchOptions : BaseLaunchOptions {
+        
+        private string targetMachineField;
+        
+        private string startRemoteDebuggerCommandField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string TargetMachine {
+            get {
+                return this.targetMachineField;
+            }
+            set {
+                this.targetMachineField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string StartRemoteDebuggerCommand {
+            get {
+                return this.startRemoteDebuggerCommandField;
+            }
+            set {
+                this.startRemoteDebuggerCommandField = value;
             }
         }
     }

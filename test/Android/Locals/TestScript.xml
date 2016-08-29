@@ -151,25 +151,25 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^31,0 to 31,0 in (\[Unknown\]|liblocals.so)!SimpleClass::TestMe\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^31,0 to 31,0 in (\[Unknown\]|liblocals.so)!SimpleClass::TestMe\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^48,0 to 48,0 in (\[Unknown\]|liblocals.so)!DerivedClass::DerivedClass\(int, int\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^48,0 to 48,0 in (\[Unknown\]|liblocals.so)!DerivedClass::DerivedClass\(int, int\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^65,0 to 65,0 in (\[Unknown\]|liblocals.so)!DerivedClass::TestMe\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^65,0 to 65,0 in (\[Unknown\]|liblocals.so)!DerivedClass::TestMe\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^116,0 to 116,0 in (\[Unknown\]|liblocals.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^116,0 to 116,0 in (\[Unknown\]|liblocals.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^73,0 to 73,0 in (\[Unknown\]|liblocals.so)!x_2\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^73,0 to 73,0 in (\[Unknown\]|liblocals.so)!x_2\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^80,0 to 80,0 in (\[Unknown\]|liblocals.so)!x_1\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^80,0 to 80,0 in (\[Unknown\]|liblocals.so)!x_1\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint RegEx="^84,0 to 84,0 in (\[Unknown\]|liblocals.so)!x_1\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^84,0 to 84,0 in (\[Unknown\]|liblocals.so)!x_1\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />

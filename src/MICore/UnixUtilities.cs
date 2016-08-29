@@ -20,6 +20,9 @@ namespace MICore
         // Linux specific
         private const string PtraceScopePath = "/proc/sys/kernel/yama/ptrace_scope";
 
+        // OS X specific
+        private const string CodeSignPath = "/usr/bin/codesign";
+
         /// <summary>
         /// Launch a new terminal, spin up a new bash shell, cd to the working dir, execute a tty command to get the shell tty and store it.
         /// Start the debugger in mi mode setting the tty to the terminal defined earlier and redirect stdin/stdout
@@ -39,6 +42,12 @@ namespace MICore
             string pidFifo,
             string debuggerCmd)
         {
+            // On OSX, 'wait' will return once there is a status change from the launched process rather than for it to exit, so
+            // we need to use 'fg' there. This works as our bash prompt is launched through apple script rather than 'bash -c'.
+            // On Linux, fg will fail with 'no job control' because our commands are being executed through 'bash -c', and
+            // bash doesn't support fg in this mode, so we need to use 'wait' there.
+            string waitForCompletionCommand = PlatformUtilities.IsOSX() ? "fg > /dev/null; " : "wait $pid; ";
+
             return string.Format(CultureInfo.InvariantCulture,
                 // echo the shell pid so that we can monitor it
                 "echo $$ > {3}; " +
@@ -52,12 +61,13 @@ namespace MICore
                 // we need to fake an exit by the debugger
                 "pid=$! ; " +
                 "echo $pid > {3}; " +
-                "wait $pid; ",
-                debuggeeDir,
-                dbgStdInName,
-                dbgStdOutName,
-                pidFifo,
-                debuggerCmd
+                "{5}",
+                debuggeeDir, /* 0 */
+                dbgStdInName, /* 1 */
+                dbgStdOutName, /* 2 */
+                pidFifo, /* 3 */
+                debuggerCmd, /* 4 */
+                waitForCompletionCommand /* 5 */
                 );
         }
 
@@ -159,6 +169,29 @@ namespace MICore
             // When getting the process group ID, getpgid will return -1
             // if there is no process with the ID specified.
             return UnixNativeMethods.GetPGid(processId) >= 0;
+        }
+
+        public static bool IsBinarySigned(string filePath)
+        {
+            if (!PlatformUtilities.IsOSX())
+            {
+                throw new NotImplementedException();
+            }
+
+            Process p = new Process
+            {
+                StartInfo =
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = true,
+                    FileName = CodeSignPath,
+                    Arguments = "--display " + filePath
+                 }
+            };
+
+            p.Start();
+            p.WaitForExit();
+            return p.ExitCode == 0;
         }
     }
 }
