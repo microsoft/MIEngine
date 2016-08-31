@@ -383,6 +383,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Starting unix command: &apos;{0}&apos;.
+        /// </summary>
+        public static string Info_StartingUnixCommand {
+            get {
+                return ResourceManager.GetString("Info_StartingUnixCommand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained..
         /// </summary>
         public static string Status_BreakpointPending {
@@ -415,6 +424,15 @@ namespace MICore {
         public static string Warn_ProcessExit {
             get {
                 return ResourceManager.GetString("Warn_ProcessExit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Downloading Clrdbg to remote machine failed with error {0}..
+        /// </summary>
+        public static string Warning_DownloadingClrDbgToRemote {
+            get {
+                return ResourceManager.GetString("Warning_DownloadingClrDbgToRemote", resourceCulture);
             }
         }
     }
