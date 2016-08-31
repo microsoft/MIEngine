@@ -443,7 +443,7 @@ namespace MICore
         /// {1} - clrdbg version.
         /// {2} - Subdirectory where clrdbg should be installed.
         /// </remarks>
-        private const string ClrdbgFirstLaunchCommand = "pushd {0} && chmod +x ./GetClrDbg.sh && ./GetClrDbg.sh -v {1} -l {0}/{2} -d";
+        private const string ClrdbgFirstLaunchCommand = "cd {0} && chmod +x ./GetClrDbg.sh && ./GetClrDbg.sh -v {1} -l {0}/{2} -d";
 
         /// <summary>
         /// Shell command invoked after a successful launch of clrdbg. 
@@ -454,7 +454,7 @@ namespace MICore
         /// {1} - clrdbg version.
         /// {2} - Subdirectory where clrdbg should be installed.
         /// </remarks>
-        private const string ClrdbgSubsequentLaunchCommand = "pushd {0} && ./GetClrDbg.sh -v {1} -l {0}/{2} -d -s";
+        private const string ClrdbgSubsequentLaunchCommand = "cd {0} && ./GetClrDbg.sh -v {1} -l {0}/{2} -d -s";
 
         public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand,
                 Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
@@ -501,7 +501,7 @@ namespace MICore
                         break;
                     case MIMode.Clrdbg:
                         string userHomeDirectory = UnixPort.GetUserHomeDirectory();
-                        string debuggerHomeDirectory = System.FormattableString.Invariant($"{userHomeDirectory}{Path.AltDirectorySeparatorChar}{DebuggerInstallationDirectory}{Path.AltDirectorySeparatorChar}");
+                        string debuggerHomeDirectory = string.Format(CultureInfo.InvariantCulture, "{0}/{1}/", userHomeDirectory, DebuggerInstallationDirectory);
 
                         if (!HasSuccessfulPreviousLaunch(this))
                         {

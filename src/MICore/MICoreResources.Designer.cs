@@ -428,7 +428,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Downloading Clrdbg to remote machine failed with error {0}..
+        ///   Looks up a localized string similar to Warning: Downloading .NET debugger to remote machine failed with error {0}..
         /// </summary>
         public static string Warning_DownloadingClrDbgToRemote {
             get {

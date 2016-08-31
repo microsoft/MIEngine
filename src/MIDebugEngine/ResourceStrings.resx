@@ -237,7 +237,7 @@
     <comment>0 = failure message</comment>
   </data>
   <data name="Error_PTraceFailure" xml:space="preserve">
-    <value>Attaching to process {0} with {1} failed because of insufficient privilages with error message {2}.
+    <value>Attaching to process {0} with {1} failed because of insufficient privilages with error message '{2}'.
 
 To attach to application on Linux, login as super user or disable ptrace.</value>
     <comment>{0} process pid

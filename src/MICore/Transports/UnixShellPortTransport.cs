@@ -25,7 +25,7 @@ namespace MICore
         private bool _debuggerLaunched = false;
         private UnixShellPortLaunchOptions _launchOptions;
 
-        private const string s_errorPrefix = "Error:";
+        private const string ErrorPrefix = "Error:";
         private const string ShellScriptName = "GetClrDbg.sh";
 
         public UnixShellPortTransport()
@@ -145,9 +145,9 @@ namespace MICore
                 }
                 else
                 {
-                    if (line != null && line.StartsWith(s_errorPrefix, System.StringComparison.OrdinalIgnoreCase))
+                    if (line != null && line.StartsWith(ErrorPrefix, System.StringComparison.OrdinalIgnoreCase))
                     {
-                        _callback.OnStdErrorLine(line.Substring(s_errorPrefix.Length).Trim());
+                        _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
                     }
                     else
                     {

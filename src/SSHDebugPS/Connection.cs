@@ -82,10 +82,12 @@ namespace Microsoft.SSHDebugPS
                 stat = _remoteSystem.FileSystem.Stat(path);
                 directoryExists = stat.IsDirectory();
             }
-            catch
+            catch 
             {
-                // Eat exceptions.
+                // Catching and eating all exceptions.
+                // Unfortunately the exceptions that are thrown by liblinux are not public, so we can't specialize it.
             }
+            
 
             if (stat == null && !directoryExists)
             {

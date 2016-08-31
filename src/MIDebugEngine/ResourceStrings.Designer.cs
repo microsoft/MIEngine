@@ -118,7 +118,7 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attaching to process {0} with {1} failed because of insufficient privilages with error message {2}.
+        ///   Looks up a localized string similar to Attaching to process {0} with {1} failed because of insufficient privilages with error message &apos;{2}&apos;.
         ///
         ///To attach to application on Linux, login as super user or disable ptrace..
         /// </summary>

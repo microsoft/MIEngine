@@ -657,8 +657,7 @@ namespace Microsoft.MIDebugEngine
                         }
                     };
 
-                    int pid = _launchOptions.ProcessId;
-                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false, failureHandler: failureHandler));
+                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId, ignoreFailures: false, failureHandler: failureHandler));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -774,7 +773,8 @@ namespace Microsoft.MIDebugEngine
             // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
-            string absoluteExePath = System.FormattableString.Invariant($"shell lsof -p {_launchOptions.ProcessId} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'");
+            // Usually the first FD=txt in the output of lsof points to the executable.
+            string absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId);
 
             Action<string> failureHandler = (string miError) =>
             {
