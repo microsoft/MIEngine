@@ -243,4 +243,12 @@ Error: {1}</value>
   <data name="Info_InstallingDebuggerOnRemote" xml:space="preserve">
     <value>Installing debugger on the remote machine.</value>
   </data>
+  <data name="Info_StartingUnixCommand" xml:space="preserve">
+    <value>Starting unix command: '{0}'</value>
+    <comment>{0} command run on the remote unix machine.</comment>
+  </data>
+  <data name="Warning_DownloadingClrDbgToRemote" xml:space="preserve">
+    <value>Warning: Downloading Clrdbg to remote machine failed with error {0}.</value>
+    <comment>{0} exception error</comment>
+  </data>
 </root>

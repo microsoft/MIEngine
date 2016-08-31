@@ -123,6 +123,10 @@
   <data name="AuthenticationFailureHeader" xml:space="preserve">
     <value>Authentication Failure</value>
   </data>
+  <data name="Error_InvalidDirectory" xml:space="preserve">
+    <value>The specified directory {0} could not be created or accessed.</value>
+    <comment>{0} directory name.</comment>
+  </data>
   <data name="Error_PSFailed" xml:space="preserve">
     <value>Unable to obtain process listing. 'ps' command failed.</value>
   </data>

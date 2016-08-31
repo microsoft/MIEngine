@@ -54,6 +54,12 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// <param name="path">Path on the remote machine.</param>
         /// <returns>Full path of the created directory.</returns>
         string MakeDirectory(string path);
+
+        /// <summary>
+        /// Gets the home directory of the user.
+        /// </summary>
+        /// <returns>Home directory of the user.</returns>
+        string GetUserHomeDirectory();
     }
 
     /// <summary>

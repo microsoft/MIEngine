@@ -79,6 +79,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified directory {0} could not be created or accessed..
+        /// </summary>
+        internal static string Error_InvalidDirectory {
+            get {
+                return ResourceManager.GetString("Error_InvalidDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to obtain process listing. &apos;ps&apos; command failed..
         /// </summary>
         internal static string Error_PSFailed {

@@ -46,7 +46,7 @@
 ; "SetNextStatement"=dword:00000001
 ; "SuspendThread"=dword:00000001
 "CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
-"RemoteInstallationDirectory"="~/.vs-debugger"
+"RemoteInstallationDirectory"=".vs-debugger"
 "RemoteInstallationSubDirectory"="vs2015u2"
 "ClrDbgVersion"="vs2015u2"
 ; Following is a placeholder, needs to be fixed.

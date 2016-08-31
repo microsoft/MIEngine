@@ -55,14 +55,13 @@ namespace Microsoft.SSHDebugPS
         /// <param name="destinationPath">Destination path on the remote machine.</param>
         internal void CopyFile(string sourcePath, string destinationPath)
         {
-            if (!string.IsNullOrEmpty(sourcePath))
+            if (string.IsNullOrEmpty(sourcePath))
             {
                 throw new ArgumentNullException(sourcePath);
             }
 
             if (!File.Exists(sourcePath))
             {
-                // TODO: Errors in resource
                 throw new FileNotFoundException(StringResources.Error_SourceFileNotFound, sourcePath);
             }
 
@@ -76,14 +75,36 @@ namespace Microsoft.SSHDebugPS
         /// <returns>Full path of the created directory.</returns>
         internal string MakeDirectory(string path)
         {
-            if (!_remoteSystem.FileSystem.IsDirectory(path))
+            bool directoryExists = false;
+            liblinux.IO.IRemoteFileSystemInfo stat = null;
+            try
+            {
+                stat = _remoteSystem.FileSystem.Stat(path);
+                directoryExists = stat.IsDirectory();
+            }
+            catch
+            {
+                // Eat exceptions.
+            }
+
+            if (stat == null && !directoryExists)
             {
                 return _remoteSystem.FileSystem.CreateDirectory(path).FullPath;
             }
-            else
+            else if (stat != null && directoryExists)
             {
                 return _remoteSystem.FileSystem.GetDirectory(path).FullPath;
             }
+            else
+            {
+                // This may happen if the user does not have permissions or if it is a file, etc.
+                throw new ArgumentException(string.Format(CultureInfo.CurrentUICulture, StringResources.Error_InvalidDirectory, path), nameof(path));
+            }
+        }
+
+        internal string GetUserHomeDirectory()
+        {
+            return _remoteSystem.FileSystem.GetDirectory(liblinux.IO.SpecialDirectory.Home).FullPath;
         }
     }
 }

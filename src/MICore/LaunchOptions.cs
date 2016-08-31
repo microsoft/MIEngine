@@ -421,7 +421,7 @@ namespace MICore
         /// <summary>
         /// Default location of the debugger on the remote machine.
         /// </summary>
-        public string DebuggerInstallationDirectory { get; private set; } = "~/.vs-debugger";
+        public string DebuggerInstallationDirectory { get; private set; } = ".vs-debugger";
 
         /// <summary>
         /// Meta version of the clrdbg.
@@ -435,54 +435,26 @@ namespace MICore
         public string ClrDbgInstallationSubDirectory { get; private set; } = "vs2015u2";
 
         /// <summary>
-        /// Shell command invoked first time when a ClrDbg debug session is launched.
-        /// Downloads and launches clrdbg on the remote machine.
+        /// Shell command invoked after a successful launch of clrdbg. 
+        /// Launches the existing clrdbg.
         /// </summary>
-        /// <remarks>
-        /// {0} - DebuggerInstallationDirectory
-        /// {1} - GetClrDbg.sh url.
-        /// {2} - ClrDbg version.
-        /// {3} - Subdirectory where clrdbg should be installed.
+        /// /// <remarks>
+        /// {0} - Base directory of debugger
+        /// {1} - clrdbg version.
+        /// {2} - Subdirectory where clrdbg should be installed.
         /// </remarks>
-        private const string ClrdbgFirstLaunchCommand = 
-            "(" +
-                "mkdir -p {0} && " +
-                "echo \"Info: Downloading GetClrDbgScript from {1}\" && " +
-                "( " +
-                    "( " +
-                        "type wget > /dev/null 2>&1 && " +
-                        "wget -q {1} -O {0}/GetClrDbg.download && " +
-                        "echo Successfully downloaded GetClrDbg.sh" +
-                    ") || " +
-                    "( " +
-                        "type curl > /dev/null 2>&1 && " +
-                        "curl -s {1} -o {0}/GetClrDbg.download && " +
-                        "echo \"Info: Successfully downloaded GetClrDbg.sh\" " +
-                    ") || " +
-                    "( " +
-                        "echo \"Error: Failed to download GetClrDbg.sh. Commands wget and curl are not available. \" && " +
-                        "exit 1" +
-                    ") " +
-                ") && " +
-                "mv {0}/GetClrDbg.download {0}/GetClrDbg.sh && " + 
-                "chmod +x {0}/GetClrDbg.sh && " +
-                "echo \"Info: Downloading and setting up GetClrDbg.sh script was successful.\" " +
-            ");" + 
-            "(" +
-                "echo \"Info: Launching GetClrDbg.sh\" && " +
-                "{0}/GetClrDbg.sh -v {2} -l {0}/{3} -d -u" +
-            ")";
+        private const string ClrdbgFirstLaunchCommand = "pushd {0} && chmod +x ./GetClrDbg.sh && ./GetClrDbg.sh -v {1} -l {0}/{2} -d";
 
         /// <summary>
         /// Shell command invoked after a successful launch of clrdbg. 
         /// Launches the existing clrdbg.
         /// </summary>
         /// /// <remarks>
-        /// {0} - DebuggerInstallationDirectory
-        /// {1} - GetClrDbg.sh url.
+        /// {0} - Base directory of debugger
+        /// {1} - clrdbg version.
         /// {2} - Subdirectory where clrdbg should be installed.
         /// </remarks>
-        private const string ClrdbgSubsequentLaunchCommand = "{0}/GetClrDbg.sh -v {1} -l {0}/{2} -d -s";
+        private const string ClrdbgSubsequentLaunchCommand = "pushd {0} && ./GetClrDbg.sh -v {1} -l {0}/{2} -d -s";
 
         public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand, 
                 Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort, 
@@ -528,13 +500,16 @@ namespace MICore
                         startRemoteDebuggerCommand = "lldb-mi --interpreter=mi";
                         break;
                     case MIMode.Clrdbg:
+                        string userHomeDirectory = UnixPort.GetUserHomeDirectory();
+                        string debuggerHomeDirectory = System.FormattableString.Invariant($"{userHomeDirectory}{Path.AltDirectorySeparatorChar}{DebuggerInstallationDirectory}{Path.AltDirectorySeparatorChar}");
+
                         if (!HasSuccessfulPreviousLaunch(this))
                         {
-                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgFirstLaunchCommand, DebuggerInstallationDirectory, GetClrDbgUrl, ClrDbgVersion, ClrDbgInstallationSubDirectory);
+                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgFirstLaunchCommand, debuggerHomeDirectory, ClrDbgVersion, ClrDbgInstallationSubDirectory);
                         }
                         else
                         {
-                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgSubsequentLaunchCommand, DebuggerInstallationDirectory, ClrDbgVersion, ClrDbgInstallationSubDirectory);
+                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgSubsequentLaunchCommand, debuggerHomeDirectory, ClrDbgVersion, ClrDbgInstallationSubDirectory);
                         }
                         break;
 
@@ -603,7 +578,7 @@ namespace MICore
         /// Returns true if the previous launch was ever successful on the same session false otherwise.
         /// </summary>
         /// <param name="launchOptions">launch options</param>
-        private static bool HasSuccessfulPreviousLaunch(UnixShellPortLaunchOptions launchOptions)
+        public static bool HasSuccessfulPreviousLaunch(UnixShellPortLaunchOptions launchOptions)
         {
             IDebugPort2 debugPort = launchOptions.UnixPort as IDebugPort2;
             if (debugPort != null)

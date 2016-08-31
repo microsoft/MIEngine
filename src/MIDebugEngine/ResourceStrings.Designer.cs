@@ -118,6 +118,17 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attaching to process {0} with {1} failed because of insufficient privilages with error message {2}.
+        ///
+        ///To attach to application on Linux, login as super user or disable ptrace..
+        /// </summary>
+        internal static string Error_PTraceFailure {
+            get {
+                return ResourceManager.GetString("Error_PTraceFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error &quot;{0}&quot; while reading file: {1}.
         /// </summary>
         internal static string ErrorReadingFile {

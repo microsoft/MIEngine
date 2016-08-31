@@ -643,8 +643,22 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
 
+                    Action<string> failureHandler = (string miError) =>
+                    {
+                        if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
+                            throw new LaunchErrorException(message);
+                        }
+                        else
+                        {
+                            string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                            throw new LaunchErrorException(message);
+                        }
+                    };
+
                     int pid = _launchOptions.ProcessId;
-                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
+                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false, failureHandler: failureHandler));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -757,9 +771,7 @@ namespace Microsoft.MIDebugEngine
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands)
         {
-            // TODO: rajkumar42, make it robust, either use the liblinux api or fallback shell commands available in other distros.
-            // TODO: rajkumar42, -target-attach can fail with gdb if ptrace>=1, elevate permission with liblinux and retry, display error on second failure.
-            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet.
+            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
             string absoluteExePath = System.FormattableString.Invariant($"shell lsof -p {_launchOptions.ProcessId} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'");
