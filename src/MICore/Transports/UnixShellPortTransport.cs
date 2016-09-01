@@ -46,7 +46,7 @@ namespace MICore
                     waitLoop?.SetText(MICoreResources.Info_InstallingDebuggerOnRemote);
                     try
                     {
-                        Task.Run(async () => await DownloadAndCopyFileToRemote(_launchOptions.DebuggerInstallationDirectory, _launchOptions.GetClrDbgUrl)).Wait();
+                        Task.Run(() => DownloadAndCopyFileToRemote(_launchOptions.DebuggerInstallationDirectory, _launchOptions.GetClrDbgUrl)).Wait();
                     }
                     catch (Exception e)
                     {
