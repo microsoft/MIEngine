@@ -508,7 +508,7 @@ namespace MICore
                         else
                         {
                             string userHomeDirectory = UnixPort.GetUserHomeDirectory();
-                            debuggerHomeDirectory = string.Format(CultureInfo.InvariantCulture, "{0}/{1}/", userHomeDirectory, DebuggerInstallationDirectory);
+                            debuggerHomeDirectory = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", userHomeDirectory, DebuggerInstallationDirectory);
                         }
 
                         if (!HasSuccessfulPreviousLaunch(this))
