@@ -118,13 +118,23 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attaching to process {0} with {1} failed because of insufficient privilages with error message &apos;{2}&apos;.
+        ///   Looks up a localized string similar to Attaching to process {0} with {1} failed because of insufficient privileges with error message &apos;{2}&apos;.
         ///
-        ///To attach to application on Linux, login as super user or disable ptrace..
+        ///To attach to application on Linux, login as super user or disable ptrace.
+        ///See https://aka.ms/q5qtjf for details..
         /// </summary>
         internal static string Error_PTraceFailure {
             get {
                 return ResourceManager.GetString("Error_PTraceFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported platform..
+        /// </summary>
+        internal static string Error_UnsupportedPlatform {
+            get {
+                return ResourceManager.GetString("Error_UnsupportedPlatform", resourceCulture);
             }
         }
         

@@ -97,7 +97,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Source file not found.
+        ///   Looks up a localized string similar to Source file &apos;{0}&apos; not found.
         /// </summary>
         internal static string Error_SourceFileNotFound {
             get {

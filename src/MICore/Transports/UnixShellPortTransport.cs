@@ -44,10 +44,9 @@ namespace MICore
                 if (!UnixShellPortLaunchOptions.HasSuccessfulPreviousLaunch(_launchOptions))
                 {
                     waitLoop?.SetText(MICoreResources.Info_InstallingDebuggerOnRemote);
-                    string remoteDebuggerLocation = null;
                     try
                     {
-                        remoteDebuggerLocation = DownloadAndCopyFileToRemote(_launchOptions.DebuggerInstallationDirectory, _launchOptions.GetClrDbgUrl).Result;
+                        Task.Run(async () => await DownloadAndCopyFileToRemote(_launchOptions.DebuggerInstallationDirectory, _launchOptions.GetClrDbgUrl)).Wait();
                     }
                     catch (Exception e)
                     {

@@ -131,7 +131,8 @@
     <value>Unable to obtain process listing. 'ps' command failed.</value>
   </data>
   <data name="Error_SourceFileNotFound" xml:space="preserve">
-    <value>Source file not found</value>
+    <value>Source file '{0}' not found</value>
+    <comment>{0} file</comment>
   </data>
   <data name="HeaderTextFormat" xml:space="preserve">
     <value>Enter credentials to connect to {0}</value>

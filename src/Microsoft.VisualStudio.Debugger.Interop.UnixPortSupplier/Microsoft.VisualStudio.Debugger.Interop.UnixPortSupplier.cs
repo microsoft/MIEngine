@@ -60,6 +60,12 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// </summary>
         /// <returns>Home directory of the user.</returns>
         string GetUserHomeDirectory();
+
+        /// <returns>True if the remote machine is OSX.</returns>
+        bool IsOSX();
+
+        /// <returns>True if the remote machine is Linux.</returns>
+        bool IsLinux();
     }
 
     /// <summary>

@@ -62,7 +62,7 @@ namespace Microsoft.SSHDebugPS
 
             if (!File.Exists(sourcePath))
             {
-                throw new FileNotFoundException(StringResources.Error_SourceFileNotFound, sourcePath);
+                throw new FileNotFoundException(string.Format(CultureInfo.CurrentUICulture, StringResources.Error_SourceFileNotFound, sourcePath));
             }
 
             _remoteSystem.FileSystem.UploadFile(sourcePath, destinationPath);
@@ -107,6 +107,22 @@ namespace Microsoft.SSHDebugPS
         internal string GetUserHomeDirectory()
         {
             return _remoteSystem.FileSystem.GetDirectory(liblinux.IO.SpecialDirectory.Home).FullPath;
+        }
+
+        internal bool IsOSX()
+        {
+            return _remoteSystem.Properties.Id == SystemId.OSX;
+        }
+
+        internal bool IsLinux()
+        {
+            var command = _remoteSystem.Shell.ExecuteCommand("uname");
+            if (command.ExitCode != 0)
+            {
+                return false;
+            }
+
+            return command.Output.Trim().Equals("Linux");
         }
     }
 }

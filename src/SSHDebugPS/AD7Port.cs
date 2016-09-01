@@ -195,5 +195,15 @@ namespace Microsoft.SSHDebugPS
         {
             return GetConnection(ConnectionReason.Deferred).GetUserHomeDirectory();
         }
+
+        public bool IsOSX()
+        {
+            return GetConnection(ConnectionReason.Deferred).IsOSX();
+        }
+
+        public bool IsLinux()
+        {
+            return GetConnection(ConnectionReason.Deferred).IsLinux();
+        }
     }
 }

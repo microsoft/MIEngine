@@ -500,8 +500,16 @@ namespace MICore
                         startRemoteDebuggerCommand = "lldb-mi --interpreter=mi";
                         break;
                     case MIMode.Clrdbg:
-                        string userHomeDirectory = UnixPort.GetUserHomeDirectory();
-                        string debuggerHomeDirectory = string.Format(CultureInfo.InvariantCulture, "{0}/{1}/", userHomeDirectory, DebuggerInstallationDirectory);
+                        string debuggerHomeDirectory;
+                        if (DebuggerInstallationDirectory.StartsWith("/", StringComparison.OrdinalIgnoreCase))
+                        {
+                            debuggerHomeDirectory = DebuggerInstallationDirectory;
+                        }
+                        else
+                        {
+                            string userHomeDirectory = UnixPort.GetUserHomeDirectory();
+                            debuggerHomeDirectory = string.Format(CultureInfo.InvariantCulture, "{0}/{1}/", userHomeDirectory, DebuggerInstallationDirectory);
+                        }
 
                         if (!HasSuccessfulPreviousLaunch(this))
                         {
