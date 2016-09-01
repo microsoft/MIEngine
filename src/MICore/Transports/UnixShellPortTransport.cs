@@ -3,7 +3,11 @@
 
 using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
+using System;
 using System.Globalization;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace MICore
 {
@@ -21,7 +25,8 @@ namespace MICore
         private bool _debuggerLaunched = false;
         private UnixShellPortLaunchOptions _launchOptions;
 
-        private static string s_errorPrefix = "Error:";
+        private const string ErrorPrefix = "Error:";
+        private const string ShellScriptName = "GetClrDbg.sh";
 
         public UnixShellPortTransport()
         {
@@ -34,10 +39,67 @@ namespace MICore
             _logger = logger;
             _startRemoteDebuggerCommand = _launchOptions.StartRemoteDebuggerCommand;
 
-            waitLoop?.SetText(MICoreResources.Info_InstallingDebuggerOnRemote);
+            if (_launchOptions.DebuggerMIMode == MIMode.Clrdbg)
+            {
+                if (!UnixShellPortLaunchOptions.HasSuccessfulPreviousLaunch(_launchOptions))
+                {
+                    waitLoop?.SetText(MICoreResources.Info_InstallingDebuggerOnRemote);
+                    try
+                    {
+                        Task.Run(() => DownloadAndCopyFileToRemote(_launchOptions.DebuggerInstallationDirectory, _launchOptions.GetClrDbgUrl)).Wait();
+                    }
+                    catch (Exception e)
+                    {
+                        // Even if downloading & copying to remote fails, we will still try to invoke the script as it might already exist.
+                        string message = String.Format(CultureInfo.CurrentUICulture, MICoreResources.Warning_DownloadingClrDbgToRemote, e.Message);
+                        _callback.AppendToInitializationLog(message);
+                    }
+                }
+            }
 
-            _callback.AppendToInitializationLog("Starting unix command: " + _startRemoteDebuggerCommand);
+            _callback.AppendToInitializationLog(string.Format(CultureInfo.CurrentUICulture, MICoreResources.Info_StartingUnixCommand, _startRemoteDebuggerCommand));
             _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, this, out _asyncCommand);
+        }
+
+        /// <summary>
+        /// Downloads and copies the GetClrDbg.sh shell script to the remote machine.
+        /// </summary>
+        /// <param name="remoteDirectory">Location on the remote machine.</param>
+        /// <param name="getclrdbgUri">URI of the GetClrDbg.sh script.</param>
+        /// <returns>Full path of the location of GetClrDbg.sh on the remote machine.</returns>
+        private async Task<string> DownloadAndCopyFileToRemote(string remoteDirectory, string getclrdbgUri)
+        {
+            string localFile = Path.GetTempFileName();
+            string remoteFilePath = null;
+            try
+            {
+                using (HttpClient httpClient = new HttpClient())
+                {
+                    using (var response = await httpClient.GetStreamAsync(getclrdbgUri))
+                    {
+                        using (TextReader textReader = new StreamReader(response))
+                        {
+                            using (Stream destinationStream = File.Create(localFile))
+                            {
+                                await response.CopyToAsync(destinationStream);
+                            }
+                        }
+                    }
+                }
+
+                _launchOptions.UnixPort.MakeDirectory(remoteDirectory);
+                remoteFilePath = remoteDirectory + Path.AltDirectorySeparatorChar + ShellScriptName;
+                _launchOptions.UnixPort.CopyFile(localFile, remoteFilePath);
+            }
+            finally
+            {
+                if (File.Exists(localFile))
+                {
+                    File.Delete(localFile);
+                }
+            }
+
+            return remoteFilePath;
         }
 
         public void Close()
@@ -82,9 +144,9 @@ namespace MICore
                 }
                 else
                 {
-                    if (line != null && line.StartsWith(s_errorPrefix, System.StringComparison.OrdinalIgnoreCase))
+                    if (line != null && line.StartsWith(ErrorPrefix, System.StringComparison.OrdinalIgnoreCase))
                     {
-                        _callback.OnStdErrorLine(line.Substring(s_errorPrefix.Length).Trim());
+                        _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
                     }
                     else
                     {

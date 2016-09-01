@@ -625,7 +625,7 @@ namespace Microsoft.MIDebugEngine
                             // For now it is limited to Linux and debugger running on remote machine.
                             Debug.Assert(_launchOptions.ExePath == null);
 
-                            DetermineAndAddExecutablePathCommand(commands);
+                            DetermineAndAddExecutablePathCommand(commands, _launchOptions as UnixShellPortLaunchOptions);
                         }
                         else
                         {
@@ -643,8 +643,21 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
 
-                    int pid = _launchOptions.ProcessId;
-                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
+                    Action<string> failureHandler = (string miError) =>
+                    {
+                        if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
+                            throw new LaunchErrorException(message);
+                        }
+                        else
+                        {
+                            string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                            throw new LaunchErrorException(message);
+                        }
+                    };
+
+                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId, ignoreFailures: false, failureHandler: failureHandler));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -755,14 +768,27 @@ namespace Microsoft.MIDebugEngine
             commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures: false, failureHandler: failureHandler));
         }
 
-        private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands)
+        private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
         {
-            // TODO: rajkumar42, make it robust, either use the liblinux api or fallback shell commands available in other distros.
-            // TODO: rajkumar42, -target-attach can fail with gdb if ptrace>=1, elevate permission with liblinux and retry, display error on second failure.
-            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet.
+            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
-            string absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
+            // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
+            // embedded error text in lsof output like "(readlink error)". 
+            string absoluteExePath;
+            if (launchOptions.UnixPort.IsOSX())
+            {
+                // Usually the first FD=txt in the output of lsof points to the executable.
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId);
+            }
+            else if (launchOptions.UnixPort.IsLinux())
+            {
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
+            }
+            else
+            {
+                throw new LaunchErrorException(ResourceStrings.Error_UnsupportedPlatform);
+            }
 
             Action<string> failureHandler = (string miError) =>
             {

@@ -55,13 +55,15 @@ namespace Microsoft.SSHDebugPS
 
         private void OnOutputReceived(object sender, string unorderedText)
         {
-            // TODO: The OutputReceived event in liblinux has some issues. If we stick with liblinux, we should fix it:
+            // TODO: rajkumar42 The OutputReceived event in liblinux has some issues. If we stick with liblinux, we should fix it:
             // 1. It kicks off a different thread pool thread every time data is received. As such there is no
             // way to order the input.
             // 2. The shell in Linux keeps a queue of input. If a component only obtains the input through the
             // output received event, then nothing will ever drain the output.
             //
             // Suggested fix: Add a ReadLine async method to the shell and remove the output received event
+
+            // TODO: rajkumar42, this breaks when logging in as root. 
 
             IEnumerable<string> linesToSend = null;
 

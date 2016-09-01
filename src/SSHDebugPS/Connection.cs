@@ -47,5 +47,82 @@ namespace Microsoft.SSHDebugPS
             command.Start(commandText);
             asyncCommand = command;
         }
+
+        /// <summary>
+        /// Copy a single file from the local machine to the remote machine.
+        /// </summary>
+        /// <param name="sourcePath">File on the local machine.</param>
+        /// <param name="destinationPath">Destination path on the remote machine.</param>
+        internal void CopyFile(string sourcePath, string destinationPath)
+        {
+            if (string.IsNullOrEmpty(sourcePath))
+            {
+                throw new ArgumentNullException(sourcePath);
+            }
+
+            if (!File.Exists(sourcePath))
+            {
+                throw new FileNotFoundException(string.Format(CultureInfo.CurrentUICulture, StringResources.Error_SourceFileNotFound, sourcePath));
+            }
+
+            _remoteSystem.FileSystem.UploadFile(sourcePath, destinationPath);
+        }
+
+        /// <summary>
+        /// Creates directory provided the path. Does not fail if the directory already exists.
+        /// </summary>
+        /// <param name="path">Path on the remote machine.</param>
+        /// <returns>Full path of the created directory.</returns>
+        internal string MakeDirectory(string path)
+        {
+            bool directoryExists = false;
+            liblinux.IO.IRemoteFileSystemInfo stat = null;
+            try
+            {
+                stat = _remoteSystem.FileSystem.Stat(path);
+                directoryExists = stat.IsDirectory();
+            }
+            catch 
+            {
+                // Catching and eating all exceptions.
+                // Unfortunately the exceptions that are thrown by liblinux are not public, so we can't specialize it.
+            }
+            
+
+            if (stat == null && !directoryExists)
+            {
+                return _remoteSystem.FileSystem.CreateDirectory(path).FullPath;
+            }
+            else if (stat != null && directoryExists)
+            {
+                return _remoteSystem.FileSystem.GetDirectory(path).FullPath;
+            }
+            else
+            {
+                // This may happen if the user does not have permissions or if it is a file, etc.
+                throw new ArgumentException(string.Format(CultureInfo.CurrentUICulture, StringResources.Error_InvalidDirectory, path), nameof(path));
+            }
+        }
+
+        internal string GetUserHomeDirectory()
+        {
+            return _remoteSystem.FileSystem.GetDirectory(liblinux.IO.SpecialDirectory.Home).FullPath;
+        }
+
+        internal bool IsOSX()
+        {
+            return _remoteSystem.Properties.Id == SystemId.OSX;
+        }
+
+        internal bool IsLinux()
+        {
+            var command = _remoteSystem.Shell.ExecuteCommand("uname");
+            if (command.ExitCode != 0)
+            {
+                return false;
+            }
+
+            return command.Output.Trim().Equals("Linux");
+        }
     }
 }
