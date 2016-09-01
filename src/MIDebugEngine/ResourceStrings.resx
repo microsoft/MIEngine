@@ -239,7 +239,7 @@
   <data name="Error_PTraceFailure" xml:space="preserve">
     <value>Attaching to process {0} with {1} failed because of insufficient privileges with error message '{2}'.
 
-To attach to application on Linux, login as super user or disable ptrace.
+To attach to application on Linux, login as super user or set ptrace_scope to 0.
 See https://aka.ms/q5qtjf for details.</value>
     <comment>{0} process pid
 {1} Debugger
