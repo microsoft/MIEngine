@@ -537,6 +537,25 @@
 			ret
 		}
 	}
+	.class public RemoteConnectionTimeoutException
+		extends liblinux.RemoteConnectivityException
+	{
+		.method public hidebysig specialname 
+			instance void .ctor()
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string message)
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string message, class [mscorlib]System.Exception innerException)
+		{
+			ret
+		}
+	}
 	.class public RemoteConnectivityException
 		extends liblinux.ExceptionBase
 	{
@@ -762,37 +781,53 @@
 		.field public rtspecialname specialname int32 value__
 		.field static public literal valuetype liblinux.SystemId Android = int32(0x00000008)
 		.field static public literal valuetype liblinux.SystemId Arch = int32(0x00000004)
-		.field static public literal valuetype liblinux.SystemId BSD = int32(0x0000001A)
-		.field static public literal valuetype liblinux.SystemId CentOS = int32(0x00000019)
+		.field static public literal valuetype liblinux.SystemId BSD = int32(0x0000001B)
+		.field static public literal valuetype liblinux.SystemId CentOS = int32(0x0000001A)
 		.field static public literal valuetype liblinux.SystemId Debian = int32(0x00000003)
-		.field static public literal valuetype liblinux.SystemId Fedora = int32(0x00000016)
-		.field static public literal valuetype liblinux.SystemId FreeBSD = int32(0x0000001B)
+		.field static public literal valuetype liblinux.SystemId Fedora = int32(0x00000017)
+		.field static public literal valuetype liblinux.SystemId FreeBSD = int32(0x0000001C)
 		.field static public literal valuetype liblinux.SystemId Gentoo = int32(0x00000005)
+		.field static public literal valuetype liblinux.SystemId Kali = int32(0x0000000F)
 		.field static public literal valuetype liblinux.SystemId Knoppix = int32(0x0000000D)
-		.field static public literal valuetype liblinux.SystemId Kubuntu = int32(0x00000010)
-		.field static public literal valuetype liblinux.SystemId Mandrake = int32(0x00000017)
-		.field static public literal valuetype liblinux.SystemId Minix = int32(0x0000001F)
-		.field static public literal valuetype liblinux.SystemId NetBSD = int32(0x0000001D)
-		.field static public literal valuetype liblinux.SystemId OSX = int32(0x0000001C)
-		.field static public literal valuetype liblinux.SystemId OpenBSD = int32(0x0000001E)
-		.field static public literal valuetype liblinux.SystemId OpenSUSE = int32(0x00000013)
-		.field static public literal valuetype liblinux.SystemId PCLinux = int32(0x00000018)
-		.field static public literal valuetype liblinux.SystemId Poky = int32(0x00000021)
+		.field static public literal valuetype liblinux.SystemId Kubuntu = int32(0x00000011)
+		.field static public literal valuetype liblinux.SystemId Mandrake = int32(0x00000018)
+		.field static public literal valuetype liblinux.SystemId Minix = int32(0x00000020)
+		.field static public literal valuetype liblinux.SystemId NetBSD = int32(0x0000001E)
+		.field static public literal valuetype liblinux.SystemId OSX = int32(0x0000001D)
+		.field static public literal valuetype liblinux.SystemId OpenBSD = int32(0x0000001F)
+		.field static public literal valuetype liblinux.SystemId OpenSUSE = int32(0x00000014)
+		.field static public literal valuetype liblinux.SystemId PCLinuxOS = int32(0x00000019)
+		.field static public literal valuetype liblinux.SystemId Poky = int32(0x00000022)
 		.field static public literal valuetype liblinux.SystemId Puppy = int32(0x00000009)
-		.field static public literal valuetype liblinux.SystemId Raspbian = int32(0x00000011)
+		.field static public literal valuetype liblinux.SystemId Raspbian = int32(0x00000012)
 		.field static public literal valuetype liblinux.SystemId RedHat = int32(0x00000007)
-		.field static public literal valuetype liblinux.SystemId RedHatEnterprise = int32(0x00000015)
-		.field static public literal valuetype liblinux.SystemId 'SUSE' = int32(0x00000012)
+		.field static public literal valuetype liblinux.SystemId RedHatEnterprise = int32(0x00000016)
+		.field static public literal valuetype liblinux.SystemId 'SUSE' = int32(0x00000013)
 		.field static public literal valuetype liblinux.SystemId Slackware = int32(0x00000006)
-		.field static public literal valuetype liblinux.SystemId Slax = int32(0x00000014)
+		.field static public literal valuetype liblinux.SystemId Slax = int32(0x00000015)
 		.field static public literal valuetype liblinux.SystemId Sorcerer = int32(0x0000000A)
 		.field static public literal valuetype liblinux.SystemId Ubuntu = int32(0x0000000E)
-		.field static public literal valuetype liblinux.SystemId UbuntuServer = int32(0x0000000F)
+		.field static public literal valuetype liblinux.SystemId UbuntuServer = int32(0x00000010)
 		.field static public literal valuetype liblinux.SystemId Unix = int32(0x00000002)
 		.field static public literal valuetype liblinux.SystemId Unknown = int32(0x00000001)
-		.field static public literal valuetype liblinux.SystemId Yocto = int32(0x00000020)
+		.field static public literal valuetype liblinux.SystemId WindowsSubsystemForLinux = int32(0x00000023)
+		.field static public literal valuetype liblinux.SystemId Yocto = int32(0x00000021)
 		.field static public literal valuetype liblinux.SystemId ddWRT = int32(0x0000000C)
 		.field static public literal valuetype liblinux.SystemId openWRT = int32(0x0000000B)
+	}
+	.class public sealed SystemPlatform
+		extends [mscorlib]System.Enum
+	{
+		.field public rtspecialname specialname int32 value__
+		.field static public literal valuetype liblinux.SystemPlatform ARM = int32(0x00000002)
+		.field static public literal valuetype liblinux.SystemPlatform 'ARM64' = int32(0x00000003)
+		.field static public literal valuetype liblinux.SystemPlatform 'MIPS' = int32(0x00000008)
+		.field static public literal valuetype liblinux.SystemPlatform 'MIPS64' = int32(0x00000009)
+		.field static public literal valuetype liblinux.SystemPlatform PPC = int32(0x00000006)
+		.field static public literal valuetype liblinux.SystemPlatform 'PPC64' = int32(0x00000007)
+		.field static public literal valuetype liblinux.SystemPlatform Unknown = int32(0x00000001)
+		.field static public literal valuetype liblinux.SystemPlatform x64 = int32(0x00000005)
+		.field static public literal valuetype liblinux.SystemPlatform 'x86' = int32(0x00000004)
 	}
 	.class public SystemProperties
 		extends [mscorlib]System.Object
@@ -811,6 +846,16 @@
 		}
 		.method public virtual hidebysig newslot specialname 
 			instance string get_Name()
+		{
+			ret
+		}
+		.method public virtual hidebysig newslot specialname 
+			instance class [mscorlib]System.Version get_Version()
+		{
+			ret
+		}
+		.method public virtual hidebysig newslot specialname 
+			instance valuetype liblinux.SystemPlatform get_Platform()
 		{
 			ret
 		}
@@ -875,14 +920,22 @@
 		{
 			.get instance string liblinux.SystemProperties::get_Name()
 		}
+		.property instance valuetype liblinux.SystemPlatform Platform()
+		{
+			.get instance valuetype liblinux.SystemPlatform liblinux.SystemProperties::get_Platform()
+		}
+		.property instance class [mscorlib]System.Version Version()
+		{
+			.get instance class [mscorlib]System.Version liblinux.SystemProperties::get_Version()
+		}
 	}
 	.class public sealed SystemPropertyId
 		extends [mscorlib]System.Enum
 	{
 		.field public rtspecialname specialname int32 value__
-		.field static public literal valuetype liblinux.SystemPropertyId Architecture = int32(0x00000002)
 		.field static public literal valuetype liblinux.SystemPropertyId Id = int32(0x00000000)
 		.field static public literal valuetype liblinux.SystemPropertyId Name = int32(0x00000001)
+		.field static public literal valuetype liblinux.SystemPropertyId Platform = int32(0x00000002)
 		.field static public literal valuetype liblinux.SystemPropertyId Version = int32(0x00000003)
 	}
 	.class public UnixSystem
@@ -1028,11 +1081,71 @@
 			ret
 		}
 	}
+	.class public interface abstract IRemoteDirectory
+		implements 'liblinux.IO.IRemoteFileSystemInfo'
+	{
+		.method public virtual hidebysig newslot abstract 
+			instance void Delete()
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string localFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.DirectoryInfo' Download(string localPath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteDirectory' CreateDirectory(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteDirectory' CreateDirectories(string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteDirectory'[] GetDirectories()
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteFile'[] GetFiles()
+		{
+		}
+	}
+	.class public interface abstract IRemoteFile
+		implements 'liblinux.IO.IRemoteFileSystemInfo'
+	{
+		.method public virtual hidebysig newslot abstract 
+			instance void Delete()
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadTo(string localPath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' Download(string localFileName)
+		{
+		}
+	}
 	.class public interface abstract IRemoteFileSystem
 		implements [mscorlib]System.IDisposable
 	{
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFile' UploadFile(string localFileName, string remoteFileName)
+			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName, string remoteFileName)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1040,15 +1153,15 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' CreateDirectory(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' CreateDirectory(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' CreateDirectories(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' CreateDirectories(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' UploadDirectory(string localPath, string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1072,7 +1185,7 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFileSystemInfo' ResolvePath(string remotePath)
+			instance class 'liblinux.IO.IRemoteFileSystemInfo' ResolvePath(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1096,35 +1209,35 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory'[] GetDirectories(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFile'[] GetFiles(string remotePath)
+			instance class 'liblinux.IO.IRemoteFile'[] GetFiles(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories()
+			instance class 'liblinux.IO.IRemoteDirectory'[] GetDirectories()
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFile'[] GetFiles()
+			instance class 'liblinux.IO.IRemoteFile'[] GetFiles()
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' GetDirectory(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFile' GetFile(string remoteFileName)
+			instance class 'liblinux.IO.IRemoteFile' GetFile(string remoteFileName)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(valuetype 'liblinux.IO.SpecialDirectory' directory)
+			instance class 'liblinux.IO.IRemoteDirectory' GetDirectory(valuetype 'liblinux.IO.SpecialDirectory' directory)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFileSystemInfo' Stat(string remotePath)
+			instance class 'liblinux.IO.IRemoteFileSystemInfo' Stat(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1136,57 +1249,59 @@
 		{
 		}
 	}
-	.class public RemoteDirectory
-		extends 'liblinux.IO.RemoteFileSystemInfo'
+	.class public interface abstract IRemoteFileSystemInfo
 	{
-		.method public hidebysig 
-			instance void Delete()
+		.method public virtual hidebysig newslot abstract specialname 
+			instance string get_Name()
 		{
-			ret
 		}
-		.method public hidebysig 
-			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadTo(string localPath)
+		.method public virtual hidebysig newslot abstract specialname 
+			instance string get_FullPath()
 		{
-			ret
 		}
-		.method public hidebysig 
-			instance class 'liblinux.IO.RemoteFile' UploadFile(string localFileName)
+		.method public virtual hidebysig newslot abstract specialname 
+			instance class 'liblinux.IO.FilePermissions' get_Permissions()
 		{
-			ret
 		}
-		.method public hidebysig 
-			instance class 'liblinux.IO.RemoteDirectory' UploadDirectory(string localPath, string remotePath)
+		.method public virtual hidebysig newslot abstract specialname 
+			instance valuetype [mscorlib]System.DateTime get_DateAccessed()
 		{
-			ret
 		}
-		.method public hidebysig 
-			instance class 'liblinux.IO.RemoteDirectory' CreateDirectory(string remotePath)
+		.method public virtual hidebysig newslot abstract specialname 
+			instance valuetype [mscorlib]System.DateTime get_DateModified()
 		{
-			ret
 		}
-		.method public hidebysig 
-			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories()
+		.method public virtual hidebysig newslot abstract 
+			instance bool Exists()
 		{
-			ret
 		}
-		.method public hidebysig 
-			instance class 'liblinux.IO.RemoteFile'[] GetFiles()
+		.method public virtual hidebysig newslot abstract 
+			instance bool IsFile()
 		{
-			ret
 		}
-	}
-	.class public RemoteFile
-		extends 'liblinux.IO.RemoteFileSystemInfo'
-	{
-		.method public hidebysig 
-			instance void Delete()
+		.method public virtual hidebysig newslot abstract 
+			instance bool IsDirectory()
 		{
-			ret
 		}
-		.method public hidebysig 
-			instance class [mscorlib]'System.IO.FileInfo' DownloadTo(string localPath)
+		.property instance valuetype [mscorlib]System.DateTime DateAccessed()
 		{
-			ret
+			.get instance valuetype [mscorlib]System.DateTime 'liblinux.IO.IRemoteFileSystemInfo'::get_DateAccessed()
+		}
+		.property instance valuetype [mscorlib]System.DateTime DateModified()
+		{
+			.get instance valuetype [mscorlib]System.DateTime 'liblinux.IO.IRemoteFileSystemInfo'::get_DateModified()
+		}
+		.property instance string FullPath()
+		{
+			.get instance string 'liblinux.IO.IRemoteFileSystemInfo'::get_FullPath()
+		}
+		.property instance string Name()
+		{
+			.get instance string 'liblinux.IO.IRemoteFileSystemInfo'::get_Name()
+		}
+		.property instance class 'liblinux.IO.FilePermissions' Permissions()
+		{
+			.get instance class 'liblinux.IO.FilePermissions' 'liblinux.IO.IRemoteFileSystemInfo'::get_Permissions()
 		}
 	}
 	.class public RemoteFileSystem
@@ -1249,7 +1364,7 @@
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteFile' UploadFile(string localFileName, string remoteFileName)
+			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName, string remoteFileName)
 		{
 			ret
 		}
@@ -1259,17 +1374,17 @@
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteDirectory' CreateDirectory(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' CreateDirectory(string remotePath)
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteDirectory' CreateDirectories(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' CreateDirectories(string remotePath)
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteDirectory' UploadDirectory(string localPath, string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath)
 		{
 			ret
 		}
@@ -1299,7 +1414,7 @@
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteFileSystemInfo' ResolvePath(string remotePath)
+			instance class 'liblinux.IO.IRemoteFileSystemInfo' ResolvePath(string remotePath)
 		{
 			ret
 		}
@@ -1329,42 +1444,42 @@
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory'[] GetDirectories(string remotePath)
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteFile'[] GetFiles(string remotePath)
+			instance class 'liblinux.IO.IRemoteFile'[] GetFiles(string remotePath)
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories()
+			instance class 'liblinux.IO.IRemoteDirectory'[] GetDirectories()
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteFile'[] GetFiles()
+			instance class 'liblinux.IO.IRemoteFile'[] GetFiles()
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' GetDirectory(string remotePath)
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteFile' GetFile(string remoteFileName)
+			instance class 'liblinux.IO.IRemoteFile' GetFile(string remoteFileName)
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(valuetype 'liblinux.IO.SpecialDirectory' directory)
+			instance class 'liblinux.IO.IRemoteDirectory' GetDirectory(valuetype 'liblinux.IO.SpecialDirectory' directory)
 		{
 			ret
 		}
 		.method public final virtual hidebysig newslot 
-			instance class 'liblinux.IO.RemoteFileSystemInfo' Stat(string remotePath)
+			instance class 'liblinux.IO.IRemoteFileSystemInfo' Stat(string remotePath)
 		{
 			ret
 		}
@@ -1389,7 +1504,7 @@
 		implements 'liblinux.IO.IRemoteFileSystem', [mscorlib]System.IDisposable
 	{
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFile' UploadFile(string localFileName, string remoteFileName)
+			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName, string remoteFileName)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1397,15 +1512,15 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' CreateDirectory(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' CreateDirectory(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' CreateDirectories(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' CreateDirectories(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' UploadDirectory(string localPath, string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1429,7 +1544,7 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFileSystemInfo' ResolvePath(string remotePath)
+			instance class 'liblinux.IO.IRemoteFileSystemInfo' ResolvePath(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1469,35 +1584,35 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory'[] GetDirectories(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFile'[] GetFiles(string remotePath)
+			instance class 'liblinux.IO.IRemoteFile'[] GetFiles(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory'[] GetDirectories()
+			instance class 'liblinux.IO.IRemoteDirectory'[] GetDirectories()
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFile'[] GetFiles()
+			instance class 'liblinux.IO.IRemoteFile'[] GetFiles()
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(string remotePath)
+			instance class 'liblinux.IO.IRemoteDirectory' GetDirectory(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFile' GetFile(string remoteFileName)
+			instance class 'liblinux.IO.IRemoteFile' GetFile(string remoteFileName)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteDirectory' GetDirectory(valuetype 'liblinux.IO.SpecialDirectory' directory)
+			instance class 'liblinux.IO.IRemoteDirectory' GetDirectory(valuetype 'liblinux.IO.SpecialDirectory' directory)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance class 'liblinux.IO.RemoteFileSystemInfo' Stat(string remotePath)
+			instance class 'liblinux.IO.IRemoteFileSystemInfo' Stat(string remotePath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1516,75 +1631,6 @@
 			instance void .ctor()
 		{
 			ret
-		}
-	}
-	.class public RemoteFileSystemInfo
-		extends [mscorlib]System.Object
-	{
-		.method public hidebysig specialname 
-			instance string get_Name()
-		{
-			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
-			ret
-		}
-		.method public hidebysig specialname 
-			instance string get_FullPath()
-		{
-			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
-			ret
-		}
-		.method public hidebysig specialname 
-			instance class 'liblinux.IO.FilePermissions' get_Permissions()
-		{
-			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
-			ret
-		}
-		.method public hidebysig specialname 
-			instance valuetype [mscorlib]System.DateTime get_DateAccessed()
-		{
-			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
-			ret
-		}
-		.method public hidebysig specialname 
-			instance valuetype [mscorlib]System.DateTime get_DateModified()
-		{
-			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
-			ret
-		}
-		.method public hidebysig 
-			instance bool Exists()
-		{
-			ret
-		}
-		.method public hidebysig 
-			instance bool IsFile()
-		{
-			ret
-		}
-		.method public hidebysig 
-			instance bool IsDirectory()
-		{
-			ret
-		}
-		.property instance valuetype [mscorlib]System.DateTime DateAccessed()
-		{
-			.get instance valuetype [mscorlib]System.DateTime 'liblinux.IO.RemoteFileSystemInfo'::get_DateAccessed()
-		}
-		.property instance valuetype [mscorlib]System.DateTime DateModified()
-		{
-			.get instance valuetype [mscorlib]System.DateTime 'liblinux.IO.RemoteFileSystemInfo'::get_DateModified()
-		}
-		.property instance string FullPath()
-		{
-			.get instance string 'liblinux.IO.RemoteFileSystemInfo'::get_FullPath()
-		}
-		.property instance string Name()
-		{
-			.get instance string 'liblinux.IO.RemoteFileSystemInfo'::get_Name()
-		}
-		.property instance class 'liblinux.IO.FilePermissions' Permissions()
-		{
-			.get instance class 'liblinux.IO.FilePermissions' 'liblinux.IO.RemoteFileSystemInfo'::get_Permissions()
 		}
 	}
 	.class public sealed SecurityAttributes
@@ -1675,13 +1721,13 @@
 			ret
 		}
 		.method public hidebysig 
-			instance void Update(class liblinux.ConnectionInfo connectionInfo, [opt] valuetype liblinux.Persistence.UpdateMode updateHint)
+			instance void Update(class liblinux.ConnectionInfo connectionInfo, [opt] valuetype liblinux.Persistence.UpdateMode updateMode)
 		{
 			.param [2] = int32(0x00000000)
 			ret
 		}
 		.method public hidebysig 
-			instance void Update(class liblinux.Persistence.StoredConnectionInfo storedConnectionInfo, [opt] valuetype liblinux.Persistence.UpdateMode updateHint)
+			instance void Update(class liblinux.Persistence.StoredConnectionInfo storedConnectionInfo, [opt] valuetype liblinux.Persistence.UpdateMode updateMode)
 		{
 			.param [2] = int32(0x00000000)
 			ret
@@ -1692,7 +1738,12 @@
 			ret
 		}
 		.method public hidebysig 
-			instance bool TryGetById(int32 id, [out] class liblinux.Persistence.StoredConnectionInfo& connectionInfo)
+			instance bool TryGetById(int32 id, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGet(class liblinux.ConnectionInfo connectionInfo, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
 		{
 			ret
 		}
@@ -1702,12 +1753,12 @@
 			ret
 		}
 		.method public hidebysig 
-			instance bool Contains(int32 id)
+			instance bool Contains(int32 connectionId)
 		{
 			ret
 		}
 		.method public hidebysig 
-			instance void RemoveById(int32 id)
+			instance void RemoveById(int32 connectionId)
 		{
 			ret
 		}

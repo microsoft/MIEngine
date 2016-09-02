@@ -180,5 +180,30 @@ namespace Microsoft.SSHDebugPS
         {
             throw new NotImplementedException();
         }
+
+        public void CopyFile(string sourcePath, string destinationPath)
+        {
+            GetConnection(ConnectionReason.Deferred).CopyFile(sourcePath, destinationPath);
+        }
+
+        public string MakeDirectory(string path)
+        {
+            return GetConnection(ConnectionReason.Deferred).MakeDirectory(path);
+        }
+
+        public string GetUserHomeDirectory()
+        {
+            return GetConnection(ConnectionReason.Deferred).GetUserHomeDirectory();
+        }
+
+        public bool IsOSX()
+        {
+            return GetConnection(ConnectionReason.Deferred).IsOSX();
+        }
+
+        public bool IsLinux()
+        {
+            return GetConnection(ConnectionReason.Deferred).IsLinux();
+        }
     }
 }

@@ -103,6 +103,7 @@
   <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
     <Reference Include="System" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
     </Reference>
