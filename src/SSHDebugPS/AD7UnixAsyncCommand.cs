@@ -65,8 +65,6 @@ namespace Microsoft.SSHDebugPS
             //
             // Suggested fix: Add a ReadLine async method to the shell and remove the output received event
 
-            // TODO: rajkumar42, this breaks when logging in as root. 
-
             IEnumerable<string> linesToSend = null;
 
             lock (_lock)
