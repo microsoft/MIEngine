@@ -23,6 +23,8 @@ namespace Microsoft.SSHDebugPS
         private bool _beginReceived;
         private bool _isClosed;
 
+        private string startCommand;
+
         public AD7UnixAsyncCommand(IShellStream shellStream, IDebugUnixShellCommandCallback callback)
         {
             _shellStream = shellStream;
@@ -37,8 +39,8 @@ namespace Microsoft.SSHDebugPS
 
         internal void Start(string commandText)
         {
-            string fullCommand = string.Format("echo \"{0}\"; {1}; echo \"{2}$?\"", _beginMessage, commandText, _exitMessagePrefix);
-            _shellStream.WriteLine(fullCommand);
+            startCommand = string.Format("echo \"{0}\"; {1}; echo \"{2}$?\"", _beginMessage, commandText, _exitMessagePrefix);
+            _shellStream.WriteLine(startCommand);
             _shellStream.Flush();
         }
 
@@ -81,6 +83,13 @@ namespace Microsoft.SSHDebugPS
                 if (_isClosed)
                 {
                     return;
+                }
+
+                if (line.Equals(startCommand, StringComparison.Ordinal))
+                {
+                    // When logged in as root, shell sends a copy of stdin to stdout.
+                    // This ignores the shell command that was used to launch the debugger.
+                    continue;
                 }
 
                 int endCommandIndex = line.IndexOf(_exitMessagePrefix);
