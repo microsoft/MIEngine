@@ -21,7 +21,6 @@ __RemoveExistingOnUpgrade=false
 # Internal, fully specified version of the ClrDbg. Computed when the meta version is used.
 __ClrDbgVersion=
 
-
 # Gets the script directory
 get_script_directory()
 {
@@ -50,7 +49,7 @@ print_help()
 }
 
 # Sets __RuntimeID as given by 'dotnet --info'
-get_dotnet_runtime_id()
+get_dotnet_runtime_id_old()
 {
     # example output of dotnet --info
     # .NET Command Line Tools (1.0.0-beta-002194)
@@ -75,6 +74,25 @@ get_dotnet_runtime_id()
     rid="$(echo -e "${rid_line}" | tr -d '[[:space:]]')"
 
     __RuntimeID=$rid
+}
+
+get_dotnet_runtime_id()
+{
+    # Sample content of /etc/os-release looks like this
+    # NAME="Ubuntu"
+    # VERSION="14.04.5 LTS, Trusty Tahr"
+    # ID=ubuntu
+    # ID_LIKE=debian
+    # PRETTY_NAME="Ubuntu 14.04.5 LTS"
+    # VERSION_ID="14.04"
+    # HOME_URL="http://www.ubuntu.com/"
+    # SUPPORT_URL="http://help.ubuntu.com/"
+    # BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
+
+    PlatformID=$(cat /etc/os-release | awk '{split($0,a,"="); if (a[1] == "ID") print a[2]}' | tr -d \" | tr -d '[[:space:]]')
+    PlatformVersionID=$(cat /etc/os-release | awk '{split($0,a,"="); if (a[1] == "VERSION_ID") print a[2]}' | tr -d \" | tr -d '[[:space:]]')
+
+    
 }
 
 # Produces project.json in the current directory
@@ -305,6 +323,9 @@ check_latest()
         echo "Info: Previous installation at "$__InstallLocation" not found"
     fi
 }
+
+// TODO: rajkumar42 remove this 
+exit 0
 
 get_script_directory
 
