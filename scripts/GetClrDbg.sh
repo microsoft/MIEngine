@@ -373,7 +373,7 @@ else
     __RuntimeID=
     get_dotnet_runtime_id
     if [ -z $__RuntimeID ]; then
-        echo "Error: Unable to determine dotnet Runtime ID. GetClrDbg.sh requires .NET CLI Tools version >= 1.0.0-beta-002173. Please make sure your install of .NET CLI is up to date"
+        echo "Error: Unable to determine dotnet Runtime ID. Please make sure that dotnet is installed and the platform is supported. Look at https://www.microsoft.com/net/core for supported platforms."
         exit 1
     fi
     echo "Info: Using Runtime ID '$__RuntimeID'"
