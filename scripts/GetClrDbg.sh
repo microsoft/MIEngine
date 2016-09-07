@@ -48,34 +48,8 @@ print_help()
     echo '  <version> can be "latest" or a version number such as 14.0.25109-preview-2865786'
 }
 
-# Sets __RuntimeID as given by 'dotnet --info'
-get_dotnet_runtime_id_old()
-{
-    # example output of dotnet --info
-    # .NET Command Line Tools (1.0.0-beta-002194)
-    #
-    # Product Information:
-    #  Version:     1.0.0-beta-002194
-    #  Commit Sha:  a28369bfe0
-    #
-    # Runtime Environment:
-    #  OS Name:     ubuntu
-    #  OS Version:  14.04
-    #  OS Platform: Linux
-    #  RID:         ubuntu.14.04-x64
-
-    # Get the output of dotnet --info
-    info="$(dotnet --info)"
-
-    # filter to the line that contains the RID. Output still contains spaces. Example: '         ubuntu.14.04-x64'
-    rid_line="$(echo "${info}" | awk 'BEGIN { FS=":" }{ if ( $1 ~ "RID" ) { print $2 } }')"
-
-    # trim whitespace from awk return
-    rid="$(echo -e "${rid_line}" | tr -d '[[:space:]]')"
-
-    __RuntimeID=$rid
-}
-
+# Set the __RuntimeID by reading the contents of /etc/os-release. 
+# This logic is identical to the one used by C# extensions, make sure they are kept in sync.
 get_dotnet_runtime_id()
 {
     # Sample content of /etc/os-release looks like this
@@ -92,7 +66,45 @@ get_dotnet_runtime_id()
     PlatformID=$(cat /etc/os-release | awk '{split($0,a,"="); if (a[1] == "ID") print a[2]}' | tr -d \" | tr -d '[[:space:]]')
     PlatformVersionID=$(cat /etc/os-release | awk '{split($0,a,"="); if (a[1] == "VERSION_ID") print a[2]}' | tr -d \" | tr -d '[[:space:]]')
 
-    
+    case $PlatformID in
+        ubuntu) 
+            if [[ "$PlatformVersionID" == 14* ]]; then
+                __RuntimeID=ubuntu.14.04-x64
+            elif [[ "$PlatformVersionID" == 16* ]]; then
+                __RuntimeID=ubuntu.16.04-x64
+            fi
+            ;;
+        centos)
+            __RuntimeID=centos.7-x64
+            ;;
+        fedora)
+            __RuntimeID=fedora.23-x64
+            ;;
+        opensuse)
+            __RuntimeID=opensuse.13.2-x64
+            ;;
+        rhel)
+            __RuntimeID=rhel.7-x64
+            ;;
+        debian)
+            __RuntimeID=debian.8-x64
+            ;;
+        ol)
+            __RuntimeID=centos.7-x64
+            ;;
+        elementaryOS)
+            if [[ "$PlatformVersionID" == 0.3* ]]; then
+                __RuntimeID=ubuntu.14.04-x64
+            elif [[ "$PlatformVersionID" == 0.4* ]]; then
+                __RuntimeID=ubuntu.16.04-x64
+            fi
+            ;;
+        linuxmint)
+            if [[ "$PlatformVersionID" == 18* ]]; then
+                __RuntimeID=ubuntu.16.04-x64
+            fi
+            ;;
+    esac
 }
 
 # Produces project.json in the current directory
@@ -159,7 +171,7 @@ parse_and_get_arguments()
                 echo "Error: Invalid Option: -$OPTARG"
                 print_help
                 exit 1;
-				;;
+                ;;
             :)
                 echo "Error: Option expected for -$OPTARG"
                 print_help
@@ -324,9 +336,6 @@ check_latest()
     fi
 }
 
-// TODO: rajkumar42 remove this 
-exit 0
-
 get_script_directory
 
 if [ -z "$1" ]; then
@@ -370,7 +379,7 @@ else
     echo "Info: Using Runtime ID '$__RuntimeID'"
 
     echo 'Info: Generating project.json'
-    generate_project_json $rid
+    generate_project_json $__RuntimeID
 
     echo 'Info: Generating NuGet.config'
     generate_nuget_config
@@ -387,7 +396,7 @@ else
     fi
 
     echo 'Info: Executing dotnet publish'
-    dotnet publish -o . > dotnet_publish.log 2>&1
+    dotnet publish -r $__RuntimeID -o . > dotnet_publish.log 2>&1
     if [ $? -ne 0 ]; then
         echo "Error: dotnet publish failed"
         exit 1
