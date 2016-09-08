@@ -21,7 +21,6 @@ __RemoveExistingOnUpgrade=false
 # Internal, fully specified version of the ClrDbg. Computed when the meta version is used.
 __ClrDbgVersion=
 
-
 # Gets the script directory
 get_script_directory()
 {
@@ -49,32 +48,63 @@ print_help()
     echo '  <version> can be "latest" or a version number such as 14.0.25109-preview-2865786'
 }
 
-# Sets __RuntimeID as given by 'dotnet --info'
+# Set the __RuntimeID by reading the contents of /etc/os-release. 
+# This logic is identical to the one used by C# extensions, make sure they are kept in sync.
 get_dotnet_runtime_id()
 {
-    # example output of dotnet --info
-    # .NET Command Line Tools (1.0.0-beta-002194)
-    #
-    # Product Information:
-    #  Version:     1.0.0-beta-002194
-    #  Commit Sha:  a28369bfe0
-    #
-    # Runtime Environment:
-    #  OS Name:     ubuntu
-    #  OS Version:  14.04
-    #  OS Platform: Linux
-    #  RID:         ubuntu.14.04-x64
+    # Sample content of /etc/os-release looks like this
+    # NAME="Ubuntu"
+    # VERSION="14.04.5 LTS, Trusty Tahr"
+    # ID=ubuntu
+    # ID_LIKE=debian
+    # PRETTY_NAME="Ubuntu 14.04.5 LTS"
+    # VERSION_ID="14.04"
+    # HOME_URL="http://www.ubuntu.com/"
+    # SUPPORT_URL="http://help.ubuntu.com/"
+    # BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
 
-    # Get the output of dotnet --info
-    info="$(dotnet --info)"
+    PlatformID=$(cat /etc/os-release | awk '{split($0,a,"="); if (a[1] == "ID") print a[2]}' | tr -d \" | tr -d '[[:space:]]')
+    PlatformVersionID=$(cat /etc/os-release | awk '{split($0,a,"="); if (a[1] == "VERSION_ID") print a[2]}' | tr -d \" | tr -d '[[:space:]]')
 
-    # filter to the line that contains the RID. Output still contains spaces. Example: '         ubuntu.14.04-x64'
-    rid_line="$(echo "${info}" | awk 'BEGIN { FS=":" }{ if ( $1 ~ "RID" ) { print $2 } }')"
-
-    # trim whitespace from awk return
-    rid="$(echo -e "${rid_line}" | tr -d '[[:space:]]')"
-
-    __RuntimeID=$rid
+    case $PlatformID in
+        ubuntu) 
+            if [[ "$PlatformVersionID" == 14* ]]; then
+                __RuntimeID=ubuntu.14.04-x64
+            elif [[ "$PlatformVersionID" == 16* ]]; then
+                __RuntimeID=ubuntu.16.04-x64
+            fi
+            ;;
+        centos)
+            __RuntimeID=centos.7-x64
+            ;;
+        fedora)
+            __RuntimeID=fedora.23-x64
+            ;;
+        opensuse)
+            __RuntimeID=opensuse.13.2-x64
+            ;;
+        rhel)
+            __RuntimeID=rhel.7-x64
+            ;;
+        debian)
+            __RuntimeID=debian.8-x64
+            ;;
+        ol)
+            __RuntimeID=centos.7-x64
+            ;;
+        elementaryOS)
+            if [[ "$PlatformVersionID" == 0.3* ]]; then
+                __RuntimeID=ubuntu.14.04-x64
+            elif [[ "$PlatformVersionID" == 0.4* ]]; then
+                __RuntimeID=ubuntu.16.04-x64
+            fi
+            ;;
+        linuxmint)
+            if [[ "$PlatformVersionID" == 18* ]]; then
+                __RuntimeID=ubuntu.16.04-x64
+            fi
+            ;;
+    esac
 }
 
 # Produces project.json in the current directory
@@ -141,7 +171,7 @@ parse_and_get_arguments()
                 echo "Error: Invalid Option: -$OPTARG"
                 print_help
                 exit 1;
-				;;
+                ;;
             :)
                 echo "Error: Option expected for -$OPTARG"
                 print_help
@@ -343,13 +373,13 @@ else
     __RuntimeID=
     get_dotnet_runtime_id
     if [ -z $__RuntimeID ]; then
-        echo "Error: Unable to determine dotnet Runtime ID. GetClrDbg.sh requires .NET CLI Tools version >= 1.0.0-beta-002173. Please make sure your install of .NET CLI is up to date"
+        echo "Error: Unable to determine dotnet Runtime ID. Please make sure that dotnet is installed and the platform is supported. Look at https://www.microsoft.com/net/core for supported platforms."
         exit 1
     fi
     echo "Info: Using Runtime ID '$__RuntimeID'"
 
     echo 'Info: Generating project.json'
-    generate_project_json $rid
+    generate_project_json $__RuntimeID
 
     echo 'Info: Generating NuGet.config'
     generate_nuget_config
@@ -366,7 +396,7 @@ else
     fi
 
     echo 'Info: Executing dotnet publish'
-    dotnet publish -o . > dotnet_publish.log 2>&1
+    dotnet publish -r $__RuntimeID -o . > dotnet_publish.log 2>&1
     if [ $? -ne 0 ]; then
         echo "Error: dotnet publish failed"
         exit 1
