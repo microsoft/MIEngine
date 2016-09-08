@@ -17,9 +17,6 @@ Specifies the path where clrdbg will be installed. Defaults to the directory con
 .Parameter RemoveExistingOnUpgrade
 Remove existing installation directory before upgrade.
 
-.Parameter SkipDownloads
-Skips any download actions.
-
 .INPUTS
 None. You cannot pipe inputs to GetClrDbg.
 
@@ -51,11 +48,7 @@ Param (
     
     [Parameter(Mandatory=$false)]
     [switch]
-    $RemoveExistingOnUpgrade,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]
-    $SkipDownloads
+    $RemoveExistingOnUpgrade
 )
 
 function GetDotNetRuntimeID() {
@@ -169,40 +162,37 @@ if (-not([System.IO.Path]::IsPathRooted($InstallPath))) {
     $InstallPath = Join-Path -Path (Split-Path -Path $MyInvocation.MyCommand.Definition) -ChildPath $InstallPath
 }
 
-if ($RemoveExistingOnUpgrade) {
-    if (Test-Path $InstallPath) {
-        Write-Host "Info: $InstallPath exists, deleting." 
-        Remove-Item $InstallPath -Force -Recurse -ErrorAction Stop
-    }
-}
 
-if (! $SkipDownloads) {
-    if (IsLatest $InstallPath $RuntimeID $VersionNumber) {
-        Write-Host "Info: Latest version of ClrDbg is present. Skipping downloads"
-    } else {
-        
-        Push-Location $TempPath -ErrorAction Stop
-        
-        Write-Host "Info: Generating project.json"
-        GenerateProjectJson $VersionNumber $RuntimeID
-
-        Write-Host "Info: Generating NuGet.config"
-        GenerateNuGetConfig
-
-        Write-Host "Info: Executing dotnet restore"
-        dotnet restore
-
-        Write-Host "Info: Executing dotnet publish"
-        dotnet publish -r $RuntimeID -o $InstallPath
-
-        Pop-Location
-
-        Remove-Item -Path $TempPath -Recurse -Force
-
-        WriteSuccessInfo $InstallPath $RuntimeID $VersionNumber
-        Write-Host "Info: Successfully installed clrdbg at '$InstallPath'"
-    }
+if (IsLatest $InstallPath $RuntimeID $VersionNumber) {
+    Write-Host "Info: Latest version of ClrDbg is present. Skipping downloads"
 } else {
-    Write-Host "Info: Skipping Downloads"
+    if ($RemoveExistingOnUpgrade) {
+        if (Test-Path $InstallPath) {
+            Write-Host "Info: $InstallPath exists, deleting." 
+            Remove-Item $InstallPath -Force -Recurse -ErrorAction Stop
+        }
+    }
+    
+    Push-Location $TempPath -ErrorAction Stop
+    
+    Write-Host "Info: Generating project.json"
+    GenerateProjectJson $VersionNumber $RuntimeID
+
+    Write-Host "Info: Generating NuGet.config"
+    GenerateNuGetConfig
+
+    Write-Host "Info: Executing dotnet restore"
+    dotnet restore
+
+    Write-Host "Info: Executing dotnet publish"
+    dotnet publish -r $RuntimeID -o $InstallPath
+
+    Pop-Location
+
+    Remove-Item -Path $TempPath -Recurse -Force
+
+    WriteSuccessInfo $InstallPath $RuntimeID $VersionNumber
+    Write-Host "Info: Successfully installed clrdbg at '$InstallPath'"
 }
+
 
