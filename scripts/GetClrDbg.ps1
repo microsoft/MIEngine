@@ -14,6 +14,12 @@ Specifies the .NET Runtime ID of the clrdbg that will be downloaded. Example: ub
 .Parameter InstallPath
 Specifies the path where clrdbg will be installed. Defaults to the directory containing this script.
 
+.Parameter RemoveExistingOnUpgrade
+Remove existing installation directory before upgrade.
+
+.Parameter SkipDownloads
+Skips any download actions.
+
 .INPUTS
 None. You cannot pipe inputs to GetClrDbg.
 
@@ -35,8 +41,21 @@ Param (
     [ValidatePattern("\d+\.\d+\.\d+.*")]
     $VersionNumber,
 
-    [string]$RuntimeID,
-    [string]$InstallPath = (Split-Path -Path $MyInvocation.MyCommand.Definition)
+    [Parameter(Mandatory=$false)]
+    [string]
+    $RuntimeID,
+
+    [Parameter(Mandatory=$false)]
+    [string]
+    $InstallPath = (Split-Path -Path $MyInvocation.MyCommand.Definition),
+    
+    [Parameter(Mandatory=$false)]
+    [switch]
+    $RemoveExistingOnUpgrade,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]
+    $SkipDownloads
 )
 
 function GetDotNetRuntimeID() {
@@ -89,6 +108,39 @@ function GenerateNuGetConfig() {
     $nugetConfig | Out-File -Encoding utf8 NuGet.config
 }
 
+# Checks if the existing version is the latest version.
+function IsLatest([string]$installationPath, [string]$runtimeId, [string]$version) {
+    $SuccessRidFile = Join-Path -Path $installationPath -ChildPath "success_rid.txt"
+    if (Test-Path $SuccessRidFile) {
+        $LastRid = Get-Content -Path $SuccessRidFile
+        if ($LastRid -ne $runtimeId) {
+            return $false
+        }
+    } else {
+        return $false
+    }
+
+    $SuccessVersionFile = Join-Path -Path $installationPath -ChildPath "success_version.txt"
+    if (Test-Path $SuccessVersionFile) {
+        $LastVersion = Get-Content -Path $SuccessVersionFile
+        if ($LastVersion -ne $version) {
+            return $false
+        }
+    } else {
+        return $false
+    }
+    
+    return $true
+}
+
+function WriteSuccessInfo([string]$installationPath, [string]$runtimeId, [string]$version) {
+    $SuccessRidFile = Join-Path -Path $installationPath -ChildPath "success_rid.txt"
+    $runtimeId | Out-File -Encoding utf8 $SuccessRidFile
+
+    $SuccessVersionFile = Join-Path -Path $installationPath -ChildPath "success_version.txt"      
+    $version | Out-File -Encoding utf8 $SuccessVersionFile
+}
+
 # Add new version constants here
 # 'latest' version may be updated
 # all other version constants i.e. 'vs2015u2' may not be updated after they are finalized
@@ -108,7 +160,7 @@ Write-Host "Info: Using Runtime ID '$RuntimeID'"
 $GuidString = [System.Guid]::NewGuid()
 $TempPath = Join-Path -Path $env:TEMP -ChildPath $GuidString
 if (-not (Test-Path -Path $TempPath -PathType Container)) {
-    New-Item -ItemType Directory -Force -Path $TempPath
+    New-Item -ItemType Directory -Force -Path $TempPath -ErrorAction Stop | Out-Null
 }
 $TempPath = Resolve-Path -Path $TempPath -ErrorAction Stop
 
@@ -117,22 +169,40 @@ if (-not([System.IO.Path]::IsPathRooted($InstallPath))) {
     $InstallPath = Join-Path -Path (Split-Path -Path $MyInvocation.MyCommand.Definition) -ChildPath $InstallPath
 }
 
-Push-Location $TempPath -ErrorAction Stop
+if ($RemoveExistingOnUpgrade) {
+    if (Test-Path $InstallPath) {
+        Write-Host "Info: $InstallPath exists, deleting." 
+        Remove-Item $InstallPath -Force -Recurse -ErrorAction Stop
+    }
+}
 
-Write-Host "Info: Generating project.json"
-GenerateProjectJson $VersionNumber $RuntimeID
+if (! $SkipDownloads) {
+    if (IsLatest $InstallPath $RuntimeID $VersionNumber) {
+        Write-Host "Info: Latest version of ClrDbg is present. Skipping downloads"
+    } else {
+        
+        Push-Location $TempPath -ErrorAction Stop
+        
+        Write-Host "Info: Generating project.json"
+        GenerateProjectJson $VersionNumber $RuntimeID
 
-Write-Host "Info: Generating NuGet.config"
-GenerateNuGetConfig
+        Write-Host "Info: Generating NuGet.config"
+        GenerateNuGetConfig
 
-Write-Host "Info: Executing dotnet restore"
-dotnet restore
+        Write-Host "Info: Executing dotnet restore"
+        dotnet restore
 
-Write-Host "Info: Executing dotnet publish"
-dotnet publish -r $RuntimeID -o $InstallPath
+        Write-Host "Info: Executing dotnet publish"
+        dotnet publish -r $RuntimeID -o $InstallPath
 
-Pop-Location
+        Pop-Location
 
-Remove-Item -Path $TempPath -Recurse -Force
+        Remove-Item -Path $TempPath -Recurse -Force
 
-Write-Host "Successfully installed clrdbg at '$InstallPath'"
+        WriteSuccessInfo $InstallPath $RuntimeID $VersionNumber
+        Write-Host "Info: Successfully installed clrdbg at '$InstallPath'"
+    }
+} else {
+    Write-Host "Info: Skipping Downloads"
+}
+
