@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using Microsoft.VisualStudio.OLE.Interop;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -115,7 +116,17 @@ namespace Microsoft.SSHDebugPS
 
         void IDebugUnixShellPort.ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
         {
-            throw new NotImplementedException();
+            int code = -1;
+            string output = null;
+
+            string waitPrompt = string.Format(CultureInfo.CurrentUICulture, StringResources.WaitingOp_ExecutingCommand, commandDescription);
+            VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: () =>
+            {
+                code = GetConnection(ConnectionReason.Deferred).ExecuteCommand(commandText, timeout, out output);
+            });
+
+            exitCode = code;
+            commandOutput = output;
         }
 
         void IDebugUnixShellPort.BeginExecuteAsyncCommand(string commandText, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
