@@ -142,6 +142,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Running command &apos;{0}&apos; on the remote system....
+        /// </summary>
+        internal static string WaitingOp_ExecutingCommand {
+            get {
+                return ResourceManager.GetString("WaitingOp_ExecutingCommand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Running ps on the remote system....
         /// </summary>
         internal static string WaitingOp_ExecutingPS {

@@ -148,6 +148,10 @@
     <value>Connecting to {0}...</value>
     <comment>{0} is the network address being connected to</comment>
   </data>
+  <data name="WaitingOp_ExecutingCommand" xml:space="preserve">
+    <value>Running command '{0}' on the remote system...</value>
+    <comment>{0} is the command description.</comment>
+  </data>
   <data name="WaitingOp_ExecutingPS" xml:space="preserve">
     <value>Running ps on the remote system...</value>
   </data>
