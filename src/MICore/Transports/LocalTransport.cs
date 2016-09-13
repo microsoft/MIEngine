@@ -41,9 +41,14 @@ namespace MICore
                 proc.StartInfo.SetEnvironmentVariable("PATH", path);
             }
 
-            foreach (EnvironmentEntry entry in localOptions.Environment)
+            // Only pass the environment to launch clrdbg. For other modes, there are commands that set the environment variables
+            // directly for the debuggee.
+            if (options.DebuggerMIMode == MIMode.Clrdbg)
             {
-                proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+                foreach (EnvironmentEntry entry in localOptions.Environment)
+                {
+                    proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+                }
             }
 
             InitProcess(proc, out reader, out writer);
