@@ -24,6 +24,7 @@
 		.field public rtspecialname specialname int32 value__
 		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogOptions CheckPrerequisites = int32(0x00000002)
 		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogOptions None = int32(0x00000001)
+		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogOptions UpdateCredentials = int32(0x00000003)
 	}
 	.class public sealed ConnectionManagerDialogResult
 		extends [mscorlib]System.Enum
@@ -32,6 +33,7 @@
 		.field public rtspecialname specialname int32 value__
 		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogResult AuthenticationFailure = int32(0x00000008)
 		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogResult Cancelled = int32(0x00000002)
+		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogResult ConnectionUpdated = int32(0x00000400)
 		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogResult ConnectivityFailure = int32(0x00000010)
 		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogResult CredentialsStoreFailure = int32(0x00000040)
 		.field static public literal valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogResult Failed = int32(0x00000004)
@@ -55,6 +57,14 @@
 			instance valuetype Microsoft.VisualStudio.Linux.ConnectionManager.ConnectionManagerDialogResult get_DialogResult()
 		{
 		}
+		.method public virtual hidebysig newslot abstract specialname 
+			instance valuetype [liblinux]liblinux.SystemId get_SystemId()
+		{
+		}
+		.method public virtual hidebysig newslot abstract specialname 
+			instance valuetype [liblinux]liblinux.SystemPlatform get_SystemPlatform()
+		{
+		}
 		.property instance class [liblinux]liblinux.ConnectionInfo ConnectionInfo()
 		{
 			.get instance class [liblinux]liblinux.ConnectionInfo Microsoft.VisualStudio.Linux.ConnectionManager.IConnectionManagerResult::get_ConnectionInfo()
@@ -66,6 +76,14 @@
 		.property instance int32 StoredConnectionId()
 		{
 			.get instance int32 Microsoft.VisualStudio.Linux.ConnectionManager.IConnectionManagerResult::get_StoredConnectionId()
+		}
+		.property instance valuetype [liblinux]liblinux.SystemId SystemId()
+		{
+			.get instance valuetype [liblinux]liblinux.SystemId Microsoft.VisualStudio.Linux.ConnectionManager.IConnectionManagerResult::get_SystemId()
+		}
+		.property instance valuetype [liblinux]liblinux.SystemPlatform SystemPlatform()
+		{
+			.get instance valuetype [liblinux]liblinux.SystemPlatform Microsoft.VisualStudio.Linux.ConnectionManager.IConnectionManagerResult::get_SystemPlatform()
 		}
 	}
 	.class public interface abstract IVsConnectionManager

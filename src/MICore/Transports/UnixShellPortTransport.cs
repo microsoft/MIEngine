@@ -157,18 +157,19 @@ namespace MICore
                     {
                         _debuggerLaunched = true;
                         UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);
-                        return;
                     }
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(line))
+                {
+                    _callback.OnStdOutLine(line);
                 }
             }
 
             _logger?.WriteLine("->" + line);
             _logger?.Flush();
-
-            if (!string.IsNullOrEmpty(line))
-            {
-                _callback.OnStdOutLine(line);
-            }
         }
 
         void IDebugUnixShellCommandCallback.OnExit(string exitCode)
