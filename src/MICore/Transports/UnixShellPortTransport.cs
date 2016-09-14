@@ -148,10 +148,6 @@ namespace MICore
                     {
                         _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
                     }
-                    else
-                    {
-                        _callback.OnStdOutLine(line);
-                    }
 
                     if (line.Equals("Info: Launching clrdbg"))
                     {
@@ -160,12 +156,10 @@ namespace MICore
                     }
                 }
             }
-            else
+
+            if (!string.IsNullOrEmpty(line))
             {
-                if (!string.IsNullOrEmpty(line))
-                {
-                    _callback.OnStdOutLine(line);
-                }
+                _callback.OnStdOutLine(line);
             }
 
             _logger?.WriteLine("->" + line);

@@ -47,6 +47,14 @@ namespace Microsoft.SSHDebugPS
 
         void IDebugUnixShellAsyncCommand.WriteLine(string text)
         {
+            lock (_lock)
+            {
+                if (_isClosed)
+                {
+                    return;
+                }
+            }
+
             _streamingShell.WriteLine(text);
             _streamingShell.Flush();
         }
@@ -119,12 +127,6 @@ namespace Microsoft.SSHDebugPS
 
         private void OnClosed(object sender, EventArgs e)
         {
-            // TODO: When we implement ReadLineAsync this code should be able to go away
-            if (_firedOnExit == 0 && _isClosed == false)
-            {
-                Thread.Sleep(200);
-            }
-
             if (_firedOnExit == 0 && _isClosed == false)
             {
                 Debug.Fail("Why was the SSH session closed?");
