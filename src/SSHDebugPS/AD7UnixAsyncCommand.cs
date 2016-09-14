@@ -33,7 +33,8 @@ namespace Microsoft.SSHDebugPS
             _beginMessage = string.Format("Begin:{0}", id);
             _exitMessagePrefix = string.Format("Exit:{0}-", id);
             _streamingShell.OutputReceived += OnOutputReceived;
-            _streamingShell.Closed += OnClosed;
+            _streamingShell.Closed += OnClosedOrDisconnected;
+            _streamingShell.Disconnected += OnClosedOrDisconnected;
             _streamingShell.ErrorOccured += OnError;
         }
 
@@ -125,7 +126,7 @@ namespace Microsoft.SSHDebugPS
             Close();
         }
 
-        private void OnClosed(object sender, EventArgs e)
+        private void OnClosedOrDisconnected(object sender, EventArgs e)
         {
             if (_firedOnExit == 0 && _isClosed == false)
             {
