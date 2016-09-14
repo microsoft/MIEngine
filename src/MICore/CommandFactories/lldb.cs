@@ -143,6 +143,14 @@ namespace MICore
             return TargetArchitecture.Unknown;
         }
 
+        public override string GetSetEnvironmentVariableCommand(string name, string value)
+        {
+            // LLDB requires surrounding values with quotes if the values contain spaces.
+            // This is because LLDB allows setting multiple environment variables with one command,
+            // using a space as the delimiter between variables.
+            return string.Format(CultureInfo.InvariantCulture, "settings set target.env-vars {0}=\"{1}\"", name, EscapeQuotes(value));
+        }
+
         public override Task Signal(string sig)
         {
             throw new NotImplementedException("lldb signal command");

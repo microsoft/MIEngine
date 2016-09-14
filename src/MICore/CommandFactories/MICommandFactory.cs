@@ -579,6 +579,8 @@ namespace MICore
         abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
 
+        abstract public string GetSetEnvironmentVariableCommand(string name, string value);
+
         abstract public bool SupportsStopOnDynamicLibLoad();
 
         abstract public bool SupportsChildProcessDebugging();
