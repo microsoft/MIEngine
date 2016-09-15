@@ -16,7 +16,7 @@ namespace Microsoft.SSHDebugPS
         private readonly object _lock = new object();
         private readonly string _beginMessage;
         private readonly string _exitMessagePrefix;
-        private readonly IShellStream _shellStream;
+        private readonly IStreamingShell _streamingShell;
         private readonly IDebugUnixShellCommandCallback _callback;
         private readonly LineBuffer _lineBuffer = new LineBuffer();
         private int _firedOnExit;
@@ -25,29 +25,39 @@ namespace Microsoft.SSHDebugPS
 
         private string _startCommand;
 
-        public AD7UnixAsyncCommand(IShellStream shellStream, IDebugUnixShellCommandCallback callback)
+        public AD7UnixAsyncCommand(IStreamingShell streamingShell, IDebugUnixShellCommandCallback callback)
         {
-            _shellStream = shellStream;
+            _streamingShell = streamingShell;
             _callback = callback;
             Guid id = Guid.NewGuid();
             _beginMessage = string.Format("Begin:{0}", id);
             _exitMessagePrefix = string.Format("Exit:{0}-", id);
-            _shellStream.OutputReceived += OnOutputReceived;
-            _shellStream.Closed += OnClosed;
-            _shellStream.ErrorOccured += OnError;
+            _streamingShell.OutputReceived += OnOutputReceived;
+            _streamingShell.Closed += OnClosedOrDisconnected;
+            _streamingShell.Disconnected += OnClosedOrDisconnected;
+            _streamingShell.ErrorOccured += OnError;
         }
 
         internal void Start(string commandText)
         {
             _startCommand = string.Format("echo \"{0}\"; {1}; echo \"{2}$?\"", _beginMessage, commandText, _exitMessagePrefix);
-            _shellStream.WriteLine(_startCommand);
-            _shellStream.Flush();
+            _streamingShell.WriteLine(_startCommand);
+            _streamingShell.Flush();
+            _streamingShell.BeginOutputRead();
         }
 
         void IDebugUnixShellAsyncCommand.WriteLine(string text)
         {
-            _shellStream.WriteLine(text);
-            _shellStream.Flush();
+            lock (_lock)
+            {
+                if (_isClosed)
+                {
+                    return;
+                }
+            }
+
+            _streamingShell.WriteLine(text);
+            _streamingShell.Flush();
         }
 
         void IDebugUnixShellAsyncCommand.Abort()
@@ -55,25 +65,16 @@ namespace Microsoft.SSHDebugPS
             Close();
         }
 
-        private void OnOutputReceived(object sender, string unorderedText)
+        private void OnOutputReceived(object sender, OutputReceivedEventArgs e)
         {
-            // TODO: rajkumar42 The OutputReceived event in liblinux has some issues. If we stick with liblinux, we should fix it:
-            // 1. It kicks off a different thread pool thread every time data is received. As such there is no
-            // way to order the input.
-            // 2. The shell in Linux keeps a queue of input. If a component only obtains the input through the
-            // output received event, then nothing will ever drain the output.
-            //
-            // Suggested fix: Add a ReadLine async method to the shell and remove the output received event
-
             IEnumerable<string> linesToSend = null;
 
             lock (_lock)
             {
-                string text = _shellStream.ReadToEnd();
-                if (string.IsNullOrEmpty(text))
+                if (string.IsNullOrEmpty(e.Output))
                     return;
 
-                _lineBuffer.ProcessText(text, out linesToSend);
+                _lineBuffer.ProcessText(e.Output, out linesToSend);
             }
 
             foreach (string line in linesToSend)
@@ -115,7 +116,7 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        private void OnError(object sender)
+        private void OnError(object sender, liblinux.ErrorOccuredEventArgs e)
         {
             if (Interlocked.CompareExchange(ref _firedOnExit, 1, 0) == 0)
             {
@@ -125,18 +126,12 @@ namespace Microsoft.SSHDebugPS
             Close();
         }
 
-        private void OnClosed(object sender)
+        private void OnClosedOrDisconnected(object sender, EventArgs e)
         {
-            // TODO: When we implement ReadLineAsync this code should be able to go away
-            if (_firedOnExit == 0 && _isClosed == false)
-            {
-                Thread.Sleep(200);
-            }
-
             if (_firedOnExit == 0 && _isClosed == false)
             {
                 Debug.Fail("Why was the SSH session closed?");
-                OnError(sender);
+                OnError(sender, null);
             }
         }
 
@@ -150,7 +145,7 @@ namespace Microsoft.SSHDebugPS
                 _isClosed = true;
             }
 
-            _shellStream.Close();
+            _streamingShell.Close();
         }
 
         private static string SplitExitCode(string line, int startIndex)

@@ -148,27 +148,22 @@ namespace MICore
                     {
                         _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
                     }
-                    else
-                    {
-                        _callback.OnStdOutLine(line);
-                    }
 
                     if (line.Equals("Info: Launching clrdbg"))
                     {
                         _debuggerLaunched = true;
                         UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);
-                        return;
                     }
                 }
             }
-
-            _logger?.WriteLine("->" + line);
-            _logger?.Flush();
 
             if (!string.IsNullOrEmpty(line))
             {
                 _callback.OnStdOutLine(line);
             }
+
+            _logger?.WriteLine("->" + line);
+            _logger?.Flush();
         }
 
         void IDebugUnixShellCommandCallback.OnExit(string exitCode)
