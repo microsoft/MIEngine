@@ -365,7 +365,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
-                    if (this.ProcessState == MICore.ProcessState.Exited)
+                    if (_terminating)
                     {
                         return; // ignore exceptions after the process has exited
                     }
