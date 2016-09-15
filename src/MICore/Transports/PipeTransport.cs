@@ -333,26 +333,21 @@ namespace MICore
             int exitCode = -1;
 
             Process proc = new Process();
-            try
-            {
-                proc.StartInfo.FileName = _pipePath;
-                proc.StartInfo.Arguments = string.Format(CultureInfo.InvariantCulture, _cmdArgs, commandText);
-                proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
-                proc.EnableRaisingEvents = false;
-                proc.StartInfo.RedirectStandardInput = false;
-                proc.StartInfo.RedirectStandardOutput = true;
-                proc.StartInfo.RedirectStandardError = true;
-                proc.StartInfo.UseShellExecute = false;
-                proc.StartInfo.CreateNoWindow = true;
-                proc.Start();
-                proc.WaitForExit(timeout);
-                exitCode = proc.ExitCode;
-            }
-            finally
-            {
-                output = proc.StandardOutput.ReadToEnd();
-                error = proc.StandardError.ReadToEnd();
-            }
+            proc.StartInfo.FileName = _pipePath;
+            proc.StartInfo.Arguments = string.Format(CultureInfo.InvariantCulture, _cmdArgs, commandText);
+            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
+            proc.EnableRaisingEvents = false;
+            proc.StartInfo.RedirectStandardInput = false;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.RedirectStandardError = true;
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.CreateNoWindow = true;
+            proc.Start();
+            proc.WaitForExit(timeout);
+            exitCode = proc.ExitCode;
+
+            output = proc.StandardOutput.ReadToEnd();
+            error = proc.StandardError.ReadToEnd();
 
             return exitCode;
         }

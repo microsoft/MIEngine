@@ -69,12 +69,12 @@ namespace MICore
 
         public int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
         {
-            throw new NotImplementedException();
+            return _clientTransport.ExecuteSyncCommand(commandDescription, commandText, timeout, out output, out error);
         }
 
         public bool CanExecuteCommand()
         {
-            return false;
+            return _clientTransport.CanExecuteCommand();
         }
     }
 }
