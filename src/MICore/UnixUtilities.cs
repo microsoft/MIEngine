@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -192,6 +193,61 @@ namespace MICore
             p.Start();
             p.WaitForExit();
             return p.ExitCode == 0;
+        }
+
+        internal static void KillProcessTree(Process p)
+        {
+            bool isLinux = PlatformUtilities.IsLinux();
+            bool isOSX = PlatformUtilities.IsOSX();
+            if (isLinux || isOSX)
+            {
+                // On linux run 'ps -x -o "%p %P"' (similarly on Mac), which generates a list of the process ids (%p) and parent process ids (%P).
+                // Using this list, issue a 'kill' command for each child process. Kill the children (recursively) to eliminate
+                // the entire process tree rooted at p. 
+                Process ps = new Process();
+                ps.StartInfo.FileName = "/bin/ps";
+                ps.StartInfo.Arguments = isLinux ? "-x -o \"%p %P\"" : "-x -o \"pid ppid\"";
+                ps.StartInfo.RedirectStandardOutput = true;
+                ps.StartInfo.UseShellExecute = false;
+                ps.Start();
+                string line;
+                List<Tuple<int, int>> processAndParent = new List<Tuple<int, int>>();
+                char[] whitespace = new char[] { ' ', '\t' };
+                while ((line = ps.StandardOutput.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    int id, pid;
+                    if (Int32.TryParse(line.Substring(0, line.IndexOfAny(whitespace)), NumberStyles.Integer, CultureInfo.InvariantCulture, out id)
+                        && Int32.TryParse(line.Substring(line.IndexOfAny(whitespace)).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out pid))
+                    {
+                        processAndParent.Add(new Tuple<int, int>(id, pid));
+                    }
+                }
+                KillChildren(processAndParent, p.Id);
+            }
+        }
+
+        private static void KillChildren(List<Tuple<int, int>> processes, int pid)
+        {
+            processes.ForEach((p) =>
+            {
+                if (p.Item2 == pid)
+                {
+                    KillChildren(processes, p.Item1);
+                    Kill(p.Item1, 9);
+                }
+            });
+        }
+
+        internal static void Interrupt(int pid)
+        {
+            Kill(pid, 2);
+        }
+
+        private static void Kill(int pid, int signal)
+        {
+            var k = Process.Start("/bin/kill", String.Format(CultureInfo.InvariantCulture, "-{0} {1}", signal, pid));
+            k.WaitForExit();
         }
     }
 }

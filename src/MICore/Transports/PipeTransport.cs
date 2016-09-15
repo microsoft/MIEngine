@@ -40,34 +40,8 @@ namespace MICore
                 return false;
             }
 
-            try
-            {
-                Process proc = new Process();
-                string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
-                proc.StartInfo.FileName = _pipePath;
-                proc.StartInfo.Arguments = string.Format(CultureInfo.InvariantCulture, _cmdArgs, killCmd);
-                proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
-                proc.EnableRaisingEvents = false;
-                proc.StartInfo.RedirectStandardInput = false;
-                proc.StartInfo.RedirectStandardOutput = true;
-                proc.StartInfo.RedirectStandardError = true;
-                proc.StartInfo.UseShellExecute = false;
-                proc.StartInfo.CreateNoWindow = true;
-                proc.Start();
-                AsyncReadFromStream(proc.StandardOutput, (s) => { if (!string.IsNullOrWhiteSpace(s)) this.Callback.OnStdOutLine(s); });
-                AsyncReadFromStream(proc.StandardError, (s) => { if (!string.IsNullOrWhiteSpace(s)) this.Callback.OnStdErrorLine(s); });
-                proc.WaitForExit();
-                if (proc.ExitCode != 0)
-                {
-                    this.Callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessExit, _pipePath, proc.ExitCode));
-                }
-            }
-            catch (Exception e)
-            {
-                this.Callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessException, _pipePath, e.Message));
-                return false;
-            }
-            return true;
+            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
+            return WrappedExecuteSyncCommand(MICoreResources.Info_KillingPipeProcess, killCmd, Timeout.Infinite) == 0;
         }
 
         protected override string GetThreadName()
@@ -145,49 +119,14 @@ namespace MICore
             InitProcess(proc, out reader, out writer);
         }
 
-        private void KillChildren(List<Tuple<int, int>> processes, int pid)
+        /// <summary>
+        /// Kills the pipe process and its child processes. 
+        /// It maybe the debugger itself it is local.
+        /// </summary>
+        /// <param name="p">Process to kill.</param>
+        private void KillPipeProcessAndChildren(Process p)
         {
-            processes.ForEach((p) =>
-            {
-                if (p.Item2 == pid)
-                {
-                    KillChildren(processes, p.Item1);
-                    var k = Process.Start("/bin/kill", String.Format(CultureInfo.InvariantCulture, "-9 {0}", p.Item1));
-                    k.WaitForExit();
-                }
-            });
-        }
-
-        private void KillProcess(Process p)
-        {
-            bool isLinux = PlatformUtilities.IsLinux();
-            bool isOSX = PlatformUtilities.IsOSX();
-            if (isLinux || isOSX)
-            {
-                // On linux run 'ps -x -o "%p %P"' (similarly on Mac), which generates a list of the process ids (%p) and parent process ids (%P).
-                // Using this list, issue a 'kill' command for each child process. Kill the children (recursively) to eliminate
-                // the entire process tree rooted at p. 
-                Process ps = new Process();
-                ps.StartInfo.FileName = "/bin/ps";
-                ps.StartInfo.Arguments = isLinux ? "-x -o \"%p %P\"" : "-x -o \"pid ppid\"";
-                ps.StartInfo.RedirectStandardOutput = true;
-                ps.StartInfo.UseShellExecute = false;
-                ps.Start();
-                string line;
-                List<Tuple<int, int>> processAndParent = new List<Tuple<int, int>>();
-                char[] whitespace = new char[] { ' ', '\t' };
-                while ((line = ps.StandardOutput.ReadLine()) != null)
-                {
-                    line = line.Trim();
-                    int id, pid;
-                    if (Int32.TryParse(line.Substring(0, line.IndexOfAny(whitespace)), NumberStyles.Integer, CultureInfo.InvariantCulture, out id)
-                        && Int32.TryParse(line.Substring(line.IndexOfAny(whitespace)).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out pid))
-                    {
-                        processAndParent.Add(new Tuple<int, int>(id, pid));
-                    }
-                }
-                KillChildren(processAndParent, p.Id);
-            }
+            UnixUtilities.KillProcessTree(p);
             if (!p.HasExited)
             {
                 p.Kill();
@@ -225,7 +164,7 @@ namespace MICore
                 {
                     try
                     {
-                        KillProcess(_process);
+                        KillPipeProcessAndChildren(_process);
                     }
                     catch
                     {
@@ -360,6 +299,67 @@ namespace MICore
                     // lets not crash VS
                 }
             }
+        }
+
+        private int WrappedExecuteSyncCommand(string commandDescription, string commandText, int timeout)
+        {
+            int exitCode = -1;
+            string output = null;
+            string error = null;
+
+            string fullCommand = string.Format(CultureInfo.InvariantCulture, "{0} {1} {2}", _pipePath, _cmdArgs, commandText);
+
+            try
+            {
+                exitCode = ExecuteSyncCommand(commandDescription, commandText, timeout, out output, out error);
+
+                if (exitCode != 0)
+                {
+                    this.Callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessExit, fullCommand, exitCode));
+                }
+            }
+            catch (Exception e)
+            {
+                this.Callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessException, fullCommand, e.Message));
+            }
+
+            return exitCode;
+        }
+
+        public override int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
+        {
+            output = null;
+            error = null;
+            int exitCode = -1;
+
+            Process proc = new Process();
+            try
+            {
+                proc.StartInfo.FileName = _pipePath;
+                proc.StartInfo.Arguments = string.Format(CultureInfo.InvariantCulture, _cmdArgs, commandText);
+                proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
+                proc.EnableRaisingEvents = false;
+                proc.StartInfo.RedirectStandardInput = false;
+                proc.StartInfo.RedirectStandardOutput = true;
+                proc.StartInfo.RedirectStandardError = true;
+                proc.StartInfo.UseShellExecute = false;
+                proc.StartInfo.CreateNoWindow = true;
+                proc.Start();
+                proc.WaitForExit(timeout);
+                exitCode = proc.ExitCode;
+            }
+            finally
+            {
+                output = proc.StandardOutput.ReadToEnd();
+                error = proc.StandardError.ReadToEnd();
+            }
+
+            return exitCode;
+        }
+
+        public override bool CanExecuteCommand()
+        {
+            return true;
         }
     }
 }

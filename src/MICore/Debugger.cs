@@ -779,8 +779,7 @@ namespace MICore
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
-            const int sigint = 2;
-            UnixNativeMethods.Kill(debugeePid, sigint);
+            UnixUtilities.Interrupt(debugeePid);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }

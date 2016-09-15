@@ -85,5 +85,15 @@ namespace MICore
             base.Close();
             ((IDisposable)_client).Dispose();
         }
+
+        public override int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool CanExecuteCommand()
+        {
+            return false;
+        }
     }
 }
