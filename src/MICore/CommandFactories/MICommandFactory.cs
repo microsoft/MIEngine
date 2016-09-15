@@ -360,7 +360,7 @@ namespace MICore
             return results;
         }
 
-        public async Task<string> VarAssign(string variableName, string expression)
+        public virtual async Task<string> VarAssign(string variableName, string expression, int threadId, uint frameLevel)
         {
             string command = string.Format("-var-assign {0} \"{1}\"", variableName, expression);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);

@@ -705,8 +705,11 @@ namespace Microsoft.MIDebugEngine
 
             _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
+                int threadId = Client.GetDebuggedThread().Id;
+                uint frameLevel = _ctx.Level;
+
                 _engine.DebuggedProcess.FlushBreakStateData();
-                Value = await _engine.DebuggedProcess.MICommandFactory.VarAssign(_internalName, expression);
+                Value = await _engine.DebuggedProcess.MICommandFactory.VarAssign(_internalName, expression, threadId, frameLevel);
             });
         }
 
