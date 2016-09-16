@@ -26,6 +26,19 @@ namespace MICore
         /// acknowledging that it has exited.
         /// </summary>
         int DebuggerPid { get; }
+
+        /// <summary>
+        /// Executes a command synchronously
+        /// </summary>
+        /// <param name="commandDescription">Description of the command which is being passed in</param>
+        /// <param name="commandText">Command to execute</param>
+        /// <param name="timeout">timeout for the command</param>
+        /// <param name="output">Output of the command in stdout</param>
+        /// <param name="error">Output of the command in stderr</param>
+        /// <returns>Exit code of the command</returns>
+        int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error);
+
+        bool CanExecuteCommand();
     }
     public interface ISignalingTransport : ITransport
     {

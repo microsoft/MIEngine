@@ -66,5 +66,15 @@ namespace MICore
         {
             _clientTransport.Send(cmd);
         }
+
+        public int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
+        {
+            return _clientTransport.ExecuteSyncCommand(commandDescription, commandText, timeout, out output, out error);
+        }
+
+        public bool CanExecuteCommand()
+        {
+            return _clientTransport.CanExecuteCommand();
+        }
     }
 }

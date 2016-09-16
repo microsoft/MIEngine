@@ -383,6 +383,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Killing pipe process.
+        /// </summary>
+        public static string Info_KillingPipeProcess {
+            get {
+                return ResourceManager.GetString("Info_KillingPipeProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Starting unix command: &apos;{0}&apos;.
         /// </summary>
         public static string Info_StartingUnixCommand {
