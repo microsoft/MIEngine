@@ -171,5 +171,26 @@ namespace MICore
         {
             throw new NotImplementedException("lldb catch command");
         }
+
+        /// <summary>
+        /// Assigns the value of an expression to a variable.
+        /// Since LLDB only accepts assigning values to variables, the expression may need to be evaluated.
+        /// However, since the result of evaluating an expression in LLDB can return some extra information:
+        /// e.g., 'a' --> 97 'a'. We don't want to assign the value "97 'a'". Instead, we first try
+        /// assigning what the user passed, only falling back to evaluation if the first assignment fails.
+        /// </summary>
+        public async override Task<string> VarAssign(string variableName, string expression, int threadId, uint frameLevel)
+        {
+            try
+            {
+                return await base.VarAssign(variableName, expression, threadId, frameLevel);
+            }
+            catch (UnexpectedMIResultException)
+            {
+                Results results = await VarCreate(expression, threadId, frameLevel, 0, ResultClass.done);
+                string value = results.FindString("value");
+                return await base.VarAssign(variableName, value, threadId, frameLevel);
+            }
+        }
     }
 }
