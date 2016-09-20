@@ -392,6 +392,7 @@ else
     dotnet restore > dotnet_restore.log 2>&1
     if [ $? -ne 0 ]; then
         echo "Error: dotnet restore failed"
+        cat dotnet_restore.log >&2
         exit 1
     fi
 

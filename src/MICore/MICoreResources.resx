@@ -131,7 +131,9 @@
   <data name="Error_DebuggerInitializeFailed_StdErr" xml:space="preserve">
     <value>Unable to establish a connection to {0}. The following message was written to stderr:
 
-{1}</value>
+{1}
+
+See output window for details.</value>
   </data>
   <data name="Error_DebugServerInitializationFailed" xml:space="preserve">
     <value>Debug server process failed to initialize.</value>
