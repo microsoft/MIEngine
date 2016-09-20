@@ -151,16 +151,16 @@ namespace Microsoft.SSHDebugPS
                         _streamingShell.Close();
                     }
 
-                    if (_streamingShell != null)
-                    {
-                        _streamingShell.Dispose();
-                        _streamingShell = null;
-                    }
+                    _streamingShell?.Dispose();
                 }
                 catch (ThreadInterruptedException)
                 {
                     // This can happen if the command failed on a timeout. Say dotnet restore failed because of insufficient permissions etc.
+                    // Calling dispose on StreamingShell throws ThreadInterruptedException as well. For this case, any operation on StreamingShell
+                    // will likely cause this exception to be thrown, setting it to null to allow cleanup.
                 }
+
+                _streamingShell = null;
             }
         }
 

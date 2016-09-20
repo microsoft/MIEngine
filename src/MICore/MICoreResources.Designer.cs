@@ -104,7 +104,7 @@ namespace MICore {
         ///
         ///{1}
         ///
-        ///See output window for details..
+        ///See Output Window for details..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_StdErr {
             get {
