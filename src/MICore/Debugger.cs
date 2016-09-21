@@ -252,10 +252,10 @@ namespace MICore
 
             //if this is an exception reported from LLDB, it will not currently contain a frame object in the MI
             //if we don't have a frame, check if this is an exception and retrieve the frame
-            if (!results.Contains("frame") &&
+            if (!results.Contains("frame") && !_terminating &&
                 (string.Compare(reason, "exception-received", StringComparison.OrdinalIgnoreCase) == 0 ||
-                string.Compare(reason, "signal-received", StringComparison.OrdinalIgnoreCase) == 0)
-                )
+                 string.Compare(reason, "signal-received", StringComparison.OrdinalIgnoreCase) == 0)
+               )
             {
                 //get the info for the current frame
                 Results frameResult = await MICommandFactory.StackInfoFrame();
@@ -273,7 +273,7 @@ namespace MICore
             this.ProcessState = ProcessState.Stopped;
             FlushBreakStateData();
 
-            if (!results.Contains("frame"))
+            if (!results.Contains("frame") && !_terminating)
             {
                 if (ModuleLoadEvent != null)
                 {
@@ -779,8 +779,7 @@ namespace MICore
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
-            const int sigint = 2;
-            UnixNativeMethods.Kill(debugeePid, sigint);
+            UnixUtilities.Interrupt(debugeePid);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }

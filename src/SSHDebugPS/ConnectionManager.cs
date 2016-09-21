@@ -54,7 +54,7 @@ namespace Microsoft.SSHDebugPS
 
                 IConnectionManagerResult result = connectionManager.ShowDialog(newConnectionInfo);
 
-                if (result.DialogResult == ConnectionManagerDialogResult.Succeeded)
+                if ((result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
                 {
                     // Retrieve the newly added connection
                     store.Load();
@@ -81,14 +81,8 @@ namespace Microsoft.SSHDebugPS
                         IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
                         IConnectionManagerResult result = connectionManager.ShowDialog(StringResources.AuthenticationFailureHeader, StringResources.AuthenticationFailureDescription, connectionInfo);
 
-                        if (result.DialogResult == ConnectionManagerDialogResult.Succeeded)
+                        if ((result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
                         {
-                            // Update the credentials in the store
-                            store.Load();
-                            store.RemoveById(result.StoredConnectionId);
-                            store.Add(result.ConnectionInfo);
-                            store.Save();
-
                             connectionInfo = result.ConnectionInfo;
                         }
                         else

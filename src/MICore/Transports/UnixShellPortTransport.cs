@@ -148,27 +148,22 @@ namespace MICore
                     {
                         _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
                     }
-                    else
-                    {
-                        _callback.OnStdOutLine(line);
-                    }
 
                     if (line.Equals("Info: Launching clrdbg"))
                     {
                         _debuggerLaunched = true;
                         UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);
-                        return;
                     }
                 }
             }
-
-            _logger?.WriteLine("->" + line);
-            _logger?.Flush();
 
             if (!string.IsNullOrEmpty(line))
             {
                 _callback.OnStdOutLine(line);
             }
+
+            _logger?.WriteLine("->" + line);
+            _logger?.Flush();
         }
 
         void IDebugUnixShellCommandCallback.OnExit(string exitCode)
@@ -187,6 +182,19 @@ namespace MICore
                     // eat exceptions on this thread so we don't bring down VS
                 }
             }
+        }
+
+        public int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
+        {
+            int errorCode = -1;
+            error = null; // In SSH transport, stderr is printed on stdout.
+            _launchOptions.UnixPort.ExecuteSyncCommand(commandDescription, commandText, out output, timeout, out errorCode);
+            return errorCode;
+        }
+
+        public bool CanExecuteCommand()
+        {
+            return true;
         }
     }
 }

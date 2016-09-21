@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System.IO;
 using System.Globalization;
 using liblinux;
+using liblinux.Shell;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -43,9 +44,16 @@ namespace Microsoft.SSHDebugPS
 
         internal void BeginExecuteAsyncCommand(string commandText, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
-            var command = new AD7UnixAsyncCommand(_remoteSystem.Shell.OpenStream(), callback);
+            var command = new AD7UnixAsyncCommand(new StreamingShell(_remoteSystem), callback);
             command.Start(commandText);
             asyncCommand = command;
+        }
+
+        internal int ExecuteCommand(string commandText, int timeout, out string commandOutput)
+        {
+            var command = _remoteSystem.Shell.ExecuteCommand(commandText, timeout);
+            commandOutput = command.Output;
+            return command.ExitCode;
         }
 
         /// <summary>

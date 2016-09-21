@@ -221,5 +221,8 @@ namespace MICore
 
             reader?.Dispose();
         }
+
+        public abstract int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error);
+        public abstract bool CanExecuteCommand();
     }
 }

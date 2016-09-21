@@ -360,7 +360,7 @@ namespace MICore
             return results;
         }
 
-        public async Task<string> VarAssign(string variableName, string expression)
+        public virtual async Task<string> VarAssign(string variableName, string expression, int threadId, uint frameLevel)
         {
             string command = string.Format("-var-assign {0} \"{1}\"", variableName, expression);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
@@ -578,6 +578,8 @@ namespace MICore
 
         abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
+
+        abstract public string GetSetEnvironmentVariableCommand(string name, string value);
 
         abstract public bool SupportsStopOnDynamicLibLoad();
 

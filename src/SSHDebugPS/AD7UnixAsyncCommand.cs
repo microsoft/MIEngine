@@ -16,36 +16,48 @@ namespace Microsoft.SSHDebugPS
         private readonly object _lock = new object();
         private readonly string _beginMessage;
         private readonly string _exitMessagePrefix;
-        private readonly IShellStream _shellStream;
+        private IStreamingShell _streamingShell;
         private readonly IDebugUnixShellCommandCallback _callback;
         private readonly LineBuffer _lineBuffer = new LineBuffer();
         private int _firedOnExit;
         private bool _beginReceived;
         private bool _isClosed;
 
-        public AD7UnixAsyncCommand(IShellStream shellStream, IDebugUnixShellCommandCallback callback)
+        private string _startCommand;
+
+        public AD7UnixAsyncCommand(IStreamingShell streamingShell, IDebugUnixShellCommandCallback callback)
         {
-            _shellStream = shellStream;
+            _streamingShell = streamingShell;
             _callback = callback;
             Guid id = Guid.NewGuid();
             _beginMessage = string.Format("Begin:{0}", id);
             _exitMessagePrefix = string.Format("Exit:{0}-", id);
-            _shellStream.OutputReceived += OnOutputReceived;
-            _shellStream.Closed += OnClosed;
-            _shellStream.ErrorOccured += OnError;
+            _streamingShell.OutputReceived += OnOutputReceived;
+            _streamingShell.Closed += OnClosedOrDisconnected;
+            _streamingShell.Disconnected += OnClosedOrDisconnected;
+            _streamingShell.ErrorOccured += OnError;
         }
 
         internal void Start(string commandText)
         {
-            string fullCommand = string.Format("echo \"{0}\"; {1}; echo \"{2}$?\"", _beginMessage, commandText, _exitMessagePrefix);
-            _shellStream.WriteLine(fullCommand);
-            _shellStream.Flush();
+            _startCommand = string.Format("echo \"{0}\"; {1}; echo \"{2}$?\"", _beginMessage, commandText, _exitMessagePrefix);
+            _streamingShell.WriteLine(_startCommand);
+            _streamingShell.Flush();
+            _streamingShell.BeginOutputRead();
         }
 
         void IDebugUnixShellAsyncCommand.WriteLine(string text)
         {
-            _shellStream.WriteLine(text);
-            _shellStream.Flush();
+            lock (_lock)
+            {
+                if (_isClosed)
+                {
+                    return;
+                }
+            }
+
+            _streamingShell.WriteLine(text);
+            _streamingShell.Flush();
         }
 
         void IDebugUnixShellAsyncCommand.Abort()
@@ -53,27 +65,16 @@ namespace Microsoft.SSHDebugPS
             Close();
         }
 
-        private void OnOutputReceived(object sender, string unorderedText)
+        private void OnOutputReceived(object sender, OutputReceivedEventArgs e)
         {
-            // TODO: rajkumar42 The OutputReceived event in liblinux has some issues. If we stick with liblinux, we should fix it:
-            // 1. It kicks off a different thread pool thread every time data is received. As such there is no
-            // way to order the input.
-            // 2. The shell in Linux keeps a queue of input. If a component only obtains the input through the
-            // output received event, then nothing will ever drain the output.
-            //
-            // Suggested fix: Add a ReadLine async method to the shell and remove the output received event
-
-            // TODO: rajkumar42, this breaks when logging in as root. 
-
             IEnumerable<string> linesToSend = null;
 
             lock (_lock)
             {
-                string text = _shellStream.ReadToEnd();
-                if (string.IsNullOrEmpty(text))
+                if (string.IsNullOrEmpty(e.Output))
                     return;
 
-                _lineBuffer.ProcessText(text, out linesToSend);
+                _lineBuffer.ProcessText(e.Output, out linesToSend);
             }
 
             foreach (string line in linesToSend)
@@ -81,6 +82,13 @@ namespace Microsoft.SSHDebugPS
                 if (_isClosed)
                 {
                     return;
+                }
+
+                if (line.Equals(_startCommand, StringComparison.Ordinal))
+                {
+                    // When logged in as root, shell sends a copy of stdin to stdout.
+                    // This ignores the shell command that was used to launch the debugger.
+                    continue;
                 }
 
                 int endCommandIndex = line.IndexOf(_exitMessagePrefix);
@@ -108,7 +116,7 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        private void OnError(object sender)
+        private void OnError(object sender, liblinux.ErrorOccuredEventArgs e)
         {
             if (Interlocked.CompareExchange(ref _firedOnExit, 1, 0) == 0)
             {
@@ -118,18 +126,12 @@ namespace Microsoft.SSHDebugPS
             Close();
         }
 
-        private void OnClosed(object sender)
+        private void OnClosedOrDisconnected(object sender, EventArgs e)
         {
-            // TODO: When we implement ReadLineAsync this code should be able to go away
-            if (_firedOnExit == 0 && _isClosed == false)
-            {
-                Thread.Sleep(200);
-            }
-
             if (_firedOnExit == 0 && _isClosed == false)
             {
                 Debug.Fail("Why was the SSH session closed?");
-                OnError(sender);
+                OnError(sender, null);
             }
         }
 
@@ -141,9 +143,25 @@ namespace Microsoft.SSHDebugPS
                     return;
 
                 _isClosed = true;
-            }
 
-            _shellStream.Close();
+                try
+                {
+                    if (_streamingShell != null && _streamingShell.IsOpen)
+                    {
+                        _streamingShell.Close();
+                    }
+
+                    _streamingShell?.Dispose();
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // This can happen if the command failed on a timeout. Say dotnet restore failed because of insufficient permissions etc.
+                    // Calling dispose on StreamingShell throws ThreadInterruptedException as well. For this case, any operation on StreamingShell
+                    // will likely cause this exception to be thrown, setting it to null to allow cleanup.
+                }
+
+                _streamingShell = null;
+            }
         }
 
         private static string SplitExitCode(string line, int startIndex)

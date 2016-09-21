@@ -10,9 +10,6 @@ namespace MICore
     {
         private const string Libc = "libc";
 
-        [DllImport(Libc, EntryPoint = "kill", SetLastError = true)]
-        internal static extern int Kill(int pid, int mode);
-
         [DllImport(Libc, EntryPoint = "mkfifo", SetLastError = true)]
         internal static extern int MkFifo(byte[] name, int mode);
 

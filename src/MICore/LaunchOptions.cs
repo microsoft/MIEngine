@@ -414,9 +414,8 @@ namespace MICore
 
         /// <summary>
         /// Url to get the GetClrDbg.sh script from.
-        /// TODO: rajkumar42, placeholder should point to azure blob storage.
         /// </summary>
-        public string GetClrDbgUrl { get; private set; } = "https://raw.githubusercontent.com/Microsoft/MIEngine/master/scripts/GetClrDbg.sh";
+        public string GetClrDbgUrl { get; private set; } = "https://aka.ms/getclrdbgsh";
 
         /// <summary>
         /// Default location of the debugger on the remote machine.

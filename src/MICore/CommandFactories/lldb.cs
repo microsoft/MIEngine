@@ -77,6 +77,17 @@ namespace MICore
 
             return results;
         }
+        
+        public override async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
+        {
+            // This override is necessary because lldb treats any object with children as not a simple object.
+            // This prevents char* and char** from returning a value when queried by -var-list-children
+            // Limit the number of children expanded to 1000 in case memory is uninitialized
+            string command = string.Format("-var-list-children --all-values \"{0}\" 0 1000", variableReference);
+            Results results = await _debugger.CmdAsync(command, resultClass);
+
+            return results;
+        }
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel)
         {
@@ -143,6 +154,14 @@ namespace MICore
             return TargetArchitecture.Unknown;
         }
 
+        public override string GetSetEnvironmentVariableCommand(string name, string value)
+        {
+            // LLDB requires surrounding values with quotes if the values contain spaces.
+            // This is because LLDB allows setting multiple environment variables with one command,
+            // using a space as the delimiter between variables.
+            return string.Format(CultureInfo.InvariantCulture, "settings set target.env-vars {0}=\"{1}\"", name, EscapeQuotes(value));
+        }
+
         public override Task Signal(string sig)
         {
             throw new NotImplementedException("lldb signal command");
@@ -151,6 +170,27 @@ namespace MICore
         public override Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done)
         {
             throw new NotImplementedException("lldb catch command");
+        }
+
+        /// <summary>
+        /// Assigns the value of an expression to a variable.
+        /// Since LLDB only accepts assigning values to variables, the expression may need to be evaluated.
+        /// However, since the result of evaluating an expression in LLDB can return some extra information:
+        /// e.g., 'a' --> 97 'a'. We don't want to assign the value "97 'a'". Instead, we first try
+        /// assigning what the user passed, only falling back to evaluation if the first assignment fails.
+        /// </summary>
+        public async override Task<string> VarAssign(string variableName, string expression, int threadId, uint frameLevel)
+        {
+            try
+            {
+                return await base.VarAssign(variableName, expression, threadId, frameLevel);
+            }
+            catch (UnexpectedMIResultException)
+            {
+                Results results = await VarCreate(expression, threadId, frameLevel, 0, ResultClass.done);
+                string value = results.FindString("value");
+                return await base.VarAssign(variableName, value, threadId, frameLevel);
+            }
         }
     }
 }

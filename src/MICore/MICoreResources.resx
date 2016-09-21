@@ -131,7 +131,9 @@
   <data name="Error_DebuggerInitializeFailed_StdErr" xml:space="preserve">
     <value>Unable to establish a connection to {0}. The following message was written to stderr:
 
-{1}</value>
+{1}
+
+See Output Window for details.</value>
   </data>
   <data name="Error_DebugServerInitializationFailed" xml:space="preserve">
     <value>Debug server process failed to initialize.</value>
@@ -250,5 +252,8 @@ Error: {1}</value>
   <data name="Warning_DownloadingClrDbgToRemote" xml:space="preserve">
     <value>Warning: Downloading .NET debugger to remote machine failed with error {0}.</value>
     <comment>{0} exception error</comment>
+  </data>
+  <data name="Info_KillingPipeProcess" xml:space="preserve">
+    <value>Killing pipe process</value>
   </data>
 </root>
