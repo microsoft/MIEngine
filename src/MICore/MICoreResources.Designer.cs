@@ -102,7 +102,9 @@ namespace MICore {
         /// <summary>
         ///   Looks up a localized string similar to Unable to establish a connection to {0}. The following message was written to stderr:
         ///
-        ///{1}.
+        ///{1}
+        ///
+        ///See Output Window for details..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_StdErr {
             get {

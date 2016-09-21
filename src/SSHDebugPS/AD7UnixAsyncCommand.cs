@@ -16,7 +16,7 @@ namespace Microsoft.SSHDebugPS
         private readonly object _lock = new object();
         private readonly string _beginMessage;
         private readonly string _exitMessagePrefix;
-        private readonly IStreamingShell _streamingShell;
+        private IStreamingShell _streamingShell;
         private readonly IDebugUnixShellCommandCallback _callback;
         private readonly LineBuffer _lineBuffer = new LineBuffer();
         private int _firedOnExit;
@@ -143,9 +143,25 @@ namespace Microsoft.SSHDebugPS
                     return;
 
                 _isClosed = true;
-            }
 
-            _streamingShell.Close();
+                try
+                {
+                    if (_streamingShell != null && _streamingShell.IsOpen)
+                    {
+                        _streamingShell.Close();
+                    }
+
+                    _streamingShell?.Dispose();
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // This can happen if the command failed on a timeout. Say dotnet restore failed because of insufficient permissions etc.
+                    // Calling dispose on StreamingShell throws ThreadInterruptedException as well. For this case, any operation on StreamingShell
+                    // will likely cause this exception to be thrown, setting it to null to allow cleanup.
+                }
+
+                _streamingShell = null;
+            }
         }
 
         private static string SplitExitCode(string line, int startIndex)
