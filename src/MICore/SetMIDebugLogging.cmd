@@ -45,9 +45,9 @@ if /i NOT "%LoggingValue%"=="1" if NOT "%ServerLogging%"=="" echo ERROR: '/serve
 set SetLoggingError=
 if NOT "%VSRootDir%"=="" call :SetLogging "%VSRootDir%" & goto Done
 
+REM If '/VSRootDir' is NOT specified, try ALL the default locations
 set ProgRoot=%ProgramFiles(x86)%
 if "%ProgRoot%"=="" set ProgRoot=%ProgramFiles%
-
 set VSVersionFound=
 set MIEngineFound=
 call :TryVSPath "%ProgRoot%\Microsoft Visual Studio 14.0"
@@ -115,10 +115,12 @@ echo.
 echo Logging will be saved to %TMP%\Microsoft.MIDebug.log.
 echo.
 echo /serverlogging [full] Enables logging from gdbserver. This option is only 
-echo                   supported when enabling logging ('on'). 'full' logging will
-echo                   turn on packet logging in addition to normal logging.
+echo            supported when enabling logging ('on'). 'full' logging will
+echo            turn on packet logging in addition to normal logging.
 echo.
 echo /VSRootDir ^<value^> sets the path to the root of Visual Studio 
-echo                   (ex: C:\Program Files (x86)\Microsoft Visual Studio 14.0)
+echo            (ex: C:\Program Files (x86)\Microsoft Visual Studio 14.0). If not
+echo            specified, the default install directories for all versions of VS
+echo            2015+ will be used.
 echo.
 :eof
