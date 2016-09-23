@@ -94,10 +94,21 @@ namespace MICore
             PipeLaunchOptions pipeOptions = (PipeLaunchOptions)options;
 
             string workingDirectory = pipeOptions.PipeCwd;
-            if (!LocalLaunchOptions.CheckDirectoryPath(pipeOptions.PipeCwd))
+            if (!string.IsNullOrWhiteSpace(workingDirectory))
             {
-                // If provided PipeCwd is not an absolute path, the working directory will be set to null.
-                workingDirectory = null;
+                if (!LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
+                {
+                    throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalDirectoryPath, workingDirectory));
+                }
+            }
+            else
+            {
+                workingDirectory = Path.GetDirectoryName(pipeOptions.PipePath);
+                if (!LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
+                {
+                    // If provided PipeCwd is not an absolute path, the working directory will be set to null.
+                    workingDirectory = null;
+                }
             }
 
             if (!LocalLaunchOptions.CheckFilePath(pipeOptions.PipePath))
