@@ -80,6 +80,7 @@ namespace MICore
             this.PipePath = pipePath;
             this.PipeArguments = pipeArguments;
             this.PipeCommandArguments = pipeCommandArguments;
+            this.PipeCwd = pipeCwd;
 
             this.PipeEnvironment = (pipeEnvironment != null) ? pipeEnvironment.Select(e => new EnvironmentEntry(e)).ToArray() : new EnvironmentEntry[] { };
         }
