@@ -81,15 +81,6 @@ namespace MICore
             this.PipeArguments = pipeArguments;
             this.PipeCommandArguments = pipeCommandArguments;
 
-            if (!String.IsNullOrWhiteSpace(pipeCwd))
-            {
-                this.PipeCwd = pipeCwd;
-            }
-            else
-            {
-                this.PipeCwd = Path.GetDirectoryName(pipePath);
-            }
-
             this.PipeEnvironment = (pipeEnvironment != null) ? pipeEnvironment.Select(e => new EnvironmentEntry(e)).ToArray() : new EnvironmentEntry[] { };
         }
 
