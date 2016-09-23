@@ -239,9 +239,6 @@ Error: {1}</value>
   <data name="Error_LocalUnixTerminalDebuggerInitializationFailed" xml:space="preserve">
     <value>Failed to initialize debugger terminal.</value>
   </data>
-  <data name="Error_InvalidLocalDirectoryPath" xml:space="preserve">
-    <value>Invalid path to directory path '{0}'. Directory must be a valid directory name that exists.</value>
-  </data>
   <data name="Info_InstallingDebuggerOnRemote" xml:space="preserve">
     <value>Installing debugger on the remote machine.</value>
   </data>

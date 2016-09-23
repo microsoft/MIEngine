@@ -187,15 +187,6 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid path to directory path &apos;{0}&apos;. Directory must be a valid directory name that exists..
-        /// </summary>
-        public static string Error_InvalidLocalDirectoryPath {
-            get {
-                return ResourceManager.GetString("Error_InvalidLocalDirectoryPath", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists..
         /// </summary>
         public static string Error_InvalidLocalExePath {
