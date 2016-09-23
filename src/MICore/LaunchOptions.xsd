@@ -289,7 +289,7 @@
           </xs:sequence>
           <xs:attribute name="PipePath" type="xs:string" use="required">
             <xs:annotation>
-              <xs:documentation>Path on the VS computer to an executable to run to establish a standard input/output pipe to the target computer.</xs:documentation>
+              <xs:documentation>Path on the VS computer to an executable to run to establish a standard input/output pipe to the target computer. This should either be a full path to an executable or the name of a program on the PATH.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="PipeArguments" type="xs:string" use="optional">
@@ -304,7 +304,7 @@
           </xs:attribute>
           <xs:attribute name="PipeCwd" type="xs:string" use="optional">
             <xs:annotation>
-              <xs:documentation>The fully qualified path to the working directory for the pipe program.</xs:documentation>
+              <xs:documentation>The fully qualified path to the working directory for the pipe program. If empty, PipePath directory will be used if fully qualified.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
         </xs:extension>

@@ -125,7 +125,7 @@ namespace MICoreUnitTests
             var options = (PipeLaunchOptions)baseOptions;
 
             Assert.Equal(options.PipePath, fakeFilePath);
-            Assert.Equal(options.PipeCwd, System.IO.Path.GetDirectoryName(fakeFilePath));
+            Assert.Equal(options.PipeCwd, null);
             Assert.Equal(options.ExePath, "/home/user/myname/foo");
             Assert.Equal(options.ExeArguments, "arg1 arg2");
             Assert.Equal(options.TargetArchitecture, TargetArchitecture.X64);

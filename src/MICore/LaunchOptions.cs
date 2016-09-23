@@ -64,6 +64,14 @@ namespace MICore
     /// </summary>
     public sealed class PipeLaunchOptions : LaunchOptions
     {
+        /// <summary>
+        /// Creates an instance of PipeLaunchOptions
+        /// </summary>
+        /// <param name="pipePath">Path of the pipe program</param>
+        /// <param name="pipeArguments">Argument to the pipe program</param>
+        /// <param name="pipeCommandArguments">Command to be invoked on the pipe program</param>
+        /// <param name="pipeCwd">Current working directory of pipe program. If empty directory of the pipePath is set as the cwd.</param>
+        /// <param name="pipeEnvironment">Environment variables set before invoking the pipe program</param>
         public PipeLaunchOptions(string pipePath, string pipeArguments, string pipeCommandArguments, string pipeCwd, MICore.Xml.LaunchOptions.EnvironmentEntry[] pipeEnvironment)
         {
             if (string.IsNullOrEmpty(pipePath))
@@ -72,15 +80,7 @@ namespace MICore
             this.PipePath = pipePath;
             this.PipeArguments = pipeArguments;
             this.PipeCommandArguments = pipeCommandArguments;
-
-            if (!String.IsNullOrWhiteSpace(pipeCwd))
-            {
-                this.PipeCwd = pipeCwd;
-            }
-            else
-            {
-                this.PipeCwd = Path.GetDirectoryName(pipePath);
-            }
+            this.PipeCwd = pipeCwd;
 
             this.PipeEnvironment = (pipeEnvironment != null) ? pipeEnvironment.Select(e => new EnvironmentEntry(e)).ToArray() : new EnvironmentEntry[] { };
         }
