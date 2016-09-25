@@ -122,6 +122,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PipePath cannot be empty..
+        /// </summary>
+        public static string Error_EmptyPipePath {
+            get {
+                return ResourceManager.GetString("Error_EmptyPipePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exception while processing MIEngine operation. {0}. If the problem continues restart debugging..
         /// </summary>
         public static string Error_ExceptionInOperation {

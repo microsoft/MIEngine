@@ -111,9 +111,9 @@ namespace MICore
                 }
             }
 
-            if (!LocalLaunchOptions.CheckFilePath(pipeOptions.PipePath))
+            if (string.IsNullOrWhiteSpace(pipeOptions.PipePath))
             {
-                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, pipeOptions.PipePath));
+                throw new ArgumentException(MICoreResources.Error_EmptyPipePath);
             }
 
             _cmdArgs = pipeOptions.PipeCommandArguments;
