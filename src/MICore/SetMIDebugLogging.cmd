@@ -95,7 +95,7 @@ goto Done
             goto :EOF
         :EnableLogging_PkgDefCreated
 
-        echo "Logging"=dword:00000001>> "%PkgDefFile%"
+        echo "EnableMIDebugLogger"=dword:00000001>> "%PkgDefFile%"
         if NOT "%ServerLogging%"=="" echo "GDBServerLoggingArguments"="%ServerLogging%">> "%PkgDefFile%"
 
     :UpdateConfiguration
