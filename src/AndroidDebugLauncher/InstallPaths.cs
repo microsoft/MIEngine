@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using MICore;
 
 namespace AndroidDebugLauncher
 {
@@ -26,7 +27,7 @@ namespace AndroidDebugLauncher
         /// <param name="token">token to check for cancelation</param>
         /// <param name="launchOptions">[Required] launch options object</param>
         /// <returns>[Required] Created InstallPaths object</returns>
-        public static InstallPaths Resolve(CancellationToken token, AndroidLaunchOptions launchOptions, MICore.Logger logger)
+        public static InstallPaths Resolve(CancellationToken token, AndroidLaunchOptions launchOptions, MICore.Logger logger, TargetEngine targetEngine)
         {
             var result = new InstallPaths();
 
@@ -39,94 +40,97 @@ namespace AndroidDebugLauncher
                 result.SDKRoot = GetDirectoryFromRegistry(@"SOFTWARE\Android SDK Tools", "Path", checkBothBitnesses: true, externalProductName: LauncherResources.ProductName_SDK);
             }
 
-            string ndkRoot = launchOptions.NDKRoot;
-            if (ndkRoot == null)
+            if (targetEngine != TargetEngine.Java)
             {
-                ndkRoot = GetDirectoryFromRegistry(RegistryRoot.Value + @"\Setup\VS\SecondaryInstaller\AndroidNDK", "NDK_HOME", checkBothBitnesses: false, externalProductName: LauncherResources.ProductName_NDK);
-            }
-
-            NdkReleaseId ndkReleaseId = new NdkReleaseId();
-            string ndkReleaseVersionFile = Path.Combine(ndkRoot, "RELEASE.TXT");
-            string ndkSourcePropertiesFile = Path.Combine(ndkRoot, "source.properties");
-
-            // NDK releases >= r11 have a source.properties file
-            if (File.Exists(ndkSourcePropertiesFile))
-            {
-                NdkReleaseId.TryParsePropertiesFile(ndkSourcePropertiesFile, out ndkReleaseId);
-            }
-            // NDK releases < r11 have a RELEASE.txt file
-            else if (File.Exists(ndkReleaseVersionFile))
-            {
-                NdkReleaseId.TryParseFile(ndkReleaseVersionFile, out ndkReleaseId);
-            }
-            else
-            {
-                ThrowExternalFileNotFoundException(ndkReleaseVersionFile, LauncherResources.ProductName_NDK);
-            }
-
-            logger.WriteLine("Using NDK '{0}' from path '{1}'", ndkReleaseId, ndkRoot);
-
-            // 32 vs 64-bit doesn't matter when comparing
-            var r11 = new NdkReleaseId(11, 'a');
-            // In NDK r11 and later, gdb is multi-arch and there's only one binary
-            // in the prebuilt directory
-            bool usePrebuiltGDB = ndkReleaseId.CompareVersion(r11) >= 0;
-            IEnumerable<INDKFilePath> prebuiltGDBPath = NDKPrebuiltFilePath.GDBPaths();
-
-            string targetArchitectureName = launchOptions.TargetArchitecture.ToNDKArchitectureName();
-            IEnumerable<INDKFilePath> possibleGDBPaths;
-
-            switch (launchOptions.TargetArchitecture)
-            {
-                case MICore.TargetArchitecture.X86:
-                    possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.x86_GDBPaths();
-                    break;
-
-                case MICore.TargetArchitecture.X64:
-                    possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.x64_GDBPaths();
-                    break;
-
-                case MICore.TargetArchitecture.ARM:
-                    possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.ARM_GDBPaths();
-                    break;
-
-                case MICore.TargetArchitecture.ARM64:
-                    possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.ARM64_GDBPaths();
-                    break;
-
-                default:
-                    Debug.Fail("Should be impossible");
-                    throw new InvalidOperationException();
-            }
-
-            INDKFilePath gdbMatchedPath;
-            result.GDBPath = GetNDKFilePath(
-                string.Concat("Android-", targetArchitectureName, "-GDBPath"),
-                ndkRoot,
-                possibleGDBPaths,
-                out gdbMatchedPath
-                );
-            if (launchOptions.TargetArchitecture == MICore.TargetArchitecture.X86 && gdbMatchedPath != null)
-            {
-                var r10b = new NdkReleaseId(10, 'b');
-
-                // Before r10b, the 'windows-x86_64' ndk didn't support x86 debugging
-                if (ndkReleaseId.IsValid && ndkReleaseId.CompareVersion(r10b) < 0 && gdbMatchedPath.PartialFilePath.Contains(@"\windows-x86_64\"))
+                string ndkRoot = launchOptions.NDKRoot;
+                if (ndkRoot == null)
                 {
-                    throw new LauncherException(Telemetry.LaunchFailureCode.NoReport, LauncherResources.Error_64BitNDKNotSupportedForX86);
+                    ndkRoot = GetDirectoryFromRegistry(RegistryRoot.Value + @"\Setup\VS\SecondaryInstaller\AndroidNDK", "NDK_HOME", checkBothBitnesses: false, externalProductName: LauncherResources.ProductName_NDK);
                 }
+
+                NdkReleaseId ndkReleaseId = new NdkReleaseId();
+                string ndkReleaseVersionFile = Path.Combine(ndkRoot, "RELEASE.TXT");
+                string ndkSourcePropertiesFile = Path.Combine(ndkRoot, "source.properties");
+
+                // NDK releases >= r11 have a source.properties file
+                if (File.Exists(ndkSourcePropertiesFile))
+                {
+                    NdkReleaseId.TryParsePropertiesFile(ndkSourcePropertiesFile, out ndkReleaseId);
+                }
+                // NDK releases < r11 have a RELEASE.txt file
+                else if (File.Exists(ndkReleaseVersionFile))
+                {
+                    NdkReleaseId.TryParseFile(ndkReleaseVersionFile, out ndkReleaseId);
+                }
+                else
+                {
+                    ThrowExternalFileNotFoundException(ndkReleaseVersionFile, LauncherResources.ProductName_NDK);
+                }
+
+                logger.WriteLine("Using NDK '{0}' from path '{1}'", ndkReleaseId, ndkRoot);
+
+                // 32 vs 64-bit doesn't matter when comparing
+                var r11 = new NdkReleaseId(11, 'a');
+                // In NDK r11 and later, gdb is multi-arch and there's only one binary
+                // in the prebuilt directory
+                bool usePrebuiltGDB = ndkReleaseId.CompareVersion(r11) >= 0;
+                IEnumerable<INDKFilePath> prebuiltGDBPath = NDKPrebuiltFilePath.GDBPaths();
+
+                string targetArchitectureName = launchOptions.TargetArchitecture.ToNDKArchitectureName();
+                IEnumerable<INDKFilePath> possibleGDBPaths;
+
+                switch (launchOptions.TargetArchitecture)
+                {
+                    case MICore.TargetArchitecture.X86:
+                        possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.x86_GDBPaths();
+                        break;
+
+                    case MICore.TargetArchitecture.X64:
+                        possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.x64_GDBPaths();
+                        break;
+
+                    case MICore.TargetArchitecture.ARM:
+                        possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.ARM_GDBPaths();
+                        break;
+
+                    case MICore.TargetArchitecture.ARM64:
+                        possibleGDBPaths = usePrebuiltGDB ? prebuiltGDBPath : NDKToolChainFilePath.ARM64_GDBPaths();
+                        break;
+
+                    default:
+                        Debug.Fail("Should be impossible");
+                        throw new InvalidOperationException();
+                }
+
+                INDKFilePath gdbMatchedPath;
+                result.GDBPath = GetNDKFilePath(
+                    string.Concat("Android-", targetArchitectureName, "-GDBPath"),
+                    ndkRoot,
+                    possibleGDBPaths,
+                    out gdbMatchedPath
+                    );
+                if (launchOptions.TargetArchitecture == MICore.TargetArchitecture.X86 && gdbMatchedPath != null)
+                {
+                    var r10b = new NdkReleaseId(10, 'b');
+
+                    // Before r10b, the 'windows-x86_64' ndk didn't support x86 debugging
+                    if (ndkReleaseId.IsValid && ndkReleaseId.CompareVersion(r10b) < 0 && gdbMatchedPath.PartialFilePath.Contains(@"\windows-x86_64\"))
+                    {
+                        throw new LauncherException(Telemetry.LaunchFailureCode.NoReport, LauncherResources.Error_64BitNDKNotSupportedForX86);
+                    }
+                }
+
+                IEnumerable<INDKFilePath> gdbServerPath = NDKPrebuiltFilePath.GDBServerPaths(targetArchitectureName);
+                INDKFilePath gdbServerMatchedPath;
+                result.GDBServerPath = GetNDKFilePath(
+                    string.Concat("Android-", targetArchitectureName, "-GDBServerPath"),
+                    ndkRoot,
+                    gdbServerPath,
+                    out gdbServerMatchedPath // not used
+                    );
+
+                token.ThrowIfCancellationRequested();
             }
-
-            IEnumerable<INDKFilePath> gdbServerPath = NDKPrebuiltFilePath.GDBServerPaths(targetArchitectureName);
-            INDKFilePath gdbServerMatchedPath;
-            result.GDBServerPath = GetNDKFilePath(
-                string.Concat("Android-", targetArchitectureName, "-GDBServerPath"),
-                ndkRoot,
-                gdbServerPath,
-                out gdbServerMatchedPath // not used
-                );
-
-            token.ThrowIfCancellationRequested();
 
             return result;
         }
