@@ -137,10 +137,15 @@ namespace Microsoft.DebugEngineHost
             return GetDebuggerConfigurationSetting(DebuggerSectionName, settingName, defaultValue);
         }
 
-        public Guid GetCustomLauncherClsid(string launcherTypeName)
+        public object GetCustomLauncher(string launcherTypeName)
         {
             string guidstr = GetDebuggerConfigurationSetting(LaunchersSectionName, launcherTypeName, Guid.Empty.ToString());
-            return new Guid(guidstr);
+            Guid clsidLauncher = new Guid(guidstr);
+            if (clsidLauncher == Guid.Empty)
+            {
+                return null;
+            }
+            return HostLoader.VsCoCreateManagedObject(this, clsidLauncher);
         }
 
         private T GetDebuggerConfigurationSetting<T>(string sectionName, string settingName, T defaultValue)

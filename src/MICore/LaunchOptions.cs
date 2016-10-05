@@ -936,6 +936,7 @@ namespace MICore
 
             LaunchOptions launchOptions = null;
             Guid clsidLauncher = Guid.Empty;
+            object launcher = null;
             object launcherXmlOptions = null;
 
             try
@@ -998,13 +999,16 @@ namespace MICore
 
                         default:
                             {
-                                // look up the LocalName in the config info.
-                                clsidLauncher = configStore.GetCustomLauncherClsid(reader.LocalName);
-                                if (clsidLauncher == Guid.Empty)
+                                launcher = configStore?.GetCustomLauncher(reader.LocalName);
+                                if (launcher == null)
                                 {
                                     throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
                                 }
-                                var deviceAppLauncher = (IPlatformAppLauncherSerializer)HostLoader.VsCoCreateManagedObject(configStore, clsidLauncher);
+                                if (launcher as IPlatformAppLauncher == null)
+                                {
+                                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, reader.LocalName));
+                                }
+                                var deviceAppLauncher = (IPlatformAppLauncherSerializer)launcher;
                                 if (deviceAppLauncher == null)
                                 {
                                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherSerializerNotFound, clsidLauncher.ToString("B")));
@@ -1028,6 +1032,10 @@ namespace MICore
             if (clsidLauncher != Guid.Empty)
             {
                 launchOptions = ExecuteLauncher(configStore, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
+            }
+            else if (launcher != null)
+            {
+                launchOptions = ExecuteLauncher(configStore, (IPlatformAppLauncher)launcher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
             }
 
             if (targetEngine == TargetEngine.Native)
@@ -1282,7 +1290,11 @@ namespace MICore
             {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, clsidLauncher.ToString("B")));
             }
+            return ExecuteLauncher(configStore, deviceAppLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
+        }
 
+        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, IPlatformAppLauncher deviceAppLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
+        {
             bool success = false;
 
             try

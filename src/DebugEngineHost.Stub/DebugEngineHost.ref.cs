@@ -189,14 +189,14 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Lookup the clsid of the launcher that understands these options
+        /// Load the launcher that understands these options
         /// </summary>
-        /// <param name="launchOptionsName">launch options type name</param>
+        /// <param name="launcherTypeName">launch options type name</param>
         /// <returns></returns>
-        public Guid GetCustomLauncherClsid(string launchOptionsName)
+        public object GetCustomLauncher(string launcherTypeName)
         {
             throw new NotImplementedException();
-    }
+        }
 }
 
 /// <summary>
