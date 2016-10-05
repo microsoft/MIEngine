@@ -26,6 +26,8 @@ namespace AndroidDebugLauncher
         /// </summary>
         /// <param name="token">token to check for cancelation</param>
         /// <param name="launchOptions">[Required] launch options object</param>
+        /// <param name="logger">logger object</param>
+        /// <param name="targetEngine">target engine</param>
         /// <returns>[Required] Created InstallPaths object</returns>
         public static InstallPaths Resolve(CancellationToken token, AndroidLaunchOptions launchOptions, MICore.Logger logger, TargetEngine targetEngine)
         {
@@ -145,7 +147,7 @@ namespace AndroidDebugLauncher
         }
 
         /// <summary>
-        /// [Required] Path to GDB
+        /// [Optional] Path to GDB
         /// </summary>
         public string GDBPath
         {
@@ -154,7 +156,7 @@ namespace AndroidDebugLauncher
         }
 
         /// <summary>
-        /// [Required] Path to GDBServer
+        /// [Optional] Path to GDBServer
         /// </summary>
         public string GDBServerPath
         {
