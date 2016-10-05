@@ -232,6 +232,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Device App Launcher Serializer {0} could not be found..
+        /// </summary>
+        public static string Error_LauncherSerializerNotFound {
+            get {
+                return ResourceManager.GetString("Error_LauncherSerializerNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to initialize debugger terminal..
         /// </summary>
         public static string Error_LocalUnixTerminalDebuggerInitializationFailed {

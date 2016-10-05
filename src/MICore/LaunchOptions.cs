@@ -936,6 +936,7 @@ namespace MICore
 
             LaunchOptions launchOptions = null;
             Guid clsidLauncher = Guid.Empty;
+            object launcher = null;
             object launcherXmlOptions = null;
 
             try
@@ -998,8 +999,24 @@ namespace MICore
 
                         default:
                             {
-                                throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
+                                launcher = configStore?.GetCustomLauncher(reader.LocalName);
+                                if (launcher == null)
+                                {
+                                    throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
+                                }
+                                if (launcher as IPlatformAppLauncher == null)
+                                {
+                                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, reader.LocalName));
+                                }
+                                var deviceAppLauncher = (IPlatformAppLauncherSerializer)launcher;
+                                if (deviceAppLauncher == null)
+                                {
+                                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherSerializerNotFound, clsidLauncher.ToString("B")));
+                                }
+                                serializer = deviceAppLauncher.GetXmlSerializer(reader.LocalName);
+                                launcherXmlOptions = Deserialize(serializer, reader);
                             }
+                            break;
                     }
 
                     // Read any remaining bits of XML to catch other errors
@@ -1015,6 +1032,10 @@ namespace MICore
             if (clsidLauncher != Guid.Empty)
             {
                 launchOptions = ExecuteLauncher(configStore, clsidLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
+            }
+            else if (launcher != null)
+            {
+                launchOptions = ExecuteLauncher(configStore, (IPlatformAppLauncher)launcher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
             }
 
             if (targetEngine == TargetEngine.Native)
@@ -1269,7 +1290,11 @@ namespace MICore
             {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, clsidLauncher.ToString("B")));
             }
+            return ExecuteLauncher(configStore, deviceAppLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
+        }
 
+        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, IPlatformAppLauncher deviceAppLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
+        {
             bool success = false;
 
             try
@@ -1438,6 +1463,17 @@ namespace MICore
     };
 
     /// <summary>
+    /// Used when implementing a launcher extention. The extention implements this interface for deserializing its custom xml parameters
+    /// </summary>
+    [ComVisible(true)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("040D083A-A799-45F9-A459-B134B49EE629")]
+    public interface IPlatformAppLauncherSerializer : IDisposable
+    {
+        XmlSerializer GetXmlSerializer(string name);
+    }
+
+    /// <summary>
     /// Call back implemented by the caller of OnResume to provide a channel for errors
     /// </summary>
     [ComVisible(true)]
@@ -1461,5 +1497,11 @@ namespace MICore
         /// <param name="parameter1">[Optional] Specifies additional message-specific information.</param>
         /// <param name="parameter2">[Optional] Specifies additional message-specific information.</param>
         void OnCustomDebugEvent(Guid guidVSService, Guid sourceId, int messageCode, object parameter1, object parameter2);
+
+        /// <summary>
+        /// Used to send an output string to the IDE
+        /// </summary>
+        /// <param name="outputString">message to send</param>
+        void OnOutputString(string outputString);
     }
 }
