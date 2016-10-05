@@ -177,7 +177,7 @@ namespace AndroidDebugLauncher
 
                 actions.Add(new NamedAction(LauncherResources.Step_ResolveInstallPaths, () =>
                 {
-                    _installPaths = InstallPaths.Resolve(token, _launchOptions, Logger);
+                    _installPaths = InstallPaths.Resolve(token, _launchOptions, Logger, _targetEngine);
                 }));
 
                 actions.Add(new NamedAction(LauncherResources.Step_ConnectToDevice, () =>
