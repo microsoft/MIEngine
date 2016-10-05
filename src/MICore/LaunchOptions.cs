@@ -998,8 +998,21 @@ namespace MICore
 
                         default:
                             {
-                                throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
+                                // look up the LocalName in the config info.
+                                clsidLauncher = configStore.GetCustomLauncherClsid(reader.LocalName);
+                                if (clsidLauncher == Guid.Empty)
+                                {
+                                    throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
+                                }
+                                var deviceAppLauncher = (IPlatformAppLauncherSerializer)HostLoader.VsCoCreateManagedObject(configStore, clsidLauncher);
+                                if (deviceAppLauncher == null)
+                                {
+                                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherSerializerNotFound, clsidLauncher.ToString("B")));
+                                }
+                                serializer = deviceAppLauncher.GetXmlSerializer(reader.LocalName);
+                                launcherXmlOptions = Deserialize(serializer, reader);
                             }
+                            break;
                     }
 
                     // Read any remaining bits of XML to catch other errors
@@ -1438,6 +1451,17 @@ namespace MICore
     };
 
     /// <summary>
+    /// Used when implementing a launcher extention. The extention implements this interface for deserializing its custom xml parameters
+    /// </summary>
+    [ComVisible(true)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("040D083A-A799-45F9-A459-B134B49EE629")]
+    public interface IPlatformAppLauncherSerializer : IDisposable
+    {
+        XmlSerializer GetXmlSerializer(string name);
+    }
+
+    /// <summary>
     /// Call back implemented by the caller of OnResume to provide a channel for errors
     /// </summary>
     [ComVisible(true)]
@@ -1461,5 +1485,11 @@ namespace MICore
         /// <param name="parameter1">[Optional] Specifies additional message-specific information.</param>
         /// <param name="parameter2">[Optional] Specifies additional message-specific information.</param>
         void OnCustomDebugEvent(Guid guidVSService, Guid sourceId, int messageCode, object parameter1, object parameter2);
+
+        /// <summary>
+        /// Used to send an output string to the IDE
+        /// </summary>
+        /// <param name="outputString">message to send</param>
+        void OnOutputString(string outputString);
     }
 }
