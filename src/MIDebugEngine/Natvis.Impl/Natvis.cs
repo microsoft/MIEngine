@@ -192,7 +192,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                 // failed to find the VS Service
             }
 
-            if (string.IsNullOrEmpty(Path.GetDirectoryName(fileName)))
+            if (!Path.IsPathRooted(fileName))
             {
                 string globalVisualizersDirectory = _process.Engine.GetMetric("GlobalVisualizersDirectory") as string;
                 string globalNatVisPath = null;
@@ -202,24 +202,26 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
 
                 // For local launch, try and load natvis next to the target exe if it exists.
+                // If the file doesn't exist, and also doesn't exist in the global folder fail.
                 if (_process.LaunchOptions is LocalLaunchOptions)
                 {
-                    string natvisPath = Path.Combine(Path.GetDirectoryName((_process.LaunchOptions as LocalLaunchOptions).ExePath), fileName);
+                    string localNatvisPath = Path.Combine(Path.GetDirectoryName((_process.LaunchOptions as LocalLaunchOptions).ExePath), fileName);
 
-                    if (File.Exists(natvisPath))
+                    if (File.Exists(localNatvisPath))
                     {
-                        LoadFile(natvisPath);
+                        LoadFile(localNatvisPath);
                         return;
                     }
                     else if (!File.Exists(globalNatVisPath))
                     {
                         // Neither local or global path exists, report an error.
-                        _process.WriteOutput(String.Format(CultureInfo.CurrentCulture, ResourceStrings.FileNotFound, natvisPath));
+                        _process.WriteOutput(String.Format(CultureInfo.CurrentCulture, ResourceStrings.FileNotFound, localNatvisPath));
                         return;
                     }
                 }
 
-                // try and load from globally registered visualizer directory if local didn't work/
+                // Local wasn't supported or the file didn't exist. Try and load from globally registered visualizer directory if local didn't work 
+                // or wasn't supported by the launch options
                 if (!string.IsNullOrEmpty(globalNatVisPath))
                 {
                     LoadFile(globalNatVisPath);
