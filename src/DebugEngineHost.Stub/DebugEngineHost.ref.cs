@@ -187,12 +187,22 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
-    }
 
-    /// <summary>
-    /// The host logger returned from HostConfigurationStore.GetLogger.
-    /// </summary>
-    public sealed class HostLogger
+        /// <summary>
+        /// Load the launcher that understands these options
+        /// </summary>
+        /// <param name="launcherTypeName">launch options type name</param>
+        /// <returns></returns>
+        public object GetCustomLauncher(string launcherTypeName)
+        {
+            throw new NotImplementedException();
+        }
+}
+
+/// <summary>
+/// The host logger returned from HostConfigurationStore.GetLogger.
+/// </summary>
+public sealed class HostLogger
     {
         private HostLogger()
         {

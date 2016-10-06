@@ -16,6 +16,7 @@ namespace Microsoft.DebugEngineHost
     public sealed class HostConfigurationStore
     {
         private const string DebuggerSectionName = "Debugger";
+        private const string LaunchersSectionName = "MILaunchers";
 
         private string _engineId;
         private string _registryRoot;
@@ -133,7 +134,23 @@ namespace Microsoft.DebugEngineHost
 
         public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)
         {
-            object valueObj = GetOptionalValue(DebuggerSectionName, settingName);
+            return GetDebuggerConfigurationSetting(DebuggerSectionName, settingName, defaultValue);
+        }
+
+        public object GetCustomLauncher(string launcherTypeName)
+        {
+            string guidstr = GetDebuggerConfigurationSetting(LaunchersSectionName, launcherTypeName, Guid.Empty.ToString());
+            Guid clsidLauncher = new Guid(guidstr);
+            if (clsidLauncher == Guid.Empty)
+            {
+                return null;
+            }
+            return HostLoader.VsCoCreateManagedObject(this, clsidLauncher);
+        }
+
+        private T GetDebuggerConfigurationSetting<T>(string sectionName, string settingName, T defaultValue)
+        {
+            object valueObj = GetOptionalValue(sectionName, settingName);
             if (valueObj == null)
             {
                 return defaultValue;
