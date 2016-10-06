@@ -201,22 +201,26 @@ namespace Microsoft.MIDebugEngine.Natvis
                     globalNatVisPath = Path.Combine(globalVisualizersDirectory, fileName);
                 }
 
-                // For local launch, try and load natvis next to the target exe if it exists.
-                // If the file doesn't exist, and also doesn't exist in the global folder fail.
+                // For local launch, try and load natvis next to the target exe if it exists and if 
+                // the exe is rooted. If the file doesn't exist, and also doesn't exist in the global folder fail.
                 if (_process.LaunchOptions is LocalLaunchOptions)
                 {
-                    string localNatvisPath = Path.Combine(Path.GetDirectoryName((_process.LaunchOptions as LocalLaunchOptions).ExePath), fileName);
+                    string exePath = (_process.LaunchOptions as LocalLaunchOptions).ExePath;
+                    if (Path.IsPathRooted(exePath))
+                    {
+                        string localNatvisPath = Path.Combine(Path.GetDirectoryName(exePath), fileName);
 
-                    if (File.Exists(localNatvisPath))
-                    {
-                        LoadFile(localNatvisPath);
-                        return;
-                    }
-                    else if (!File.Exists(globalNatVisPath))
-                    {
-                        // Neither local or global path exists, report an error.
-                        _process.WriteOutput(String.Format(CultureInfo.CurrentCulture, ResourceStrings.FileNotFound, localNatvisPath));
-                        return;
+                        if (File.Exists(localNatvisPath))
+                        {
+                            LoadFile(localNatvisPath);
+                            return;
+                        }
+                        else if (globalNatVisPath == null || !File.Exists(globalNatVisPath))
+                        {
+                            // Neither local or global path exists, report an error.
+                            _process.WriteOutput(String.Format(CultureInfo.CurrentCulture, ResourceStrings.FileNotFound, localNatvisPath));
+                            return;
+                        }
                     }
                 }
 
