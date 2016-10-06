@@ -182,7 +182,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
 
         public void Initialize(string fileName)
-        {
+        { 
             try
             {
                 HostNatvisProject.FindNatvisInSolution((s) => LoadFile(s));
@@ -191,16 +191,44 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 // failed to find the VS Service
             }
-            string natvisPath = null;
-            string directory = _process.Engine.GetMetric("GlobalVisualizersDirectory") as string;
-            if (!string.IsNullOrEmpty(directory) && !string.IsNullOrEmpty(fileName))
-            {
-                natvisPath = Path.Combine(directory, fileName);
-            }
 
-            if (!string.IsNullOrEmpty(natvisPath))
+            if (string.IsNullOrEmpty(Path.GetDirectoryName(fileName)))
             {
-                LoadFile(natvisPath);
+                string globalVisualizersDirectory = _process.Engine.GetMetric("GlobalVisualizersDirectory") as string;
+                string globalNatVisPath = null;
+                if (!string.IsNullOrEmpty(globalVisualizersDirectory) && !string.IsNullOrEmpty(fileName))
+                {
+                    globalNatVisPath = Path.Combine(globalVisualizersDirectory, fileName);
+                }
+
+                // For local launch, try and load natvis next to the target exe if it exists.
+                if (_process.LaunchOptions is LocalLaunchOptions)
+                {
+                    string natvisPath = Path.Combine(Path.GetDirectoryName((_process.LaunchOptions as LocalLaunchOptions).ExePath), fileName);
+
+                    if (File.Exists(natvisPath))
+                    {
+                        LoadFile(natvisPath);
+                        return;
+                    }
+                    else if (!File.Exists(globalNatVisPath))
+                    {
+                        // Neither local or global path exists, report an error.
+                        _process.WriteOutput(String.Format(CultureInfo.CurrentCulture, ResourceStrings.FileNotFound, natvisPath));
+                        return;
+                    }
+                }
+
+                // try and load from globally registered visualizer directory if local didn't work/
+                if (!string.IsNullOrEmpty(globalNatVisPath))
+                {
+                    LoadFile(globalNatVisPath);
+                }
+            }
+            else
+            {
+                // Full path to the natvis file.. Just try the load
+                LoadFile(fileName);
             }
         }
 
