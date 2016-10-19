@@ -20,9 +20,8 @@ namespace Microsoft.SSHDebugPS
         private readonly IDebugUnixShellCommandCallback _callback;
         private readonly LineBuffer _lineBuffer = new LineBuffer();
         private int _firedOnExit;
+        private int _bClosed = 0;
         private bool _beginReceived;
-        private bool _isClosed;
-
         private string _startCommand;
 
         public AD7UnixAsyncCommand(IStreamingShell streamingShell, IDebugUnixShellCommandCallback callback)
@@ -48,16 +47,19 @@ namespace Microsoft.SSHDebugPS
 
         void IDebugUnixShellAsyncCommand.WriteLine(string text)
         {
-            lock (_lock)
+            if (_bClosed == 1)
             {
-                if (_isClosed)
-                {
-                    return;
-                }
+                return;
             }
 
-            _streamingShell.WriteLine(text);
-            _streamingShell.Flush();
+            lock (_lock)
+            {
+                if (_streamingShell != null)
+                {
+                    _streamingShell.WriteLine(text);
+                    _streamingShell.Flush();
+                }
+            }
         }
 
         void IDebugUnixShellAsyncCommand.Abort()
@@ -69,17 +71,14 @@ namespace Microsoft.SSHDebugPS
         {
             IEnumerable<string> linesToSend = null;
 
-            lock (_lock)
-            {
-                if (string.IsNullOrEmpty(e.Output))
-                    return;
+            if (string.IsNullOrEmpty(e.Output))
+                return;
 
-                _lineBuffer.ProcessText(e.Output, out linesToSend);
-            }
+            _lineBuffer.ProcessText(e.Output, out linesToSend);
 
             foreach (string line in linesToSend)
             {
-                if (_isClosed)
+                if (_bClosed == 1)
                 {
                     return;
                 }
@@ -128,7 +127,7 @@ namespace Microsoft.SSHDebugPS
 
         private void OnClosedOrDisconnected(object sender, EventArgs e)
         {
-            if (_firedOnExit == 0 && _isClosed == false)
+            if (_firedOnExit == 0 && _bClosed == 0)
             {
                 Debug.Fail("Why was the SSH session closed?");
                 OnError(sender, null);
@@ -137,30 +136,27 @@ namespace Microsoft.SSHDebugPS
 
         private void Close()
         {
-            lock (_lock)
+            // Don't want output processing thread and the PollThread to go through this at the same time
+            // If PollThread issues Dispose and the output processing thread block on the _lock below, it will cause ThreadInterruptedException
+            // in the output processing thread
+            if (Interlocked.CompareExchange(ref _bClosed, 1, 0) == 0) 
             {
-                if (_isClosed)
-                    return;
-
-                _isClosed = true;
-
-                try
+                lock (_lock)
                 {
-                    if (_streamingShell != null && _streamingShell.IsOpen)
+                    try
                     {
-                        _streamingShell.Close();
+                        _streamingShell?.Dispose();
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        // We will run into this when we are closing as a result of getting exit message
+                        // in OnOutputReceived method in error cases. The method will be called on the thread
+                        // that StreamingShell uses for output processing. Dispose tries to interrupt the
+                        // same thread we are on leading to ThreadInterruptedException
                     }
 
-                    _streamingShell?.Dispose();
+                    _streamingShell = null;
                 }
-                catch (ThreadInterruptedException)
-                {
-                    // This can happen if the command failed on a timeout. Say dotnet restore failed because of insufficient permissions etc.
-                    // Calling dispose on StreamingShell throws ThreadInterruptedException as well. For this case, any operation on StreamingShell
-                    // will likely cause this exception to be thrown, setting it to null to allow cleanup.
-                }
-
-                _streamingShell = null;
             }
         }
 
