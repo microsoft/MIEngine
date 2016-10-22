@@ -223,7 +223,7 @@ namespace MICore
                         // When using signals to stop the proces, do not kick off another break attempt. The debug break injection and
                         // signal based models are reliable so no retries are needed. Cygwin can't currently async-break reliably, so
                         // use retries there.
-                        if (!IsLocalGdb() && !this.IsCygwin)
+                        if (!IsLocalGdb() && this.IsCygwin)
                         {
                             _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
                         }
