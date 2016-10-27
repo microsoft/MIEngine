@@ -40,7 +40,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         static TypeName()
         {
             s_identifier = new Regex("^[a-zA-Z$_][a-zA-Z$_0-9]*");
-            s_numeric = new Regex("^[0-9]+");        // only decimal constants
+            s_numeric = new Regex("^[0-9]+(u|l|ul)*");        // only decimal constants
             s_simpleType = new Regex(
                     @"^(signed\s+char|unsigned\s+char|char16_t|char32_t|wchar_t|char|"
                     + @"signed\s+short\s+int|signed\s+short|unsigned\s+short\s+int|unsigned\s+short|short\s+int|short|"

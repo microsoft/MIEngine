@@ -544,6 +544,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             getValue = (v) => v.FindChildByName(item.ValueNode.Value);
                         }
+                        else if (GetExpression(item.ValueNode.Value, headVal, visualizer.ScopedNames) != null)
+                        {
+                            getValue = (v) => GetExpression(item.ValueNode.Value, v, visualizer.ScopedNames);
+                        }
                         if (goLeft == null || goRight == null || getValue == null)
                         {
                             continue;
