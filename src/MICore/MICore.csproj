@@ -103,6 +103,7 @@
   <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
     <Reference Include="System" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
     </Reference>
@@ -113,9 +114,15 @@
       <Name>DebugEngineHost.Stub</Name>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.csproj">
+      <Project>{7654cfbb-30db-4c20-bde3-a960cba2036c}</Project>
+      <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\prebuild\prebuild.csproj">
       <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
-      <Name>Prebuild</Name>
+      <Name>prebuild</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
@@ -139,6 +146,7 @@
     <Compile Include="CommandFactories\MICommandFactory.cs" />
     <Compile Include="CommandLock.cs" />
     <Compile Include="Debugger.cs" />
+    <Compile Include="DebuggerDisposedException.cs" />
     <Compile Include="ExceptionHelper.cs" />
     <Compile Include="InvalidCoreDumpOperationException.cs" />
     <Compile Include="InvalidLaunchOptionsException.cs" />
@@ -166,6 +174,7 @@
     <Compile Include="Transports\LocalUnixTerminalTransport.cs" />
     <Compile Include="Transports\MockTransport.cs" />
     <Compile Include="Transports\PipeTransport.cs" />
+    <Compile Include="Transports\UnixShellPortTransport.cs" />
     <Compile Include="Transports\ServerTransport.cs" />
     <Compile Include="Transports\StreamTransport.cs" />
     <Compile Include="Transports\TcpTransport.cs" />

@@ -243,9 +243,17 @@ namespace MICore
         }
 
         public override TargetArchitecture ParseTargetArchitectureResult(string result)
-        { 
+        {
             // CLRDBG only support x64 now.
             return TargetArchitecture.X64;
+        }
+
+        public override string GetSetEnvironmentVariableCommand(string name, string value)
+        {
+            // clrdbg doesn't implement a command to set environment variables on the debuggee
+            // This is worked around by setting the environment variables on the actual debugger
+            // process, and getting the debuggee to inherit those.
+            throw new NotImplementedException();
         }
     }
 }

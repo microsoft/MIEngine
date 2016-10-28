@@ -10,7 +10,7 @@
 
 namespace Microsoft.MIDebugEngine {
     using System;
-	using System.Reflection;
+    using System.Reflection;
     
     
     /// <summary>
@@ -100,11 +100,41 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to get executable path with error &apos;{0}&apos;..
+        /// </summary>
+        internal static string Error_FailedToGetExePath {
+            get {
+                return ResourceManager.GetString("Error_FailedToGetExePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to obtain target architecture..
         /// </summary>
         internal static string Error_FailedToGetTargetArchitecture {
             get {
                 return ResourceManager.GetString("Error_FailedToGetTargetArchitecture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attaching to process {0} with {1} failed because of insufficient privileges with error message &apos;{2}&apos;.
+        ///
+        ///To attach to an application on Linux, login as super user or set ptrace_scope to 0.
+        ///See https://aka.ms/miengine-gdb-troubleshooting for details..
+        /// </summary>
+        internal static string Error_PTraceFailure {
+            get {
+                return ResourceManager.GetString("Error_PTraceFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported platform..
+        /// </summary>
+        internal static string Error_UnsupportedPlatform {
+            get {
+                return ResourceManager.GetString("Error_UnsupportedPlatform", resourceCulture);
             }
         }
         

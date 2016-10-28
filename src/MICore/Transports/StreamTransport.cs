@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,7 +40,7 @@ namespace MICore
         public abstract void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer);
         protected virtual string GetThreadName() { return "MI.StreamTransport"; }
 
-        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
+        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
         {
             Logger = logger;
             _callback = transportCallback;
@@ -220,5 +221,8 @@ namespace MICore
 
             reader?.Dispose();
         }
+
+        public abstract int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error);
+        public abstract bool CanExecuteCommand();
     }
 }

@@ -258,6 +258,10 @@ namespace Microsoft.MIDebugEngine
                 Name = '[' + this.Name + ']';
                 VariableNodeType = NodeType.ArrayElement;
             }
+            else if (this.Name.Length > 2 && this.Name[0] == '[' && this.Name[this.Name.Length-1] == ']')
+            {
+                VariableNodeType = NodeType.ArrayElement;
+            }
             else
             {
                 _strippedName = Name;
@@ -705,8 +709,11 @@ namespace Microsoft.MIDebugEngine
 
             _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
+                int threadId = Client.GetDebuggedThread().Id;
+                uint frameLevel = _ctx.Level;
+
                 _engine.DebuggedProcess.FlushBreakStateData();
-                Value = await _engine.DebuggedProcess.MICommandFactory.VarAssign(_internalName, expression);
+                Value = await _engine.DebuggedProcess.MICommandFactory.VarAssign(_internalName, expression, threadId, frameLevel);
             });
         }
 

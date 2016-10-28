@@ -102,7 +102,9 @@ namespace MICore {
         /// <summary>
         ///   Looks up a localized string similar to Unable to establish a connection to {0}. The following message was written to stderr:
         ///
-        ///{1}.
+        ///{1}
+        ///
+        ///See Output Window for details..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_StdErr {
             get {
@@ -116,6 +118,15 @@ namespace MICore {
         public static string Error_DebugServerInitializationFailed {
             get {
                 return ResourceManager.GetString("Error_DebugServerInitializationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PipePath cannot be empty..
+        /// </summary>
+        public static string Error_EmptyPipePath {
+            get {
+                return ResourceManager.GetString("Error_EmptyPipePath", resourceCulture);
             }
         }
         
@@ -217,6 +228,15 @@ namespace MICore {
         public static string Error_LauncherNotFound {
             get {
                 return ResourceManager.GetString("Error_LauncherNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Device App Launcher Serializer {0} could not be found..
+        /// </summary>
+        public static string Error_LauncherSerializerNotFound {
+            get {
+                return ResourceManager.GetString("Error_LauncherSerializerNotFound", resourceCulture);
             }
         }
         
@@ -374,6 +394,33 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installing debugger on the remote machine..
+        /// </summary>
+        public static string Info_InstallingDebuggerOnRemote {
+            get {
+                return ResourceManager.GetString("Info_InstallingDebuggerOnRemote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Killing pipe process.
+        /// </summary>
+        public static string Info_KillingPipeProcess {
+            get {
+                return ResourceManager.GetString("Info_KillingPipeProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting unix command: &apos;{0}&apos;.
+        /// </summary>
+        public static string Info_StartingUnixCommand {
+            get {
+                return ResourceManager.GetString("Info_StartingUnixCommand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained..
         /// </summary>
         public static string Status_BreakpointPending {
@@ -406,6 +453,15 @@ namespace MICore {
         public static string Warn_ProcessExit {
             get {
                 return ResourceManager.GetString("Warn_ProcessExit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Downloading .NET debugger to remote machine failed with error {0}..
+        /// </summary>
+        public static string Warning_DownloadingClrDbgToRemote {
+            get {
+                return ResourceManager.GetString("Warning_DownloadingClrDbgToRemote", resourceCulture);
             }
         }
     }

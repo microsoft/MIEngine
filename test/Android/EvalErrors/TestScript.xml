@@ -146,7 +146,7 @@
     <EvalIsExpandable>False</EvalIsExpandable>
   </Command>
   <Command name="eval &quot;123&quot;+&quot;456&quot;">
-    <EvalResult>Problem parsing arguments: var-create - * &quot;&quot;123&quot;+&quot;456&quot;&quot;</EvalResult>
+    <EvalResult>Argument to arithmetic operation not a number or boolean.</EvalResult>
     <EvalType></EvalType>
     <EvalName>&quot;123&quot;+&quot;456&quot;</EvalName>
     <EvalFullName>&quot;123&quot;+&quot;456&quot;</EvalFullName>

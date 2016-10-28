@@ -236,7 +236,7 @@ namespace MICore
         }
 
         public override TargetArchitecture ParseTargetArchitectureResult(string result)
-        { 
+        {
             using (StringReader stringReader = new StringReader(result))
             {
                 while (true)
@@ -264,6 +264,11 @@ namespace MICore
                 }
             }
             return TargetArchitecture.Unknown;
+        }
+
+        public override string GetSetEnvironmentVariableCommand(string name, string value)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "set env {0} {1}", name, value);
         }
 
         public override async Task Signal(string sig)

@@ -52,7 +52,7 @@ namespace Microsoft.MIDebugEngine
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _childProcessHandler;
 
-        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore) : base(launchOptions, engine.Logger)
+        public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
             uint processExitCode = 0;
             _pendingMessages = new StringBuilder(400);
@@ -176,7 +176,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (PlatformUtilities.IsOSX() &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
-                    localLaunchOptions.DebuggerMIMode != MIMode.Lldb && 
+                    localLaunchOptions.DebuggerMIMode != MIMode.Lldb &&
                     !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath))
                 {
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_DarwinDebuggerUnsigned, localLaunchOptions.MIDebuggerPath);
@@ -228,6 +228,10 @@ namespace Microsoft.MIDebugEngine
             else if (_launchOptions is TcpLaunchOptions)
             {
                 this.Init(new MICore.TcpTransport(), _launchOptions);
+            }
+            else if (_launchOptions is UnixShellPortLaunchOptions)
+            {
+                this.Init(new MICore.UnixShellPortTransport(), _launchOptions, waitLoop);
             }
             else
             {
@@ -361,7 +365,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
-                    if (this.ProcessState == MICore.ProcessState.Exited)
+                    if (_terminating || this.ProcessState == MICore.ProcessState.Exited)
                     {
                         return; // ignore exceptions after the process has exited
                     }
@@ -612,7 +616,22 @@ namespace Microsoft.MIDebugEngine
 
                     CheckCygwin(commands, localLaunchOptions);
 
-                    this.AddExecutablePathCommand(commands);
+                    // ClrDbg doesn't need -file-exec-and-symbols set.
+                    if (this.MICommandFactory.Mode == MIMode.Gdb)
+                    {
+                        if (_launchOptions is UnixShellPortLaunchOptions)
+                        {
+                            // This code path is probably applicable when the ExePath is not specified and can be used to determine the full executable path.
+                            // For now it is limited to Linux and debugger running on remote machine.
+                            Debug.Assert(_launchOptions.ExePath == null);
+
+                            DetermineAndAddExecutablePathCommand(commands, _launchOptions as UnixShellPortLaunchOptions);
+                        }
+                        else
+                        {
+                            this.AddExecutablePathCommand(commands);
+                        }
+                    }
 
                     // Important: this must occur after file-exec-and-symbols but before anything else.
                     this.AddGetTargetArchitectureCommand(commands);
@@ -624,8 +643,21 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
 
-                    int pid = localLaunchOptions.ProcessId;
-                    commands.Add(new LaunchCommand(String.Format(CultureInfo.CurrentUICulture, "-target-attach {0}", pid), ignoreFailures: false));
+                    Action<string> failureHandler = (string miError) =>
+                    {
+                        if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
+                            throw new LaunchErrorException(message);
+                        }
+                        else
+                        {
+                            string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                            throw new LaunchErrorException(message);
+                        }
+                    };
+
+                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId, ignoreFailures: false, failureHandler: failureHandler));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -647,7 +679,7 @@ namespace Microsoft.MIDebugEngine
 
                     // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
                     if (localLaunchOptions != null &&
-                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && 
+                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
                         (PlatformUtilities.IsWindows() || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
@@ -689,6 +721,15 @@ namespace Microsoft.MIDebugEngine
                         if (!string.IsNullOrEmpty(destination))
                         {
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
+                        }
+
+                        // Environment variables are set for the debuggee only with the modes that support that
+                        if (this.MICommandFactory.Mode != MIMode.Clrdbg)
+                        {
+                            foreach (EnvironmentEntry envEntry in localLaunchOptions.Environment)
+                            {
+                                commands.Add(new LaunchCommand(MICommandFactory.GetSetEnvironmentVariableCommand(envEntry.Name, envEntry.Value)));
+                            }
                         }
                     }
                 }
@@ -736,6 +777,51 @@ namespace Microsoft.MIDebugEngine
             commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures: false, failureHandler: failureHandler));
         }
 
+        private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
+        {
+            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
+
+            // Runs a shell command to get the full path of the exe.
+            // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
+            // embedded error text in lsof output like "(readlink error)". 
+            string absoluteExePath;
+            if (launchOptions.UnixPort.IsOSX())
+            {
+                // Usually the first FD=txt in the output of lsof points to the executable.
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId);
+            }
+            else if (launchOptions.UnixPort.IsLinux())
+            {
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
+            }
+            else
+            {
+                throw new LaunchErrorException(ResourceStrings.Error_UnsupportedPlatform);
+            }
+
+            Action<string> failureHandler = (string miError) =>
+            {
+                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_FailedToGetExePath, miError);
+                throw new LaunchErrorException(message);
+            };
+
+            Action<string> successHandler = async (string exePath) =>
+            {
+                string trimmedExePath = exePath.Trim();
+                try
+                {
+                    await CmdAsync("-file-exec-and-symbols " + trimmedExePath, ResultClass.done);
+                }
+                catch (UnexpectedMIResultException miException)
+                {
+                    string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, trimmedExePath, MICommandFactory.Name, miException.MIError);
+                    throw new LaunchErrorException(message);
+                }
+            };
+
+            commands.Add(new LaunchCommand(absoluteExePath, ignoreFailures: false, failureHandler: failureHandler, successHandler: successHandler));
+        }
+
         private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
         {
             if (_launchOptions.TargetArchitecture == TargetArchitecture.Unknown)
@@ -754,10 +840,12 @@ namespace Microsoft.MIDebugEngine
                     {
                         arch = LaunchOptions.TargetArchitecture;
                     }
-                    else
+                    else if (arch == TargetArchitecture.Unknown)
                     {
+                        // Use X64 as default if the arch couldn't be detected and wasn't specified
+                        // in the launch options
                         WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
-                        arch = TargetArchitecture.X64;  // use as default
+                        arch = TargetArchitecture.X64;
                     }
 
                     SetTargetArch(arch);

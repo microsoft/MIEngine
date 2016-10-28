@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
 using Microsoft.Win32.SafeHandles;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -251,10 +252,10 @@ namespace MICore
 
             //if this is an exception reported from LLDB, it will not currently contain a frame object in the MI
             //if we don't have a frame, check if this is an exception and retrieve the frame
-            if (!results.Contains("frame") &&
+            if (!results.Contains("frame") && !_terminating &&
                 (string.Compare(reason, "exception-received", StringComparison.OrdinalIgnoreCase) == 0 ||
-                string.Compare(reason, "signal-received", StringComparison.OrdinalIgnoreCase) == 0)
-                )
+                 string.Compare(reason, "signal-received", StringComparison.OrdinalIgnoreCase) == 0)
+               )
             {
                 //get the info for the current frame
                 Results frameResult = await MICommandFactory.StackInfoFrame();
@@ -272,7 +273,7 @@ namespace MICore
             this.ProcessState = ProcessState.Stopped;
             FlushBreakStateData();
 
-            if (!results.Contains("frame"))
+            if (!results.Contains("frame") && !_terminating)
             {
                 if (ModuleLoadEvent != null)
                 {
@@ -378,7 +379,7 @@ namespace MICore
             {
                 if (_isClosed)
                 {
-                    source.SetException(new ObjectDisposedException("Debugger"));
+                    source.SetException(new DebuggerDisposedException());
                 }
                 else
                 {
@@ -402,13 +403,13 @@ namespace MICore
             return processContinued;
         }
 
-        public void Init(ITransport transport, LaunchOptions options)
+        public void Init(ITransport transport, LaunchOptions options, HostWaitLoop waitLoop = null)
         {
             _lastCommandId = 1000;
             _transport = transport;
             FlushBreakStateData();
 
-            _transport.Init(this, options, Logger);
+            _transport.Init(this, options, Logger, waitLoop);
         }
 
         public void SetTargetArch(TargetArchitecture arch)
@@ -492,7 +493,7 @@ namespace MICore
             {
                 if (_internalBreakActionCompletionSource != null)
                 {
-                    _internalBreakActionCompletionSource.SetException(new ObjectDisposedException("Debugger"));
+                    _internalBreakActionCompletionSource.SetException(new DebuggerDisposedException());
                 }
                 _internalBreakActions.Clear();
             }
@@ -688,7 +689,7 @@ namespace MICore
             {
                 if (this.ProcessState == MICore.ProcessState.Exited)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException();
                 }
                 else
                 {
@@ -703,7 +704,7 @@ namespace MICore
                 {
                     if (this.ProcessState == MICore.ProcessState.Exited)
                     {
-                        throw new ObjectDisposedException("Debugger");
+                        throw new DebuggerDisposedException();
                     }
                     else
                     {
@@ -760,7 +761,7 @@ namespace MICore
             {
                 if (_isClosed)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException();
                 }
 
                 id = ++_lastCommandId;
@@ -778,8 +779,7 @@ namespace MICore
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
-            const int sigint = 2;
-            UnixNativeMethods.Kill(debugeePid, sigint);
+            UnixUtilities.Interrupt(debugeePid);
 
             return Task.FromResult<Results>(new Results(ResultClass.done));
         }
@@ -970,11 +970,26 @@ namespace MICore
 
             internal void Abort()
             {
-                _completionSource.SetException(new ObjectDisposedException("Debugger"));
+                _completionSource.SetException(new DebuggerDisposedException(Command));
             }
         }
 
         private readonly Dictionary<uint, WaitingOperationDescriptor> _waitingOperations = new Dictionary<uint, WaitingOperationDescriptor>();
+
+        /// <summary>
+        /// Returns true it is a (gdb) prompt.
+        /// </summary>
+        /// <param name="prompt">The prompt from the debugger</param>
+        /// <returns>True if (gdb) prompt, false otherwise</returns>
+        /// <remarks>For SSH transport connecting to gdb, it has a trailing space following the prompt like "(gdb) ".</remarks>
+        private static bool IsGdbPrompt(string prompt)
+        {
+            const string gdbPrompt = "(gdb)";
+
+            return
+                prompt.StartsWith(gdbPrompt, StringComparison.Ordinal) &&
+                prompt.Trim().Length == gdbPrompt.Length;
+        }
 
         public void ProcessStdOutLine(string line)
         {
@@ -982,7 +997,7 @@ namespace MICore
             {
                 return;
             }
-            else if (line == "(gdb)")
+            else if (IsGdbPrompt(line))
             {
                 if (_consoleDebuggerInitializeCompletionSource != null)
                 {
