@@ -76,6 +76,18 @@ generate_nuget_config()
     echo "</configuration>"                                                                                     >> NuGet.config
 }
 
+is_project_json_supported()
+{
+    # Last preview2 release version is 3133 and starting preview3 only csproj files were supported.
+    dotnetversion="$(dotnet --version)"
+    v="$(echo $dotnetversion | awk -F'-'  '{print $3 + 0}')"
+    if (("$v" <= 3133)); then
+        return 0
+    else
+        return 1
+    fi
+}
+
 if [ -z "$1" ]; then
     print_help
     exit 1
@@ -142,29 +154,67 @@ if [ -z $__RuntimeID ]; then
 fi
 echo "Info: Using Runtime ID '$__RuntimeID'"
 
-echo 'Info: Generating project.json'
-generate_project_json $rid
+if is_project_json_supported; then
+    # Legacy support till supported versions are available as zip.
+    echo 'Info: Generating project.json'
+    generate_project_json $rid
 
-echo 'Info: Generating NuGet.config'
-generate_nuget_config
+    echo 'Info: Generating NuGet.config'
+    generate_nuget_config
 
-# dotnet restore and publish add color to their output
-# I have found that the extra characters to provide color can corrupt
-# the shell output when running this as part of docker build
-# Therefore, I redirect the output of these commands to a log
-echo 'Info: Executing dotnet restore'
-dotnet restore > dotnet_restore.log 2>&1
-if [ $? -ne 0 ]; then
-    echo "dotnet restore failed"
-    exit 1
+    # dotnet restore and publish add color to their output
+    # I have found that the extra characters to provide color can corrupt
+    # the shell output when running this as part of docker build
+    # Therefore, I redirect the output of these commands to a log
+    echo 'Info: Executing dotnet restore'
+    dotnet restore > dotnet_restore.log 2>&1
+    if [ $? -ne 0 ]; then
+        echo "dotnet restore failed"
+        exit 1
+    fi
+
+    echo 'Info: Executing dotnet publish'
+    dotnet publish -o . > dotnet_publish.log 2>&1
+    if [ $? -ne 0 ]; then
+        echo "dotnet publish failed"
+        exit 1
+    fi
+else
+    clrdbgZip="clrdbg.zip"
+    target="$(echo ${__ClrDbgVersion}-${__RuntimeID} | tr '.' '-')"
+    url="$(echo https://vsdebugger.azureedge.net/clrdbg-${target}/${clrdbgZip})"
+   
+    echo "Downloading ${url}"
+    if ! hash unzip 2>/dev/null; then
+        echo "unzip command not found. Install unzip for this script to work."
+        exit 1
+    fi
+   
+    if hash wget 2>/dev/null; then
+        wget -q $url -O $clrdbgZip
+    elif hash curl 2>/dev/null; then
+        curl -s $url -o $clrdbgZip
+    else
+        echo "Install curl or wget. It is needed to download clrdbg."
+        exit 1
+    fi
+    
+    if [ $? -ne  0 ]; then
+        echo "Could not download ${url}"
+        exit 1;
+    fi
+    
+    unzip -q $clrdbgZip
+    
+    if [ $? -ne  0 ]; then
+        echo "Failed to unzip clrdbg"
+        exit 1;
+    fi
+    
+    chmod +x ./clrdbg
+    rm $clrdbgZip
 fi
 
-echo 'Info: Executing dotnet publish'
-dotnet publish -o . > dotnet_publish.log 2>&1
-if [ $? -ne 0 ]; then
-    echo "dotnet publish failed"
-    exit 1
-fi
 
 popd > /dev/null 2>&1
 

@@ -89,6 +89,12 @@ function GenerateNuGetConfig() {
     $nugetConfig | Out-File -Encoding utf8 NuGet.config
 }
 
+function IsProjectJsonSupported() {
+    # Last preview2 release version is 3133 and starting preview3 only csproj files were supported.
+    $dotnetVersion = dotnet --version
+    return (($dotnetVersion.Split("-")[2] -as [int]) -le 3133)
+}
+
 # Add new version constants here
 # 'latest' version may be updated
 # all other version constants i.e. 'vs2015u2' may not be updated after they are finalized
@@ -119,17 +125,29 @@ if (-not([System.IO.Path]::IsPathRooted($InstallPath))) {
 
 Push-Location $TempPath -ErrorAction Stop
 
-Write-Host "Info: Generating project.json"
-GenerateProjectJson $VersionNumber $RuntimeID
+if (IsProjectJsonSupported) {
+    # Legacy support till supported versions are available as zip.
+    Write-Host "Info: Generating project.json"
+    GenerateProjectJson $VersionNumber $RuntimeID
+    
+    Write-Host "Info: Generating NuGet.config"
+    GenerateNuGetConfig
+    
+    Write-Host "Info: Executing dotnet restore"
+    dotnet restore
+    
+    Write-Host "Info: Executing dotnet publish"
+    dotnet publish -r $RuntimeID -o $InstallPath
+} else {
+    $target = ($VersionNumber + '-' + $RuntimeID).Replace('.','-')
+    $url = "https://vsdebugger.azureedge.net/clrdbg-" + $target + "/clrdbg.zip"
+    Write-Host "Downloading: " $url
 
-Write-Host "Info: Generating NuGet.config"
-GenerateNuGetConfig
-
-Write-Host "Info: Executing dotnet restore"
-dotnet restore
-
-Write-Host "Info: Executing dotnet publish"
-dotnet publish -r $RuntimeID -o $InstallPath
+    $zipfile = Join-Path $TempPath "clrdbg.zip"
+    Invoke-WebRequest -uri $url -o $zipfile
+    Add-Type -assembly "System.IO.Compression.FileSystem"
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $InstallPath)
+}
 
 Pop-Location
 
