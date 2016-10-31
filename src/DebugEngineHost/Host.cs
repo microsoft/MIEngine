@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Internal.VisualStudio.Shell;
+using Microsoft.Internal.VisualStudio.Shell.Interop;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -41,9 +43,21 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         public static void EnsureMainThreadInitialized()
         {
-            //This call is to initialize the global service provider while we are still on the main thread.
-            //Do not remove this this, even though the return value goes unused.
+            // This call is to initialize the global service provider while we are still on the main thread.
+            // Do not remove this this, even though the return value goes unused.
             var globalProvider = Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider;
+
+#if LAB
+            try
+            {
+                // Force the IVsTelemetryService to complete its lazy loading. There is a hang caused by trying to
+                // send telemetry while Visual Studio is launching the debugger if the telemetry helper also needs 
+                // to load the telemetry service on the main thread.
+                // Do not remove this this, even though the return value goes unused.
+                var telemetryService = TelemetryHelper.TelemetryService;
+            }
+            catch { }
+#endif
         }
 
         /// <summary>
