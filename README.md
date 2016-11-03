@@ -2,7 +2,7 @@
 
 ||Debug|Release|
 |:--:|:--:|:--:|
-|**master**|[![Build Status](http://dotnet-ci.cloudapp.net/job/Microsoft_MIEngine/job/master/job/debug/badge/icon)](http://dotnet-ci.cloudapp.net/job/Microsoft_MIEngine/job/master/job/debug/)|[![Build Status](http://dotnet-ci.cloudapp.net/job/Microsoft_MIEngine/job/master/job/release/badge/icon)](http://dotnet-ci.cloudapp.net/job/Microsoft_MIEngine/job/master/job/release/)|
+|**master**|[![Build Status](https://ci.dot.net/job/Microsoft_MIEngine/job/master/job/debug/badge/icon)](https://ci.dot.net/job/Microsoft_MIEngine/job/master/job/debug/)|[![Build Status](https://ci.dot.net/job/Microsoft_MIEngine/job/master/job/release/badge/icon)](https://ci.dot.net/job/Microsoft_MIEngine/job/master/job/release/)|
 
 The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with debuggers that support the gdb Machine Interface ("MI")
 specification such as [GDB](http://www.gnu.org/software/gdb/), [LLDB](http://lldb.llvm.org/), and [CLRDBG](https://github.com/Microsoft/MIEngine/wiki/What-is-CLRDBG).
