@@ -287,30 +287,27 @@ namespace MICore
             // our pipe.
             _allReadersDone.WaitOne(100);
 
-            if (!this.IsClosed)
+            // We are sometimes seeing m_process throw InvalidOperationExceptions by the time we get here. 
+            // Attempt to get the real exit code, if we can't, still log the message with unknown exit code.
+            string exitCode = null;
+            try
             {
-                // We are sometimes seeing m_process throw InvalidOperationExceptions by the time we get here. 
-                // Attempt to get the real exit code, if we can't, still log the message with unknown exit code.
-                string exitCode = null;
-                try
-                {
-                    exitCode = string.Format(CultureInfo.InvariantCulture, "{0} (0x{0:X})", _process.ExitCode);
-                }
-                catch (InvalidOperationException)
-                {
-                }
-                this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "\"{0}\" exited with code {1}.", _process.StartInfo.FileName, exitCode ?? "???"));
+                exitCode = string.Format(CultureInfo.InvariantCulture, "{0} (0x{0:X})", _process.ExitCode);
+            }
+            catch (InvalidOperationException)
+            {
+            }
 
+            this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "\"{0}\" exited with code {1}.", _process.StartInfo.FileName, exitCode ?? "???"));
 
-                try
-                {
-                    this.Callback.OnDebuggerProcessExit(exitCode);
-                }
-                catch
-                {
-                    // We have no exception back stop here, and we are trying to report failures. But if something goes wrong,
-                    // lets not crash VS
-                }
+            try
+            {
+                this.Callback.OnDebuggerProcessExit(exitCode);
+            }
+            catch
+            {
+                // We have no exception back stop here, and we are trying to report failures. But if something goes wrong,
+                // lets not crash VS
             }
         }
 
