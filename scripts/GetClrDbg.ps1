@@ -95,13 +95,10 @@ function IsProjectJsonSupported() {
     return (($dotnetVersion.Split("-")[2] -as [int]) -le 3133)
 }
 
-# Add new version constants here
-# 'latest' version may be updated
-# all other version constants i.e. 'vs2015u2' may not be updated after they are finalized
 if ($Version -eq "latest") {
-    $VersionNumber = "14.0.25520-preview-3139256"
+    $VersionNumber = "15.0.25904-preview-3404276"
 } elseif ($Version -eq "vs2015u2") {
-    $VersionNumber = "14.0.25520-preview-3139256" # This version is now locked and should not be updated
+    $VersionNumber = "15.0.25904-preview-3404276" 
 }
 Write-Host "Info: Using clrdbg version '$VersionNumber'"
 

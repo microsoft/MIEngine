@@ -97,16 +97,13 @@ elif [ "$1" == "-h" ]; then
 fi
 
 # This case statement is done on the lower case version of version_string
-# Add new version constants here
-# 'latest' version may be updated
-# all other version contstants i.e. 'vs2015u2' may not be updated after they are finalized
 version_string="$(echo $1 | awk '{print tolower($0)}')"
 case $version_string in
     latest)
-        __ClrDbgVersion=14.0.25520-preview-3139256
+        __ClrDbgVersion=15.0.25904-preview-3404276
         ;;
     vs2015u2)
-        __ClrDbgVersion=14.0.25520-preview-3139256 #This version is now locked and should not be updated.
+        __ClrDbgVersion=15.0.25904-preview-3404276
         ;;
     *)
         simpleVersionRegex="^[0-9].*"
