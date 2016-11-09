@@ -26,7 +26,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <DefineConstants>>$(DefineConstants);TRACE</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -126,6 +126,7 @@
     <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
       <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
       <Name>DebugEngineHost.Stub</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
@@ -135,6 +136,7 @@
       <Project>{7654cfbb-30db-4c20-bde3-a960cba2036c}</Project>
       <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
       <EmbedInteropTypes>True</EmbedInteropTypes>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\prebuild\prebuild.csproj">
       <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
