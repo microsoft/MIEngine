@@ -75,6 +75,14 @@ function GenerateProjectJson([string] $version, [string]$runtimeID) {
     $projectJson | Out-File -Encoding utf8 project.json
 }
 
+# In a separate method to prevent locking zip files.
+function DownloadAndExtract([string]$url, [string]$targetLocation) {
+    $zipfile = Join-Path $TempPath "clrdbg.zip"
+    Invoke-WebRequest -uri $url -o $zipfile
+    Add-Type -assembly "System.IO.Compression.FileSystem"
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $InstallPath)
+}
+
 # Produces NuGet.config in the current directory
 function GenerateNuGetConfig() {
     $nugetConfig = 
@@ -140,14 +148,17 @@ if (IsProjectJsonSupported) {
     $url = "https://vsdebugger.azureedge.net/clrdbg-" + $target + "/clrdbg.zip"
     Write-Host "Downloading: " $url
 
-    $zipfile = Join-Path $TempPath "clrdbg.zip"
-    Invoke-WebRequest -uri $url -o $zipfile
-    Add-Type -assembly "System.IO.Compression.FileSystem"
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $InstallPath)
+    DownloadAndExtract $url $TempPath    
 }
 
 Pop-Location
 
-Remove-Item -Path $TempPath -Recurse -Force
+# Delete child items individually, Remove-Item -Recurse has known issue, this is the suggested way.
+Get-ChildItem $TempPath -Recurse | Remove-Item -Force
+Remove-Item -Path $TempPath -Force -Recurse
 
 Write-Host "Successfully installed clrdbg at '$InstallPath'"
+
+##################################################################################################################################
+#                                                       End of Script                                                            #
+##################################################################################################################################
