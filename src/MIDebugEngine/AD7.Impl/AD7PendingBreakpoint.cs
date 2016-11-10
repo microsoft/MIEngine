@@ -351,7 +351,7 @@ namespace Microsoft.MIDebugEngine
         {
             lock (_boundBreakpoints)
             {
-                if (!IsDataBreakpoint && _boundBreakpoints.Find((b) => b.Addr == bp.Addr) != null)
+                if (bp.Addr == 0 || (!IsDataBreakpoint && _boundBreakpoints.Find((b) => b.Addr == bp.Addr) != null))
                 {
                     return null;   // already bound to this breakpoint
                 }
