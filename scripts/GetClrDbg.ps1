@@ -77,10 +77,12 @@ function GenerateProjectJson([string] $version, [string]$runtimeID) {
 
 # In a separate method to prevent locking zip files.
 function DownloadAndExtract([string]$url, [string]$targetLocation) {
-    $zipfile = Join-Path $TempPath "clrdbg.zip"
-    Invoke-WebRequest -uri $url -o $zipfile
     Add-Type -assembly "System.IO.Compression.FileSystem"
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $InstallPath)
+    $zipStream = (New-Object System.Net.WebClient).OpenRead($url)
+    $zipArchive = New-Object System.IO.Compression.ZipArchive -ArgumentList $zipStream
+    [System.IO.Compression.ZipFileExtensions]::ExtractToDirectory($zipArchive, $targetLocation)
+    $zipArchive.Dispose()
+    $zipStream.Dispose()
 }
 
 # Produces NuGet.config in the current directory
@@ -115,22 +117,23 @@ if (-not $RuntimeID) {
 }
 Write-Host "Info: Using Runtime ID '$RuntimeID'"
 
-# create the temp folder if it does not exist
-$GuidString = [System.Guid]::NewGuid()
-$TempPath = Join-Path -Path $env:TEMP -ChildPath $GuidString
-if (-not (Test-Path -Path $TempPath -PathType Container)) {
-    New-Item -ItemType Directory -Force -Path $TempPath
-}
-$TempPath = Resolve-Path -Path $TempPath -ErrorAction Stop
-
 # if we were given a relative path, assume its relative to the script directory and create an absolute path
 if (-not([System.IO.Path]::IsPathRooted($InstallPath))) {
     $InstallPath = Join-Path -Path (Split-Path -Path $MyInvocation.MyCommand.Definition) -ChildPath $InstallPath
 }
 
-Push-Location $TempPath -ErrorAction Stop
-
 if (IsProjectJsonSupported) {
+    # create the temp folder if it does not exist
+    $GuidString = [System.Guid]::NewGuid()
+    $TempPath = Join-Path -Path $env:TEMP -ChildPath $GuidString
+    if (-not (Test-Path -Path $TempPath -PathType Container)) {
+        New-Item -ItemType Directory -Force -Path $TempPath
+    }
+    
+    $TempPath = Resolve-Path -Path $TempPath -ErrorAction Stop
+
+    Push-Location $TempPath -ErrorAction Stop
+
     # Legacy support till supported versions are available as zip.
     Write-Host "Info: Generating project.json"
     GenerateProjectJson $VersionNumber $RuntimeID
@@ -143,19 +146,20 @@ if (IsProjectJsonSupported) {
     
     Write-Host "Info: Executing dotnet publish"
     dotnet publish -r $RuntimeID -o $InstallPath
-} else {
+    
+    Pop-Location
+
+    Remove-Item -Path $TempPath -Force -Recurse
+} else {    
     $target = ($VersionNumber + '-' + $RuntimeID).Replace('.','-')
     $url = "https://vsdebugger.azureedge.net/clrdbg-" + $target + "/clrdbg.zip"
-    Write-Host "Downloading: " $url
-
-    DownloadAndExtract $url $TempPath    
+    
+    if (Test-Path $InstallPath) {
+        Remove-Item -Path $InstallPath -Force -Recurse
+    }
+    
+    DownloadAndExtract $url $InstallPath    
 }
-
-Pop-Location
-
-# Delete child items individually, Remove-Item -Recurse has known issue, this is the suggested way.
-Get-ChildItem $TempPath -Recurse | Remove-Item -Force
-Remove-Item -Path $TempPath -Force -Recurse
 
 Write-Host "Successfully installed clrdbg at '$InstallPath'"
 
