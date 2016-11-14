@@ -78,6 +78,7 @@ function GenerateProjectJson([string] $version, [string]$runtimeID) {
 # In a separate method to prevent locking zip files.
 function DownloadAndExtract([string]$url, [string]$targetLocation) {
     Add-Type -assembly "System.IO.Compression.FileSystem"
+    Add-Type -assembly "System.IO.Compression"
     $zipStream = (New-Object System.Net.WebClient).OpenRead($url)
     $zipArchive = New-Object System.IO.Compression.ZipArchive -ArgumentList $zipStream
     [System.IO.Compression.ZipFileExtensions]::ExtractToDirectory($zipArchive, $targetLocation)
