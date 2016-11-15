@@ -131,7 +131,9 @@
   <data name="Error_DebuggerInitializeFailed_StdErr" xml:space="preserve">
     <value>Unable to establish a connection to {0}. The following message was written to stderr:
 
-{1}</value>
+{1}
+
+See Output Window for details.</value>
   </data>
   <data name="Error_DebugServerInitializationFailed" xml:space="preserve">
     <value>Debug server process failed to initialize.</value>
@@ -237,9 +239,6 @@ Error: {1}</value>
   <data name="Error_LocalUnixTerminalDebuggerInitializationFailed" xml:space="preserve">
     <value>Failed to initialize debugger terminal.</value>
   </data>
-  <data name="Error_InvalidLocalDirectoryPath" xml:space="preserve">
-    <value>Invalid path to directory path '{0}'. Directory must be a valid directory name that exists.</value>
-  </data>
   <data name="Info_InstallingDebuggerOnRemote" xml:space="preserve">
     <value>Installing debugger on the remote machine.</value>
   </data>
@@ -253,5 +252,14 @@ Error: {1}</value>
   </data>
   <data name="Info_KillingPipeProcess" xml:space="preserve">
     <value>Killing pipe process</value>
+  </data>
+  <data name="Error_InvalidLocalDirectoryPath" xml:space="preserve">
+    <value>Invalid path to directory path '{0}'. Directory must be a valid directory name that exists.</value>
+  </data>
+  <data name="Error_EmptyPipePath" xml:space="preserve">
+    <value>PipePath cannot be empty.</value>
+  </data>
+  <data name="Error_LauncherSerializerNotFound" xml:space="preserve">
+    <value>Device App Launcher Serializer {0} could not be found.</value>
   </data>
 </root>

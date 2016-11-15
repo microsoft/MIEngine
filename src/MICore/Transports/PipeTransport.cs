@@ -93,14 +93,27 @@ namespace MICore
         {
             PipeLaunchOptions pipeOptions = (PipeLaunchOptions)options;
 
-            if (!LocalLaunchOptions.CheckDirectoryPath(pipeOptions.PipeCwd))
+            string workingDirectory = pipeOptions.PipeCwd;
+            if (!string.IsNullOrWhiteSpace(workingDirectory))
             {
-                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalDirectoryPath, pipeOptions.PipeCwd));
+                if (!LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
+                {
+                    throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalDirectoryPath, workingDirectory));
+                }
+            }
+            else
+            {
+                workingDirectory = Path.GetDirectoryName(pipeOptions.PipePath);
+                if (!LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
+                {
+                    // If provided PipeCwd is not an absolute path, the working directory will be set to null.
+                    workingDirectory = null;
+                }
             }
 
-            if (!LocalLaunchOptions.CheckFilePath(pipeOptions.PipePath))
+            if (string.IsNullOrWhiteSpace(pipeOptions.PipePath))
             {
-                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, pipeOptions.PipePath));
+                throw new ArgumentException(MICoreResources.Error_EmptyPipePath);
             }
 
             _cmdArgs = pipeOptions.PipeCommandArguments;
@@ -109,7 +122,7 @@ namespace MICore
             _pipePath = pipeOptions.PipePath;
             proc.StartInfo.FileName = pipeOptions.PipePath;
             proc.StartInfo.Arguments = pipeOptions.PipeArguments;
-            proc.StartInfo.WorkingDirectory = pipeOptions.PipeCwd;
+            proc.StartInfo.WorkingDirectory = workingDirectory;
 
             foreach (EnvironmentEntry entry in pipeOptions.PipeEnvironment)
             {
@@ -274,30 +287,27 @@ namespace MICore
             // our pipe.
             _allReadersDone.WaitOne(100);
 
-            if (!this.IsClosed)
+            // We are sometimes seeing m_process throw InvalidOperationExceptions by the time we get here. 
+            // Attempt to get the real exit code, if we can't, still log the message with unknown exit code.
+            string exitCode = null;
+            try
             {
-                // We are sometimes seeing m_process throw InvalidOperationExceptions by the time we get here. 
-                // Attempt to get the real exit code, if we can't, still log the message with unknown exit code.
-                string exitCode = null;
-                try
-                {
-                    exitCode = string.Format(CultureInfo.InvariantCulture, "{0} (0x{0:X})", _process.ExitCode);
-                }
-                catch (InvalidOperationException)
-                {
-                }
-                this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "\"{0}\" exited with code {1}.", _process.StartInfo.FileName, exitCode ?? "???"));
+                exitCode = string.Format(CultureInfo.InvariantCulture, "{0} (0x{0:X})", _process.ExitCode);
+            }
+            catch (InvalidOperationException)
+            {
+            }
 
+            this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "\"{0}\" exited with code {1}.", _process.StartInfo.FileName, exitCode ?? "???"));
 
-                try
-                {
-                    this.Callback.OnDebuggerProcessExit(exitCode);
-                }
-                catch
-                {
-                    // We have no exception back stop here, and we are trying to report failures. But if something goes wrong,
-                    // lets not crash VS
-                }
+            try
+            {
+                this.Callback.OnDebuggerProcessExit(exitCode);
+            }
+            catch
+            {
+                // We have no exception back stop here, and we are trying to report failures. But if something goes wrong,
+                // lets not crash VS
             }
         }
 

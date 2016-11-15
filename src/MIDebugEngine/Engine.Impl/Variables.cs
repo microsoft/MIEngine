@@ -258,6 +258,10 @@ namespace Microsoft.MIDebugEngine
                 Name = '[' + this.Name + ']';
                 VariableNodeType = NodeType.ArrayElement;
             }
+            else if (this.Name.Length > 2 && this.Name[0] == '[' && this.Name[this.Name.Length-1] == ']')
+            {
+                VariableNodeType = NodeType.ArrayElement;
+            }
             else
             {
                 _strippedName = Name;

@@ -120,7 +120,7 @@ namespace Microsoft.MIDebugEngine {
         /// <summary>
         ///   Looks up a localized string similar to Attaching to process {0} with {1} failed because of insufficient privileges with error message &apos;{2}&apos;.
         ///
-        ///To attach to application on Linux, login as super user or set ptrace_scope to 0.
+        ///To attach to an application on Linux, login as super user or set ptrace_scope to 0.
         ///See https://aka.ms/miengine-gdb-troubleshooting for details..
         /// </summary>
         internal static string Error_PTraceFailure {

@@ -365,7 +365,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
-                    if (this.ProcessState == MICore.ProcessState.Exited)
+                    if (_terminating || this.ProcessState == MICore.ProcessState.Exited)
                     {
                         return; // ignore exceptions after the process has exited
                     }
@@ -840,10 +840,12 @@ namespace Microsoft.MIDebugEngine
                     {
                         arch = LaunchOptions.TargetArchitecture;
                     }
-                    else
+                    else if (arch == TargetArchitecture.Unknown)
                     {
+                        // Use X64 as default if the arch couldn't be detected and wasn't specified
+                        // in the launch options
                         WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
-                        arch = TargetArchitecture.X64;  // use as default
+                        arch = TargetArchitecture.X64;
                     }
 
                     SetTargetArch(arch);

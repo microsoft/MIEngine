@@ -102,7 +102,9 @@ namespace MICore {
         /// <summary>
         ///   Looks up a localized string similar to Unable to establish a connection to {0}. The following message was written to stderr:
         ///
-        ///{1}.
+        ///{1}
+        ///
+        ///See Output Window for details..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_StdErr {
             get {
@@ -116,6 +118,15 @@ namespace MICore {
         public static string Error_DebugServerInitializationFailed {
             get {
                 return ResourceManager.GetString("Error_DebugServerInitializationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PipePath cannot be empty..
+        /// </summary>
+        public static string Error_EmptyPipePath {
+            get {
+                return ResourceManager.GetString("Error_EmptyPipePath", resourceCulture);
             }
         }
         
@@ -217,6 +228,15 @@ namespace MICore {
         public static string Error_LauncherNotFound {
             get {
                 return ResourceManager.GetString("Error_LauncherNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Device App Launcher Serializer {0} could not be found..
+        /// </summary>
+        public static string Error_LauncherSerializerNotFound {
+            get {
+                return ResourceManager.GetString("Error_LauncherSerializerNotFound", resourceCulture);
             }
         }
         
