@@ -51,7 +51,7 @@ if "%ProgRoot%"=="" set ProgRoot=%ProgramFiles%
 set VSVersionFound=
 set MIEngineFound=
 call :TryVSPath "%ProgRoot%\Microsoft Visual Studio 14.0"
-call :TryVSPath "%ProgRoot%\Microsoft Visual Studio\VS15Preview"
+call :TryVSPaths "%ProgRoot%\Microsoft Visual Studio\2017\*"
 if "%VSVersionFound%"=="" echo ERROR: Visual Studio 2015+ is not installed, or not installed to the default location. Use '/VSRootDir' to specify the directory. & exit /b -1
 if "%MIEngineFound%"=="" echo ERROR: The found version(s) of Visual Studio do not have the MIEngine installed. & exit /b -1
 goto Done
@@ -62,6 +62,10 @@ goto Done
     echo SetMIDebugLogging.cmd succeeded. Restart Visual Studio to take effect.
     if "%LoggingValue%"=="1" echo Logging will be saved to %TMP%\Microsoft.MIDebug.log.
     exit /b 0
+
+:TryVSPaths
+    for /d %%d in (%1) do call :TryVSPath "%%d"
+    goto :EOF
 
 :TryVSPath
     REM Arg1: path to VS Root
