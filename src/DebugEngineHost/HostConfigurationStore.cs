@@ -88,14 +88,13 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled. If not specified, this will check 'Logging' in the AD7 Metrics.</param>
         /// <param name="logFileName">[Required] name of the log file to open if logging is enabled.</param>
-        /// <returns>[Optional] If logging is enabled, the logging object.</returns>
+        /// <returns>If no error then logging object. If file cannot be openened then throw an exception. Otherwise return an empty logger - the user can explictly reconfigure it later</returns>
         public HostLogger GetLogger(string enableLoggingSettingName, string logFileName)
         {
             if (string.IsNullOrEmpty(logFileName))
             {
-                throw new ArgumentNullException("logFileName");
+                return new HostLogger();    // empty logger
             }
-
             object enableLoggingValue;
             if (!string.IsNullOrEmpty(enableLoggingSettingName))
             {
@@ -110,26 +109,22 @@ namespace Microsoft.DebugEngineHost
                 !(enableLoggingValue is int) ||
                 ((int)enableLoggingValue) == 0)
             {
-                return null;
+                return new HostLogger();    // empty logger
             }
 
-            string tempDirectory = Path.GetTempPath();
-            if (!string.IsNullOrEmpty(tempDirectory) && Directory.Exists(tempDirectory))
-            {
-                string filePath = Path.Combine(tempDirectory, logFileName);
+            return new HostLogger(HostLogger.GetStreamForName(logFileName));
+        }
 
-                try
-                {
-                    FileStream stream = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-                    return new HostLogger(new StreamWriter(stream));
-                }
-                catch (IOException)
-                {
-                    // ignore failures from the log being in use by another process
-                }
-            }
-
-            return null;
+        /// <summary>
+        /// Get a logger after the user has explicitly configured a log file/callback
+        /// </summary>
+        /// <param name="logFileName"></param>
+        /// <param name="callback"></param>
+        /// <returns>The host logger object</returns>
+        public HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
+        {
+            StreamWriter writer = HostLogger.GetStreamForName(logFileName);
+            return new HostLogger(writer, callback);
         }
 
         public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)

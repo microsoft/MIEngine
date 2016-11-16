@@ -27,6 +27,15 @@ namespace MICore
         private static HostLogger s_logger;
         private static int s_count;
         private int _id;
+        public class LogInfo
+        {
+            public string logFile;
+            public HostLogger.OutputCallback logToOutput;
+            public bool enabled;
+        };
+        private static LogInfo s_cmdLogInfo = new LogInfo();
+        public static LogInfo CmdLogInfo { get { return s_cmdLogInfo; } set { s_cmdLogInfo = value; } }
+
 
         private Logger()
         {
@@ -57,14 +66,32 @@ namespace MICore
         public static void LoadMIDebugLogger(HostConfigurationStore configStore)
         {
             if (s_logger == null)
-            {
-                s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
+            { 
+                if (CmdLogInfo.enabled)
+                {   // command configured log file
+                    s_logger = configStore.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
+                }
+                else
+                {   // use default logging
+                    s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
+                }
                 if (s_logger != null)
                 {
                     s_isEnabled = true;
                 }
             }
         }
+
+        public static void Reset()
+        {
+            if (s_logger != null)
+            {
+                if (CmdLogInfo.enabled)
+                {   // command configured log file
+                    s_logger.Reassign(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
+                }
+            }
+         }
 
         /// <summary>
         /// If logging is enabled, writes a line of text to the log

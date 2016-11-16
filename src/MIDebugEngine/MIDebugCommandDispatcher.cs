@@ -79,5 +79,27 @@ namespace Microsoft.MIDebugEngine
                 }
             }
         }
+
+        public static void EnableLogging(bool output, string logFile)
+        {
+            Logger.CmdLogInfo.logFile = logFile;
+            if (output)
+                Logger.CmdLogInfo.logToOutput = WriteLogToOutput;
+            else
+                Logger.CmdLogInfo.logToOutput = null;
+            Logger.CmdLogInfo.enabled = true;
+            Logger.Reset();
+        }
+
+        public static void WriteLogToOutput(string line)
+        {
+            lock (s_processes)
+            {
+                if (s_processes.Count > 0)
+                {
+                    s_processes[0].WriteOutput(line); ;
+                }
+            }
+        }
     }
 }

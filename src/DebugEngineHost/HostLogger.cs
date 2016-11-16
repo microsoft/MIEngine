@@ -12,27 +12,89 @@ namespace Microsoft.DebugEngineHost
 {
     public sealed class HostLogger
     {
-        private readonly StreamWriter _streamWriter;
+        /// <summary>
+        /// Callback for programmatic display of log messages
+        /// </summary>
+        /// <param name="outputString"></param>
+        public delegate void OutputCallback(string outputString);
 
-        internal HostLogger(StreamWriter streamWriter)
+        private StreamWriter _streamWriter;
+        private OutputCallback _callback;
+        private readonly object _locker = new object();
+
+        internal HostLogger(StreamWriter streamWriter = null, OutputCallback callback = null)
         {
             _streamWriter = streamWriter;
+            _callback = callback;
         }
 
         public void WriteLine(string line)
         {
-            lock (_streamWriter)
+            lock (_locker)
             {
-                _streamWriter.WriteLine(line);
+                if (_streamWriter != null)
+                    _streamWriter.WriteLine(line);
+                _callback?.Invoke(line);
             }
         }
 
         public void Flush()
         {
-            lock (_streamWriter)
+            lock (_locker)
             {
-                _streamWriter.Flush();
+                if (_streamWriter != null)
+                    _streamWriter.Flush();
             }
+        }
+
+        public void Close()
+        {
+            lock (_locker)
+            {
+                if (_streamWriter != null)
+                    _streamWriter.Close();
+                _streamWriter = null;
+            }
+        }
+
+        public void Reassign(string logFileName, OutputCallback callback)
+        {
+            StreamWriter streamWriter = GetStreamForName(logFileName);
+            Close();
+            lock (_locker)
+            {
+                _streamWriter = streamWriter;
+                _callback = callback;
+            }
+        }
+
+        internal static StreamWriter GetStreamForName(string logFileName)
+        {
+            if (string.IsNullOrEmpty(logFileName))
+            {
+                return null;
+            }
+            string tempDirectory = Path.GetTempPath();
+            StreamWriter writer = null;
+            if (Path.IsPathRooted(logFileName) || (!string.IsNullOrEmpty(tempDirectory) && Directory.Exists(tempDirectory)))
+            {
+                string filePath = Path.Combine(tempDirectory, logFileName);
+
+                try
+                {
+                    FileStream stream = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
+                    writer = new StreamWriter(stream);
+                }
+                catch (IOException)
+                {
+                    // ignore failures from the log being in use by another process
+                }
+            }
+            else
+            {
+                throw new ArgumentException("logFileName");
+            }
+            return writer;
         }
     }
 }

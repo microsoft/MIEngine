@@ -80,6 +80,9 @@ namespace Microsoft.MIDebugPackage
                     case PkgCmdIDList.cmdidMIDebugExec:
                         return MIDebugExec(nCmdExecOpt, pvaIn, pvaOut);
 
+                    case PkgCmdIDList.cmdidMIDebugLog:
+                        return MIDebugLog(nCmdExecOpt, pvaIn, pvaOut);
+
                     default:
                         Debug.Fail("Unknown command id");
                         return VSConstants.E_NOTIMPL;
@@ -97,6 +100,7 @@ namespace Microsoft.MIDebugPackage
                 {
                     case PkgCmdIDList.cmdidLaunchMIDebug:
                     case PkgCmdIDList.cmdidMIDebugExec:
+                    case PkgCmdIDList.cmdidMIDebugLog:
                         prgCmds[0].cmdf |= (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_INVISIBLE);
                         return VSConstants.S_OK;
 
@@ -223,6 +227,81 @@ namespace Microsoft.MIDebugPackage
             return VSConstants.S_OK;
         }
 
+
+        /// <summary>
+        /// The syntax for the MIDebugLog command. Notes:
+        /// ':' : The switch takes a value
+        /// '!' : The value is required
+        /// '(' ... ')' : Auto complete list for the switch (I don't know what is valid here except for 'd')
+        /// d : A path
+        /// </summary>
+        private const string LogMIDebugCommandSyntax = "O,On:(d) Output Off";
+        private enum LogMIDebugCommandSwitchEnum
+        {
+            On,
+            Output,
+            Off
+        }
+
+
+        private int MIDebugLog(uint nCmdLogOpt, IntPtr pvaIn, IntPtr pvaOut)
+        {
+            int hr;
+
+            if (IsQueryParameterList(pvaIn, pvaOut, nCmdLogOpt))
+            {
+                Marshal.GetNativeVariantForObject("$ /switchdefs:\"" + LogMIDebugCommandSyntax + "\"", pvaOut);
+                return VSConstants.S_OK;
+            }
+
+            string arguments;
+            hr = EnsureString(pvaIn, out arguments);
+            if (hr != VSConstants.S_OK)
+                return hr;
+
+            IVsParseCommandLine parseCommandLine = (IVsParseCommandLine)GetService(typeof(SVsParseCommandLine));
+            hr = parseCommandLine.ParseCommandTail(arguments, iMaxParams: -1);
+            if (ErrorHandler.Failed(hr))
+                return hr;
+
+            hr = parseCommandLine.HasParams();
+            if (ErrorHandler.Failed(hr))
+                return hr;
+            if (hr == VSConstants.S_OK || parseCommandLine.HasSwitches() != VSConstants.S_OK)
+            {
+                string message = string.Concat("Unexpected syntax for MIDebugLaunch command. Expected:\n",
+                    "Debug.MIDebugLog [/On:<optional_path> [/Output] | /Off]");
+                throw new ApplicationException(message);
+            }
+
+            hr = parseCommandLine.EvaluateSwitches(LogMIDebugCommandSyntax);
+            if (ErrorHandler.Failed(hr))
+                return hr;
+
+            string logPath = string.Empty;
+            bool logToOutput = false;
+            if (parseCommandLine.GetSwitchValue((int)LogMIDebugCommandSwitchEnum.On, out logPath) == VSConstants.S_OK)
+            {
+                logToOutput = parseCommandLine.IsSwitchPresent((int)LogMIDebugCommandSwitchEnum.Output) == VSConstants.S_OK;
+                if (parseCommandLine.IsSwitchPresent((int)LogMIDebugCommandSwitchEnum.Off) == VSConstants.S_OK)
+                {
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "/On and /Off cannot both appear on command line"));
+                }
+                if (!logToOutput && string.IsNullOrEmpty(logPath))
+                {
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Must specify a log file (/On:<path>) or /Output"));
+                }
+            }
+            else if (parseCommandLine.IsSwitchPresent((int)LogMIDebugCommandSwitchEnum.Off) != VSConstants.S_OK)
+            {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "One of /On or /Off must be present on command line"));
+            }
+
+            EnableLogging(logToOutput, logPath);
+
+            return 0;
+        }
+
         private async void MIDebugExecAsync(string command)
         {
             var commandWindow = (IVsCommandWindow)GetService(typeof(SVsCommandWindow));
@@ -289,6 +368,19 @@ namespace Microsoft.MIDebugPackage
             VsDebugTargetProcessInfo[] processInfo = new VsDebugTargetProcessInfo[debugTargets.Length];
 
             debugger.LaunchDebugTargets4(1, debugTargets, processInfo);
+        }
+
+        private void EnableLogging(bool output, string logFile)
+        {
+            try
+            {
+                MIDebugCommandDispatcher.EnableLogging(output, logFile);
+            }
+            catch (Exception e)
+            {
+                var commandWindow = (IVsCommandWindow)GetService(typeof(SVsCommandWindow));
+                commandWindow.Print(string.Format(CultureInfo.CurrentCulture, "Error: {0}\r\n", e.Message));
+            }
         }
 
         static private int EnsureString(IntPtr pvaIn, out string arguments)

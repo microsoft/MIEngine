@@ -60,6 +60,16 @@
           <LocCanonicalName>Debug.MIDebugExec</LocCanonicalName>
         </Strings>
       </Button>
+      <Button guid="guidMIDebugPackageCmdSet" id="cmdidMIDebugLog" priority="0x0100" type="Button">
+        <CommandFlag>AllowParams</CommandFlag>
+        <Strings>
+          <ButtonText>MIDebug Control Logging</ButtonText>
+          <!--NOTE: 'Debug.' (or some other prefix) is required - the command window doesn't like commands which aren't prefixed.
+            If we wind up keeping this code, we might want to switch to things like 'MIDebug.launch <foo>'-->
+          <CanonicalName>Debug.MIDebugLog</CanonicalName>
+          <LocCanonicalName>Debug.MIDebugLog</LocCanonicalName>
+        </Strings>
+      </Button>
     </Buttons>
   </Commands>
 
@@ -73,6 +83,7 @@
       <IDSymbol name="MyMenuGroup" value="0x1020" />
       <IDSymbol name="cmdidLaunchMIDebug" value="0x0100" />
       <IDSymbol name="cmdidMIDebugExec" value="0x0101" />
+      <IDSymbol name="cmdidMIDebugLog" value="0x0102" />
     </GuidSymbol>
   </Symbols>
 

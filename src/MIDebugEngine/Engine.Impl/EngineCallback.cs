@@ -98,8 +98,6 @@ namespace Microsoft.MIDebugEngine
 
         public void OnOutputString(string outputString)
         {
-            Debug.Assert(_engine.DebuggedProcess.WorkerThread.IsPollThread());
-
             AD7OutputDebugStringEvent eventObject = new AD7OutputDebugStringEvent(outputString);
 
             Send(eventObject, AD7OutputDebugStringEvent.IID, null);

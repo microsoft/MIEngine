@@ -11,5 +11,6 @@ namespace Microsoft.MIDebugPackage
     {
         public const uint cmdidLaunchMIDebug = 0x100;
         public const uint cmdidMIDebugExec = 0x101;
+        public const uint cmdidMIDebugLog = 0x102;
     };
 }
