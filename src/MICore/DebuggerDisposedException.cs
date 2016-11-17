@@ -15,17 +15,6 @@ namespace MICore
         /// </summary>
         public string AbortedCommand { get; private set; }
 
-        private const string Debugger = "Debugger";
-
-        /// <summary>
-        /// Constructor for the DebuggerDisposedException which takes the aborted command.
-        /// </summary>
-        /// <param name="abortedCommand">MI Command</param>
-        public DebuggerDisposedException(string abortedCommand = null) : base(Debugger)
-        {
-            AbortedCommand = abortedCommand;
-        }
-
         /// <summary>
         /// Constructor for the DebuggerDisposedException which takes message, innerException and aborted command.
         /// </summary>
@@ -37,9 +26,8 @@ namespace MICore
         /// <summary>
         /// Constructor for the DebuggerDisposedException which takes message and aborted command.
         /// </summary>
-        public DebuggerDisposedException(string message, string abortedCommand = null) : base(Debugger, message)
+        public DebuggerDisposedException(string message, string abortedCommand = null) : this(message, null, abortedCommand)
         {
-            AbortedCommand = abortedCommand;
         }
     }
 }

@@ -91,6 +91,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The debugger is no longer debugging the specified process..
+        /// </summary>
+        public static string Error_DebuggerClosed {
+            get {
+                return ResourceManager.GetString("Error_DebuggerClosed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to establish a connection to {0}. Debug output may contain more information..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_NoStdErr {
@@ -250,7 +259,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} exited unexpectedly. Debugging will now abort..
+        ///   Looks up a localized string similar to {0} exited unexpectedly..
         /// </summary>
         public static string Error_MIDebuggerExited_UnknownCode {
             get {
@@ -259,7 +268,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} exited unexpectedly with exit code {1}. Debugging will now abort..
+        ///   Looks up a localized string similar to {0} exited unexpectedly with exit code {1}..
         /// </summary>
         public static string Error_MIDebuggerExited_WithCode {
             get {
@@ -336,6 +345,15 @@ namespace MICore {
         public static string Error_StringIsNullOrEmpty {
             get {
                 return ResourceManager.GetString("Error_StringIsNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The target process has exited..
+        /// </summary>
+        public static string Error_TargetProcessExited {
+            get {
+                return ResourceManager.GetString("Error_TargetProcessExited", resourceCulture);
             }
         }
         
