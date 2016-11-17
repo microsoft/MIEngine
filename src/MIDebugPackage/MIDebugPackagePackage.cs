@@ -235,11 +235,11 @@ namespace Microsoft.MIDebugPackage
         /// '(' ... ')' : Auto complete list for the switch (I don't know what is valid here except for 'd')
         /// d : A path
         /// </summary>
-        private const string LogMIDebugCommandSyntax = "O,On:(d) Output Off";
+        private const string LogMIDebugCommandSyntax = "O,On:(d) OutputWindow Off";
         private enum LogMIDebugCommandSwitchEnum
         {
             On,
-            Output,
+            OutputWindow,
             Off
         }
 
@@ -270,7 +270,7 @@ namespace Microsoft.MIDebugPackage
             if (hr == VSConstants.S_OK || parseCommandLine.HasSwitches() != VSConstants.S_OK)
             {
                 string message = string.Concat("Unexpected syntax for MIDebugLaunch command. Expected:\n",
-                    "Debug.MIDebugLog [/On:<optional_path> [/Output] | /Off]");
+                    "Debug.MIDebugLog [/On:<optional_path> [/OutputWindow] | /Off]");
                 throw new ApplicationException(message);
             }
 
@@ -282,14 +282,14 @@ namespace Microsoft.MIDebugPackage
             bool logToOutput = false;
             if (parseCommandLine.GetSwitchValue((int)LogMIDebugCommandSwitchEnum.On, out logPath) == VSConstants.S_OK)
             {
-                logToOutput = parseCommandLine.IsSwitchPresent((int)LogMIDebugCommandSwitchEnum.Output) == VSConstants.S_OK;
+                logToOutput = parseCommandLine.IsSwitchPresent((int)LogMIDebugCommandSwitchEnum.OutputWindow) == VSConstants.S_OK;
                 if (parseCommandLine.IsSwitchPresent((int)LogMIDebugCommandSwitchEnum.Off) == VSConstants.S_OK)
                 {
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "/On and /Off cannot both appear on command line"));
                 }
                 if (!logToOutput && string.IsNullOrEmpty(logPath))
                 {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Must specify a log file (/On:<path>) or /Output"));
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Must specify a log file (/On:<path>) or /OutputWindow"));
                 }
             }
             else if (parseCommandLine.IsSwitchPresent((int)LogMIDebugCommandSwitchEnum.Off) != VSConstants.S_OK)
@@ -370,11 +370,11 @@ namespace Microsoft.MIDebugPackage
             debugger.LaunchDebugTargets4(1, debugTargets, processInfo);
         }
 
-        private void EnableLogging(bool output, string logFile)
+        private void EnableLogging(bool sendToOutputWindow, string logFile)
         {
             try
             {
-                MIDebugCommandDispatcher.EnableLogging(output, logFile);
+                MIDebugCommandDispatcher.EnableLogging(sendToOutputWindow, logFile);
             }
             catch (Exception e)
             {

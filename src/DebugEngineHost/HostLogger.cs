@@ -57,18 +57,7 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
-        public void Reassign(string logFileName, OutputCallback callback)
-        {
-            StreamWriter streamWriter = GetStreamForName(logFileName);
-            Close();
-            lock (_locker)
-            {
-                _streamWriter = streamWriter;
-                _callback = callback;
-            }
-        }
-
-        internal static StreamWriter GetStreamForName(string logFileName)
+        internal static StreamWriter GetStreamForName(string logFileName, bool throwInUseError)
         {
             if (string.IsNullOrEmpty(logFileName))
             {
@@ -87,6 +76,8 @@ namespace Microsoft.DebugEngineHost
                 }
                 catch (IOException)
                 {
+                    if (throwInUseError)
+                        throw;
                     // ignore failures from the log being in use by another process
                 }
             }
@@ -95,6 +86,18 @@ namespace Microsoft.DebugEngineHost
                 throw new ArgumentException("logFileName");
             }
             return writer;
+        }
+
+        /// <summary>
+        /// Get a logger after the user has explicitly configured a log file/callback
+        /// </summary>
+        /// <param name="logFileName"></param>
+        /// <param name="callback"></param>
+        /// <returns>The host logger object</returns>
+        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
+        {
+            StreamWriter writer = HostLogger.GetStreamForName(logFileName, throwInUseError: true);
+            return new HostLogger(writer, callback);
         }
     }
 }

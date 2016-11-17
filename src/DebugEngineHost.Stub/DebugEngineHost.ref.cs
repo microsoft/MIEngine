@@ -178,17 +178,6 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Get a logger after the user has explicitly configured a log file/callback
-        /// </summary>
-        /// <param name="logFileName"></param>
-        /// <param name="callback"></param>
-        /// <returns>The host logger object</returns>
-        public HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Read the debugger setting
         ///
         /// In VS, this is wired up to read setting value from RegistryRoot\\Debugger\\
@@ -244,11 +233,20 @@ public sealed class HostLogger
         }
 
         /// <summary>
-        /// Change the log to a different stream/callback
+        /// If the log is implemented as a file, this closes the file.
+        /// </summary>
+        public void Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Get a logger after the user has explicitly configured a log file/callback
         /// </summary>
         /// <param name="logFileName"></param>
         /// <param name="callback"></param>
-        public void Reassign(string logFileName, OutputCallback callback)
+        /// <returns>The host logger object</returns>
+        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
         {
             throw new NotImplementedException();
         }

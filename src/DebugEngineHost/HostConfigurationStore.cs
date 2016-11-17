@@ -93,7 +93,7 @@ namespace Microsoft.DebugEngineHost
         {
             if (string.IsNullOrEmpty(logFileName))
             {
-                return new HostLogger();    // empty logger
+                throw new ArgumentNullException("logFileName");
             }
             object enableLoggingValue;
             if (!string.IsNullOrEmpty(enableLoggingSettingName))
@@ -109,22 +109,10 @@ namespace Microsoft.DebugEngineHost
                 !(enableLoggingValue is int) ||
                 ((int)enableLoggingValue) == 0)
             {
-                return new HostLogger();    // empty logger
+                return null;
             }
 
-            return new HostLogger(HostLogger.GetStreamForName(logFileName));
-        }
-
-        /// <summary>
-        /// Get a logger after the user has explicitly configured a log file/callback
-        /// </summary>
-        /// <param name="logFileName"></param>
-        /// <param name="callback"></param>
-        /// <returns>The host logger object</returns>
-        public HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
-        {
-            StreamWriter writer = HostLogger.GetStreamForName(logFileName);
-            return new HostLogger(writer, callback);
+            return new HostLogger(HostLogger.GetStreamForName(logFileName, throwInUseError:false));
         }
 
         public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)

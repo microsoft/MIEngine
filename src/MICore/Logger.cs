@@ -34,7 +34,7 @@ namespace MICore
             public bool enabled;
         };
         private static LogInfo s_cmdLogInfo = new LogInfo();
-        public static LogInfo CmdLogInfo { get { return s_cmdLogInfo; } set { s_cmdLogInfo = value; } }
+        public static LogInfo CmdLogInfo { get { return s_cmdLogInfo; } }
 
 
         private Logger()
@@ -69,7 +69,7 @@ namespace MICore
             { 
                 if (CmdLogInfo.enabled)
                 {   // command configured log file
-                    s_logger = configStore.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
+                    s_logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
                 }
                 else
                 {   // use default logging
@@ -84,12 +84,12 @@ namespace MICore
 
         public static void Reset()
         {
-            if (s_logger != null)
+            HostLogger logger;
+            if (CmdLogInfo.enabled)
             {
-                if (CmdLogInfo.enabled)
-                {   // command configured log file
-                    s_logger.Reassign(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
-                }
+                logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
+                logger = Interlocked.Exchange(ref s_logger, logger);
+                logger?.Close();
             }
          }
 
