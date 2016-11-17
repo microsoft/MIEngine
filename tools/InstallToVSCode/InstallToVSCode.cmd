@@ -82,9 +82,9 @@ dotnet publish -o %DESTDIR%
 if NOT "%ERRORLEVEL%"=="0" echo "ERROR: 'dotnet publish' failed." & exit /b -1
 popd
 
-pushd %destdir%
-ren dummy.exe opendebugad7.exe
-if not "%errorlevel%"=="0" echo error: unable to rename opendebugad7.exe???& exit /b -1
+pushd %DESTDIR%
+ren dummy.exe OpenDebugAD7.exe
+if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to rename OpenDebugAD7.exe???& exit /b -1
 popd
 
 for %%f in (dar.exe) do call :InstallFile "%OpenDebugAD7BinDir%\%%f"
