@@ -197,8 +197,8 @@ mkdir -p "$DESTDIR"
 hash dotnet 2>/dev/null
 [ $? -ne 0 ] && echo "ERROR: The .NET CLI is not installed. see: http://dotnet.github.io/getting-started/" && exit 1
 
-SetupSymLink "$CSharpExtensionRoot/coreclr-debug/debugAdapters" "$DESTDIR"
-[ $? -ne 0 ] && echo "ERROR: Unable to link $CSharpExtensionRoot/coreclr-debug/debugAdapters to $DESTDIR" && exit 1
+SetupSymLink "$CSharpExtensionRoot/.debugger" "$DESTDIR"
+[ $? -ne 0 ] && echo "ERROR: Unable to link $CSharpExtensionRoot/.debugger to $DESTDIR" && exit 1
 
 mkdir -p "$DESTDIR/CLRDependencies"
 [ $? -ne 0 ] && echo "ERROR: unable to create destination directory '$DESTDIR/CLRDependencies'." && exit 1
