@@ -61,7 +61,7 @@ for /d %%d in (%VSCodeExtensionsRoot%\ms-vscode.csharp-*) do call :SetCSharpExte
 if NOT "%InstallError%"=="" exit /b -1
 if "%CSharpExtensionRoot%"=="" echo ERROR: C# extension is not installed in VS Code. No directory matching '%VSCodeExtensionsRoot%\ms-vscode.csharp-*' found. & exit /b -1
 
-call :SetupSymLink %CSharpExtensionRoot%\coreclr-debug\debugAdapters
+call :SetupSymLink %CSharpExtensionRoot%\.debugger
 if NOT "%InstallError%"=="" exit /b -1
 
 mkdir "%DESTDIR%\CLRDependencies"
