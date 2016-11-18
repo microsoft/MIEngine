@@ -17,6 +17,7 @@ namespace Microsoft.MIDebugEngine
     {
         private readonly IDebugEventCallback2 _eventCallback;
         private readonly AD7Engine _engine;
+        private int _sentProgramDestroy;
 
         public EngineCallback(AD7Engine engine, IDebugEventCallback2 ad7Callback)
         {
@@ -129,15 +130,18 @@ namespace Microsoft.MIDebugEngine
 
         public void OnProcessExit(uint exitCode)
         {
-            AD7ProgramDestroyEvent eventObject = new AD7ProgramDestroyEvent(exitCode);
+            if (Interlocked.Exchange(ref _sentProgramDestroy, 1) == 0)
+            {
+                AD7ProgramDestroyEvent eventObject = new AD7ProgramDestroyEvent(exitCode);
 
-            try
-            {
-                Send(eventObject, AD7ProgramDestroyEvent.IID, null);
-            }
-            catch (InvalidOperationException)
-            {
-                // If debugging has already stopped, this can throw
+                try
+                {
+                    Send(eventObject, AD7ProgramDestroyEvent.IID, null);
+                }
+                catch (InvalidOperationException)
+                {
+                    // If debugging has already stopped, this can throw
+                }
             }
         }
 

@@ -80,6 +80,15 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debugging will now abort..
+        /// </summary>
+        internal static string DebuggingWillAbort {
+            get {
+                return ResourceManager.GetString("DebuggingWillAbort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sample Engine.
         /// </summary>
         internal static string EngineName {

@@ -162,11 +162,11 @@ Error: {1}</value>
     <value>Device App Launcher {0} could not be found.</value>
   </data>
   <data name="Error_MIDebuggerExited_UnknownCode" xml:space="preserve">
-    <value>{0} exited unexpectedly. Debugging will now abort.</value>
+    <value>{0} exited unexpectedly.</value>
     <comment>{0} is the name of the debugger</comment>
   </data>
   <data name="Error_MIDebuggerExited_WithCode" xml:space="preserve">
-    <value>{0} exited unexpectedly with exit code {1}. Debugging will now abort.</value>
+    <value>{0} exited unexpectedly with exit code {1}.</value>
     <comment>{0} is the name of the debugger</comment>
   </data>
   <data name="Error_MissingAttribute" xml:space="preserve">
@@ -261,5 +261,11 @@ Error: {1}</value>
   </data>
   <data name="Error_LauncherSerializerNotFound" xml:space="preserve">
     <value>Device App Launcher Serializer {0} could not be found.</value>
+  </data>
+  <data name="Error_DebuggerClosed" xml:space="preserve">
+    <value>The debugger is no longer debugging the specified process.</value>
+  </data>
+  <data name="Error_TargetProcessExited" xml:space="preserve">
+    <value>The target process has exited.</value>
   </data>
 </root>

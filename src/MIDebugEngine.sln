@@ -223,8 +223,8 @@ Global
 		{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Debug-PortablePDB|Any CPU.ActiveCfg = Debug-PortablePDB|Any CPU
-		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Debug-PortablePDB|Any CPU.Build.0 = Debug-PortablePDB|Any CPU
+		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Debug-PortablePDB|Any CPU.ActiveCfg = Debug|Any CPU
+		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Debug-PortablePDB|Any CPU.Build.0 = Debug|Any CPU
 		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Desktop.Debug|Any CPU.ActiveCfg = Desktop.Debug|Any CPU
 		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Desktop.Debug|Any CPU.Build.0 = Desktop.Debug|Any CPU
 		{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}.Desktop.Release|Any CPU.ActiveCfg = Desktop.Release|Any CPU
