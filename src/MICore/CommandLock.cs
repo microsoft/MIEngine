@@ -107,7 +107,7 @@ namespace MICore
         {
         }
 
-        internal void Close(string closeMessage)
+        public void Close(string closeMessage)
         {
             lock (this.LockObject)
             {
