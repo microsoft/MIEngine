@@ -248,4 +248,7 @@ See https://aka.ms/miengine-gdb-troubleshooting for details.</value>
   <data name="Error_UnsupportedPlatform" xml:space="preserve">
     <value>Unsupported platform.</value>
   </data>
+  <data name="DebuggingWillAbort" xml:space="preserve">
+    <value>Debugging will now abort.</value>
+  </data>
 </root>
