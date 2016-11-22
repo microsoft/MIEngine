@@ -90,8 +90,12 @@ namespace MICore
                 logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
                 logger = Interlocked.Exchange(ref s_logger, logger);
                 logger?.Close();
+                if (s_logger != null)
+                {
+                    s_isEnabled = true;
+                }
             }
-         }
+        }
 
         /// <summary>
         /// If logging is enabled, writes a line of text to the log
