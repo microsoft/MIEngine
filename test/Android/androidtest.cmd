@@ -19,6 +19,7 @@ set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r11c
 set _LoopCount=
 set _Verbose=
 set _TestsToRun=
+set _ScriptPath=%~dp0
 
 if "%~1"=="-?" goto Help
 if "%~1"=="/?" goto Help
@@ -33,6 +34,14 @@ set _GlassDir=%_ProjectRoot%%_GlassPackageName%\
 :: Get Glass from NuGet
 if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install %_GlassPackageName% -Version %_GlassPackageVersion% -ExcludeVersion -OutputDirectory %_ProjectRoot%
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to get Glass from NuGet.& exit /b -1
+
+:: Copy binaries to folder "Microsoft.VisualStudio.Glass" which required by glass2.exe in runtime for Visual Studio 2017
+if defined VS150COMNTOOLS (
+xcopy /Y /D "%VSINSTALLDIR%Common7\IDE\Remote Debugger\x86\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" "%_GlassDir%"
+xcopy /Y /D "%VSINSTALLDIR%Common7\IDE\Remote Debugger\x86\Microsoft.VisualStudio.OLE.Interop.dll" "%_GlassDir%"
+xcopy /Y /D "%VSINSTALLDIR%Common7\IDE\PrivateAssemblies\Microsoft.VisualStudio.Shell.14.0.dll" "%_GlassDir%"
+if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy the binaries from Visual Studio installation.& exit /b -1
+)
 
 :: Ensure the project has been built
 if NOT exist "%_GlassDir%Microsoft.MIDebugEngine.dll" echo The project has not been built. Building now with default settings.& call %_ProjectRoot%build.cmd
@@ -188,14 +197,15 @@ exit /b -1
 :RunSingleTestOnce
     pushd "%~1"
     echo Running '%~1'
+    set _TestsToRun=%~1
     set LastTestSucceeded=false
     
     ::Build the app
-    call msbuild /p:Platform=%_Platform%;VS_NDKRoot="%_NdkRoot%";VS_SDKRoot="%_SdkRoot%";PackageDebugSymbols=true > build.log
+    call msbuild /p:Platform=%_Platform%;VS_NDKRoot="%_NdkRoot%";VS_SDKRoot="%_SdkRoot%";PackageDebugSymbols=true > build.log 2>&1
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to build %~1. See build.log for more information.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Deploy the app
-    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% install -r %_Platform%\Debug\%~1.apk > adb.log 2>&1
+    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% install -r %_ScriptPath%%_TestsToRun%\%_TestsToRun%\%_TestsToRun%.Packaging\%_Platform%\Debug\%~1.apk > adb.log 2>&1
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: adb failed for one reason or another.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Create temp directory
