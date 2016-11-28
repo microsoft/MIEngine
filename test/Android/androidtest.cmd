@@ -16,7 +16,8 @@ set _DeviceId=
 set _Platform=
 set _SdkRoot=%ProgramFiles(x86)%\Android\android-sdk
 set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r11c
-set _LoopCount=
+if not exist "%_NdkRoot%" for /f %%v in ('dir /b /o:n %ProgramData%\Microsoft\AndroidNDK\android-ndk-r*') do set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\%%v
+ set _LoopCount=
 set _Verbose=
 set _TestsToRun=
 
@@ -195,7 +196,10 @@ exit /b -1
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to build %~1. See build.log for more information.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Deploy the app
-    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% install -r %_Platform%\Debug\%~1.apk > adb.log 2>&1
+    set ApkFile=%_Platform%\Debug\%~1.apk
+    if not exist "%ApkFile%" set ApkFile=%~1\%~1.Packaging\%_Platform%\Debug\%~1.apk
+    if not exist "%ApkFile%" echo ERROR: Building the app failed to create '%CD%\%ApkFile%'& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
+    call "%_SdkRoot%\platform-tools\adb.exe" -s %_DeviceId% install -r %ApkFile% > adb.log 2>&1
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: adb failed for one reason or another.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Create temp directory
