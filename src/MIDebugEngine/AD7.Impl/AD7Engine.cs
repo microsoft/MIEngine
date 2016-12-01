@@ -70,14 +70,7 @@ namespace Microsoft.MIDebugEngine
 
         public AD7Engine()
         {
-            try
-            {
-                Host.EnsureMainThreadInitialized();
-            }
-            catch
-            {
-                // In miengine based glass tests, VS types will be missing and throw exception. Ignore the exceptions.
-            }
+            Host.EnsureMainThreadInitialized();
 
             _breakpointManager = new BreakpointManager(this);
         }

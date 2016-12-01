@@ -38,12 +38,10 @@ namespace Microsoft.DebugEngineHost
     /// </summary>
     public static class Host
     {
-        /// <summary>
-        /// Called by a debug engine to ensure that the main thread is initialized.
-        /// </summary>
-        public static void EnsureMainThreadInitialized()
+        // Seperate class to make sure that we can catch any exceptions from the missing shell assemblies in glass
+        static internal class Impl
         {
-            try
+            internal static void EnsureMainThreadInitialized()
             {
                 // This call is to initialize the global service provider while we are still on the main thread.
                 // Do not remove this this, even though the return value goes unused.
@@ -56,7 +54,17 @@ namespace Microsoft.DebugEngineHost
                 // Do not remove this this, even though the return value goes unused.
                 var telemetryService = TelemetryHelper.TelemetryService;
 #endif
+            }
+        }
 
+        /// <summary>
+        /// Called by a debug engine to ensure that the main thread is initialized.
+        /// </summary>
+        public static void EnsureMainThreadInitialized()
+        {
+            try
+            {
+                Impl.EnsureMainThreadInitialized();
             }
             catch
             {
