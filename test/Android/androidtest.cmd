@@ -35,6 +35,12 @@ set _GlassDir=%_ProjectRoot%%_GlassPackageName%\
 if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_ProjectRoot%tools\NuGet\nuget.exe" install %_GlassPackageName% -Version %_GlassPackageVersion% -ExcludeVersion -OutputDirectory %_ProjectRoot%
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to get Glass from NuGet.& exit /b -1
 
+:: Copy binary to folder "Microsoft.VisualStudio.Glass" which required by glass2.exe in runtime for Visual Studio 2017
+if defined VS150COMNTOOLS (
+xcopy /Y /D "%VSINSTALLDIR%Common7\IDE\Remote Debugger\x86\Microsoft.VisualStudio.OLE.Interop.dll" "%_GlassDir%"
+if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy the binaries from Visual Studio installation.& exit /b -1
+)
+
 :: Ensure the project has been built
 if NOT exist "%_GlassDir%Microsoft.MIDebugEngine.dll" echo The project has not been built. Building now with default settings.& call %_ProjectRoot%build.cmd
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to build MIEngine project.& exit /b -1
@@ -192,7 +198,7 @@ exit /b -1
     set LastTestSucceeded=false
     
     ::Build the app
-    call msbuild /p:Platform=%_Platform%;VS_NDKRoot="%_NdkRoot%";VS_SDKRoot="%_SdkRoot%";PackageDebugSymbols=true > build.log
+    call msbuild /p:Platform=%_Platform%;VS_NDKRoot="%_NdkRoot%";VS_SDKRoot="%_SdkRoot%";PackageDebugSymbols=true > build.log 2>&1
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to build %~1. See build.log for more information.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     
     ::Deploy the app
