@@ -11,7 +11,7 @@ using MICore;
 namespace Microsoft.MIDebugEngine
 {
     // This class represents a document context to the debugger. A document context represents a location within a source file. 
-    internal class AD7DocumentContext : IDebugDocumentContext2
+    internal class AD7DocumentContext : IDebugDocumentContext2, IDebugDocumentContext150
     {
         private readonly MITextPosition _textPosition;
         private AD7MemoryAddress _codeContext;
@@ -25,7 +25,7 @@ namespace Microsoft.MIDebugEngine
             _debuggedProcess = debuggedProcess;
         }
 
-        #region IDebugDocumentContext2 Members
+#region IDebugDocumentContext2 Members
 
         // Compares this document context to a given array of document contexts.
         int IDebugDocumentContext2.Compare(enum_DOCCONTEXT_COMPARE Compare, IDebugDocumentContext2[] rgpDocContextSet, uint dwDocContextSetLen, out uint pdwDocContext)
@@ -156,9 +156,20 @@ namespace Microsoft.MIDebugEngine
         int IDebugDocumentContext2.Seek(int nCount, out IDebugDocumentContext2 ppDocContext)
         {
             ppDocContext = null;
+
             return Constants.E_NOTIMPL;
         }
 
-        #endregion
+#endregion
+
+#region IDebugDocumentContext150 Members
+        public int UseDefaultSourceSearchDirectories(out int pfUseDefaultSourceSearchDirectories)
+        {
+            pfUseDefaultSourceSearchDirectories = 0;
+            return Constants.S_OK;
+        }
+
+#endregion
+
     }
 }
