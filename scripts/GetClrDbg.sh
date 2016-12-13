@@ -428,7 +428,8 @@ else
         __RuntimeID=
         get_dotnet_runtime_id
         if [ -z $__RuntimeID ]; then
-            echo "Error: Unable to determine dotnet Runtime ID. Please make sure that dotnet is installed and the platform is supported. Look at https://www.microsoft.com/net/core for supported platforms."
+            echo "Error: Unable to determine dotnet Runtime ID. Please make sure that dotnet is installed and the platform is supported. Look at https://www.microsoft.com/net/core for supported platforms. Alternatively you can specify the RuntimeID with -r switch."
+            print_help
             exit 1
         fi
     fi
