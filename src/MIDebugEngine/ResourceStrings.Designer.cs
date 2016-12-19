@@ -100,7 +100,9 @@ namespace Microsoft.MIDebugEngine {
         /// <summary>
         ///   Looks up a localized string similar to Program path &apos;{0}&apos; is missing or invalid.
         ///
-        ///{1} failed with message: {2}.
+        ///{1} failed with message: {2}
+        ///
+        ///This may occur if the process&apos;s executable was changed after the process was started, such as when installing an update. Try re-launching the application or restarting the machine..
         /// </summary>
         internal static string Error_ExePathInvalid {
             get {

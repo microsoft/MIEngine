@@ -509,7 +509,7 @@ namespace Microsoft.MIDebugEngine
                         {
                             if (command.SuccessHandler != null)
                             {
-                                command.SuccessHandler(results.ToString());
+                                await command.SuccessHandler(results.ToString());
                             }
                         }
                     }
@@ -518,7 +518,7 @@ namespace Microsoft.MIDebugEngine
                         string resultString = await ConsoleCmdAsync(command.CommandText, command.IgnoreFailures);
                         if (command.SuccessHandler != null)
                         {
-                            command.SuccessHandler(resultString);
+                            await command.SuccessHandler(resultString);
                         }
                     }
                 }
@@ -747,7 +747,7 @@ namespace Microsoft.MIDebugEngine
             if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
             {
                 // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
-                LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, new Action<string>((string resStr) =>
+                LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, (string resStr) =>
                 {
                     if (resStr.Contains("cygwin"))
                     {
@@ -761,7 +761,9 @@ namespace Microsoft.MIDebugEngine
                         // Gdb on windows and not cygwin implies mingw
                         _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
                     }
-                }));
+
+                    return Task.FromResult(0);
+                });
                 commands.Add(lc);
             }
         }
@@ -808,7 +810,7 @@ namespace Microsoft.MIDebugEngine
                 throw new LaunchErrorException(message);
             };
 
-            Action<string> successHandler = async (string exePath) =>
+            Func<string, Task> successHandler = async (string exePath) =>
             {
                 string trimmedExePath = exePath.Trim();
                 try
@@ -835,7 +837,7 @@ namespace Microsoft.MIDebugEngine
                     throw new LaunchErrorException(message);
                 };
 
-                Action<string> successHandler = (string resultsStr) =>
+                Func<string, Task> successHandler = (string resultsStr) =>
                 {
                     TargetArchitecture arch = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
 
@@ -852,6 +854,8 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     SetTargetArch(arch);
+
+                    return Task.FromResult(0);
                 };
 
                 string cmd = MICommandFactory.GetTargetArchitectureCommand();

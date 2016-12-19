@@ -22,9 +22,9 @@ namespace MICore
         public readonly bool IgnoreFailures;
         public readonly bool IsMICommand;
         public /*OPTIONAL*/ Action<string> FailureHandler { get; private set; }
-        public /*OPTIONAL*/ Action<string> SuccessHandler { get; private set; }
+        public /*OPTIONAL*/ Func<string, Task> SuccessHandler { get; private set; }
 
-        public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false, Action<string> failureHandler = null, Action<string> successHandler = null)
+        public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false, Action<string> failureHandler = null, Func<string, Task> successHandler = null)
         {
             if (commandText == null)
                 throw new ArgumentNullException("commandText");
