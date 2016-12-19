@@ -215,7 +215,7 @@
 
 {1} failed with message: {2}
 
-Updates can cause binaries replaced on disk and resulting in this failure. Try re-launching the application or restarting the machine.</value>
+This may occur if the process's executable was changed after the process was started, such as when installing an update. Try re-launching the application or restarting the machine.</value>
     <comment>0: exe path passed in
 1: Name of the debugger (ex: 'GDB')
 2: Message from GDB</comment>

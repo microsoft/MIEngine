@@ -102,7 +102,7 @@ namespace Microsoft.MIDebugEngine {
         ///
         ///{1} failed with message: {2}
         ///
-        ///Updates can cause binaries replaced on disk and resulting in this failure. Try re-launching the application or restarting the machine..
+        ///This may occur if the process&apos;s executable was changed after the process was started, such as when installing an update. Try re-launching the application or restarting the machine..
         /// </summary>
         internal static string Error_ExePathInvalid {
             get {
