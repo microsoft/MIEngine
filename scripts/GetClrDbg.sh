@@ -21,6 +21,9 @@ __RemoveExistingOnUpgrade=false
 # Internal, fully specified version of the ClrDbg. Computed when the meta version is used.
 __ClrDbgVersion=
 
+# RuntimeID of dotnet
+__RuntimeID=
+
 # Gets the script directory
 get_script_directory()
 {
@@ -31,21 +34,22 @@ get_script_directory()
 
 print_help()
 {
-    echo 'GetClrDbg.sh [-usdh] -v V [-l L]'
+    echo 'GetClrDbg.sh [-usdh] -v V [-l L] [-r R]'
     echo ''
     echo 'This script downloads and configures clrdbg, the Cross Platform .NET Debugger'
     echo '-u    Deletes the existing installation directory of the debugger before installing the current version.'
     echo '-s    Skips any steps which requires downloading from the internet.'
     echo '-d    Launches debugger after the script completion.'
     echo '-h    Prints usage information.'
-    echo '-v V  Version V can be "latest" or a version number such as 14.0.25109-preview-2865786'
+    echo '-v V  Version V can be "latest" or a version number such as 15.0.25930.0'
     echo '-l L  Location L where the debugger should be installed. Can be absolute or relative'
+    echo '-r R  Debugger for the RuntimeID will be installed'
     echo ''
     echo 'Legacy commandline'
     echo '  GetClrDbg.sh <version> [<install path>]'   
     echo '  If <install path> is not specified, clrdbg will be installed to the directory'
     echo '  from which this script was executed.' 
-    echo '  <version> can be "latest" or a version number such as 14.0.25109-preview-2865786'
+    echo '  <version> can be "latest" or a version number such as 15.0.25930.0'
 }
 
 # Set the __RuntimeID by reading the contents of /etc/os-release. 
@@ -70,21 +74,31 @@ get_dotnet_runtime_id()
         ubuntu) 
             if [[ "$PlatformVersionID" == 14* ]]; then
                 __RuntimeID=ubuntu.14.04-x64
-            elif [[ "$PlatformVersionID" == 16* ]]; then
+            elif [[ "$PlatformVersionID" == 16.04 ]]; then
                 __RuntimeID=ubuntu.16.04-x64
+            elif [[ "$PlatformVersionID" == 16.10 ]]; then
+                __RuntimeID=ubuntu.16.10-x64
             fi
             ;;
         centos)
             __RuntimeID=centos.7-x64
             ;;
         fedora)
-            __RuntimeID=fedora.23-x64
+            if [[ "$PlatformVersionID" == 23 ]]; then
+                __RuntimeID=fedora.23-x64
+            elif [[ "$PlatformVersionID" == 24 ]]; then
+                __RuntimeID=fedora.24-x64
+            fi
             ;;
         opensuse)
-            __RuntimeID=opensuse.13.2-x64
+            if [[ "$PlatformVersionID" == 13.2 ]]; then
+                __RuntimeID=opensuse.13.2-x64
+            elif [[ "$PlatformVersionID" == 42.1 ]]; then
+                __RuntimeID=opensuse.42.1-x64
+            fi
             ;;
         rhel)
-            __RuntimeID=rhel.7-x64
+            __RuntimeID=rhel.7.2-x64
             ;;
         debian)
             __RuntimeID=debian.8-x64
@@ -146,7 +160,7 @@ generate_nuget_config()
 # Parses and populates the arguments
 parse_and_get_arguments()
 {
-    while getopts "v:l:suhd" opt; do
+    while getopts "v:l:r:suhd" opt; do
         case $opt in
             v)
                 __ClrDbgMetaVersion=$OPTARG;
@@ -163,7 +177,10 @@ parse_and_get_arguments()
             d)
                 __LaunchClrDbg=true
                 ;;
-            h)            
+            r)
+                __RuntimeID=$OPTARG
+                ;;
+            h)
                 print_help
                 exit 1
                 ;;    
@@ -272,10 +289,10 @@ set_clrdbg_version()
     version_string="$(echo $1 | awk '{print tolower($0)}')"
     case $version_string in
         latest)
-            __ClrDbgVersion=14.0.25520-preview-3139256
+            __ClrDbgVersion=15.0.26013.0
             ;;
         vs2015u2)
-            __ClrDbgVersion=14.0.25520-preview-3139256 #This version is now locked and should not be updated.
+            __ClrDbgVersion=15.0.26013.0
             ;;
         *)
             simpleVersionRegex="^[0-9].*"
@@ -336,6 +353,43 @@ check_latest()
     fi
 }
 
+download_and_extract()
+{
+    clrdbgZip="clrdbg-${__RuntimeID}.zip"
+    target="$(echo ${__ClrDbgVersion} | tr '.' '-')"
+    url="$(echo https://vsdebugger.azureedge.net/clrdbg-${target}/${clrdbgZip})"
+   
+    echo "Downloading ${url}"
+    if ! hash unzip 2>/dev/null; then
+        echo "unzip command not found. Install unzip for this script to work."
+        exit 1
+    fi
+   
+    if hash wget 2>/dev/null; then
+        wget -q $url -O $clrdbgZip
+    elif hash curl 2>/dev/null; then
+        curl -s $url -o $clrdbgZip
+    else
+        echo "Install curl or wget. It is needed to download clrdbg."
+        exit 1
+    fi
+    
+    if [ $? -ne  0 ]; then
+        echo "Could not download ${url}"
+        exit 1;
+    fi
+    
+    unzip -q $clrdbgZip
+    
+    if [ $? -ne  0 ]; then
+        echo "Failed to unzip clrdbg"
+        exit 1;
+    fi
+    
+    chmod +x ./clrdbg
+    rm $clrdbgZip
+}
+
 get_script_directory
 
 if [ -z "$1" ]; then
@@ -369,39 +423,19 @@ else
 
     # For the rest of this script we can assume the working directory is the install path
 
-    echo 'Info: Determining Runtime ID'
-    __RuntimeID=
-    get_dotnet_runtime_id
     if [ -z $__RuntimeID ]; then
-        echo "Error: Unable to determine dotnet Runtime ID. Please make sure that dotnet is installed and the platform is supported. Look at https://www.microsoft.com/net/core for supported platforms."
-        exit 1
+        echo 'Info: Determining Runtime ID'
+        __RuntimeID=
+        get_dotnet_runtime_id
+        if [ -z $__RuntimeID ]; then
+            echo "Error: Unable to determine dotnet Runtime ID. Please make sure that dotnet is installed and the platform is supported. Look at https://www.microsoft.com/net/core for supported platforms. Alternatively you can specify the RuntimeID with -r switch."
+            print_help
+            exit 1
+        fi
     fi
+    
     echo "Info: Using Runtime ID '$__RuntimeID'"
-
-    echo 'Info: Generating project.json'
-    generate_project_json $__RuntimeID
-
-    echo 'Info: Generating NuGet.config'
-    generate_nuget_config
-
-    # dotnet restore and publish add color to their output
-    # I have found that the extra characters to provide color can corrupt
-    # the shell output when running this as part of docker build
-    # Therefore, I redirect the output of these commands to a log
-    echo 'Info: Executing dotnet restore'
-    dotnet restore > dotnet_restore.log 2>&1
-    if [ $? -ne 0 ]; then
-        echo "Error: dotnet restore failed"
-        cat dotnet_restore.log >&2
-        exit 1
-    fi
-
-    echo 'Info: Executing dotnet publish'
-    dotnet publish -r $__RuntimeID -o . > dotnet_publish.log 2>&1
-    if [ $? -ne 0 ]; then
-        echo "Error: dotnet publish failed"
-        exit 1
-    fi
+    download_and_extract
 
     echo "$__ClrDbgVersion" > success.txt
     popd > /dev/null 2>&1
