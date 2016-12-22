@@ -289,10 +289,10 @@ set_clrdbg_version()
     version_string="$(echo $1 | awk '{print tolower($0)}')"
     case $version_string in
         latest)
-            __ClrDbgVersion=15.0.26013.0
+            __ClrDbgVersion=15.0.26022.0
             ;;
         vs2015u2)
-            __ClrDbgVersion=15.0.26013.0
+            __ClrDbgVersion=15.0.26022.0
             ;;
         *)
             simpleVersionRegex="^[0-9].*"
