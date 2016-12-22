@@ -25,6 +25,13 @@ namespace Microsoft.MIDebugEngine
             this.EndPosition = endPosition;
         }
 
+        public MITextPosition(string filename, uint line)
+        {
+            this.FileName = filename;
+            this.BeginPosition = new Microsoft.VisualStudio.Debugger.Interop.TEXT_POSITION() { dwLine = line - 1 };
+            this.EndPosition = this.BeginPosition;
+        }
+
         public static MITextPosition TryParse(TupleValue miTuple)
         {
             string filename = miTuple.TryFindString("fullname");

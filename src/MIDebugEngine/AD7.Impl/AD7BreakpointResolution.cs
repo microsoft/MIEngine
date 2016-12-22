@@ -16,13 +16,15 @@ namespace Microsoft.MIDebugEngine
         internal ulong Addr { get; set; }
         private AD7DocumentContext _documentContext;
         private string _functionName;
+        private enum_BP_TYPE _breakType;
 
-        public AD7BreakpointResolution(AD7Engine engine, ulong address, /*optional*/ string functionName, /*optional*/ AD7DocumentContext documentContext)
+        public AD7BreakpointResolution(AD7Engine engine, bool isDataBreakpoint, ulong address, /*optional*/ string functionName, /*optional*/ AD7DocumentContext documentContext)
         {
             _engine = engine;
             Addr = address;
             _documentContext = documentContext;
             _functionName = functionName;
+            _breakType = isDataBreakpoint ? enum_BP_TYPE.BPT_DATA : enum_BP_TYPE.BPT_CODE;
         }
 
         #region IDebugBreakpointResolution2 Members
@@ -30,8 +32,7 @@ namespace Microsoft.MIDebugEngine
         // Gets the type of the breakpoint represented by this resolution. 
         int IDebugBreakpointResolution2.GetBreakpointType(enum_BP_TYPE[] pBPType)
         {
-            // The sample engine only supports code breakpoints.
-            pBPType[0] = enum_BP_TYPE.BPT_CODE;
+            pBPType[0] = _breakType;
             return Constants.S_OK;
         }
 
@@ -40,17 +41,24 @@ namespace Microsoft.MIDebugEngine
         {
             if ((dwFields & enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION) != 0)
             {
-                // The sample engine only supports code breakpoints.
                 BP_RESOLUTION_LOCATION location = new BP_RESOLUTION_LOCATION();
-                location.bpType = (uint)enum_BP_TYPE.BPT_CODE;
-
-                // The debugger will not QI the IDebugCodeContex2 interface returned here. We must pass the pointer
-                // to IDebugCodeContex2 and not IUnknown.
-                AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, Addr, _functionName);
-                codeContext.SetDocumentContext(_documentContext);
-                location.unionmember1 = HostMarshal.RegisterCodeContext(codeContext);
-                pBPResolutionInfo[0].bpResLocation = location;
-                pBPResolutionInfo[0].dwFields |= enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION;
+                location.bpType = (uint)_breakType;
+                if (_breakType == enum_BP_TYPE.BPT_CODE)
+                {
+                    // The debugger will not QI the IDebugCodeContex2 interface returned here. We must pass the pointer
+                    // to IDebugCodeContex2 and not IUnknown.
+                    AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, Addr, _functionName);
+                    codeContext.SetDocumentContext(_documentContext);
+                    location.unionmember1 = HostMarshal.RegisterCodeContext(codeContext);
+                    pBPResolutionInfo[0].bpResLocation = location;
+                    pBPResolutionInfo[0].dwFields |= enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION;
+                }
+                else if (_breakType == enum_BP_TYPE.BPT_DATA)
+                {
+                    location.unionmember1 = HostMarshal.GetIntPtrForDataBreakpointAddress(EngineUtils.AsAddr(Addr, _engine.DebuggedProcess.Is64BitArch));
+                    pBPResolutionInfo[0].bpResLocation = location;
+                    pBPResolutionInfo[0].dwFields |= enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION;
+                }
             }
 
             if ((dwFields & enum_BPRESI_FIELDS.BPRESI_PROGRAM) != 0)

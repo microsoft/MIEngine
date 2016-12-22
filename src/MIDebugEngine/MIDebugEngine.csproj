@@ -13,11 +13,16 @@
     <AssemblyName>Microsoft.MIDebugEngine</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
+    <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
+    <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsCoreClr)' == 'false'">
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,6 +36,25 @@
     <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
@@ -65,12 +89,30 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(IsCoreClr)' == 'true'">
     <None Include="project.json" />
+    <!-- A reference to the entire .NET Framework is automatically included -->
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0">
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.10.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0">
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.11.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.12.0">
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.12.0.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AD7.Definitions\AD7Guids.cs" />
     <Compile Include="AD7.Definitions\AD7Hresult.cs" />
+    <Compile Include="AD7.Definitions\IDebugDocumentContext150.cs" />
     <Compile Include="AD7.Impl\AD7BoundBreakpoint.cs" />
     <Compile Include="AD7.Impl\AD7BreakpointResolution.cs" />
     <Compile Include="AD7.Impl\AD7Disassembly.cs" />
@@ -89,11 +131,14 @@
     <Compile Include="AD7.Impl\AD7StackFrame.cs" />
     <Compile Include="AD7.Impl\AD7Thread.cs" />
     <Compile Include="AD7.Impl\EngineConstants.cs" />
+    <Compile Include="AD7.Impl\HashAlgorithmId.cs" />
     <Compile Include="Engine.Impl\BreakpointManager.cs" />
     <Compile Include="Engine.Impl\Breakpoints.cs" />
+    <Compile Include="Engine.Impl\CygwinFileMapper.cs" />
     <Compile Include="Engine.Impl\DebuggedModule.cs" />
     <Compile Include="Engine.Impl\DebuggedProcess.cs" />
     <Compile Include="Engine.Impl\DebuggedThread.cs" />
+    <Compile Include="Engine.Impl\DebugUnixChildProcess.cs" />
     <Compile Include="Engine.Impl\Disassembly.cs" />
     <Compile Include="Engine.Impl\EngineCallback.cs" />
     <Compile Include="Engine.Impl\EngineUtils.cs" />
@@ -142,8 +187,19 @@
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
       <Name>MICore</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.csproj">
+      <Project>{7654cfbb-30db-4c20-bde3-a960cba2036c}</Project>
+      <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </ProjectReference>
+    <ProjectReference Include="..\prebuild\prebuild.csproj">
+      <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
+      <Name>prebuild</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

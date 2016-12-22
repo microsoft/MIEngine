@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\build\all_projects.settings.targets" />
+  <Import Project="..\..\build\miengine.settings.targets" />
+  <Import Project="..\..\build\miengine.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -12,24 +13,58 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug-PortablePDB|AnyCPU'" />
-
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'" />
   <ItemGroup>
     <GenerateAssembly Include="$(ILDir)*.il">
       <Visible>false</Visible>
     </GenerateAssembly>
   </ItemGroup>
   <Target Name="GenerateAssemblies" Condition="'@(GenerateAssembly)' != ''" Inputs="@(GenerateAssembly)" Outputs="@(GenerateAssembly->'$(GeneratedAssembliesDir)%(FileName).dll')" AfterTargets="Build">
+    <Exec Condition="'$(IsMonoRuntime)' == 'true'"
+          ConsoleToMsBuild="true"
+          Command="dirname `which ilasm`">
+      <Output TaskParameter="ConsoleOutput" PropertyName="IlAsmPath" />
+    </Exec>
+
     <PropertyGroup>
-      <IlAsmCommand>"$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe"</IlAsmCommand>
+      <IlAsmCommand Condition="'$(IsMonoRuntime)' == 'false'">"$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe"</IlAsmCommand>
+      <IlAsmCommand Condition="'$(IsMonoRuntime)' == 'true'">$(IlAsmPath)/ilasm</IlAsmCommand>
       <IlAsmFlags>$(IlAsmFlags) /DLL /quiet</IlAsmFlags>
     </PropertyGroup>
     <MakeDir Condition="!Exists('$(GeneratedAssembliesDir)')" Directories="$(GeneratedAssembliesDir)" />
     <Exec Command="$(IlAsmCommand) $(IlAsmFlags) /out=&quot;$(GeneratedAssembliesDir)%(FileName).dll&quot; @(GenerateAssembly->'&quot;%(Identity)&quot;')" />
   </Target>
 
-  <Target Name="Build">
-    <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; -MSBuildVersion 14 &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot;" />
+  <Target Name="InstallCoreClrPackages"
+          Condition="'$(IsCoreClr)' == 'true'">
+    <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot; -Verbosity detailed" />
   </Target>
+
+  <Target Name="InstallDesktopPackages"
+          Condition="'$(IsCoreClr)' == 'false'">
+    <!-- For desktop, we need to install packages from packages.config, so run NuGet for each project separately -->
+    <ItemGroup>
+      <DesktopProjects Include="../MICore/MICore.csproj" />
+      <DesktopProjects Include="../MIDebugEngine/MIDebugEngine.csproj" />
+      <DesktopProjects Include="../DebugEngineHost.Stub/DebugEngineHost.stub.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(IsMonoRuntime)'=='false'">
+      <DesktopProjects Include="../IOSDebugLauncher/IOSDebugLauncher.csproj" />
+      <DesktopProjects Include="../MICoreUnitTests/MICoreUnitTests.csproj" />
+      <DesktopProjects Include="../JDbgUnitTests/JDbgUnitTests.csproj" />
+      <DesktopProjects Include="../MIDebugPackage/MIDebugPackage.csproj" />
+    </ItemGroup>
+
+    <MsBuild Projects="@(DesktopProjects)"
+             Targets="RestoreDesktopPackages" />
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn);InstallCoreClrPackages;InstallDesktopPackages">
+    <Copy SourceFiles="@(DependenciesToCopy)" DestinationFolder="$(DropDir)" />
+  </Target>
+
   <Target Name="Clean">
     <RemoveDir Directories="$(GeneratedAssembliesDir)" />
   </Target>
@@ -40,4 +75,10 @@
   <Target Name="BuiltProjectOutputGroup" />
   <Target Name="SatelliteDllsProjectOutputGroup" />
   <Target Name="DebugSymbolsProjectOutputGroup" />
+  <Target Name="GetPackagingOutputs" />
+  <Target Name="GetTargetPath" />
+  <Target Name="GetTargetFrameworkProperties" />
+  <!-- Older versions of NuGet don't respect the ProjectReference.ReferenceOutputAssembly attribute and will attempt to parse this
+       project anyway, so include a fake target to keep it happy -->
+  <Target Name="_NuGet_GetProjectsReferencingProjectJsonInternal" />
 </Project>

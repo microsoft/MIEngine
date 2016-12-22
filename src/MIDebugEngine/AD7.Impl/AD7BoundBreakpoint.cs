@@ -20,21 +20,34 @@ namespace Microsoft.MIDebugEngine
         private AD7Engine _engine;
         private BoundBreakpoint _bp;
 
-        private bool _enabled;
         private bool _deleted;
 
-        internal bool Enabled { get { return _enabled; } }
-        internal bool Deleted { get { return _deleted; } }
-        internal ulong Addr { get; private set; }
-        internal AD7PendingBreakpoint PendingBreakpoint { get { return _pendingBreakpoint; } }
+        internal bool Enabled
+        {
+            get
+            {
+                return _bp.Enabled;
+            }
+            set
+            {
+                _bp.Enabled = value;
+            }
+        }
 
-        public AD7BoundBreakpoint(AD7Engine engine, ulong address, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution, BoundBreakpoint bp)
+        internal bool Deleted { get { return _deleted; } }
+        internal ulong Addr
+        {
+            get
+            { return _bp.Addr; }
+        }
+        internal AD7PendingBreakpoint PendingBreakpoint { get { return _pendingBreakpoint; } }
+        internal bool IsDataBreakpoint { get { return PendingBreakpoint.IsDataBreakpoint; } }
+
+        public AD7BoundBreakpoint(AD7Engine engine, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution, BoundBreakpoint bp)
         {
             _engine = engine;
-            Addr = address;
             _pendingBreakpoint = pendingBreakpoint;
             _breakpointResolution = breakpointResolution;
-            _enabled = true;
             _deleted = false;
             _bp = bp;
         }
@@ -61,7 +74,7 @@ namespace Microsoft.MIDebugEngine
         // Called by the debugger UI when the user is enabling or disabling a breakpoint.
         int IDebugBoundBreakpoint2.Enable(int fEnable)
         {
-            _enabled = fEnable == 0 ? false : true;
+            Enabled = fEnable == 0 ? false : true;
             return Constants.S_OK;
         }
 
@@ -88,11 +101,11 @@ namespace Microsoft.MIDebugEngine
             {
                 pState[0] = enum_BP_STATE.BPS_DELETED;
             }
-            else if (_enabled)
+            else if (Enabled)
             {
                 pState[0] = enum_BP_STATE.BPS_ENABLED;
             }
-            else if (!_enabled)
+            else if (!Enabled)
             {
                 pState[0] = enum_BP_STATE.BPS_DISABLED;
             }
@@ -138,7 +151,6 @@ namespace Microsoft.MIDebugEngine
 
         internal void UpdateAddr(ulong addr)
         {
-            Addr = addr;
             _bp.Addr = addr;
             _breakpointResolution.Addr = addr;
             if (!_deleted)

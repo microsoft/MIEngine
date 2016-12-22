@@ -11,19 +11,21 @@ using MICore;
 namespace Microsoft.MIDebugEngine
 {
     // This class represents a document context to the debugger. A document context represents a location within a source file. 
-    internal class AD7DocumentContext : IDebugDocumentContext2
+    internal class AD7DocumentContext : IDebugDocumentContext2, IDebugDocumentContext150
     {
         private readonly MITextPosition _textPosition;
         private AD7MemoryAddress _codeContext;
+        private readonly DebuggedProcess _debuggedProcess;
 
 
-        public AD7DocumentContext(MITextPosition textPosition, AD7MemoryAddress codeContext)
+        public AD7DocumentContext(MITextPosition textPosition, AD7MemoryAddress codeContext, DebuggedProcess debuggedProcess)
         {
             _textPosition = textPosition;
             _codeContext = codeContext;
+            _debuggedProcess = debuggedProcess;
         }
 
-        #region IDebugDocumentContext2 Members
+#region IDebugDocumentContext2 Members
 
         // Compares this document context to a given array of document contexts.
         int IDebugDocumentContext2.Compare(enum_DOCCONTEXT_COMPARE Compare, IDebugDocumentContext2[] rgpDocContextSet, uint dwDocContextSetLen, out uint pdwDocContext)
@@ -40,6 +42,12 @@ namespace Microsoft.MIDebugEngine
         int IDebugDocumentContext2.EnumCodeContexts(out IEnumDebugCodeContexts2 ppEnumCodeCxts)
         {
             ppEnumCodeCxts = null;
+
+            if (_codeContext == null)
+            {
+                return Constants.E_FAIL;
+            }
+
             try
             {
                 AD7MemoryAddress[] codeContexts = new AD7MemoryAddress[1];
@@ -96,7 +104,15 @@ namespace Microsoft.MIDebugEngine
         // Gets the displayable name of the document that contains this document context.
         int IDebugDocumentContext2.GetName(enum_GETNAME_TYPE gnType, out string pbstrFileName)
         {
-            pbstrFileName = _textPosition.FileName;
+            if (_debuggedProcess.IsCygwin)
+            {
+                pbstrFileName = _debuggedProcess.CygwinFilePathMapper.MapCygwinToWindows(_textPosition.FileName);
+            }
+            else
+            {
+                pbstrFileName = _textPosition.FileName;
+            }
+
             return Constants.S_OK;
         }
 
@@ -140,9 +156,20 @@ namespace Microsoft.MIDebugEngine
         int IDebugDocumentContext2.Seek(int nCount, out IDebugDocumentContext2 ppDocContext)
         {
             ppDocContext = null;
+
             return Constants.E_NOTIMPL;
         }
 
-        #endregion
+#endregion
+
+#region IDebugDocumentContext150 Members
+        public int UseDefaultSourceSearchDirectories(out int pfUseDefaultSourceSearchDirectories)
+        {
+            pfUseDefaultSourceSearchDirectories = 0;
+            return Constants.S_OK;
+        }
+
+#endregion
+
     }
 }

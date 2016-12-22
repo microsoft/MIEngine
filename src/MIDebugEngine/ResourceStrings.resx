@@ -147,6 +147,24 @@
   <data name="LoadingSymbolMessage" xml:space="preserve">
     <value>Loading symbols for module {0}</value>
   </data>
+  <data name="ModuleLoadMessage" xml:space="preserve">
+    <value>Loaded '{0}'. {1}</value>
+  </data>
+  <data name="ModuleUnloadMessage" xml:space="preserve">
+    <value>Unloaded '{0}'.</value>
+  </data>
+  <data name="ModuleLoadedWithSymbols" xml:space="preserve">
+    <value>Symbols loaded.</value>
+  </data>
+  <data name="SymbolsLoadedInfo" xml:space="preserve">
+    <value>Symbols loaded - {0}</value>
+  </data>
+  <data name="ModuleLoadedWithoutSymbols" xml:space="preserve">
+    <value>Cannot find or open the symbol file.</value>
+  </data>
+  <data name="SymbolsNotLoadedInfo" xml:space="preserve">
+    <value>Symbols not loaded</value>
+  </data>
   <data name="LongBind" xml:space="preserve">
     <value>Attempting to bind the breakpoint....</value>
   </data>
@@ -195,9 +213,44 @@
   <data name="Error_ExePathInvalid" xml:space="preserve">
     <value>Program path '{0}' is missing or invalid.
 
-{1} failed with message: {2}</value>
+{1} failed with message: {2}
+
+This may occur if the process's executable was changed after the process was started, such as when installing an update. Try re-launching the application or restarting the machine.</value>
     <comment>0: exe path passed in
 1: Name of the debugger (ex: 'GDB')
 2: Message from GDB</comment>
+  </data>
+  <data name="Warning_SourceFileOutOfDate_Arg2" xml:space="preserve">
+    <value>Warning: Source file '{0}' is newer than module file '{1}'.</value>
+    <comment>0 = source file path, 1 = module file path</comment>
+  </data>
+  <data name="Warning_UsingDefaultArchitecture" xml:space="preserve">
+    <value>Warning: Debuggee TargetArchitecture not detected, assuming x86_64.</value>
+  </data>
+  <data name="Warning_DarwinDebuggerUnsigned" xml:space="preserve">
+    <value>Debugger executable '{0}' is not signed. As a result, debugging may not work properly.</value>
+    <comment>0 = debugger path</comment>
+  </data>
+  <data name="Error_FailedToGetTargetArchitecture" xml:space="preserve">
+    <value>Failed to obtain target architecture.</value>
+  </data>
+  <data name="Error_FailedToGetExePath" xml:space="preserve">
+    <value>Failed to get executable path with error '{0}'.</value>
+    <comment>0 = failure message</comment>
+  </data>
+  <data name="Error_PTraceFailure" xml:space="preserve">
+    <value>Attaching to process {0} with {1} failed because of insufficient privileges with error message '{2}'.
+
+To attach to an application on Linux, login as super user or set ptrace_scope to 0.
+See https://aka.ms/miengine-gdb-troubleshooting for details.</value>
+    <comment>{0} process pid
+{1} Debugger
+{2} Error message</comment>
+  </data>
+  <data name="Error_UnsupportedPlatform" xml:space="preserve">
+    <value>Unsupported platform.</value>
+  </data>
+  <data name="DebuggingWillAbort" xml:space="preserve">
+    <value>Debugging will now abort.</value>
   </data>
 </root>

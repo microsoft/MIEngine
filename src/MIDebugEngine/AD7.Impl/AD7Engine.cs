@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.ExceptionServices;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,25 +14,27 @@ using MICore;
 using System.Globalization;
 using Microsoft.DebugEngineHost;
 
+using Logger = MICore.Logger;
+
 namespace Microsoft.MIDebugEngine
 {
-    // AD7Engine is the primary entrypoint object for the sample engine. 
+    // AD7Engine is the primary entrypoint object for the sample engine.
     //
     // It implements:
     //
-    // IDebugEngine2: This interface represents a debug engine (DE). It is used to manage various aspects of a debugging session, 
+    // IDebugEngine2: This interface represents a debug engine (DE). It is used to manage various aspects of a debugging session,
     // from creating breakpoints to setting and clearing exceptions.
     //
     // IDebugEngineLaunch2: Used by a debug engine (DE) to launch and terminate programs.
     //
-    // IDebugProgram3: This interface represents a program that is running in a process. Since this engine only debugs one process at a time and each 
+    // IDebugProgram3: This interface represents a program that is running in a process. Since this engine only debugs one process at a time and each
     // process only contains one program, it is implemented on the engine.
     //
     // IDebugEngineProgram2: This interface provides simultanious debugging of multiple threads in a debuggee.
 
     [System.Runtime.InteropServices.ComVisible(true)]
     [System.Runtime.InteropServices.Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
-    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110
+    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugEngine3, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110
     {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private EngineCallback _engineCallback;
@@ -47,6 +50,8 @@ namespace Microsoft.MIDebugEngine
         // This object manages breakpoints in the sample engine.
         private BreakpointManager _breakpointManager;
 
+        private Guid _engineGuid = EngineConstants.EngineId;
+
         // A unique identifier for the program being debugged.
         private Guid _ad7ProgramId;
 
@@ -55,6 +60,13 @@ namespace Microsoft.MIDebugEngine
         public Logger Logger { private set; get; }
 
         private IDebugSettingsCallback110 _settingsCallback;
+
+        private static List<int> s_childProcessLaunch;
+
+        static AD7Engine()
+        {
+            s_childProcessLaunch = new List<int>();
+        }
 
         public AD7Engine()
         {
@@ -68,6 +80,22 @@ namespace Microsoft.MIDebugEngine
             if (_pollThread != null)
             {
                 _pollThread.Close();
+            }
+        }
+
+        internal static void AddChildProcess(int processId)
+        {
+            lock (s_childProcessLaunch)
+            {
+                s_childProcessLaunch.Add(processId);
+            }
+        }
+
+        internal static bool RemoveChildProcess(int processId)
+        {
+            lock (s_childProcessLaunch)
+            {
+                return s_childProcessLaunch.Remove(processId);
             }
         }
 
@@ -115,8 +143,8 @@ namespace Microsoft.MIDebugEngine
 
         #region IDebugEngine2 Members
 
-        // Attach the debug engine to a program. 
-        int IDebugEngine2.Attach(IDebugProgram2[] rgpPrograms, IDebugProgramNode2[] rgpProgramNodes, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason)
+        // Attach the debug engine to a program.
+        public int Attach(IDebugProgram2[] portProgramArray, IDebugProgramNode2[] programNodeArray, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason)
         {
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
@@ -125,29 +153,37 @@ namespace Microsoft.MIDebugEngine
                 Debug.Fail("SampleEngine only expects to see one program in a process");
                 throw new ArgumentException();
             }
+            IDebugProgram2 portProgram = portProgramArray[0];
 
+            Exception exception = null;
             try
             {
-                AD_PROCESS_ID processId = EngineUtils.GetProcessId(rgpPrograms[0]);
+                IDebugProcess2 process;
+                EngineUtils.RequireOk(portProgram.GetProcess(out process));
 
-                EngineUtils.RequireOk(rgpPrograms[0].GetProgramId(out _ad7ProgramId));
+                AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
+
+                EngineUtils.RequireOk(portProgram.GetProgramId(out _ad7ProgramId));
 
                 // Attach can either be called to attach to a new process, or to complete an attach
                 // to a launched process
                 if (_pollThread == null)
                 {
-                    // We are being asked to debug a process when we currently aren't debugging anything
-                    _pollThread = new WorkerThread(Logger);
+                    if (processId.ProcessIdType != (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM)
+                    {
+                        Debug.Fail("Invalid process to attach to");
+                        throw new ArgumentException();
+                    }
+
+                    IDebugPort2 port;
+                    EngineUtils.RequireOk(process.GetPort(out port));
+
+                    Debug.Assert(_engineCallback == null);
+                    Debug.Assert(_debuggedProcess == null);
 
                     _engineCallback = new EngineCallback(this, ad7Callback);
-
-                    // Complete the win32 attach on the poll thread
-                    _pollThread.RunOperation(new Operation(delegate
-                    {
-                        throw new NotImplementedException();
-                    }));
-
-                    _pollThread.PostedOperationErrorEvent += _debuggedProcess.OnPostedOperationError;
+                    LaunchOptions launchOptions = CreateAttachLaunchOptions(processId.dwProcessId, port);
+                    StartDebugging(launchOptions);
                 }
                 else
                 {
@@ -164,28 +200,85 @@ namespace Microsoft.MIDebugEngine
 
                 return Constants.S_OK;
             }
-            catch (MIException e)
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
             {
-                return e.HResult;
+                exception = e;
             }
-            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting:true))
-            {
-                return EngineUtils.UnexpectedException(e);
-            }
+
+            // If we just return the exception as an HRESULT, we will loose our message, so we instead send up an error event, and
+            // return that the attach was canceled
+            OnStartDebuggingFailed(exception);
+            return AD7_HRESULT.E_ATTACH_USER_CANCELED;
         }
 
-        // Requests that all programs being debugged by this DE stop execution the next time one of their threads attempts to run.
-        // This is normally called in response to the user clicking on the pause button in the debugger.
-        // When the break is complete, an AsyncBreakComplete event will be sent back to the debugger.
-        int IDebugEngine2.CauseBreak()
+        private LaunchOptions CreateAttachLaunchOptions(uint processId, IDebugPort2 port)
         {
-            return ((IDebugProgram2)this).CauseBreak();
+            LaunchOptions launchOptions;
+
+            var unixPort = port as IDebugUnixShellPort;
+            if (unixPort != null)
+            {
+                MIMode miMode;
+                if (_engineGuid == EngineConstants.ClrdbgEngine)
+                {
+                    miMode = MIMode.Clrdbg;
+                }
+                else if (_engineGuid == EngineConstants.GdbEngine)
+                {
+                    miMode = MIMode.Gdb;
+                }
+                else
+                {
+                    // TODO: LLDB support
+                    throw new NotImplementedException();
+                }
+
+                if (processId > int.MaxValue)
+                {
+                    throw new ArgumentOutOfRangeException("processId");
+                }
+
+                string getClrDbgUrl = GetMetric("GetClrDbgUrl") as string;
+                string remoteDebuggerInstallationDirectory = GetMetric("RemoteInstallationDirectory") as string;
+                string remoteDebuggerInstallationSubDirectory = GetMetric("RemoteInstallationSubDirectory") as string;
+                string clrDbgVersion = GetMetric("ClrDbgVersion") as string;
+
+                launchOptions = UnixShellPortLaunchOptions.CreateForAttachRequest(unixPort,
+                                                                                (int)processId,
+                                                                                miMode,
+                                                                                getClrDbgUrl,
+                                                                                remoteDebuggerInstallationDirectory,
+                                                                                remoteDebuggerInstallationSubDirectory,
+                                                                                clrDbgVersion);
+
+                // TODO: Add a tools option page for:
+                // AdditionalSOLibSearchPath
+                // VisualizerFile?
+            }
+            else
+            {
+                // TODO: when we have a tools options page, we can add support for the attach dialog here pretty easily:
+                //var defaultPort = port as IDebugDefaultPort2;
+                //if (defaultPort != null && defaultPort.QueryIsLocal() == Constants.S_OK)
+                //{
+                //    launchOptions = new LocalLaunchOptions(...);
+                //}
+                //else
+                //{
+                //    // Invalid port
+                //    throw new ArgumentException();
+                //}
+
+                throw new NotSupportedException();
+            }
+
+            return launchOptions;
         }
 
         // Called by the SDM to indicate that a synchronous debug event, previously sent by the DE to the SDM,
         // was received and processed. The only event the sample engine sends in this fashion is Program Destroy.
         // It responds to that event by shutting down the engine.
-        int IDebugEngine2.ContinueFromSynchronousEvent(IDebugEvent2 eventObject)
+        public int ContinueFromSynchronousEvent(IDebugEvent2 eventObject)
         {
             try
             {
@@ -248,9 +341,9 @@ namespace Microsoft.MIDebugEngine
             pollThread?.Close();
         }
 
-        // Creates a pending breakpoint in the engine. A pending breakpoint is contains all the information needed to bind a breakpoint to 
+        // Creates a pending breakpoint in the engine. A pending breakpoint is contains all the information needed to bind a breakpoint to
         // a location in the debuggee.
-        int IDebugEngine2.CreatePendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, out IDebugPendingBreakpoint2 ppPendingBP)
+        public int CreatePendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, out IDebugPendingBreakpoint2 ppPendingBP)
         {
             Debug.Assert(_breakpointManager != null);
             ppPendingBP = null;
@@ -267,9 +360,9 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // Informs a DE that the program specified has been atypically terminated and that the DE should 
+        // Informs a DE that the program specified has been atypically terminated and that the DE should
         // clean up all references to the program and send a program destroy event.
-        int IDebugEngine2.DestroyProgram(IDebugProgram2 pProgram)
+        public int DestroyProgram(IDebugProgram2 pProgram)
         {
             // Tell the SDM that the engine knows that the program is exiting, and that the
             // engine will send a program destroy. We do this because the Win32 debug api will always
@@ -279,22 +372,22 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Gets the GUID of the DE.
-        int IDebugEngine2.GetEngineId(out Guid guidEngine)
+        public int GetEngineId(out Guid guidEngine)
         {
-            guidEngine = new Guid(EngineConstants.EngineId);
+            guidEngine = _engineGuid;
             return Constants.S_OK;
         }
 
         // Removes the list of exceptions the IDE has set for a particular run-time architecture or language.
-        int IDebugEngine2.RemoveAllSetExceptions(ref Guid guidType)
+        public int RemoveAllSetExceptions(ref Guid guidType)
         {
             _debuggedProcess?.ExceptionManager.RemoveAllSetExceptions(guidType);
             return Constants.S_OK;
         }
 
         // Removes the specified exception so it is no longer handled by the debug engine.
-        // The sample engine does not support exceptions in the debuggee so this method is not actually implemented.       
-        int IDebugEngine2.RemoveSetException(EXCEPTION_INFO[] pException)
+        // The sample engine does not support exceptions in the debuggee so this method is not actually implemented.
+        public int RemoveSetException(EXCEPTION_INFO[] pException)
         {
             _debuggedProcess?.ExceptionManager.RemoveSetException(ref pException[0]);
             return Constants.S_OK;
@@ -302,7 +395,7 @@ namespace Microsoft.MIDebugEngine
 
         // Specifies how the DE should handle a given exception.
         // The sample engine does not support exceptions in the debuggee so this method is not actually implemented.
-        int IDebugEngine2.SetException(EXCEPTION_INFO[] pException)
+        public int SetException(EXCEPTION_INFO[] pException)
         {
             _debuggedProcess?.ExceptionManager.SetException(ref pException[0]);
             return Constants.S_OK;
@@ -311,14 +404,14 @@ namespace Microsoft.MIDebugEngine
         // Sets the locale of the DE.
         // This method is called by the session debug manager (SDM) to propagate the locale settings of the IDE so that
         // strings returned by the DE are properly localized. The sample engine is not localized so this is not implemented.
-        int IDebugEngine2.SetLocale(ushort wLangID)
+        public int SetLocale(ushort wLangID)
         {
             return Constants.S_OK;
         }
 
-        // A metric is a registry value used to change a debug engine's behavior or to advertise supported functionality. 
+        // A metric is a registry value used to change a debug engine's behavior or to advertise supported functionality.
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
-        int IDebugEngine2.SetMetric(string pszMetric, object varValue)
+        public int SetMetric(string pszMetric, object varValue)
         {
             if (string.CompareOrdinal(pszMetric, "JustMyCodeStepping") == 0)
             {
@@ -340,15 +433,35 @@ namespace Microsoft.MIDebugEngine
                 _pollThread.RunOperation(new Operation(() => { _debuggedProcess.MICommandFactory.SetJustMyCode(optJustMyCode); }));
                 return Constants.S_OK;
             }
+            else if (string.CompareOrdinal(pszMetric, "EnableStepFiltering") == 0)
+            {
+                string enableStepFiltering = varValue.ToString();
+                bool optStepFiltering;
+                if (string.CompareOrdinal(enableStepFiltering, "0") == 0)
+                {
+                    optStepFiltering = false;
+                }
+                else if (string.CompareOrdinal(enableStepFiltering, "1") == 0)
+                {
+                    optStepFiltering = true;
+                }
+                else
+                {
+                    return Constants.E_FAIL;
+                }
+
+                _pollThread.RunOperation(new Operation(() => { _debuggedProcess.MICommandFactory.SetStepFiltering(optStepFiltering); }));
+                return Constants.S_OK;
+            }
 
             return Constants.E_NOTIMPL;
         }
 
         // Sets the registry root currently in use by the DE. Different installations of Visual Studio can change where their registry information is stored
         // This allows the debugger to tell the engine where that location is.
-        int IDebugEngine2.SetRegistryRoot(string registryRoot)
+        public int SetRegistryRoot(string registryRoot)
         {
-            _configStore = new HostConfigurationStore(registryRoot, EngineConstants.EngineId);
+            _configStore = new HostConfigurationStore(registryRoot);
             Logger = Logger.EnsureInitialized(_configStore);
             return Constants.S_OK;
         }
@@ -377,9 +490,9 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Launches a process by means of the debug engine.
-        // Normally, Visual Studio launches a program using the IDebugPortEx2::LaunchSuspended method and then attaches the debugger 
-        // to the suspended program. However, there are circumstances in which the debug engine may need to launch a program 
-        // (for example, if the debug engine is part of an interpreter and the program being debugged is an interpreted language), 
+        // Normally, Visual Studio launches a program using the IDebugPortEx2::LaunchSuspended method and then attaches the debugger
+        // to the suspended program. However, there are circumstances in which the debug engine may need to launch a program
+        // (for example, if the debug engine is part of an interpreter and the program being debugged is an interpreted language),
         // in which case Visual Studio uses the IDebugEngineLaunch2::LaunchSuspended method
         // The IDebugEngineLaunch2::ResumeProcess method is called to start the process after the process has been successfully launched in a suspended state.
         int IDebugEngineLaunch2.LaunchSuspended(string pszServer, IDebugPort2 port, string exe, string args, string dir, string env, string options, enum_LAUNCH_FLAGS launchFlags, uint hStdInput, uint hStdOutput, uint hStdError, IDebugEventCallback2 ad7Callback, out IDebugProcess2 process)
@@ -389,6 +502,9 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_debuggedProcess == null);
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
+            // Check if the logger was enabled late.
+            Logger.LoadMIDebugLogger(_configStore);
+
             process = null;
 
             _engineCallback = new EngineCallback(this, ad7Callback);
@@ -397,39 +513,14 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
+                bool noDebug = launchFlags.HasFlag(enum_LAUNCH_FLAGS.LAUNCH_NODEBUG);
+
                 // Note: LaunchOptions.GetInstance can be an expensive operation and may push a wait message loop
-                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, _engineCallback, TargetEngine.Native, Logger);
+                LaunchOptions launchOptions = LaunchOptions.GetInstance(_configStore, exe, args, dir, options, noDebug, _engineCallback, TargetEngine.Native, Logger);
 
-                // We are being asked to debug a process when we currently aren't debugging anything
-                _pollThread = new WorkerThread(Logger);
-                var cancellationTokenSource = new CancellationTokenSource();
-
-                using (cancellationTokenSource)
-                {
-                    _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (HostWaitLoop waitLoop) =>
-                    {
-                        try
-                        {
-                            _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore);
-                        }
-                        finally
-                        {
-                            // If there is an exception from the DebuggeedProcess constructor, it is our responsibility to dispose the DeviceAppLauncher,
-                            // otherwise the DebuggedProcess object takes ownership.
-                            if (_debuggedProcess == null && launchOptions.DeviceAppLauncher != null)
-                            {
-                                launchOptions.DeviceAppLauncher.Dispose();
-                            }
-                        }
-
-                        _pollThread.PostedOperationErrorEvent += _debuggedProcess.OnPostedOperationError;
-
-                        return _debuggedProcess.Initialize(waitLoop, cancellationTokenSource.Token);
-                    });
-                }
+                StartDebugging(launchOptions);
 
                 EngineUtils.RequireOk(port.GetProcess(_debuggedProcess.Id, out process));
-
                 return Constants.S_OK;
             }
             catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
@@ -440,12 +531,52 @@ namespace Microsoft.MIDebugEngine
 
             // If we just return the exception as an HRESULT, we will loose our message, so we instead send up an error event, and then
             // return E_ABORT.
+            OnStartDebuggingFailed(exception);
+
+            return Constants.E_ABORT;
+        }
+
+        private void StartDebugging(LaunchOptions launchOptions)
+        {
+            Debug.Assert(_engineCallback != null);
+            Debug.Assert(_pollThread == null);
+            Debug.Assert(_debuggedProcess == null);
+
+            // We are being asked to debug a process when we currently aren't debugging anything
+            _pollThread = new WorkerThread(Logger);
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            using (cancellationTokenSource)
+            {
+                _pollThread.RunOperation(ResourceStrings.InitializingDebugger, cancellationTokenSource, (HostWaitLoop waitLoop) =>
+                {
+                    try
+                    {
+                        _debuggedProcess = new DebuggedProcess(true, launchOptions, _engineCallback, _pollThread, _breakpointManager, this, _configStore, waitLoop);
+                    }
+                    finally
+                    {
+                        // If there is an exception from the DebuggeedProcess constructor, it is our responsibility to dispose the DeviceAppLauncher,
+                        // otherwise the DebuggedProcess object takes ownership.
+                        if (_debuggedProcess == null && launchOptions.DeviceAppLauncher != null)
+                        {
+                            launchOptions.DeviceAppLauncher.Dispose();
+                        }
+                    }
+
+                    _pollThread.PostedOperationErrorEvent += _debuggedProcess.OnPostedOperationError;
+
+                    return _debuggedProcess.Initialize(waitLoop, cancellationTokenSource.Token);
+                });
+            }
+        }
+
+        private void OnStartDebuggingFailed(Exception exception)
+        {
             Logger.Flush();
             SendStartDebuggingError(exception);
 
             Dispose();
-
-            return Constants.E_ABORT;
         }
 
         private void SendStartDebuggingError(Exception exception)
@@ -497,7 +628,7 @@ namespace Microsoft.MIDebugEngine
                 IDebugPortNotify2 portNotify;
                 EngineUtils.RequireOk(defaultPort.GetPortNotify(out portNotify));
 
-                EngineUtils.RequireOk(portNotify.AddProgramNode(new AD7ProgramNode(_debuggedProcess.Id)));
+                EngineUtils.RequireOk(portNotify.AddProgramNode(new AD7ProgramNode(_debuggedProcess.Id, _engineGuid)));
 
                 if (_ad7ProgramId == Guid.Empty)
                 {
@@ -543,7 +674,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    // Clrdbg issues a proper exit event on CmdTerminate call, don't call _debuggedProcess.Terminate() which 
+                    // Clrdbg issues a proper exit event on CmdTerminate call, don't call _debuggedProcess.Terminate() which
                     // simply sends a fake exit event that overrides the exit code of the real one
                 }
             }
@@ -557,26 +688,58 @@ namespace Microsoft.MIDebugEngine
 
         #endregion
 
+        #region IDebugEngine3 Members
+
+        public int SetSymbolPath(string szSymbolSearchPath, string szSymbolCachePath, uint Flags)
+        {
+            return Constants.S_OK;
+        }
+
+        public int LoadSymbols()
+        {
+            return Constants.S_FALSE; // indicate that we didn't load symbols for anything
+        }
+
+        public int SetJustMyCodeState(int fUpdate, uint dwModules, JMC_CODE_SPEC[] rgJMCSpec)
+        {
+            return Constants.S_OK;
+        }
+
+        public int SetEngineGuid(ref Guid guidEngine)
+        {
+            _engineGuid = guidEngine;
+            _configStore.SetEngineGuid(_engineGuid);
+            return Constants.S_OK;
+        }
+
+        public int SetAllExceptions(enum_EXCEPTION_STATE dwState)
+        {
+            _debuggedProcess?.ExceptionManager.SetAllExceptions(dwState);
+            return Constants.S_OK;
+        }
+
+        #endregion
+
         #region IDebugProgram2 Members
 
         // Determines if a debug engine (DE) can detach from the program.
         public int CanDetach()
         {
-            // The sample engine always supports detach
-            return Constants.S_OK;
+            bool canDetach = _debuggedProcess != null && _debuggedProcess.MICommandFactory.CanDetach();
+            return canDetach ? Constants.S_OK : Constants.S_FALSE;
         }
 
         // The debugger calls CauseBreak when the user clicks on the pause button in VS. The debugger should respond by entering
-        // breakmode. 
+        // breakmode.
         public int CauseBreak()
         {
-            _pollThread.RunOperation(() => _debuggedProcess.CmdBreak());
+            _pollThread.RunOperation(() => _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Async));
 
             return Constants.S_OK;
         }
 
         // Continue is called from the SDM when it wants execution to continue in the debugee
-        // but have stepping state remain. An example is when a tracepoint is executed, 
+        // but have stepping state remain. An example is when a tracepoint is executed,
         // and the debugger does not want to actually enter break mode.
         public int Continue(IDebugThread2 pThread)
         {
@@ -608,8 +771,16 @@ namespace Microsoft.MIDebugEngine
         {
             _breakpointManager.ClearBoundBreakpoints();
 
-            _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
+            try
+            {
+                _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
+            }
+            catch (DebuggerDisposedException e) when (e.AbortedCommand == "-target-detach")
+            {
+                // Detach command could cause DebuggerDisposedException and we ignore that.
+            }
 
+            _debuggedProcess.Detach();
             return Constants.S_OK;
         }
 
@@ -641,7 +812,7 @@ namespace Microsoft.MIDebugEngine
                     pos.dwLine = line;
                     pos.dwColumn = 0;
                     MITextPosition textPosition = new MITextPosition(documentName, pos, pos);
-                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt));
+                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt, this.DebuggedProcess));
                     codeContexts.Add(codeCxt);
                 }
                 if (codeContexts.Count > 0)
@@ -697,10 +868,10 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // The properties returned by this method are specific to the program. If the program needs to return more than one property, 
-        // then the IDebugProperty2 object returned by this method is a container of additional properties and calling the 
+        // The properties returned by this method are specific to the program. If the program needs to return more than one property,
+        // then the IDebugProperty2 object returned by this method is a container of additional properties and calling the
         // IDebugProperty2::EnumChildren method returns a list of all properties.
-        // A program may expose any number and type of additional properties that can be described through the IDebugProperty2 interface. 
+        // A program may expose any number and type of additional properties that can be described through the IDebugProperty2 interface.
         // An IDE might display the additional program properties through a generic property browser user interface.
         // The sample engine does not support this
         public int GetDebugProperty(out IDebugProperty2 ppProperty)
@@ -729,11 +900,11 @@ namespace Microsoft.MIDebugEngine
         public int GetEngineInfo(out string engineName, out Guid engineGuid)
         {
             engineName = ResourceStrings.EngineName;
-            engineGuid = new Guid(EngineConstants.EngineId);
+            engineGuid = _engineGuid;
             return Constants.S_OK;
         }
 
-        // The memory bytes as represented by the IDebugMemoryBytes2 object is for the program's image in memory and not any memory 
+        // The memory bytes as represented by the IDebugMemoryBytes2 object is for the program's image in memory and not any memory
         // that was allocated when the program was executed.
         public int GetMemoryBytes(out IDebugMemoryBytes2 ppMemoryBytes)
         {
@@ -767,6 +938,11 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
+                if (null == thread || null == thread.GetDebuggedThread())
+                {
+                    return Constants.E_FAIL;
+                }
+
                 _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
             }
             catch (InvalidCoreDumpOperationException)
@@ -796,7 +972,7 @@ namespace Microsoft.MIDebugEngine
 
         #region IDebugProgram3 Members
 
-        // ExecuteOnThread is called when the SDM wants execution to continue and have 
+        // ExecuteOnThread is called when the SDM wants execution to continue and have
         // stepping state cleared.
         public int ExecuteOnThread(IDebugThread2 pThread)
         {
@@ -804,7 +980,7 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                _pollThread.RunOperation(() => _debuggedProcess.Execute(thread.GetDebuggedThread()));
+                _pollThread.RunOperation(() => _debuggedProcess.Execute(thread?.GetDebuggedThread()));
             }
             catch (InvalidCoreDumpOperationException)
             {
@@ -819,18 +995,21 @@ namespace Microsoft.MIDebugEngine
         #region IDebugEngineProgram2 Members
 
         // Stops all threads running in this program.
-        // This method is called when this program is being debugged in a multi-program environment. When a stopping event from some other program 
-        // is received, this method is called on this program. The implementation of this method should be asynchronous; 
-        // that is, not all threads should be required to be stopped before this method returns. The implementation of this method may be 
+        // This method is called when this program is being debugged in a multi-program environment. When a stopping event from some other program
+        // is received, this method is called on this program. The implementation of this method should be asynchronous;
+        // that is, not all threads should be required to be stopped before this method returns. The implementation of this method may be
         // as simple as calling the IDebugProgram2::CauseBreak method on this program.
         //
-        // The sample engine only supports debugging native applications and therefore only has one program per-process
         public int Stop()
         {
-            throw new NotImplementedException();
+            DebuggedProcess.WorkerThread.RunOperation(async () =>
+            {
+                await _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Stop);
+            });
+            return _debuggedProcess.ProcessState == ProcessState.Running ? Constants.S_ASYNC_STOP : Constants.S_OK;
         }
 
-        // WatchForExpressionEvaluationOnThread is used to cooperate between two different engines debugging 
+        // WatchForExpressionEvaluationOnThread is used to cooperate between two different engines debugging
         // the same process. The sample engine doesn't cooperate with other engines, so it has nothing
         // to do here.
         public int WatchForExpressionEvaluationOnThread(IDebugProgram2 pOriginatingProgram, uint dwTid, uint dwEvalFlags, IDebugEventCallback2 pExprCallback, int fWatch)
@@ -913,7 +1092,7 @@ namespace Microsoft.MIDebugEngine
         #region Deprecated interface methods
         // These methods are not called by the Visual Studio debugger, so they don't need to be implemented
 
-        int IDebugEngine2.EnumPrograms(out IEnumDebugPrograms2 programs)
+        public int EnumPrograms(out IEnumDebugPrograms2 programs)
         {
             Debug.Fail("This function is not called by the debugger");
 

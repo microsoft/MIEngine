@@ -27,6 +27,15 @@ namespace MICore
         private static HostLogger s_logger;
         private static int s_count;
         private int _id;
+        public class LogInfo
+        {
+            public string logFile;
+            public HostLogger.OutputCallback logToOutput;
+            public bool enabled;
+        };
+        private static LogInfo s_cmdLogInfo = new LogInfo();
+        public static LogInfo CmdLogInfo { get { return s_cmdLogInfo; } }
+
 
         private Logger()
         {
@@ -41,11 +50,7 @@ namespace MICore
                 s_isInitialized = true;
                 s_initTime = DateTime.Now;
 
-                s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
-                if (s_logger != null)
-                {
-                    s_isEnabled = true;
-                }
+                LoadMIDebugLogger(configStore);
                 res.WriteLine("Initialized log at: " + s_initTime);
             }
 
@@ -56,6 +61,40 @@ namespace MICore
             }
 #endif
             return res;
+        }
+
+        public static void LoadMIDebugLogger(HostConfigurationStore configStore)
+        {
+            if (s_logger == null)
+            { 
+                if (CmdLogInfo.enabled)
+                {   // command configured log file
+                    s_logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
+                }
+                else
+                {   // use default logging
+                    s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
+                }
+                if (s_logger != null)
+                {
+                    s_isEnabled = true;
+                }
+            }
+        }
+
+        public static void Reset()
+        {
+            HostLogger logger;
+            if (CmdLogInfo.enabled)
+            {
+                logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
+                logger = Interlocked.Exchange(ref s_logger, logger);
+                logger?.Close();
+                if (s_logger != null)
+                {
+                    s_isEnabled = true;
+                }
+            }
         }
 
         /// <summary>

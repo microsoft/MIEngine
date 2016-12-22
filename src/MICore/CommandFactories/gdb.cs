@@ -33,9 +33,29 @@ namespace MICore
             return true;
         }
 
+        public override bool SupportsChildProcessDebugging()
+        {
+            return true;
+        }
+
         public override bool AllowCommandsWhileRunning()
         {
             return false;
+        }
+
+        public override bool UseExternalConsoleForLocalLaunch(LocalLaunchOptions localLaunchOptions)
+        {
+            // NOTE: On Linux, there are issues if we try to have GDB launch the process as a child of VS 
+            // code -- it will cause a deadlock during debuggee launch. So we always use the external console 
+            // unless we are in a scenario where the debuggee will not be a child process.
+            if (PlatformUtilities.IsLinux())
+            {
+                return String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
+            }
+            else
+            {
+                return base.UseExternalConsoleForLocalLaunch(localLaunchOptions);
+            }
         }
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
@@ -184,6 +204,83 @@ namespace MICore
             // Although the mi documentation states that the correct command to terminate is -exec-abort
             // that isn't actually supported by gdb. 
             await _debugger.CmdAsync("kill", ResultClass.None);
+        }
+        private static string TypeBySize(uint size)
+        {
+            switch (size)
+            {
+                case 1:
+                    return "char";
+                case 2:
+                    return "short";
+                case 4:
+                    return "int";
+                case 8:
+                    return "double";
+                default:
+                    throw new ArgumentException("size");
+            }
+        }
+
+        public override async Task<Results> BreakWatch(string address, uint size, ResultClass resultClass = ResultClass.done)
+        {
+            string cmd = string.Format(CultureInfo.InvariantCulture, "-break-watch *({0}*)({1})", TypeBySize(size), address);
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
+        }
+
+        public override bool SupportsDataBreakpoints { get { return true; } }
+
+        public override string GetTargetArchitectureCommand()
+        {
+            return "show architecture";
+        }
+
+        public override TargetArchitecture ParseTargetArchitectureResult(string result)
+        {
+            using (StringReader stringReader = new StringReader(result))
+            {
+                while (true)
+                {
+                    string resultLine = stringReader.ReadLine();
+                    if (resultLine == null)
+                        break;
+
+                    if (resultLine.IndexOf("x86-64", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.X64;
+                    }
+                    else if (resultLine.IndexOf("i386", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.X86;
+                    }
+                    else if (resultLine.IndexOf("arm64", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.ARM64;
+                    }
+                    else if (resultLine.IndexOf("arm", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.ARM;
+                    }
+                }
+            }
+            return TargetArchitecture.Unknown;
+        }
+
+        public override string GetSetEnvironmentVariableCommand(string name, string value)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "set env {0} {1}", name, value);
+        }
+
+        public override async Task Signal(string sig)
+        {
+            string command = String.Format("-interpreter-exec console \"signal {0}\"", sig);
+            await _debugger.CmdAsync(command, ResultClass.running);
+        }
+
+        public override async Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done)
+        {
+            string command = onlyOnce ? "tcatch " : "catch ";
+            await _debugger.ConsoleCmdAsync(command + name);
         }
     }
 }

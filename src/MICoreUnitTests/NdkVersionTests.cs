@@ -52,20 +52,20 @@ namespace MICoreUnitTests
         }
 
         [Fact]
-        public void TestNdkReleaseId1()
+        public void TestNdkReleaseIdReleaseFile()
         {
             NdkReleaseId r;
             Assert.True(NdkReleaseId.TryParse("r1", out r));
             Assert.Equal(r.ToString(), "r1");
 
             Assert.True(NdkReleaseId.TryParse("r1a", out r));
-            Assert.Equal(r.ToString(), "r1a");
+            Assert.Equal(r.ToString(), "r1");
 
             Assert.True(NdkReleaseId.TryParse("r10", out r));
             Assert.Equal(r.ToString(), "r10");
 
             Assert.True(NdkReleaseId.TryParse("r10b (64-bit)", out r));
-            Assert.Equal(r.ToString(), "r10b (64-bit)");
+            Assert.Equal(r.ToString(), "r10b");
 
             Assert.False(NdkReleaseId.TryParse("100", out r));
             Assert.False(NdkReleaseId.TryParse("r", out r));
@@ -75,19 +75,36 @@ namespace MICoreUnitTests
         }
 
         [Fact]
-        public void TestNdkReleaseId2()
+        public void TestNdkReleaseIdCompare()
         {
-            NdkReleaseId r10 = new NdkReleaseId(10, (char)0, true);
-            NdkReleaseId r10_64bit = new NdkReleaseId(10, (char)0, false);
-            NdkReleaseId r10b = new NdkReleaseId(10, 'b', true);
-            NdkReleaseId r9d = new NdkReleaseId(9, 'd', true);
+            NdkReleaseId r10 = new NdkReleaseId(10, (char)0);
+            NdkReleaseId r10b = new NdkReleaseId(10, 'b');
+            NdkReleaseId r9d = new NdkReleaseId(9, 'd');
 
             Assert.True(r10.CompareVersion(r10) == 0);
-            Assert.True(r10.CompareVersion(r10_64bit) == 0);
             Assert.True(r10.CompareVersion(r10b) < 0);
             Assert.True(r10b.CompareVersion(r10) > 0);
             Assert.True(r10.CompareVersion(r9d) > 0);
             Assert.True(r9d.CompareVersion(r10) < 0);
+        }
+
+        [Fact]
+        public void TestNdkReleaseIdPropertiesFile()
+        {
+            NdkReleaseId r;
+            Assert.True(NdkReleaseId.TryParseRevision("1.0.0", out r));
+            Assert.Equal("r1", r.ToString());
+
+            Assert.True(NdkReleaseId.TryParseRevision("1.0.1234", out r));
+            Assert.Equal("r1", r.ToString());
+
+            Assert.True(NdkReleaseId.TryParseRevision("13.2.0", out r));
+            Assert.Equal(r.ToString(), "r13c");
+
+            Assert.False(NdkReleaseId.TryParseRevision("100", out r));
+            Assert.False(NdkReleaseId.TryParseRevision("r11b", out r));
+            Assert.False(NdkReleaseId.TryParseRevision("-100", out r));
+            Assert.False(NdkReleaseId.TryParseRevision("10.0", out r));
         }
     }
 }

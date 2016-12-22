@@ -23,6 +23,9 @@ namespace MICore
         private ManualResetEvent _allReadersDone = new ManualResetEvent(false);
         private bool _killOnClose;
         private bool _filterStderr;
+        private int _debuggerPid = -1;
+        private string _pipePath;
+        private string _cmdArgs;
 
         public PipeTransport(bool killOnClose = false, bool filterStderr = false, bool filterStdout = false) : base(filterStdout)
         {
@@ -30,9 +33,32 @@ namespace MICore
             _filterStderr = filterStderr;
         }
 
+        public bool Interrupt(int pid)
+        {
+            if (_cmdArgs == null)
+            {
+                return false;
+            }
+
+            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
+            return WrappedExecuteSyncCommand(MICoreResources.Info_KillingPipeProcess, killCmd, Timeout.Infinite) == 0;
+        }
+
         protected override string GetThreadName()
         {
             return "MI.PipeTransport";
+        }
+
+        /// <summary>
+        /// The value of this property reflects the pid for the debugger running
+        /// locally.
+        /// </summary>
+        public override int DebuggerPid
+        {
+            get
+            {
+                return _debuggerPid;
+            }
         }
 
         protected virtual void InitProcess(Process proc, out StreamReader stdout, out StreamWriter stdin)
@@ -53,6 +79,7 @@ namespace MICore
                 this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "Starting: \"{0}\" {1}", _process.StartInfo.FileName, _process.StartInfo.Arguments));
                 _process.Start();
 
+                _debuggerPid = _process.Id;
                 stdout = _process.StandardOutput;
                 stdin = _process.StandardInput;
                 _stdErrReader = _process.StandardError;
@@ -62,62 +89,57 @@ namespace MICore
             }
         }
 
-
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
             PipeLaunchOptions pipeOptions = (PipeLaunchOptions)options;
 
+            string workingDirectory = pipeOptions.PipeCwd;
+            if (!string.IsNullOrWhiteSpace(workingDirectory))
+            {
+                if (!LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
+                {
+                    throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalDirectoryPath, workingDirectory));
+                }
+            }
+            else
+            {
+                workingDirectory = Path.GetDirectoryName(pipeOptions.PipePath);
+                if (!LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
+                {
+                    // If provided PipeCwd is not an absolute path, the working directory will be set to null.
+                    workingDirectory = null;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(pipeOptions.PipePath))
+            {
+                throw new ArgumentException(MICoreResources.Error_EmptyPipePath);
+            }
+
+            _cmdArgs = pipeOptions.PipeCommandArguments;
+
             Process proc = new Process();
+            _pipePath = pipeOptions.PipePath;
             proc.StartInfo.FileName = pipeOptions.PipePath;
             proc.StartInfo.Arguments = pipeOptions.PipeArguments;
-            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(pipeOptions.PipePath);
+            proc.StartInfo.WorkingDirectory = workingDirectory;
+
+            foreach (EnvironmentEntry entry in pipeOptions.PipeEnvironment)
+            {
+                proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+            }
 
             InitProcess(proc, out reader, out writer);
         }
 
-        private void KillChildren(List<Tuple<int,int>> processes, int pid)
+        /// <summary>
+        /// Kills the pipe process and its child processes. 
+        /// It maybe the debugger itself it is local.
+        /// </summary>
+        /// <param name="p">Process to kill.</param>
+        private void KillPipeProcessAndChildren(Process p)
         {
-            processes.ForEach((p) =>
-            {
-                if (p.Item2 == pid)
-                {
-                    KillChildren(processes, p.Item1);
-                    var k = Process.Start("/bin/kill", String.Format(CultureInfo.InvariantCulture, "-9 {0}", p.Item1));
-                    k.WaitForExit();
-                }
-            });
-        }
-
-        private void KillProcess(Process p)
-        {
-            bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-            bool isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-            if (isLinux || isOSX)
-            {
-                // On linux run 'ps -x -o "%p %P"' (similarly on Mac), which generates a list of the process ids (%p) and parent process ids (%P).
-                // Using this list, issue a 'kill' command for each child process. Kill the children (recursively) to eliminate
-                // the entire process tree rooted at p. 
-                Process ps = new Process();
-                ps.StartInfo.FileName ="/bin/ps";
-                ps.StartInfo.Arguments = isLinux ? "-x -o \"%p %P\"" : "-x -o \"pid ppid\"";
-                ps.StartInfo.RedirectStandardOutput = true;
-                ps.StartInfo.UseShellExecute = false;
-                ps.Start();
-                string line;
-                List<Tuple<int, int>> processAndParent = new List<Tuple<int, int>>();
-                char[] whitespace = new char[] { ' ', '\t' };
-                while ((line = ps.StandardOutput.ReadLine()) != null)
-                {
-                    line = line.Trim();
-                    int id, pid;
-                    if (Int32.TryParse(line.Substring(0, line.IndexOfAny(whitespace)), NumberStyles.Integer, CultureInfo.InvariantCulture, out id)
-                        && Int32.TryParse(line.Substring(line.IndexOfAny(whitespace)).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out pid))
-                    {
-                        processAndParent.Add(new Tuple<int, int>(id, pid));
-                    }
-                }
-                KillChildren(processAndParent, p.Id);
-            }
+            UnixUtilities.KillProcessTree(p);
             if (!p.HasExited)
             {
                 p.Kill();
@@ -153,8 +175,9 @@ namespace MICore
                 _process.Exited -= OnProcessExit;
                 if (_killOnClose && !_process.HasExited)
                 {
-                    try {
-                        KillProcess(_process);
+                    try
+                    {
+                        KillPipeProcessAndChildren(_process);
                     }
                     catch
                     {
@@ -184,6 +207,25 @@ namespace MICore
             }
 
             base.OnReadStreamAborted();
+        }
+
+        private async void AsyncReadFromStream(StreamReader stream, Action<string> lineHandler)
+        {
+            try
+            {
+                while (true)
+                {
+                    string line = await stream.ReadLineAsync();
+                    if (line == null)
+                        break;
+
+                    lineHandler(line);
+                }
+            }
+            catch (Exception)
+            {
+                // If anything goes wrong, don't crash VS
+            }
         }
 
         private async void AsyncReadFromStdError()
@@ -245,31 +287,84 @@ namespace MICore
             // our pipe.
             _allReadersDone.WaitOne(100);
 
-            if (!this.IsClosed)
+            // We are sometimes seeing m_process throw InvalidOperationExceptions by the time we get here. 
+            // Attempt to get the real exit code, if we can't, still log the message with unknown exit code.
+            string exitCode = null;
+            try
             {
-                // We are sometimes seeing m_process throw InvalidOperationExceptions by the time we get here. 
-                // Attempt to get the real exit code, if we can't, still log the message with unknown exit code.
-                string exitCode = null;
-                try
-                {
-                    exitCode = string.Format(CultureInfo.InvariantCulture, "{0} (0x{0:X})", _process.ExitCode);
-                }
-                catch (InvalidOperationException)
-                {
-                }
-                this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "\"{0}\" exited with code {1}.", _process.StartInfo.FileName, exitCode ?? "???"));
+                exitCode = string.Format(CultureInfo.InvariantCulture, "{0} (0x{0:X})", _process.ExitCode);
+            }
+            catch (InvalidOperationException)
+            {
+            }
 
+            this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "\"{0}\" exited with code {1}.", _process.StartInfo.FileName, exitCode ?? "???"));
 
-                try
+            try
+            {
+                this.Callback.OnDebuggerProcessExit(exitCode);
+            }
+            catch
+            {
+                // We have no exception back stop here, and we are trying to report failures. But if something goes wrong,
+                // lets not crash VS
+            }
+        }
+
+        private int WrappedExecuteSyncCommand(string commandDescription, string commandText, int timeout)
+        {
+            int exitCode = -1;
+            string output = null;
+            string error = null;
+
+            string fullCommand = string.Format(CultureInfo.InvariantCulture, "{0} {1} {2}", _pipePath, _cmdArgs, commandText);
+
+            try
+            {
+                exitCode = ExecuteSyncCommand(commandDescription, commandText, timeout, out output, out error);
+
+                if (exitCode != 0)
                 {
-                    this.Callback.OnDebuggerProcessExit(exitCode);
-                }
-                catch
-                {
-                    // We have no exception back stop here, and we are trying to report failures. But if something goes wrong,
-                    // lets not crash VS
+                    this.Callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessExit, fullCommand, exitCode));
                 }
             }
+            catch (Exception e)
+            {
+                this.Callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessException, fullCommand, e.Message));
+            }
+
+            return exitCode;
+        }
+
+        public override int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
+        {
+            output = null;
+            error = null;
+            int exitCode = -1;
+
+            Process proc = new Process();
+            proc.StartInfo.FileName = _pipePath;
+            proc.StartInfo.Arguments = string.Format(CultureInfo.InvariantCulture, _cmdArgs, commandText);
+            proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
+            proc.EnableRaisingEvents = false;
+            proc.StartInfo.RedirectStandardInput = false;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.RedirectStandardError = true;
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.CreateNoWindow = true;
+            proc.Start();
+            proc.WaitForExit(timeout);
+            exitCode = proc.ExitCode;
+
+            output = proc.StandardOutput.ReadToEnd();
+            error = proc.StandardError.ReadToEnd();
+
+            return exitCode;
+        }
+
+        public override bool CanExecuteCommand()
+        {
+            return true;
         }
     }
 }

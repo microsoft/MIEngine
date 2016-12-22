@@ -10,6 +10,7 @@ using System.IO;
 using System.Collections.Specialized;
 using System.Collections;
 using System.Text.RegularExpressions;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -26,14 +27,14 @@ namespace MICore
             _serverTransport = serverTransport;
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
         {
             _launchTimeout = ((LocalLaunchOptions)options).ServerLaunchTimeout;
-            _serverTransport.Init(transportCallback, options, logger);
+            _serverTransport.Init(transportCallback, options, logger, waitLoop);
             WaitForStart();
             if (!_clientTransport.IsClosed)
             {
-                _clientTransport.Init(transportCallback, options, logger);
+                _clientTransport.Init(transportCallback, options, logger, waitLoop);
             }
         }
 
@@ -53,9 +54,27 @@ namespace MICore
 
         public bool IsClosed { get { return _clientTransport.IsClosed; } }
 
+        public int DebuggerPid
+        {
+            get
+            {
+                return _clientTransport.DebuggerPid;
+            }
+        }
+
         public void Send(string cmd)
         {
             _clientTransport.Send(cmd);
+        }
+
+        public int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
+        {
+            return _clientTransport.ExecuteSyncCommand(commandDescription, commandText, timeout, out output, out error);
+        }
+
+        public bool CanExecuteCommand()
+        {
+            return _clientTransport.CanExecuteCommand();
         }
     }
 }

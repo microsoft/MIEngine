@@ -13,16 +13,21 @@
     <AssemblyName>Microsoft.MICore</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
     <DocumentationFile>$(DropRootDir)\ReferenceAssemblies\$(AssemblyName).xml</DocumentationFile>
     <!-- Disable warning about public API without XML documentation: it would be nice if MICore had documentation 
     for all its methods, but it is also not a public assembly, and adding XML documentation for all its methods
     would take a fair amount of work.-->
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
+    <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsCoreClr)' == 'false'">
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,6 +42,26 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
@@ -71,26 +96,63 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <ItemGroup>
-    <None Include="LaunchOptions.xsd" />
+  <ItemGroup Condition="'$(IsCoreClr)' == 'true'">
     <None Include="project.json" />
-    <None Include="SetMIDebugLogging.cmd" />
-    <None Include="ValidateDesignerFile.cmd" />
-    <None Include="PostProcessXsdOutput.cmd" />
+    <!-- A reference to the entire .NET Framework is automatically included -->
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
+      <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
+      <Name>DebugEngineHost.Stub</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.csproj">
+      <Project>{7654cfbb-30db-4c20-bde3-a960cba2036c}</Project>
+      <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\prebuild\prebuild.csproj">
+      <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
+      <Name>prebuild</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup>
+    <XsdCodeFile Condition="'$(IsCoreClr)' == 'true'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
+    <XsdCodeFile Condition="'$(IsCoreClr)' == 'false'">LaunchOptions.xsd.types.designer.desktop.cs</XsdCodeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="LaunchOptions.xsd" />
+    <None Include="SetMIDebugLogging.cmd" />
+    <ContentWithTargetPath Include="osxlaunchhelper.scpt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>osxlaunchhelper.scpt</TargetPath>
+    </ContentWithTargetPath>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Checksum.cs" />
     <Compile Include="CommandFactories\clrdbg.cs" />
     <Compile Include="CommandFactories\gdb.cs" />
     <Compile Include="CommandFactories\lldb.cs" />
     <Compile Include="CommandFactories\MICommandFactory.cs" />
     <Compile Include="CommandLock.cs" />
     <Compile Include="Debugger.cs" />
+    <Compile Include="DebuggerDisposedException.cs" />
     <Compile Include="ExceptionHelper.cs" />
     <Compile Include="InvalidCoreDumpOperationException.cs" />
     <Compile Include="InvalidLaunchOptionsException.cs" />
     <Compile Include="LaunchCommand.cs" />
     <Compile Include="LaunchOptions.cs" />
-    <Compile Include="LaunchOptions.xsd.types.desginer.cs">
+    <Compile Include="$(XsdCodeFile)">
       <AutoGen>True</AutoGen>
       <DependentUpon>LaunchOptions.xsd</DependentUpon>
     </Compile>
@@ -102,17 +164,22 @@
     </Compile>
     <Compile Include="MIException.cs" />
     <Compile Include="MIResults.cs" />
-    <Compile Include="LinuxNativeMethods.cs" />
+    <Compile Include="PlatformUtilities.cs" />
+    <Compile Include="ProcessMonitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TerminalLauncher.cs" />
     <Compile Include="Transports\ClientServerTransport.cs" />
     <Compile Include="Transports\ITransport.cs" />
     <Compile Include="Transports\LocalTransport.cs" />
-    <Compile Include="Transports\LocalLinuxTransport.cs" />
+    <Compile Include="Transports\LocalUnixTerminalTransport.cs" />
     <Compile Include="Transports\MockTransport.cs" />
     <Compile Include="Transports\PipeTransport.cs" />
+    <Compile Include="Transports\UnixShellPortTransport.cs" />
     <Compile Include="Transports\ServerTransport.cs" />
     <Compile Include="Transports\StreamTransport.cs" />
     <Compile Include="Transports\TcpTransport.cs" />
+    <Compile Include="UnixNativeMethods.cs" />
+    <Compile Include="UnixUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ExampleLaunchOptions.xml" />
@@ -128,63 +195,18 @@
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
     <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" Condition="'$(Configuration)'!='Debug-PortablePDB'" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
-      <Project>{ea876a2d-ab0f-4204-97dd-dfb3b5568978}</Project>
-      <Name>DebugEngineHost.Stub</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="AfterBuild">
-  </Target>
-  -->
-  <!--This is a target file used to generate + validate LaunchOptions.xsd.types.desginer.cs. The way this works is that we have a baseline
-  file checked in. This target will create a new one, and if it is different from the baseline, it will update the baseline.
-  NOTE: We skip this step for the lab configuration to ensure that in the lab we build exsactly what is checked in.-->
-  <Target Name="BeforeBuild" Inputs="LaunchOptions.xsd;ValidateDesignerFile.cmd;PostProcessXsdOutput.cmd" Outputs="$(IntermediateOutputPath)LaunchOptions.xsd.types.desginer-candidate.cs" Condition="'$(Configuration)' != 'Lab.Debug' And '$(Configuration)' != 'Lab.Release'">
-    <!--First validate the tools we need are where we expect-->
-    <Error Condition="'$(SDK40ToolsPath)'==''" Text="SDK40ToolsPath msbuild property is undefined." />
-    <Error Condition="!Exists('$(SDK40ToolsPath)xsd.exe')" Text="xsd.exe does not exist in the SDK40ToolsPath ($(SDK40ToolsPath)xsd.exe)." />
-    <!--Convert the .xsd -> types -->
-    <MakeDir Condition="!Exists('$(IntermediateOutputPath)')" Directories="$(IntermediateOutputPath)" />
-    <Exec Command="&quot;$(SDK40ToolsPath)xsd.exe&quot; &quot;LaunchOptions.xsd&quot; /classes /fields /namespace:$(RootNamespace).Xml.LaunchOptions /out:&quot;$(IntermediateOutputPath).&quot;" />
-    <!--Process the output from xsd.exe into LaunchOptions.xsd.types.desginer-candidate.cs -->
-    <Exec Command="PostProcessXsdOutput.cmd &quot;$(IntermediateOutputPath)LaunchOptions.cs&quot; &quot;$(IntermediateOutputPath)LaunchOptions.xsd.types.desginer-candidate.cs&quot;" />
-    <!--Update the checked in types designer file if it is out of date-->
-    <Exec Command="ValidateDesignerFile.cmd LaunchOptions.xsd.types.desginer.cs $(IntermediateOutputPath)LaunchOptions.xsd.types.desginer-candidate.cs &quot;$(IntermediateOutputPath)&quot;" />
-  </Target>
-  <!--This target is used to generate an XML serializers assembly for the types in LaunchOptions.xsd. We can't embed these types
-  into MICore as CoreCLR doesn't expose the types needed to make that code work.
-  NOTE: We don't do this in the Debug-PortablePDB configuration as having this file messes up unix, and when we use 'InstallToVSCode link'
-  the CLR will try and load the assembly directly from the output directory.-->
-  <Target Name="GenerateXmlSerializersAssembly" AfterTargets="Compile" Inputs="LaunchOptions.xsd.types.desginer.cs;$(AssemblyOriginatorKeyFile)" Condition="'$(Configuration)'!='Debug-PortablePDB'" Outputs="$(IntermediateOutputPath)sgen\$(AssemblyName).XmlSerializers.dll">
-    <PropertyGroup>
-      <SereializationSigningCompilerOptions>/keyfile:$(AssemblyOriginatorKeyFile)</SereializationSigningCompilerOptions>
-      <SereializationSigningCompilerOptions Condition="'$(DelaySign)'=='true'">$(SereializationSigningCompilerOptions) /delaysign</SereializationSigningCompilerOptions>
-    </PropertyGroup>
-    <Error Condition="'$(SDK40ToolsPath)'==''" Text="SDK40ToolsPath msbuild property is undefined." />
-    <Error Condition="'$(MSBuildBinPath)'==''" Text="MSBuildBinPath msbuild property is undefined" />
-    <Error Condition="!Exists('$(SDK40ToolsPath)sgen.exe')" Text="sgen.exe does not exist in the SDK40ToolsPath ($(SDK40ToolsPath)xsd.exe)." />
-    <Error Condition="!Exists('$(MSBuildBinPath)\csc.exe')" Text="csc.exe does not exist in MSBuildBinPath ($(MSBuildBinPath))" />
-    <RemoveDir Condition="Exists('$(IntermediateOutputPath)sgen')" Directories="$(IntermediateOutputPath)sgen" />
-    <MakeDir Directories="$(IntermediateOutputPath)sgen" />
-    <!--Compile the types file into an assembly that we can use as input to sgen. We don't want to pass our real assembly as we have some things that sgen doesn't like.-->
-    <Exec Command="&quot;$(MSBuildBinPath)\csc.exe&quot; LaunchOptions.xsd.types.desginer.cs $(GeneratedAssemblyInfoFile) /out:$(IntermediateOutputPath)sgen\$(AssemblyName).dll /target:library /noconfig $(SereializationSigningCompilerOptions) /r:$(MSBuildFrameworkToolsPath)\System.dll /r:$(MSBuildFrameworkToolsPath)\System.XML.dll" />
-    <!--Now generate the serialization assembly-->
-    <Exec Command="&quot;$(SDK40ToolsPath)sgen.exe&quot; $(IntermediateOutputPath)sgen\$(AssemblyName).dll /force /compiler:&quot;$(SereializationSigningCompilerOptions)&quot; /keep" />
-  </Target>
-  <!--To get the seralization assembly copied to the vsix, and also to the output directory, we have this target
+  <Import Project="GenerateXmlSerializersAssembly.targets" />
+  <!-- To get the seralization assembly copied to the vsix, and also to the output directory, we have this target
   which adds the XmlSerializers as if it was a source item in our project with a 'CopyToOutputDirectory' child
   node. See the 'GetCopyToOutputDirectoryItems' target in C:\Program Files (x86)\MSBuild\14.0\Bin\Microsoft.Common.CurrentVersion.targets
-  for more info.-->
+  for more info. -->
   <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="'$(Configuration)'!='Debug-PortablePDB'">
     <ItemGroup>
-      <_GenerateXmlSerializersAssemblyOutput Include="$(IntermediateOutputPath)sgen\$(AssemblyName).XmlSerializers.dll" />
+      <_GenerateXmlSerializersAssemblyOutput Include="$(IntermediateOutputPath)sgen/$(AssemblyName).XmlSerializers.dll" />
       <_SourceItemsToCopyToOutputDirectoryAlways Include="@(_GenerateXmlSerializersAssemblyOutput->'%(FullPath)')">
         <TargetPath>$(AssemblyName).XmlSerializers.dll</TargetPath>
       </_SourceItemsToCopyToOutputDirectoryAlways>

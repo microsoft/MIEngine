@@ -10,5 +10,8 @@
     <Rule Id="CA1065" Action="None" />
     <Rule Id="CA1801" Action="None" />
     <Rule Id="CA1822" Action="None" />
+    <Rule Id="CA2243" Action="None" />
+    <!-- Disabling CA2210 because signing does not occur until after Code Analysis for this project has run-->
+    <Rule Id="CA2210" Action="None" />
   </Rules>
 </RuleSet>

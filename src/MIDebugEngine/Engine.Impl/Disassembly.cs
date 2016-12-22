@@ -173,7 +173,7 @@ namespace Microsoft.MIDebugEngine
         private async Task<DisasmInstruction[]> VerifyDisassembly(DisasmInstruction[] instructions, ulong startAddress, ulong targetAddress)
         {
             int count = 0;
-            while (instructions[instructions.Length - 1].Addr != targetAddress && count < _process.MaxInstructionSize)
+            while ((instructions.Length == 0 || instructions[instructions.Length - 1].Addr != targetAddress) && count < _process.MaxInstructionSize)
             {
                 instructions = null;    // throw away the previous instructions
                 count++;

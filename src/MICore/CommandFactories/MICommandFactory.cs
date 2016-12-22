@@ -233,10 +233,16 @@ namespace MICore
             await ThreadCmdAsync(command, resultClass, threadId);
         }
 
+        public async Task ExecNextInstruction(int threadId, ResultClass resultClass = ResultClass.running)
+        {
+            string command = "-exec-next-instruction";
+            await ThreadCmdAsync(command, resultClass, threadId);
+        }
+
         /// <summary>
         /// Tells GDB to spawn a target process previous setup with -file-exec-and-symbols or similar
         /// </summary>
-        public async Task ExecRun()
+        public virtual async Task ExecRun()
         {
             string command = "-exec-run";
             await _debugger.CmdAsync(command, ResultClass.running);
@@ -249,6 +255,18 @@ namespace MICore
         {
             string command = "-exec-continue";
             await _debugger.CmdAsync(command, ResultClass.running);
+        }
+
+        /// <summary>
+        /// Deliver signal to the process. Continue running the process. [Optional]
+        /// </summary>
+        /// <param name="sig">The signal to deliver, e.g. "SIGSTOP"</param>
+        /// <returns></returns>
+        public abstract Task Signal(string sig);
+
+        public async Task TargetDetach()
+        {
+            await _debugger.CmdAsync("-target-detach", ResultClass.done);
         }
 
         #endregion
@@ -295,6 +313,12 @@ namespace MICore
             return Task.FromResult<bool>(true);
         }
 
+        public virtual Task<bool> SetStepFiltering(bool enabled)
+        {
+            // See comment on Just My Code
+            return Task.FromResult<bool>(true);
+        }
+
         public uint Radix { get; protected set; }
 
 
@@ -304,7 +328,8 @@ namespace MICore
 
         public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-create - * \"{0}\"", expression);
+            string quoteEscapedExpression = EscapeQuotes(expression);
+            string command = string.Format("-var-create - * \"{0}\"", quoteEscapedExpression);
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
             return results;
@@ -320,7 +345,8 @@ namespace MICore
 
         public virtual async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-list-children --simple-values \"{0}\"", variableReference);
+            // Limit the number of children expanded to 1000 in case memory is uninitialized
+            string command = string.Format("-var-list-children --simple-values \"{0}\" 0 1000", variableReference);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
@@ -334,7 +360,7 @@ namespace MICore
             return results;
         }
 
-        public async Task<string> VarAssign(string variableName, string expression)
+        public virtual async Task<string> VarAssign(string variableName, string expression, int threadId, uint frameLevel)
         {
             string command = string.Format("-var-assign {0} \"{1}\"", variableName, expression);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
@@ -384,7 +410,7 @@ namespace MICore
 
         #region Breakpoints
 
-        private StringBuilder BuildBreakInsert(string condition)
+        protected virtual StringBuilder BuildBreakInsert(string condition, bool enabled)
         {
             StringBuilder cmd = new StringBuilder("-break-insert -f ");
             if (condition != null)
@@ -393,25 +419,52 @@ namespace MICore
                 cmd.Append(condition);
                 cmd.Append("\" ");
             }
+            if (!enabled)
+            {
+                cmd.Append("-d ");
+            }
             return cmd;
         }
 
-        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, bool enabled, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition);
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
+
+            if (checksums != null && checksums.Count() != 0)
+            {
+                cmd.Append(Checksum.GetMIString(checksums));
+                cmd.Append(" ");
+            }
+
             cmd.Append(filename);
             cmd.Append(":");
             cmd.Append(line.ToString());
+
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
 
-        public virtual async Task<Results> BreakInsert(string functionName, string condition, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string functionName, string condition, bool enabled, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition);
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
             // TODO: Add support of break function type filename:function locations
             cmd.Append(functionName);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
+
+        public virtual async Task<Results> BreakInsert(ulong codeAddress, string condition, bool enabled, ResultClass resultClass = ResultClass.done)
+        {
+            StringBuilder cmd = BuildBreakInsert(condition, enabled);
+            cmd.Append('*');
+            cmd.Append(codeAddress);
+            return await _debugger.CmdAsync(cmd.ToString(), resultClass);
+        }
+
+        public virtual Task<Results> BreakWatch(string address, uint size, ResultClass resultClass = ResultClass.done)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual bool SupportsDataBreakpoints { get { return false; } }
 
         public virtual async Task<TupleValue> BreakInfo(string bkptno)
         {
@@ -456,23 +509,25 @@ namespace MICore
             return new Guid[0];
         }
 
+        public abstract Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done);
+
         /// <summary>
         /// Adds a breakpoint which will be triggered when an exception is thrown and/or goes user-unhandled
         /// </summary>
         /// <param name="exceptionCategory">AD7 category for the execption</param>
-        /// <param name="exceptionNames">[Optional] names of the exceptions to set a breakpoint on. If null, this sets an breakpoint for all 
+        /// <param name="exceptionNames">[Optional] names of the exceptions to set a breakpoint on. If null, this sets an breakpoint for all
         /// exceptions in the category. Note that this clear all previous exception breakpoints set in this category.</param>
         /// <param name="exceptionBreakpointState">Indicates when the exception breakpoint should fire</param>
         /// <returns>Task containing the exception breakpoint id's for the various set exceptions</returns>
         public virtual Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
         {
-            // NOTES: 
+            // NOTES:
             // GDB /MI has no support for exceptions. Though they do have it through the non-MI through a 'catch' command. Example:
             //   catch throw MyException
             //   Catchpoint 3 (throw)
             //   =breakpoint-created,bkpt={number="3",type="breakpoint",disp="keep",enabled="y",addr="0xa1b5f830",what="exception throw",catch-type="throw",thread-groups=["i1"],regexp="MyException",times="0"}
             // Documentation: http://www.sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html#Set-Catchpoints
-            // 
+            //
             // LLDB-MI has no support for exceptions. Though they do have it through the non-MI breakpoint command. Example:
             //   break set -F std::range_error
             // And they do have it in their API:
@@ -501,14 +556,34 @@ namespace MICore
 
         #region Helpers
 
+        public abstract string GetTargetArchitectureCommand();
+        public abstract TargetArchitecture ParseTargetArchitectureResult(string result);
+
+        public virtual async Task<Results> SetOption(string variable, string value, ResultClass resultClass = ResultClass.done)
+        {
+            string command = string.Format("-gdb-set {0} {1}", variable, value);
+            Results results = await _debugger.CmdAsync(command, resultClass);
+
+            return results;
+        }
+
+        internal string EscapeQuotes(string str)
+        {
+            return str.Replace("\"", "\\\"");
+        }
+
         #endregion
 
-        #region Abstract Methods
+        #region Other
 
         abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
         abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
 
+        abstract public string GetSetEnvironmentVariableCommand(string name, string value);
+
         abstract public bool SupportsStopOnDynamicLibLoad();
+
+        abstract public bool SupportsChildProcessDebugging();
 
         /// <summary>
         /// True if the underlying debugger can format frames itself
@@ -520,7 +595,27 @@ namespace MICore
 
         public virtual bool IsAsyncBreakSignal(Results results)
         {
-            return (results.TryFindString("reason") == "signal-received" && results.TryFindString("signal-name") == "SIGINT");
+            bool isAsyncBreak = false;
+
+            if (results.TryFindString("reason") == "signal-received")
+            {
+                if (results.TryFindString("signal-name") == "SIGINT")
+                {
+                    isAsyncBreak = true;
+                }
+            }
+
+            return isAsyncBreak;
+        }
+
+        /// <summary>
+        /// Determines if a new external console should be spawned on non-Windows platforms for the debugger+app
+        /// </summary>
+        /// <param name="localLaunchOptions">[required] local launch options</param>
+        /// <returns>True if an external console should be used</returns>
+        public virtual bool UseExternalConsoleForLocalLaunch(LocalLaunchOptions localLaunchOptions)
+        {
+            return localLaunchOptions.UseExternalConsole && String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
         }
 
         public Results IsModuleLoad(string cmd)
@@ -536,6 +631,11 @@ namespace MICore
 
         abstract public bool AllowCommandsWhileRunning();
 
+        public virtual bool CanDetach()
+        {
+            return true;
+        }
+
         abstract public Task<List<ulong>> StartAddressesForLine(string file, uint line);
 
         /// <summary>
@@ -543,6 +643,11 @@ namespace MICore
         /// </summary>
         /// <returns>[Required] Task to track when this is complete</returns>
         abstract public Task EnableTargetAsyncOption();
+
+        public virtual bool SupportsBreakpointChecksums()
+        {
+            return false;
+        }
 
         #endregion
     }

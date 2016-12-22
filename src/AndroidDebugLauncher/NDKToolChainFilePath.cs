@@ -15,11 +15,11 @@ namespace AndroidDebugLauncher
     /// <summary>
     /// Represents a relative path within the ndk_root\toolchains folder which does fuzzy matching for tool chain version.
     /// </summary>
-    internal class NDKToolChainFilePath
+    internal class NDKToolChainFilePath : INDKFilePath
     {
-        public readonly string ToolChainName;
-        public readonly string PreferredVersion;
-        public readonly string PartialFilePath;
+        public string ToolChainName { get; }
+        public string PreferredVersion { get; }
+        public string PartialFilePath { get; }
 
         private NDKToolChainFilePath(string toolChainName, string preferredVersion, string partialFilePath)
         {
@@ -95,6 +95,11 @@ namespace AndroidDebugLauncher
         public string GetSearchPathDescription(string ndkRoot)
         {
             return GetFullPath(GetToolChainsDirectory(ndkRoot), "*");
+        }
+
+        public string GetPartialFilePath()
+        {
+            return PartialFilePath;
         }
 
         private static string GetToolChainsDirectory(string ndkRoot)

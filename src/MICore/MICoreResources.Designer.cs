@@ -91,7 +91,16 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to establish a connection to {0}. Go to the &apos;Debug&apos; pane of the Visual Studio output window for more information..
+        ///   Looks up a localized string similar to The debugger is no longer debugging the specified process..
+        /// </summary>
+        public static string Error_DebuggerClosed {
+            get {
+                return ResourceManager.GetString("Error_DebuggerClosed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to establish a connection to {0}. Debug output may contain more information..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_NoStdErr {
             get {
@@ -102,7 +111,9 @@ namespace MICore {
         /// <summary>
         ///   Looks up a localized string similar to Unable to establish a connection to {0}. The following message was written to stderr:
         ///
-        ///{1}.
+        ///{1}
+        ///
+        ///See Output Window for details..
         /// </summary>
         public static string Error_DebuggerInitializeFailed_StdErr {
             get {
@@ -116,6 +127,15 @@ namespace MICore {
         public static string Error_DebugServerInitializationFailed {
             get {
                 return ResourceManager.GetString("Error_DebugServerInitializationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PipePath cannot be empty..
+        /// </summary>
+        public static string Error_EmptyPipePath {
+            get {
+                return ResourceManager.GetString("Error_EmptyPipePath", resourceCulture);
             }
         }
         
@@ -158,6 +178,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal file &quot;{0}&quot; could not be found..
+        /// </summary>
+        public static string Error_InternalFileMissing {
+            get {
+                return ResourceManager.GetString("Error_InternalFileMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launch options string provided by the project system is invalid. {0}.
         /// </summary>
         public static string Error_InvalidLaunchOptions {
@@ -176,7 +205,16 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists on the Visual Studio computer..
+        ///   Looks up a localized string similar to Invalid path to directory path &apos;{0}&apos;. Directory must be a valid directory name that exists..
+        /// </summary>
+        public static string Error_InvalidLocalDirectoryPath {
+            get {
+                return ResourceManager.GetString("Error_InvalidLocalDirectoryPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists..
         /// </summary>
         public static string Error_InvalidLocalExePath {
             get {
@@ -203,7 +241,25 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} exited unexpectedly. Debugging will now abort..
+        ///   Looks up a localized string similar to Device App Launcher Serializer {0} could not be found..
+        /// </summary>
+        public static string Error_LauncherSerializerNotFound {
+            get {
+                return ResourceManager.GetString("Error_LauncherSerializerNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to initialize debugger terminal..
+        /// </summary>
+        public static string Error_LocalUnixTerminalDebuggerInitializationFailed {
+            get {
+                return ResourceManager.GetString("Error_LocalUnixTerminalDebuggerInitializationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} exited unexpectedly..
         /// </summary>
         public static string Error_MIDebuggerExited_UnknownCode {
             get {
@@ -212,7 +268,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} exited unexpectedly with exit code {1}. Debugging will now abort..
+        ///   Looks up a localized string similar to {0} exited unexpectedly with exit code {1}..
         /// </summary>
         public static string Error_MIDebuggerExited_WithCode {
             get {
@@ -230,11 +286,29 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to determine path to debugger.  Please specify the &quot;MIDebuggerPath&quot; option..
+        /// </summary>
+        public static string Error_NoMiDebuggerPath {
+            get {
+                return ResourceManager.GetString("Error_NoMiDebuggerPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to execute command. The MIEngine is not currently debugging any process..
         /// </summary>
         public static string Error_NoMIDebuggerProcess {
             get {
                 return ResourceManager.GetString("Error_NoMIDebuggerProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No terminal is available to launch the debugger.  Please install Gnome Terminal or XTerm..
+        /// </summary>
+        public static string Error_NoTerminalAvailable_Linux {
+            get {
+                return ResourceManager.GetString("Error_NoTerminalAvailable_Linux", resourceCulture);
             }
         }
         
@@ -275,6 +349,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The target process has exited..
+        /// </summary>
+        public static string Error_TargetProcessExited {
+            get {
+                return ResourceManager.GetString("Error_TargetProcessExited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal error. Failed to load serializer for type &apos;{0}&apos;..
         /// </summary>
         public static string Error_UnableToLoadSerializer {
@@ -302,6 +385,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal error: unable to serialize launch options..
+        /// </summary>
+        public static string Error_UnknownLaunchOptions {
+            get {
+                return ResourceManager.GetString("Error_UnknownLaunchOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown or unsupported target architecture &apos;{0}&apos;..
         /// </summary>
         public static string Error_UnknownTargetArchitecture {
@@ -320,11 +412,74 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installing debugger on the remote machine..
+        /// </summary>
+        public static string Info_InstallingDebuggerOnRemote {
+            get {
+                return ResourceManager.GetString("Info_InstallingDebuggerOnRemote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Killing pipe process.
+        /// </summary>
+        public static string Info_KillingPipeProcess {
+            get {
+                return ResourceManager.GetString("Info_KillingPipeProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting unix command: &apos;{0}&apos;.
+        /// </summary>
+        public static string Info_StartingUnixCommand {
+            get {
+                return ResourceManager.GetString("Info_StartingUnixCommand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained..
         /// </summary>
         public static string Status_BreakpointPending {
             get {
                 return ResourceManager.GetString("Status_BreakpointPending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Superuser access is required to attach to a process. Attaching as superuser can potentially harm your computer. Do you want to continue? [y/N].
+        /// </summary>
+        public static string Warn_AttachAsRootProcess {
+            get {
+                return ResourceManager.GetString("Warn_AttachAsRootProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to execute {0} failed with exception {1}.
+        /// </summary>
+        public static string Warn_ProcessException {
+            get {
+                return ResourceManager.GetString("Warn_ProcessException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} exited with exit code {1}.
+        /// </summary>
+        public static string Warn_ProcessExit {
+            get {
+                return ResourceManager.GetString("Warn_ProcessExit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Downloading .NET debugger to remote machine failed with error {0}..
+        /// </summary>
+        public static string Warning_DownloadingClrDbgToRemote {
+            get {
+                return ResourceManager.GetString("Warning_DownloadingClrDbgToRemote", resourceCulture);
             }
         }
     }

@@ -11,9 +11,9 @@ using System.Threading;
 ////////////////////////////////////////////////////////////////////////////////////////
 // FILE SUMMARY
 //
-// This file defines the contract for the Microsoft.DebugEngineHost assembly. The 
-// Microsoft.DebugEngineHost provides services to a debug engine. There are two 
-// different implementations of this contract -- one for running the engine in Visual Studio, 
+// This file defines the contract for the Microsoft.DebugEngineHost assembly. The
+// Microsoft.DebugEngineHost provides services to a debug engine. There are two
+// different implementations of this contract -- one for running the engine in Visual Studio,
 // and one for running in VS Code.
 //
 
@@ -21,7 +21,29 @@ using System.Threading;
 namespace Microsoft.DebugEngineHost
 {
     /// <summary>
-    /// Static class which provides the initialization method for 
+    /// Enumeration of Host User Interfaces that an engine can be run from.
+    /// This must be kept in sync with all DebugEngineHost implentations
+    /// </summary>
+    public enum HostUIIdentifier
+    {
+        /// <summary>
+        /// Visual Studio IDE
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly")]
+        VSIDE = 0,
+        /// <summary>
+        /// Visual Studio Code
+        /// </summary>
+        VSCode = 1,
+        /// <summary>
+        /// Xamarin Studio
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly")]
+        XamarinStudio = 2
+    }
+
+    /// <summary>
+    /// Static class which provides the initialization method for
     /// Microsoft.DebugEngineHost.
     /// </summary>
     public static class Host
@@ -33,10 +55,19 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Called by a debug engine to determine which UI is using it.
+        /// </summary>
+        /// <returns></returns>
+        public static HostUIIdentifier GetHostUIIdentifier()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
-    /// Abstraction over a named section within the HostConfigurationStore. This provides 
+    /// Abstraction over a named section within the HostConfigurationStore. This provides
     /// the ability to enumerate values within the section.
     /// </summary>
     public sealed class HostConfigurationSection : IDisposable
@@ -78,15 +109,23 @@ namespace Microsoft.DebugEngineHost
     public sealed class HostConfigurationStore
     {
         /// <summary>
-        /// Constructs a new HostConfigurationStore object. This API should generally be 
+        /// Constructs a new HostConfigurationStore object. This API should generally be
         /// called from an engine's implementation of IDebugEngine2.SetRegistryRoot.
         /// </summary>
-        /// <param name="registryRoot">registryRoot value provided in SetRegistryRoot. 
-        /// In Visual Studio, this will be something like 'Software\\Microsoft\\VisualStudio\\14.0'. 
-        /// In VS Code this will not really be a registry value but rather a key used to 
+        /// <param name="registryRoot">registryRoot value provided in SetRegistryRoot.
+        /// In Visual Studio, this will be something like 'Software\\Microsoft\\VisualStudio\\14.0'.
+        /// In VS Code this will not really be a registry value but rather a key used to
         /// find the right configuration file.</param>
-        /// <param name="engineId">The engine id of this engine.</param>
-        public HostConfigurationStore(string registryRoot, string engineId)
+        public HostConfigurationStore(string registryRoot)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Sets the Guid of the engine being hosted. This should only be set once for each HostConfigurationStore instance.
+        /// </summary>
+        /// <param name="value">The new engine GUID to set</param>
+        public void SetEngineGuid(Guid value)
         {
             throw new NotImplementedException();
         }
@@ -124,12 +163,12 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Checks if logging is enabled, and if so returns a logger object. 
-        /// 
+        /// Checks if logging is enabled, and if so returns a logger object.
+        ///
         /// In VS, this is wired up to read from the registry and return a logger which writes a log file to %TMP%\log-file-name.
         /// In VS Code, this will check if the '--engineLogging' switch is enabled, and if so return a logger that will write to the Console.
         /// </summary>
-        /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled. 
+        /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled.
         /// If not specified, this will check 'EnableLogging' in the AD7 Metrics.</param>
         /// <param name="logFileName">[Required] name of the log file to open if logging is enabled.</param>
         /// <returns>[Optional] If logging is enabled, the logging object.</returns>
@@ -140,7 +179,7 @@ namespace Microsoft.DebugEngineHost
 
         /// <summary>
         /// Read the debugger setting
-        /// 
+        ///
         /// In VS, this is wired up to read setting value from RegistryRoot\\Debugger\\
         /// </summary>
         /// <returns>value of the setting</returns>
@@ -148,13 +187,29 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
-    }
 
-    /// <summary>
-    /// The host logger returned from HostConfigurationStore.GetLogger.
-    /// </summary>
-    public sealed class HostLogger
+        /// <summary>
+        /// Load the launcher that understands these options
+        /// </summary>
+        /// <param name="launcherTypeName">launch options type name</param>
+        /// <returns></returns>
+        public object GetCustomLauncher(string launcherTypeName)
+        {
+            throw new NotImplementedException();
+        }
+}
+
+/// <summary>
+/// The host logger returned from HostConfigurationStore.GetLogger.
+/// </summary>
+public sealed class HostLogger
     {
+        /// <summary>
+        /// Callback for programmatic display of log messages
+        /// </summary>
+        /// <param name="outputMessage"></param>
+        public delegate void OutputCallback(string outputMessage);
+
         private HostLogger()
         {
             throw new NotImplementedException();
@@ -173,6 +228,25 @@ namespace Microsoft.DebugEngineHost
         /// If the log is implemented as a file, this flushes the file.
         /// </summary>
         public void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// If the log is implemented as a file, this closes the file.
+        /// </summary>
+        public void Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Get a logger after the user has explicitly configured a log file/callback
+        /// </summary>
+        /// <param name="logFileName"></param>
+        /// <param name="callback"></param>
+        /// <returns>The host logger object</returns>
+        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
         {
             throw new NotImplementedException();
         }
@@ -197,10 +271,10 @@ namespace Microsoft.DebugEngineHost
     }
 
     /// <summary>
-    /// This class provides marshalling helper methods to a debug engine. 
-    /// 
+    /// This class provides marshalling helper methods to a debug engine.
+    ///
     /// When run in Visual Studio, these methods deal with COM marshalling.
-    /// 
+    ///
     /// When run in Visual Studio code, these methods are stubs to allow the AD7 API to function without COM.
     /// </summary>
     public static class HostMarshal
@@ -242,6 +316,39 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Obtain the string expression from the bpLocation union for a BPLT_DATA_STRING breakpoint.
+        /// </summary>
+        /// <param name="stringId"></param>
+        /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ForInt")]
+        public static string GetDataBreakpointStringForIntPtr(IntPtr stringId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Return the string form of the address of a bound data breakpoint
+        /// </summary>
+        /// <param name="address">address string</param>
+        /// <returns>IntPtr to a BSTR which can be returned to VS.</returns>
+        public static IntPtr GetIntPtrForDataBreakpointAddress(string address)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Obtains a code context interface given the specified IntPtr of the location.
+        /// </summary>
+        /// <param name="contextId">In VS, the IUnknown pointer to QI for a code context. In VS Code,
+        /// the identifier for the code context</param>
+        /// <returns>code context object</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ForInt")]
+        public static IDebugCodeContext2 GetDebugCodeContextForIntPtr(IntPtr contextId)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
         /// <param name="ad7Callback">The underlying event call back which was obtained from the port</param>
@@ -273,6 +380,20 @@ namespace Microsoft.DebugEngineHost
         /// <param name="loader">Natvis loader method to invoke</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Natvis")]
         public static void FindNatvisInSolution(NatvisLoader loader)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Provides interactions with the host's debugger
+    /// </summary>
+    public static class HostDebugger
+    {
+        /// <summary>
+        /// Ask the host to async spin up a new instance of the debug engine and go through the launch sequence using the specified options
+        /// </summary>
+        public static void StartDebugChildProcess(string filePath, string options, Guid engineId)
         {
             throw new NotImplementedException();
         }
@@ -351,6 +472,15 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Sets the text of the dialog without changing the progress.
+        /// </summary>
+        /// <param name="text">Text to set.</param>
+        public void SetText(string text)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Wait for the specified handle to be signaled.
         /// </summary>
         /// <param name="handle">Handle to wait on.</param>
@@ -373,8 +503,8 @@ namespace Microsoft.DebugEngineHost
     }
 
     /// <summary>
-    /// Static class providing telemetry reporting services to debug engines. Telemetry 
-    /// reports go to Microsoft, and so in general this functionality should not be used 
+    /// Static class providing telemetry reporting services to debug engines. Telemetry
+    /// reports go to Microsoft, and so in general this functionality should not be used
     /// by non-Microsoft implemented debug engines.
     /// </summary>
     public static class HostTelemetry
@@ -382,9 +512,9 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Reports a telemetry event to Microsoft. This method is a nop in non-lab configurations.
         /// </summary>
-        /// <param name="eventName">Name of the event. This should generally start with the 
+        /// <param name="eventName">Name of the event. This should generally start with the
         /// prefix 'VS/Diagnostics/Debugger/'</param>
-        /// <param name="eventProperties">0 or more properties of the event. Property names 
+        /// <param name="eventProperties">0 or more properties of the event. Property names
         /// should generally start with the prefix 'VS.Diagnostics.Debugger.'</param>
         [Conditional("LAB")]
         public static void SendEvent(string eventName, params KeyValuePair<string, object>[] eventProperties)
@@ -393,8 +523,8 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Reports the current exception to Microsoft's telemetry service. 
-        /// 
+        /// Reports the current exception to Microsoft's telemetry service.
+        ///
         /// *NOTE*: This should only be called from a 'catch(...) when' handler.
         /// </summary>
         /// <param name="currentException">Exception object to report.</param>

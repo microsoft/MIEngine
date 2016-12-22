@@ -72,10 +72,28 @@ namespace MICore
             }
         }
 
+        public override int DebuggerPid
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public override void Close()
         {
             base.Close();
-            _client.Dispose();
+            ((IDisposable)_client).Dispose();
+        }
+
+        public override int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool CanExecuteCommand()
+        {
+            return false;
         }
     }
 }

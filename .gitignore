@@ -5,6 +5,7 @@ obj
 *.orig
 *.sdf
 *.opensdf
+*.userprefs
 ipch
 debug/
 release/
@@ -18,8 +19,12 @@ intermediate
 *.metaproj
 *.tmp
 *.VC.opendb
+*.VC.db
 packages/
+packages.Desktop/
 .vs/
 Microsoft.VisualStudio.Glass
 project.lock.json
+src/*/*.nuget.props
+src/*/*.nuget.targets
 .DS_Store

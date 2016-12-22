@@ -1,0 +1,8 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <Microsoft_VisualStudio_Shell_14_0_Version>14.3.25407</Microsoft_VisualStudio_Shell_14_0_Version>
+    <Microsoft_VisualStudio_Utilities>14.3.25407</Microsoft_VisualStudio_Utilities>
+  </PropertyGroup>
+  
+</Project>

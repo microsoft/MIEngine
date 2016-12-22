@@ -83,7 +83,7 @@ namespace MICore
         }
     }
 
-    sealed public class CommandLock : IDisposable
+    sealed public class CommandLock
     {
         /// <summary>
         /// 0 if lock is free
@@ -101,24 +101,26 @@ namespace MICore
         private int _pendingSharedLockRequests;
         private TaskCompletionSource<int> _waitingSharedLockSource;
         private readonly Queue<TaskCompletionSource<ExclusiveLockToken>> _waitingExclusiveLockRequests = new Queue<TaskCompletionSource<ExclusiveLockToken>>();
+        private string _closeMessage;
 
         public CommandLock()
         {
         }
 
-        public void Close()
+        public void Close(string closeMessage)
         {
             lock (this.LockObject)
             {
+                _closeMessage = closeMessage;
                 _lockStatus = StatusClosed;
                 if (_waitingSharedLockSource != null)
                 {
-                    _waitingSharedLockSource.SetException(new ObjectDisposedException("Debugger"));
+                    _waitingSharedLockSource.SetException(new DebuggerDisposedException(_closeMessage));
                     _waitingSharedLockSource = null;
                 }
                 foreach (TaskCompletionSource<ExclusiveLockToken> completionSource in _waitingExclusiveLockRequests)
                 {
-                    completionSource.SetException(new ObjectDisposedException("Debugger"));
+                    completionSource.SetException(new DebuggerDisposedException(_closeMessage));
                 }
                 _waitingExclusiveLockRequests.Clear();
             }
@@ -134,7 +136,7 @@ namespace MICore
             {
                 if (_lockStatus == StatusClosed)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException(_closeMessage);
                 }
 
                 if (_lockStatus == StatusFree)
@@ -160,7 +162,7 @@ namespace MICore
             {
                 if (_lockStatus == StatusClosed)
                 {
-                    throw new ObjectDisposedException("Debugger");
+                    throw new DebuggerDisposedException(_closeMessage);
                 }
 
                 if (_lockStatus >= 0)
@@ -318,10 +320,5 @@ namespace MICore
         }
 
         private object LockObject { get { return _waitingExclusiveLockRequests; } }
-
-        public void Dispose()
-        {
-            Close();
-        }
     }
 }

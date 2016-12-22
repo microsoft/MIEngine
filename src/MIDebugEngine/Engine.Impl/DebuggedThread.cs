@@ -19,6 +19,7 @@ namespace Microsoft.MIDebugEngine
             TargetId = (uint)id;
             AD7Thread ad7Thread = new MIDebugEngine.AD7Thread(engine, this);
             Client = ad7Thread;
+            ChildThread = false;
         }
 
         public int Id { get; private set; }
@@ -27,6 +28,7 @@ namespace Microsoft.MIDebugEngine
         public bool Alive { get; set; }
         public bool Default { get; set; }
         public string Name { get; set; }
+        public bool ChildThread { get; set; }       // transient child thread, don't inform UI of this thread
     }
 
     internal class ThreadCache
@@ -40,12 +42,22 @@ namespace Microsoft.MIDebugEngine
         private DebuggedProcess _debugger;
         private List<DebuggedThread> _deadThreads;
         private List<DebuggedThread> _newThreads;
+        private Dictionary<string, List<int>> _threadGroups;
+        private static uint s_targetId;
+        private const string c_defaultGroupId = "i1";  // gdb's default group id, also used for any process without group ids
+
+        static ThreadCache()
+        {
+            s_targetId = uint.MaxValue;
+        }
 
         internal ThreadCache(ISampleEngineCallback callback, DebuggedProcess debugger)
         {
             _threadList = new List<DebuggedThread>();
             _stackFrames = new Dictionary<int, List<ThreadContext>>();
             _topContext = new Dictionary<int, ThreadContext>();
+            _threadGroups = new Dictionary<string, List<int>>();
+            _threadGroups[c_defaultGroupId] = new List<int>();  // initialize the processes thread group
             _stateChange = true;
             _callback = callback;
             _debugger = debugger;
@@ -135,16 +147,59 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        internal void ThreadEvent(int id, bool deleted)
+        internal void ThreadCreatedEvent(int id, string groupId)
         {
             lock (_threadList)
             {
                 var thread = _threadList.Find(t => t.Id == id);
-                if ((thread != null) == deleted)
+                if (thread == null)
                 {
                     _stateChange = true;
                 }
+                if (string.IsNullOrEmpty(groupId))
+                {
+                    groupId = c_defaultGroupId;
+                }
+                if (!_threadGroups.ContainsKey(groupId))
+                {
+                    _threadGroups[groupId] = new List<int>();
+                }
+                _threadGroups[groupId].Add(id);
             }
+        }
+
+        internal void ThreadExitedEvent(int id)
+        {
+            lock (_threadList)
+            {
+                var thread = _threadList.Find(t => t.Id == id);
+                if (thread != null)
+                {
+                    _stateChange = true;
+                }
+                foreach (var g in _threadGroups)
+                {
+                    if (g.Value.Contains(id))
+                    {
+                        g.Value.Remove(id);
+                        break;
+                    }
+                }
+            }
+        }
+
+        internal void ThreadGroupExitedEvent(string groupId)
+        {
+            lock (_threadList)
+            {
+                _threadGroups.Remove(groupId);
+            }
+        }
+
+        private bool IsInParent(int tid)
+        {
+            // only those threads in the s_defaultGroupId threadgroup are in the debugee, others are transient while attaching to a child process
+            return _threadGroups[c_defaultGroupId].Contains(tid);
         }
 
         private async Task<List<ThreadContext>> WalkStack(DebuggedThread thread)
@@ -213,12 +268,34 @@ namespace Microsoft.MIDebugEngine
                             {
                                 thread.TargetId = tid;
                             }
-                            else if (targetId.StartsWith("Thread") &&
+                            else if (targetId.StartsWith("Thread ", StringComparison.OrdinalIgnoreCase) &&
                                      System.UInt32.TryParse(targetId.Substring("Thread ".Length), out tid) &&
                                      tid != 0
                             )
                             {
                                 thread.TargetId = tid;
+                            }
+                            else if (targetId.StartsWith("Process ", StringComparison.OrdinalIgnoreCase) &&
+                                    System.UInt32.TryParse(targetId.Substring("Process ".Length), out tid) &&
+                                    tid != 0
+                            )
+                            {   // First thread in a linux process has tid == pid
+                                thread.TargetId = tid;
+                            }
+                            else if (targetId.StartsWith("Thread ", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // In processes with pthreads the thread name is in form: "Thread <0x123456789abc> (LWP <thread-id>)"
+                                int lwp_pos = targetId.IndexOf("(LWP ");
+                                int paren_pos = targetId.LastIndexOf(')');
+                                int len = paren_pos - (lwp_pos + 5);
+                                if (len > 0 && System.UInt32.TryParse(targetId.Substring(lwp_pos + 5, len), out tid) && tid != 0)
+                                {
+                                    thread.TargetId = tid;
+                                }
+                            }
+                            else
+                            {
+                                thread.TargetId = --s_targetId;
                             }
                         }
                         if (t.Contains("name"))
@@ -288,13 +365,19 @@ namespace Microsoft.MIDebugEngine
             if (newThreads != null)
                 foreach (var newt in newThreads)
                 {
-                    _callback.OnThreadStart(newt);
+                    if (!newt.ChildThread)
+                    {
+                        _callback.OnThreadStart(newt);
+                    }
                 }
             if (deadThreads != null)
                 foreach (var dead in deadThreads)
                 {
-                    // Send the destroy event outside the lock
-                    _callback.OnThreadExit(dead, 0);
+                    if (!dead.ChildThread)
+                    {
+                        // Send the destroy event outside the lock
+                        _callback.OnThreadExit(dead, 0);
+                    }
                 }
         }
 
@@ -307,6 +390,10 @@ namespace Microsoft.MIDebugEngine
                 return thread;
             // thread not found, so create it, and return it
             newthread = new DebuggedThread(id, _debugger.Engine);
+            if (!IsInParent(id))
+            {
+                newthread.ChildThread = true;
+            }
             newthread.Default = false;
             _threadList.Add(newthread);
             bNew = true;

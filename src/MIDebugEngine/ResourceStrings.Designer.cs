@@ -80,6 +80,15 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debugging will now abort..
+        /// </summary>
+        internal static string DebuggingWillAbort {
+            get {
+                return ResourceManager.GetString("DebuggingWillAbort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sample Engine.
         /// </summary>
         internal static string EngineName {
@@ -91,11 +100,52 @@ namespace Microsoft.MIDebugEngine {
         /// <summary>
         ///   Looks up a localized string similar to Program path &apos;{0}&apos; is missing or invalid.
         ///
-        ///{1} failed with message: {2}.
+        ///{1} failed with message: {2}
+        ///
+        ///This may occur if the process&apos;s executable was changed after the process was started, such as when installing an update. Try re-launching the application or restarting the machine..
         /// </summary>
         internal static string Error_ExePathInvalid {
             get {
                 return ResourceManager.GetString("Error_ExePathInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get executable path with error &apos;{0}&apos;..
+        /// </summary>
+        internal static string Error_FailedToGetExePath {
+            get {
+                return ResourceManager.GetString("Error_FailedToGetExePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to obtain target architecture..
+        /// </summary>
+        internal static string Error_FailedToGetTargetArchitecture {
+            get {
+                return ResourceManager.GetString("Error_FailedToGetTargetArchitecture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attaching to process {0} with {1} failed because of insufficient privileges with error message &apos;{2}&apos;.
+        ///
+        ///To attach to an application on Linux, login as super user or set ptrace_scope to 0.
+        ///See https://aka.ms/miengine-gdb-troubleshooting for details..
+        /// </summary>
+        internal static string Error_PTraceFailure {
+            get {
+                return ResourceManager.GetString("Error_PTraceFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported platform..
+        /// </summary>
+        internal static string Error_UnsupportedPlatform {
+            get {
+                return ResourceManager.GetString("Error_UnsupportedPlatform", resourceCulture);
             }
         }
         
@@ -199,6 +249,42 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find or open the symbol file..
+        /// </summary>
+        internal static string ModuleLoadedWithoutSymbols {
+            get {
+                return ResourceManager.GetString("ModuleLoadedWithoutSymbols", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols loaded..
+        /// </summary>
+        internal static string ModuleLoadedWithSymbols {
+            get {
+                return ResourceManager.GetString("ModuleLoadedWithSymbols", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loaded &apos;{0}&apos;. {1}.
+        /// </summary>
+        internal static string ModuleLoadMessage {
+            get {
+                return ResourceManager.GetString("ModuleLoadMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unloaded &apos;{0}&apos;..
+        /// </summary>
+        internal static string ModuleUnloadMessage {
+            get {
+                return ResourceManager.GetString("ModuleUnloadMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit refresh required for visualized expressions.
         /// </summary>
         internal static string NoSideEffectsVisualizerMessage {
@@ -222,6 +308,24 @@ namespace Microsoft.MIDebugEngine {
         internal static string SettingSymbolSearchPath {
             get {
                 return ResourceManager.GetString("SettingSymbolSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols loaded - {0}.
+        /// </summary>
+        internal static string SymbolsLoadedInfo {
+            get {
+                return ResourceManager.GetString("SymbolsLoadedInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols not loaded.
+        /// </summary>
+        internal static string SymbolsNotLoadedInfo {
+            get {
+                return ResourceManager.GetString("SymbolsNotLoadedInfo", resourceCulture);
             }
         }
         
@@ -294,6 +398,33 @@ namespace Microsoft.MIDebugEngine {
         internal static string VisualizingExpressionMessage {
             get {
                 return ResourceManager.GetString("VisualizingExpressionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugger executable &apos;{0}&apos; is not signed. As a result, debugging may not work properly..
+        /// </summary>
+        internal static string Warning_DarwinDebuggerUnsigned {
+            get {
+                return ResourceManager.GetString("Warning_DarwinDebuggerUnsigned", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Source file &apos;{0}&apos; is newer than module file &apos;{1}&apos;..
+        /// </summary>
+        internal static string Warning_SourceFileOutOfDate_Arg2 {
+            get {
+                return ResourceManager.GetString("Warning_SourceFileOutOfDate_Arg2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Debuggee TargetArchitecture not detected, assuming x86_64..
+        /// </summary>
+        internal static string Warning_UsingDefaultArchitecture {
+            get {
+                return ResourceManager.GetString("Warning_UsingDefaultArchitecture", resourceCulture);
             }
         }
     }

@@ -2,6 +2,7 @@
 <Project ToolsVersion="14.0"
          DefaultTargets="BuildAndTest"
          xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="build\miengine.settings.targets" />
          
   <UsingTask
     AssemblyFile="src\packages\xunit.runners.2.0.0\tools\xunit.runner.msbuild.dll"
@@ -15,7 +16,7 @@
 	
 	<!--Don't run unit tests for lab builds -->
 	<TargetsToRun>Build;Test</TargetsToRun>
-	<TargetsToRun Condition="'$(Configuration)' == 'Lab.Release' OR '$(Configuration)' == 'Lab.Debug'">Build</TargetsToRun>
+	<TargetsToRun Condition="'$(Lab)' == 'true'">Build</TargetsToRun>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,7 +46,7 @@
       <TestAssemblies Include="bin\$(Configuration)\**\*UnitTests.dll"/>
     </ItemGroup>
     
-    <Exec Command="src\packages\xunit.runner.console.2.0.0\tools\xunit.console.exe @(TestAssemblies, ' ') -xml &quot;$(OutDir)TestResults.xml&quot;" />
+    <Exec Command="$(NugetPackagesDirectory)\xunit.runner.console.2.0.0\tools\xunit.console.exe @(TestAssemblies, ' ') -xml &quot;$(OutDir)TestResults.xml&quot;" />
     
   </Target>
   

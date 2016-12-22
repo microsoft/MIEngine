@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,7 +40,7 @@ namespace MICore
         public abstract void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer);
         protected virtual string GetThreadName() { return "MI.StreamTransport"; }
 
-        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
+        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
         {
             Logger = logger;
             _callback = transportCallback;
@@ -71,6 +72,7 @@ namespace MICore
 
                     line = line.TrimEnd();
                     Logger?.WriteLine("->" + line);
+                    Logger?.Flush();
 
                     try
                     {
@@ -100,8 +102,28 @@ namespace MICore
                 {
                     _bQuit = true;
                     _streamReadCancellationTokenSource.Dispose();
-                    _reader.Dispose();
-                    _writer.Dispose();
+
+                    // If we are shutting down without notice from the debugger (e.g., the terminal
+                    // where the debugger was hosted was closed), at this point it's possible that
+                    // there is a thread blocked doing a read() syscall.
+                    ForceDisposeStreamReader(_reader);
+
+                    try
+                    {
+                        _writer.Dispose();
+                    }
+                    catch
+                    {
+                        // This can fail flush side effects if the debugger goes down. When this happens we don't want
+                        // to crash OpenDebugAD7/VS. Stack:
+                        //   System.IO.UnixFileStream.WriteNative(Byte[] array, Int32 offset, Int32 count)
+                        //   System.IO.UnixFileStream.FlushWriteBuffer()
+                        //   System.IO.UnixFileStream.Dispose(Boolean disposing)
+                        //   System.IO.FileStream.Dispose(Boolean disposing)
+                        //   System.IO.Stream.Close()
+                        //   System.IO.StreamWriter.Dispose(Boolean disposing)
+                        //   System.IO.TextWriter.Dispose()
+                    }
                 }
             }
         }
@@ -120,6 +142,7 @@ namespace MICore
         protected void Echo(string cmd)
         {
             Logger?.WriteLine("<-" + cmd);
+            Logger?.Flush();
             _writer.WriteLine(cmd);
             _writer.Flush();
         }
@@ -172,9 +195,34 @@ namespace MICore
             get { return _bQuit; }
         }
 
+        public abstract int DebuggerPid { get; }
+
         protected ITransportCallback Callback
         {
             get { return _callback; }
         }
+
+        /// <summary>
+        /// In some scenarios, a StreamReader will be blocked on read() when trying to dispose it.
+        /// On OS X under mono, read() will block any close() syscalls on the file descriptor for the stream.
+        /// Therefore, we write a byte to unblock the read() and allow close() to succeed.
+        /// Callers to this function should document why read() might be blocked.
+        /// </summary>
+        /// <param name="reader">The StreamReader to forcibly dispose</param>
+        protected static void ForceDisposeStreamReader(StreamReader reader)
+        {
+            try
+            {
+                reader?.BaseStream.WriteByte(0);
+            }
+            catch
+            {
+            }
+
+            reader?.Dispose();
+        }
+
+        public abstract int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error);
+        public abstract bool CanExecuteCommand();
     }
 }

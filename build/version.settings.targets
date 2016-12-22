@@ -7,12 +7,12 @@
     <VersionZeroYear>2013</VersionZeroYear>
 
     <!--Compute the major and minor build number-->
-    <!--Team build passes the build number in the TF_BUILD_BUILDNUMBER variable. It has the format 'Master_20140922.4' where
+    <!--Team build passes the build number in the BUILD_BUILDNUMBER variable. It has the format 'Master_20140922.4' where
     'Master' is the name of the definition, '2014' is the year, '09' is the month, '22' is the day, and '4' is the revision. 
     TeamBuild also sets a 'BuildNumber' but that number is different from what we want, and msbuild will not let us clear it,
     so do not use a property of that name.-->
-    <BuildDateRevision Condition="'$(TF_BUILD_BUILDNUMBER)'==''">$([System.DateTime]::Now.ToString(yyyyMMdd))</BuildDateRevision>
-    <BuildDateRevision Condition="'$(TF_BUILD_BUILDNUMBER)'!=''">$(TF_BUILD_BUILDNUMBER.Substring($([MSBuild]::Add($(TF_BUILD_BUILDNUMBER.LastIndexOf('_')),1))))</BuildDateRevision>
+    <BuildDateRevision Condition="'$(BUILD_BUILDNUMBER)'==''">$([System.DateTime]::Now.ToString(yyyyMMdd))</BuildDateRevision>
+    <BuildDateRevision Condition="'$(BUILD_BUILDNUMBER)'!=''">$(BUILD_BUILDNUMBER.Substring($([MSBuild]::Add($(BUILD_BUILDNUMBER.LastIndexOf('_')),1))))</BuildDateRevision>
     <BuildNumber_Year>$([MSBuild]::Subtract($([System.Int32]::Parse($(BuildDateRevision.Substring(0,4)))),$(VersionZeroYear)))</BuildNumber_Year>
     <BuildNumber_Month>$(BuildDateRevision.Substring(4,2))</BuildNumber_Month>
     <BuildNumber_Day>$(BuildDateRevision.Substring(6,2))</BuildNumber_Day>
@@ -23,6 +23,6 @@
     <AssemblyVersion Condition="'$(AssemblyVersion)'==''">$(MajorVersion).$(MinorVersion).0</AssemblyVersion>
     <BuildVersion>$(MajorVersion).$(MinorVersion).$(BuildNumberMajor).$(BuildNumberMinor)</BuildVersion>
     <BuildVersionExtended>$(BuildVersion)</BuildVersionExtended>
-    <BuildVersionExtended Condition="'$(TF_BUILD_SOURCEGETVERSION)'!=''">$(BuildVersionExtended) commit:$(TF_BUILD_SOURCEGETVERSION)</BuildVersionExtended>
+    <BuildVersionExtended Condition="'$(BUILD_SOURCEVERSION)'!=''">$(BuildVersionExtended) commit:$(BUILD_SOURCEVERSION)</BuildVersionExtended>
   </PropertyGroup>
 </Project>

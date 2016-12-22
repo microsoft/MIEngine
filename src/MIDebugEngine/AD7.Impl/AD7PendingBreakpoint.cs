@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using MICore;
 using System.Diagnostics;
 using Microsoft.DebugEngineHost;
+using System.Globalization;
+using System.Linq;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -40,6 +42,8 @@ namespace Microsoft.MIDebugEngine
         internal bool Enabled { get { return _enabled; } }
         internal bool Deleted { get { return _deleted; } }
         internal bool PendingDelete { get { return _pendingDelete; } }
+
+        internal bool IsDataBreakpoint { get { return _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING; } }
 
         internal PendingBreakpoint PendingBreakpoint { get { return _bp; } }
 
@@ -80,22 +84,24 @@ namespace Microsoft.MIDebugEngine
             // The sample engine only supports breakpoints on a file and line number or function name. No other types of breakpoints are supported.
             if (_deleted ||
                 (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE
-                && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET))
+                && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET
+                && _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT
+                && (_bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING || !_engine.DebuggedProcess.MICommandFactory.SupportsDataBreakpoints)))
             {
-                _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
+                SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
                 return false;
             }
             if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0)
             {
                 if (!VerifyCondition(_bpRequestInfo.bpCondition))
                 {
-                    _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
+                    SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
                     return false;
                 }
             }
             if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
             {
-                _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
+                this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
                 return false;
             }
 
@@ -106,18 +112,25 @@ namespace Microsoft.MIDebugEngine
         // location.
         public AD7DocumentContext GetDocumentContext(ulong address, string functionName)
         {
-            IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
-            string documentName;
-            EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
+            if ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE)
+            {
+                IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                string documentName;
+                EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
 
-            // Get the location in the document that the breakpoint is in.
-            TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
-            TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
-            EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                // Get the location in the document that the breakpoint is in.
+                TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
+                TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
+                EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
 
-            AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, address, functionName);
+                AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, address, functionName);
 
-            return new AD7DocumentContext(new MITextPosition(documentName, startPosition[0], startPosition[0]), codeContext);
+                return new AD7DocumentContext(new MITextPosition(documentName, startPosition[0], startPosition[0]), codeContext, _engine.DebuggedProcess);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         // Remove all of the bound breakpoints for this pending breakpoint
@@ -130,6 +143,16 @@ namespace Microsoft.MIDebugEngine
                     _boundBreakpoints[i].Delete();
                 }
                 _boundBreakpoints.Clear();
+            }
+        }
+
+        public void SetError(AD7ErrorBreakpoint bpError, bool sendEvent = false)
+        {
+            _BPError = bpError;
+
+            if (sendEvent)
+            {
+                _engine.Callback.OnBreakpointError(bpError);
             }
         }
 
@@ -155,8 +178,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         //send a low severity warning bp. This will allow the UI to respond quickly, and if the mi debugger doesn't end up binding, this warning will get 
                         //replaced by the real mi debugger error text
-                        _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.LongBind, enum_BP_ERROR_TYPE.BPET_SEV_LOW | enum_BP_ERROR_TYPE.BPET_TYPE_WARNING);
-                        _engine.Callback.OnBreakpointError(_BPError);
+                        this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.LongBind, enum_BP_ERROR_TYPE.BPET_SEV_LOW | enum_BP_ERROR_TYPE.BPET_TYPE_WARNING), true);
                         return Constants.S_FALSE;
                     }
                     else
@@ -201,6 +223,10 @@ namespace Microsoft.MIDebugEngine
                 TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
                 TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
                 string condition = null;
+                string address = null;
+                ulong codeAddress = 0;
+                uint size = 0;
+                IEnumerable<Checksum> checksums = null;
 
                 lock (_boundBreakpoints)
                 {
@@ -209,39 +235,94 @@ namespace Microsoft.MIDebugEngine
                         Debug.Fail("Breakpoint already bound");
                         return;
                     }
-                    if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0)
-                    {
-                        if (_bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET)
-                        {
-                            IDebugFunctionPosition2 functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
-                            EngineUtils.CheckOk(functionPosition.GetFunctionName(out functionName));
-                        }
-                        else if (_bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE)
-                        {
-                            IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
-
-                            // Get the name of the document that the breakpoint was put in
-                            EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
-
-                            // Get the location in the document that the breakpoint is in.
-                            EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
-                        }
-                    }
                     if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0
                         && _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE)
                     {
                         condition = _bpRequestInfo.bpCondition.bstrCondition;
+                    }
+                    if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0)
+                    {
+                        switch ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType)
+                        {
+                            case enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET:
+                                {
+                                    IDebugFunctionPosition2 functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                                    EngineUtils.CheckOk(functionPosition.GetFunctionName(out functionName));
+                                    break;
+                                }
+                            case enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT:
+                                {
+                                    IDebugCodeContext2 codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_bpRequestInfo.bpLocation.unionmember1);
+                                    if (!(codePosition is AD7MemoryAddress))
+                                    {
+                                        goto default;   // context is not from this engine
+                                    }
+                                    codeAddress = ((AD7MemoryAddress)codePosition).Address;
+                                    break;
+                                }
+                            case enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE:
+                                {
+                                    IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+
+                                    // Get the name of the document that the breakpoint was put in
+                                    EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
+
+                                    // Get the location in the document that the breakpoint is in.
+                                    EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+
+                                    // Get the document checksum
+                                    // TODO: This and all other AD7 interface calls need to be moved so that they are only
+                                    // executed from the main thread.
+                                    // Github issue: https://github.com/Microsoft/MIEngine/issues/350
+                                    if (_engine.DebuggedProcess.MICommandFactory.SupportsBreakpointChecksums())
+                                    {
+                                        try
+                                        {
+                                            checksums = GetSHA1Checksums();
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // If we fail to get a checksum there's nothing else we can do
+                                        }
+                                    }
+
+                                    break;
+                                }
+                            case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
+                                {
+                                    address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    size = (uint)_bpRequestInfo.bpLocation.unionmember4;
+                                    if (condition != null)
+                                    {
+                                        goto default;   // mi has no conditions on watchpoints
+                                    }
+                                    break;
+                                }
+                            default:
+                                {
+                                    this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint), true);
+                                    return;
+                                }
+                        }
                     }
                 }
                 PendingBreakpoint.BindResult bindResult;
                 // Bind all breakpoints that match this source and line number.
                 if (documentName != null)
                 {
-                    bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, this);
+                    bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, _enabled, checksums, this);
+                }
+                else if (functionName != null)
+                {
+                    bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, _enabled, this);
+                }
+                else if (codeAddress != 0)
+                {
+                    bindResult = await PendingBreakpoint.Bind(codeAddress, _engine.DebuggedProcess, condition, _enabled, this);
                 }
                 else
                 {
-                    bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, this);
+                    bindResult = await PendingBreakpoint.Bind(address, size, _engine.DebuggedProcess, condition, this);
                 }
 
                 lock (_boundBreakpoints)
@@ -252,8 +333,7 @@ namespace Microsoft.MIDebugEngine
                     }
                     if (bindResult.BoundBreakpoints == null || bindResult.BoundBreakpoints.Count == 0)
                     {
-                        _BPError = new AD7ErrorBreakpoint(this, bindResult.ErrorMessage);
-                        _engine.Callback.OnBreakpointError(_BPError);
+                        this.SetError(new AD7ErrorBreakpoint(this, bindResult.ErrorMessage), true);
                     }
                     else
                     {
@@ -271,13 +351,12 @@ namespace Microsoft.MIDebugEngine
         {
             lock (_boundBreakpoints)
             {
-                if (_boundBreakpoints.Find((b) => b.Addr == bp.Addr) != null)
+                if (!IsDataBreakpoint && _boundBreakpoints.Find((b) => b.Addr == bp.Addr) != null)
                 {
                     return null;   // already bound to this breakpoint
                 }
-                AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, bp.Addr, bp.FunctionName, bp.DocumentContext(_engine));
-                AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp.Addr, this, breakpointResolution, bp);
-
+                AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, IsDataBreakpoint, bp.Addr, bp.FunctionName, bp.DocumentContext(_engine));
+                AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, this, breakpointResolution, bp);
                 //check can bind one last time. If the pending breakpoint was deleted before now, we need to clean up gdb side
                 if (CanBind())
                 {
@@ -321,7 +400,7 @@ namespace Microsoft.MIDebugEngine
                     _boundBreakpoints[i].Delete();
                 }
                 _deleted = true;
-                if (_engine.DebuggedProcess.ProcessState != ProcessState.Stopped)
+                if (_engine.DebuggedProcess.ProcessState != ProcessState.Stopped && !_engine.DebuggedProcess.MICommandFactory.AllowCommandsWhileRunning())
                 {
                     _pendingDelete = true;
                 }
@@ -353,12 +432,19 @@ namespace Microsoft.MIDebugEngine
         // Toggles the enabled state of this pending breakpoint.
         int IDebugPendingBreakpoint2.Enable(int fEnable)
         {
-            lock (_boundBreakpoints)
+            bool newValue = fEnable == 0 ? false : true;
+            if (_enabled != newValue)
             {
-                _enabled = fEnable == 0 ? false : true;
-                if (_bp != null)
+                _enabled = newValue;
+                PendingBreakpoint bp = _bp;
+                if (bp != null)
                 {
-                    _bp.Enable(_enabled, _engine.DebuggedProcess);
+                    _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+                    {
+                        _engine.DebuggedProcess.AddInternalBreakAction(
+                            () => bp.EnableAsync(_enabled, _engine.DebuggedProcess)
+                        );
+                    });
                 }
             }
 
@@ -438,10 +524,9 @@ namespace Microsoft.MIDebugEngine
             PendingBreakpoint bp = null;
             lock (_boundBreakpoints)
             {
-                if (!VerifyCondition(bpCondition))
+                if (!VerifyCondition(bpCondition) || IsDataBreakpoint)
                 {
-                    _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
-                    _engine.Callback.OnBreakpointError(_BPError);
+                    this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedConditionalBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR), true);
                     return Constants.E_FAIL;
                 }
                 if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0
@@ -463,7 +548,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     _engine.DebuggedProcess.AddInternalBreakAction(
                         () => bp.SetConditionAsync(bpCondition.bstrCondition, _engine.DebuggedProcess)
-                            );
+                    );
                 });
             }
             return Constants.S_OK;
@@ -474,8 +559,7 @@ namespace Microsoft.MIDebugEngine
         {
             if (bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
             {
-                _BPError = new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR);
-                _engine.Callback.OnBreakpointError(_BPError);
+                this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR), true);
                 return Constants.E_FAIL;
             }
             return Constants.S_OK;
@@ -501,10 +585,95 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task EnableAfterFuncEvalAsync()
         {
-            if (_enabled && _bp != null)
+            if (!_enabled && _bp != null)
             {
                 await _bp.EnableAsync(true, _engine.DebuggedProcess);
             }
+        }
+
+        /// <summary>
+        /// Get the checksums associated with this pending breakpoint in order to verify the source file
+        /// </summary>
+        /// <param name="hashAlgorithmId">The HashAlgorithmId to use to calculate checksums</param>
+        /// <param name="checksums">Enumerable of the checksums obtained from the UI</param>
+        /// <returns>
+        /// S_OK on Success, Error Codes on failure
+        /// </returns>
+        private int GetChecksum(HashAlgorithmId hashAlgorithmId, out IEnumerable<Checksum> checksums)
+        {
+            checksums = Enumerable.Empty<Checksum>();
+
+            IDebugBreakpointChecksumRequest2 checksumRequest = _pBPRequest as IDebugBreakpointChecksumRequest2;
+            if (checksumRequest == null)
+            {
+                return Constants.E_NOTIMPL;
+            }
+
+            int hr = Constants.S_OK;
+
+            int checksumEnabled;
+            hr = checksumRequest.IsChecksumEnabled(out checksumEnabled);
+            if (hr != Constants.S_OK || checksumEnabled == 0)
+            {
+                return Constants.E_NOTIMPL;
+            }
+
+            Guid guidAlgorithm = hashAlgorithmId.AD7GuidHashAlgorithm;
+            uint checksumSize = hashAlgorithmId.HashSize;
+
+            CHECKSUM_DATA[] checksumDataArr = new CHECKSUM_DATA[1];
+            hr = checksumRequest.GetChecksum(ref guidAlgorithm, checksumDataArr);
+            if (hr != Constants.S_OK)
+            {
+                return hr;
+            }
+            CHECKSUM_DATA checksumData = checksumDataArr[0];
+
+            Debug.Assert(checksumData.ByteCount % checksumSize == 0);
+            uint countChecksums = checksumData.ByteCount / checksumSize;
+            if (countChecksums == 0)
+            {
+                return Constants.S_OK;
+            }
+
+            byte[] allChecksumBytes = new byte[checksumData.ByteCount];
+            System.Runtime.InteropServices.Marshal.Copy(checksumData.pBytes, allChecksumBytes, 0, allChecksumBytes.Length);
+            System.Runtime.InteropServices.Marshal.FreeCoTaskMem(checksumData.pBytes);
+
+            Checksum[] checksumArray = new Checksum[countChecksums];
+            for (uint i = 0; i < countChecksums; i++)
+            {
+                checksumArray[i] = Checksum.FromBytes(hashAlgorithmId.MIHashAlgorithmName, allChecksumBytes.Skip((int)(i * checksumSize)).Take((int)checksumSize).ToArray());
+            }
+
+            checksums = checksumArray;
+
+            return Constants.S_OK;
+        }
+
+        /// <summary>
+        /// Get the SHA1Nomralized Checksums for the document associated with the breakpoint request.
+        /// If the normalized guid is not recognized by the UI, it will attempt to obtain just the SHA1 checksum
+        /// </summary>
+        /// <returns>One or more checksums on succes, empty enumerable on any failures</returns>
+        private IEnumerable<Checksum> GetSHA1Checksums()
+        {
+            IEnumerable<Checksum> checksums = Enumerable.Empty<Checksum>();
+            int hr = GetChecksum(HashAlgorithmId.SHA1Normalized, out checksums);
+
+            // VS IDE does not understand the normalized guids and will return E_FAIL for normalized
+            // Try to get a checksum for SHA1
+            if (hr == Constants.E_FAIL)
+            {
+                hr = GetChecksum(HashAlgorithmId.SHA1, out checksums);
+            }
+
+            if (hr != Constants.S_OK)
+            {
+                return Enumerable.Empty<Checksum>();
+            }
+
+            return checksums;
         }
     }
 

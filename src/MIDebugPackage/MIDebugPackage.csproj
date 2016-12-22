@@ -1,13 +1,38 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
+  <Import Project="..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="..\..\build\miengine.settings.targets" />
+  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
+  <Import Project="packages.props" />
   <PropertyGroup>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <!--Visual Studio will prompt to upgrade the project unless $(MinimumVisualStudioVersion)==$(VisualStudioVersion), to make
+    VS happy, we will conditionally set MinimumVisualStudioVersion based on what version is opening the project -->
+    <MinimumVisualStudioVersion Condition="'$(VisualStudioVersion)' == '15.0'">15.0</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion Condition="'$(VisualStudioVersion)' != '15.0'">14.0</MinimumVisualStudioVersion>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <TargetFrameworkProfile />
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -25,6 +50,25 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\RequiredNetFX46FacadeAssemblies.targets" />
@@ -48,27 +92,8 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartAction>Program</StartAction>
-    <StartProgram>$(ProgramFiles)\Microsoft Visual Studio 14.0\Common7\IDE\devenv.exe</StartProgram>
+    <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -96,16 +121,20 @@
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop">
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.14.0">
+    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.14.0.$(Microsoft_VisualStudio_Shell_14_0_Version)\lib\Microsoft.VisualStudio.Shell.14.0.dll">
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0">
+    <!--NOTE: this reference is here to enable CreatePkgDef.exe to succeed when compiling in VS in a version != the shell targetting version -->
+    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Utilities.$(Microsoft_VisualStudio_Utilities)\lib\net45\Microsoft.VisualStudio.Utilities.dll">
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0">
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.12.0">
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -139,6 +168,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.props" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -166,25 +199,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
     <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
@@ -206,7 +220,17 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
     <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
+    <DropSignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreCLR)' == 'false'">
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AndroidDebugLauncher\AndroidDebugLauncher.csproj">
@@ -235,6 +259,13 @@
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
+    <ProjectReference Include="..\SSHDebugPS\SSHDebugPS.csproj">
+      <Project>{15bcbef4-1c2b-412b-925b-34a049097e62}</Project>
+      <Name>SSHDebugPS</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
@@ -245,12 +276,19 @@
   <Import Project="..\..\build\DropFiles.targets" />
   <Import Project="..\..\build\PackageNuGet.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
+    <Error Condition="!Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
+  </Target>
+  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
   <!--
   Target to drop the built files into a directory.
   For the official build, we need to drop files to the build share
   For normal builds, we drop files to <enlistment-root>\bin\debug\drop for easy sharing
   -->
-  
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
@@ -258,4 +296,6 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <!-- Extra empty msbuild targets to make it happy -->
+  <Target Name="SetDevPathEnvironment" />
 </Project>

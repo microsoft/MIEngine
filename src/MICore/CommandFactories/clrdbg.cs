@@ -30,6 +30,11 @@ namespace MICore
             return false;
         }
 
+        public override bool SupportsChildProcessDebugging()
+        {
+            return false;
+        }
+
         // CLRDBG supports frame formatting itself
         override public bool SupportsFrameFormatting
         {
@@ -41,9 +46,21 @@ namespace MICore
             return true;
         }
 
+        public override bool SupportsBreakpointChecksums()
+        {
+            return true;
+        }
+
         public override async Task<bool> SetJustMyCode(bool enabled)
         {
             string command = "-gdb-set just-my-code " + (enabled ? "1" : "0");
+            Results results = await _debugger.CmdAsync(command, ResultClass.None);
+            return results.ResultClass == ResultClass.done;
+        }
+
+        public override async Task<bool> SetStepFiltering(bool enabled)
+        {
+            string command = "-gdb-set enable-step-filtering " + (enabled ? "1" : "0");
             Results results = await _debugger.CmdAsync(command, ResultClass.None);
             return results.ResultClass == ResultClass.done;
         }
@@ -182,6 +199,13 @@ namespace MICore
             }
         }
 
+        public override async Task ExecRun()
+        {
+            string command = (_debugger.LaunchOptions.NoDebug) ? "-exec-run --noDebug" : "-exec-run";
+            _debugger.VerifyNotDebuggingCoreDump();
+            await _debugger.CmdAsync(command, ResultClass.running);
+        }
+
         override public async Task Terminate()
         {
             string command = "-exec-abort";
@@ -198,10 +222,38 @@ namespace MICore
 
         public override async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-list-children --simple-values \"{0}\" --propertyInfoFlags {1}", variableReference, (uint)dwFlags);
+            // Limit the number of children expanded to 1000 in case memory is uninitialized
+            string command = string.Format("-var-list-children --simple-values \"{0}\" --propertyInfoFlags {1} 0 1000", variableReference, (uint)dwFlags);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
+        }
+        public override Task Signal(string sig)
+        {
+            throw new NotImplementedException("clrdbg signal command");
+        }
+        public override Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done)
+        {
+            throw new NotImplementedException("clrdbg catch command");
+        }
+
+        public override string GetTargetArchitectureCommand()
+        {
+            return null;
+        }
+
+        public override TargetArchitecture ParseTargetArchitectureResult(string result)
+        {
+            // CLRDBG only support x64 now.
+            return TargetArchitecture.X64;
+        }
+
+        public override string GetSetEnvironmentVariableCommand(string name, string value)
+        {
+            // clrdbg doesn't implement a command to set environment variables on the debuggee
+            // This is worked around by setting the environment variables on the actual debugger
+            // process, and getting the debuggee to inherit those.
+            throw new NotImplementedException();
         }
     }
 }

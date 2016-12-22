@@ -109,7 +109,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>221,0 to 221,0 in [Unknown]!android_main(android_app*)</BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^221,0 to 221,0 in (\[Unknown\]|libsanity.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />

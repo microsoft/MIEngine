@@ -17,5 +17,6 @@
     <file src="Microsoft.MICore.dll" target="lib\dnxcore50\Microsoft.MICore.dll" />
     <file src="Microsoft.MIDebugEngine.dll" target="lib\dnxcore50\Microsoft.MIDebugEngine.dll" />
     <file src="coreclr.ad7Engine.json" target="contentFiles\any\any" />
+    <file src="osxlaunchhelper.scpt" target="contentFiles\any\any" />
   </files>
 </package>

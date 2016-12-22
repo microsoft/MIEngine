@@ -1,17 +1,23 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
+  <PropertyGroup>
+    <!-- Dependencies from project.json go in folders like "Dependency\Version", but package.json uses "Dependency.Version" -->
+    <VersionSeparator Condition="'$(IsCoreClr)' == 'true'">\</VersionSeparator>
+    <VersionSeparator Condition="'$(IsCoreClr)' == 'false'">.</VersionSeparator>
+  </PropertyGroup>
+  
   <!--This is a list of additional facade assemblies which didn't ship with .NET 4.6, and we use, and therefore need
   to be included in our setup in some way.
   -->
   <ItemGroup>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.IO.FileSystem\4.0.0\lib\net46\System.IO.FileSystem.dll"/>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.IO.FileSystem.Primitives\4.0.0\lib\net46\System.IO.FileSystem.Primitives.dll"/>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Reflection.TypeExtensions\4.0.0\lib\net46\System.Reflection.TypeExtensions.dll"/>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Threading.Thread\4.0.0-beta-23225\lib\net46\System.Threading.Thread.dll"/>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Diagnostics.Process\4.0.0-beta-23225\ref\net46\System.Diagnostics.Process.dll"/>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Net.Security\4.0.0-beta-23225\lib\net46\System.Net.Security.dll"/>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Net.Sockets\4.1.0-beta-23225\lib\net46\System.Net.Sockets.dll"/>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Security.Cryptography.X509Certificates\4.0.0-beta-23225\lib\net46\System.Security.Cryptography.X509Certificates.dll"/>
-    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Runtime.InteropServices.RuntimeInformation\4.0.0-beta-23225\lib\dotnet\System.Runtime.InteropServices.RuntimeInformation.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.IO.FileSystem$(VersionSeparator)4.0.0\lib\net46\System.IO.FileSystem.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.IO.FileSystem.Primitives$(VersionSeparator)4.0.0\lib\net46\System.IO.FileSystem.Primitives.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Reflection.TypeExtensions$(VersionSeparator)4.0.0\lib\net46\System.Reflection.TypeExtensions.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Threading.Thread$(VersionSeparator)4.0.0-beta-23225\lib\net46\System.Threading.Thread.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Diagnostics.Process$(VersionSeparator)4.0.0-beta-23225\ref\net46\System.Diagnostics.Process.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Net.Security$(VersionSeparator)4.0.0-beta-23225\lib\net46\System.Net.Security.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Net.Sockets$(VersionSeparator)4.1.0-beta-23225\lib\net46\System.Net.Sockets.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Security.Cryptography.X509Certificates$(VersionSeparator)4.0.0-beta-23225\lib\net46\System.Security.Cryptography.X509Certificates.dll"/>
+    <RequiredNetFX46FacadeAssemblies Include="$(NuGetPackagesDirectory)\System.Runtime.InteropServices.RuntimeInformation$(VersionSeparator)4.0.0-beta-23225\lib\dotnet\System.Runtime.InteropServices.RuntimeInformation.dll"/>
   </ItemGroup>
 </Project>

@@ -15,7 +15,7 @@ using System.Globalization;
 
 namespace Microsoft.MIDebugEngine
 {
-    internal interface IVariableInformation
+    internal interface IVariableInformation : IDisposable
     {
         string Name { get; }
         string Value { get; }
@@ -37,6 +37,7 @@ namespace Microsoft.MIDebugEngine
         VariableInformation FindChildByName(string name);
         string EvalDependentExpression(string expr);
         bool IsVisualized { get; }
+        bool IsReadOnly { get; }
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
     }
 
@@ -171,8 +172,14 @@ namespace Microsoft.MIDebugEngine
             IsParameter = false;
             IsChild = false;
             _attribsFetched = false;
+            _isReadonly = false;
             Access = enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_NONE;
             _fullname = null;
+
+            lock (_debuggedProcess.ActiveVariables)
+            {
+                _debuggedProcess.ActiveVariables.Add(this);
+            }
         }
 
         //this constructor is used to create root nodes (local/params)
@@ -227,6 +234,14 @@ namespace Microsoft.MIDebugEngine
             {
                 DisplayHint = results.FindString("displayhint");
             }
+            if (results.Contains("attributes"))
+            {
+                if (results.FindString("attributes") == "noneditable")
+                {
+                    _isReadonly = true;
+                }
+                _attribsFetched = true;
+            }
 
             int index;
 
@@ -234,13 +249,17 @@ namespace Microsoft.MIDebugEngine
             {
                 // base classes show up with no value and exp==type 
                 // (sometimes underlying debugger does not follow this convention, when using typedefs in templated types so look for "::" in the field name too)
-                Name = "base";
+                Name = TypeName + " (base)";
                 Value = TypeName;
                 VariableNodeType = NodeType.BaseClass;
             }
             else if (Int32.TryParse(this.Name, System.Globalization.NumberStyles.Integer, null, out index)) // array element
             {
                 Name = '[' + this.Name + ']';
+                VariableNodeType = NodeType.ArrayElement;
+            }
+            else if (this.Name.Length > 2 && this.Name[0] == '[' && this.Name[this.Name.Length-1] == ']')
+            {
                 VariableNodeType = NodeType.ArrayElement;
             }
             else
@@ -254,30 +273,6 @@ namespace Microsoft.MIDebugEngine
             _format = parent._format; // inherit formatting
             _parent = parent.VariableNodeType == NodeType.AccessQualifier ? parent._parent : parent;
             this.PropertyInfoFlags = parent.PropertyInfoFlags;
-        }
-
-        private VariableInformation(TupleValue results, VariableInformation parent, bool ro)
-            : this(results, parent)
-        {
-            _attribsFetched = true;  // read-only attribute is passed in at construction
-            _isReadonly = ro;
-        }
-
-        ~VariableInformation()
-        {
-            //mi -var-delete deletes all children, so only top level variables should be added to the delete list
-            //Additionally, we create variables for anything we try to evaluate. Only succesful evaluations get internal names, 
-            //so look for that.
-            if (!IsChild && !string.IsNullOrWhiteSpace(_internalName))
-            {
-                if (!_debuggedProcess.IsClosed)
-                {
-                    lock (_debuggedProcess.VariablesToDelete)
-                    {
-                        _debuggedProcess.VariablesToDelete.Add(_internalName);
-                    }
-                }
-            }
         }
 
         public ThreadContext ThreadContext { get { return _ctx; } }
@@ -403,6 +398,8 @@ namespace Microsoft.MIDebugEngine
 
         public string EvalDependentExpression(string expr)
         {
+            this.VerifyNotDisposed();
+
             string val = null;
             Task eval = Task.Run(async () =>
             {
@@ -414,6 +411,8 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task Eval(enum_EVALFLAGS dwFlags = 0)
         {
+            this.VerifyNotDisposed();
+
             _engine.CurrentRadix();    // ensure the radix value is up-to-date
 
             string execCommandString = "-exec ";
@@ -425,7 +424,7 @@ namespace Microsoft.MIDebugEngine
 
                 try
                 {
-                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess);
+                    consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures: true);
                     Value = String.Empty;
                     this.TypeName = null;
                 }
@@ -471,6 +470,14 @@ namespace Microsoft.MIDebugEngine
                     {
                         DisplayHint = results.FindString("displayhint");
                     }
+                    if (results.Contains("attributes"))
+                    {
+                        if (results.FindString("attributes") == "noneditable")
+                        {
+                            _isReadonly = true;
+                        }
+                        _attribsFetched = true;
+                    }
                     Value = results.TryFindString("value");
                     if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
                     {
@@ -510,6 +517,8 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task Format()
         {
+            this.VerifyNotDisposed();
+
             Debug.Assert(_internalName != null);
             Debug.Assert(_format != null);
             Results results = await _engine.DebuggedProcess.MICommandFactory.VarSetFormat(_internalName, _format, ResultClass.None);
@@ -545,31 +554,24 @@ namespace Microsoft.MIDebugEngine
         }
         private async Task InternalFetchChildren()
         {
+            this.VerifyNotDisposed();
+
             Results results = await _engine.DebuggedProcess.MICommandFactory.VarListChildren(_internalName, PropertyInfoFlags, ResultClass.None);
 
             if (results.ResultClass == ResultClass.done)
             {
-                TupleValue[] children = results.Contains("children") 
+                TupleValue[] children = results.Contains("children")
                     ? results.Find<ResultListValue>("children").FindAll<TupleValue>("child")
                     : new TupleValue[0];
                 int i = 0;
                 bool isArray = IsArrayType();
-                bool elementIsReadonly = false;
                 if (isArray)
                 {
                     CountChildren = results.FindUint("numchild");
                     Children = new VariableInformation[CountChildren];
-                    //if (k.Length > 0)    // perform attrib check on first array child, apply to all elements
-                    //{
-                    //    MICore.Debugger.Results childResults = MICore.Debugger.DecodeResults(k[0]);
-                    //    string name = childResults.Find("name");
-                    //    Debug.Assert(!string.IsNullOrEmpty(name));
-                    //    string attribute = await m_engine.DebuggedProcess.MICommandFactory.VarShowAttributes(name);
-                    //    elementIsReadonly = (attribute != "editable");
-                    //}
                     foreach (var c in children)
                     {
-                        Children[i] = new VariableInformation(c, this, elementIsReadonly);
+                        Children[i] = new VariableInformation(c, this);
                         i++;
                     }
                 }
@@ -581,12 +583,12 @@ namespace Microsoft.MIDebugEngine
                     //      children of this value can be assumed to alternate between keys and values.'
                     //
                     List<VariableInformation> listChildren = new List<VariableInformation>();
-                    for(int p = 0; p+1 < children.Length; p+=2)
+                    for (int p = 0; p + 1 < children.Length; p += 2)
                     {
                         // One Variable is created for each pair returned with the first element (p) being the name of the child
                         // and the second element (p+1) becoming the value.
                         string name = children[p].FindString("value");
-                        var variable = new VariableInformation(children[p+1], this, '[' + name + ']');
+                        var variable = new VariableInformation(children[p + 1], this, '[' + name + ']');
                         listChildren.Add(variable);
                     }
                     Children = listChildren.ToArray();
@@ -673,35 +675,91 @@ namespace Microsoft.MIDebugEngine
             return DisplayHint == "map";
         }
 
-        public bool IsReadOnly()
+        public bool IsReadOnly
         {
-            if (!_attribsFetched)
+            get
             {
-                if (string.IsNullOrEmpty(_internalName))
+                if (!_attribsFetched)
                 {
-                    return true;
+                    if (string.IsNullOrEmpty(_internalName))
+                    {
+                        return true;
+                    }
+
+                    this.VerifyNotDisposed();
+
+                    string attribute = string.Empty;
+
+                    _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                    {
+                        attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
+                    });
+
+                    _isReadonly = (attribute == "noneditable");
+                    _attribsFetched = true;
                 }
 
-                string attribute = string.Empty;
-
-                _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
-                {
-                    attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
-                });
-
-                _isReadonly = (attribute != "editable");
-                _attribsFetched = true;
+                return _isReadonly;
             }
-            return _isReadonly;
         }
 
         public void Assign(string expression)
         {
+            this.VerifyNotDisposed();
+
             _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
+                int threadId = Client.GetDebuggedThread().Id;
+                uint frameLevel = _ctx.Level;
+
                 _engine.DebuggedProcess.FlushBreakStateData();
-                Value = await _engine.DebuggedProcess.MICommandFactory.VarAssign(_internalName, expression);
+                Value = await _engine.DebuggedProcess.MICommandFactory.VarAssign(_internalName, expression, threadId, frameLevel);
             });
         }
+
+        #region IDisposable Implementation
+
+        private bool _isDisposed = false;
+
+        private void VerifyNotDisposed()
+        {
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool isDisposing)
+        {
+            _isDisposed = true;
+
+            //mi -var-delete deletes all children, so only top level variables should be added to the delete list
+            //Additionally, we create variables for anything we try to evaluate. Only succesful evaluations get internal names, 
+            //so look for that.
+            if (!IsChild && !string.IsNullOrWhiteSpace(_internalName))
+            {
+                if (!_debuggedProcess.IsClosed)
+                {
+                    lock (_debuggedProcess.VariablesToDelete)
+                    {
+                        _debuggedProcess.VariablesToDelete.Add(_internalName);
+                    }
+                }
+            }
+        }
+
+        ~VariableInformation()
+        {
+            this.Dispose(false);
+        }
+
+        #endregion
     }
 }

@@ -16,12 +16,13 @@ namespace Microsoft.DebugEngineHost
     public sealed class HostConfigurationStore
     {
         private const string DebuggerSectionName = "Debugger";
+        private const string LaunchersSectionName = "MILaunchers";
 
         private string _engineId;
         private string _registryRoot;
         private RegistryKey _configKey;
 
-        public HostConfigurationStore(string registryRoot, string engineId)
+        public HostConfigurationStore(string registryRoot)
         {
             if (string.IsNullOrEmpty(registryRoot))
                 throw new ArgumentNullException("registryRoot");
@@ -29,12 +30,25 @@ namespace Microsoft.DebugEngineHost
                 throw new ArgumentNullException("engineId");
 
             _registryRoot = registryRoot;
-            _engineId = engineId;
             _configKey = Registry.LocalMachine.OpenSubKey(registryRoot);
             if (_configKey == null)
             {
                 throw new HostConfigurationException(registryRoot);
             }
+        }
+
+        /// <summary>
+        /// Sets the Guid of the engine being hosted. This should only be set once for each HostConfigurationStore instance.
+        /// </summary>
+        /// <param name="value">The new engine GUID to set</param>
+        public void SetEngineGuid(Guid value)
+        {
+            if (_engineId != null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            _engineId = value.ToString("B", CultureInfo.InvariantCulture);
         }
 
         // TODO: This should be removed. It is here only to make the Android launcher work for now
@@ -48,7 +62,12 @@ namespace Microsoft.DebugEngineHost
 
         public object GetEngineMetric(string metric)
         {
-            return GetOptionalValue(@"AD7Metrics\Engine\" + _engineId.ToUpper(CultureInfo.InvariantCulture), metric);
+            if (_engineId == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            return GetOptionalValue(@"AD7Metrics\Engine\" + _engineId, metric);
         }
 
         public void GetExceptionCategorySettings(Guid categoryId, out HostConfigurationSection categoryConfigSection, out string categoryName)
@@ -69,14 +88,13 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled. If not specified, this will check 'Logging' in the AD7 Metrics.</param>
         /// <param name="logFileName">[Required] name of the log file to open if logging is enabled.</param>
-        /// <returns>[Optional] If logging is enabled, the logging object.</returns>
+        /// <returns>If no error then logging object. If file cannot be openened then throw an exception. Otherwise return an empty logger - the user can explictly reconfigure it later</returns>
         public HostLogger GetLogger(string enableLoggingSettingName, string logFileName)
         {
             if (string.IsNullOrEmpty(logFileName))
             {
                 throw new ArgumentNullException("logFileName");
             }
-
             object enableLoggingValue;
             if (!string.IsNullOrEmpty(enableLoggingSettingName))
             {
@@ -94,28 +112,28 @@ namespace Microsoft.DebugEngineHost
                 return null;
             }
 
-            string tempDirectory = Path.GetTempPath();
-            if (!string.IsNullOrEmpty(tempDirectory) && Directory.Exists(tempDirectory))
-            {
-                string filePath = Path.Combine(tempDirectory, logFileName);
-
-                try
-                {
-                    FileStream stream = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-                    return new HostLogger(new StreamWriter(stream));
-                }
-                catch (IOException)
-                {
-                    // ignore failures from the log being in use by another process
-                }
-            }
-
-            return null;
+            return new HostLogger(HostLogger.GetStreamForName(logFileName, throwInUseError:false));
         }
 
         public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)
         {
-            object valueObj = GetOptionalValue(DebuggerSectionName, settingName);
+            return GetDebuggerConfigurationSetting(DebuggerSectionName, settingName, defaultValue);
+        }
+
+        public object GetCustomLauncher(string launcherTypeName)
+        {
+            string guidstr = GetDebuggerConfigurationSetting(LaunchersSectionName, launcherTypeName, Guid.Empty.ToString());
+            Guid clsidLauncher = new Guid(guidstr);
+            if (clsidLauncher == Guid.Empty)
+            {
+                return null;
+            }
+            return HostLoader.VsCoCreateManagedObject(this, clsidLauncher);
+        }
+
+        private T GetDebuggerConfigurationSetting<T>(string sectionName, string settingName, T defaultValue)
+        {
+            object valueObj = GetOptionalValue(sectionName, settingName);
             if (valueObj == null)
             {
                 return defaultValue;

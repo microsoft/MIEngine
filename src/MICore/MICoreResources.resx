@@ -126,12 +126,14 @@
 {1}</value>
   </data>
   <data name="Error_DebuggerInitializeFailed_NoStdErr" xml:space="preserve">
-    <value>Unable to establish a connection to {0}. Go to the 'Debug' pane of the Visual Studio output window for more information.</value>
+    <value>Unable to establish a connection to {0}. Debug output may contain more information.</value>
   </data>
   <data name="Error_DebuggerInitializeFailed_StdErr" xml:space="preserve">
     <value>Unable to establish a connection to {0}. The following message was written to stderr:
 
-{1}</value>
+{1}
+
+See Output Window for details.</value>
   </data>
   <data name="Error_DebugServerInitializationFailed" xml:space="preserve">
     <value>Debug server process failed to initialize.</value>
@@ -154,17 +156,17 @@ Error: {1}</value>
     <value>Launch options string provided by the project system is invalid. {0}</value>
   </data>
   <data name="Error_InvalidLocalExePath" xml:space="preserve">
-    <value>Invalid path to executable file path '{0}'. File must be a valid file name that exists on the Visual Studio computer.</value>
+    <value>Invalid path to executable file path '{0}'. File must be a valid file name that exists.</value>
   </data>
   <data name="Error_LauncherNotFound" xml:space="preserve">
     <value>Device App Launcher {0} could not be found.</value>
   </data>
   <data name="Error_MIDebuggerExited_UnknownCode" xml:space="preserve">
-    <value>{0} exited unexpectedly. Debugging will now abort.</value>
+    <value>{0} exited unexpectedly.</value>
     <comment>{0} is the name of the debugger</comment>
   </data>
   <data name="Error_MIDebuggerExited_WithCode" xml:space="preserve">
-    <value>{0} exited unexpectedly with exit code {1}. Debugging will now abort.</value>
+    <value>{0} exited unexpectedly with exit code {1}.</value>
     <comment>{0} is the name of the debugger</comment>
   </data>
   <data name="Error_MissingAttribute" xml:space="preserve">
@@ -212,5 +214,58 @@ Error: {1}</value>
   </data>
   <data name="Error_InvalidMiDebuggerPath" xml:space="preserve">
     <value>The value of miDebuggerPath is invalid</value>
+  </data>
+  <data name="Error_NoTerminalAvailable_Linux" xml:space="preserve">
+    <value>No terminal is available to launch the debugger.  Please install Gnome Terminal or XTerm.</value>
+  </data>
+  <data name="Error_NoMiDebuggerPath" xml:space="preserve">
+    <value>Unable to determine path to debugger.  Please specify the "MIDebuggerPath" option.</value>
+  </data>
+  <data name="Error_InternalFileMissing" xml:space="preserve">
+    <value>Internal file "{0}" could not be found.</value>
+  </data>
+  <data name="Warn_AttachAsRootProcess" xml:space="preserve">
+    <value>Superuser access is required to attach to a process. Attaching as superuser can potentially harm your computer. Do you want to continue? [y/N]</value>
+  </data>
+  <data name="Error_UnknownLaunchOptions" xml:space="preserve">
+    <value>Internal error: unable to serialize launch options.</value>
+  </data>
+  <data name="Warn_ProcessException" xml:space="preserve">
+    <value>Attempt to execute {0} failed with exception {1}</value>
+  </data>
+  <data name="Warn_ProcessExit" xml:space="preserve">
+    <value>{0} exited with exit code {1}</value>
+  </data>
+  <data name="Error_LocalUnixTerminalDebuggerInitializationFailed" xml:space="preserve">
+    <value>Failed to initialize debugger terminal.</value>
+  </data>
+  <data name="Info_InstallingDebuggerOnRemote" xml:space="preserve">
+    <value>Installing debugger on the remote machine.</value>
+  </data>
+  <data name="Info_StartingUnixCommand" xml:space="preserve">
+    <value>Starting unix command: '{0}'</value>
+    <comment>{0} command run on the remote unix machine.</comment>
+  </data>
+  <data name="Warning_DownloadingClrDbgToRemote" xml:space="preserve">
+    <value>Warning: Downloading .NET debugger to remote machine failed with error {0}.</value>
+    <comment>{0} exception error</comment>
+  </data>
+  <data name="Info_KillingPipeProcess" xml:space="preserve">
+    <value>Killing pipe process</value>
+  </data>
+  <data name="Error_InvalidLocalDirectoryPath" xml:space="preserve">
+    <value>Invalid path to directory path '{0}'. Directory must be a valid directory name that exists.</value>
+  </data>
+  <data name="Error_EmptyPipePath" xml:space="preserve">
+    <value>PipePath cannot be empty.</value>
+  </data>
+  <data name="Error_LauncherSerializerNotFound" xml:space="preserve">
+    <value>Device App Launcher Serializer {0} could not be found.</value>
+  </data>
+  <data name="Error_DebuggerClosed" xml:space="preserve">
+    <value>The debugger is no longer debugging the specified process.</value>
+  </data>
+  <data name="Error_TargetProcessExited" xml:space="preserve">
+    <value>The target process has exited.</value>
   </data>
 </root>

@@ -29,7 +29,7 @@ namespace Microsoft.MIDebugEngine
             return ExecuteCommand(command, lastProcess);
         }
 
-        internal static Task<string> ExecuteCommand(string command, DebuggedProcess process)
+        internal static Task<string> ExecuteCommand(string command, DebuggedProcess process, bool ignoreFailures = false)
         {
             if (string.IsNullOrWhiteSpace(command))
                 throw new ArgumentNullException("command");
@@ -43,17 +43,17 @@ namespace Microsoft.MIDebugEngine
 
             if (command[0] == '-')
             {
-                return ExecuteMiCommand(process, command);
+                return ExecuteMiCommand(process, command, ignoreFailures);
             }
             else
             {
-                return process.ConsoleCmdAsync(command);
+                return process.ConsoleCmdAsync(command, ignoreFailures);
             }
         }
 
-        private static async Task<string> ExecuteMiCommand(DebuggedProcess lastProcess, string command)
+        private static async Task<string> ExecuteMiCommand(DebuggedProcess lastProcess, string command, bool ignoreFailures)
         {
-            Results results = await lastProcess.CmdAsync(command, ResultClass.None);
+            Results results = await lastProcess.CmdAsync(command, ignoreFailures ? ResultClass.None : ResultClass.done);
             return results.ToString();
         }
 
@@ -76,6 +76,28 @@ namespace Microsoft.MIDebugEngine
                 lock (s_processes)
                 {
                     s_processes.Remove(debuggedProcess);
+                }
+            }
+        }
+
+        public static void EnableLogging(bool output, string logFile)
+        {
+            Logger.CmdLogInfo.logFile = logFile;
+            if (output)
+                Logger.CmdLogInfo.logToOutput = WriteLogToOutput;
+            else
+                Logger.CmdLogInfo.logToOutput = null;
+            Logger.CmdLogInfo.enabled = true;
+            Logger.Reset();
+        }
+
+        public static void WriteLogToOutput(string line)
+        {
+            lock (s_processes)
+            {
+                if (s_processes.Count > 0)
+                {
+                    s_processes[0].WriteOutput(line); ;
                 }
             }
         }

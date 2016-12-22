@@ -18,6 +18,8 @@ using System.IO;
 using Microsoft.DebugEngineHost;
 using System.Reflection;
 
+using Logger = MICore.Logger;
+
 namespace Microsoft.MIDebugEngine.Natvis
 {
     internal class SimpleWrapper : IVariableInformation
@@ -40,28 +42,28 @@ namespace Microsoft.MIDebugEngine.Natvis
         public AD7Thread Client { get { return Parent.Client; } }
         public bool Error { get { return Parent.Error; } }
         public uint CountChildren { get { return Parent.CountChildren; } }
-        public bool IsChild { get { return Parent.IsChild; } set {; } }
+        public bool IsChild { get { return Parent.IsChild; } set { Parent.IsChild = value; } }
         public enum_DBG_ATTRIB_FLAGS Access { get { return Parent.Access; } }
-        public virtual string FullName()
-        {
-            return Name;
-        }
         public bool IsStringType { get { return Parent.IsStringType; } }
-        public void EnsureChildren()
-        {
-            Parent.EnsureChildren();
-        }
+        public ThreadContext ThreadContext { get { return Parent.ThreadContext; } }
+        public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
+        public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
+        public virtual bool IsReadOnly { get { return Parent.IsReadOnly; } }
+
+        public VariableInformation FindChildByName(string name) => Parent.FindChildByName(name);
+        public string EvalDependentExpression(string expr) => Parent.EvalDependentExpression(expr);
+        public void AsyncEval(IDebugEventCallback2 pExprCallback) => Parent.AsyncEval(pExprCallback);
+        public void SyncEval(enum_EVALFLAGS dwFlags) => Parent.SyncEval(dwFlags);
+        public virtual string FullName() => Name;
+        public void EnsureChildren() => Parent.EnsureChildren();
         public void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error)
         {
             VariableInformation.AsyncErrorImpl(pExprCallback != null ? new EngineCallback(_engine, pExprCallback) : _engine.Callback, this, error);
         }
-        public void AsyncEval(IDebugEventCallback2 pExprCallback) { Parent.AsyncEval(pExprCallback); }
-        public void SyncEval(enum_EVALFLAGS dwFlags) { Parent.SyncEval(dwFlags); }
-        public ThreadContext ThreadContext { get { return Parent.ThreadContext; } }
-        public VariableInformation FindChildByName(string name) { return Parent.FindChildByName(name); }
-        public string EvalDependentExpression(string expr) { return Parent.EvalDependentExpression(expr); }
-        public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
-        public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
+
+        public void Dispose()
+        {
+        }
     }
 
     internal class VisualizerWrapper : SimpleWrapper
@@ -189,16 +191,53 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 // failed to find the VS Service
             }
-            string natvisPath = null;
-            string directory = _process.Engine.GetMetric("GlobalVisualizersDirectory") as string;
-            if (!string.IsNullOrEmpty(directory) && !string.IsNullOrEmpty(fileName))
-            {
-                natvisPath = Path.Combine(directory, fileName);
-            }
 
-            if (!string.IsNullOrEmpty(natvisPath))
+            if (!string.IsNullOrEmpty(fileName))
             {
-                LoadFile(natvisPath);
+                if (!Path.IsPathRooted(fileName))
+                {
+                    string globalVisualizersDirectory = _process.Engine.GetMetric("GlobalVisualizersDirectory") as string;
+                    string globalNatVisPath = null;
+                    if (!string.IsNullOrEmpty(globalVisualizersDirectory) && !string.IsNullOrEmpty(fileName))
+                    {
+                        globalNatVisPath = Path.Combine(globalVisualizersDirectory, fileName);
+                    }
+
+                    // For local launch, try and load natvis next to the target exe if it exists and if 
+                    // the exe is rooted. If the file doesn't exist, and also doesn't exist in the global folder fail.
+                    if (_process.LaunchOptions is LocalLaunchOptions)
+                    {
+                        string exePath = (_process.LaunchOptions as LocalLaunchOptions).ExePath;
+                        if (Path.IsPathRooted(exePath))
+                        {
+                            string localNatvisPath = Path.Combine(Path.GetDirectoryName(exePath), fileName);
+
+                            if (File.Exists(localNatvisPath))
+                            {
+                                LoadFile(localNatvisPath);
+                                return;
+                            }
+                            else if (globalNatVisPath == null || !File.Exists(globalNatVisPath))
+                            {
+                                // Neither local or global path exists, report an error.
+                                _process.WriteOutput(String.Format(CultureInfo.CurrentCulture, ResourceStrings.FileNotFound, localNatvisPath));
+                                return;
+                            }
+                        }
+                    }
+
+                    // Local wasn't supported or the file didn't exist. Try and load from globally registered visualizer directory if local didn't work 
+                    // or wasn't supported by the launch options
+                    if (!string.IsNullOrEmpty(globalNatVisPath))
+                    {
+                        LoadFile(globalNatVisPath);
+                    }
+                }
+                else
+                {
+                    // Full path to the natvis file.. Just try the load
+                    LoadFile(fileName);
+                }
             }
         }
 
@@ -504,6 +543,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                         else if (headVal.FindChildByName(item.ValueNode.Value) != null)
                         {
                             getValue = (v) => v.FindChildByName(item.ValueNode.Value);
+                        }
+                        else if (GetExpression(item.ValueNode.Value, headVal, visualizer.ScopedNames) != null)
+                        {
+                            getValue = (v) => GetExpression(item.ValueNode.Value, v, visualizer.ScopedNames);
                         }
                         if (goLeft == null || goRight == null || getValue == null)
                         {

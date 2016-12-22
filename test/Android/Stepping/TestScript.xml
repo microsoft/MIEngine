@@ -6,7 +6,7 @@
   <Command name="SetLaunchOptionsString @LaunchOptions.xml">
     <Duration Volatile="True">00:00:00.0001066</Duration>
   </Command>
-  <Command name="bp main.cpp 40">
+  <Command name="bp main.cpp 292">
     <Duration Volatile="True">00:00:00.0050582</Duration>
   </Command>
   <Command name="launch MIEngine app_process">
@@ -116,7 +116,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint>39,0 to 39,0 in [Unknown]!android_main(android_app*)</BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^291,0 to 291,0 in (\[Unknown\]|libstepping.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -127,51 +127,84 @@
       <functionName>android_main</functionName>
       <function>android_main(android_app * state)</function>
       <file>main.cpp</file>
-      <line>40</line>
+      <line>292</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step in">
+  <Command name="step into">
     <Event name="IDebugProcessContinueEvent100" expected="False" />
     <Duration Volatile="True">00:00:00.0149998</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func1</functionName>
       <function>func1()</function>
-      <file>main.cpp</file>
-      <line>23</line>
+      <file>Source1.cpp</file>
+      <line>6</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step">
+  <Command name="step over">
     <Event name="IDebugProcessContinueEvent100" expected="False" />
     <Duration Volatile="True">00:00:00.0217211</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func1</functionName>
       <function>func1()</function>
-      <file>main.cpp</file>
-      <line>25</line>
+      <file>Source1.cpp</file>
+      <line>7</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step in">
+  <Command name="step into">
     <Event name="IDebugProcessContinueEvent100" expected="False" />
     <Duration Volatile="True">00:00:00.0171611</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
       <functionName>func2</functionName>
       <function>func2()</function>
-      <file>main.cpp</file>
-      <line>30</line>
+      <file>Source1.cpp</file>
+      <line>13</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="step out">
+  <Command name="step over">
     <Event name="IDebugProcessContinueEvent100" expected="False" />
     <Duration Volatile="True">00:00:00.0262903</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func1</functionName>
-      <function>func1()</function>
-      <file>main.cpp</file>
-      <line>26</line>
+      <functionName>func2</functionName>
+      <function>func2()</function>
+      <file>Source1.cpp</file>
+      <line>14</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="step into">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Duration Volatile="True">00:00:00.0233561</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func2</functionName>
+      <function>func2()</function>
+      <file>Source1.cpp</file>
+      <line>16</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="step into">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Duration Volatile="True">00:00:00.0233561</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func3</functionName>
+      <function>func3()</function>
+      <file>Source2.cpp</file>
+      <line>5</line>
+      <col>0</col>
+    </Event>
+  </Command>
+  <Command name="step into">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Duration Volatile="True">00:00:00.0233561</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func4</functionName>
+      <function>func4()</function>
+      <file>Source2.cpp</file>
+      <line>11</line>
       <col>0</col>
     </Event>
   </Command>
@@ -179,19 +212,34 @@
     <Event name="IDebugProcessContinueEvent100" expected="False" />
     <Duration Volatile="True">00:00:00.0233561</Duration>
     <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>android_main</functionName>
-      <function>android_main(android_app * state)</function>
-      <file>main.cpp</file>
-      <line>41</line>
+      <functionName>func3</functionName>
+      <function>func3()</function>
+      <file>Source2.cpp</file>
+      <line>7</line>
       <col>0</col>
     </Event>
   </Command>
-  <Command name="go">
+  <Command name="step out">
     <Event name="IDebugProcessContinueEvent100" expected="False" />
-    <Duration Volatile="True">00:00:00.2063949</Duration>
+    <Duration Volatile="True">00:00:00.0233561</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func2</functionName>
+      <function>func2()</function>
+      <file>Source1.cpp</file>
+      <line>18</line>
+      <col>0</col>
+    </Event>
   </Command>
-  <Command name="go">
-    <Duration Volatile="True">00:00:00.2014485</Duration>
+  <Command name="step out">
+    <Event name="IDebugProcessContinueEvent100" expected="False" />
+    <Duration Volatile="True">00:00:00.0233561</Duration>
+    <Event name="IDebugStepCompleteEvent2" expected="True">
+      <functionName>func1</functionName>
+      <function>func1()</function>
+      <file>Source1.cpp</file>
+      <line>9</line>
+      <col>0</col>
+    </Event>
   </Command>
   <Command name="stopdebugging">
     <Event name="IDebugOutputStringEvent2" expected="False" />

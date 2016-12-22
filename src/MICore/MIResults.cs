@@ -38,7 +38,7 @@ namespace MICore
             throw new MIResultFormatException(name, this);
         }
 
-        public virtual bool TryFind(string name, ResultValue result)
+        public virtual bool TryFind(string name, out ResultValue result)
         {
             if (Contains(name))
             {
@@ -412,7 +412,7 @@ namespace MICore
         public TupleValue Subset(IEnumerable<string> requiredNames, IEnumerable<string> optionalNames = null)
         {
             List<NamedResultValue> values = new List<NamedResultValue>();
-            
+
             // Iterate the required list and add the values.
             // Will throw if a name cannot be found.
             foreach (string name in requiredNames)

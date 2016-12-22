@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Diagnostics;
 using System.IO;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -33,7 +34,7 @@ namespace MICore
             _filename = logfilename;
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
         {
             _bQuit = false;
             _callback = transportCallback;
@@ -61,6 +62,11 @@ namespace MICore
         }
 
         public bool IsClosed { get { return _bQuit; } }
+
+        public int DebuggerPid
+        {
+            get { throw new NotImplementedException(); }
+        }
 
         private void TransportLoop()
         {
@@ -96,6 +102,16 @@ namespace MICore
                     _callback.OnStdOutLine(line);
                 }
             }
+        }
+
+        public int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CanExecuteCommand()
+        {
+            return false;
         }
     }
 }
