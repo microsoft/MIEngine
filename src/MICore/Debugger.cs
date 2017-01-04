@@ -603,10 +603,12 @@ namespace MICore
                 _terminating = true;
                 if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
                 {
-                    await CmdBreak(BreakRequest.Async);
+                    await AddInternalBreakAction(() => MICommandFactory.Terminate());
                 }
-
-                await MICommandFactory.Terminate();
+                else
+                {
+                    await MICommandFactory.Terminate();
+                }
             }
 
             return new Results(ResultClass.done);
@@ -615,12 +617,14 @@ namespace MICore
         public async Task<Results> CmdDetach()
         {
             _detaching = true;
-            if (ProcessState == ProcessState.Running)
+            if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
             {
-                await CmdBreak(BreakRequest.Async);
+                await AddInternalBreakAction(() => CmdAsync("-target-detach", ResultClass.done));
             }
-
-            await CmdAsync("-target-detach", ResultClass.done);
+            else
+            {
+                await CmdAsync("-target-detach", ResultClass.done);
+            }
             return new Results(ResultClass.done);
         }
 
@@ -888,7 +892,7 @@ namespace MICore
 
                 Close(message);
 
-                if (this.ProcessState != ProcessState.Exited)
+                if (this.ProcessState != ProcessState.Exited && !_terminating && !_detaching)
                 {
                     if (DebuggerAbortedEvent != null)
                     {
