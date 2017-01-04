@@ -603,10 +603,13 @@ namespace MICore
                 _terminating = true;
                 if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
                 {
+                    await AddInternalBreakAction(() => MICommandFactory.Terminate());
                     await CmdBreak(BreakRequest.Async);
                 }
-
-                await MICommandFactory.Terminate();
+                else
+                {
+                    await MICommandFactory.Terminate();
+                }
             }
 
             return new Results(ResultClass.done);
@@ -617,10 +620,13 @@ namespace MICore
             _detaching = true;
             if (ProcessState == ProcessState.Running)
             {
+                await AddInternalBreakAction(() => CmdAsync("-target-detach", ResultClass.done));
                 await CmdBreak(BreakRequest.Async);
             }
-
-            await CmdAsync("-target-detach", ResultClass.done);
+            else
+            {
+                await CmdAsync("-target-detach", ResultClass.done);
+            }
             return new Results(ResultClass.done);
         }
 
@@ -888,7 +894,7 @@ namespace MICore
 
                 Close(message);
 
-                if (this.ProcessState != ProcessState.Exited)
+                if (this.ProcessState != ProcessState.Exited && !_terminating && !_detaching)
                 {
                     if (DebuggerAbortedEvent != null)
                     {
