@@ -604,7 +604,6 @@ namespace MICore
                 if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
                 {
                     await AddInternalBreakAction(() => MICommandFactory.Terminate());
-                    await CmdBreak(BreakRequest.Async);
                 }
                 else
                 {
@@ -618,10 +617,9 @@ namespace MICore
         public async Task<Results> CmdDetach()
         {
             _detaching = true;
-            if (ProcessState == ProcessState.Running)
+            if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
             {
                 await AddInternalBreakAction(() => CmdAsync("-target-detach", ResultClass.done));
-                await CmdBreak(BreakRequest.Async);
             }
             else
             {
