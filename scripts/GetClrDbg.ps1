@@ -3,13 +3,13 @@
 Downloads the given $Version of clrdbg for the given $RuntimeID and installs it to the given $InstallPath
 
 .DESCRIPTION
-The following script will generate a project.json and NuGet.config and use dotnet restore and publish to install clrdbg, the .NET Core Debugger
+The following script will download clrdbg and install clrdbg, the .NET Core Debugger
 
 .PARAMETER Version
-Specifies the version of clrdbg to install. Can be 'latest', VS2015U2, or a specific version string i.e. 14.0.25406-preview-3044032
+Specifies the version of clrdbg to install. Can be 'latest', VS2015U2, or a specific version string i.e. 15.0.25930.0
 
 .PARAMETER RuntimeID
-Specifies the .NET Runtime ID of the clrdbg that will be downloaded. Example: ubuntu.14.04-x64. Defaults to the Runtime ID of the current machine.
+Specifies the .NET Runtime ID of the clrdbg that will be downloaded. Example: ubuntu.14.04-x64. Defaults to win7-x64.
 
 .Parameter InstallPath
 Specifies the path where clrdbg will be installed. Defaults to the directory containing this script.
@@ -51,54 +51,15 @@ Param (
     $RemoveExistingOnUpgrade
 )
 
-function GetDotNetRuntimeID() {
-    $ridLine = dotnet --info | findstr "RID"
-    
-    if ([System.String]::IsNullOrEmpty($ridLine)) {
-        throw [System.Exception] "Unable to determine runtime from dotnet --info. Make sure dotnet cli is up to date on this machine"
-    }
-
-    $rid = $ridLine.Split(":")[1].Trim();
-
-    if ([System.String]::IsNullOrEmpty($rid)) {
-        throw [System.Exception] "Unable to determine runtime from dotnet --info. Make sure dotnet cli is up to date on this machine"
-    }
-
-    return $rid
-}
-
-# Produces project.json in the current directory
-function GenerateProjectJson([string] $version, [string]$runtimeID) {
-    $projectJson = 
-"{
-    `"dependencies`": {
-       `"Microsoft.VisualStudio.clrdbg`": `"$version`"
-    },
-    `"frameworks`": {
-        `"netstandardapp1.5`": {
-          `"imports`": [ `"dnxcore50`", `"portable-net45+win8`" ]
-       }
-   },
-   `"runtimes`": {
-      `"$runtimeID`": {}
-   }
-}"
-
-    $projectJson | Out-File -Encoding utf8 project.json
-}
-
-# Produces NuGet.config in the current directory
-function GenerateNuGetConfig() {
-    $nugetConfig = 
-"<?xml version=`"1.0`" encoding=`"utf-8`"?>
-<configuration>
-  <packageSources>
-      <clear />
-      <add key=`"api.nuget.org`" value=`"https://api.nuget.org/v3/index.json`" />
-  </packageSources>
-</configuration>"
-
-    $nugetConfig | Out-File -Encoding utf8 NuGet.config
+# In a separate method to prevent locking zip files.
+function DownloadAndExtract([string]$url, [string]$targetLocation) {
+    Add-Type -assembly "System.IO.Compression.FileSystem"
+    Add-Type -assembly "System.IO.Compression"
+    $zipStream = (New-Object System.Net.WebClient).OpenRead($url)
+    $zipArchive = New-Object System.IO.Compression.ZipArchive -ArgumentList $zipStream
+    [System.IO.Compression.ZipFileExtensions]::ExtractToDirectory($zipArchive, $targetLocation)
+    $zipArchive.Dispose()
+    $zipStream.Dispose()
 }
 
 # Checks if the existing version is the latest version.
@@ -134,34 +95,22 @@ function WriteSuccessInfo([string]$installationPath, [string]$runtimeId, [string
     $version | Out-File -Encoding utf8 $SuccessVersionFile
 }
 
-# Add new version constants here
-# 'latest' version may be updated
-# all other version constants i.e. 'vs2015u2' may not be updated after they are finalized
 if ($Version -eq "latest") {
-    $VersionNumber = "14.0.25406-preview-3044032"
+    $VersionNumber = "15.0.26022.0"
 } elseif ($Version -eq "vs2015u2") {
-    $VersionNumber = "14.0.25406-preview-3044032"
+    $VersionNumber = "15.0.26022.0"
 }
 Write-Host "Info: Using clrdbg version '$VersionNumber'"
 
 if (-not $RuntimeID) {
-    $RuntimeID = GetDotNetRuntimeID
+    $RuntimeID = "win7-x64"
 }
 Write-Host "Info: Using Runtime ID '$RuntimeID'"
-
-# create the temp folder if it does not exist
-$GuidString = [System.Guid]::NewGuid()
-$TempPath = Join-Path -Path $env:TEMP -ChildPath $GuidString
-if (-not (Test-Path -Path $TempPath -PathType Container)) {
-    New-Item -ItemType Directory -Force -Path $TempPath -ErrorAction Stop | Out-Null
-}
-$TempPath = Resolve-Path -Path $TempPath -ErrorAction Stop
 
 # if we were given a relative path, assume its relative to the script directory and create an absolute path
 if (-not([System.IO.Path]::IsPathRooted($InstallPath))) {
     $InstallPath = Join-Path -Path (Split-Path -Path $MyInvocation.MyCommand.Definition) -ChildPath $InstallPath
 }
-
 
 if (IsLatest $InstallPath $RuntimeID $VersionNumber) {
     Write-Host "Info: Latest version of ClrDbg is present. Skipping downloads"
@@ -173,26 +122,16 @@ if (IsLatest $InstallPath $RuntimeID $VersionNumber) {
         }
     }
     
-    Push-Location $TempPath -ErrorAction Stop
+    $target = ("clrdbg-" + $VersionNumber).Replace('.','-') + "/clrdbg-" + $RuntimeID + ".zip"
+    $url = "https://vsdebugger.azureedge.net/" + $target
     
-    Write-Host "Info: Generating project.json"
-    GenerateProjectJson $VersionNumber $RuntimeID
-
-    Write-Host "Info: Generating NuGet.config"
-    GenerateNuGetConfig
-
-    Write-Host "Info: Executing dotnet restore"
-    dotnet restore
-
-    Write-Host "Info: Executing dotnet publish"
-    dotnet publish -r $RuntimeID -o $InstallPath
-
-    Pop-Location
-
-    Remove-Item -Path $TempPath -Recurse -Force
+    if (Test-Path $InstallPath) {
+        Remove-Item -Path $InstallPath -Force -Recurse
+    }
+    
+    DownloadAndExtract $url $InstallPath
 
     WriteSuccessInfo $InstallPath $RuntimeID $VersionNumber
     Write-Host "Info: Successfully installed clrdbg at '$InstallPath'"
 }
-
 

@@ -39,6 +39,10 @@ namespace Microsoft.SSHDebugPS
 
         internal void Start(string commandText)
         {
+            // The scripts and commands which gets executed are based on bash and may not work with other shells. 
+            // Invoking bash as the first command to make sure of that.
+            _streamingShell.WriteLine("/bin/bash");
+
             _startCommand = string.Format("echo \"{0}\"; {1}; echo \"{2}$?\"", _beginMessage, commandText, _exitMessagePrefix);
             _streamingShell.WriteLine(_startCommand);
             _streamingShell.Flush();
@@ -83,7 +87,7 @@ namespace Microsoft.SSHDebugPS
                     return;
                 }
 
-                if (line.Equals(_startCommand, StringComparison.Ordinal))
+                if (line.EndsWith(_startCommand, StringComparison.Ordinal))
                 {
                     // When logged in as root, shell sends a copy of stdin to stdout.
                     // This ignores the shell command that was used to launch the debugger.

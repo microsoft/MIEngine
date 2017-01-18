@@ -112,6 +112,7 @@
   <ItemGroup>
     <Compile Include="AD7.Definitions\AD7Guids.cs" />
     <Compile Include="AD7.Definitions\AD7Hresult.cs" />
+    <Compile Include="AD7.Definitions\IDebugDocumentContext150.cs" />
     <Compile Include="AD7.Impl\AD7BoundBreakpoint.cs" />
     <Compile Include="AD7.Impl\AD7BreakpointResolution.cs" />
     <Compile Include="AD7.Impl\AD7Disassembly.cs" />

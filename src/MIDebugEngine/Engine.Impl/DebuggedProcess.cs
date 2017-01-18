@@ -260,7 +260,16 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 // quit MI Debugger
-                _worker.PostOperation(CmdExitAsync);
+                if (!this.IsClosed)
+                {
+                    _worker.PostOperation(CmdExitAsync);
+                }
+                else
+                {
+                    // If we are already closed, make sure that something sends program destroy
+                    _callback.OnProcessExit(processExitCode);
+                }
+
                 if (_waitDialog != null)
                 {
                     _waitDialog.EndWaitDialog();
@@ -279,14 +288,14 @@ namespace Microsoft.MIDebugEngine
                 Dispose();
             };
 
-            DebuggerAbortedEvent += delegate (object o, /*OPTIONAL*/ string debuggerExitCode)
+            DebuggerAbortedEvent += delegate (object o, DebuggerAbortedEventArgs eventArgs)
             {
                 // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
 
                 // The MI debugger process unexpectedly exited.
                 _worker.PostOperation(() =>
                     {
-                        _engineTelemetry.SendDebuggerAborted(MICommandFactory, GetLastSentCommandName(), debuggerExitCode);
+                        _engineTelemetry.SendDebuggerAborted(MICommandFactory, GetLastSentCommandName(), eventArgs.ExitCode);
 
                         // If the MI Debugger exits before we get a resume call, we have no way of sending program destroy. So just let start debugging fail.
                         if (!_connected)
@@ -294,13 +303,7 @@ namespace Microsoft.MIDebugEngine
                             return;
                         }
 
-                        string message;
-                        if (string.IsNullOrEmpty(debuggerExitCode))
-                            message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_UnknownCode, MICommandFactory.Name);
-                        else
-                            message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_WithCode, MICommandFactory.Name, debuggerExitCode);
-
-                        _callback.OnError(message);
+                        _callback.OnError(string.Concat(eventArgs.Message, " ", ResourceStrings.DebuggingWillAbort));
                         _callback.OnProcessExit(uint.MaxValue);
 
                         Dispose();
@@ -365,7 +368,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
-                    if (_terminating || this.ProcessState == MICore.ProcessState.Exited)
+                    if (this.IsStopDebuggingInProgress)
                     {
                         return; // ignore exceptions after the process has exited
                     }
@@ -506,7 +509,7 @@ namespace Microsoft.MIDebugEngine
                         {
                             if (command.SuccessHandler != null)
                             {
-                                command.SuccessHandler(results.ToString());
+                                await command.SuccessHandler(results.ToString());
                             }
                         }
                     }
@@ -515,7 +518,7 @@ namespace Microsoft.MIDebugEngine
                         string resultString = await ConsoleCmdAsync(command.CommandText, command.IgnoreFailures);
                         if (command.SuccessHandler != null)
                         {
-                            command.SuccessHandler(resultString);
+                            await command.SuccessHandler(resultString);
                         }
                     }
                 }
@@ -744,7 +747,7 @@ namespace Microsoft.MIDebugEngine
             if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
             {
                 // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
-                LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, new Action<string>((string resStr) =>
+                LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, (string resStr) =>
                 {
                     if (resStr.Contains("cygwin"))
                     {
@@ -758,7 +761,9 @@ namespace Microsoft.MIDebugEngine
                         // Gdb on windows and not cygwin implies mingw
                         _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
                     }
-                }));
+
+                    return Task.FromResult(0);
+                });
                 commands.Add(lc);
             }
         }
@@ -805,7 +810,7 @@ namespace Microsoft.MIDebugEngine
                 throw new LaunchErrorException(message);
             };
 
-            Action<string> successHandler = async (string exePath) =>
+            Func<string, Task> successHandler = async (string exePath) =>
             {
                 string trimmedExePath = exePath.Trim();
                 try
@@ -832,7 +837,7 @@ namespace Microsoft.MIDebugEngine
                     throw new LaunchErrorException(message);
                 };
 
-                Action<string> successHandler = (string resultsStr) =>
+                Func<string, Task> successHandler = (string resultsStr) =>
                 {
                     TargetArchitecture arch = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
 
@@ -849,6 +854,8 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     SetTargetArch(arch);
+
+                    return Task.FromResult(0);
                 };
 
                 string cmd = MICommandFactory.GetTargetArchitectureCommand();
@@ -924,7 +931,7 @@ namespace Microsoft.MIDebugEngine
             DebuggedThread thread = await ThreadCache.GetThread(tid);
             if (thread == null)
             {
-                if (!_terminating)
+                if (!this.IsStopDebuggingInProgress)
                 {
                     Debug.Fail("Failed to find thread on break event.");
                     throw new Exception(String.Format(CultureInfo.CurrentUICulture, ResourceStrings.MissingThreadBreakEvent, tid));

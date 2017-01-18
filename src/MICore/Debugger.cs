@@ -28,7 +28,7 @@ namespace MICore
         public event EventHandler RunModeEvent;
         public event EventHandler ProcessExitEvent;
         public event EventHandler DebuggerExitEvent;
-        public event EventHandler<string> DebuggerAbortedEvent;
+        public event EventHandler<DebuggerAbortedEventArgs> DebuggerAbortedEvent;
         public event EventHandler<string> OutputStringEvent;
         public event EventHandler EvaluationEvent;
         public event EventHandler ErrorEvent;
@@ -57,7 +57,7 @@ namespace MICore
         {
             get
             {
-                return _isClosed;
+                return _closeMessage != null;
             }
         }
 
@@ -79,7 +79,13 @@ namespace MICore
         private int _localDebuggerPid = -1;
 
         protected bool _connected;
-        protected bool _terminating;
+        private bool _terminating;
+        private bool _detaching;
+
+        public bool IsStopDebuggingInProgress
+        {
+            get { return _terminating || _detaching || this.ProcessState == MICore.ProcessState.Exited; }
+        }
 
         public class ResultEventArgs : EventArgs
         {
@@ -117,7 +123,12 @@ namespace MICore
         /// </summary>
         private string _lastCommandText;
         private uint _lastCommandId;
-        private bool _isClosed;
+
+        /// <summary>
+        /// Message used in any DebuggerDisposedExceptions once the debugger is closed. Setting
+        /// this to non-null indicates that the debugger is now closed. It is only set once.
+        /// </summary>
+        private string _closeMessage;
 
         /// <summary>
         /// [Optional] If a console command is being executed, list where we append the output
@@ -377,9 +388,9 @@ namespace MICore
             bool processContinued = false;
             if (source != null)
             {
-                if (_isClosed)
+                if (this.IsClosed)
                 {
-                    source.SetException(new DebuggerDisposedException());
+                    source.SetException(new DebuggerDisposedException(_closeMessage));
                 }
                 else
                 {
@@ -473,19 +484,32 @@ namespace MICore
         {
             if (Interlocked.CompareExchange(ref _exiting, 1, 0) == 0)
             {
-                Close();
+                string closeMessage;
+                if (this.ProcessState == ProcessState.Exited && !_terminating && !_detaching)
+                {
+                    closeMessage = MICoreResources.Error_TargetProcessExited;
+                }
+                else
+                {
+                    closeMessage = MICoreResources.Error_DebuggerClosed;
+                }
+
+                Close(closeMessage);
             }
         }
 
-        private void Close()
+        private void Close(string closeMessage)
         {
-            _isClosed = true;
+            Debug.Assert(closeMessage != null, "Invalid close message. Very bad.");
+            Debug.Assert(_closeMessage == null, "Why was Close called more than once? Should be impossible.");
+
+            _closeMessage = closeMessage;
             _transport.Close();
             lock (_waitingOperations)
             {
                 foreach (var value in _waitingOperations.Values)
                 {
-                    value.Abort();
+                    value.Abort(_closeMessage);
                 }
                 _waitingOperations.Clear();
             }
@@ -493,7 +517,7 @@ namespace MICore
             {
                 if (_internalBreakActionCompletionSource != null)
                 {
-                    _internalBreakActionCompletionSource.SetException(new DebuggerDisposedException());
+                    _internalBreakActionCompletionSource.SetException(new DebuggerDisposedException(_closeMessage));
                 }
                 _internalBreakActions.Clear();
             }
@@ -579,10 +603,12 @@ namespace MICore
                 _terminating = true;
                 if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
                 {
-                    await CmdBreak(BreakRequest.Async);
+                    await AddInternalBreakAction(() => MICommandFactory.Terminate());
                 }
-
-                await MICommandFactory.Terminate();
+                else
+                {
+                    await MICommandFactory.Terminate();
+                }
             }
 
             return new Results(ResultClass.done);
@@ -590,12 +616,15 @@ namespace MICore
 
         public async Task<Results> CmdDetach()
         {
-            if (ProcessState == ProcessState.Running)
+            _detaching = true;
+            if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
             {
-                await CmdBreak(BreakRequest.Async);
+                await AddInternalBreakAction(() => CmdAsync("-target-detach", ResultClass.done));
             }
-            await CmdAsync("-target-detach", ResultClass.done);
-
+            else
+            {
+                await CmdAsync("-target-detach", ResultClass.done);
+            }
             return new Results(ResultClass.done);
         }
 
@@ -689,7 +718,7 @@ namespace MICore
             {
                 if (this.ProcessState == MICore.ProcessState.Exited)
                 {
-                    throw new DebuggerDisposedException();
+                    throw new DebuggerDisposedException(GetTargetProcessExitedReason());
                 }
                 else
                 {
@@ -704,7 +733,7 @@ namespace MICore
                 {
                     if (this.ProcessState == MICore.ProcessState.Exited)
                     {
-                        throw new DebuggerDisposedException();
+                        throw new DebuggerDisposedException(GetTargetProcessExitedReason());
                     }
                     else
                     {
@@ -726,6 +755,16 @@ namespace MICore
                     _consoleCommandOutput = null;
                 }
             }
+        }
+
+        private string GetTargetProcessExitedReason()
+        {
+            if (_closeMessage != null)
+            {
+                return _closeMessage;
+            }
+
+            return MICoreResources.Error_TargetProcessExited;
         }
 
         public async Task<Results> CmdAsync(string command, ResultClass expectedResultClass)
@@ -759,9 +798,9 @@ namespace MICore
 
             lock (_waitingOperations)
             {
-                if (_isClosed)
+                if (this.IsClosed)
                 {
-                    throw new DebuggerDisposedException();
+                    throw new DebuggerDisposedException(_closeMessage);
                 }
 
                 id = ++_lastCommandId;
@@ -844,12 +883,20 @@ namespace MICore
                     }
                 }
 
-                Close();
-                if (this.ProcessState != ProcessState.Exited)
+
+                string message;
+                if (string.IsNullOrEmpty(exitCode))
+                    message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_UnknownCode, this.MICommandFactory.Name);
+                else
+                    message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_WithCode, this.MICommandFactory.Name, exitCode);
+
+                Close(message);
+
+                if (this.ProcessState != ProcessState.Exited && !_terminating && !_detaching)
                 {
                     if (DebuggerAbortedEvent != null)
                     {
-                        DebuggerAbortedEvent(this, exitCode);
+                        DebuggerAbortedEvent(this, new DebuggerAbortedEventArgs(message, exitCode));
                     }
                 }
                 else
@@ -968,9 +1015,9 @@ namespace MICore
 
             public Task<Results> Task { get { return _completionSource.Task; } }
 
-            internal void Abort()
+            internal void Abort(string abortMessage)
             {
-                _completionSource.SetException(new DebuggerDisposedException(Command));
+                _completionSource.SetException(new DebuggerDisposedException(abortMessage, Command));
             }
         }
 
@@ -1479,5 +1526,18 @@ namespace MICore
                 throw new InvalidCoreDumpOperationException();
         }
     }
+
+    public class DebuggerAbortedEventArgs
+    {
+        public readonly string Message;
+        public readonly string /*OPTIONAL*/ ExitCode;
+
+        public DebuggerAbortedEventArgs(string message, string exitCode)
+        {
+            Debug.Assert(message != null, "Invalid argument");
+            this.Message = message;
+            this.ExitCode = exitCode;
+        }
+    };
 }
 
