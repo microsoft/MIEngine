@@ -12,7 +12,7 @@ if not defined VisualStudioVersion (
         goto :EnvSet
     )
 
-    echo Error: build.cmd requires Visual Studio 2015.
+    echo Error: build.cmd requires Visual Studio 2015 or to be run from a developer command prompt.
     exit /b 1
 )
 

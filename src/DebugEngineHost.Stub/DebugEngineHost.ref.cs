@@ -204,6 +204,12 @@ namespace Microsoft.DebugEngineHost
 /// </summary>
 public sealed class HostLogger
     {
+        /// <summary>
+        /// Callback for programmatic display of log messages
+        /// </summary>
+        /// <param name="outputMessage"></param>
+        public delegate void OutputCallback(string outputMessage);
+
         private HostLogger()
         {
             throw new NotImplementedException();
@@ -222,6 +228,25 @@ public sealed class HostLogger
         /// If the log is implemented as a file, this flushes the file.
         /// </summary>
         public void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// If the log is implemented as a file, this closes the file.
+        /// </summary>
+        public void Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Get a logger after the user has explicitly configured a log file/callback
+        /// </summary>
+        /// <param name="logFileName"></param>
+        /// <param name="callback"></param>
+        /// <returns>The host logger object</returns>
+        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
         {
             throw new NotImplementedException();
         }

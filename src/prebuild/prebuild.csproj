@@ -38,7 +38,7 @@
 
   <Target Name="InstallCoreClrPackages"
           Condition="'$(IsCoreClr)' == 'true'">
-    <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; -MSBuildVersion 14 &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot; -Verbosity detailed" />
+    <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot; -Verbosity detailed" />
   </Target>
 
   <Target Name="InstallDesktopPackages"
@@ -77,6 +77,7 @@
   <Target Name="DebugSymbolsProjectOutputGroup" />
   <Target Name="GetPackagingOutputs" />
   <Target Name="GetTargetPath" />
+  <Target Name="GetTargetFrameworkProperties" />
   <!-- Older versions of NuGet don't respect the ProjectReference.ReferenceOutputAssembly attribute and will attempt to parse this
        project anyway, so include a fake target to keep it happy -->
   <Target Name="_NuGet_GetProjectsReferencingProjectJsonInternal" />
