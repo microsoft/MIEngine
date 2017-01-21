@@ -267,7 +267,7 @@ prepare_install_location()
 convert_install_path_to_absolute()
 {
     if [ -z $__InstallLocation ]; then
-        __InstallLocation=$pwd
+        __InstallLocation=$(pwd)
     else
         if [ ! -d $__InstallLocation ]; then
             prepare_install_location            
