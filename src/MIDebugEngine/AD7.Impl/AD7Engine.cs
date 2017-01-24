@@ -774,13 +774,13 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
+                _debuggedProcess.Detach();
             }
-            catch (DebuggerDisposedException e) when (e.AbortedCommand == "-target-detach")
+            catch (DebuggerDisposedException) 
             {
                 // Detach command could cause DebuggerDisposedException and we ignore that.
             }
 
-            _debuggedProcess.Detach();
             return Constants.S_OK;
         }
 
