@@ -379,7 +379,7 @@ download_and_extract()
         exit 1;
     fi
     
-    unzip -o -f -q $clrdbgZip
+    unzip -o -q $clrdbgZip
     
     if [ $? -ne  0 ]; then
         echo "Failed to unzip clrdbg"
