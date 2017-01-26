@@ -1137,7 +1137,10 @@ namespace MICore
             List<PathMapEntry> map = new List<PathMapEntry>(SourceMap);
             if (suppOptions.SourceMap != null)
             {
-                Array.ForEach(suppOptions.SourceMap, (e) => map.Add(new PathMapEntry(e)));
+                foreach (var e in suppOptions.SourceMap)
+                {
+                    map.Add(new PathMapEntry(e));
+                }
             }
             SourceMap = new ReadOnlyCollection<PathMapEntry>(map);
         }
