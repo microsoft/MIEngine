@@ -436,9 +436,11 @@ namespace MICore
                 cmd.Append(" ");
             }
 
+            cmd.Append("\"");
             cmd.Append(filename);
             cmd.Append(":");
             cmd.Append(line.ToString());
+            cmd.Append("\"");
 
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }

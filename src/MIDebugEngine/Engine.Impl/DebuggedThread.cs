@@ -224,7 +224,7 @@ namespace Microsoft.MIDebugEngine
         private ThreadContext CreateContext(TupleValue frame)
         {
             ulong? pc = frame.TryFindAddr("addr");
-            MITextPosition textPosition = MITextPosition.TryParse(frame);
+            MITextPosition textPosition = MITextPosition.TryParse(this._debugger, frame);
             string func = frame.TryFindString("func");
             uint level = frame.FindUint("level");
             string from = frame.TryFindString("from");

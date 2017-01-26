@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using MICore;
 using System.Globalization;
+using System.IO;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -27,6 +28,7 @@ namespace Microsoft.MIDebugEngine
 
         public bool IsMultiple { get { return _breakState == MIBreakpointState.Multiple; } }
         public bool IsPending { get { return _breakState == MIBreakpointState.Pending; } }
+        public DebuggedProcess DebuggedProcess { get { return AD7breakpoint.DebuggedProcess; } }
 
         internal PendingBreakpoint(AD7PendingBreakpoint pbreak, string number, MIBreakpointState state)
         {
@@ -109,10 +111,13 @@ namespace Microsoft.MIDebugEngine
         {
             process.VerifyNotDebuggingCoreDump();
 
-            string basename = System.IO.Path.GetFileName(documentName);     // get basename from Windows path
-            basename = process.EscapePath(basename);
-
-            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(basename, line, condition, enabled, checksums, ResultClass.None), pbreak);
+            string compilerSrcName;
+            if (!process.MapCurrentSrcToCompilerSrc(documentName, out compilerSrcName))
+            {
+                compilerSrcName = Path.GetFileName(documentName);   
+            }
+            string file = process.EscapePath(compilerSrcName, ignoreSpaces:true);
+            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(file, line, condition, enabled, checksums, ResultClass.None), pbreak);
 
             // On GDB, the returned line information is from the pending breakpoint instead of the bound breakpoint.
             // Check the address mapping to make sure the line info is correct.
@@ -121,7 +126,12 @@ namespace Microsoft.MIDebugEngine
             {
                 foreach (var boundBreakpoint in bindResults.BoundBreakpoints)
                 {
-                    boundBreakpoint.Line = await process.LineForStartAddress(basename, boundBreakpoint.Addr);
+                    string matchFile = file;
+                    if (!string.IsNullOrEmpty(boundBreakpoint.CompiledFileName))
+                    {
+                        matchFile = boundBreakpoint.CompiledFileName;   // get the file name as it appears in the symbolic info
+                    }
+                    boundBreakpoint.Line = await process.LineForStartAddress(matchFile, boundBreakpoint.Addr);
                 }
             }
 
@@ -363,6 +373,7 @@ namespace Microsoft.MIDebugEngine
         internal bool Enabled { get; set; }
         internal bool IsDataBreakpoint { get { return _parent.AD7breakpoint.IsDataBreakpoint; } }
         private MITextPosition _textPosition;
+        internal string CompiledFileName   { get; private set; }    // name as it appears in the debug symbols
 
         internal BoundBreakpoint(PendingBreakpoint parent, TupleValue bindinfo)
         {
@@ -371,8 +382,9 @@ namespace Microsoft.MIDebugEngine
             this.FunctionName = bindinfo.TryFindString("func");
             this.Enabled = bindinfo.TryFindString("enabled") == "n" ? false : true;
             this.HitCount = 0;
+            this.CompiledFileName = bindinfo.Contains("fullname") ? bindinfo.FindString("fullname") : bindinfo.TryFindString("file");
             _parent = parent;
-            _textPosition = MITextPosition.TryParse(bindinfo);
+            _textPosition = MITextPosition.TryParse(parent.DebuggedProcess, bindinfo);
         }
 
         internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, /*optional*/ TupleValue frame)
@@ -385,7 +397,7 @@ namespace Microsoft.MIDebugEngine
             if (frame != null)
             {
                 this.FunctionName = frame.TryFindString("func");
-                _textPosition = MITextPosition.TryParse(frame);
+                _textPosition = MITextPosition.TryParse(parent.DebuggedProcess, frame);
             }
         }
 

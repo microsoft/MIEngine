@@ -1916,5 +1916,65 @@ namespace Microsoft.MIDebugEngine
         {
             return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
         }
+
+        public bool MapCurrentSrcToCompilerSrc(string currentSrc, out string compilerSrc)
+        {
+            StringComparison comp = PlatformUtilities.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            foreach (var e in _launchOptions.SourceMap)
+            {
+                if (e.UseForBreakpoints && currentSrc.StartsWith(e.EditorPath, comp))
+                {
+                    var file = currentSrc.Substring(e.EditorPath.Length);
+                    if (string.IsNullOrEmpty(file)) // matched the whole directory string
+                    {
+                        break;  // use default
+                    }
+                    if (file[0] == Path.DirectorySeparatorChar || file[0] == Path.AltDirectorySeparatorChar)
+                    {
+                        file = file.Substring(1);   // Trim the directory separator
+                    }
+                    compilerSrc = Path.Combine(e.CompilerPath,file);    // map to the compiled location
+                    return true;
+                }
+            }
+            compilerSrc = currentSrc;
+            return false;
+        }
+
+        public bool MapCompilerSrcToCurrentSrc(string compilerSrc, out string currentName)
+        {
+            StringComparison comp = _launchOptions.UseUnixSymbolPaths ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            foreach (var e in _launchOptions.SourceMap)
+            {
+                if (string.IsNullOrEmpty(e.CompilerPath))
+                {
+                    continue;   // don't try to map back if path has an emty compiler src tree
+                }
+                if (compilerSrc.StartsWith(e.CompilerPath, comp))
+                {
+                    var file = compilerSrc.Substring(e.CompilerPath.Length);
+                    if (string.IsNullOrEmpty(file)) // matched the whole directory string
+                    {
+                        break;  // use default
+                    }
+                    if (file[0] == Path.DirectorySeparatorChar || file[0] == Path.AltDirectorySeparatorChar)
+                    {
+                        file = file.Substring(1);   // Trim the directory separator
+                    }
+                    currentName = Path.Combine(e.EditorPath, file);    // map to the compiled location
+                    return true;
+                }
+            }
+            currentName = compilerSrc;
+            return false;
+        }
+
+        public string GetMappedFileFromTuple(TupleValue tuple)
+        {
+            string file = tuple.Contains("fullname") ? tuple.FindString("fullname") : tuple.TryFindString("file");
+            string currentName;
+            MapCompilerSrcToCurrentSrc(file, out currentName);
+            return currentName;
+        }
     }
 }

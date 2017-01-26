@@ -172,6 +172,39 @@ namespace MICore
         public string Value { get; private set; }
     }
 
+    public sealed class PathMapEntry
+    {
+        public PathMapEntry()
+        {
+        }
+
+        public PathMapEntry(Xml.LaunchOptions.PathMapEntry xmlEntry)
+        {
+            if (string.IsNullOrEmpty(xmlEntry.EditorPath))
+            {
+                throw new ArgumentNullException("EditorPath");
+            }
+            this.EditorPath = xmlEntry.EditorPath;
+            this.CompilerPath = xmlEntry.CompilerPath == null ? string.Empty : xmlEntry.CompilerPath;
+            this.UseForBreakpoints = xmlEntry.UseForBreakpoints;
+        }
+
+        public string EditorPath { get; set; }
+        public string CompilerPath { get; set; }
+        public bool UseForBreakpoints { get; set; }
+
+        public static ReadOnlyCollection<PathMapEntry> CreateCollectionFromXml(Xml.LaunchOptions.PathMapEntry[] source)
+        {
+            PathMapEntry[] pathArray = source?.Select(x => new PathMapEntry(x)).ToArray();
+            if (pathArray == null)
+            {
+                pathArray = new PathMapEntry[0];
+            }
+
+            return new ReadOnlyCollection<PathMapEntry>(pathArray);
+        }
+    }
+
     /// <summary>
     /// Launch options class when VS should launch an instance of an MI Debugger to connect to an MI Debugger server
     /// </summary>
@@ -888,6 +921,18 @@ namespace MICore
             }
         }
 
+        private ReadOnlyCollection<PathMapEntry> _sourceMap;
+
+        public ReadOnlyCollection<PathMapEntry> SourceMap
+        {
+            get { return _sourceMap; }
+            set
+            {
+                VerifyCanModifyProperty("SourceMap");
+                _sourceMap = value;
+            }
+        }
+
         public string GetOptionsString()
         {
             try
@@ -1055,8 +1100,46 @@ namespace MICore
             if (launchOptions._setupCommands == null)
                 launchOptions._setupCommands = new List<LaunchCommand>(capacity: 0).AsReadOnly();
 
+            // load supplemental options from the solution root
+            string slnRoot = HostNatvisProject.FindSolutionRoot();
+            if (!string.IsNullOrEmpty(slnRoot))
+            {
+                string optFile = Path.Combine(slnRoot, "Microsoft.MIEngine.Options.xml");
+                if (File.Exists(optFile))
+                {
+                    var reader = File.OpenText(optFile);
+                    string suppOptions = reader.ReadToEnd();
+                    if (!string.IsNullOrEmpty(suppOptions))
+                    {
+                        try
+                        {
+                            logger?.WriteTextBlock("SupplementalLaunchOptions", suppOptions);
+                            XmlReader xmlRrd = OpenXml(suppOptions);
+                            XmlSerializer serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.SupplementalLaunchOptions));
+                            var xmlSuppOptions = (Xml.LaunchOptions.SupplementalLaunchOptions)Deserialize(serializer, xmlRrd);
+                            launchOptions.Merge(xmlSuppOptions);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new Exception(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_ProcessingFile, "Microsoft.MIEngine.Options.xml", e.Message), e);
+                        }
+                    }
+                }
+            }
+
             launchOptions.SetInitializationComplete();
             return launchOptions;
+        }
+
+        private void Merge(SupplementalLaunchOptions suppOptions)
+        {
+            // merge the source mapping lists
+            List<PathMapEntry> map = new List<PathMapEntry>(SourceMap);
+            if (suppOptions.SourceMap != null)
+            {
+                Array.ForEach(suppOptions.SourceMap, (e) => map.Add(new PathMapEntry(e)));
+            }
+            SourceMap = new ReadOnlyCollection<PathMapEntry>(map);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",
@@ -1235,6 +1318,8 @@ namespace MICore
             {
                 this.CustomLaunchSetupCommands = LaunchCommand.CreateCollectionFromXml(source.CustomLaunchSetupCommands);
             }
+
+            this.SourceMap = PathMapEntry.CreateCollectionFromXml(source.SourceMap);
 
             Debug.Assert((uint)LaunchCompleteCommand.ExecRun == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.execrun);
             Debug.Assert((uint)LaunchCompleteCommand.ExecContinue == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.execcontinue);
