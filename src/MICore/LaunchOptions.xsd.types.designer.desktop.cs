@@ -391,17 +391,19 @@ namespace MICore.Xml.LaunchOptions {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public partial class PathMapEntry {
+    public partial class SourceMapEntry {
         
         private string editorPathField;
         
-        private string compilerPathField;
+        private string compileTimePathField;
         
         private bool useForBreakpointsField;
         
-        private bool useForBreakpointsFieldSpecified;
-        
         private string valueField;
+        
+        public SourceMapEntry() {
+            this.useForBreakpointsField = false;
+        }
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -416,34 +418,24 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string CompilerPath {
+        public string CompileTimePath {
             get {
-                return this.compilerPathField;
+                return this.compileTimePathField;
             }
             set {
-                this.compilerPathField = value;
+                this.compileTimePathField = value;
             }
         }
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
         public bool UseForBreakpoints {
             get {
                 return this.useForBreakpointsField;
             }
             set {
                 this.useForBreakpointsField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool UseForBreakpointsSpecified {
-            get {
-                return this.useForBreakpointsFieldSpecified;
-            }
-            set {
-                this.useForBreakpointsFieldSpecified = value;
             }
         }
         
@@ -536,7 +528,7 @@ namespace MICore.Xml.LaunchOptions {
         
         private bool launchCompleteCommandFieldSpecified;
         
-        private PathMapEntry[] sourceMapField;
+        private SourceMapEntry[] sourceMapField;
         
         private string exePathField;
         
@@ -623,7 +615,7 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
-        public PathMapEntry[] SourceMap {
+        public SourceMapEntry[] SourceMap {
             get {
                 return this.sourceMapField;
             }
@@ -1434,11 +1426,11 @@ namespace MICore.Xml.LaunchOptions {
     [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
     public partial class SupplementalLaunchOptions {
         
-        private PathMapEntry[] sourceMapField;
+        private SourceMapEntry[] sourceMapField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
-        public PathMapEntry[] SourceMap {
+        public SourceMapEntry[] SourceMap {
             get {
                 return this.sourceMapField;
             }

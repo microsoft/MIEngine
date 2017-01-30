@@ -1240,6 +1240,8 @@ namespace Microsoft.MIDebugEngine
             return path;
         }
 
+        internal bool UseUnixSymbolPaths { get { return _launchOptions.UseUnixSymbolPaths;  } }
+
         internal static string UnixPathToWindowsPath(string unixPath)
         {
             return unixPath.Replace('/', '\\');
@@ -1917,52 +1919,73 @@ namespace Microsoft.MIDebugEngine
             return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
         }
 
-        public bool MapCurrentSrcToCompilerSrc(string currentSrc, out string compilerSrc)
+        public bool MapCurrentSrcToCompileTimeSrc(string currentSrc, out string compilerSrc)
         {
-            StringComparison comp = PlatformUtilities.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-            foreach (var e in _launchOptions.SourceMap)
+            if (_launchOptions.SourceMap != null)
             {
-                if (e.UseForBreakpoints && currentSrc.StartsWith(e.EditorPath, comp))
+                StringComparison comp = PlatformUtilities.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+                foreach (var e in _launchOptions.SourceMap)
                 {
-                    var file = currentSrc.Substring(e.EditorPath.Length);
-                    if (string.IsNullOrEmpty(file)) // matched the whole directory string
+                    if (e.UseForBreakpoints && currentSrc.StartsWith(e.EditorPath, comp))
                     {
-                        break;  // use default
+                        var file = currentSrc.Substring(e.EditorPath.Length);
+                        if (string.IsNullOrEmpty(file)) // matched the whole string
+                        {
+                            compilerSrc = e.CompileTimePath;  // return the matches compile time path
+                            return true;
+                        }
+                        // must do the path break at a directory boundry, i.e. at a '\' or '/' char
+                        char firstFilechar = file[0];
+                        char lastDirectoryChar = e.EditorPath[e.EditorPath.Length - 1];
+                        if (firstFilechar == Path.DirectorySeparatorChar || firstFilechar == Path.AltDirectorySeparatorChar)
+                        {
+                            file = file.Substring(1);   // Trim the directory separator
+                        }
+                        else if (lastDirectoryChar != Path.DirectorySeparatorChar && lastDirectoryChar != Path.AltDirectorySeparatorChar)
+                        {
+                            continue;   // match didn't end at a directory separator, not actually a match
+                        }
+                        compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
+                        return true;
                     }
-                    if (file[0] == Path.DirectorySeparatorChar || file[0] == Path.AltDirectorySeparatorChar)
-                    {
-                        file = file.Substring(1);   // Trim the directory separator
-                    }
-                    compilerSrc = Path.Combine(e.CompilerPath,file);    // map to the compiled location
-                    return true;
                 }
             }
             compilerSrc = currentSrc;
             return false;
         }
 
-        public bool MapCompilerSrcToCurrentSrc(string compilerSrc, out string currentName)
+        public bool MapCompileTimeSrcToCurrentSrc(string compilerSrc, out string currentName)
         {
-            StringComparison comp = _launchOptions.UseUnixSymbolPaths ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-            foreach (var e in _launchOptions.SourceMap)
+            if (_launchOptions.SourceMap != null)
             {
-                if (string.IsNullOrEmpty(e.CompilerPath))
+                StringComparison comp = _launchOptions.UseUnixSymbolPaths ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                foreach (var e in _launchOptions.SourceMap)
                 {
-                    continue;   // don't try to map back if path has an emty compiler src tree
-                }
-                if (compilerSrc.StartsWith(e.CompilerPath, comp))
-                {
-                    var file = compilerSrc.Substring(e.CompilerPath.Length);
-                    if (string.IsNullOrEmpty(file)) // matched the whole directory string
+                    if (string.IsNullOrEmpty(e.CompileTimePath))
                     {
-                        break;  // use default
+                        continue;   // don't try to map back if path has an empty compiler src tree
                     }
-                    if (file[0] == Path.DirectorySeparatorChar || file[0] == Path.AltDirectorySeparatorChar)
+                    if (compilerSrc.StartsWith(e.CompileTimePath, comp))
                     {
-                        file = file.Substring(1);   // Trim the directory separator
+                        var file = compilerSrc.Substring(e.CompileTimePath.Length);
+                        if (string.IsNullOrEmpty(file)) // matched the whole directory string
+                        {
+                            break;  // use default
+                        }
+                        // must do the path break at a directory boundry, i.e. at a '\' or '/' char
+                        char firstFilechar = file[0];
+                        char lastDirectoryChar = e.CompileTimePath[e.CompileTimePath.Length - 1];
+                        if (file[0] == Path.DirectorySeparatorChar || file[0] == Path.AltDirectorySeparatorChar)
+                        {
+                            file = file.Substring(1);   // Trim the directory separator
+                        }
+                        else if (lastDirectoryChar != Path.DirectorySeparatorChar && lastDirectoryChar != Path.AltDirectorySeparatorChar)
+                        {
+                            continue;   // match didn't end at a directory separator, not actually a match
+                        }
+                        currentName = Path.Combine(e.EditorPath, file);    // map to the compiled location
+                        return true;
                     }
-                    currentName = Path.Combine(e.EditorPath, file);    // map to the compiled location
-                    return true;
                 }
             }
             currentName = compilerSrc;
@@ -1972,8 +1995,11 @@ namespace Microsoft.MIDebugEngine
         public string GetMappedFileFromTuple(TupleValue tuple)
         {
             string file = tuple.Contains("fullname") ? tuple.FindString("fullname") : tuple.TryFindString("file");
-            string currentName;
-            MapCompilerSrcToCurrentSrc(file, out currentName);
+            string currentName = string.Empty;
+            if (!string.IsNullOrEmpty(file))
+            {
+                MapCompileTimeSrcToCurrentSrc(file, out currentName);
+            }
             return currentName;
         }
     }

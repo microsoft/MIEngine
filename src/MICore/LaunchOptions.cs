@@ -172,36 +172,60 @@ namespace MICore
         public string Value { get; private set; }
     }
 
-    public sealed class PathMapEntry
+    public sealed class SourceMapEntry
     {
-        public PathMapEntry()
+        public SourceMapEntry() // used by launchers 
         {
         }
 
-        public PathMapEntry(Xml.LaunchOptions.PathMapEntry xmlEntry)
+        public SourceMapEntry(Xml.LaunchOptions.SourceMapEntry xmlEntry)
         {
-            if (string.IsNullOrEmpty(xmlEntry.EditorPath))
-            {
-                throw new ArgumentNullException("EditorPath");
-            }
             this.EditorPath = xmlEntry.EditorPath;
-            this.CompilerPath = xmlEntry.CompilerPath == null ? string.Empty : xmlEntry.CompilerPath;
+            this.CompileTimePath = xmlEntry.CompileTimePath;
             this.UseForBreakpoints = xmlEntry.UseForBreakpoints;
         }
 
-        public string EditorPath { get; set; }
-        public string CompilerPath { get; set; }
+        private string _editorPath;
+        public string EditorPath
+        {
+            get
+            {
+                return _editorPath;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("EditorPath");
+                }
+                this._editorPath = value;
+            }
+        }
+
+
+        private string _compileTimePath;
+        public string CompileTimePath
+        {
+            get
+            {
+                return _compileTimePath;
+            }
+            set
+            {
+                _compileTimePath = value == null ? string.Empty : value;
+            }
+        }
         public bool UseForBreakpoints { get; set; }
 
-        public static ReadOnlyCollection<PathMapEntry> CreateCollectionFromXml(Xml.LaunchOptions.PathMapEntry[] source)
+        public static ReadOnlyCollection<SourceMapEntry> CreateCollectionFromXml(Xml.LaunchOptions.SourceMapEntry[] source)
         {
-            PathMapEntry[] pathArray = source?.Select(x => new PathMapEntry(x)).ToArray();
+            SourceMapEntry[] pathArray = source?.Select(x => new SourceMapEntry(x)).ToArray();
             if (pathArray == null)
             {
-                pathArray = new PathMapEntry[0];
+                pathArray = new SourceMapEntry[0];
             }
 
-            return new ReadOnlyCollection<PathMapEntry>(pathArray);
+            return new ReadOnlyCollection<SourceMapEntry>(pathArray);
         }
     }
 
@@ -586,6 +610,7 @@ namespace MICore
 
             @this.ProcessId = processId;
             @this.SetupCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
+            @this.LoadSupplementalOptions(null);
             @this.SetInitializationComplete();
 
             return @this;
@@ -921,9 +946,9 @@ namespace MICore
             }
         }
 
-        private ReadOnlyCollection<PathMapEntry> _sourceMap;
+        private ReadOnlyCollection<SourceMapEntry> _sourceMap;
 
-        public ReadOnlyCollection<PathMapEntry> SourceMap
+        public ReadOnlyCollection<SourceMapEntry> SourceMap
         {
             get { return _sourceMap; }
             set
@@ -1100,6 +1125,19 @@ namespace MICore
             if (launchOptions._setupCommands == null)
                 launchOptions._setupCommands = new List<LaunchCommand>(capacity: 0).AsReadOnly();
 
+            // load supplemental options 
+            launchOptions.LoadSupplementalOptions(logger);
+
+            launchOptions.SetInitializationComplete();
+            return launchOptions;
+        }
+
+        internal void LoadSupplementalOptions(Logger logger)
+        {
+            if (SourceMap == null)
+            {
+                SourceMap = new ReadOnlyCollection<SourceMapEntry>(new List<SourceMapEntry>());
+            }
             // load supplemental options from the solution root
             string slnRoot = HostNatvisProject.FindSolutionRoot();
             if (!string.IsNullOrEmpty(slnRoot))
@@ -1117,7 +1155,7 @@ namespace MICore
                             XmlReader xmlRrd = OpenXml(suppOptions);
                             XmlSerializer serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.SupplementalLaunchOptions));
                             var xmlSuppOptions = (Xml.LaunchOptions.SupplementalLaunchOptions)Deserialize(serializer, xmlRrd);
-                            launchOptions.Merge(xmlSuppOptions);
+                            Merge(xmlSuppOptions);
                         }
                         catch (Exception e)
                         {
@@ -1126,23 +1164,27 @@ namespace MICore
                     }
                 }
             }
-
-            launchOptions.SetInitializationComplete();
-            return launchOptions;
         }
 
         private void Merge(SupplementalLaunchOptions suppOptions)
         {
             // merge the source mapping lists
-            List<PathMapEntry> map = new List<PathMapEntry>(SourceMap);
+            List<SourceMapEntry> map = new List<SourceMapEntry>();
             if (suppOptions.SourceMap != null)
             {
-                foreach (var e in suppOptions.SourceMap)
+                foreach (var e in suppOptions.SourceMap)    // add new entries from the supplemental options
                 {
-                    map.Add(new PathMapEntry(e));
+                    map.Add(new SourceMapEntry(e));
                 }
             }
-            SourceMap = new ReadOnlyCollection<PathMapEntry>(map);
+            if (SourceMap != null)
+            {
+                foreach (var e in SourceMap)    // append project system entries
+                {
+                    map.Add(e);
+                }
+            }
+            SourceMap = new ReadOnlyCollection<SourceMapEntry>(map);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",
@@ -1322,7 +1364,7 @@ namespace MICore
                 this.CustomLaunchSetupCommands = LaunchCommand.CreateCollectionFromXml(source.CustomLaunchSetupCommands);
             }
 
-            this.SourceMap = PathMapEntry.CreateCollectionFromXml(source.SourceMap);
+            this.SourceMap = SourceMapEntry.CreateCollectionFromXml(source.SourceMap);
 
             Debug.Assert((uint)LaunchCompleteCommand.ExecRun == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.execrun);
             Debug.Assert((uint)LaunchCompleteCommand.ExecContinue == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.execcontinue);

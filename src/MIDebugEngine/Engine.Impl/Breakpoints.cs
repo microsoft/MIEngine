@@ -112,12 +112,11 @@ namespace Microsoft.MIDebugEngine
             process.VerifyNotDebuggingCoreDump();
 
             string compilerSrcName;
-            if (!process.MapCurrentSrcToCompilerSrc(documentName, out compilerSrcName))
+            if (!process.MapCurrentSrcToCompileTimeSrc(documentName, out compilerSrcName))
             {
                 compilerSrcName = Path.GetFileName(documentName);   
             }
-            string file = process.EscapePath(compilerSrcName, ignoreSpaces:true);
-            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(file, line, condition, enabled, checksums, ResultClass.None), pbreak);
+            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(compilerSrcName, process.UseUnixSymbolPaths, line, condition, enabled, checksums, ResultClass.None), pbreak);
 
             // On GDB, the returned line information is from the pending breakpoint instead of the bound breakpoint.
             // Check the address mapping to make sure the line info is correct.
@@ -126,7 +125,7 @@ namespace Microsoft.MIDebugEngine
             {
                 foreach (var boundBreakpoint in bindResults.BoundBreakpoints)
                 {
-                    string matchFile = file;
+                    string matchFile = compilerSrcName;
                     if (!string.IsNullOrEmpty(boundBreakpoint.CompiledFileName))
                     {
                         matchFile = boundBreakpoint.CompiledFileName;   // get the file name as it appears in the symbolic info

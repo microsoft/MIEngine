@@ -365,7 +365,7 @@
     </xs:annotation>
     <xs:complexType>
       <xs:sequence>
-      <xs:element name="SourceMap" type="PathMapList" minOccurs="0" maxOccurs="1">
+      <xs:element name="SourceMap" type="SourceMapList" minOccurs="0" maxOccurs="1">
       </xs:element>
       </xs:sequence>
     </xs:complexType>
@@ -412,7 +412,7 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="SourceMap" minOccurs="0" maxOccurs="1" type="PathMapList">
+      <xs:element name="SourceMap" minOccurs="0" maxOccurs="1" type="SourceMapList">
         <xs:annotation>
           <xs:documentation>
             If provided this list is used to map source file names found in the subtrees pointed to by these entries.
@@ -495,23 +495,23 @@
       <xs:element name="Command" minOccurs="0" maxOccurs="unbounded" type="Command"/>
     </xs:sequence>
   </xs:complexType>
-  <xs:complexType name="PathMapEntry">
+  <xs:complexType name="SourceMapEntry">
     <xs:annotation>
-      <xs:documentation>Current and compile-time paths to the same source trees. Files found under the EditorPath are mapped to the CompilerPath path for breakpoint matching and mapped from CompilerPath to EditorPath when displaying stacktrace locations.</xs:documentation>
+      <xs:documentation>Current and compile-time paths to the same source trees. Files found under the EditorPath are mapped to the CompileTimePath path for breakpoint matching and mapped from CompileTimePath to EditorPath when displaying stacktrace locations.</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="xs:string">
         <xs:attribute name="EditorPath" type="xs:string">
           <xs:annotation>
-            <xs:documentation>The current path to the source tree.</xs:documentation>
+            <xs:documentation>The path to the source tree the editor will use.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="CompilerPath" type="xs:string">
+        <xs:attribute name="CompileTimePath" type="xs:string">
           <xs:annotation>
             <xs:documentation>The path to the source tree at compile time.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="UseForBreakpoints" type="xs:boolean">
+        <xs:attribute name="UseForBreakpoints" type="xs:boolean" default="false">
           <xs:annotation>
             <xs:documentation>False if entry is only used for stack frame location mapping. True if this entry should also be used when specifying breakpoint locations.</xs:documentation>
           </xs:annotation>
@@ -519,9 +519,9 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:complexType name="PathMapList">
+  <xs:complexType name="SourceMapList">
     <xs:sequence>
-      <xs:element name="PathMapEntry" minOccurs="0" maxOccurs="unbounded" type="PathMapEntry"/>
+      <xs:element name="SourceMapEntry" minOccurs="0" maxOccurs="unbounded" type="SourceMapEntry"/>
     </xs:sequence>
   </xs:complexType>
 </xs:schema>
