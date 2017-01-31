@@ -194,7 +194,7 @@ namespace MICore
             }
             set
             {
-                if (value == null)
+                if (string.IsNullOrEmpty(value))
                 {
                     throw new ArgumentNullException("EditorPath");
                 }
