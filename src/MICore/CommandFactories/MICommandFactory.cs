@@ -426,7 +426,24 @@ namespace MICore
             return cmd;
         }
 
-        public virtual async Task<Results> BreakInsert(string filename, uint line, string condition, bool enabled, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
+        internal bool PreparePath(string path, bool useUnixFormat, out string pathMI)
+        {
+            bool requiresQuotes = false;
+            path = path.Trim();
+            if (useUnixFormat)  // convert directory separators
+            {
+                path = path.Replace('\\', '/');
+            }
+            if (path.IndexOf(' ') != -1)    // path contains spaces. Convert to c-string format
+            {
+                path = path.Replace(@"\", @"\\");   // escape any backslashes in the path
+                requiresQuotes = true;              // parameter containing the name will need to be quoted
+            }
+            pathMI = path;
+            return requiresQuotes;
+        }
+
+        public virtual async Task<Results> BreakInsert(string filename, bool useUnixFormat, uint line, string condition, bool enabled, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
         {
             StringBuilder cmd = BuildBreakInsert(condition, enabled);
 
@@ -436,9 +453,19 @@ namespace MICore
                 cmd.Append(" ");
             }
 
-            cmd.Append(filename);
+            string filenameMI;
+            bool quotes = PreparePath(filename, useUnixFormat, out filenameMI);
+            if (quotes)
+            {
+                cmd.Append("\"");
+            }
+            cmd.Append(filenameMI);
             cmd.Append(":");
             cmd.Append(line.ToString());
+            if (quotes)
+            {
+                cmd.Append("\"");
+            }
 
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
         }
