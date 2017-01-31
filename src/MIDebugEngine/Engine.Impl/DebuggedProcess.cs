@@ -1425,8 +1425,12 @@ namespace Microsoft.MIDebugEngine
 
             if (_initialBreakArgs != null)
             {
-                await CheckModules();
-                _libraryLoaded.Clear();
+                if (MICommandFactory.SupportsStopOnDynamicLibLoad())
+                {
+                    await CheckModules();
+                    _libraryLoaded.Clear();
+                }
+                
                 await HandleBreakModeEvent(_initialBreakArgs, BreakRequest.None);
                 _initialBreakArgs = null;
             }
