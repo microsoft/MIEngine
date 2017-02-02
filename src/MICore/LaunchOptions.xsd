@@ -225,7 +225,7 @@
           </xs:sequence>  
           <xs:attribute name="MIDebuggerPath" type="xs:string" use="required">
             <xs:annotation>
-              <xs:documentation>Full path to the MI Debugger executable.</xs:documentation>
+              <xs:documentation>Path to the MI Debugger executable. If only the executable name is provided, it will attempt to search $PATH for the location of the executable.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="MIDebuggerServerAddress" type="xs:string" use="optional">

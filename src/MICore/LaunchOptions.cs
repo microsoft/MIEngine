@@ -332,7 +332,7 @@ namespace MICore
             {
                 // If user specifies only a filename for miDebuggerPath, search the local PATH to see if we can determine where it is. 
                 if (!File.Exists(miDebuggerPath) &&
-                    miDebuggerPath.IndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }) == 0)
+                    miDebuggerPath.IndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }) == -1)
                 {
                     miDebuggerPath = LocalLaunchOptions.ResolveFromPath(miDebuggerPath);
 
