@@ -12,7 +12,7 @@
     <tags></tags>
   </metadata>
   <files>
-    <file src="drop\Release\ReferenceAssemblies\*.xml" target="ref\dotnet" />
+    <file src="drop\Release\ReferenceAssemblies\*.xml" target="ref\dotnet" exclude="drop\Release\ReferenceAssemblies\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.xml" />
     <file src="drop\Release\ReferenceAssemblies\Microsoft.DebugEngineHost.dll" target="ref\dotnet" />
     <file src="drop\Release\Microsoft.MICore.dll" target="ref\dotnet" />
     <file src="drop\Release\*" target="Release" exclude="drop\Release\Install.cmd;drop\Release\ReferenceAssemblies" />
