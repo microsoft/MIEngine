@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>VS.Redist.Debugger.MDD.UnixPortSupplier</id>
+    <version>0.0.0.0</version>
+    <authors>VSEng</authors>
+    <owners>VSEng</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Package containing VS.Redist.Debugger.MDD.UnixPortSupplier artifacts</description>
+    <releaseNotes></releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags></tags>
+  </metadata>
+  <files>
+    <file src="drop\Release\ReferenceAssemblies\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.xml" target="ref\dotnet" />
+    <file src="drop\Release\ReferenceAssemblies\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.dll" target="ref\dotnet" />
+  </files>
+</package>
