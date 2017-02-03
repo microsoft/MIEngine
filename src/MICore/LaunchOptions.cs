@@ -3,21 +3,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Security;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
 using System.Xml;
-using System.Globalization;
-using System.Net.Security;
-using System.Collections.ObjectModel;
 using System.Xml.Serialization;
-using System.Diagnostics;
-using Microsoft.DebugEngineHost;
 using MICore.Xml.LaunchOptions;
-using System.Reflection;
+using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace MICore
@@ -328,6 +326,20 @@ namespace MICore
                 if (String.IsNullOrEmpty(miDebuggerPath))
                 {
                     throw new InvalidLaunchOptionsException(MICoreResources.Error_NoMiDebuggerPath);
+                }
+            }
+            else
+            {
+                // If user specifies only a filename for miDebuggerPath, search the local PATH to see if we can determine where it is. 
+                if (!File.Exists(miDebuggerPath) &&
+                    miDebuggerPath.IndexOfAny(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }) == -1)
+                {
+                    miDebuggerPath = LocalLaunchOptions.ResolveFromPath(miDebuggerPath);
+
+                    if (String.IsNullOrEmpty(miDebuggerPath))
+                    {
+                        throw new InvalidLaunchOptionsException(MICoreResources.Error_NoMiDebuggerPath);
+                    }
                 }
             }
 
