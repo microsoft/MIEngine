@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
     [ComImport()]
     [ComVisible(true)]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("808CC6CA-45B1-47D5-9779-62BAA597BA50")]
+    [Guid("5FE438B2-46BA-4637-88B3-E7B908D17331")]
     public interface IDebugUnixShellPort
     {
         /// <summary>
