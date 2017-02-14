@@ -53,7 +53,7 @@ namespace Microsoft.SSHDebugPS
             {
                 if (_command != null)
                 {
-                    _command.Write(text + "\r");
+                    _command.Write(text + "\n");
                 }
             }
         }
