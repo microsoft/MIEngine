@@ -846,7 +846,11 @@ namespace Microsoft.MIDebugEngine.Natvis
             if (!String.IsNullOrWhiteSpace(condition))
             {
                 string exprValue = GetExpressionValue(condition, variable, scopedNames);
-                res = !String.IsNullOrEmpty(exprValue) && (exprValue.Equals("true", StringComparison.OrdinalIgnoreCase) || exprValue.Equals("1", StringComparison.OrdinalIgnoreCase));
+
+                bool exprBool = false;
+                int exprInt = 0;
+                res = !String.IsNullOrEmpty(exprValue) &&
+                    ((bool.TryParse(exprValue, out exprBool) && exprBool) || (int.TryParse(exprValue, out exprInt) && exprInt > 0));
             }
             return res;
         }
