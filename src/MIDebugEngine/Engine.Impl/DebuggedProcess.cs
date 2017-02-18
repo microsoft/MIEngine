@@ -551,18 +551,18 @@ namespace Microsoft.MIDebugEngine
 
             // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
             string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
-            string escappedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
-            if (!string.IsNullOrWhiteSpace(escappedSearchPath))
+            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
+            if (!string.IsNullOrWhiteSpace(escapedSearchPath))
             {
                 if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
                 {
                     // Do not place quotes around so paths for gdb
-                    commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escappedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
+                    commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escapedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
                 }
                 else
                 {
                     // surround so lib path with quotes in other cases
-                    commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
+                    commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escapedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
                 }
             }
 
@@ -676,8 +676,8 @@ namespace Microsoft.MIDebugEngine
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
-                        string escappedDir = EscapePath(_launchOptions.WorkingDirectory);
-                        commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
+                        string escapedDir = EscapePath(_launchOptions.WorkingDirectory);
+                        commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
 
                     // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
@@ -989,7 +989,24 @@ namespace Microsoft.MIDebugEngine
             if (String.IsNullOrWhiteSpace(reason) && !this.EntrypointHit)
             {
                 breakRequest = BreakRequest.None;   // don't let stopping interfere with launch processing
-                this.EntrypointHit = true;
+                
+                // MinGW sends a stopped event on attach. gdb<->gdbserver also sends a stopped event when first attached.
+                // If this is a gdb<->gdbserver connection, ignore this as the entryPoint
+                if (this._launchOptions is LocalLaunchOptions &&
+                    !String.IsNullOrWhiteSpace(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress))
+                {
+                    // If the stopped event occurs on gdbserver, ignore it unless it contains a filename.
+                    TupleValue frame = results.Results.TryFind<TupleValue>("frame");
+                    if (frame.Contains("file"))
+                    {
+                        this.EntrypointHit = true;
+                    }
+                }
+                else
+                {
+                    this.EntrypointHit = true;
+                }
+
                 CmdContinueAsync();
                 FireDeviceAppLauncherResume();
             }
@@ -1240,7 +1257,7 @@ namespace Microsoft.MIDebugEngine
             return path;
         }
 
-        internal bool UseUnixSymbolPaths { get { return _launchOptions.UseUnixSymbolPaths;  } }
+        internal bool UseUnixSymbolPaths { get { return _launchOptions.UseUnixSymbolPaths; } }
 
         internal static string UnixPathToWindowsPath(string unixPath)
         {
@@ -1432,7 +1449,7 @@ namespace Microsoft.MIDebugEngine
                     await CheckModules();
                     _libraryLoaded.Clear();
                 }
-                
+
                 await HandleBreakModeEvent(_initialBreakArgs, BreakRequest.None);
                 _initialBreakArgs = null;
             }
