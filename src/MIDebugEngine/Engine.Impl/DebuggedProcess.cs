@@ -384,9 +384,15 @@ namespace Microsoft.MIDebugEngine
             ErrorEvent += delegate (object o, EventArgs args)
             {
                 // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
-
                 ResultEventArgs result = (ResultEventArgs)args;
-                _callback.OnError(result.Results.FindString("msg"));
+                // In lldb, the format is ^error,message=""
+                // In gdb/vsdbg it is ^error,msg=""
+                string message = result.Results.TryFindString("msg");
+                if(String.IsNullOrWhiteSpace(message))
+                {
+                    message = result.Results.TryFindString("message");
+                }
+                _callback.OnError(message);
             };
 
             ThreadCreatedEvent += delegate (object o, EventArgs args)
