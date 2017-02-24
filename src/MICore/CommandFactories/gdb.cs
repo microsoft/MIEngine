@@ -155,9 +155,9 @@ namespace MICore
                 _currentFrameLevel = frameLevel;
             }
         }
-        public override async Task<Results> ThreadInfo()
+        public override async Task<Results> ThreadInfo(uint? threadId = null)
         {
-            Results results = await base.ThreadInfo();
+            Results results = await base.ThreadInfo(threadId);
             if (results.ResultClass == ResultClass.done && results.Contains("current-thread-id"))
             {
                 _currentThreadId = results.FindInt("current-thread-id");

@@ -97,9 +97,14 @@ namespace MICore
         {
         }
 
-        public virtual async Task<Results> ThreadInfo()
+        public virtual async Task<Results> ThreadInfo(uint? threadid = null)
         {
-            Results threadsinfo = await _debugger.CmdAsync("-thread-info", ResultClass.None);
+            string command = "-thread-info";
+            if (threadid.HasValue)
+            {
+                command = String.Concat(command, " ", threadid.Value);
+            }
+            Results threadsinfo = await _debugger.CmdAsync(command, ResultClass.None);
             return threadsinfo;
         }
 
