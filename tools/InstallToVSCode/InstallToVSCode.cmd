@@ -10,6 +10,11 @@ if "%~1"=="-h" goto help
 if "%~1"=="" goto help
 if "%~6"=="" echo InstallToVSCode.cmd: ERROR: Bad command line arguments. & exit /b -1
 
+set DotNetSdkRoot=%ProgramFiles%\dotnet\sdk
+if /i "%PROCESSOR_ARCHITEW6432%"=="AMD64" set DotNetSdkRoot=%ProgramW6432%\dotnet\sdk
+set DotNetDll=%DotNetSdkRoot%\1.0.0-preview2-1-003177\dotnet.dll
+if not exist "%DotNetDll%" echo ERROR: .NET CLI preview2 must be installed.&exit /b -1
+
 set InstallAction=
 if "%~1"=="link" set InstallAction=LinkFile&goto InstallActionSet
 if "%~1"=="copy" set InstallAction=CopyFile&goto InstallActionSet
@@ -42,7 +47,7 @@ if not exist "%MIEngineBinDir%Microsoft.MIDebugEngine.dll" echo ERROR: Microsoft
 if NOT "%~5"=="-d" echo ERROR: Bad command line argument. Expected '-d ^<vsdbg-dir^>'. & exit /b -1
 if "%~6" == "" echo ERROR: VsDbg binaries directory not set &exit /b -1
 set VSDBGBITSDIR=%~6
-if not exist "%VSDBGBITSDIR%\libvsdbg.dll" echo ERROR: %VSDBGBITSDIR%\libvsdbg.dll does not exist. & exit /b -1
+if not exist "%VSDBGBITSDIR%\vsdbg.dll" echo ERROR: %VSDBGBITSDIR%\vsdbg.dll does not exist. & exit /b -1
 
 set DESTDIR=%USERPROFILE%\.MIEngine-VSCode-Debug
 if exist "%DESTDIR%" rmdir /s /q "%DESTDIR%"
@@ -75,10 +80,10 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to change to CLRDependencies direc
 
 for /f "tokens=1 delims=" %%l in (project.json.template) do if NOT "%%l"=="@current-OS@" (echo %%l>>project.json) else (echo     "win7-x64":{}>>project.json)
 
-dotnet restore
+dotnet "%DotNetDll%" restore
 if NOT "%ERRORLEVEL%"=="0" echo "ERROR: 'dotnet restore' failed." & exit /b -1
 
-dotnet publish -o %DESTDIR%
+dotnet "%DotNetDll%" publish -o %DESTDIR%
 if NOT "%ERRORLEVEL%"=="0" echo "ERROR: 'dotnet publish' failed." & exit /b -1
 popd
 
