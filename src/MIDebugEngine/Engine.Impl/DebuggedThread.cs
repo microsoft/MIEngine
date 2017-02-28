@@ -173,6 +173,19 @@ namespace Microsoft.MIDebugEngine
 
         internal async void ThreadCreatedEvent(int id, string groupId)
         {
+            // Mark that the threads have changed
+            lock (_threadList)
+            {
+                {
+                    var thread = _threadList.Find(t => t.Id == id);
+                    if (thread == null)
+                    {
+                        _stateChange = true;
+                    }
+                }
+            }
+
+            // Try and get the info for the new thread now.
             try
             {
                 ResultValue resVal = null;
@@ -188,14 +201,9 @@ namespace Microsoft.MIDebugEngine
                     else
                     {
                         var tlist = results.Find<ValueListValue>("threads");
-                        if (!(tlist.Content.Length == 1))
-                        {
-                            Debug.Fail("Expected 1 thread, received more than one thread.");
-                        }
-                        else
-                        {
-                            resVal = tlist.Content[0];
-                        }
+
+                        Debug.Assert(tlist.Content.Length == 1, "Expected 1 thread, received more than one thread.");
+                        resVal = tlist.Content.FirstOrDefault(item => item.FindInt("id") == id);
                     }
                 }
 
@@ -219,15 +227,6 @@ namespace Microsoft.MIDebugEngine
                         if (bNew)
                         {
                             _callback.OnThreadStart(thread);
-                            _stateChange = true;
-                        }
-                    }
-                    else
-                    {
-                        var thread = _threadList.Find(t => t.Id == id);
-                        if (thread == null)
-                        {
-                            _stateChange = true;
                         }
                     }
                 }
@@ -259,7 +258,7 @@ namespace Microsoft.MIDebugEngine
                     }
                 }
             }
-            if(thread != null)
+            if (thread != null)
             {
                 SendThreadEvents(null, null);
             }
@@ -340,6 +339,14 @@ namespace Microsoft.MIDebugEngine
                 {
                     return true;
                 }
+            }
+            else if (targetId.StartsWith("LWP ", StringComparison.OrdinalIgnoreCase) &&
+                    System.UInt32.TryParse(targetId.Substring("LWP ".Length), out tid) &&
+                    tid != 0
+            )
+            {
+                // In gdb coredumps the thread name is in the form:" LWP <thread-id>"
+                return true;
             }
             else
             {
@@ -434,7 +441,7 @@ namespace Microsoft.MIDebugEngine
                             _threadList.Remove(thread);
                         }
                     }
-                    
+
                     _stateChange = false;
                     _full = true;
                 }
