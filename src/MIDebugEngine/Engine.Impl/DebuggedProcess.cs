@@ -395,9 +395,16 @@ namespace Microsoft.MIDebugEngine
 
             ThreadCreatedEvent += async delegate (object o, EventArgs args)
             {
-                ResultEventArgs result = (ResultEventArgs)args;
-                await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
-                _childProcessHandler?.ThreadCreatedEvent(result.Results);
+                try
+                {
+                    ResultEventArgs result = (ResultEventArgs)args;
+                    await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
+                    _childProcessHandler?.ThreadCreatedEvent(result.Results);
+                }
+                catch(Exception)
+                {
+                    // Avoid crashing VS
+                }
             };
 
             ThreadExitedEvent += delegate (object o, EventArgs args)
