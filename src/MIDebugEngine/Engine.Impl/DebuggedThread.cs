@@ -91,10 +91,17 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<DebuggedThread[]> GetThreads()
         {
-            if (_stateChange) // if new threads 
+            bool stateChange = false;
+            lock (_threadList)
+            {
+                stateChange = _stateChange;
+            }
+
+            if (stateChange)
             {
                 await CollectThreadsInfo(0);
             }
+
             lock (_threadList)
             {
                 return _threadList.ToArray();
@@ -158,6 +165,7 @@ namespace Microsoft.MIDebugEngine
                     return null;    // no context available for this thread
                 }
             }
+
             return await CollectThreadsInfo(thread.Id);
         }
 
@@ -171,7 +179,7 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        internal async void ThreadCreatedEvent(int id, string groupId)
+        internal async Task ThreadCreatedEvent(int id, string groupId)
         {
             // Mark that the threads have changed
             lock (_threadList)
@@ -183,57 +191,53 @@ namespace Microsoft.MIDebugEngine
                         _stateChange = true;
                     }
                 }
+
+                // This must go before getting the thread-info for the thread since that method call is async.
+                // The threadId must be added to the thread-group before the new thread is created or else it will
+                // be marked as a child thread and then thread-created and thread-exited won't be sent to the UI
+                if (string.IsNullOrEmpty(groupId))
+                {
+                    groupId = c_defaultGroupId;
+                }
+                if (!_threadGroups.ContainsKey(groupId))
+                {
+                    _threadGroups[groupId] = new List<int>();
+                }
+                _threadGroups[groupId].Add(id);
             }
 
-            // Try and get the info for the new thread now.
-            try
+            // Run Thread-info now to get the target-id
+            // ClrDbg doesn't support getting threadInfo while running.
+            ResultValue resVal = null;
+            if (id >= 0 && _debugger.LaunchOptions.DebuggerMIMode != MIMode.Clrdbg)
             {
-                ResultValue resVal = null;
-                if (id >= 0)
+                uint? tid = null;
+                tid = (uint)id;
+                Results results = await _debugger.MICommandFactory.ThreadInfo(tid);
+                if (results.ResultClass != ResultClass.done)
                 {
-                    uint? tid = null;
-                    tid = (uint)id;
-                    Results results = await _debugger.MICommandFactory.ThreadInfo(tid);
-                    if (results.ResultClass != ResultClass.done)
-                    {
-                        Debug.Fail("Thread info not successful");
-                    }
-                    else
-                    {
-                        var tlist = results.Find<ValueListValue>("threads");
-
-                        Debug.Assert(tlist.Content.Length == 1, "Expected 1 thread, received more than one thread.");
-                        resVal = tlist.Content.FirstOrDefault(item => item.FindInt("id") == id);
-                    }
+                    Debug.Fail("Thread info not successful");
                 }
-
-                lock (_threadList)
+                else
                 {
-                    // The thread groups section must happen before a new DebuggedThread might be created.
-                    if (string.IsNullOrEmpty(groupId))
-                    {
-                        groupId = c_defaultGroupId;
-                    }
-                    if (!_threadGroups.ContainsKey(groupId))
-                    {
-                        _threadGroups[groupId] = new List<int>();
-                    }
-                    _threadGroups[groupId].Add(id);
+                    var tlist = results.Find<ValueListValue>("threads");
 
-                    if (resVal != null)
-                    {
-                        bool bNew = false;
-                        var thread = SetThreadInfoFromResultValue(resVal, out bNew);
-                        if (bNew)
-                        {
-                            _callback.OnThreadStart(thread);
-                        }
-                    }
+                    Debug.Assert(tlist.Content.Length == 1, "Expected 1 thread, received more than one thread.");
+                    resVal = tlist.Content.FirstOrDefault(item => item.FindInt("id") == id);
                 }
             }
-            catch (Exception)
+
+            lock (_threadList)
             {
-                // Don't want to crash VS
+                if (resVal != null)
+                {
+                    bool bNew = false;
+                    var thread = SetThreadInfoFromResultValue(resVal, out bNew);
+                    if (bNew)
+                    {
+                        _callback.OnThreadStart(thread);
+                    }
+                }
             }
         }
 
@@ -274,7 +278,7 @@ namespace Microsoft.MIDebugEngine
 
         private bool IsInParent(int tid)
         {
-            // only those threads in the s_defaultGroupId threadgroup are in the debugee, others are transient while attaching to a child process
+            // only those threads in the s_defaultGroupId threadgroup are in the debuggee, others are transient while attaching to a child process
             return _threadGroups[c_defaultGroupId].Contains(tid);
         }
 
@@ -386,6 +390,7 @@ namespace Microsoft.MIDebugEngine
             ThreadContext ret = null;
             // set of threads has changed or thread locations have been asked for
             Results threadsinfo = await _debugger.MICommandFactory.ThreadInfo();
+
             if (threadsinfo.ResultClass != ResultClass.done)
             {
                 Debug.Fail("Failed to get thread info");
