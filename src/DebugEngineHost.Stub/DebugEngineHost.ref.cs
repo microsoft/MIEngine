@@ -383,6 +383,14 @@ public sealed class HostLogger
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Return the solution's root directory, null if no solution
+        /// </summary>
+        public static string FindSolutionRoot()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>

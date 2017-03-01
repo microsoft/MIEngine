@@ -32,13 +32,9 @@ namespace Microsoft.MIDebugEngine
             this.EndPosition = this.BeginPosition;
         }
 
-        public static MITextPosition TryParse(TupleValue miTuple)
+        public static MITextPosition TryParse(DebuggedProcess process, TupleValue miTuple)
         {
-            string filename = miTuple.TryFindString("fullname");
-            if (string.IsNullOrEmpty(filename))
-            {
-                filename = miTuple.TryFindString("file");
-            }
+            string filename = process.GetMappedFileFromTuple(miTuple);
             if (!string.IsNullOrEmpty(filename))
             {
                 filename = DebuggedProcess.UnixPathToWindowsPath(filename);

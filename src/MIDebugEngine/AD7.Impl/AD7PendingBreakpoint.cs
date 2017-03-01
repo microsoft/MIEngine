@@ -34,6 +34,8 @@ namespace Microsoft.MIDebugEngine
         private bool _deleted;
         private bool _pendingDelete;
 
+        public DebuggedProcess DebuggedProcess {  get { return _engine.DebuggedProcess;  } }
+
         internal string BreakpointId
         {
             get { return _bp == null ? string.Empty : _bp.Number; }
