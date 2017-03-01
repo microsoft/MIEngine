@@ -1,22 +1,20 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MICore;
+using Microsoft.DebugEngineHost;
+using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.VisualStudio.Debugger.Interop;
-using System.Diagnostics;
-using System.Threading;
 using System.Collections.ObjectModel;
-using MICore;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Globalization;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using Microsoft.DebugEngineHost;
-
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Logger = MICore.Logger;
 
 namespace Microsoft.MIDebugEngine
@@ -388,17 +386,17 @@ namespace Microsoft.MIDebugEngine
                 // In lldb, the format is ^error,message=""
                 // In gdb/vsdbg it is ^error,msg=""
                 string message = result.Results.TryFindString("msg");
-                if(String.IsNullOrWhiteSpace(message))
+                if (String.IsNullOrWhiteSpace(message))
                 {
                     message = result.Results.TryFindString("message");
                 }
                 _callback.OnError(message);
             };
 
-            ThreadCreatedEvent += delegate (object o, EventArgs args)
+            ThreadCreatedEvent += async delegate (object o, EventArgs args)
             {
                 ResultEventArgs result = (ResultEventArgs)args;
-                ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
+                await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
                 _childProcessHandler?.ThreadCreatedEvent(result.Results);
             };
 
@@ -995,7 +993,7 @@ namespace Microsoft.MIDebugEngine
             if (String.IsNullOrWhiteSpace(reason) && !this.EntrypointHit)
             {
                 breakRequest = BreakRequest.None;   // don't let stopping interfere with launch processing
-                
+
                 // MinGW sends a stopped event on attach. gdb<->gdbserver also sends a stopped event when first attached.
                 // If this is a gdb<->gdbserver connection, ignore this as the entryPoint
                 if (this._launchOptions is LocalLaunchOptions &&

@@ -561,7 +561,7 @@ namespace MICore
             }
             return CmdBreakInternal();
         }
-        
+
         internal bool IsLocalGdb()
         {
             if (this.MICommandFactory.Mode == MIMode.Gdb &&

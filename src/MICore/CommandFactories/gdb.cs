@@ -155,6 +155,7 @@ namespace MICore
                 _currentFrameLevel = frameLevel;
             }
         }
+
         public override async Task<Results> ThreadInfo(uint? threadId = null)
         {
             Results results = await base.ThreadInfo(threadId);
@@ -164,6 +165,7 @@ namespace MICore
             }
             return results;
         }
+
         public override async Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
             string cmd = "info line " + file + ":" + line;
