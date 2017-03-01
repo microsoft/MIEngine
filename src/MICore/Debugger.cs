@@ -394,7 +394,7 @@ namespace MICore
                 }
                 else
                 {
-                    if (_requestingRealAsyncBreak == BreakRequest.Internal && fIsAsyncBreak)
+                    if (_requestingRealAsyncBreak == BreakRequest.Internal && fIsAsyncBreak && (!_terminating && !_detaching))
                     {
                         CmdContinueAsync();
                         processContinued = true;
@@ -561,7 +561,6 @@ namespace MICore
             }
             return CmdBreakInternal();
         }
-
 
         internal bool IsLocalGdb()
         {
@@ -1540,4 +1539,3 @@ namespace MICore
         }
     };
 }
-

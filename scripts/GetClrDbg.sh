@@ -267,7 +267,7 @@ prepare_install_location()
 convert_install_path_to_absolute()
 {
     if [ -z $__InstallLocation ]; then
-        __InstallLocation=$pwd
+        __InstallLocation=$(pwd)
     else
         if [ ! -d $__InstallLocation ]; then
             prepare_install_location            
@@ -379,7 +379,7 @@ download_and_extract()
         exit 1;
     fi
     
-    unzip -q $clrdbgZip
+    unzip -o -q $clrdbgZip
     
     if [ $? -ne  0 ]; then
         echo "Failed to unzip clrdbg"

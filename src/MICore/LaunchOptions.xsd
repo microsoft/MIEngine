@@ -225,7 +225,7 @@
           </xs:sequence>  
           <xs:attribute name="MIDebuggerPath" type="xs:string" use="required">
             <xs:annotation>
-              <xs:documentation>Full path to the MI Debugger executable.</xs:documentation>
+              <xs:documentation>Path to the MI Debugger executable. If only the executable name is provided, it will attempt to search $PATH for the location of the executable.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="MIDebuggerServerAddress" type="xs:string" use="optional">
@@ -359,7 +359,19 @@
     </xs:complexType>
   </xs:element>
 
-<!--base type for LocalLaunchOptions, PipeLaunchOptions, and TcpLaunchOptions -->
+  <xs:element name="SupplementalLaunchOptions">
+    <xs:annotation>
+      <xs:documentation>Option values that supplement the xml that arrives via the launch command.</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+      <xs:element name="SourceMap" type="SourceMapList" minOccurs="0" maxOccurs="1">
+      </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--base type for LocalLaunchOptions, PipeLaunchOptions, and TcpLaunchOptions -->
   <xs:complexType name="BaseLaunchOptions">
     <xs:sequence>
       <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
@@ -399,6 +411,13 @@
             </xs:enumeration>
           </xs:restriction>
         </xs:simpleType>
+      </xs:element>
+      <xs:element name="SourceMap" minOccurs="0" maxOccurs="1" type="SourceMapList">
+        <xs:annotation>
+          <xs:documentation>
+            If provided this list is used to map source file names found in the subtrees pointed to by these entries.
+          </xs:documentation>
+        </xs:annotation>
       </xs:element>
     </xs:sequence>
     <xs:attribute name="ExePath" type="xs:string" use="optional">
@@ -474,6 +493,35 @@
   <xs:complexType name="CommandList">
     <xs:sequence>
       <xs:element name="Command" minOccurs="0" maxOccurs="unbounded" type="Command"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="SourceMapEntry">
+    <xs:annotation>
+      <xs:documentation>Current and compile-time paths to the same source trees. Files found under the EditorPath are mapped to the CompileTimePath path for breakpoint matching and mapped from CompileTimePath to EditorPath when displaying stacktrace locations.</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="EditorPath" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>The path to the source tree the editor will use.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="CompileTimePath" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>The path to the source tree at compile time.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="UseForBreakpoints" type="xs:boolean" default="false">
+          <xs:annotation>
+            <xs:documentation>False if entry is only used for stack frame location mapping. True if this entry should also be used when specifying breakpoint locations.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="SourceMapList">
+    <xs:sequence>
+      <xs:element name="SourceMapEntry" minOccurs="0" maxOccurs="unbounded" type="SourceMapEntry"/>
     </xs:sequence>
   </xs:complexType>
 </xs:schema>

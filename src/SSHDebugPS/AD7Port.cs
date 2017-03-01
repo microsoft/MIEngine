@@ -129,9 +129,9 @@ namespace Microsoft.SSHDebugPS
             commandOutput = output;
         }
 
-        void IDebugUnixShellPort.BeginExecuteAsyncCommand(string commandText, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
+        void IDebugUnixShellPort.BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
-            GetConnection(ConnectionReason.Deferred).BeginExecuteAsyncCommand(commandText, callback, out asyncCommand);
+            GetConnection(ConnectionReason.Deferred).BeginExecuteAsyncCommand(commandText, runInShell, callback, out asyncCommand);
         }
 
         void IConnectionPointContainer.EnumConnectionPoints(out IEnumConnectionPoints ppEnum)

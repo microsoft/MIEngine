@@ -42,11 +42,20 @@ namespace Microsoft.SSHDebugPS
             return PSOutputParser.Parse(command.Output);
         }
 
-        internal void BeginExecuteAsyncCommand(string commandText, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
+        internal void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
-            var command = new AD7UnixAsyncCommand(new StreamingShell(_remoteSystem), callback);
-            command.Start(commandText);
-            asyncCommand = command;
+            if (runInShell)
+            {
+                var command = new AD7UnixAsyncShellCommand(new StreamingShell(_remoteSystem), callback);
+                command.Start(commandText);
+                asyncCommand = command;
+            }
+            else
+            {
+                var command = new AD7UnixAsyncCommand(_remoteSystem, callback);
+                command.Start(commandText);
+                asyncCommand = command;
+            }
         }
 
         internal int ExecuteCommand(string commandText, int timeout, out string commandOutput)
@@ -90,12 +99,12 @@ namespace Microsoft.SSHDebugPS
                 stat = _remoteSystem.FileSystem.Stat(path);
                 directoryExists = stat.IsDirectory();
             }
-            catch 
+            catch
             {
                 // Catching and eating all exceptions.
                 // Unfortunately the exceptions that are thrown by liblinux are not public, so we can't specialize it.
             }
-            
+
 
             if (stat == null && !directoryExists)
             {
