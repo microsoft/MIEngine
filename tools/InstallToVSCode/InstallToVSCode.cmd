@@ -47,7 +47,9 @@ if not exist "%MIEngineBinDir%Microsoft.MIDebugEngine.dll" echo ERROR: Microsoft
 if NOT "%~5"=="-d" echo ERROR: Bad command line argument. Expected '-d ^<vsdbg-dir^>'. & exit /b -1
 if "%~6" == "" echo ERROR: VsDbg binaries directory not set &exit /b -1
 set VSDBGBITSDIR=%~6
+if "%VSDBGBITSDIR%"=="novsdbg" goto SkipVSDBGCheck
 if not exist "%VSDBGBITSDIR%\vsdbg.dll" echo ERROR: %VSDBGBITSDIR%\vsdbg.dll does not exist. & exit /b -1
+:SkipVSDBGCheck
 
 set DESTDIR=%USERPROFILE%\.MIEngine-VSCode-Debug
 if exist "%DESTDIR%" rmdir /s /q "%DESTDIR%"
@@ -97,6 +99,8 @@ for %%f in (xunit.console.netcore.exe) do call :InstallFile "%OpenDebugAD7BinDir
 for %%f in (%OpenDebugAD7BinDir%\*.dll) do call :InstallFile "%%f"
 
 echo.
+
+if "%VSDBGBITSDIR%"=="novsdbg" goto AfterVSDBGCopy
 echo Installing vsdbg bits from %VSDBGBITSDIR%...
 
 REM NOTE: We ignore files that already exist. This is because we have already
@@ -118,6 +122,7 @@ pushd %destdir%
 ren vsdbg.exe clrdbg.exe
 if not "%errorlevel%"=="0" echo error: unable to rename vsdbg.exe???& exit /b -1
 popd
+:AfterVSDBGCopy
 
 for %%f in (coreclr\coreclr.ad7Engine.json) do call :InstallFile "%~dp0%%f"
 for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%MIEngineBinDir%%%f"
@@ -172,7 +177,7 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: mklink failed. Ensure this script is runn
 goto eof
 
 :Help
-echo InstallToVSCode ^<link^|copy^> ^<portable^|debug^> ^<oss-dev^|alpha^|insiders^|stable^> ^<open-debug-ad7-dir^> -d ^<vsdbg-binaries^>
+echo InstallToVSCode ^<link^|copy^> ^<portable^|debug^> ^<oss-dev^|alpha^|insiders^|stable^> ^<open-debug-ad7-dir^> -d ^<vsdbg-binaries^|novsdbg^>
 echo.
 echo This script is used to copy files needed to enable MIEngine based debugging 
 echo into VS Code.
@@ -190,7 +195,7 @@ echo   insiders: Install to VSCode insiders
 echo   stable: Install to VSCode stable
 echo.
 echo  open-debug-ad7-dir : Root of the OpenDebugAD7 repo
-echo  vsdbg-binaries: Directory which contains vsdbg binaries
+echo  vsdbg-binaries: Directory which contains vsdbg binaries or 'novsdbg' to not copy vsdbg binaries
 echo.
 echo Example: 
 echo .\InstallToVSCode.cmd link portable alpha c:\dd\OpenDebugAD7 -d c:\dd\vs1\out\binaries\amd64chk\Debugger\x-plat\vsdbg
