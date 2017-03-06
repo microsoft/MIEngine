@@ -199,6 +199,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     groupId = c_defaultGroupId;
                 }
+
                 if (!_threadGroups.ContainsKey(groupId))
                 {
                     _threadGroups[groupId] = new List<int>();
@@ -233,6 +234,8 @@ namespace Microsoft.MIDebugEngine
                 {
                     bool bNew = false;
                     var thread = SetThreadInfoFromResultValue(resVal, out bNew);
+                    Debug.Assert(thread.Id == id, "thread.Id and id should match");
+
                     if (bNew)
                     {
                         _callback.OnThreadStart(thread);
@@ -361,15 +364,17 @@ namespace Microsoft.MIDebugEngine
             return false;
         }
 
-        private DebuggedThread SetThreadInfoFromResultValue(ResultValue resVal, out bool newThread)
+        private DebuggedThread SetThreadInfoFromResultValue(ResultValue resVal, out bool isNewThread)
         {
-            newThread = false;
+            isNewThread = false;
             int threadId = resVal.FindInt("id");
             string targetId = resVal.TryFindString("target-id");
 
-            DebuggedThread thread = FindThread(threadId, out newThread);
+            DebuggedThread thread = FindThread(threadId, out isNewThread);
             thread.Alive = true;
-            if (!String.IsNullOrEmpty(targetId))
+
+            // Only update targetId if it is a new thread.
+            if (isNewThread && !String.IsNullOrEmpty(targetId))
             {
                 uint tid = 0;
                 if (TryGetTidFromTargetId(targetId, out tid))
@@ -411,26 +416,26 @@ namespace Microsoft.MIDebugEngine
                     {
                         bool bNew = false;
                         var thread = SetThreadInfoFromResultValue(t, out bNew);
+                        int threadId = thread.Id;
 
                         if (bNew)
                         {
                             NewThreads.Add(thread);
                         }
 
-                        int threadId = t.FindInt("id");
                         TupleValue[] frames = ((TupleValue)t).FindAll<TupleValue>("frame");
-                        var stack = new List<ThreadContext>();
-                        foreach (var frame in frames)
+
+                        if (frames.Any())
                         {
-                            stack.Add(CreateContext(frame));
-                        }
-                        if (stack.Count > 0)
-                        {
+                            List<ThreadContext> stack = new List<ThreadContext>();
+                            stack.AddRange(frames.Select(frame => CreateContext(frame)));
+
                             _topContext[threadId] = stack[0];
                             if (threadId == cxtThreadId)
                             {
                                 ret = _topContext[threadId];
                             }
+                            
                             if (stack.Count > 1)
                             {
                                 _stackFrames[threadId] = stack;
