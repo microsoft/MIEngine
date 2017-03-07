@@ -282,7 +282,7 @@ namespace Microsoft.MIDebugEngine
         private bool IsInParent(int tid)
         {
             // only those threads in the s_defaultGroupId threadgroup are in the debuggee, others are transient while attaching to a child process
-            return _threadGroups[c_defaultGroupId].Contains(tid);
+            return _threadGroups.ContainsKey(c_defaultGroupId) && _threadGroups[c_defaultGroupId].Contains(tid);
         }
 
         private async Task<List<ThreadContext>> WalkStack(DebuggedThread thread)
