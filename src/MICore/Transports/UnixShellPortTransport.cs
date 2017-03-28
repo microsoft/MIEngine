@@ -58,7 +58,7 @@ namespace MICore
             }
 
             _callback.AppendToInitializationLog(string.Format(CultureInfo.CurrentUICulture, MICoreResources.Info_StartingUnixCommand, _startRemoteDebuggerCommand));
-            _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, this, out _asyncCommand);
+            _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, true, this, out _asyncCommand);
         }
 
         /// <summary>

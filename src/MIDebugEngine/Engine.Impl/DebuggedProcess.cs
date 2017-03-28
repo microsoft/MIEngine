@@ -1,22 +1,20 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MICore;
+using Microsoft.DebugEngineHost;
+using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.VisualStudio.Debugger.Interop;
-using System.Diagnostics;
-using System.Threading;
 using System.Collections.ObjectModel;
-using MICore;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Globalization;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using Microsoft.DebugEngineHost;
-
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Logger = MICore.Logger;
 
 namespace Microsoft.MIDebugEngine
@@ -384,16 +382,29 @@ namespace Microsoft.MIDebugEngine
             ErrorEvent += delegate (object o, EventArgs args)
             {
                 // NOTE: Exceptions leaked from this method may cause VS to crash, be careful
-
                 ResultEventArgs result = (ResultEventArgs)args;
-                _callback.OnError(result.Results.FindString("msg"));
+                // In lldb, the format is ^error,message=""
+                // In gdb/vsdbg it is ^error,msg=""
+                string message = result.Results.TryFindString("msg");
+                if (String.IsNullOrWhiteSpace(message))
+                {
+                    message = result.Results.TryFindString("message");
+                }
+                _callback.OnError(message);
             };
 
-            ThreadCreatedEvent += delegate (object o, EventArgs args)
+            ThreadCreatedEvent += async delegate (object o, EventArgs args)
             {
-                ResultEventArgs result = (ResultEventArgs)args;
-                ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
-                _childProcessHandler?.ThreadCreatedEvent(result.Results);
+                try
+                {
+                    ResultEventArgs result = (ResultEventArgs)args;
+                    await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
+                    _childProcessHandler?.ThreadCreatedEvent(result.Results);
+                }
+                catch(Exception)
+                {
+                    // Avoid crashing VS
+                }
             };
 
             ThreadExitedEvent += delegate (object o, EventArgs args)
@@ -551,18 +562,18 @@ namespace Microsoft.MIDebugEngine
 
             // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
             string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
-            string escappedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
-            if (!string.IsNullOrWhiteSpace(escappedSearchPath))
+            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
+            if (!string.IsNullOrWhiteSpace(escapedSearchPath))
             {
                 if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
                 {
                     // Do not place quotes around so paths for gdb
-                    commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escappedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
+                    commands.Add(new LaunchCommand("-gdb-set solib-search-path " + escapedSearchPath + pathEntrySeperator, ResourceStrings.SettingSymbolSearchPath));
                 }
                 else
                 {
                     // surround so lib path with quotes in other cases
-                    commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escappedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
+                    commands.Add(new LaunchCommand("-gdb-set solib-search-path \"" + escapedSearchPath + pathEntrySeperator + "\"", ResourceStrings.SettingSymbolSearchPath));
                 }
             }
 
@@ -676,8 +687,8 @@ namespace Microsoft.MIDebugEngine
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
-                        string escappedDir = EscapePath(_launchOptions.WorkingDirectory);
-                        commands.Add(new LaunchCommand("-environment-cd " + escappedDir));
+                        string escapedDir = EscapePath(_launchOptions.WorkingDirectory);
+                        commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
 
                     // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
@@ -989,7 +1000,24 @@ namespace Microsoft.MIDebugEngine
             if (String.IsNullOrWhiteSpace(reason) && !this.EntrypointHit)
             {
                 breakRequest = BreakRequest.None;   // don't let stopping interfere with launch processing
-                this.EntrypointHit = true;
+
+                // MinGW sends a stopped event on attach. gdb<->gdbserver also sends a stopped event when first attached.
+                // If this is a gdb<->gdbserver connection, ignore this as the entryPoint
+                if (this._launchOptions is LocalLaunchOptions &&
+                    !String.IsNullOrWhiteSpace(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress))
+                {
+                    // If the stopped event occurs on gdbserver, ignore it unless it contains a filename.
+                    TupleValue frame = results.Results.TryFind<TupleValue>("frame");
+                    if (frame.Contains("file"))
+                    {
+                        this.EntrypointHit = true;
+                    }
+                }
+                else
+                {
+                    this.EntrypointHit = true;
+                }
+
                 CmdContinueAsync();
                 FireDeviceAppLauncherResume();
             }
@@ -1240,6 +1268,8 @@ namespace Microsoft.MIDebugEngine
             return path;
         }
 
+        internal bool UseUnixSymbolPaths { get { return _launchOptions.UseUnixSymbolPaths; } }
+
         internal static string UnixPathToWindowsPath(string unixPath)
         {
             return unixPath.Replace('/', '\\');
@@ -1425,8 +1455,12 @@ namespace Microsoft.MIDebugEngine
 
             if (_initialBreakArgs != null)
             {
-                await CheckModules();
-                _libraryLoaded.Clear();
+                if (MICommandFactory.SupportsStopOnDynamicLibLoad())
+                {
+                    await CheckModules();
+                    _libraryLoaded.Clear();
+                }
+
                 await HandleBreakModeEvent(_initialBreakArgs, BreakRequest.None);
                 _initialBreakArgs = null;
             }
@@ -1915,6 +1949,90 @@ namespace Microsoft.MIDebugEngine
         private Task<string> ResetConsole()
         {
             return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
+        }
+
+        public bool MapCurrentSrcToCompileTimeSrc(string currentSrc, out string compilerSrc)
+        {
+            if (_launchOptions.SourceMap != null)
+            {
+                StringComparison comp = PlatformUtilities.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+                foreach (var e in _launchOptions.SourceMap)
+                {
+                    if (e.UseForBreakpoints && currentSrc.StartsWith(e.EditorPath, comp))
+                    {
+                        var file = currentSrc.Substring(e.EditorPath.Length);
+                        if (string.IsNullOrEmpty(file)) // matched the whole string
+                        {
+                            compilerSrc = e.CompileTimePath;  // return the matches compile time path
+                            return true;
+                        }
+                        // must do the path break at a directory boundry, i.e. at a '\' or '/' char
+                        char firstFilechar = file[0];
+                        char lastDirectoryChar = e.EditorPath[e.EditorPath.Length - 1];
+                        if (firstFilechar == Path.DirectorySeparatorChar || firstFilechar == Path.AltDirectorySeparatorChar)
+                        {
+                            file = file.Substring(1);   // Trim the directory separator
+                        }
+                        else if (lastDirectoryChar != Path.DirectorySeparatorChar && lastDirectoryChar != Path.AltDirectorySeparatorChar)
+                        {
+                            continue;   // match didn't end at a directory separator, not actually a match
+                        }
+                        compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
+                        return true;
+                    }
+                }
+            }
+            compilerSrc = currentSrc;
+            return false;
+        }
+
+        public bool MapCompileTimeSrcToCurrentSrc(string compilerSrc, out string currentName)
+        {
+            if (_launchOptions.SourceMap != null)
+            {
+                StringComparison comp = _launchOptions.UseUnixSymbolPaths ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                foreach (var e in _launchOptions.SourceMap)
+                {
+                    if (string.IsNullOrEmpty(e.CompileTimePath))
+                    {
+                        continue;   // don't try to map back if path has an empty compiler src tree
+                    }
+                    if (compilerSrc.StartsWith(e.CompileTimePath, comp))
+                    {
+                        var file = compilerSrc.Substring(e.CompileTimePath.Length);
+                        if (string.IsNullOrEmpty(file)) // matched the whole directory string
+                        {
+                            break;  // use default
+                        }
+                        // must do the path break at a directory boundry, i.e. at a '\' or '/' char
+                        char firstFilechar = file[0];
+                        char lastDirectoryChar = e.CompileTimePath[e.CompileTimePath.Length - 1];
+                        if (file[0] == Path.DirectorySeparatorChar || file[0] == Path.AltDirectorySeparatorChar)
+                        {
+                            file = file.Substring(1);   // Trim the directory separator
+                        }
+                        else if (lastDirectoryChar != Path.DirectorySeparatorChar && lastDirectoryChar != Path.AltDirectorySeparatorChar)
+                        {
+                            continue;   // match didn't end at a directory separator, not actually a match
+                        }
+                        currentName = Path.Combine(e.EditorPath, file);    // map to the compiled location
+                        return true;
+                    }
+                }
+            }
+            currentName = compilerSrc;
+            return false;
+        }
+
+        public string GetMappedFileFromTuple(TupleValue tuple)
+        {
+            string file = tuple.Contains("fullname") ? tuple.FindString("fullname") : tuple.TryFindString("file");
+            string currentName = string.Empty;
+            if (!string.IsNullOrEmpty(file))
+            {
+                MapCompileTimeSrcToCurrentSrc(file, out currentName);
+            }
+            return currentName;
         }
     }
 }

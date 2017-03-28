@@ -10,6 +10,11 @@ if "%~1"=="-h" goto help
 if "%~1"=="" goto help
 if "%~6"=="" echo InstallToVSCode.cmd: ERROR: Bad command line arguments. & exit /b -1
 
+set DotNetSdkRoot=%ProgramFiles%\dotnet\sdk
+if /i "%PROCESSOR_ARCHITEW6432%"=="AMD64" set DotNetSdkRoot=%ProgramW6432%\dotnet\sdk
+set DotNetDll=%DotNetSdkRoot%\1.0.0-preview2-1-003177\dotnet.dll
+if not exist "%DotNetDll%" echo ERROR: .NET CLI preview2 must be installed.&exit /b -1
+
 set InstallAction=
 if "%~1"=="link" set InstallAction=LinkFile&goto InstallActionSet
 if "%~1"=="copy" set InstallAction=CopyFile&goto InstallActionSet
@@ -42,7 +47,9 @@ if not exist "%MIEngineBinDir%Microsoft.MIDebugEngine.dll" echo ERROR: Microsoft
 if NOT "%~5"=="-d" echo ERROR: Bad command line argument. Expected '-d ^<vsdbg-dir^>'. & exit /b -1
 if "%~6" == "" echo ERROR: VsDbg binaries directory not set &exit /b -1
 set VSDBGBITSDIR=%~6
-if not exist "%VSDBGBITSDIR%\libvsdbg.dll" echo ERROR: %VSDBGBITSDIR%\libvsdbg.dll does not exist. & exit /b -1
+if "%VSDBGBITSDIR%"=="novsdbg" goto SkipVSDBGCheck
+if not exist "%VSDBGBITSDIR%\vsdbg.dll" echo ERROR: %VSDBGBITSDIR%\vsdbg.dll does not exist. & exit /b -1
+:SkipVSDBGCheck
 
 set DESTDIR=%USERPROFILE%\.MIEngine-VSCode-Debug
 if exist "%DESTDIR%" rmdir /s /q "%DESTDIR%"
@@ -75,10 +82,10 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: Unable to change to CLRDependencies direc
 
 for /f "tokens=1 delims=" %%l in (project.json.template) do if NOT "%%l"=="@current-OS@" (echo %%l>>project.json) else (echo     "win7-x64":{}>>project.json)
 
-dotnet restore
+dotnet "%DotNetDll%" restore
 if NOT "%ERRORLEVEL%"=="0" echo "ERROR: 'dotnet restore' failed." & exit /b -1
 
-dotnet publish -o %DESTDIR%
+dotnet "%DotNetDll%" publish -o %DESTDIR%
 if NOT "%ERRORLEVEL%"=="0" echo "ERROR: 'dotnet publish' failed." & exit /b -1
 popd
 
@@ -92,6 +99,8 @@ for %%f in (xunit.console.netcore.exe) do call :InstallFile "%OpenDebugAD7BinDir
 for %%f in (%OpenDebugAD7BinDir%\*.dll) do call :InstallFile "%%f"
 
 echo.
+
+if "%VSDBGBITSDIR%"=="novsdbg" goto AfterVSDBGCopy
 echo Installing vsdbg bits from %VSDBGBITSDIR%...
 
 REM NOTE: We ignore files that already exist. This is because we have already
@@ -113,6 +122,7 @@ pushd %destdir%
 ren vsdbg.exe clrdbg.exe
 if not "%errorlevel%"=="0" echo error: unable to rename vsdbg.exe???& exit /b -1
 popd
+:AfterVSDBGCopy
 
 for %%f in (coreclr\coreclr.ad7Engine.json) do call :InstallFile "%~dp0%%f"
 for %%f in (Microsoft.MICore.dll Microsoft.MIDebugEngine.dll) do call :InstallFile "%MIEngineBinDir%%%f"
@@ -167,7 +177,7 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: mklink failed. Ensure this script is runn
 goto eof
 
 :Help
-echo InstallToVSCode ^<link^|copy^> ^<portable^|debug^> ^<oss-dev^|alpha^|insiders^|stable^> ^<open-debug-ad7-dir^> -d ^<vsdbg-binaries^>
+echo InstallToVSCode ^<link^|copy^> ^<portable^|debug^> ^<oss-dev^|alpha^|insiders^|stable^> ^<open-debug-ad7-dir^> -d ^<vsdbg-binaries^|novsdbg^>
 echo.
 echo This script is used to copy files needed to enable MIEngine based debugging 
 echo into VS Code.
@@ -185,7 +195,7 @@ echo   insiders: Install to VSCode insiders
 echo   stable: Install to VSCode stable
 echo.
 echo  open-debug-ad7-dir : Root of the OpenDebugAD7 repo
-echo  vsdbg-binaries: Directory which contains vsdbg binaries
+echo  vsdbg-binaries: Directory which contains vsdbg binaries or 'novsdbg' to not copy vsdbg binaries
 echo.
 echo Example: 
 echo .\InstallToVSCode.cmd link portable alpha c:\dd\OpenDebugAD7 -d c:\dd\vs1\out\binaries\amd64chk\Debugger\x-plat\vsdbg

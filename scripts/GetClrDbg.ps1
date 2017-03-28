@@ -96,9 +96,9 @@ function WriteSuccessInfo([string]$installationPath, [string]$runtimeId, [string
 }
 
 if ($Version -eq "latest") {
-    $VersionNumber = "15.0.26013.0"
+    $VersionNumber = "15.0.26022.0"
 } elseif ($Version -eq "vs2015u2") {
-    $VersionNumber = "15.0.26013.0"
+    $VersionNumber = "15.0.26022.0"
 }
 Write-Host "Info: Using clrdbg version '$VersionNumber'"
 

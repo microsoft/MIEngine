@@ -60,11 +60,17 @@ namespace Microsoft.MIDebugEngine
         internal static void AddProcess(DebuggedProcess process)
         {
             process.DebuggerExitEvent += process_DebuggerExitEvent;
+            process.DebuggerAbortedEvent += process_DebuggerAbortedEvent;
 
             lock (s_processes)
             {
                 s_processes.Add(process);
             }
+        }
+
+        private static void process_DebuggerAbortedEvent(object sender, DebuggerAbortedEventArgs args)
+        {
+            process_DebuggerExitEvent(sender, null);
         }
 
         private static void process_DebuggerExitEvent(object sender, EventArgs e)
@@ -73,6 +79,7 @@ namespace Microsoft.MIDebugEngine
             if (debuggedProcess != null)
             {
                 debuggedProcess.DebuggerExitEvent -= process_DebuggerExitEvent;
+                debuggedProcess.DebuggerAbortedEvent -= process_DebuggerAbortedEvent;
                 lock (s_processes)
                 {
                     s_processes.Remove(debuggedProcess);

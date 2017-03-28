@@ -223,7 +223,7 @@ namespace Microsoft.MIDebugEngine
                 return null;
             }
 
-            return DecodeSourceAnnotatedDisassemblyInstructions(results.Find<ResultListValue>("asm_insns").FindAll<TupleValue>("src_and_asm_line"));
+            return DecodeSourceAnnotatedDisassemblyInstructions(process, results.Find<ResultListValue>("asm_insns").FindAll<TupleValue>("src_and_asm_line"));
         }
 
         private static DisasmInstruction[] DecodeDisassemblyInstructions(TupleValue[] items)
@@ -243,12 +243,12 @@ namespace Microsoft.MIDebugEngine
             }
             return instructions;
         }
-        private static IEnumerable<DisasmInstruction> DecodeSourceAnnotatedDisassemblyInstructions(TupleValue[] items)
+        private static IEnumerable<DisasmInstruction> DecodeSourceAnnotatedDisassemblyInstructions(DebuggedProcess process, TupleValue[] items)
         {
             foreach (var item in items)
             {
                 uint line = item.FindUint("line");
-                string file = item.FindString("file");
+                string file = process.GetMappedFileFromTuple(item);
                 ValueListValue asm_items = item.Find<ValueListValue>("line_asm_insn");
                 uint lineOffset = 0;
                 foreach (var asm_item in asm_items.Content)

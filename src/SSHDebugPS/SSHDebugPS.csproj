@@ -91,6 +91,7 @@
     <Compile Include="AD7ConnectCanceledException.cs" />
     <Compile Include="AD7Process.cs" />
     <Compile Include="AD7Program.cs" />
+    <Compile Include="AD7UnixAsyncCommand.cs" />
     <Compile Include="MIEngineLauncher.cs" />
     <Compile Include="CommandFailedException.cs" />
     <Compile Include="ConnectionReason.cs" />
@@ -108,7 +109,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>StringResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="AD7UnixAsyncCommand.cs" />
+    <Compile Include="AD7UnixAsyncShellCommand.cs" />
     <Compile Include="VSOperationWaiter.cs" />
   </ItemGroup>
   <ItemGroup>
