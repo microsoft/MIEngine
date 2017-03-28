@@ -313,6 +313,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error while processing {0}: {1}.
+        /// </summary>
+        public static string Error_ProcessingFile {
+            get {
+                return ResourceManager.GetString("Error_ProcessingFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Commands are only accepted when the process is stopped..
         /// </summary>
         public static string Error_ProcessMustBeStopped {

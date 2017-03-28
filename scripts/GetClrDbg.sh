@@ -267,7 +267,7 @@ prepare_install_location()
 convert_install_path_to_absolute()
 {
     if [ -z $__InstallLocation ]; then
-        __InstallLocation=$pwd
+        __InstallLocation=$(pwd)
     else
         if [ ! -d $__InstallLocation ]; then
             prepare_install_location            
@@ -289,10 +289,10 @@ set_clrdbg_version()
     version_string="$(echo $1 | awk '{print tolower($0)}')"
     case $version_string in
         latest)
-            __ClrDbgVersion=15.0.26013.0
+            __ClrDbgVersion=15.0.26022.0
             ;;
         vs2015u2)
-            __ClrDbgVersion=15.0.26013.0
+            __ClrDbgVersion=15.0.26022.0
             ;;
         *)
             simpleVersionRegex="^[0-9].*"
@@ -379,7 +379,7 @@ download_and_extract()
         exit 1;
     fi
     
-    unzip -q $clrdbgZip
+    unzip -o -q $clrdbgZip
     
     if [ $? -ne  0 ]; then
         echo "Failed to unzip clrdbg"

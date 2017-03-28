@@ -37,6 +37,19 @@ namespace Microsoft.DebugEngineHost
             paths.ForEach((s) => loader(s));
         }
 
+        public static string FindSolutionRoot()
+        {
+            string path = null;
+            try
+            {
+                ThreadHelper.Generic.Invoke(() => { path = Internal.FindSolutionRootImpl(); });
+            }
+            catch (Exception)
+            {
+            }
+            return path;
+        }
+
         private static class Internal
         {
             // from vsshell.idl
@@ -87,6 +100,20 @@ namespace Microsoft.DebugEngineHost
                 {
                     LoadNatvisFromProject(proj[0], paths, solutionLevel: true);
                 }
+            }
+
+            public static string FindSolutionRootImpl()
+            {
+                string root = null;
+                string slnFile;
+                string slnUserFile;
+                var solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
+                if (solution == null)
+                {
+                    return null; // failed to find a solution
+                }
+                solution.GetSolutionInfo(out root, out slnFile, out slnUserFile);
+                return root;
             }
 
             private static void LoadNatvisFromProject(IVsHierarchy hier, List<string> paths, bool solutionLevel)

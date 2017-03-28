@@ -394,7 +394,7 @@ namespace MICore
                 }
                 else
                 {
-                    if (_requestingRealAsyncBreak == BreakRequest.Internal && fIsAsyncBreak)
+                    if (_requestingRealAsyncBreak == BreakRequest.Internal && fIsAsyncBreak && (!_terminating && !_detaching))
                     {
                         CmdContinueAsync();
                         processContinued = true;
@@ -562,7 +562,6 @@ namespace MICore
             return CmdBreakInternal();
         }
 
-
         internal bool IsLocalGdb()
         {
             if (this.MICommandFactory.Mode == MIMode.Gdb &&
@@ -603,10 +602,12 @@ namespace MICore
                 _terminating = true;
                 if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
                 {
-                    await CmdBreak(BreakRequest.Async);
+                    await AddInternalBreakAction(() => MICommandFactory.Terminate());
                 }
-
-                await MICommandFactory.Terminate();
+                else
+                {
+                    await MICommandFactory.Terminate();
+                }
             }
 
             return new Results(ResultClass.done);
@@ -615,12 +616,14 @@ namespace MICore
         public async Task<Results> CmdDetach()
         {
             _detaching = true;
-            if (ProcessState == ProcessState.Running)
+            if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
             {
-                await CmdBreak(BreakRequest.Async);
+                await AddInternalBreakAction(() => CmdAsync("-target-detach", ResultClass.done));
             }
-
-            await CmdAsync("-target-detach", ResultClass.done);
+            else
+            {
+                await CmdAsync("-target-detach", ResultClass.done);
+            }
             return new Results(ResultClass.done);
         }
 
@@ -888,7 +891,7 @@ namespace MICore
 
                 Close(message);
 
-                if (this.ProcessState != ProcessState.Exited)
+                if (this.ProcessState != ProcessState.Exited && !_terminating && !_detaching)
                 {
                     if (DebuggerAbortedEvent != null)
                     {
@@ -1536,4 +1539,3 @@ namespace MICore
         }
     };
 }
-

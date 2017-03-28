@@ -116,6 +116,11 @@
 		{
 			ret
 		}
+		.method public hidebysig specialname 
+			instance void .ctor(class [mscorlib]System.Exception exception)
+		{
+			ret
+		}
 		.property instance class [mscorlib]System.Exception Exception()
 		{
 			.get instance class [mscorlib]System.Exception liblinux.ErrorOccuredEventArgs::get_Exception()
@@ -1037,6 +1042,7 @@
 		.field static public literal valuetype liblinux.SystemId OSX = int32(0x0000001D)
 		.field static public literal valuetype liblinux.SystemId OpenBSD = int32(0x0000001F)
 		.field static public literal valuetype liblinux.SystemId OpenSUSE = int32(0x00000014)
+		.field static public literal valuetype liblinux.SystemId OracleLinux = int32(0x00000024)
 		.field static public literal valuetype liblinux.SystemId PCLinuxOS = int32(0x00000019)
 		.field static public literal valuetype liblinux.SystemId Poky = int32(0x00000022)
 		.field static public literal valuetype liblinux.SystemId Puppy = int32(0x00000009)
@@ -1344,7 +1350,15 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string localFileName, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
 			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName, int32 bufferSize)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1352,11 +1366,23 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.DirectoryInfo' Download(string localPath, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
 			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
 			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath, int32 bufferSize)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1388,7 +1414,15 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadTo(string localPath, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
 			instance class [mscorlib]'System.IO.FileInfo' Download(string localFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' Download(string localFileName, int32 bufferSize)
 		{
 		}
 	}
@@ -1408,7 +1442,23 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName, string remoteFileName, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.Threading.Tasks.Task`1'<class 'liblinux.IO.IRemoteFile'> UploadFileAsync(string localFileName, string remoteFileName, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
 			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string remoteFileName, string localFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string remoteFileName, string localFileName, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.Threading.Tasks.Task`1'<class [mscorlib]'System.IO.FileInfo'> DownloadFileAsync(string remoteFileName, string localFileName, int32 bufferSize)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1424,7 +1474,15 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
 			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath, int32 bufferSize)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1768,7 +1826,27 @@
 			ret
 		}
 		.method public virtual hidebysig newslot 
+			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName, string remoteFileName, int32 bufferSize)
+		{
+			ret
+		}
+		.method public virtual hidebysig newslot 
+			instance class [mscorlib]'System.Threading.Tasks.Task`1'<class 'liblinux.IO.IRemoteFile'> UploadFileAsync(string localFileName, string remoteFileName, int32 bufferSize)
+		{
+			ret
+		}
+		.method public virtual hidebysig newslot 
 			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string remoteFileName, string localFileName)
+		{
+			ret
+		}
+		.method public virtual hidebysig newslot 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string remoteFileName, string localFileName, int32 bufferSize)
+		{
+			ret
+		}
+		.method public virtual hidebysig newslot 
+			instance class [mscorlib]'System.Threading.Tasks.Task`1'<class [mscorlib]'System.IO.FileInfo'> DownloadFileAsync(string remoteFileName, string localFileName, int32 bufferSize)
 		{
 			ret
 		}
@@ -1788,7 +1866,17 @@
 			ret
 		}
 		.method public virtual hidebysig newslot 
+			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath, int32 bufferSize)
+		{
+			ret
+		}
+		.method public virtual hidebysig newslot 
 			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath)
+		{
+			ret
+		}
+		.method public virtual hidebysig newslot 
+			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath, int32 bufferSize)
 		{
 			ret
 		}
@@ -1928,7 +2016,23 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteFile' UploadFile(string localFileName, string remoteFileName, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.Threading.Tasks.Task`1'<class 'liblinux.IO.IRemoteFile'> UploadFileAsync(string localFileName, string remoteFileName, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
 			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string remoteFileName, string localFileName)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.FileInfo' DownloadFile(string remoteFileName, string localFileName, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.Threading.Tasks.Task`1'<class [mscorlib]'System.IO.FileInfo'> DownloadFileAsync(string remoteFileName, string localFileName, int32 bufferSize)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -1944,7 +2048,15 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
+			instance class 'liblinux.IO.IRemoteDirectory' UploadDirectory(string localPath, string remotePath, int32 bufferSize)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
 			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath)
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance class [mscorlib]'System.IO.DirectoryInfo' DownloadDirectory(string remotePath, string localPath, int32 bufferSize)
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
@@ -2228,12 +2340,62 @@
 			ret
 		}
 		.method public hidebysig 
+			instance bool TryGetById(int32 id, valuetype liblinux.Persistence.RetrieveMode mode, [out] class liblinux.ConnectionInfo& connectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
 			instance bool TryGetById(int32 id, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
 		{
 			ret
 		}
 		.method public hidebysig 
+			instance bool TryGetById(int32 id, valuetype liblinux.Persistence.RetrieveMode mode, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
 			instance bool TryGet(class liblinux.ConnectionInfo connectionInfo, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGetByName(string name, [out] class liblinux.ConnectionInfo& connectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGetByName(string name, valuetype liblinux.Persistence.RetrieveMode mode, [out] class liblinux.ConnectionInfo& connectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGetByName(string name, valuetype [mscorlib]System.StringComparison comparisonType, [out] class liblinux.ConnectionInfo& connectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGetByName(string name, valuetype [mscorlib]System.StringComparison comparisonType, valuetype liblinux.Persistence.RetrieveMode mode, [out] class liblinux.ConnectionInfo& connectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGetByName(string name, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGetByName(string name, valuetype liblinux.Persistence.RetrieveMode mode, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGetByName(string name, valuetype [mscorlib]System.StringComparison comparisonType, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool TryGetByName(string name, valuetype [mscorlib]System.StringComparison comparisonType, valuetype liblinux.Persistence.RetrieveMode mode, [out] class liblinux.Persistence.StoredConnectionInfo& storedConnectionInfo)
 		{
 			ret
 		}
@@ -2244,6 +2406,16 @@
 		}
 		.method public hidebysig 
 			instance bool Contains(int32 connectionId)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool Contains(string name)
+		{
+			ret
+		}
+		.method public hidebysig 
+			instance bool Contains(string name, valuetype [mscorlib]System.StringComparison comparisonType)
 		{
 			ret
 		}
@@ -2305,6 +2477,13 @@
 		.field public rtspecialname specialname int32 value__
 		.field static public literal valuetype liblinux.Persistence.PersistenceMode Disk = int32(0x00000001)
 		.field static public literal valuetype liblinux.Persistence.PersistenceMode Memory = int32(0x00000000)
+	}
+	.class public sealed RetrieveMode
+		extends [mscorlib]System.Enum
+	{
+		.field public rtspecialname specialname int32 value__
+		.field static public literal valuetype liblinux.Persistence.RetrieveMode All = int32(0x00000000)
+		.field static public literal valuetype liblinux.Persistence.RetrieveMode PropertiesOnly = int32(0x00000001)
 	}
 	.class public StoredConnectionInfo
 		extends [mscorlib]System.Object
@@ -3019,6 +3198,18 @@
 		{
 			ret
 		}
+		.method public final virtual hidebysig newslot specialname 
+			instance void add_Finished(class [mscorlib]System.EventHandler 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
+		.method public final virtual hidebysig newslot specialname 
+			instance void remove_Finished(class [mscorlib]System.EventHandler 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+			ret
+		}
 		.method public virtual hidebysig newslot specialname 
 			instance bool get_Running()
 		{
@@ -3107,6 +3298,10 @@
 		{
 			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
 			ret
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance void Write(string text)
+		{
 		}
 		.method public virtual hidebysig newslot specialname 
 			instance bool get_Queue()
@@ -3254,6 +3449,11 @@
 			ret
 		}
 		.method family hidebysig 
+			instance void NotifyCommandFinished(object sender)
+		{
+			ret
+		}
+		.method family hidebysig 
 			instance void EnsureCommandNotRunning()
 		{
 			ret
@@ -3262,6 +3462,11 @@
 		{
 			.addon instance void liblinux.Shell.CommonCommandBase::add_ErrorOutputReceived(class [mscorlib]'System.EventHandler`1'<class liblinux.Shell.OutputReceivedEventArgs>)
 			.removeon instance void liblinux.Shell.CommonCommandBase::remove_ErrorOutputReceived(class [mscorlib]'System.EventHandler`1'<class liblinux.Shell.OutputReceivedEventArgs>)
+		}
+		.event [mscorlib]System.EventHandler Finished
+		{
+			.addon instance void liblinux.Shell.CommonCommandBase::add_Finished(class [mscorlib]System.EventHandler)
+			.removeon instance void liblinux.Shell.CommonCommandBase::remove_Finished(class [mscorlib]System.EventHandler)
 		}
 		.event class [mscorlib]'System.EventHandler`1'<class liblinux.Shell.OutputReceivedEventArgs> OutputReceived
 		{
@@ -3356,6 +3561,16 @@
 		implements liblinux.Shell.ICommand, [mscorlib]System.IDisposable
 	{
 		.method public virtual hidebysig newslot abstract specialname 
+			instance void add_Finished(class [mscorlib]System.EventHandler 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+		}
+		.method public virtual hidebysig newslot abstract specialname 
+			instance void remove_Finished(class [mscorlib]System.EventHandler 'value')
+		{
+			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
+		}
+		.method public virtual hidebysig newslot abstract specialname 
 			instance bool get_Running()
 		{
 		}
@@ -3394,6 +3609,11 @@
 		.method public virtual hidebysig newslot abstract 
 			instance void Cancel()
 		{
+		}
+		.event [mscorlib]System.EventHandler Finished
+		{
+			.addon instance void liblinux.Shell.IAsyncronousCommand::add_Finished(class [mscorlib]System.EventHandler)
+			.removeon instance void liblinux.Shell.IAsyncronousCommand::remove_Finished(class [mscorlib]System.EventHandler)
 		}
 		.property instance bool Cancelled()
 		{
@@ -3779,6 +3999,14 @@
 		{
 			.custom instance void [mscorlib]System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor() = { }
 		}
+		.method public virtual hidebysig newslot abstract 
+			instance void Write(string text)
+		{
+		}
+		.method public virtual hidebysig newslot abstract specialname 
+			instance bool get_Completed()
+		{
+		}
 		.method public virtual hidebysig newslot abstract specialname 
 			instance bool get_DelayOutputReceiveEvents()
 		{
@@ -3849,6 +4077,10 @@
 		{
 			.get instance bool liblinux.Shell.IStreamableCommand::get_AccumulateOutput()
 			.set instance void liblinux.Shell.IStreamableCommand::set_AccumulateOutput(bool)
+		}
+		.property instance bool Completed()
+		{
+			.get instance bool liblinux.Shell.IStreamableCommand::get_Completed()
 		}
 		.property instance bool DelayOutputReceiveEvents()
 		{
@@ -4060,6 +4292,11 @@
 			ret
 		}
 		.method public virtual hidebysig 
+			instance void Write(string text)
+		{
+			ret
+		}
+		.method public virtual hidebysig 
 			instance void BeginOutputRead()
 		{
 			ret
@@ -4109,6 +4346,11 @@
 	{
 		.method public hidebysig specialname 
 			instance string get_Output()
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void .ctor(string output)
 		{
 			ret
 		}

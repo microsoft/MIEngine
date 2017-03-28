@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
     [ComImport()]
     [ComVisible(true)]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("808CC6CA-45B1-47D5-9779-62BAA597BA50")]
+    [Guid("5FE438B2-46BA-4637-88B3-E7B908D17331")]
     public interface IDebugUnixShellPort
     {
         /// <summary>
@@ -36,10 +36,11 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// it.
         /// </summary>
         /// <param name="commandText">Text of the command to execut</param>
+        /// <param name="runInShell">True if a PTY should be allocated and a shell started before executing the command.</param>
         /// <param name="callback">Callback which will receive the output and events 
         /// from the command</param>
         /// <param name="asyncCommand">Returned command object</param>
-        void BeginExecuteAsyncCommand(string commandText, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand);
+        void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand);
 
         /// <summary>
         /// Copy a single file from the local machine to the remote machine.
@@ -70,7 +71,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
 
     /// <summary>
     /// Interface representing an executing asynchronous command. This is returned from 
-    /// <see cref="IDebugUnixShellPort.BeginExecuteAsyncCommand(string, IDebugUnixShellCommandCallback, out IDebugUnixShellAsyncCommand)"/>.
+    /// <see cref="IDebugUnixShellPort.BeginExecuteAsyncCommand(string, bool, IDebugUnixShellCommandCallback, out IDebugUnixShellAsyncCommand)"/>.
     /// </summary>
     [ComImport()]
     [ComVisible(true)]
@@ -79,7 +80,13 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
     public interface IDebugUnixShellAsyncCommand
     {
         /// <summary>
-        /// Writes to the standard input steam of the executing command
+        /// Writes to the standard input stream of the executing command
+        /// </summary>
+        /// <param name="text">Text to send to the command</param>
+        void Write(string text);
+
+        /// <summary>
+        /// Writes to the standard input steam of the executing command, appending a newline
         /// </summary>
         /// <param name="text">Text to send to the command</param>
         void WriteLine(string text);
@@ -92,7 +99,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
 
     /// <summary>
     /// Interface to receive events from an executing async command. This is passed to 
-    /// <see cref="IDebugUnixShellPort.BeginExecuteAsyncCommand(string, IDebugUnixShellCommandCallback, out IDebugUnixShellAsyncCommand)"/>.
+    /// <see cref="IDebugUnixShellPort.BeginExecuteAsyncCommand(string, bool, IDebugUnixShellCommandCallback, out IDebugUnixShellAsyncCommand)"/>.
     /// </summary>
     [ComImport()]
     [ComVisible(true)]
