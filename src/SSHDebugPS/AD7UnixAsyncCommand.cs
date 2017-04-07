@@ -29,7 +29,7 @@ namespace Microsoft.SSHDebugPS
         internal void Start(string commandText)
         {
             _command = _remoteSystem.Shell.ExecuteCommandAsynchronously(commandText, Timeout.Infinite);
-            _command.Finished += (sender, e) => _callback.OnExit(_command.ExitCode.ToString());
+            _command.Finished += (sender, e) => _callback.OnExit(((NonHostedCommand)sender).ExitCode.ToString());
             _command.OutputReceived += (sender, e) => _callback.OnOutputLine(e.Output);
 
             _command.RedirectErrorOutputToOutput = true;

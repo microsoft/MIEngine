@@ -553,6 +553,11 @@ namespace Microsoft.MIDebugEngine
 
             commands.AddRange(_launchOptions.SetupCommands);
 
+            if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
+            {
+                commands.Add(new LaunchCommand("-interpreter-exec console \"set pagination off\""));
+            }
+
             // If the absolute prefix so path has not been specified, then don't set it to null
             // because the debugger might already have a default.
             if (!string.IsNullOrEmpty(_launchOptions.AbsolutePrefixSOLibSearchPath))
