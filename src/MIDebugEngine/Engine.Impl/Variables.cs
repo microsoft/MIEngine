@@ -39,6 +39,7 @@ namespace Microsoft.MIDebugEngine
         bool IsVisualized { get; }
         bool IsReadOnly { get; }
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
+        bool IsPreformatted { get; set; }
     }
 
     internal class SimpleVariableInformation
@@ -86,6 +87,8 @@ namespace Microsoft.MIDebugEngine
         public bool IsVisualized { get { return _parent == null ? false : _parent.IsVisualized; } }
         public enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         private string DisplayHint { get; set; }
+        public bool IsPreformatted { get; set; }
+
 
         private static bool IsPointer(string typeName)
         {
@@ -225,6 +228,7 @@ namespace Microsoft.MIDebugEngine
             if (results.Contains("dynamic"))
             {
                 CountChildren = 1;
+                IsPreformatted = true;
             }
             else
             {
@@ -258,7 +262,7 @@ namespace Microsoft.MIDebugEngine
                 Name = '[' + this.Name + ']';
                 VariableNodeType = NodeType.ArrayElement;
             }
-            else if (this.Name.Length > 2 && this.Name[0] == '[' && this.Name[this.Name.Length-1] == ']')
+            else if (this.Name.Length > 2 && this.Name[0] == '[' && this.Name[this.Name.Length - 1] == ']')
             {
                 VariableNodeType = NodeType.ArrayElement;
             }
@@ -458,6 +462,10 @@ namespace Microsoft.MIDebugEngine
                 {
                     _internalName = results.FindString("name");
                     TypeName = results.TryFindString("type");
+                    if (results.Contains("dynamic"))
+                    {
+                        IsPreformatted = true;
+                    }
                     if (results.Contains("dynamic") && results.Contains("has_more"))
                     {
                         CountChildren = results.FindUint("has_more");
@@ -675,6 +683,7 @@ namespace Microsoft.MIDebugEngine
             return DisplayHint == "map";
         }
 
+        [DebuggerHidden()]
         public bool IsReadOnly
         {
             get

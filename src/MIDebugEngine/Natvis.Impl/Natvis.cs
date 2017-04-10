@@ -64,6 +64,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         public void Dispose()
         {
         }
+        public bool IsPreformatted { get { return Parent.IsPreformatted; } set { } }
     }
 
     internal class VisualizerWrapper : SimpleWrapper
@@ -339,7 +340,8 @@ namespace Microsoft.MIDebugEngine.Natvis
                 {
                     if (!(variable is VisualizerWrapper) && //no displaystring for dummy vars ([Raw View])
                         (ShowDisplayStrings == DisplayStringsState.On
-                        || (ShowDisplayStrings == DisplayStringsState.ForVisualizedItems && variable.IsVisualized)))
+                        || (ShowDisplayStrings == DisplayStringsState.ForVisualizedItems && variable.IsVisualized)) &&
+                        !variable.IsPreformatted)
                     {
                         VisualizerInfo visualizer = FindType(variable);
                         if (visualizer == null)
@@ -379,6 +381,10 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         private IVariableInformation GetVisualizationWrapper(IVariableInformation variable)
         {
+            if (variable.IsPreformatted)
+            {
+                return null;
+            }
             VisualizerInfo visualizer = FindType(variable);
             if (visualizer == null || variable is VisualizerWrapper)    // don't stack wrappers
             {
