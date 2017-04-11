@@ -37,7 +37,7 @@ namespace Microsoft.MIDebugEngine
         VariableInformation FindChildByName(string name);
         string EvalDependentExpression(string expr);
         bool IsVisualized { get; }
-        bool IsReadOnly { get; }
+        bool IsReadOnly();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         bool IsPreformatted { get; set; }
     }
@@ -683,33 +683,29 @@ namespace Microsoft.MIDebugEngine
             return DisplayHint == "map";
         }
 
-        [DebuggerHidden()]
-        public bool IsReadOnly
+        public bool IsReadOnly()
         {
-            get
+            if (!_attribsFetched)
             {
-                if (!_attribsFetched)
+                if (string.IsNullOrEmpty(_internalName))
                 {
-                    if (string.IsNullOrEmpty(_internalName))
-                    {
-                        return true;
-                    }
-
-                    this.VerifyNotDisposed();
-
-                    string attribute = string.Empty;
-
-                    _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
-                    {
-                        attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
-                    });
-
-                    _isReadonly = (attribute == "noneditable");
-                    _attribsFetched = true;
+                    return true;
                 }
 
-                return _isReadonly;
+                this.VerifyNotDisposed();
+
+                string attribute = string.Empty;
+
+                _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                {
+                    attribute = await _engine.DebuggedProcess.MICommandFactory.VarShowAttributes(_internalName);
+                });
+
+                _isReadonly = (attribute == "noneditable");
+                _attribsFetched = true;
             }
+
+            return _isReadonly;
         }
 
         public void Assign(string expression)
