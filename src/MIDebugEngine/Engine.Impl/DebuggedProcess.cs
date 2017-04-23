@@ -1036,9 +1036,10 @@ namespace Microsoft.MIDebugEngine
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
 
-                bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
-                AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
+                Tuple<AD7BoundBreakpoint[], bool> result = await _breakpointManager.FindHitBreakpoints(bkptno, addr, frame);
+                AD7BoundBreakpoint[] bkpt = result.Item1;
+                bool fContinue = result.Item2;
                 if (bkpt != null)
                 {
                     if (frame != null && addr != 0)
