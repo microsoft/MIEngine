@@ -659,9 +659,9 @@ namespace MICore
             public int IndexOf(string theString, char c)
             {
                 int i = theString.IndexOf(c, Start);
-                if (i < 0)
+                if (i < 0 || i >= Extent)
                 {
-                    return i;
+                    return -1;
                 }
                 return i - Start;   // Span relative offset
             }
@@ -682,7 +682,7 @@ namespace MICore
             }
         }
 
-        private string theResult;
+        private string _resultString;
         private Logger Logger { get; set; }
 
         public MIResults(Logger logger)
@@ -696,8 +696,8 @@ namespace MICore
         /// <param name="output"></param>
         public Results ParseCommandOutput(string output)
         {
-            theResult = output.Trim();
-            int comma = theResult.IndexOf(',');
+            _resultString = output.Trim();
+            int comma = _resultString.IndexOf(',');
             Results results;
             ResultClass resultClass = ResultClass.None;
             if (comma < 0)
@@ -708,7 +708,7 @@ namespace MICore
             else
             {
                 resultClass = ParseResultClass(output.Substring(0, comma));
-                Span wholeString = new Span(theResult);
+                Span wholeString = new Span(_resultString);
                 results = ParseResultList(wholeString.AdvanceTo(comma + 1), resultClass);
             }
             return results;
@@ -716,8 +716,8 @@ namespace MICore
 
         public Results ParseResultList(string listStr, ResultClass resultClass = ResultClass.None)
         {
-            theResult = listStr.Trim();
-            return ParseResultList(new Span(theResult), resultClass);
+            _resultString = listStr.Trim();
+            return ParseResultList(new Span(_resultString), resultClass);
         }
 
         private Results ParseResultList(Span listStr, ResultClass resultClass = ResultClass.None)
@@ -754,7 +754,7 @@ namespace MICore
             {
                 return input;
             }
-            theResult = cstr;
+            _resultString = cstr;
             Span rest;
             var s = ParseCString(new Span(cstr), out rest);
             return s == null ? string.Empty : s.AsString;
@@ -767,9 +767,9 @@ namespace MICore
                 return string.Empty;
             }
 
-            if (theResult[input.Start] != '\"')   // not a Cstring, just return the string
+            if (_resultString[input.Start] != '\"')   // not a Cstring, just return the string
             {
-                return input.Extract(theResult);
+                return input.Extract(_resultString);
             }
             Span rest;
             var s = ParseCString(input, out rest);
@@ -788,7 +788,7 @@ namespace MICore
             {
                 return null;
             }
-            switch (theResult[resultStr.Start])
+            switch (_resultString[resultStr.Start])
             {
                 case '\"':
                     value = ParseCString(resultStr, out rest);
@@ -822,7 +822,7 @@ namespace MICore
             {
                 return null;
             }
-            switch (theResult[resultStr.Start])
+            switch (_resultString[resultStr.Start])
             {
                 case '\"':
                     value = ParseCString(resultStr, out rest);
@@ -856,13 +856,13 @@ namespace MICore
         private NamedResultValue ParseResult(Span resultStr, out Span rest)
         {
             rest = Span.Empty;
-            int equals = resultStr.IndexOf(theResult, '=');
+            int equals = resultStr.IndexOf(_resultString, '=');
             if (equals < 1)
             {
                 ParseError("variable not found", resultStr);
                 return null;
             }
-            string name = resultStr.Prefix(equals).Extract(theResult);
+            string name = resultStr.Prefix(equals).Extract(_resultString);
             ResultValue value = ParseResultValue(resultStr.Advance(equals + 1), out rest);
             if (value == null)
             {
@@ -892,7 +892,7 @@ namespace MICore
         {
             rest = input;
             StringBuilder output = new StringBuilder();
-            if (input.IsEmpty || theResult[input.Start] != '\"')
+            if (input.IsEmpty || _resultString[input.Start] != '\"')
             {
                 ParseError("Cstring expected", input);
                 return null;
@@ -901,12 +901,12 @@ namespace MICore
             bool endFound = false;
             for (; i < input.Extent; i++)
             {
-                char c = theResult[i];
+                char c = _resultString[i];
                 if (c == '\"')
                 {
                     // closing quote, so we are (probably) done
                     i++;
-                    if ((i < input.Extent) && (theResult[i] == c))
+                    if ((i < input.Extent) && (_resultString[i] == c))
                     {
                         // double quotes mean we emit a single quote, and carry on
                         ;
@@ -920,7 +920,7 @@ namespace MICore
                 else if (c == '\\')
                 {
                     // escaped character
-                    c = theResult[++i];
+                    c = _resultString[++i];
                     switch (c)
                     {
                         case 'n': c = '\n'; break;
@@ -966,7 +966,7 @@ namespace MICore
             }
             list.Add(item);
             input = rest;
-            while (!input.IsEmpty && theResult[input.Start] == ',')
+            while (!input.IsEmpty && _resultString[input.Start] == ',')
             {
                 item = ParseResult(input.Advance(1), out rest);
                 if (item == null)
@@ -993,7 +993,7 @@ namespace MICore
         {
             return ParseResultList((Span s, ref int i) =>
             {
-                if (theResult[i] == begin)
+                if (_resultString[i] == begin)
                 {
                     i++;
                     return true;
@@ -1001,7 +1001,7 @@ namespace MICore
                 return false;
             }, (Span s, ref int i) =>
             {
-                if (i < s.Extent && theResult[i] == end)
+                if (i < s.Extent && _resultString[i] == end)
                 {
                     i++;
                     return true;
@@ -1023,7 +1023,7 @@ namespace MICore
             }
             var tlist = new List<ResultValue>();
             TupleValue v;
-            while (rest.StartsWith(theResult, ",{"))
+            while (rest.StartsWith(_resultString, ",{"))
             {
                 // a tuple list
                 v = new TupleValue(list);
@@ -1058,17 +1058,17 @@ namespace MICore
         private ResultValue ParseList(Span input, out Span rest)
         {
             rest = Span.Empty;
-            if (theResult[input.Start] != '[')
+            if (_resultString[input.Start] != '[')
             {
                 ParseError("List expected", input);
                 return null;
             }
-            if (theResult[input.Start + 1] == ']')    // list is empty
+            if (_resultString[input.Start + 1] == ']')    // list is empty
             {
                 rest = input.Advance(2);  // eat through the closing brace
                 return new ValueListValue(new List<ResultValue>());
             }
-            if (IsValueChar(theResult[input.Start + 1]))
+            if (IsValueChar(_resultString[input.Start + 1]))
             {
                 return ParseValueList(input, out rest);
             }
@@ -1085,7 +1085,7 @@ namespace MICore
         {
             rest = Span.Empty;
             List<ResultValue> list = new List<ResultValue>();
-            if (theResult[input.Start] != '[')
+            if (_resultString[input.Start] != '[')
             {
                 ParseError("List expected", input);
                 return null;
@@ -1099,7 +1099,7 @@ namespace MICore
             }
             list.Add(item);
             input = rest;
-            while (!input.IsEmpty && theResult[input.Start] == ',')
+            while (!input.IsEmpty && _resultString[input.Start] == ',')
             {
                 item = ParseValue(input.Advance(1), out rest);
                 if (item == null)
@@ -1111,7 +1111,7 @@ namespace MICore
                 input = rest;
             }
 
-            if (input.IsEmpty || theResult[input.Start] != ']')    // list is not closed
+            if (input.IsEmpty || _resultString[input.Start] != ']')    // list is not closed
             {
                 ParseError("List not terminated", input);
                 rest = Span.Empty;
@@ -1140,7 +1140,7 @@ namespace MICore
             {
                 input = new Span(input.Start, 1000);    // don't show more than 1000 chars
             }
-            string result = input.Extract(theResult);
+            string result = input.Extract(_resultString);
             Debug.Fail(message + ": " + result);
 #if DEBUG
             Logger?.WriteLine(String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, result));
