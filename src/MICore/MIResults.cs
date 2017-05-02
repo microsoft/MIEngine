@@ -740,7 +740,6 @@ namespace MICore
 
         public string ParseCString(string input)
         {
-            input = input.Trim();
             if (input == null)
             {
                 throw new ArgumentNullException("input");
