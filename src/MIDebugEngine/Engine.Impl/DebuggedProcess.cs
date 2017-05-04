@@ -709,15 +709,6 @@ namespace Microsoft.MIDebugEngine
                     // Send client version to clrdbg to set the capabilities appropriately
                     if (this.MICommandFactory.Mode == MIMode.Clrdbg)
                     {
-                        string version = string.Empty;
-                        var attribute = this.GetType().GetTypeInfo().Assembly.GetCustomAttribute(typeof(System.Reflection.AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
-
-                        if (attribute != null)
-                        {
-                            version = attribute.Version;
-                        }
-
-                        commands.Add(new LaunchCommand("-gdb-set client-version \"" + version + "\""));
                         commands.Add(new LaunchCommand("-gdb-set client-ui \"" + Host.GetHostUIIdentifier().ToString() + "\""));
                     }
 

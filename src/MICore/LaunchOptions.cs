@@ -148,7 +148,18 @@ namespace MICore
         public string Hostname { get; private set; }
         public int Port { get; private set; }
         public bool Secure { get; private set; }
-        public RemoteCertificateValidationCallback ServerCertificateValidationCallback { get; set; }
+
+        /// <summary>
+        /// MIEngine definition of RemoteCertificateValidationCallback
+        /// </summary>
+        /// <param name="sender">An object that contains state information for this validation.</param>
+        /// <param name="certificate">X509Certificate object for the certificate used to authenticate the remote party.</param>
+        /// <param name="chain">X509Chain object for the chain of certificate authorities associated with the remote certificate.</param>
+        /// <param name="sslPolicyErrors">One or more errors associated with the remote certificate.</param>
+        /// <returns>true if the specified certificate is accepted</returns>
+        public delegate bool MIServerCertificateValidationCallback(object sender, object/*X509Certificate*/ certificate, object/*X509Chain*/ chain, SslPolicyErrors sslPolicyErrors);
+
+        public MIServerCertificateValidationCallback ServerCertificateValidationCallback { get; set; }
     }
 
     public sealed class EnvironmentEntry
