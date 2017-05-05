@@ -42,7 +42,18 @@ namespace MICore
             this.SuccessHandler = successHandler;
         }
 
-        public static ReadOnlyCollection<LaunchCommand> CreateCollectionFromXml(Xml.LaunchOptions.Command[] source)
+        public static ReadOnlyCollection<LaunchCommand> CreateCollection(List<Json.LaunchOptions.SetupCommand> source)
+        {
+            IList<LaunchCommand> commands = source?.Select(x => new LaunchCommand(x.Text, x.Description, x.IgnoreFailures.GetValueOrDefault(false))).ToList();
+            if(commands == null)
+            {
+                commands = new List<LaunchCommand>(0);
+            }
+
+            return new ReadOnlyCollection<LaunchCommand>(commands);
+        }
+
+        public static ReadOnlyCollection<LaunchCommand> CreateCollection(Xml.LaunchOptions.Command[] source)
         {
             LaunchCommand[] commandArray = source?.Select(x => new LaunchCommand(x.Value, x.Description, x.IgnoreFailures)).ToArray();
             if (commandArray == null)

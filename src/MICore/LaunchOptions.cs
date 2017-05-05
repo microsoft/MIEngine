@@ -17,6 +17,9 @@ using System.Xml.Serialization;
 using MICore.Xml.LaunchOptions;
 using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace MICore
 {
@@ -170,6 +173,12 @@ namespace MICore
             this.Value = xmlEntry.Value;
         }
 
+        public EnvironmentEntry(Json.LaunchOptions.Environment jsonEntry)
+        {
+            this.Name = jsonEntry.Name;
+            this.Value = jsonEntry.Value;
+        }
+
         /// <summary>
         /// [Required] Name of the environment variable
         /// </summary>
@@ -226,7 +235,7 @@ namespace MICore
         }
         public bool UseForBreakpoints { get; set; }
 
-        public static ReadOnlyCollection<SourceMapEntry> CreateCollectionFromXml(Xml.LaunchOptions.SourceMapEntry[] source)
+        public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Xml.LaunchOptions.SourceMapEntry[] source)
         {
             SourceMapEntry[] pathArray = source?.Select(x => new SourceMapEntry(x)).ToArray();
             if (pathArray == null)
@@ -235,6 +244,16 @@ namespace MICore
             }
 
             return new ReadOnlyCollection<SourceMapEntry>(pathArray);
+        }
+
+        public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, string> source)
+        {
+            IList<SourceMapEntry> sourceMaps = source?.Select(x => new SourceMapEntry() { EditorPath = x.Value, CompileTimePath = x.Key }).ToList();
+            if (sourceMaps == null)
+            {
+                sourceMaps = new List<SourceMapEntry>(0);
+            }
+            return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);
         }
     }
 
@@ -247,24 +266,36 @@ namespace MICore
 
         private const int DefaultLaunchTimeout = 10 * 1000; // 10 seconds
 
-        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, Xml.LaunchOptions.EnvironmentEntry[] environmentEntries)
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, List<EnvironmentEntry> environmentEntries)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
+            if (environmentEntries == null)
+            {
+                throw new ArgumentNullException("environmentEntries");
+            }
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
 
-            List<EnvironmentEntry> environmentList = new List<EnvironmentEntry>();
-            if (environmentEntries != null)
-            {
-                foreach (Xml.LaunchOptions.EnvironmentEntry xmlEntry in environmentEntries)
-                {
-                    environmentList.Add(new EnvironmentEntry(xmlEntry));
-                }
-            }
+            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentEntries);
+        }
 
-            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentList);
+        private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
+        {
+            if (!String.IsNullOrWhiteSpace(launchOptions.MiDebuggerServerAddress))
+            {
+                this.DebugServer = launchOptions.DebugServerPath;
+                this.DebugServerArgs = launchOptions.DebugServerArgs;
+                this.ServerStarted = launchOptions.ServerStarted;
+                this.FilterStderr = launchOptions.FilterStderr.GetValueOrDefault(false);
+                this.FilterStdout = launchOptions.FilterStdout.GetValueOrDefault(false);
+                if (!this.FilterStderr && !this.FilterStdout)
+                {
+                    this.FilterStdout = true;
+                }
+                this.ServerLaunchTimeout = launchOptions.ServerLaunchTimeout.GetValueOrDefault(DefaultLaunchTimeout);
+            }
         }
 
         private void InitializeServerOptions(Xml.LaunchOptions.LocalLaunchOptions source)
@@ -310,25 +341,193 @@ namespace MICore
             return File.Exists(MIDebuggerPath);
         }
 
+        static internal LocalLaunchOptions CreateFromJson(string json)
+        {
+            JObject parsedOptions = JObject.Parse(json);
+
+            Json.LaunchOptions.LaunchOptions launchOptions;
+
+            if (!String.Equals(parsedOptions["type"].Value<string>(), "cppdbg"))
+            {
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "type"));
+            }
+
+            switch (parsedOptions["request"].Value<string>())
+            {
+                case "launch":
+                    // handle launch case
+                    launchOptions = parsedOptions.ToObject<Json.LaunchOptions.LaunchOptions>();
+                    break;
+                case "attach":
+                // handle attach case -- Not supported yet, so we'll throw
+                //options = parsedOptions.ToObject<Json.LaunchOptions.AttachOptions>();
+                //break;
+                default:
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "request"));
+            }
+
+            if(launchOptions == null)
+            {
+                throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidLaunchOptions);
+            }
+
+            MIMode mi = ConvertMIModeString(RequireAttribute(launchOptions.MIMode, nameof(launchOptions.MIMode)));
+            string miDebuggerPath = EnsureDebuggerPath(launchOptions.MiDebuggerPath, GetDebuggerBinary(mi));
+
+            // TODO: Handle pipeTransport options
+            LocalLaunchOptions localLaunchOptions = new LocalLaunchOptions(RequireAttribute(miDebuggerPath, nameof(miDebuggerPath)),
+                launchOptions.MiDebuggerServerAddress,
+                GetEnvironmentEntries(launchOptions.Environment)
+                );
+
+            // Load up common options
+            localLaunchOptions.InitializeCommonOptions(launchOptions);
+            localLaunchOptions.InitializeServerOptions(launchOptions);
+
+            localLaunchOptions.DebuggerMIMode = mi;
+            localLaunchOptions.ExeArguments = ParseArguments(launchOptions.Args);
+            localLaunchOptions.WorkingDirectory = launchOptions.Cwd ?? String.Empty;
+            localLaunchOptions._useExternalConsole = launchOptions.ExternalConsole.GetValueOrDefault(false);
+            localLaunchOptions.CoreDumpPath = launchOptions.CoreDumpPath;
+
+            localLaunchOptions.SetupCommands = LaunchCommand.CreateCollection(launchOptions.SetupCommands);
+
+            if (launchOptions.CustomLaunchSetupCommands.Any())
+            {
+                localLaunchOptions.CustomLaunchSetupCommands = LaunchCommand.CreateCollection(launchOptions.CustomLaunchSetupCommands);
+            }
+
+            if (launchOptions.LaunchCompleteCommand.HasValue)
+            {
+                switch (launchOptions.LaunchCompleteCommand.Value)
+                {
+                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_continue:
+                        localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.ExecContinue;
+                        break;
+                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_run:
+                        localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.ExecRun;
+                        break;
+                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.None:
+                        localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.None;
+                        break;
+                }
+            }
+
+            return localLaunchOptions;
+        }
+
         static internal LocalLaunchOptions CreateFromXml(Xml.LaunchOptions.LocalLaunchOptions source)
         {
-            string miDebuggerPath = source.MIDebuggerPath;
+            string miDebuggerPath = EnsureDebuggerPath(source.MIDebuggerPath, GetDebuggerBinary(ConvertMIModeAttribute(source.MIMode)));
 
+            var options = new LocalLaunchOptions(
+                RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
+                source.MIDebuggerServerAddress,
+                GetEnvironmentEntries(source.Environment));
+            options.InitializeCommonOptions(source);
+            options.InitializeServerOptions(source);
+            options._useExternalConsole = source.ExternalConsole;
+
+            // when using local options the core dump path must check out
+            if (options.IsCoreDump && !LocalLaunchOptions.CheckFilePath(options.CoreDumpPath))
+                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, options.CoreDumpPath));
+
+            return options;
+        }
+
+        private static string GetDebuggerBinary(MIMode mode)
+        {
+            string debuggerBinary = String.Empty;
+            switch (mode)
+            {
+                case MIMode.Gdb:
+                    debuggerBinary = "gdb";
+                    break;
+                case MIMode.Lldb:
+                    debuggerBinary = "lldb-mi";
+                    break;
+            }
+            return debuggerBinary;
+        }
+
+        private static string ResolveFromPath(string command)
+        {
+            string pathVar = System.Environment.GetEnvironmentVariable("PATH");
+
+            // Check each portion of the PATH environment variable to see if it contains the requested file
+            foreach (string pathPart in pathVar.Split(Path.PathSeparator))
+            {
+                string candidate = Path.Combine(pathPart, command);
+
+                // If the file exists, use it
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private static string ParseArguments(IEnumerable<string> arguments)
+        {
+            if (arguments.Any())
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (string arg in arguments)
+                {
+                    if (stringBuilder.Length != 0)
+                        stringBuilder.Append(' ');
+
+                    stringBuilder.Append(QuoteArgument(arg));
+                }
+
+                return stringBuilder.ToString();
+            }
+            return String.Empty;
+        }
+
+        private static char[] s_ARGUMENT_SEPARATORS = new char[] { ' ', '\t' };
+        private static string QuoteArgument(string arg)
+        {
+            if (arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0)
+            {
+                return '"' + arg + '"';
+            }
+            return arg;
+        }
+
+        private static List<EnvironmentEntry> GetEnvironmentEntries(Xml.LaunchOptions.EnvironmentEntry[] entries)
+        {
+            List<EnvironmentEntry> envList = new List<EnvironmentEntry>();
+            if (entries != null)
+            {
+                foreach (var entry in entries)
+                {
+                    envList.Add(new EnvironmentEntry(entry));
+                }
+            }
+            return envList;
+        }
+
+        private static List<EnvironmentEntry> GetEnvironmentEntries(List<Json.LaunchOptions.Environment> entries)
+        {
+            List<EnvironmentEntry> envList = new List<EnvironmentEntry>();
+            if (entries != null)
+            {
+                foreach (var entry in entries)
+                {
+                    envList.Add(new EnvironmentEntry(entry));
+                }
+            }
+            return envList;
+        }
+
+        private static string EnsureDebuggerPath(string miDebuggerPath, string debuggerBinary)
+        {
             // If no path to the debugger was specified, look for the proper binary in the user's $PATH
             if (String.IsNullOrEmpty(miDebuggerPath))
             {
-                string debuggerBinary = null;
-                switch (source.MIMode)
-                {
-                    case Xml.LaunchOptions.MIMode.gdb:
-                        debuggerBinary = "gdb";
-                        break;
-
-                    case Xml.LaunchOptions.MIMode.lldb:
-                        debuggerBinary = "lldb-mi";
-                        break;
-                }
-
                 if (!String.IsNullOrEmpty(debuggerBinary))
                 {
                     miDebuggerPath = LocalLaunchOptions.ResolveFromPath(debuggerBinary);
@@ -354,38 +553,7 @@ namespace MICore
                 }
             }
 
-            var options = new LocalLaunchOptions(
-                RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
-                source.MIDebuggerServerAddress,
-                source.Environment);
-            options.InitializeCommonOptions(source);
-            options.InitializeServerOptions(source);
-            options._useExternalConsole = source.ExternalConsole;
-
-            // when using local options the core dump path must check out
-            if (options.IsCoreDump && !LocalLaunchOptions.CheckFilePath(options.CoreDumpPath))
-                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLocalExePath, options.CoreDumpPath));
-
-            return options;
-        }
-
-        private static string ResolveFromPath(string command)
-        {
-            string pathVar = System.Environment.GetEnvironmentVariable("PATH");
-
-            // Check each portion of the PATH environment variable to see if it contains the requested file
-            foreach (string pathPart in pathVar.Split(Path.PathSeparator))
-            {
-                string candidate = Path.Combine(pathPart, command);
-
-                // If the file exists, use it
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-
-            return null;
+            return miDebuggerPath;
         }
 
         /// <summary>
@@ -1022,7 +1190,8 @@ namespace MICore
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
 
-            if (string.IsNullOrWhiteSpace(options))
+            options = options?.Trim();
+            if (string.IsNullOrEmpty(options))
                 throw new InvalidLaunchOptionsException(MICoreResources.Error_StringIsNullOrEmpty);
 
             logger?.WriteTextBlock("LaunchOptions", options);
@@ -1031,95 +1200,114 @@ namespace MICore
             Guid clsidLauncher = Guid.Empty;
             object launcher = null;
             object launcherXmlOptions = null;
-
-            try
+            
+            if (options[0] == '{')
             {
-                XmlSerializer serializer;
-                using (XmlReader reader = OpenXml(options))
+                try
                 {
-                    switch (reader.LocalName)
-                    {
-                        case "LocalLaunchOptions":
-                            {
-                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.LocalLaunchOptions));
-                                var xmlLaunchOptions = (Xml.LaunchOptions.LocalLaunchOptions)Deserialize(serializer, reader);
-                                launchOptions = LocalLaunchOptions.CreateFromXml(xmlLaunchOptions);
-                                launchOptions.BaseOptions = xmlLaunchOptions;
-                            }
-                            break;
-
-                        case "PipeLaunchOptions":
-                            {
-                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.PipeLaunchOptions));
-                                var xmlLaunchOptions = (Xml.LaunchOptions.PipeLaunchOptions)Deserialize(serializer, reader);
-                                launchOptions = PipeLaunchOptions.CreateFromXml(xmlLaunchOptions);
-                                launchOptions.BaseOptions = xmlLaunchOptions;
-                            }
-                            break;
-
-                        case "TcpLaunchOptions":
-                            {
-                                serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.TcpLaunchOptions));
-                                var xmlLaunchOptions = (Xml.LaunchOptions.TcpLaunchOptions)Deserialize(serializer, reader);
-                                launchOptions = TcpLaunchOptions.CreateFromXml(xmlLaunchOptions);
-                                launchOptions.BaseOptions = xmlLaunchOptions;
-                            }
-                            break;
-
-                        case "IOSLaunchOptions":
-                            {
-                                serializer = GetXmlSerializer(typeof(IOSLaunchOptions));
-                                launcherXmlOptions = Deserialize(serializer, reader);
-                                clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
-                            }
-                            break;
-
-                        case "AndroidLaunchOptions":
-                            {
-                                serializer = GetXmlSerializer(typeof(AndroidLaunchOptions));
-                                launcherXmlOptions = Deserialize(serializer, reader);
-                                clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
-                            }
-                            break;
-
-                        case "SSHLaunchOptions":
-                            {
-                                serializer = GetXmlSerializer(typeof(SSHLaunchOptions));
-                                launcherXmlOptions = Deserialize(serializer, reader);
-                                clsidLauncher = new Guid("7E3052B2-FB42-4E38-B22C-1FD281BD4413");
-                            }
-                            break;
-
-                        default:
-                            {
-                                launcher = configStore?.GetCustomLauncher(reader.LocalName);
-                                if (launcher == null)
-                                {
-                                    throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
-                                }
-                                if (launcher as IPlatformAppLauncher == null)
-                                {
-                                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, reader.LocalName));
-                                }
-                                var deviceAppLauncher = (IPlatformAppLauncherSerializer)launcher;
-                                if (deviceAppLauncher == null)
-                                {
-                                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherSerializerNotFound, clsidLauncher.ToString("B")));
-                                }
-                                serializer = deviceAppLauncher.GetXmlSerializer(reader.LocalName);
-                                launcherXmlOptions = Deserialize(serializer, reader);
-                            }
-                            break;
-                    }
-
-                    // Read any remaining bits of XML to catch other errors
-                    while (reader.NodeType != XmlNodeType.None)
-                        reader.Read();
+                    launchOptions = LocalLaunchOptions.CreateFromJson(options);
+                }
+                catch (JsonReaderException e)
+                {
+                    throw new InvalidLaunchOptionsException(e.Message);
                 }
             }
-            catch (XmlException e)
+            else if (options[0] == '<')
             {
-                throw new InvalidLaunchOptionsException(e.Message);
+                //xml
+                try
+                {
+                    XmlSerializer serializer;
+                    using (XmlReader reader = OpenXml(options))
+                    {
+                        switch (reader.LocalName)
+                        {
+                            case "LocalLaunchOptions":
+                                {
+                                    serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.LocalLaunchOptions));
+                                    var xmlLaunchOptions = (Xml.LaunchOptions.LocalLaunchOptions)Deserialize(serializer, reader);
+                                    launchOptions = LocalLaunchOptions.CreateFromXml(xmlLaunchOptions);
+                                    launchOptions.BaseOptions = xmlLaunchOptions;
+                                }
+                                break;
+
+                            case "PipeLaunchOptions":
+                                {
+                                    serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.PipeLaunchOptions));
+                                    var xmlLaunchOptions = (Xml.LaunchOptions.PipeLaunchOptions)Deserialize(serializer, reader);
+                                    launchOptions = PipeLaunchOptions.CreateFromXml(xmlLaunchOptions);
+                                    launchOptions.BaseOptions = xmlLaunchOptions;
+                                }
+                                break;
+
+                            case "TcpLaunchOptions":
+                                {
+                                    serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.TcpLaunchOptions));
+                                    var xmlLaunchOptions = (Xml.LaunchOptions.TcpLaunchOptions)Deserialize(serializer, reader);
+                                    launchOptions = TcpLaunchOptions.CreateFromXml(xmlLaunchOptions);
+                                    launchOptions.BaseOptions = xmlLaunchOptions;
+                                }
+                                break;
+
+                            case "IOSLaunchOptions":
+                                {
+                                    serializer = GetXmlSerializer(typeof(IOSLaunchOptions));
+                                    launcherXmlOptions = Deserialize(serializer, reader);
+                                    clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
+                                }
+                                break;
+
+                            case "AndroidLaunchOptions":
+                                {
+                                    serializer = GetXmlSerializer(typeof(AndroidLaunchOptions));
+                                    launcherXmlOptions = Deserialize(serializer, reader);
+                                    clsidLauncher = new Guid("C9A403DA-D3AA-4632-A572-E81FF6301E9B");
+                                }
+                                break;
+
+                            case "SSHLaunchOptions":
+                                {
+                                    serializer = GetXmlSerializer(typeof(SSHLaunchOptions));
+                                    launcherXmlOptions = Deserialize(serializer, reader);
+                                    clsidLauncher = new Guid("7E3052B2-FB42-4E38-B22C-1FD281BD4413");
+                                }
+                                break;
+
+                            default:
+                                {
+                                    launcher = configStore?.GetCustomLauncher(reader.LocalName);
+                                    if (launcher == null)
+                                    {
+                                        throw new XmlException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownXmlElement, reader.LocalName));
+                                    }
+                                    if (launcher as IPlatformAppLauncher == null)
+                                    {
+                                        throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, reader.LocalName));
+                                    }
+                                    var deviceAppLauncher = (IPlatformAppLauncherSerializer)launcher;
+                                    if (deviceAppLauncher == null)
+                                    {
+                                        throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherSerializerNotFound, clsidLauncher.ToString("B")));
+                                    }
+                                    serializer = deviceAppLauncher.GetXmlSerializer(reader.LocalName);
+                                    launcherXmlOptions = Deserialize(serializer, reader);
+                                }
+                                break;
+                        }
+
+                        // Read any remaining bits of XML to catch other errors
+                        while (reader.NodeType != XmlNodeType.None)
+                            reader.Read();
+                    }
+                }
+                catch (XmlException e)
+                {
+                    throw new InvalidLaunchOptionsException(e.Message);
+                }
+            }
+            else
+            {
+                throw new InvalidLaunchOptionsException(MICoreResources.Error_UnknownLaunchOptions);
             }
 
             if (clsidLauncher != Guid.Empty)
@@ -1350,6 +1538,28 @@ namespace MICore
             }
         }
 
+        protected void InitializeCommonOptions(Json.LaunchOptions.BaseOptions options)
+        {
+            this.ExePath = options.Program;
+
+            if (this.TargetArchitecture == TargetArchitecture.Unknown && !String.IsNullOrWhiteSpace(options.TargetArchitecture))
+            {
+                this.TargetArchitecture = ConvertTargetArchitectureAttribute(options.TargetArchitecture);
+            }
+
+            this.VisualizerFile = options.VisualizerFile;
+            this.ShowDisplayString = options.ShowDisplayString.GetValueOrDefault(false);
+
+            this.AdditionalSOLibSearchPath = String.IsNullOrEmpty(this.AdditionalSOLibSearchPath) ?
+                options.AdditionalSOLibSearchPath :
+                String.Concat(this.AdditionalSOLibSearchPath, ";", options.AdditionalSOLibSearchPath);
+
+            // This was set in OpenDebugAD7 for !CORECLR
+            this.WaitDynamicLibLoad = false;
+
+            this.SourceMap = SourceMapEntry.CreateCollection(options.SourceFileMap);
+        }
+
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
         {
             if (this.ExePath == null)
@@ -1380,14 +1590,14 @@ namespace MICore
             this.ShowDisplayString = source.ShowDisplayString;
             this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;
 
-            this.SetupCommands = LaunchCommand.CreateCollectionFromXml(source.SetupCommands);
+            this.SetupCommands = LaunchCommand.CreateCollection(source.SetupCommands);
 
             if (source.CustomLaunchSetupCommands != null)
             {
-                this.CustomLaunchSetupCommands = LaunchCommand.CreateCollectionFromXml(source.CustomLaunchSetupCommands);
+                this.CustomLaunchSetupCommands = LaunchCommand.CreateCollection(source.CustomLaunchSetupCommands);
             }
 
-            this.SourceMap = SourceMapEntry.CreateCollectionFromXml(source.SourceMap);
+            this.SourceMap = SourceMapEntry.CreateCollection(source.SourceMap);
 
             Debug.Assert((uint)LaunchCompleteCommand.ExecRun == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.execrun);
             Debug.Assert((uint)LaunchCompleteCommand.ExecContinue == (uint)Xml.LaunchOptions.BaseLaunchOptionsLaunchCompleteCommand.execcontinue);
@@ -1557,6 +1767,53 @@ namespace MICore
 
                 default:
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownTargetArchitecture, source.ToString()));
+            }
+        }
+
+        public static TargetArchitecture ConvertTargetArchitectureAttribute(string arch)
+        {
+            if (arch.Equals("x86", StringComparison.OrdinalIgnoreCase))
+            {
+                return TargetArchitecture.X86;
+            }
+
+            if (arch.Equals("arm", StringComparison.OrdinalIgnoreCase))
+            {
+                return TargetArchitecture.ARM;
+            }
+
+            if (arch.Equals("mips", StringComparison.OrdinalIgnoreCase))
+            {
+                return TargetArchitecture.Mips;
+            }
+
+            if (arch.Equals("x64", StringComparison.OrdinalIgnoreCase) ||
+                arch.Equals("x86_64", StringComparison.OrdinalIgnoreCase) ||
+                arch.Equals("amd64", StringComparison.OrdinalIgnoreCase))
+            {
+                return TargetArchitecture.X64;
+            }
+
+            if (arch.Equals("arm64", StringComparison.OrdinalIgnoreCase))
+            {
+                return TargetArchitecture.ARM64;
+            }
+
+            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownTargetArchitecture, arch));
+        }
+
+        public static MIMode ConvertMIModeString(string mode)
+        {
+            switch (mode)
+            {
+                case "gdb":
+                    return MIMode.Gdb;
+                case "lldb":
+                    return MIMode.Lldb;
+                case "clrdbg":
+                    return MIMode.Clrdbg;
+                default:
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "MIMode"));
             }
         }
 
