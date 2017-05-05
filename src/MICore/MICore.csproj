@@ -102,8 +102,9 @@
   </ItemGroup>
   <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
     <Reference Include="System" />
-    <Reference Include="System.Xml" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
     </Reference>
@@ -150,6 +151,7 @@
     <Compile Include="ExceptionHelper.cs" />
     <Compile Include="InvalidCoreDumpOperationException.cs" />
     <Compile Include="InvalidLaunchOptionsException.cs" />
+    <Compile Include="JsonLaunchOptions.cs" />
     <Compile Include="LaunchCommand.cs" />
     <Compile Include="LaunchOptions.cs" />
     <Compile Include="$(XsdCodeFile)">
@@ -195,7 +197,12 @@
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
     <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" Condition="'$(Configuration)'!='Debug-PortablePDB'" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages.Desktop\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
