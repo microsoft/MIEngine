@@ -1,4 +1,5 @@
-﻿// © Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
@@ -66,18 +67,6 @@ namespace MICore.Json.LaunchOptions
         public string MiDebuggerServerAddress { get; set; }
 
         /// <summary>
-        /// Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true.
-        /// </summary>
-        [JsonProperty("filterStdout", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool? FilterStdout { get; set; }
-
-        /// <summary>
-        /// Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false.
-        /// </summary>
-        [JsonProperty("filterStderr", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool? FilterStderr { get; set; }
-
-        /// <summary>
         /// Optional source file mappings passed to the debug engine. Example: '{ "/original/source/path":"/current/source/path" }'
         /// </summary>
         [JsonProperty("sourceFileMap", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -95,7 +84,7 @@ namespace MICore.Json.LaunchOptions
         #region Public Properties for Serialization
         
         [JsonProperty("processId")]
-        public Dictionary<string, object> ProcessId { get; private set; }
+        public int ProcessId { get; private set; }
 
         #endregion
 
@@ -103,11 +92,10 @@ namespace MICore.Json.LaunchOptions
 
         public AttachOptions()
         {
-            this.ProcessId = new Dictionary<string, object>();
             this.SourceFileMap = new Dictionary<string, string>();
         }
 
-        public AttachOptions(string program, Dictionary<string, object> processId, string type = null, string targetArchitecture = null, string visualizerFile = null, bool? showDisplayString = null, string additionalSOLibSearchPath = null, string MIMode = null, string miDebuggerPath = null, string miDebuggerServerAddress = null, bool? filterStdout = null, bool? filterStderr = null, Dictionary<string, string> sourceFileMap = null, PipeTransport pipeTransport = null)
+        public AttachOptions(string program, int processId, string type = null, string targetArchitecture = null, string visualizerFile = null, bool? showDisplayString = null, string additionalSOLibSearchPath = null, string MIMode = null, string miDebuggerPath = null, string miDebuggerServerAddress = null, Dictionary<string, string> sourceFileMap = null, PipeTransport pipeTransport = null)
         {
             this.Program = program;
             this.Type = type;
@@ -119,8 +107,6 @@ namespace MICore.Json.LaunchOptions
             this.MiDebuggerPath = miDebuggerPath;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
             this.ProcessId = processId;
-            this.FilterStdout = filterStdout;
-            this.FilterStderr = filterStderr;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
         }
@@ -235,6 +221,18 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("serverLaunchTimeout", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public int? ServerLaunchTimeout { get; set; }
+
+        /// <summary>
+        /// Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true.
+        /// </summary>
+        [JsonProperty("filterStdout", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? FilterStdout { get; set; }
+
+        /// <summary>
+        /// Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false.
+        /// </summary>
+        [JsonProperty("filterStderr", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? FilterStderr { get; set; }
 
         /// <summary>
         /// Optional full path to a core dump file for the specified program. Defaults to null.

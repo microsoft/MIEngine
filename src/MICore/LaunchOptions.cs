@@ -366,6 +366,10 @@ namespace MICore
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "request"));
             }
 
+            if(launchOptions == null)
+            {
+                throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidLaunchOptions);
+            }
 
             MIMode mi = ConvertMIModeString(RequireAttribute(launchOptions.MIMode, nameof(launchOptions.MIMode)));
             string miDebuggerPath = EnsureDebuggerPath(launchOptions.MiDebuggerPath, GetDebuggerBinary(mi));
@@ -496,9 +500,12 @@ namespace MICore
         private static List<EnvironmentEntry> GetEnvironmentEntries(Xml.LaunchOptions.EnvironmentEntry[] entries)
         {
             List<EnvironmentEntry> envList = new List<EnvironmentEntry>();
-            foreach (var entry in entries)
+            if (entries != null)
             {
-                envList.Add(new EnvironmentEntry(entry));
+                foreach (var entry in entries)
+                {
+                    envList.Add(new EnvironmentEntry(entry));
+                }
             }
             return envList;
         }
@@ -506,9 +513,12 @@ namespace MICore
         private static List<EnvironmentEntry> GetEnvironmentEntries(List<Json.LaunchOptions.Environment> entries)
         {
             List<EnvironmentEntry> envList = new List<EnvironmentEntry>();
-            foreach (var entry in entries)
+            if (entries != null)
             {
-                envList.Add(new EnvironmentEntry(entry));
+                foreach (var entry in entries)
+                {
+                    envList.Add(new EnvironmentEntry(entry));
+                }
             }
             return envList;
         }
@@ -1180,7 +1190,8 @@ namespace MICore
             if (string.IsNullOrWhiteSpace(exePath))
                 throw new ArgumentNullException("exePath");
 
-            if (string.IsNullOrWhiteSpace(options))
+            options = options?.Trim();
+            if (string.IsNullOrEmpty(options))
                 throw new InvalidLaunchOptionsException(MICoreResources.Error_StringIsNullOrEmpty);
 
             logger?.WriteTextBlock("LaunchOptions", options);
@@ -1189,16 +1200,21 @@ namespace MICore
             Guid clsidLauncher = Guid.Empty;
             object launcher = null;
             object launcherXmlOptions = null;
-
-            if (options.Trim()[0] == '{')
+            
+            if (options[0] == '{')
             {
-                launchOptions = LocalLaunchOptions.CreateFromJson(options);
-
+                try
+                {
+                    launchOptions = LocalLaunchOptions.CreateFromJson(options);
+                }
+                catch (JsonReaderException e)
+                {
+                    throw new InvalidLaunchOptionsException(e.Message);
+                }
             }
-            else if (options.TrimStart()[0] == '<')
+            else if (options[0] == '<')
             {
                 //xml
-
                 try
                 {
                     XmlSerializer serializer;
