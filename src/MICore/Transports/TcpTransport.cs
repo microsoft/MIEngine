@@ -31,7 +31,7 @@ namespace MICore
             TcpLaunchOptions tcpOptions = (TcpLaunchOptions)options;
 
             _client = new TcpClient();
-            _client.Connect(tcpOptions.Hostname, tcpOptions.Port);
+            _client.ConnectAsync(tcpOptions.Hostname, tcpOptions.Port).Wait();
 
             if (tcpOptions.Secure)
             {
@@ -48,7 +48,7 @@ namespace MICore
                 else
                 {
                     //else use the callback specified
-                    callback = tcpOptions.ServerCertificateValidationCallback;
+                    callback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => tcpOptions.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);
                 }
 
                 var certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
@@ -61,7 +61,7 @@ namespace MICore
                     null /*UserCertificateSelectionCallback */
                     );
 
-                sslStream.AuthenticateAsClient(tcpOptions.Hostname, certStore.Certificates, System.Security.Authentication.SslProtocols.Tls, false /* checkCertificateRevocation */);
+                sslStream.AuthenticateAsClientAsync(tcpOptions.Hostname, certStore.Certificates, System.Security.Authentication.SslProtocols.Tls, false /* checkCertificateRevocation */).Wait();
                 reader = new StreamReader(sslStream);
                 writer = new StreamWriter(sslStream);
             }

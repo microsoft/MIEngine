@@ -27,7 +27,7 @@ namespace Microsoft.MIDebugEngine
 
         public int GetCodeContext(ulong uCodeLocationId, out IDebugCodeContext2 ppCodeContext)
         {
-            ppCodeContext = new AD7MemoryAddress(_engine, (uint)uCodeLocationId, null);
+            ppCodeContext = new AD7MemoryAddress(_engine, uCodeLocationId, null);
             return Constants.S_OK;
         }
 
@@ -128,7 +128,7 @@ namespace Microsoft.MIDebugEngine
             }
             else if (dwSeekStart == enum_SEEK_START.SEEK_START_CODELOCID)
             {
-                _addr = (uint)uCodeLocationId;
+                _addr = uCodeLocationId;
             }
 
             if (iInstructions != 0)

@@ -91,7 +91,15 @@ namespace IOSDebugLauncher
             }
 
             debuggerLaunchOptions = new TcpLaunchOptions(_launchOptions.RemoteMachineName, _remotePorts.DebugListenerPort, _launchOptions.Secure);
-            (debuggerLaunchOptions as TcpLaunchOptions).ServerCertificateValidationCallback = _client.ServerCertificateValidationCallback;
+
+            if (_client.ServerCertificateValidationCallback != null)
+            {
+                (debuggerLaunchOptions as TcpLaunchOptions).ServerCertificateValidationCallback = (object sender, object/*X509Certificate*/ certificate, object/*X509Chain*/ chain, SslPolicyErrors sslPolicyErrors) =>
+                {
+                    return _client.ServerCertificateValidationCallback(sender, (X509Certificate)certificate, (X509Chain)chain, sslPolicyErrors);
+                };
+            }
+            
             debuggerLaunchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
             debuggerLaunchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
             debuggerLaunchOptions.DebuggerMIMode = MIMode.Lldb;

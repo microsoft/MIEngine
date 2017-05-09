@@ -226,7 +226,7 @@ namespace Microsoft.MIDebugEngine
 
 
 
-            fContinue = (hitBoundBreakpoints.Count == 0);
+            fContinue = (hitBoundBreakpoints.Count == 0 && hitBps.Length != 0);
             return hitBoundBreakpoints.Count != 0 ? hitBoundBreakpoints.ToArray() : null;
         }
 
