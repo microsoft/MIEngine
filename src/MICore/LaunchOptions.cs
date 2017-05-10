@@ -344,29 +344,44 @@ namespace MICore
         static internal LocalLaunchOptions CreateFromJson(string json)
         {
             JObject parsedOptions = JObject.Parse(json);
+            Json.LaunchOptions.BaseOptions launchOptions;
+            string type = parsedOptions["type"].Value<string>();
 
-            Json.LaunchOptions.LaunchOptions launchOptions;
-
-            if (!String.Equals(parsedOptions["type"].Value<string>(), "cppdbg"))
+            // If its blank, assume cppdbg, otherwise if its specified it better be cppdbg
+            if (!String.IsNullOrWhiteSpace(type) && !String.Equals(type, "cppdbg"))
             {
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "type"));
             }
 
-            switch (parsedOptions["request"].Value<string>())
+            string requestType = parsedOptions["request"].Value<string>();
+            if (String.IsNullOrWhiteSpace(requestType))
+            {
+                // If request isn't specified, see if we can determine what it is
+                if (!String.IsNullOrWhiteSpace(parsedOptions["processId"].Value<string>()))
+                {
+                    requestType = "attach";
+                }
+                else if (!String.IsNullOrWhiteSpace(parsedOptions["program"].Value<string>()))
+                {
+                    requestType = "launch";
+                }
+            }
+
+            switch (requestType)
             {
                 case "launch":
                     // handle launch case
                     launchOptions = parsedOptions.ToObject<Json.LaunchOptions.LaunchOptions>();
                     break;
                 case "attach":
-                // handle attach case -- Not supported yet, so we'll throw
-                //options = parsedOptions.ToObject<Json.LaunchOptions.AttachOptions>();
-                //break;
+                    // handle attach case
+                    launchOptions = parsedOptions.ToObject<Json.LaunchOptions.AttachOptions>();
+                    break;
                 default:
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "request"));
             }
 
-            if(launchOptions == null)
+            if (launchOptions == null)
             {
                 throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidLaunchOptions);
             }
@@ -377,40 +392,52 @@ namespace MICore
             // TODO: Handle pipeTransport options
             LocalLaunchOptions localLaunchOptions = new LocalLaunchOptions(RequireAttribute(miDebuggerPath, nameof(miDebuggerPath)),
                 launchOptions.MiDebuggerServerAddress,
-                GetEnvironmentEntries(launchOptions.Environment)
+                GetEnvironmentEntries(
+                    (launchOptions is Json.LaunchOptions.LaunchOptions) ?
+                        ((Json.LaunchOptions.LaunchOptions)launchOptions).Environment
+                        : null
+                )
                 );
 
             // Load up common options
             localLaunchOptions.InitializeCommonOptions(launchOptions);
-            localLaunchOptions.InitializeServerOptions(launchOptions);
-
-            localLaunchOptions.DebuggerMIMode = mi;
-            localLaunchOptions.ExeArguments = ParseArguments(launchOptions.Args);
-            localLaunchOptions.WorkingDirectory = launchOptions.Cwd ?? String.Empty;
-            localLaunchOptions._useExternalConsole = launchOptions.ExternalConsole.GetValueOrDefault(false);
-            localLaunchOptions.CoreDumpPath = launchOptions.CoreDumpPath;
-
-            localLaunchOptions.SetupCommands = LaunchCommand.CreateCollection(launchOptions.SetupCommands);
-
-            if (launchOptions.CustomLaunchSetupCommands.Any())
+            if (launchOptions is Json.LaunchOptions.LaunchOptions)
             {
-                localLaunchOptions.CustomLaunchSetupCommands = LaunchCommand.CreateCollection(launchOptions.CustomLaunchSetupCommands);
-            }
+                Json.LaunchOptions.LaunchOptions launch = (Json.LaunchOptions.LaunchOptions)launchOptions;
+                localLaunchOptions.InitializeServerOptions(launch);
 
-            if (launchOptions.LaunchCompleteCommand.HasValue)
-            {
-                switch (launchOptions.LaunchCompleteCommand.Value)
+                localLaunchOptions.DebuggerMIMode = mi;
+                localLaunchOptions.ExeArguments = ParseArguments(launch.Args);
+                localLaunchOptions.WorkingDirectory = launch.Cwd ?? String.Empty;
+                localLaunchOptions._useExternalConsole = launch.ExternalConsole.GetValueOrDefault(false);
+                localLaunchOptions.CoreDumpPath = launch.CoreDumpPath;
+
+                localLaunchOptions.SetupCommands = LaunchCommand.CreateCollection(launch.SetupCommands);
+
+                if (launch.CustomLaunchSetupCommands.Any())
                 {
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_continue:
-                        localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.ExecContinue;
-                        break;
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_run:
-                        localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.ExecRun;
-                        break;
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.None:
-                        localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.None;
-                        break;
+                    localLaunchOptions.CustomLaunchSetupCommands = LaunchCommand.CreateCollection(launch.CustomLaunchSetupCommands);
                 }
+
+                if (launch.LaunchCompleteCommand.HasValue)
+                {
+                    switch (launch.LaunchCompleteCommand.Value)
+                    {
+                        case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_continue:
+                            localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.ExecContinue;
+                            break;
+                        case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_run:
+                            localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.ExecRun;
+                            break;
+                        case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.None:
+                            localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.None;
+                            break;
+                    }
+                }
+            }
+            if(launchOptions is Json.LaunchOptions.AttachOptions)
+            {
+                localLaunchOptions.ProcessId = ((Json.LaunchOptions.AttachOptions)launchOptions).ProcessId;
             }
 
             return localLaunchOptions;
@@ -1200,7 +1227,7 @@ namespace MICore
             Guid clsidLauncher = Guid.Empty;
             object launcher = null;
             object launcherXmlOptions = null;
-            
+
             if (options[0] == '{')
             {
                 try
