@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
-  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
+  <Import Project="..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="..\..\build\miengine.settings.targets" />
   <Import Project="packages.props" />
   <PropertyGroup>
@@ -278,7 +278,7 @@
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\PackageNuGet.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
-  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
+  <Import Project="..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
   <Import Project="..\..\build\DropFiles.targets" />
   <!--
   Target to drop the built files into a directory.
