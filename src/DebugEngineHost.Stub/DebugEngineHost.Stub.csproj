@@ -5,6 +5,7 @@
     NOTE: Ths must be set BEFORE improting miengine.settings.targets-->
     <AssemblyVersion>1.0.0</AssemblyVersion>
   </PropertyGroup>
+  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
