@@ -1,21 +1,21 @@
 ﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
-  <Target Name="DropFiles" AfterTargets="Build" Condition="'@(DropUnsignedFile);@(DropSignedFile)' != ''">
+  <ItemGroup>
+    <FilesToSign Include="@(DropSignedFile)">
+      <Authenticode>Microsoft</Authenticode>
+      <StrongName>StrongName</StrongName>
+    </FilesToSign>
+  </ItemGroup>
+
+  <Target Name="DropFiles" AfterTargets="SignFiles;Build" Condition="'@(DropUnsignedFile);@(DropSignedFile)' != ';'">
     <PropertyGroup>
       <DropDir>$(DropRootDir)</DropDir>
       <DropDir Condition="'$(DropSubDir)'!=''">$(DropRootDir)\$(DropSubDir)</DropDir>
     </PropertyGroup>
+    <!--In official builds of the lab configuration, make sure that the MicroBuild props are included in any project that uses DropFiles-->
+    <Error Condition="'$(MicroBuild_SigningTargetsImported)'!='true' and '$(Lab)'!='false' and '$(BUILD_BUILDURI)'!=''" Text="MicroBuild.Core.props must be included in projects that use DropFiles." />
     <MakeDir Condition="!Exists($(DropDir))" Directories="$(DropDir)" />
     <Copy DestinationFolder="$(DropDir)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)" />
-    <ItemGroup>
-      <FilesToSign Include="@(DropSignedFile->'$(DropDir)\%(Filename)%(Extension)')">
-        <Authenticode>Microsoft</Authenticode>
-        <StrongName>StrongName</StrongName>
-      </FilesToSign>
-    </ItemGroup>
   </Target>
-  <ItemGroup>
-    <SignFilesDependsOn Include="DropFiles" />
-  </ItemGroup>
   
 </Project>
