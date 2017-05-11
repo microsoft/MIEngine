@@ -270,13 +270,14 @@ namespace MICore
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
-            if (environmentEntries == null)
-            {
-                throw new ArgumentNullException("environmentEntries");
-            }
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
+
+            if (environmentEntries == null)
+            {
+                environmentEntries = new List<EnvironmentEntry>(0);
+            }
 
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentEntries);
         }
@@ -435,7 +436,7 @@ namespace MICore
                     }
                 }
             }
-            if(launchOptions is Json.LaunchOptions.AttachOptions)
+            if (launchOptions is Json.LaunchOptions.AttachOptions)
             {
                 localLaunchOptions.ProcessId = ((Json.LaunchOptions.AttachOptions)launchOptions).ProcessId;
             }
