@@ -346,23 +346,16 @@ namespace MICore
         {
             JObject parsedOptions = JObject.Parse(json);
             Json.LaunchOptions.BaseOptions launchOptions;
-            string type = parsedOptions["type"].Value<string>();
 
-            // If its blank, assume cppdbg, otherwise if its specified it better be cppdbg
-            if (!String.IsNullOrWhiteSpace(type) && !String.Equals(type, "cppdbg"))
-            {
-                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "type"));
-            }
-
-            string requestType = parsedOptions["request"].Value<string>();
+            string requestType = parsedOptions["request"]?.Value<string>();
             if (String.IsNullOrWhiteSpace(requestType))
             {
                 // If request isn't specified, see if we can determine what it is
-                if (!String.IsNullOrWhiteSpace(parsedOptions["processId"].Value<string>()))
+                if (!String.IsNullOrWhiteSpace(parsedOptions["processId"]?.Value<string>()))
                 {
                     requestType = "attach";
                 }
-                else if (!String.IsNullOrWhiteSpace(parsedOptions["program"].Value<string>()))
+                else if (!String.IsNullOrWhiteSpace(parsedOptions["program"]?.Value<string>()))
                 {
                     requestType = "launch";
                 }

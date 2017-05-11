@@ -1,0 +1,224 @@
+{
+  "debugExtensions": {
+    "cppdbg": {
+      "vsDebugEngineGuid": "{ea6637c6-17df-45b5-a183-0951c54243bc}",
+      "VsDebugTargetInfo4": {
+        "bstrCurDir": "${workspaceRoot}",
+        "bstrExe": "${debugInfo.target}",
+        "bstrOptions": "*"
+      },
+      "templates": [
+        {
+          "templateId": "launch",
+          "displayName": "C/C++ Launch for MinGW/Cygwin (gdb)",
+          "description": "Debug launch configuration for C/C++ hosted in MinGW or Cygwin.",
+          "fileExtensions": [ "*.exe", "makefile" ],
+          "initialConfiguration": {
+            "cwd": "${workspaceRoot}",
+            "program": "${debugInfo.target}",
+            "MIMode": "gdb",
+            "miDebuggerPath": "${env.MINGW_PREFIX}\\bin\\gdb.exe",
+            "externalConsole": true
+          }
+        },
+        {
+          "templateId": "attach",
+          "displayName": "C/C++ Attach for MinGW/Cygwin (gdb)",
+          "description": "Debug attach configuration for C/C++ hosted in MinGW or Cygwin.",
+          "fileExtensions": [ "*.exe", "makefile" ],
+          "initialConfiguration": {
+            "cwd": "${workspaceRoot}",
+            "program": "${debugInfo.target}",
+            "processId": 0,
+            "MIMode": "gdb",
+            "miDebuggerPath": "${env.MINGW_PREFIX}\\bin\\gdb.exe",
+            "externalConsole": true
+          }
+        }
+      ],
+      "schema": {
+        "definitions": {
+          "cpp_schema": {
+            "type": "object",
+            "properties": {
+
+              "program": {
+                "type": "string",
+                "description": "Full path to program executable."
+              },
+              "processId": {
+                "type": "integer",
+                "description": "Optional process id to attach the debugger to."
+              },
+              "sourceFileMap": {
+                "type": "object",
+                "description": "Optional source file mappings passed to the debug engine. Example: '{ \"C:\\foo\":\"/home/user/foo\" }'",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "MIMode": {
+                "type": "string",
+                "description": "Indicates the console debugger that the MIDebugEngine will connect to. Allowed values are \"gdb\" \"lldb\"."
+              },
+              "args": {
+                "type": "array",
+                "description": "Command line arguments passed to the program.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "environment": {
+                "type": "array",
+                "description": "Environment variables to add to the environment for the program. Example: [ { \"name\": \"squid\", \"value\": \"clam\" } ].",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": "string",
+                    "value": "string"
+                  }
+                }
+              },
+              "targetArchitecture": {
+                "type": "string",
+                "description": "The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64."
+              },
+              "cwd": {
+                "type": "string",
+                "description": "The working directory of the target"
+              },
+              "miDebuggerPath": {
+                "type": "string",
+                "description": "The path to the mi debugger (such as gdb). When unspecified, it will search path first for the debugger."
+              },
+              "miDebuggerServerAddress": {
+                "type": "string",
+                "description": "Network address of the MI Debugger Server to connect to (example: localhost:1234)."
+              },
+              "stopAtEntry": {
+                "type": "boolean",
+                "description": "Optional parameter. If true, the debugger should stop at the entrypoint of the target. If processId is passed, has no effect."
+              },
+              "setupCommands": {
+                "type": "array",
+                "description": "One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: \"setupCommands\": [ { \"text\": \"-enable-pretty-printing\", \"description\": \"Enable GDB pretty printing\", \"ignoreFailures\": true }].",
+                "items": {
+                  "$ref": "#/definitions/cpp_schema/definitions/launchSetupCommands"
+                }
+              },
+              "customLaunchSetupCommands": {
+                "type": "array",
+                "description": "If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be \"-target-attach\" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: \"customLaunchSetupCommands\": [ { \"text\": \"target-run\", \"description\": \"run target\", \"ignoreFailures\": false }].",
+                "items": {
+                  "$ref": "#/definitions/cpp_schema/definitions/launchSetupCommands"
+                }
+              },
+              "launchCompleteCommand": {
+                "type": "string",
+                "enum": [
+                  "exec-run",
+                  "exec-continue",
+                  "None"
+                ],
+                "description": "The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are \"exec-run\", \"exec-continue\", \"None\". The default value is \"exec-run\"."
+              },
+              "debugServerPath": {
+                "type": "string",
+                "description": "Optional full path to debug server to launch. Defaults to null."
+              },
+              "debugServerArgs": {
+                "type": "string",
+                "description": "Optional debug server args. Defaults to null."
+              },
+              "serverStarted": {
+                "type": "string",
+                "description": "Optional server-started pattern to look for in the debug server output. Defaults to null."
+              },
+              "filterStdout": {
+                "type": "boolean",
+                "description": "Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true."
+              },
+              "filterStderr": {
+                "type": "boolean",
+                "description": "Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false."
+              },
+              "serverLaunchTimeout": {
+                "type": "integer",
+                "description": "Optional time, in milliseconds, for the debugger to wait for the debugServer to start up. Default is 10000."
+              },
+              "coreDumpPath": {
+                "type": "string",
+                "description": "Optional full path to a core dump file for the specified program. Defaults to null."
+              },
+              "externalConsole": {
+                "type": "boolean",
+                "description": "If true, a console is launched for the debuggee. If false, no console is launched. Note this option is ignored in some cases for technical reasons."
+              },
+              "pipeTransport": {
+                "$ref": "#/definitions/cpp_schema/definitions/pipeTransportOptions",
+                "description": "When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between VS Code and the MI-enabled debugger backend executable (such as gdb)."
+              }
+            },
+            "definitions": {
+              "launchSetupCommands": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "The debugger command to execute."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Optional description for the command."
+                  },
+                  "ignoreFailures": {
+                    "type": "boolean",
+                    "description": "If true, failures from the command should be ignored. Default value is false."
+                  }
+                }
+              },
+              "pipeTransportOptions": {
+                "type": "object",
+                "properties": {
+                  "pipeCwd": {
+                    "type": "string",
+                    "description": "The fully qualified path to the working directory for the pipe program."
+                  },
+                  "pipeProgram": {
+                    "type": "string",
+                    "description": "The fully qualified pipe command to execute."
+                  },
+                  "pipeArgs": {
+                    "type": "array",
+                    "description": "Command line arguments passed to the pipe program to configure the connection.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "debuggerPath": {
+                    "type": "string",
+                    "description": "The full path to the debugger on the target machine, for example /usr/bin/gdb."
+                  },
+                  "pipeEnv": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Environment variables passed to the pipe program."
+                  }
+                }
+              }
+            }
+          },
+          "cppTemplateLayout": {
+            "allOf": [
+              { "$ref": "#/definitions/default" },
+              { "$ref": "#/definitions/cpp_schema" }
+            ]
+          }
+        },
+        "configuration": "#/definitions/cppTemplateLayout"
+      }
+    }
+  }
+}

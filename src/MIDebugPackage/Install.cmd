@@ -35,7 +35,7 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: Must be called from an elevated command p
 set BackupDir=%DestDir%\.MDDDebuggerBackup\
 set MDDDebuggerDir=%DestDir%\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger\
 
-set FilesToInstall=Microsoft.MICore.dll Microsoft.MIDebugEngine.dll Microsoft.MIDebugEngine.pkgdef Microsoft.MIDebugPackage.dll Microsoft.MIDebugPackage.pkgdef Microsoft.AndroidDebugLauncher.dll Microsoft.AndroidDebugLauncher.pkgdef Microsoft.IOSDebugLauncher.dll Microsoft.IOSDebugLauncher.pkgdef Microsoft.JDbg.dll Microsoft.DebugEngineHost.dll Microsoft.MICore.XmlSerializers.dll Microsoft.SSHDebugPS.dll Microsoft.SSHDebugPS.pkgdef
+set FilesToInstall=Microsoft.MICore.dll Microsoft.MIDebugEngine.dll Microsoft.MIDebugEngine.pkgdef Microsoft.MIDebugPackage.dll Microsoft.MIDebugPackage.pkgdef Microsoft.AndroidDebugLauncher.dll Microsoft.AndroidDebugLauncher.pkgdef Microsoft.IOSDebugLauncher.dll Microsoft.IOSDebugLauncher.pkgdef Microsoft.JDbg.dll Microsoft.DebugEngineHost.dll Microsoft.MICore.XmlSerializers.dll Microsoft.SSHDebugPS.dll Microsoft.SSHDebugPS.pkgdef OpenFolderSchema.json
 
 REM Add in the Facade assemblies we need to run on the desktop CLR if we are running in VS 2015. In VS 2017, Roslyn adds these, so don't add our own copy.
 if not exist "%DestDir%\Common7\IDE\PrivateAssemblies\System.Diagnostics.Process.dll" set FilesToInstall=%FilesToInstall% System.Diagnostics.Process.dll System.IO.FileSystem.dll System.IO.FileSystem.Primitives.dll System.Net.Security.dll System.Net.Sockets.dll System.Reflection.TypeExtensions.dll System.Runtime.InteropServices.RuntimeInformation.dll System.Security.Cryptography.X509Certificates.dll System.Threading.Thread.dll
