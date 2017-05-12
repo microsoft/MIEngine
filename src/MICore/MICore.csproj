@@ -199,6 +199,7 @@
   <ItemGroup>
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
     <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" Condition="'$(Configuration)'!='Debug-PortablePDB'" />
+    <GlassDirCopy Include="$(OutDir)Newtonsoft.Json.dll" />
   </ItemGroup>
   <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
