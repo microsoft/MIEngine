@@ -1303,7 +1303,7 @@ namespace MICore
             else
             {
                 // append a newline if the message didn't come with one
-                if (!cmd.EndsWith("\n", StringComparison.Ordinal))
+                if (!cmd.EndsWith("\n"))
                 {
                     cmd += "\n";
                 }
