@@ -12,6 +12,8 @@ using System.Linq;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.DebugEngineHost;
 
+SYNTAX ERROR
+
 namespace MICore
 {
     public enum ProcessState
