@@ -52,7 +52,7 @@
               },
               "sourceFileMap": {
                 "type": "object",
-                "description": "Optional source file mappings passed to the debug engine. Example: '{ \"C:\\foo\":\"/home/user/foo\" }'.",
+                "description": "Optional source file mappings passed to the debug engine. Format: '{ \"Editor Source Location\": \"Compiled Source Location\" }'. Example: '{ \"C:\\foo\": \"/home/user/foo\" }'.",
                 "additionalProperties": {
                   "type": "string"
                 }
@@ -201,6 +201,10 @@
                       "type": "string"
                     },
                     "description": "Environment variables passed to the pipe program."
+                  },
+                  "quoteArgs": {
+                    "type": "boolean",
+                    "description": "Should arguments that contain characters that need to be quoted (example: spaces) be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted."
                   }
                 }
               }

@@ -313,6 +313,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PipeProgram &apos;{0}&apos; could not be found..
+        /// </summary>
+        public static string Error_PipeProgramNotFound {
+            get {
+                return ResourceManager.GetString("Error_PipeProgramNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while processing {0}: {1}.
         /// </summary>
         public static string Error_ProcessingFile {

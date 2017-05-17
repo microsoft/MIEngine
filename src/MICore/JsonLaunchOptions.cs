@@ -7,6 +7,7 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using System.Globalization;
 
 namespace MICore.Json.LaunchOptions
 {
@@ -324,7 +325,13 @@ namespace MICore.Json.LaunchOptions
         /// Environment variables passed to the pipe program.
         /// </summary>
         [JsonProperty("pipeEnv", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, object> PipeEnv { get; private set; }
+        public Dictionary<string, string> PipeEnv { get; private set; }
+
+        /// <summary>
+        /// Should arguments that contain characters that need to be quoted (example: spaces) be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.
+        /// </summary>
+        [JsonProperty("quoteArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? QuoteArgs { get; private set; }
 
         #endregion
 
@@ -333,16 +340,17 @@ namespace MICore.Json.LaunchOptions
         public PipeTransport()
         {
             this.PipeArgs = new List<string>();
-            this.PipeEnv = new Dictionary<string, object>();
+            this.PipeEnv = new Dictionary<string, string>();
         }
 
-        public PipeTransport(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, object> pipeEnv = null)
+        public PipeTransport(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, string> pipeEnv = null, bool? quoteArgs = null)
         {
             this.PipeCwd = pipeCwd;
             this.PipeProgram = pipeProgram;
             this.PipeArgs = pipeArgs;
             this.DebuggerPath = debuggerPath;
             this.PipeEnv = pipeEnv;
+            this.QuoteArgs = quoteArgs;
         }
 
         #endregion
@@ -386,5 +394,46 @@ namespace MICore.Json.LaunchOptions
         }
 
         #endregion
+    }
+
+    public static class LaunchOptionHelpers
+    {
+        public static BaseOptions GetLaunchOrAttachOptions(JObject parsedJObject)
+        {
+            BaseOptions baseOptions;
+            string requestType = parsedJObject["request"]?.Value<string>();
+            if (String.IsNullOrWhiteSpace(requestType))
+            {
+                // If request isn't specified, see if we can determine what it is
+                if (!String.IsNullOrWhiteSpace(parsedJObject["processId"]?.Value<string>()))
+                {
+                    requestType = "attach";
+                }
+                else if (!String.IsNullOrWhiteSpace(parsedJObject["program"]?.Value<string>()))
+                {
+                    requestType = "launch";
+                }
+                else
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "program"));
+                }
+            }
+
+            switch (requestType)
+            {
+                case "launch":
+                    // handle launch case
+                    baseOptions = parsedJObject.ToObject<Json.LaunchOptions.LaunchOptions>();
+                    break;
+                case "attach":
+                    // handle attach case
+                    baseOptions = parsedJObject.ToObject<Json.LaunchOptions.AttachOptions>();
+                    break;
+                default:
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "request"));
+            }
+
+            return baseOptions;
+        }
     }
 }
