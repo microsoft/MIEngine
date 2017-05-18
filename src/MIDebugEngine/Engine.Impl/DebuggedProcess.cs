@@ -1906,10 +1906,20 @@ namespace Microsoft.MIDebugEngine
         public async Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
             List<ulong> addresses = new List<ulong>();
-            SourceLineMap srcLines = await SourceLineCache.GetLinesForFile(file);
-            if (srcLines == null || srcLines.Count == 0)
+            string compFile;
+            SourceLineMap srcLines;
+            if (MapCurrentSrcToCompileTimeSrc(file, out compFile))  // found a remote mapping for this source file
             {
-                srcLines = await SourceLineCache.GetLinesForFile(System.IO.Path.GetFileName(file));
+                file = compFile;
+                srcLines = await SourceLineCache.GetLinesForFile(file);
+            }
+            else
+            {
+                srcLines = await SourceLineCache.GetLinesForFile(file);
+                if (srcLines == null || srcLines.Count == 0)
+                {
+                    srcLines = await SourceLineCache.GetLinesForFile(System.IO.Path.GetFileName(file));
+                }
             }
             if (srcLines != null && srcLines.Count > 0)
             {
@@ -1933,7 +1943,7 @@ namespace Microsoft.MIDebugEngine
             if (addresses.Count == 0)
             {
                 // ask the underlying debugger for the line info
-                addresses = await MICommandFactory.StartAddressesForLine(EscapePath(file), line);
+                addresses = await MICommandFactory.StartAddressesForLine(file, line);
             }
             return addresses;
         }
@@ -1967,13 +1977,14 @@ namespace Microsoft.MIDebugEngine
                         char lastDirectoryChar = e.EditorPath[e.EditorPath.Length - 1];
                         if (firstFilechar == Path.DirectorySeparatorChar || firstFilechar == Path.AltDirectorySeparatorChar)
                         {
-                            file = file.Substring(1);   // Trim the directory separator
+                            file = file.Trim(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });   // Trim the directory separator(s)
                         }
                         else if (lastDirectoryChar != Path.DirectorySeparatorChar && lastDirectoryChar != Path.AltDirectorySeparatorChar)
                         {
                             continue;   // match didn't end at a directory separator, not actually a match
                         }
                         compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
+                        compilerSrc = compilerSrc.Replace('\\', '/'); // use Unix notation for the compiled path
                         return true;
                     }
                 }
@@ -2005,7 +2016,7 @@ namespace Microsoft.MIDebugEngine
                         char lastDirectoryChar = e.CompileTimePath[e.CompileTimePath.Length - 1];
                         if (file[0] == Path.DirectorySeparatorChar || file[0] == Path.AltDirectorySeparatorChar)
                         {
-                            file = file.Substring(1);   // Trim the directory separator
+                            file = file.Trim(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });   // Trim the directory separator(s)
                         }
                         else if (lastDirectoryChar != Path.DirectorySeparatorChar && lastDirectoryChar != Path.AltDirectorySeparatorChar)
                         {
