@@ -89,7 +89,7 @@
               },
               "miDebuggerPath": {
                 "type": "string",
-                "description": "The path to the mi debugger (such as gdb). When unspecified, it will search path first for the debugger."
+                "description": "The path to the mi debugger (such as gdb). When unspecified, it will search PATH first for the debugger."
               },
               "miDebuggerServerAddress": {
                 "type": "string",
@@ -97,7 +97,7 @@
               },
               "stopAtEntry": {
                 "type": "boolean",
-                "description": "Optional parameter. If true, the debugger should stop at the entrypoint of the target. If processId is passed, has no effect."
+                "description": "Optional parameter. If true, the debugger should stop at the entrypoint of the target. If processId is passed, has no effect. Defaults to false."
               },
               "setupCommands": {
                 "type": "array",
@@ -152,11 +152,11 @@
               },
               "externalConsole": {
                 "type": "boolean",
-                "description": "If true, a console is launched for the debuggee. If false, no console is launched. Note this option is ignored in some cases for technical reasons."
+                "description": "If true, a console is launched for the debuggee. If false, no console is launched. Default is false. NOTE: This option is ignored in some cases for technical reasons."
               },
               "pipeTransport": {
                 "$ref": "#/definitions/cpp_schema/definitions/pipeTransportOptions",
-                "description": "When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between VS Code and the MI-enabled debugger backend executable (such as gdb)."
+                "description": "When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio and the MI-enabled debugger backend executable (such as gdb)."
               }
             },
             "definitions": {
