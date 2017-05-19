@@ -359,6 +359,10 @@ namespace MICore
                 {
                     requestType = "launch";
                 }
+                else
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "program"));
+                }
             }
 
             switch (requestType)
