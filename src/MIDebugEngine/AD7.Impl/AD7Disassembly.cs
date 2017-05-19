@@ -134,10 +134,16 @@ namespace Microsoft.MIDebugEngine
             if (iInstructions != 0)
             {
                 IEnumerable<DisasmInstruction> instructions = null;
-                _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                // When failing to read all instructions try looking for smaller and smaller numbers of instructions
+                // so that fetching disassembly works near the start and end of valid address spaces
+                while (instructions == null && (iInstructions > 1 || -iInstructions > 1)) 
                 {
-                    instructions = await _engine.DebuggedProcess.Disassembly.FetchInstructions(_addr, (int)iInstructions);
-                });
+                    _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                    {
+                        instructions = await _engine.DebuggedProcess.Disassembly.FetchInstructions(_addr, (int)iInstructions);
+                    });
+                    iInstructions = iInstructions/2;
+                }
                 if (instructions == null)
                 {
                     return Constants.E_FAIL;
