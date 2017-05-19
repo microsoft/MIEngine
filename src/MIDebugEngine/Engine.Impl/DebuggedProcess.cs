@@ -1984,7 +1984,10 @@ namespace Microsoft.MIDebugEngine
                             continue;   // match didn't end at a directory separator, not actually a match
                         }
                         compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
-                        compilerSrc = compilerSrc.Replace('\\', '/'); // use Unix notation for the compiled path
+                        if (compilerSrc.IndexOf('\\') < 0)
+                        {
+                            compilerSrc = compilerSrc.Replace('\\', '/'); // use Unix notation for the compiled path
+                        }
                         return true;
                     }
                 }
