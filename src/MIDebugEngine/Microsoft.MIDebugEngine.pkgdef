@@ -45,3 +45,6 @@
 ; "SuspendThread"=dword:00000001
 "CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
 "GlobalVisualizersDirectory"="$PackageFolder$"
+
+[$RootKey$\OpenFolder\Settings\VSWorkspaceSettings\{EA6637C6-17DF-45B5-A183-0951C54243BC}]
+@="$PackageFolder$\OpenFolderSchema.json"
