@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.25909.2
+VisualStudioVersion = 15.0.26510.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platform Launchers", "Platform Launchers", "{B864C337-1AA8-42B3-BF01-90901F55DE70}"
 EndProject
@@ -45,10 +45,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugEngineHost.Stub", "DebugEngineHost.Stub\DebugEngineHost.Stub.csproj", "{EA876A2D-AB0F-4204-97DD-DFB3B5568978}"
+	ProjectSection(ProjectDependencies) = postProject
+		{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2} = {95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MICore", "MICore\MICore.csproj", "{54C33AFA-438D-4932-A2F0-D0F2BB2FADC9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2} = {95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MIDebugEngine", "MIDebugEngine\MIDebugEngine.csproj", "{A8B0230C-7806-407C-AF18-54B2CE21275E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2} = {95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugEngineHost", "DebugEngineHost\DebugEngineHost.csproj", "{E659FEE3-7773-4A73-880A-83CE5C9634CC}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -58,10 +67,19 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "prebuild", "prebuild\prebuild.csproj", "{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime", "Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.csproj", "{7654CFBB-30DB-4C20-BDE3-A960CBA2036C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2} = {95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SSHDebugPS", "SSHDebugPS\SSHDebugPS.csproj", "{15BCBEF4-1C2B-412B-925B-34A049097E62}"
+	ProjectSection(ProjectDependencies) = postProject
+		{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2} = {95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SSHDebugUnitTests", "SSHDebugTests\SSHDebugUnitTests.csproj", "{54A2C83D-E889-46E7-B974-0D8D8A51397F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2} = {95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
