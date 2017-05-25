@@ -32,14 +32,14 @@
 
   <Target Name="Build">
     <MSBuild Targets="Build"
-	         Projects="src\prebuild\prebuild.csproj" />
+             Projects="src\prebuild\prebuild.csproj" />
     <MSBuild Targets="Build"
              Projects="@(Solution)" />
   </Target>
 
   <Target Name="Rebuild">
     <MSBuild Targets="Rebuild"
-	         Projects="src\prebuild\prebuild.csproj" />
+             Projects="src\prebuild\prebuild.csproj" />
     <MSBuild Targets="Rebuild"
              Projects="@(Solution)" />
   </Target>
