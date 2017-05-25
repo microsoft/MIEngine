@@ -75,7 +75,7 @@ namespace Microsoft.MIDebugEngine
                 // double the mi messages since var-show-attributes is a separate call.
                 if (_engine.DebuggedProcess.MICommandFactory.Mode == MICore.MIMode.Clrdbg)
                 {
-                    if (variable.IsReadOnly)
+                    if (variable.IsReadOnly())
                     {
                         propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY;
                     }

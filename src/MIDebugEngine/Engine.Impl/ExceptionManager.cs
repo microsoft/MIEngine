@@ -11,7 +11,6 @@ using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
 using System.Globalization;
 using System.Collections.ObjectModel;
-using System.Collections.Concurrent;
 using System.Threading;
 using Microsoft.DebugEngineHost;
 
