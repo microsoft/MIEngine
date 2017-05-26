@@ -95,6 +95,10 @@
     <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
+  <PropertyGroup> 
+  <!-- For Localization -->
+    <EnlistmentRoot>$(MSBuildThisFileDirectory)..\..\</EnlistmentRoot>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop">
@@ -206,11 +210,13 @@
     <FilesToLocalize>
       <Languages>$(VS)</Languages>
       <ProjectFile>$(MSBuildThisFileFullPath)</ProjectFile>
+      <HasLceComments>true</HasLceComments>
     </FilesToLocalize>
   </ItemDefinitionGroup>
   <ItemGroup Condition="'$(LocalizationEnabled)'=='true'">
     <FilesToLocalize Include="$(OutDir)OpenFolderSchema.json">
-      <TranslationFile>$(InstallerRoot)loc\LCL\{Lang}\lib\OpenFolderSchema.json.lcl</TranslationFile>
+      <LciCommentFile>$(EnlistmentRoot)loc\LCI\lib\OpenFolderSchema.json.lci</LciCommentFile>
+      <TranslationFile>$(EnlistmentRoot)loc\LCL\{Lang}\lib\OpenFolderSchema.json.lcl</TranslationFile>
     </FilesToLocalize>
   </ItemGroup>
   <ItemGroup>
