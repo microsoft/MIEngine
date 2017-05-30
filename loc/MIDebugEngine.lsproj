@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LocProject SchemaVersion="6.0" Name="MIDebugEngine.lsproj" Desc="LcxAdmin Project File" xmlns="http://schemas.microsoft.com/locstudio/2006/6/LocProject">
+  <Import Project="..\build\miengine.settings.targets" />
+  <Files>
+    <File Name="OpenFolderSchema.json.lcg" Type="Lcx">
+      <Props>
+        <Str Name="LciFile" Val="$(MIEngineRoot)\loc\LCI\lib\OpenFolderSchema.json.lci" />
+        <Str Name="Open" Val="Yes" />
+      </Props>
+    </File>
+  </Files>
+</LocProject>
