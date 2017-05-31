@@ -38,7 +38,7 @@
 
   <Target Name="InstallCoreClrPackages"
           Condition="'$(IsCoreClr)' == 'true'">
-    <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot; -Verbosity detailed" />
+    <Exec Command="&quot;$(MIEngineRoot)tools\NuGet\NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(MIEngineRoot)src\MIDebugEngine.sln&quot; -Verbosity detailed -ConfigFile &quot;$(MIEngineRoot)src\.nuget\NuGet.Config&quot;" />
   </Target>
 
   <Target Name="InstallDesktopPackages"

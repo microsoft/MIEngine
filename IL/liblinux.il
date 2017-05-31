@@ -3903,30 +3903,6 @@
 		{
 		}
 		.method public virtual hidebysig newslot abstract 
-			instance bool WaitOutputReceived(string text, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-		}
-		.method public virtual hidebysig newslot abstract 
-			instance bool WaitOutputReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-		}
-		.method public virtual hidebysig newslot abstract 
-			instance bool WaitOutputLineReceived(string text, valuetype [mscorlib]System.TimeSpan timeout, valuetype liblinux.Shell.LineMatchMode mode)
-		{
-		}
-		.method public virtual hidebysig newslot abstract 
-			instance bool WaitOutputLineReceived(string text, valuetype [mscorlib]System.TimeSpan timeout, valuetype liblinux.Shell.LineMatchMode mode, [out] string& line)
-		{
-		}
-		.method public virtual hidebysig newslot abstract 
-			instance bool WaitOutputLineReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-		}
-		.method public virtual hidebysig newslot abstract 
-			instance bool WaitOutputLineReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout, [out] string& line)
-		{
-		}
-		.method public virtual hidebysig newslot abstract 
 			instance void Write(uint8[] buffer, int32 offset, int32 count)
 		{
 		}
@@ -4467,36 +4443,6 @@
 		{
 			ret
 		}
-		.method public virtual hidebysig newslot 
-			instance bool WaitOutputReceived(string text, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-			ret
-		}
-		.method public virtual hidebysig newslot 
-			instance bool WaitOutputReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-			ret
-		}
-		.method public final virtual hidebysig newslot 
-			instance bool WaitOutputLineReceived(string text, valuetype [mscorlib]System.TimeSpan timeout, valuetype liblinux.Shell.LineMatchMode mode)
-		{
-			ret
-		}
-		.method public final virtual hidebysig newslot 
-			instance bool WaitOutputLineReceived(string text, valuetype [mscorlib]System.TimeSpan timeout, valuetype liblinux.Shell.LineMatchMode mode, [out] string& line)
-		{
-			ret
-		}
-		.method public final virtual hidebysig newslot 
-			instance bool WaitOutputLineReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-			ret
-		}
-		.method public final virtual hidebysig newslot 
-			instance bool WaitOutputLineReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout, [out] string& line)
-		{
-			ret
-		}
 		.method family virtual hidebysig 
 			instance void OnBeforeOpen()
 		{
@@ -4619,11 +4565,6 @@
 		}
 		.method family virtual hidebysig newslot 
 			instance void WaitOutputReceived()
-		{
-			ret
-		}
-		.method family virtual hidebysig newslot 
-			instance bool WaitOutputReceived(valuetype [mscorlib]System.TimeSpan timeout)
 		{
 			ret
 		}
@@ -4767,36 +4708,6 @@
 		}
 		.method public virtual hidebysig newslot 
 			instance class [mscorlib]'System.Threading.Tasks.Task`1'<string> ReadToEndAsync()
-		{
-			ret
-		}
-		.method public virtual hidebysig newslot 
-			instance bool WaitOutputReceived(string text, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-			ret
-		}
-		.method public virtual hidebysig newslot 
-			instance bool WaitOutputReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-			ret
-		}
-		.method public virtual hidebysig newslot 
-			instance bool WaitOutputLineReceived(string text, valuetype [mscorlib]System.TimeSpan timeout, valuetype liblinux.Shell.LineMatchMode mode)
-		{
-			ret
-		}
-		.method public virtual hidebysig newslot 
-			instance bool WaitOutputLineReceived(string text, valuetype [mscorlib]System.TimeSpan timeout, valuetype liblinux.Shell.LineMatchMode mode, [out] string& line)
-		{
-			ret
-		}
-		.method public virtual hidebysig newslot 
-			instance bool WaitOutputLineReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout)
-		{
-			ret
-		}
-		.method public virtual hidebysig newslot 
-			instance bool WaitOutputLineReceived(class [System]System.Text.RegularExpressions.Regex regex, valuetype [mscorlib]System.TimeSpan timeout, [out] string& line)
 		{
 			ret
 		}

@@ -52,14 +52,14 @@
               },
               "sourceFileMap": {
                 "type": "object",
-                "description": "Optional source file mappings passed to the debug engine. Example: '{ \"C:\\foo\":\"/home/user/foo\" }'",
+                "description": "Optional source file mappings passed to the debug engine. Example: '{ \"C:\\foo\":\"/home/user/foo\" }'.",
                 "additionalProperties": {
                   "type": "string"
                 }
               },
               "MIMode": {
                 "type": "string",
-                "description": "Indicates the console debugger that the MIDebugEngine will connect to. Allowed values are \"gdb\" \"lldb\"."
+                "description": "Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. Allowed values are \"gdb\" \"lldb\"."
               },
               "args": {
                 "type": "array",
@@ -85,19 +85,15 @@
               },
               "cwd": {
                 "type": "string",
-                "description": "The working directory of the target"
+                "description": "The working directory of the target."
               },
               "miDebuggerPath": {
                 "type": "string",
-                "description": "The path to the mi debugger (such as gdb). When unspecified, it will search PATH first for the debugger."
+                "description": "The path to the MI-enabled debugger (such as gdb). When unspecified, it will search PATH first for the debugger."
               },
               "miDebuggerServerAddress": {
                 "type": "string",
-                "description": "Network address of the MI Debugger Server to connect to (example: localhost:1234)."
-              },
-              "stopAtEntry": {
-                "type": "boolean",
-                "description": "Optional parameter. If true, the debugger should stop at the entrypoint of the target. If processId is passed, has no effect. Defaults to false."
+                "description": "Network address of the MI-enabled debugger server to connect to. Example: localhost:1234."
               },
               "setupCommands": {
                 "type": "array",
@@ -152,11 +148,11 @@
               },
               "externalConsole": {
                 "type": "boolean",
-                "description": "If true, a console is launched for the debuggee. If false, no console is launched. Default is false. NOTE: This option is ignored in some cases for technical reasons."
+                "description": "If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons."
               },
               "pipeTransport": {
                 "$ref": "#/definitions/cpp_schema/definitions/pipeTransportOptions",
-                "description": "When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio and the MI-enabled debugger backend executable (such as gdb)."
+                "description": "When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio and the MI-enabled debugger (such as gdb)."
               }
             },
             "definitions": {
@@ -173,7 +169,7 @@
                   },
                   "ignoreFailures": {
                     "type": "boolean",
-                    "description": "If true, failures from the command should be ignored. Default value is false."
+                    "description": "If true, failures from the command should be ignored. Defaults to false."
                   }
                 }
               },

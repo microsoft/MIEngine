@@ -192,11 +192,6 @@
       <Name>Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime</Name>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </ProjectReference>
-    <ProjectReference Include="..\prebuild\prebuild.csproj">
-      <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
-      <Name>prebuild</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
   <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

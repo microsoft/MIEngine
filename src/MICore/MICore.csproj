@@ -125,11 +125,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\prebuild\prebuild.csproj">
-      <Project>{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}</Project>
-      <Name>prebuild</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <XsdCodeFile Condition="'$(IsCoreClr)' == 'true'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
