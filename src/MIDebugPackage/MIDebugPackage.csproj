@@ -221,7 +221,8 @@
       <LocalizeBinDir>$(OutDir)localize\</LocalizeBinDir>
     </PropertyGroup>
     <ItemGroup>
-      <LocalizedFileToDrop Include="$(LocalizeBinDir)ENU\*.json">
+      <!-- to copy out lcg file -->
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)ENU\*">
         <LCID>1033</LCID>
       </LocalizedFileToDrop>
       <LocalizedFileToDrop Include="$(LocalizeBinDir)CSY\*.json">
