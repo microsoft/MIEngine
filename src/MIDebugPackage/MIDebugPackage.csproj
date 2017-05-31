@@ -215,6 +215,58 @@
       <TranslationFile>$(MIEngineRoot)loc\LCL\{Lang}\lib\OpenFolderSchema.json.lcl</TranslationFile>
     </FilesToLocalize>
   </ItemGroup>
+  <Target Name="DropLocalizeDir" AfterTargets="Localize;DropFiles" Condition="'$(LocalizationEnabled)'=='true'">
+    <PropertyGroup>
+      <LocalizedDropDir>$(DropRootDir)\loc\</LocalizedDropDir>
+      <LocalizeBinDir>$(OutDir)localize\</LocalizeBinDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)ENU\*.json">
+        <LCID>1033</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)CSY\*.json">
+        <LCID>1029</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)DEU\*.json">
+        <LCID>1031</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)ESN\*.json">
+        <LCID>3082</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)FRA\*.json">
+        <LCID>1036</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)ITA\*.json">
+        <LCID>1040</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)JPN\*.json">
+        <LCID>1041</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)KOR\*.json">
+        <LCID>1042</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)PLK\*.json">
+        <LCID>1045</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)PTB\*.json">
+        <LCID>1046</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)RUS\*.json">
+        <LCID>1049</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)TRK\*.json">
+        <LCID>1055</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)CHS\*.json">
+        <LCID>2052</LCID>
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)CHT\*.json">
+        <LCID>1028</LCID>
+      </LocalizedFileToDrop>
+    </ItemGroup>
+    <Copy DestinationFiles="@(LocalizedFileToDrop->'$(LocalizedDropDir)%(LCID)\%(filename)%(extension)')" 
+        SourceFiles="@(LocalizedFileToDrop)" ContinueOnError="true" />
+  </Target>
   <ItemGroup>
     <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.Android.natvis" />
