@@ -221,52 +221,51 @@
       <LocalizeBinDir>$(OutDir)localize\</LocalizeBinDir>
     </PropertyGroup>
     <ItemGroup>
-      <Locale Include="$(LocalizeBinDir)ENU\*.json">
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)ENU\*.json">
         <LCID>1033</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)CSY\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)CSY\*.json">
         <LCID>1029</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)DEU\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)DEU\*.json">
         <LCID>1031</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)ESN\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)ESN\*.json">
         <LCID>3082</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)FRA\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)FRA\*.json">
         <LCID>1036</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)ITA\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)ITA\*.json">
         <LCID>1040</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)JPN\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)JPN\*.json">
         <LCID>1041</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)KOR\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)KOR\*.json">
         <LCID>1042</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)PLK\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)PLK\*.json">
         <LCID>1045</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)PTB\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)PTB\*.json">
         <LCID>1046</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)RUS\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)RUS\*.json">
         <LCID>1049</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)TRK\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)TRK\*.json">
         <LCID>1055</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)CHS\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)CHS\*.json">
         <LCID>2052</LCID>
-      </Locale>
-      <Locale Include="$(LocalizeBinDir)CHT\*.json">
+      </LocalizedFileToDrop>
+      <LocalizedFileToDrop Include="$(LocalizeBinDir)CHT\*.json">
         <LCID>1028</LCID>
-      </Locale>
+      </LocalizedFileToDrop>
     </ItemGroup>
-    <MakeDir Condition="!Exists($(LocalizedDropDir))" Directories="$(LocalizedDropDir)" />
-    <Copy DestinationFiles="@(Locale->'$(LocalizedDropDir)%(LCID)\%(filename)%(extension)')" 
-        SourceFiles="@(Locale)" ContinueOnError="true" />
+    <Copy DestinationFiles="@(LocalizedFileToDrop->'$(LocalizedDropDir)%(LCID)\%(filename)%(extension)')" 
+        SourceFiles="@(LocalizedFileToDrop)" ContinueOnError="true" />
   </Target>
   <ItemGroup>
     <DropUnsignedFile Include="Install.cmd" />
