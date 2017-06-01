@@ -111,6 +111,7 @@ namespace MICore
                     try
                     {
                         _writer.Dispose();
+                        _writer = null;
                     }
                     catch
                     {
@@ -143,8 +144,11 @@ namespace MICore
         {
             Logger?.WriteLine("<-" + cmd);
             Logger?.Flush();
-            _writer.WriteLine(cmd);
-            _writer.Flush();
+            lock (_locker)
+            {
+                _writer?.WriteLine(cmd);
+                _writer?.Flush();
+            }
         }
 
         private string GetLine()
