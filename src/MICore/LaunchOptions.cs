@@ -90,7 +90,7 @@ namespace MICore
             this.PipeEnvironment = new ReadOnlyCollection<EnvironmentEntry>(pipeEnvironment ?? new List<EnvironmentEntry>(0));
         }
 
-        private static string gdbPath = @"/usr/bin/gdb";
+        private static string gdbPathDefault = @"/usr/bin/gdb";
         static internal PipeLaunchOptions CreateFromJson(JObject parsedOptions)
         {
             Debug.Assert(parsedOptions["pipeTransport"] != null && parsedOptions["pipeTransport"].HasValues, "PipeTransport should exist and have values.");
@@ -111,7 +111,7 @@ namespace MICore
 
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
                 pipePath: pipeProgram,
-                pipeArguments: EnsurePipeArguments(pipeTransport.PipeArgs, pipeTransport.DebuggerPath, gdbPath, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
+                pipeArguments: EnsurePipeArguments(pipeTransport.PipeArgs, pipeTransport.DebuggerPath, gdbPathDefault, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
                 pipeCommandArguments: ParseArguments(pipeTransport.PipeArgs, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
                 pipeCwd: pipeTransport.PipeCwd,
                 pipeEnvironment: GetEnvironmentEntries(pipeTransport.PipeEnv)
@@ -351,7 +351,7 @@ namespace MICore
 
         public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, string> source)
         {
-            IList<SourceMapEntry> sourceMaps = source?.Select(x => new SourceMapEntry() { EditorPath = x.Key, CompileTimePath = x.Value}).ToList();
+            IList<SourceMapEntry> sourceMaps = source?.Select(x => new SourceMapEntry() { EditorPath = x.Key, CompileTimePath = x.Value, UseForBreakpoints = true }).ToList();
             if (sourceMaps == null)
             {
                 sourceMaps = new List<SourceMapEntry>(0);
