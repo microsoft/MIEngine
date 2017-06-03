@@ -156,7 +156,7 @@ Error: {1}</value>
     <value>Launch options string provided by the project system is invalid. {0}</value>
   </data>
   <data name="Error_InvalidLocalExePath" xml:space="preserve">
-    <value>Invalid path to executable file path '{0}'. File must be a valid file name that exists.</value>
+    <value>Invalid executable file path: '{0}'. File must be a valid file name that exists.</value>
   </data>
   <data name="Error_LauncherNotFound" xml:space="preserve">
     <value>Device App Launcher {0} could not be found.</value>
@@ -207,7 +207,7 @@ Error: {1}</value>
     <value>Module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained.</value>
   </data>
   <data name="Error_InvalidLocalCoreDumpPath" xml:space="preserve">
-    <value>Invalid path to core dump file '{0}'. File must be a valid file name that exists on the computer.</value>
+    <value>Invalid core dump file path: '{0}'. File must be a valid file name that exists on the computer.</value>
   </data>
   <data name="Error_CannotSpecifyBoth" xml:space="preserve">
     <value>Both '{0}' and '{1}' cannot be specified at the same time.</value>
@@ -254,7 +254,7 @@ Error: {1}</value>
     <value>Killing pipe process</value>
   </data>
   <data name="Error_InvalidLocalDirectoryPath" xml:space="preserve">
-    <value>Invalid path to directory path '{0}'. Directory must be a valid directory name that exists.</value>
+    <value>Invalid directory path: '{0}'. Directory must be a valid directory name that exists.</value>
   </data>
   <data name="Error_EmptyPipePath" xml:space="preserve">
     <value>PipePath cannot be empty.</value>
@@ -274,5 +274,10 @@ Error: {1}</value>
   <data name="Error_PipeProgramNotFound" xml:space="preserve">
     <value>PipeProgram '{0}' could not be found.</value>
     <comment>{0} pipe program</comment>
+  </data>
+  <data name="Error_PipeProgramStart" xml:space="preserve">
+    <value>There was an error starting the pipe program '{0}'. {1}</value>
+    <comment>{0} pipe program
+{1} error message</comment>
   </data>
 </root>

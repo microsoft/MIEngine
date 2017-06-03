@@ -76,7 +76,15 @@ namespace MICore
             lock (_process)
             {
                 this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "Starting: \"{0}\" {1}", _process.StartInfo.FileName, _process.StartInfo.Arguments));
-                _process.Start();
+
+                try
+                {
+                    _process.Start();
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_PipeProgramStart, _process.StartInfo.FileName, e.Message));
+                }
 
                 _debuggerPid = _process.Id;
                 stdout = _process.StandardOutput;
@@ -316,7 +324,8 @@ namespace MICore
             string output = null;
             string error = null;
 
-            string fullCommand = string.Format(CultureInfo.InvariantCulture, "{0} {1} {2}", _pipePath, _cmdArgs, commandText);
+            string pipeArgs = PipeLaunchOptions.ReplaceDebuggerCommandToken(_cmdArgs, commandText, true);
+            string fullCommand = string.Format(CultureInfo.InvariantCulture, "{0} {1}", _pipePath, pipeArgs);
 
             try
             {

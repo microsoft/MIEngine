@@ -100,17 +100,11 @@ namespace MICore
             // PipeProgram must be specified
             if (String.IsNullOrWhiteSpace(pipeTransport.PipeProgram))
             {
-                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_EmptyPipePath));
-            }
-
-            string pipeProgram = EnsurePipeProgramExists(pipeTransport);
-            if (string.IsNullOrWhiteSpace(pipeProgram))
-            {
-                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_PipeProgramNotFound, pipeTransport.PipeProgram));
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_EmptyPipePath));
             }
 
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
-                pipePath: pipeProgram,
+                pipePath: pipeTransport.PipeProgram,
                 pipeArguments: EnsurePipeArguments(pipeTransport.PipeArgs, pipeTransport.DebuggerPath, gdbPathDefault, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
                 pipeCommandArguments: ParseArguments(pipeTransport.PipeArgs, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
                 pipeCwd: pipeTransport.PipeCwd,
@@ -132,27 +126,6 @@ namespace MICore
             return pipeOptions;
         }
 
-        private static string EnsurePipeProgramExists(Json.LaunchOptions.PipeTransport pipeTransport)
-        {
-            string pipeProgram = pipeTransport.PipeProgram;
-            // PipeProgram should exist, if not, concatinate it with the pipeCwd
-            if (File.Exists(pipeProgram))
-            {
-                return pipeProgram;
-            }
-
-            if (!String.IsNullOrWhiteSpace(pipeTransport.PipeCwd))
-            {
-                pipeProgram = Path.Combine(pipeTransport.PipeCwd, pipeTransport.PipeProgram);
-                if (File.Exists(pipeProgram))
-                {
-                    return pipeProgram;
-                }
-            }
-
-            return null;
-        }
-
         private static string EnsurePipeArguments(List<string> pipeArgs, string debuggerPath, string debuggerPathDefault, bool quoteArgs)
         {
             // Debugger path. Assume /usr/bin/gdb unless specified
@@ -163,14 +136,25 @@ namespace MICore
 
             string userArguments = ParseArguments(pipeArgs, quoteArgs);
 
-            if (userArguments.Contains("${debuggerCommand}"))
+            return ReplaceDebuggerCommandToken(userArguments, dbgCmdArguments, quoteArgs);
+        }
+
+        /// <summary>
+        /// Replaces ${debuggerCommand} with commandText if its found. If not, will append at the end and will add quotes if quoteArgs is true and it contains spaces.
+        /// </summary>
+        /// <param name="cmdArgs">The string in which to find the token.</param>
+        /// <param name="commandText">The replacement text.</param>
+        /// <param name="quoteArgs">Whether to try and quote the commandText if it contains spaces AND it is at the end.</param>
+        /// <returns></returns>
+        internal static string ReplaceDebuggerCommandToken(string cmdArgs, string commandText, bool quoteArgs = false)
+        {
+            if (cmdArgs.Contains("${debuggerCommand}"))
             {
-                return userArguments.Replace("${debuggerCommand}", dbgCmdArguments);
+                return cmdArgs.Replace("${debuggerCommand}", commandText);
             }
             else
             {
-                string format = quoteArgs ? "{0} \"{1}\"" : "{0} {1}";
-                return String.Format(CultureInfo.InvariantCulture, format, userArguments, dbgCmdArguments);
+                return String.Format(CultureInfo.InvariantCulture, "{0} {1}", cmdArgs, quoteArgs ? QuoteArgument(commandText) : commandText);
             }
         }
 
@@ -351,6 +335,7 @@ namespace MICore
 
         public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, string> source)
         {
+            // TODO: Change json schema to support changing the boolean value of UseBreakpoints to false. 
             IList<SourceMapEntry> sourceMaps = source?.Select(x => new SourceMapEntry() { EditorPath = x.Key, CompileTimePath = x.Value, UseForBreakpoints = true }).ToList();
             if (sourceMaps == null)
             {
@@ -1910,7 +1895,7 @@ namespace MICore
             return (MIMode)source;
         }
 
-        protected static string ParseArguments(IEnumerable<string> arguments, bool alwaysQuote = false)
+        protected static string ParseArguments(IEnumerable<string> arguments, bool quoteArguments = true)
         {
             if (arguments.Any())
             {
@@ -1920,7 +1905,7 @@ namespace MICore
                     if (stringBuilder.Length != 0)
                         stringBuilder.Append(' ');
 
-                    stringBuilder.Append(alwaysQuote ? Quote(arg) : QuoteArgument(arg));
+                    stringBuilder.Append(quoteArguments ? QuoteArgument(arg) : arg);
                 }
 
                 return stringBuilder.ToString();
@@ -1931,16 +1916,12 @@ namespace MICore
         private static char[] s_ARGUMENT_SEPARATORS = new char[] { ' ', '\t' };
         protected static string QuoteArgument(string arg)
         {
-            if (arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0)
+            // If its not quoted and it has an argument separater, then quote it. 
+            if (arg[0] != '"' && arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0)
             {
-                return Quote(arg);
+                return '"' + arg + '"';
             }
             return arg;
-        }
-
-        private static string Quote(string arg)
-        {
-            return '"' + arg + '"';
         }
     }
 
