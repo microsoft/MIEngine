@@ -74,6 +74,10 @@ namespace MICore
         /// <param name="pipeCwd">Current working directory of pipe program. If empty directory of the pipePath is set as the cwd.</param>
         /// <param name="pipeEnvironment">Environment variables set before invoking the pipe program</param>
         public PipeLaunchOptions(string pipePath, string pipeArguments, string pipeCommandArguments, string pipeCwd, MICore.Xml.LaunchOptions.EnvironmentEntry[] pipeEnvironment)
+            : this(pipePath, pipeArguments, pipeCommandArguments, pipeCwd, (pipeEnvironment != null) ? pipeEnvironment.Select(e => new EnvironmentEntry(e)).ToArray() : new EnvironmentEntry[] { })
+        { }
+
+        public PipeLaunchOptions(string pipePath, string pipeArguments, string pipeCommandArguments, string pipeCwd, IList<EnvironmentEntry> pipeEnvironment)
         {
             if (string.IsNullOrEmpty(pipePath))
                 throw new ArgumentNullException("PipePath");
@@ -83,7 +87,90 @@ namespace MICore
             this.PipeCommandArguments = pipeCommandArguments;
             this.PipeCwd = pipeCwd;
 
-            this.PipeEnvironment = (pipeEnvironment != null) ? pipeEnvironment.Select(e => new EnvironmentEntry(e)).ToArray() : new EnvironmentEntry[] { };
+            this.PipeEnvironment = new ReadOnlyCollection<EnvironmentEntry>(pipeEnvironment ?? new List<EnvironmentEntry>(0));
+        }
+
+        private static string gdbPathDefault = @"/usr/bin/gdb";
+        static internal PipeLaunchOptions CreateFromJson(JObject parsedOptions)
+        {
+            Debug.Assert(parsedOptions["pipeTransport"] != null && parsedOptions["pipeTransport"].HasValues, "PipeTransport should exist and have values.");
+
+            Json.LaunchOptions.PipeTransport pipeTransport = parsedOptions["pipeTransport"].ToObject<Json.LaunchOptions.PipeTransport>();
+
+            // PipeProgram must be specified
+            if (String.IsNullOrWhiteSpace(pipeTransport.PipeProgram))
+            {
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_EmptyPipePath));
+            }
+
+            PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
+                pipePath: pipeTransport.PipeProgram,
+                pipeArguments: EnsurePipeArguments(pipeTransport.PipeArgs, pipeTransport.DebuggerPath, gdbPathDefault, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
+                pipeCommandArguments: ParseArguments(pipeTransport.PipeArgs, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
+                pipeCwd: pipeTransport.PipeCwd,
+                pipeEnvironment: GetEnvironmentEntries(pipeTransport.PipeEnv)
+                );
+
+            Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
+            pipeOptions.InitializeCommonOptions(baseOptions);
+            if (baseOptions is Json.LaunchOptions.LaunchOptions)
+            {
+                pipeOptions.InitializeLaunchOptions((Json.LaunchOptions.LaunchOptions)baseOptions);
+            }
+
+            if (baseOptions is Json.LaunchOptions.AttachOptions)
+            {
+                pipeOptions.InitializeAttachOptions((Json.LaunchOptions.AttachOptions)baseOptions);
+            }
+
+            return pipeOptions;
+        }
+
+        private static string EnsurePipeArguments(List<string> pipeArgs, string debuggerPath, string debuggerPathDefault, bool quoteArgs)
+        {
+            // Debugger path. Assume /usr/bin/gdb unless specified
+            string dbgPath = String.IsNullOrWhiteSpace(debuggerPath) ? debuggerPathDefault : debuggerPath;
+
+            // debugger command: /usr/bin/gdb --interpreter=mi
+            string dbgCmdArguments = String.Format(CultureInfo.InvariantCulture, "{0} {1}", dbgPath, "--interpreter=mi");
+
+            string userArguments = ParseArguments(pipeArgs, quoteArgs);
+
+            return ReplaceDebuggerCommandToken(userArguments, dbgCmdArguments, quoteArgs);
+        }
+
+        /// <summary>
+        /// Replaces ${debuggerCommand} with commandText if its found. If not, will append at the end and will add quotes if quoteArgs is true and it contains spaces.
+        /// </summary>
+        /// <param name="cmdArgs">The string in which to find the token.</param>
+        /// <param name="commandText">The replacement text.</param>
+        /// <param name="quoteArgs">Whether to try and quote the commandText if it contains spaces AND it is at the end.</param>
+        /// <returns></returns>
+        internal static string ReplaceDebuggerCommandToken(string cmdArgs, string commandText, bool quoteArgs = false)
+        {
+            if (cmdArgs.Contains("${debuggerCommand}"))
+            {
+                return cmdArgs.Replace("${debuggerCommand}", commandText);
+            }
+            else
+            {
+                return String.Format(CultureInfo.InvariantCulture, "{0} {1}", cmdArgs, quoteArgs ? QuoteArgument(commandText) : commandText);
+            }
+        }
+
+        private static IList<EnvironmentEntry> GetEnvironmentEntries(IDictionary<string, string> env)
+        {
+            List<EnvironmentEntry> entries = new List<EnvironmentEntry>();
+
+            if (env != null && env.Keys.Any())
+            {
+                foreach (var key in env.Keys)
+                {
+                    entries.Add(new EnvironmentEntry(new Json.LaunchOptions.Environment(name: key, value: env[key])));
+                }
+            }
+
+            return entries;
         }
 
         static internal PipeLaunchOptions CreateFromXml(Xml.LaunchOptions.PipeLaunchOptions source)
@@ -248,7 +335,8 @@ namespace MICore
 
         public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, string> source)
         {
-            IList<SourceMapEntry> sourceMaps = source?.Select(x => new SourceMapEntry() { EditorPath = x.Value, CompileTimePath = x.Key }).ToList();
+            // TODO: Change json schema to support changing the boolean value of UseBreakpoints to false. 
+            IList<SourceMapEntry> sourceMaps = source?.Select(x => new SourceMapEntry() { EditorPath = x.Key, CompileTimePath = x.Value, UseForBreakpoints = true }).ToList();
             if (sourceMaps == null)
             {
                 sourceMaps = new List<SourceMapEntry>(0);
@@ -266,7 +354,7 @@ namespace MICore
 
         private const int DefaultLaunchTimeout = 10 * 1000; // 10 seconds
 
-        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, List<EnvironmentEntry> environmentEntries)
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, IList<EnvironmentEntry> environmentEntries)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
@@ -342,42 +430,9 @@ namespace MICore
             return File.Exists(MIDebuggerPath);
         }
 
-        static internal LocalLaunchOptions CreateFromJson(string json)
+        static internal LocalLaunchOptions CreateFromJson(JObject parsedOptions)
         {
-            JObject parsedOptions = JObject.Parse(json);
-            Json.LaunchOptions.BaseOptions launchOptions;
-
-            string requestType = parsedOptions["request"]?.Value<string>();
-            if (String.IsNullOrWhiteSpace(requestType))
-            {
-                // If request isn't specified, see if we can determine what it is
-                if (!String.IsNullOrWhiteSpace(parsedOptions["processId"]?.Value<string>()))
-                {
-                    requestType = "attach";
-                }
-                else if (!String.IsNullOrWhiteSpace(parsedOptions["program"]?.Value<string>()))
-                {
-                    requestType = "launch";
-                }
-                else
-                {
-                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "program"));
-                }
-            }
-
-            switch (requestType)
-            {
-                case "launch":
-                    // handle launch case
-                    launchOptions = parsedOptions.ToObject<Json.LaunchOptions.LaunchOptions>();
-                    break;
-                case "attach":
-                    // handle attach case
-                    launchOptions = parsedOptions.ToObject<Json.LaunchOptions.AttachOptions>();
-                    break;
-                default:
-                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "request"));
-            }
+            Json.LaunchOptions.BaseOptions launchOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
 
             if (launchOptions == null)
             {
@@ -387,7 +442,6 @@ namespace MICore
             MIMode mi = ConvertMIModeString(RequireAttribute(launchOptions.MIMode, nameof(launchOptions.MIMode)));
             string miDebuggerPath = EnsureDebuggerPath(launchOptions.MiDebuggerPath, GetDebuggerBinary(mi));
 
-            // TODO: Handle pipeTransport options
             LocalLaunchOptions localLaunchOptions = new LocalLaunchOptions(RequireAttribute(miDebuggerPath, nameof(miDebuggerPath)),
                 launchOptions.MiDebuggerServerAddress,
                 GetEnvironmentEntries(
@@ -402,40 +456,14 @@ namespace MICore
             if (launchOptions is Json.LaunchOptions.LaunchOptions)
             {
                 Json.LaunchOptions.LaunchOptions launch = (Json.LaunchOptions.LaunchOptions)launchOptions;
+                localLaunchOptions.InitializeLaunchOptions(launch);
                 localLaunchOptions.InitializeServerOptions(launch);
-
-                localLaunchOptions.DebuggerMIMode = mi;
-                localLaunchOptions.ExeArguments = ParseArguments(launch.Args);
-                localLaunchOptions.WorkingDirectory = launch.Cwd ?? String.Empty;
                 localLaunchOptions._useExternalConsole = launch.ExternalConsole.GetValueOrDefault(false);
-                localLaunchOptions.CoreDumpPath = launch.CoreDumpPath;
-
-                localLaunchOptions.SetupCommands = LaunchCommand.CreateCollection(launch.SetupCommands);
-
-                if (launch.CustomLaunchSetupCommands.Any())
-                {
-                    localLaunchOptions.CustomLaunchSetupCommands = LaunchCommand.CreateCollection(launch.CustomLaunchSetupCommands);
-                }
-
-                if (launch.LaunchCompleteCommand.HasValue)
-                {
-                    switch (launch.LaunchCompleteCommand.Value)
-                    {
-                        case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_continue:
-                            localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.ExecContinue;
-                            break;
-                        case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_run:
-                            localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.ExecRun;
-                            break;
-                        case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.None:
-                            localLaunchOptions.LaunchCompleteCommand = LaunchCompleteCommand.None;
-                            break;
-                    }
-                }
             }
+
             if (launchOptions is Json.LaunchOptions.AttachOptions)
             {
-                localLaunchOptions.ProcessId = ((Json.LaunchOptions.AttachOptions)launchOptions).ProcessId;
+                localLaunchOptions.InitializeAttachOptions((Json.LaunchOptions.AttachOptions)launchOptions);
             }
 
             return localLaunchOptions;
@@ -492,34 +520,6 @@ namespace MICore
             }
 
             return null;
-        }
-
-        private static string ParseArguments(IEnumerable<string> arguments)
-        {
-            if (arguments.Any())
-            {
-                StringBuilder stringBuilder = new StringBuilder();
-                foreach (string arg in arguments)
-                {
-                    if (stringBuilder.Length != 0)
-                        stringBuilder.Append(' ');
-
-                    stringBuilder.Append(QuoteArgument(arg));
-                }
-
-                return stringBuilder.ToString();
-            }
-            return String.Empty;
-        }
-
-        private static char[] s_ARGUMENT_SEPARATORS = new char[] { ' ', '\t' };
-        private static string QuoteArgument(string arg)
-        {
-            if (arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0)
-            {
-                return '"' + arg + '"';
-            }
-            return arg;
         }
 
         private static List<EnvironmentEntry> GetEnvironmentEntries(Xml.LaunchOptions.EnvironmentEntry[] entries)
@@ -1230,7 +1230,15 @@ namespace MICore
             {
                 try
                 {
-                    launchOptions = LocalLaunchOptions.CreateFromJson(options);
+                    JObject parsedOptions = JObject.Parse(options);
+                    if (parsedOptions["pipeTransport"] != null && parsedOptions["pipeTransport"].HasValues)
+                    {
+                        launchOptions = PipeLaunchOptions.CreateFromJson(parsedOptions);
+                    }
+                    else
+                    {
+                        launchOptions = LocalLaunchOptions.CreateFromJson(parsedOptions);
+                    }
                 }
                 catch (JsonReaderException e)
                 {
@@ -1653,6 +1661,43 @@ namespace MICore
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
         }
 
+        public void InitializeLaunchOptions(Json.LaunchOptions.LaunchOptions launch)
+        {
+            this.DebuggerMIMode = ConvertMIModeString(RequireAttribute(launch.MIMode, nameof(launch.MIMode)));
+            this.ExeArguments = ParseArguments(launch.Args);
+            this.WorkingDirectory = launch.Cwd ?? String.Empty;
+
+            this.CoreDumpPath = launch.CoreDumpPath;
+
+            this.SetupCommands = LaunchCommand.CreateCollection(launch.SetupCommands);
+
+            if (launch.CustomLaunchSetupCommands.Any())
+            {
+                this.CustomLaunchSetupCommands = LaunchCommand.CreateCollection(launch.CustomLaunchSetupCommands);
+            }
+
+            if (launch.LaunchCompleteCommand.HasValue)
+            {
+                switch (launch.LaunchCompleteCommand.Value)
+                {
+                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_continue:
+                        this.LaunchCompleteCommand = LaunchCompleteCommand.ExecContinue;
+                        break;
+                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_run:
+                        this.LaunchCompleteCommand = LaunchCompleteCommand.ExecRun;
+                        break;
+                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.None:
+                        this.LaunchCompleteCommand = LaunchCompleteCommand.None;
+                        break;
+                }
+            }
+        }
+
+        public void InitializeAttachOptions(Json.LaunchOptions.AttachOptions attach)
+        {
+            this.ProcessId = attach.ProcessId;
+        }
+
         public static string RequireAttribute(string attributeValue, string attributeName)
         {
             if (string.IsNullOrWhiteSpace(attributeValue))
@@ -1848,6 +1893,35 @@ namespace MICore
             Debug.Assert((uint)MIMode.Lldb == (uint)Xml.LaunchOptions.MIMode.lldb, "Enum values don't line up!");
             Debug.Assert((uint)MIMode.Clrdbg == (uint)Xml.LaunchOptions.MIMode.clrdbg, "Enum values don't line up!");
             return (MIMode)source;
+        }
+
+        protected static string ParseArguments(IEnumerable<string> arguments, bool quoteArguments = true)
+        {
+            if (arguments.Any())
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (string arg in arguments)
+                {
+                    if (stringBuilder.Length != 0)
+                        stringBuilder.Append(' ');
+
+                    stringBuilder.Append(quoteArguments ? QuoteArgument(arg) : arg);
+                }
+
+                return stringBuilder.ToString();
+            }
+            return String.Empty;
+        }
+
+        private static char[] s_ARGUMENT_SEPARATORS = new char[] { ' ', '\t' };
+        protected static string QuoteArgument(string arg)
+        {
+            // If its not quoted and it has an argument separater, then quote it. 
+            if (arg[0] != '"' && arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0)
+            {
+                return '"' + arg + '"';
+            }
+            return arg;
         }
     }
 

@@ -223,14 +223,15 @@ namespace Microsoft.MIDebugEngine
                 {
                     var tlist = results.Find<ValueListValue>("threads");
 
-                    Debug.Assert(tlist.Content.Length == 1, "Expected 1 thread, received more than one thread.");
+                    // tlist.Content.Length could be 0 when the thread exits between it getting created and we request thread-info
+                    Debug.Assert(tlist.Content.Length <= 1, "Expected at most 1 thread, received more than one thread.");
                     resVal = tlist.Content.FirstOrDefault(item => item.FindInt("id") == id);
                 }
             }
 
-            lock (_threadList)
+            if (resVal != null)
             {
-                if (resVal != null)
+                lock (_threadList)
                 {
                     bool bNew = false;
                     var thread = SetThreadInfoFromResultValue(resVal, out bNew);
@@ -435,7 +436,7 @@ namespace Microsoft.MIDebugEngine
                             {
                                 ret = _topContext[threadId];
                             }
-                            
+
                             if (stack.Count > 1)
                             {
                                 _stackFrames[threadId] = stack;

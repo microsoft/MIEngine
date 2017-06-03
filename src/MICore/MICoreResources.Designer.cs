@@ -196,7 +196,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid path to core dump file &apos;{0}&apos;. File must be a valid file name that exists on the computer..
+        ///   Looks up a localized string similar to Invalid core dump file path: &apos;{0}&apos;. File must be a valid file name that exists on the computer..
         /// </summary>
         public static string Error_InvalidLocalCoreDumpPath {
             get {
@@ -205,7 +205,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid path to directory path &apos;{0}&apos;. Directory must be a valid directory name that exists..
+        ///   Looks up a localized string similar to Invalid directory path: &apos;{0}&apos;. Directory must be a valid directory name that exists..
         /// </summary>
         public static string Error_InvalidLocalDirectoryPath {
             get {
@@ -214,7 +214,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid path to executable file path &apos;{0}&apos;. File must be a valid file name that exists..
+        ///   Looks up a localized string similar to Invalid executable file path: &apos;{0}&apos;. File must be a valid file name that exists..
         /// </summary>
         public static string Error_InvalidLocalExePath {
             get {
@@ -309,6 +309,24 @@ namespace MICore {
         public static string Error_NoTerminalAvailable_Linux {
             get {
                 return ResourceManager.GetString("Error_NoTerminalAvailable_Linux", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PipeProgram &apos;{0}&apos; could not be found..
+        /// </summary>
+        public static string Error_PipeProgramNotFound {
+            get {
+                return ResourceManager.GetString("Error_PipeProgramNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error starting the pipe program &apos;{0}&apos;. {1}.
+        /// </summary>
+        public static string Error_PipeProgramStart {
+            get {
+                return ResourceManager.GetString("Error_PipeProgramStart", resourceCulture);
             }
         }
         

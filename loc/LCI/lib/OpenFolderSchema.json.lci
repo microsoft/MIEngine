@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="OpenFolderSchema.json" PsrId="306" FileType="1" SrcCul="en-US" Desc="Commenting file created by LCXAdmin. For more information, please visit http://localizability/longhorn/LcxAdmin.asp" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+<LCX SchemaVersion="6.0" Name="..\..\..\src\MIDebugPackage\OpenFolderSchema.json" PsrId="306" FileType="1" SrcCul="en-US" Desc="Commenting file created by LCXAdmin. For more information, please visit http://localizability/longhorn/LcxAdmin.asp" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="LcxAdmin" />
     <Cmt Name="Loc" />
@@ -8,6 +8,45 @@
     <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
     <Item ItemId=";Strings" ItemType="0" PsrId="306" Leaf="false">
       <Disp Icon="Str" Disp="true" LocTbl="false" />
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.launchSetupCommands.properties.ignoreFailures.ty" ItemType="0" PsrId="306" Leaf="false">
+        <Disp Icon="Dir" LocTbl="false" />
+        <Item ItemId=";(...) pe" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[boolean]]></Val>
+          </Str>
+          <Disp Icon="Str" />
+          <Cmts>
+            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+          </Cmts>
+        </Item>
+      </Item>
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeArgs.items.t" ItemType="0" PsrId="306" Leaf="false">
+        <Disp Icon="Dir" LocTbl="false" />
+        <Item ItemId=";(...) ype" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[string]]></Val>
+          </Str>
+          <Disp Icon="Str" />
+          <Cmts>
+            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+          </Cmts>
+        </Item>
+      </Item>
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.addition" ItemType="0" PsrId="306" InstFlg="true" Leaf="false">
+        <Disp Icon="Dir" LocTbl="false" />
+        <Cmts>
+          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+        </Cmts>
+        <Item ItemId=";(...) alProperties.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[string]]></Val>
+          </Str>
+          <Disp Icon="Str" />
+          <Cmts>
+            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+          </Cmts>
+        </Item>
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.VsDebugTargetInfo4.bstrCurDir" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${workspaceRoot}]]></Val>
@@ -71,18 +110,6 @@
           <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
         </Cmts>
       </Item>
-      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.launchSetupCommands.properties.ignoreFailures.ty" ItemType="0" PsrId="306" Leaf="false">
-        <Disp Icon="Dir" LocTbl="false" />
-        <Item ItemId=";(...) pe" ItemType="0" PsrId="306" Leaf="true">
-          <Str Cat="Text">
-            <Val><![CDATA[boolean]]></Val>
-          </Str>
-          <Disp Icon="Str" />
-          <Cmts>
-            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-          </Cmts>
-        </Item>
-      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.launchSetupCommands.properties.text.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
@@ -119,18 +146,6 @@
           <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
         </Cmts>
       </Item>
-      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeArgs.items.t" ItemType="0" PsrId="306" Leaf="false">
-        <Disp Icon="Dir" LocTbl="false" />
-        <Item ItemId=";(...) ype" ItemType="0" PsrId="306" Leaf="true">
-          <Str Cat="Text">
-            <Val><![CDATA[string]]></Val>
-          </Str>
-          <Disp Icon="Str" />
-          <Cmts>
-            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-          </Cmts>
-        </Item>
-      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeCwd.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
@@ -140,7 +155,7 @@
           <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
         </Cmts>
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.type" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
         </Str>
@@ -149,24 +164,18 @@
           <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
         </Cmts>
       </Item>
-      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.addition" ItemType="0" PsrId="306" InstFlg="true" Leaf="false">
-        <Disp Icon="Dir" LocTbl="false" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
-        <Item ItemId=";(...) alProperties.type" ItemType="0" PsrId="306" Leaf="true">
-          <Str Cat="Text">
-            <Val><![CDATA[object]]></Val>
-          </Str>
-          <Disp Icon="Str" />
-          <Cmts>
-            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-          </Cmts>
-        </Item>
-      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeProgram.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+        <Cmts>
+          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+        </Cmts>
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.quoteArgs.type" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text" UsrLk="true">
+          <Val><![CDATA[boolean]]></Val>
         </Str>
         <Disp Icon="Str" />
         <Cmts>
@@ -308,8 +317,8 @@
           <Cmt Name="LcxAdmin"><![CDATA[{Locked="[ { \"name\": \"squid\", \"value\": \"clam\" } ]5D;"}]]></Cmt>
         </Cmts>
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text" UsrLk="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
@@ -589,11 +598,11 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional source file mappings passed to the debug engine. Example: '{ "C:\foo":"/home/user/foo" }'.]]></Val>
+          <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
         </Str>
         <Disp Icon="Str" />
         <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="\'{ \"C:\foo\":\"/home/user/foo\" }\'"}]]></Cmt>
+          <Cmt Name="LcxAdmin"><![CDATA[{Locked="\"C:\foo\""} {Locked="\"/home/user/foo\""}]]></Cmt>
         </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
@@ -611,7 +620,7 @@
         </Str>
         <Disp Icon="Str" />
         <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="x86"} {Locked="arm"} {Locked="arm64"} {Locked="mips"} {Locked="x64"} {Locked="amd64"} {Locked="x86_64"}]]></Cmt>
+          <Cmt Name="LcxAdmin"><![CDATA[{Locked="arm64"} {Locked="mips"} {Locked="x64"} {Locked="amd64"} {Locked="x86_64"} {Locked="x86"} {Locked="arm"} ]]></Cmt>
         </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.targetArchitecture.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
