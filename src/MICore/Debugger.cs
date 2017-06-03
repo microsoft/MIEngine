@@ -390,7 +390,7 @@ namespace MICore
             {
                 if (this.IsClosed)
                 {
-                    source.SetException(new DebuggerDisposedException(_closeMessage));
+                    source.TrySetException(new DebuggerDisposedException(_closeMessage));
                 }
                 else
                 {
@@ -402,11 +402,11 @@ namespace MICore
 
                     if (firstException != null)
                     {
-                        source.SetException(firstException);
+                        source.TrySetException(firstException);
                     }
                     else
                     {
-                        source.SetResult(null);
+                        source.TrySetResult(null);
                     }
                 }
             }

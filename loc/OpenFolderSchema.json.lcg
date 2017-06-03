@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="OpenFolderSchema.json" PsrId="306" FileType="1" SrcCul="en-US" Desc="Commenting file created by LCXAdmin. For more information, please visit http://localizability/longhorn/LcxAdmin.asp" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+<LCX SchemaVersion="6.0" Name="..\src\MIDebugPackage\OpenFolderSchema.json" PsrId="306" FileType="1" SrcCul="en-US" Desc="Commenting file created by LCXAdmin. For more information, please visit http://localizability/longhorn/LcxAdmin.asp" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
@@ -30,11 +30,14 @@
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.launchSetupCommands.properties.ignoreFailures.ty" ItemType="0" PsrId="306" Leaf="false">
         <Disp Icon="Dir" LocTbl="false" />
-        <Item ItemId=";(...) pe" ItemType="0" PsrId="306" Leaf="true">
+        <Item ItemId=";(...) pe" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[boolean]]></Val>
           </Str>
           <Disp Icon="Str" />
+          <Cmts>
+            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+          </Cmts>
         </Item>
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.debuggerPath.des" ItemType="0" PsrId="306" Leaf="false">
@@ -57,11 +60,14 @@
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeArgs.items.t" ItemType="0" PsrId="306" Leaf="false">
         <Disp Icon="Dir" LocTbl="false" />
-        <Item ItemId=";(...) ype" ItemType="0" PsrId="306" Leaf="true">
+        <Item ItemId=";(...) ype" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[string]]></Val>
           </Str>
           <Disp Icon="Str" />
+          <Cmts>
+            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+          </Cmts>
         </Item>
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeCwd.descript" ItemType="0" PsrId="306" Leaf="false">
@@ -73,13 +79,19 @@
           <Disp Icon="Str" />
         </Item>
       </Item>
-      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.addition" ItemType="0" PsrId="306" Leaf="false">
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.addition" ItemType="0" PsrId="306" InstFlg="true" Leaf="false">
         <Disp Icon="Dir" LocTbl="false" />
-        <Item ItemId=";(...) alProperties.type" ItemType="0" PsrId="306" Leaf="true">
+        <Cmts>
+          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+        </Cmts>
+        <Item ItemId=";(...) alProperties.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[string]]></Val>
           </Str>
           <Disp Icon="Str" />
+          <Cmts>
+            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+          </Cmts>
         </Item>
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.descript" ItemType="0" PsrId="306" Leaf="false">
@@ -96,6 +108,15 @@
         <Item ItemId=";(...) ription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[The fully qualified pipe command to execute.]]></Val>
+          </Str>
+          <Disp Icon="Str" />
+        </Item>
+      </Item>
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.quoteArgs.descri" ItemType="0" PsrId="306" Leaf="false">
+        <Disp Icon="Dir" LocTbl="false" />
+        <Item ItemId=";(...) ption" ItemType="0" PsrId="306" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[Should arguments that contain characters that need to be quoted (example: spaces) be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -231,6 +252,12 @@
         <Cmts>
           <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
         </Cmts>
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.quoteArgs.type" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[boolean]]></Val>
+        </Str>
+        <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
@@ -385,11 +412,14 @@
           <Cmt Name="LcxAdmin"><![CDATA[{Locked="[ { \"name\": \"squid\", \"value\": \"clam\" } ]5D;"}]]></Cmt>
         </Cmts>
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name" ItemType="0" PsrId="306" Leaf="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
+        <Cmts>
+          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
+        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.value" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
@@ -675,7 +705,7 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional source file mappings passed to the debug engine. Example: '{ "C:\foo":"/home/user/foo" }'.]]></Val>
+          <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
         </Str>
         <Disp Icon="Str" />
         <Cmts>
