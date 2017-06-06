@@ -1724,6 +1724,30 @@ namespace Microsoft.MIDebugEngine
             return toRead;
         }
 
+        internal async Task<Tuple<ulong, ulong>> FindValidMemoryRange(ulong address, uint count, int offset)
+        {
+            var ret = new Tuple<ulong, ulong>(0, 0);    // init to an empty range
+            string cmd = String.Format(CultureInfo.InvariantCulture, "-data-read-memory-bytes -o {0} {1} {2}", offset.ToString(), EngineUtils.AsAddr(address, Is64BitArch), count.ToString());
+            Results results = await CmdAsync(cmd, ResultClass.None);
+            if (results.ResultClass == ResultClass.error)
+            {
+                return ret;
+            }
+            ValueListValue mem = results.Find<ValueListValue>("memory");
+            if (mem.IsEmpty())
+            {
+                return ret;
+            }
+            TupleValue res = mem.Content[0] as TupleValue;
+            if (res == null)
+            {
+                return ret;
+            }
+            ulong start = res.FindAddr("begin");
+            ulong end = res.FindAddr("end");
+            return new Tuple<ulong, ulong>(start, end);
+        }
+
         private OutputMessage DecodeOutputEvent(Results results)
         {
             // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
