@@ -54,7 +54,7 @@ namespace Microsoft.MIDebugEngine
             return 0 <= i && i <= _instructions.Length;
         }
 
-        public bool TryFetch(ulong addr, int cnt, out IEnumerable<DisasmInstruction> instructions)
+        public bool TryFetch(ulong addr, int cnt, out ICollection<DisasmInstruction> instructions)
         {
             instructions = null;
             if (!Contains(addr, cnt))
@@ -66,6 +66,19 @@ namespace Microsoft.MIDebugEngine
                 cnt = -cnt;
             }
             instructions = new ArraySegment<DisasmInstruction>(_instructions, i, cnt);
+            return true;
+        }
+
+        public bool TryFetch(ulong startAddr, ulong endAddr, out ICollection<DisasmInstruction> instructions)
+        {
+            instructions = null;
+            if (!Contains(startAddr, 1))
+                return false;
+            if (!Contains(endAddr, 1))
+                return false;
+            int i = FindIndex(startAddr);
+            int j = FindIndex(endAddr);
+            instructions = new ArraySegment<DisasmInstruction>(_instructions, i, j-i);
             return true;
         }
 
@@ -100,46 +113,10 @@ namespace Microsoft.MIDebugEngine
             _disassemlyCache = new SortedList<ulong, DisassemblyBlock>();
         }
 
-        // 
-        /// <summary>
-        /// Fetch disassembly for a range of instructions. May return more instructions than asked for.
-        /// </summary>
-        /// <param name="address">Beginning address of an instruction to use as a starting point for disassembly.</param>
-        /// <param name="nInstructions">Number of instructions to disassemble. Negative values indicate disassembly backwards from "address".</param>
-        /// <returns></returns>
-        public async Task<IEnumerable<DisasmInstruction>> FetchInstructions(ulong address, int nInstructions)
+        private ICollection<DisasmInstruction> UpdateCache(ulong address, int nInstructions, DisasmInstruction[] instructions)
         {
-            IEnumerable<DisasmInstruction> ret = null;
-
-            lock (_disassemlyCache)
-            {
-                // check the cache
-                var kv = _disassemlyCache.FirstOrDefault((p) => p.Value.TryFetch(address, nInstructions, out ret));
-                if (kv.Value != null)
-                    return ret;
-            }
-
-            ulong endAddress;
-            ulong startAddress;
-            if (nInstructions >= 0)
-            {
-                startAddress = address;
-                endAddress = startAddress + (ulong)(_process.MaxInstructionSize * nInstructions);
-            }
-            else
-            {
-                endAddress = address;
-                startAddress = endAddress - (uint)(_process.MaxInstructionSize * -nInstructions);
-                endAddress++;   // make sure to fetch an instruction covering the original start address
-            }
-            DisasmInstruction[] instructions = await Disassemble(_process, startAddress, endAddress);
-
-            if (instructions != null && instructions.Length > 0 && nInstructions < 0)
-            {
-                instructions = await VerifyDisassembly(instructions, startAddress, address);
-            }
-
-            if (instructions != null && instructions.Length > 0)
+            ICollection<DisasmInstruction> ret = null;
+            if (instructions.Length > 0)
             {
                 DisassemblyBlock block = new DisassemblyBlock(instructions);
                 lock (_disassemlyCache)
@@ -166,8 +143,121 @@ namespace Microsoft.MIDebugEngine
                 }
                 var kv = block.TryFetch(address, nInstructions, out ret);
             }
-
             return ret;
+        }
+
+        /// <summary>
+        /// Seek backward n instructions from a target address
+        /// </summary>
+        /// <param name="address">target address</param>
+        /// <param name="nInstructions">number of instructions</param>
+        /// <returns> address - n on failure, else the address of an instruction n back from the target address</returns>
+        public async Task<ulong> SeekBack(ulong address, int nInstructions)
+        {
+            ICollection<DisasmInstruction> ret = null;
+            ulong defaultAddr = address >= (ulong)nInstructions ? address - (ulong)nInstructions : 0;
+
+            lock (_disassemlyCache)
+            {
+                // check the cache
+                var kv = _disassemlyCache.FirstOrDefault((p) => p.Value.TryFetch(address, -nInstructions, out ret));
+                if (kv.Value != null)
+                    return ret.First().Addr;
+            }
+            ulong endAddress;
+            ulong startAddress;
+            var range = await _process.FindValidMemoryRange(address, (uint)(_process.MaxInstructionSize * nInstructions)+1, (int)(_process.MaxInstructionSize * -nInstructions));
+            startAddress = range.Item1;
+            endAddress = range.Item2;
+            if (endAddress - startAddress == 0) // bad address range, no instructions
+            {
+                return defaultAddr;
+            }
+            lock (_disassemlyCache)
+            {
+                // check the cache with the adjusted range
+                var kv = _disassemlyCache.FirstOrDefault((p) => p.Value.TryFetch(startAddress, address < endAddress ? address : endAddress, out ret));
+            }
+            if (ret == null)
+            {
+                DisasmInstruction[] instructions = await Disassemble(_process, startAddress, endAddress);
+                if (instructions == null)
+                {
+                    return defaultAddr;    // unknown error condition
+                }
+
+                // when seeking back require that the disassembly contain an instruction at the target address (x86 has varying length instructions) 
+                if (instructions.Length > 0 && address < endAddress)
+                {
+                    instructions = await VerifyDisassembly(instructions, startAddress, address);
+                }
+                ret = UpdateCache(address, -nInstructions, instructions);
+                if (ret == null)
+                {
+                    return defaultAddr;
+                }
+            }
+
+            int nLess = ret.Count((i) => i.Addr < address);
+            if (nLess < nInstructions)
+            {
+                // not enough instructions were fetched; back up one byte for each missing instruction
+                return ret.First().Addr < (ulong)(nInstructions - nLess) ? 0 : (ulong)((long)ret.First().Addr - (nInstructions - nLess));
+            }
+            else
+            {
+                return ret.First().Addr;
+            }
+        }
+
+        // 
+        /// <summary>
+        /// Fetch disassembly for a range of instructions. 
+        /// </summary>
+        /// <param name="address">Beginning address of an instruction to use as a starting point for disassembly.</param>
+        /// <param name="nInstructions">Number of instructions to disassemble.</param>
+        /// <returns></returns>
+        public async Task<ICollection<DisasmInstruction>> FetchInstructions(ulong address, int nInstructions)
+        {
+            ICollection<DisasmInstruction> ret = null;
+
+            lock (_disassemlyCache)
+            {
+                // check the cache
+                var kv = _disassemlyCache.FirstOrDefault((p) => p.Value.TryFetch(address, nInstructions, out ret));
+                if (kv.Value != null)
+                    return ret;
+            }
+
+            ulong endAddress;
+            ulong startAddress;
+            var range = await _process.FindValidMemoryRange(address, (uint)(_process.MaxInstructionSize * nInstructions), 0);
+            startAddress = range.Item1;
+            endAddress = range.Item2;
+            int gap = (int)(startAddress - address);   // num of bytes before instructions begin
+            if (endAddress > startAddress && nInstructions > gap)
+            {
+                nInstructions -= gap;
+            }
+            else
+            {
+                nInstructions = 0;
+            }
+            if (endAddress - startAddress == 0 || nInstructions == 0)
+            {
+                return null;
+            }
+            lock (_disassemlyCache)
+            {
+                // re-check the cache with the verified memory range
+                var kv = _disassemlyCache.FirstOrDefault((p) => p.Value.TryFetch(startAddress, nInstructions, out ret));
+                if (kv.Value != null)
+                    return ret;
+            }
+
+            DisasmInstruction[] instructions = await Disassemble(_process, startAddress, endAddress);
+
+            return UpdateCache(address, nInstructions, instructions);
         }
 
         private async Task<DisasmInstruction[]> VerifyDisassembly(DisasmInstruction[] instructions, ulong startAddress, ulong targetAddress)
