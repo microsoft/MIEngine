@@ -159,7 +159,7 @@ namespace Microsoft.MIDebugEngine
 
             lock (_disassemlyCache)
             {
-                // check the cache
+                // check the cache, look for it to contain nInstructions back from the address
                 var kv = _disassemlyCache.FirstOrDefault((p) => p.Value.TryFetch(address, -nInstructions, out ret));
                 if (kv.Value != null)
                     return ret.First().Addr;
@@ -262,15 +262,19 @@ namespace Microsoft.MIDebugEngine
 
         private async Task<DisasmInstruction[]> VerifyDisassembly(DisasmInstruction[] instructions, ulong startAddress, ulong targetAddress)
         {
+            var originalInstructions = instructions;
             int count = 0;
             while ((instructions.Length == 0 || instructions[instructions.Length - 1].Addr != targetAddress) && count < _process.MaxInstructionSize)
             {
-                instructions = null;    // throw away the previous instructions
                 count++;
                 startAddress--;         // back up one byte
                 instructions = await Disassemble(_process, startAddress, targetAddress + 1); // try again
+                if (instructions == null)
+                {
+                    break;
+                }
             }
-            return instructions;
+            return instructions == null ? originalInstructions : instructions;
         }
 
         private void DeleteRangeFromCache(DisassemblyBlock block)
