@@ -32,7 +32,20 @@ namespace Microsoft.MIDebugEngine
 
         private int FindIndex(ulong addr)
         {
-            return Array.FindIndex(_instructions, (p) => p.Addr == addr);
+            // allow addresses within an instruction to match the instruction
+            for (int i = 0; i < _instructions.Length - 1; ++i)
+            {
+                if (_instructions[i].Addr <= addr && _instructions[i + 1].Addr > addr)
+                {
+                    return i;
+                }
+            }
+            if (_instructions[_instructions.Length - 1].Addr == addr)
+            {
+                return _instructions.Length - 1;
+            }
+
+            return -1;
         }
 
         internal ulong Address { get { return _instructions[0].Addr; } }
@@ -116,7 +129,7 @@ namespace Microsoft.MIDebugEngine
         private ICollection<DisasmInstruction> UpdateCache(ulong address, int nInstructions, DisasmInstruction[] instructions)
         {
             ICollection<DisasmInstruction> ret = null;
-            if (instructions.Length > 0)
+            if (instructions != null && instructions.Length > 0)
             {
                 DisassemblyBlock block = new DisassemblyBlock(instructions);
                 lock (_disassemlyCache)
@@ -166,10 +179,10 @@ namespace Microsoft.MIDebugEngine
             }
             ulong endAddress;
             ulong startAddress;
-            var range = await _process.FindValidMemoryRange(address, (uint)(_process.MaxInstructionSize * nInstructions)+1, (int)(_process.MaxInstructionSize * -nInstructions));
+            var range = await _process.FindValidMemoryRange(address, (uint)(_process.MaxInstructionSize * (nInstructions+1)), (int)(_process.MaxInstructionSize * -nInstructions));
             startAddress = range.Item1;
             endAddress = range.Item2;
-            if (endAddress - startAddress == 0) // bad address range, no instructions
+            if (endAddress - startAddress == 0 || address < startAddress) // bad address range, no instructions
             {
                 return defaultAddr;
             }
@@ -187,10 +200,8 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 // when seeking back require that the disassembly contain an instruction at the target address (x86 has varying length instructions) 
-                if (instructions.Length > 0 && address < endAddress)
-                {
-                    instructions = await VerifyDisassembly(instructions, startAddress, address);
-                }
+                instructions = await VerifyDisassembly(instructions, startAddress, endAddress, address);
+
                 ret = UpdateCache(address, -nInstructions, instructions);
                 if (ret == null)
                 {
@@ -257,22 +268,24 @@ namespace Microsoft.MIDebugEngine
 
             DisasmInstruction[] instructions = await Disassemble(_process, startAddress, endAddress);
 
+            instructions = await VerifyDisassembly(instructions, startAddress, endAddress, address);
+
             return UpdateCache(address, nInstructions, instructions);
         }
 
-        private async Task<DisasmInstruction[]> VerifyDisassembly(DisasmInstruction[] instructions, ulong startAddress, ulong targetAddress)
+        private async Task<DisasmInstruction[]> VerifyDisassembly(DisasmInstruction[] instructions, ulong startAddress, ulong endAddress, ulong targetAddress)
         {
+            if (startAddress > targetAddress || targetAddress > endAddress)
+            {
+                return instructions;
+            }
             var originalInstructions = instructions;
             int count = 0;
-            while ((instructions.Length == 0 || instructions[instructions.Length - 1].Addr != targetAddress) && count < _process.MaxInstructionSize)
+            while (instructions != null && (instructions.Length == 0 || Array.Find(instructions, (i)=>i.Addr == targetAddress) == null) && count < _process.MaxInstructionSize)
             {
                 count++;
                 startAddress--;         // back up one byte
-                instructions = await Disassemble(_process, startAddress, targetAddress + 1); // try again
-                if (instructions == null)
-                {
-                    break;
-                }
+                instructions = await Disassemble(_process, startAddress, endAddress); // try again
             }
             return instructions == null ? originalInstructions : instructions;
         }
