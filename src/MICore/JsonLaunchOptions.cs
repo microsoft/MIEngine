@@ -350,10 +350,10 @@ namespace MICore.Json.LaunchOptions
                         return LaunchCompleteCommandValue.None;
                     }
 
-                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLaunchCompleteCommandValue, reader.Value));
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_InvalidLaunchCompleteCommandValue, reader.Value));
                 }
 
-                Debug.Fail(String.Format("Unexpected objectType '{0}' passed for launchCompleteCommand serialization.", objectType.ToString()));
+                Debug.Fail(String.Format(CultureInfo.CurrentUICulture, "Unexpected objectType '{0}' passed for launchCompleteCommand serialization.", objectType.ToString()));
                 return null;
             }
 
