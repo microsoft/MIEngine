@@ -187,6 +187,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown launchCompleteCommand value &apos;{0}&apos;. Expected values are &apos;exec-run&apos;, &apos;exec-continue&apos; and &apos;None&apos;..
+        /// </summary>
+        public static string Error_InvalidLaunchCompleteCommandValue {
+            get {
+                return ResourceManager.GetString("Error_InvalidLaunchCompleteCommandValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launch options string provided by the project system is invalid. {0}.
         /// </summary>
         public static string Error_InvalidLaunchOptions {
@@ -246,6 +255,15 @@ namespace MICore {
         public static string Error_LauncherSerializerNotFound {
             get {
                 return ResourceManager.GetString("Error_LauncherSerializerNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Launch options are null..
+        /// </summary>
+        public static string Error_LaunchOptionsNull {
+            get {
+                return ResourceManager.GetString("Error_LaunchOptionsNull", resourceCulture);
             }
         }
         

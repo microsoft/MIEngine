@@ -284,4 +284,11 @@ Error: {1}</value>
     <value>The format of source file map entry '{0}' is incorrect.  </value>
     <comment>{0} source file map entry</comment>
   </data>
+  <data name="Error_InvalidLaunchCompleteCommandValue" xml:space="preserve">
+    <value>Unknown launchCompleteCommand value '{0}'. Expected values are 'exec-run', 'exec-continue' and 'None'.</value>
+    <comment>{0} value</comment>
+  </data>
+  <data name="Error_LaunchOptionsNull" xml:space="preserve">
+    <value>Launch options are null.</value>
+  </data>
 </root>
