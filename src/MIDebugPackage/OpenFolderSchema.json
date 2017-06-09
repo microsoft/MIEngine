@@ -12,7 +12,11 @@
           "templateId": "launch",
           "displayName": "C/C++ Launch for MinGW/Cygwin (gdb)",
           "description": "Debug launch configuration for C/C++ hosted in MinGW or Cygwin.",
-          "fileExtensions": [ "*.exe", "makefile" ],
+          "fileExtensions": [
+            "*.exe",
+            "*.out",
+            "makefile"
+          ],
           "initialConfiguration": {
             "cwd": "${workspaceRoot}",
             "program": "${debugInfo.target}",
@@ -25,7 +29,11 @@
           "templateId": "attach",
           "displayName": "C/C++ Attach for MinGW/Cygwin (gdb)",
           "description": "Debug attach configuration for C/C++ hosted in MinGW or Cygwin.",
-          "fileExtensions": [ "*.exe", "makefile" ],
+          "fileExtensions": [
+            "*.exe",
+            "*.out",
+            "makefile"
+          ],
           "initialConfiguration": {
             "cwd": "${workspaceRoot}",
             "program": "${debugInfo.target}",
@@ -41,7 +49,6 @@
           "cpp_schema": {
             "type": "object",
             "properties": {
-
               "program": {
                 "type": "string",
                 "description": "Full path to program executable."
@@ -52,14 +59,17 @@
               },
               "sourceFileMap": {
                 "type": "object",
-                "description": "Optional source file mappings passed to the debug engine. Format: '{ \"Editor Source Location\": \"Compiled Source Location\" }'. Example: '{ \"C:\\foo\": \"/home/user/foo\" }'.",
+                "description": "Optional source file mappings passed to the debug engine. Format: '{ \"<Compiler source location>\": \"<Editor source location>\" }' OR '{ \"<Compiler source location>\": { \"editorPath\": \"<Editor source location>\", \"useForBreakpoints\": true } }'. \nExample: '{ \"/home/user/foo\": \"C:\\foo\" }' OR '{ \"/home/user/foo\": { \"editorPath\": \"c:\\foo\", \"useForBreakpoints\": true } }'.",
                 "additionalProperties": {
-                  "type": "string"
+                  "anyOf": {
+                    "type": "string",
+                    "$ref": "#/definitions/cpp_schema/definitions/sourceFileMapOptions"
+                  }
                 }
               },
               "MIMode": {
                 "type": "string",
-                "description": "Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. Allowed values are \"gdb\" \"lldb\"."
+                "description": "Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. \nAllowed values are \"gdb\", \"lldb\"."
               },
               "args": {
                 "type": "array",
@@ -70,18 +80,22 @@
               },
               "environment": {
                 "type": "array",
-                "description": "Environment variables to add to the environment for the program. Example: [ { \"name\": \"squid\", \"value\": \"clam\" } ].",
+                "description": "Environment variables to add to the environment for the program. \nExample: [ { \"name\": \"squid\", \"value\": \"clam\" } ].",
                 "items": {
                   "type": "object",
                   "properties": {
-                    "name": "string",
-                    "value": "string"
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
                   }
                 }
               },
               "targetArchitecture": {
                 "type": "string",
-                "description": "The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64."
+                "description": "The architecture of the debuggee. This will automatically be detected unless this parameter is set. \nAllowed values are x86, arm, arm64, mips, x64, amd64, x86_64."
               },
               "cwd": {
                 "type": "string",
@@ -93,18 +107,18 @@
               },
               "miDebuggerServerAddress": {
                 "type": "string",
-                "description": "Network address of the MI-enabled debugger server to connect to. Example: localhost:1234."
+                "description": "Network address of the MI-enabled debugger server to connect to. \nExample: localhost:1234."
               },
               "setupCommands": {
                 "type": "array",
-                "description": "One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: \"setupCommands\": [ { \"text\": \"-enable-pretty-printing\", \"description\": \"Enable GDB pretty printing\", \"ignoreFailures\": true }].",
+                "description": "One or more GDB/LLDB commands to execute in order to setup the underlying debugger. \nExample: \"setupCommands\": [ { \"text\": \"-enable-pretty-printing\", \"description\": \"Enable GDB pretty printing\", \"ignoreFailures\": true }].",
                 "items": {
                   "$ref": "#/definitions/cpp_schema/definitions/launchSetupCommands"
                 }
               },
               "customLaunchSetupCommands": {
                 "type": "array",
-                "description": "If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be \"-target-attach\" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: \"customLaunchSetupCommands\": [ { \"text\": \"target-run\", \"description\": \"run target\", \"ignoreFailures\": false }].",
+                "description": "If provided, this replaces the default commands used to launch a target with some other commands. \nFor example, this can be \"-target-attach\" in order to attach to a target process. \nAn empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. \nExample: \"customLaunchSetupCommands\": [ { \"text\": \"target-run\", \"description\": \"run target\", \"ignoreFailures\": false }].",
                 "items": {
                   "$ref": "#/definitions/cpp_schema/definitions/launchSetupCommands"
                 }
@@ -116,27 +130,27 @@
                   "exec-continue",
                   "None"
                 ],
-                "description": "The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are \"exec-run\", \"exec-continue\", \"None\". The default value is \"exec-run\"."
+                "description": "The command to execute after the debugger is fully setup in order to cause the target process to run. \nAllowed values are \"exec-run\", \"exec-continue\", \"None\". \nThe default value is \"exec-run\"."
               },
               "debugServerPath": {
                 "type": "string",
-                "description": "Optional full path to debug server to launch. Defaults to null."
+                "description": "Optional full path to debug server to launch. \nDefaults to null."
               },
               "debugServerArgs": {
                 "type": "string",
-                "description": "Optional debug server args. Defaults to null."
+                "description": "Optional debug server args. \nDefaults to null."
               },
               "serverStarted": {
                 "type": "string",
-                "description": "Optional server-started pattern to look for in the debug server output. Defaults to null."
+                "description": "Optional server-started pattern to look for in the debug server output. \nDefaults to null."
               },
               "filterStdout": {
                 "type": "boolean",
-                "description": "Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true."
+                "description": "Search stdout stream for server-started pattern and log stdout to debug output. \nDefaults to true."
               },
               "filterStderr": {
                 "type": "boolean",
-                "description": "Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false."
+                "description": "Search stderr stream for server-started pattern and log stderr to debug output. \nDefaults to false."
               },
               "serverLaunchTimeout": {
                 "type": "integer",
@@ -144,15 +158,14 @@
               },
               "coreDumpPath": {
                 "type": "string",
-                "description": "Optional full path to a core dump file for the specified program. Defaults to null."
+                "description": "Optional full path to a core dump file for the specified program. \nDefaults to null."
               },
               "externalConsole": {
                 "type": "boolean",
-                "description": "If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons."
+                "description": "If true, a console is launched for the debuggee. If false, no console is launched. \nDefaults to false. NOTE: This option is ignored in some cases for technical reasons."
               },
               "pipeTransport": {
-                "$ref": "#/definitions/cpp_schema/definitions/pipeTransportOptions",
-                "description": "When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio and the MI-enabled debugger (such as gdb)."
+                "$ref": "#/definitions/cpp_schema/definitions/pipeTransportOptions"
               }
             },
             "definitions": {
@@ -169,12 +182,13 @@
                   },
                   "ignoreFailures": {
                     "type": "boolean",
-                    "description": "If true, failures from the command should be ignored. Defaults to false."
+                    "description": "If true, failures from the command should be ignored. \nDefaults to false."
                   }
                 }
               },
               "pipeTransportOptions": {
                 "type": "object",
+                "description": "When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio \nand the MI-enabled debugger (such as gdb).",
                 "properties": {
                   "pipeCwd": {
                     "type": "string",
@@ -204,7 +218,20 @@
                   },
                   "quoteArgs": {
                     "type": "boolean",
-                    "description": "If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted."
+                    "description": "If individual arguments contain characters (such as spaces or tabs), should it be quoted? If 'false', the debugger command will no longer be automatically quoted. \nDefault is 'true'."
+                  }
+                }
+              },
+              "sourceFileMapOptions": {
+                "type": "object",
+                "properties": {
+                  "editorPath": {
+                    "type": "string",
+                    "description": "The location of the source code for the editor to locate."
+                  },
+                  "useForBreakpoints": {
+                    "type": "boolean",
+                    "description": "When setting breakpoints, this source mapping should be used. \nIf 'false', only the filename and line number is used for setting breakpoints. \nIf 'true', breakpoints will be set with the full path to the file and line number only when this source mapping is used. Otherwise just filename and line number will be used when setting breakpoints. \nDefault is 'true'."
                   }
                 }
               }
@@ -212,8 +239,12 @@
           },
           "cppTemplateLayout": {
             "allOf": [
-              { "$ref": "#/definitions/default" },
-              { "$ref": "#/definitions/cpp_schema" }
+              {
+                "$ref": "#/definitions/default"
+              },
+              {
+                "$ref": "#/definitions/cpp_schema"
+              }
             ]
           }
         },

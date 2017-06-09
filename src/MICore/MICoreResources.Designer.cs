@@ -367,6 +367,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The format of source file map entry &apos;{0}&apos; is incorrect.  .
+        /// </summary>
+        public static string Error_SourceFileMapFormat {
+            get {
+                return ResourceManager.GetString("Error_SourceFileMapFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This string is null or empty..
         /// </summary>
         public static string Error_StringIsNullOrEmpty {
