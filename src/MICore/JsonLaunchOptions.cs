@@ -71,7 +71,7 @@ namespace MICore.Json.LaunchOptions
         /// Optional source file mappings passed to the debug engine. Example: '{ "/original/source/path":"/current/source/path" }'
         /// </summary>
         [JsonProperty("sourceFileMap", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, string> SourceFileMap { get; protected set; }
+        public Dictionary<string, object> SourceFileMap { get; protected set; }
 
         /// <summary>
         /// When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between VS Code and the MI-enabled debugger backend executable (such as gdb).
@@ -83,7 +83,7 @@ namespace MICore.Json.LaunchOptions
     public partial class AttachOptions : BaseOptions
     {
         #region Public Properties for Serialization
-        
+
         [JsonProperty("processId")]
         public int ProcessId { get; private set; }
 
@@ -93,10 +93,22 @@ namespace MICore.Json.LaunchOptions
 
         public AttachOptions()
         {
-            this.SourceFileMap = new Dictionary<string, string>();
+            this.SourceFileMap = new Dictionary<string, object>();
         }
 
-        public AttachOptions(string program, int processId, string type = null, string targetArchitecture = null, string visualizerFile = null, bool? showDisplayString = null, string additionalSOLibSearchPath = null, string MIMode = null, string miDebuggerPath = null, string miDebuggerServerAddress = null, Dictionary<string, string> sourceFileMap = null, PipeTransport pipeTransport = null)
+        public AttachOptions(
+            string program,
+            int processId,
+            string type = null,
+            string targetArchitecture = null,
+            string visualizerFile = null,
+            bool? showDisplayString = null,
+            string additionalSOLibSearchPath = null,
+            string MIMode = null,
+            string miDebuggerPath = null,
+            string miDebuggerServerAddress = null,
+            Dictionary<string, object> sourceFileMap = null,
+            PipeTransport pipeTransport = null)
         {
             this.Program = program;
             this.Type = type;
@@ -257,10 +269,36 @@ namespace MICore.Json.LaunchOptions
             this.SetupCommands = new List<SetupCommand>();
             this.CustomLaunchSetupCommands = new List<SetupCommand>();
             this.Environment = new List<Environment>();
-            this.SourceFileMap = new Dictionary<string, string>();
+            this.SourceFileMap = new Dictionary<string, object>();
         }
 
-        public LaunchOptions(string program, List<string> args = null, string type = null, string targetArchitecture = null, string cwd = null, List<SetupCommand> setupCommands = null, List<SetupCommand> customLaunchSetupCommands = null, LaunchCompleteCommandValue? launchCompleteCommand = null, string visualizerFile = null, bool? showDisplayString = null, List<Environment> environment = null, string additionalSOLibSearchPath = null, string MIMode = null, string miDebuggerPath = null, string miDebuggerServerAddress = null, bool? stopAtEntry = null, string debugServerPath = null, string debugServerArgs = null, string serverStarted = null, bool? filterStdout = null, bool? filterStderr = null, int? serverLaunchTimeout = null, string coreDumpPath = null, bool? externalConsole = null, Dictionary<string, string> sourceFileMap = null, PipeTransport pipeTransport = null)
+        public LaunchOptions(
+            string program,
+            List<string> args = null,
+            string type = null,
+            string targetArchitecture = null,
+            string cwd = null,
+            List<SetupCommand> setupCommands = null,
+            List<SetupCommand> customLaunchSetupCommands = null,
+            LaunchCompleteCommandValue? launchCompleteCommand = null,
+            string visualizerFile = null,
+            bool? showDisplayString = null,
+            List<Environment> environment = null,
+            string additionalSOLibSearchPath = null,
+            string MIMode = null,
+            string miDebuggerPath = null,
+            string miDebuggerServerAddress = null,
+            bool? stopAtEntry = null,
+            string debugServerPath = null,
+            string debugServerArgs = null,
+            string serverStarted = null,
+            bool? filterStdout = null,
+            bool? filterStderr = null,
+            int? serverLaunchTimeout = null,
+            string coreDumpPath = null,
+            bool? externalConsole = null,
+            Dictionary<string, object> sourceFileMap = null,
+            PipeTransport pipeTransport = null)
         {
             this.Program = program;
             this.Args = args;
@@ -391,6 +429,39 @@ namespace MICore.Json.LaunchOptions
             this.Text = text;
             this.Description = description;
             this.IgnoreFailures = ignoreFailures;
+        }
+
+        #endregion
+    }
+
+    public partial class SourceFileMapOptions
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// The editor's path.
+        /// </summary>
+        [JsonProperty("editorPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string EditorPath { get; set; }
+
+        /// <summary>
+        /// Use this source mapping for breakpoint binding? Default is true.
+        /// </summary>
+        [JsonProperty("useForBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? UseForBreakpoints { get; set; }
+
+        #endregion
+
+        #region Constructors
+
+        public SourceFileMapOptions()
+        {
+        }
+
+        public SourceFileMapOptions(string editorPath = null, bool? useForBreakpoints = null)
+        {
+            this.EditorPath = editorPath;
+            this.UseForBreakpoints = useForBreakpoints;
         }
 
         #endregion
