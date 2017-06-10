@@ -259,15 +259,6 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Launch options are null..
-        /// </summary>
-        public static string Error_LaunchOptionsNull {
-            get {
-                return ResourceManager.GetString("Error_LaunchOptionsNull", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to initialize debugger terminal..
         /// </summary>
         public static string Error_LocalUnixTerminalDebuggerInitializationFailed {

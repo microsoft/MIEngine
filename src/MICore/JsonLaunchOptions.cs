@@ -186,15 +186,8 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("launchCompleteCommand", DefaultValueHandling = DefaultValueHandling.Ignore),
         JsonConverter(typeof(LaunchCompleteCommandConverter))]
-        public LaunchCompleteCommandValue? LaunchCompleteCommand { get; set; }
+        public LaunchCompleteCommand? LaunchCompleteCommand { get; set; }
         
-        public enum LaunchCompleteCommandValue
-        {
-            Exec_run,
-            Exec_continue,
-            None,
-        }
-
         /// <summary>
         /// Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ].
         /// </summary>
@@ -276,7 +269,7 @@ namespace MICore.Json.LaunchOptions
             string cwd = null,
             List<SetupCommand> setupCommands = null,
             List<SetupCommand> customLaunchSetupCommands = null,
-            LaunchCompleteCommandValue? launchCompleteCommand = null,
+            LaunchCompleteCommand? launchCompleteCommand = null,
             string visualizerFile = null,
             bool? showDisplayString = null,
             List<Environment> environment = null,
@@ -334,20 +327,20 @@ namespace MICore.Json.LaunchOptions
         {
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
-                if (objectType == typeof(LaunchCompleteCommandValue?) && reader.Value is String)
+                if (objectType == typeof(LaunchCompleteCommand?) && reader.TokenType == JsonToken.String)
                 {
-                    String value = (String)reader.Value;
+                    String value = reader.Value.ToString();
                     if (value.Equals("exec-continue", StringComparison.Ordinal))
                     {
-                        return LaunchCompleteCommandValue.Exec_continue;
+                        return MICore.LaunchCompleteCommand.ExecContinue;
                     }
                     if (value.Equals("exec-run", StringComparison.Ordinal))
                     {
-                        return LaunchCompleteCommandValue.Exec_run;
+                        return MICore.LaunchCompleteCommand.ExecRun;
                     }
                     if (value.Equals("None", StringComparison.Ordinal))
                     {
-                        return LaunchCompleteCommandValue.None;
+                        return MICore.LaunchCompleteCommand.None;
                     }
 
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_InvalidLaunchCompleteCommandValue, reader.Value));
@@ -359,7 +352,7 @@ namespace MICore.Json.LaunchOptions
 
             public override bool CanConvert(Type objectType)
             {
-                return objectType == typeof(LaunchCompleteCommandValue?);
+                return objectType == typeof(LaunchCompleteCommand?);
             }
 
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
@@ -510,7 +503,7 @@ namespace MICore.Json.LaunchOptions
     {
         public static BaseOptions GetLaunchOrAttachOptions(JObject parsedJObject)
         {
-            BaseOptions baseOptions;
+            BaseOptions baseOptions = null;
             string requestType = parsedJObject["request"]?.Value<string>();
             if (String.IsNullOrWhiteSpace(requestType))
             {

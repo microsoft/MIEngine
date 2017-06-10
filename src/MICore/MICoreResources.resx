@@ -288,7 +288,4 @@ Error: {1}</value>
     <value>Unknown launchCompleteCommand value '{0}'. Expected values are 'exec-run', 'exec-continue' and 'None'.</value>
     <comment>{0} value</comment>
   </data>
-  <data name="Error_LaunchOptionsNull" xml:space="preserve">
-    <value>Launch options are null.</value>
-  </data>
 </root>

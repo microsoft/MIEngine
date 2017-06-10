@@ -455,7 +455,7 @@ namespace MICore
 
             if (launchOptions == null)
             {
-                throw new InvalidLaunchOptionsException(MICoreResources.Error_LaunchOptionsNull);
+                throw new InvalidLaunchOptionsException(MICoreResources.Error_UnknownLaunchOptions);
             }
 
             MIMode mi = ConvertMIModeString(RequireAttribute(launchOptions.MIMode, nameof(launchOptions.MIMode)));
@@ -1697,18 +1697,7 @@ namespace MICore
 
             if (launch.LaunchCompleteCommand.HasValue)
             {
-                switch (launch.LaunchCompleteCommand.Value)
-                {
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_continue:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.ExecContinue;
-                        break;
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_run:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.ExecRun;
-                        break;
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.None:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.None;
-                        break;
-                }
+                this.LaunchCompleteCommand = launch.LaunchCompleteCommand.Value;
             }
         }
 
