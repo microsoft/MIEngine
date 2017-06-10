@@ -84,7 +84,7 @@ namespace Microsoft.MIDebugEngine
 
         public static int UnexpectedException(Exception e)
         {
-            Debug.Fail("Unexpected exception during Attach");
+            Debug.Fail("Unexpected exception.");
             return Constants.RPC_E_SERVERFAULT;
         }
 

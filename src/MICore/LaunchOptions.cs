@@ -357,9 +357,7 @@ namespace MICore
                 }                
                 else
                 {
-                    throw new InvalidLaunchOptionsException(
-                        String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_InvalidLaunchOptions, 
-                            String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_SourceFileMapFormat, item.Key)));
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_SourceFileMapFormat, item.Key));
                 }
             }
             return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);
@@ -457,7 +455,7 @@ namespace MICore
 
             if (launchOptions == null)
             {
-                throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidLaunchOptions);
+                throw new InvalidLaunchOptionsException(MICoreResources.Error_UnknownLaunchOptions);
             }
 
             MIMode mi = ConvertMIModeString(RequireAttribute(launchOptions.MIMode, nameof(launchOptions.MIMode)));
@@ -1699,18 +1697,7 @@ namespace MICore
 
             if (launch.LaunchCompleteCommand.HasValue)
             {
-                switch (launch.LaunchCompleteCommand.Value)
-                {
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_continue:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.ExecContinue;
-                        break;
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_run:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.ExecRun;
-                        break;
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.None:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.None;
-                        break;
-                }
+                this.LaunchCompleteCommand = launch.LaunchCompleteCommand.Value;
             }
         }
 

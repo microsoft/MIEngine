@@ -3,11 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 using System.Globalization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MICore.Json.LaunchOptions
 {
@@ -185,20 +184,10 @@ namespace MICore.Json.LaunchOptions
         /// <summary>
         /// The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".
         /// </summary>
-        [JsonProperty("launchCompleteCommand", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public LaunchCompleteCommandValue? LaunchCompleteCommand { get; set; }
-
-        [JsonConverter(typeof(StringEnumConverter))]
-        public enum LaunchCompleteCommandValue
-        {
-            [EnumMember(Value = "exec-run")]
-            Exec_run,
-            [EnumMember(Value = "exec-continue")]
-            Exec_continue,
-            [EnumMember(Value = "None")]
-            None,
-        }
-
+        [JsonProperty("launchCompleteCommand", DefaultValueHandling = DefaultValueHandling.Ignore),
+        JsonConverter(typeof(LaunchCompleteCommandConverter))]
+        public LaunchCompleteCommand? LaunchCompleteCommand { get; set; }
+        
         /// <summary>
         /// Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ].
         /// </summary>
@@ -280,7 +269,7 @@ namespace MICore.Json.LaunchOptions
             string cwd = null,
             List<SetupCommand> setupCommands = null,
             List<SetupCommand> customLaunchSetupCommands = null,
-            LaunchCompleteCommandValue? launchCompleteCommand = null,
+            LaunchCompleteCommand? launchCompleteCommand = null,
             string visualizerFile = null,
             bool? showDisplayString = null,
             List<Environment> environment = null,
@@ -328,6 +317,49 @@ namespace MICore.Json.LaunchOptions
             this.PipeTransport = pipeTransport;
         }
 
+        #endregion
+
+        #region Private class
+        /// <summary>
+        /// Custom converter to avoid dependency on System.Runtime.Serialization.Primitives.dll
+        /// </summary>
+        private class LaunchCompleteCommandConverter : JsonConverter
+        {
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (objectType == typeof(LaunchCompleteCommand?) && reader.TokenType == JsonToken.String)
+                {
+                    String value = reader.Value.ToString();
+                    if (value.Equals("exec-continue", StringComparison.Ordinal))
+                    {
+                        return MICore.LaunchCompleteCommand.ExecContinue;
+                    }
+                    if (value.Equals("exec-run", StringComparison.Ordinal))
+                    {
+                        return MICore.LaunchCompleteCommand.ExecRun;
+                    }
+                    if (value.Equals("None", StringComparison.Ordinal))
+                    {
+                        return MICore.LaunchCompleteCommand.None;
+                    }
+
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_InvalidLaunchCompleteCommandValue, reader.Value));
+                }
+
+                Debug.Fail(String.Format(CultureInfo.CurrentUICulture, "Unexpected objectType '{0}' passed for launchCompleteCommand serialization.", objectType.ToString()));
+                return null;
+            }
+
+            public override bool CanConvert(Type objectType)
+            {
+                return objectType == typeof(LaunchCompleteCommand?);
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
+        }
         #endregion
     }
 
@@ -471,7 +503,7 @@ namespace MICore.Json.LaunchOptions
     {
         public static BaseOptions GetLaunchOrAttachOptions(JObject parsedJObject)
         {
-            BaseOptions baseOptions;
+            BaseOptions baseOptions = null;
             string requestType = parsedJObject["request"]?.Value<string>();
             if (String.IsNullOrWhiteSpace(requestType))
             {
