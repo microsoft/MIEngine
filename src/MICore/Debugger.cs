@@ -49,6 +49,8 @@ namespace MICore
 
         public bool IsCygwin { get; protected set; }
 
+        public bool SendNewLineAfterCmd { get; protected set; }
+
         public virtual void FlushBreakStateData()
         {
         }
@@ -419,6 +421,10 @@ namespace MICore
             _lastCommandId = 1000;
             _transport = transport;
             FlushBreakStateData();
+
+            this.SendNewLineAfterCmd = (options is LocalLaunchOptions &&
+                PlatformUtilities.IsWindows() &&
+                this.MICommandFactory.Mode == MIMode.Gdb);
 
             _transport.Init(this, options, Logger, waitLoop);
         }
@@ -1445,6 +1451,14 @@ namespace MICore
         private void SendToTransport(string cmd)
         {
             _transport.Send(cmd);
+
+            // https://github.com/Microsoft/MIEngine/issues/616 :
+            // If it is local gdb (MinGW/Cygwin) on Windows, we need to send an extra line after commands 
+            // so that if it errors, the error will come through. 
+            if (this.SendNewLineAfterCmd)
+            {
+                _transport.Send(String.Empty);
+            }
         }
 
         public static ulong ParseAddr(string addr, bool throwOnError = false)
