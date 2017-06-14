@@ -286,18 +286,21 @@ namespace MICore
             this.ProcessState = ProcessState.Stopped;
             FlushBreakStateData();
 
-            if (!results.Contains("frame") && !_terminating)
+            if (!_terminating)
             {
-                if (ModuleLoadEvent != null)
+                if (!results.Contains("frame"))
                 {
-                    ModuleLoadEvent(this, new ResultEventArgs(results));
+                    if (ModuleLoadEvent != null)
+                    {
+                        ModuleLoadEvent(this, new ResultEventArgs(results));
+                    }
                 }
-            }
-            else if (BreakModeEvent != null)
-            {
-                BreakRequest request = _requestingRealAsyncBreak;
-                _requestingRealAsyncBreak = BreakRequest.None;
-                BreakModeEvent(this, new StoppingEventArgs(results, request));
+                else if (BreakModeEvent != null)
+                {
+                    BreakRequest request = _requestingRealAsyncBreak;
+                    _requestingRealAsyncBreak = BreakRequest.None;
+                    BreakModeEvent(this, new StoppingEventArgs(results, request));
+                }
             }
         }
 
