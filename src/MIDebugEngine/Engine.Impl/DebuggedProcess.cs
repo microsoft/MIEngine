@@ -753,7 +753,6 @@ namespace Microsoft.MIDebugEngine
             // If running locally on windows, determine if gdb is running from cygwin
             if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
             {
-                this.IsLocalGdbOnWindows = true;
                 // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
                 LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, (string resStr) =>
                 {
