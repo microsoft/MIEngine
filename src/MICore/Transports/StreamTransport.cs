@@ -147,6 +147,12 @@ namespace MICore
             lock (_locker)
             {
                 _writer?.WriteLine(cmd);
+                // https://github.com/Microsoft/MIEngine/issues/616 : If it is local gdb (MinGW/Cygwin) on Windows, we need to send an extra line after commands 
+                // so that if it errors, the error will come through. 
+                if((_callback is Debugger) && ((Debugger)_callback).IsLocalGdbOnWindows)
+                {
+                    _writer?.WriteLine();
+                }
                 _writer?.Flush();
             }
         }

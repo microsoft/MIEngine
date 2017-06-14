@@ -49,6 +49,8 @@ namespace MICore
 
         public bool IsCygwin { get; protected set; }
 
+        public bool IsLocalGdbOnWindows { get; protected set; }
+
         public virtual void FlushBreakStateData()
         {
         }

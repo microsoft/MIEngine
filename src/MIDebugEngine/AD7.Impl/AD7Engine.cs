@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using MICore;
 using System.Globalization;
 using Microsoft.DebugEngineHost;
-
 using Logger = MICore.Logger;
 
 namespace Microsoft.MIDebugEngine
@@ -761,6 +760,11 @@ namespace Microsoft.MIDebugEngine
             {
                 return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
             }
+            catch (Exception e)
+            {
+                _engineCallback.OnError(EngineUtils.GetExceptionDescription(e));
+                return Constants.E_ABORT;
+            }
 
             return Constants.S_OK;
         }
@@ -948,6 +952,11 @@ namespace Microsoft.MIDebugEngine
             catch (InvalidCoreDumpOperationException)
             {
                 return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+            }
+            catch (Exception e)
+            {
+                _engineCallback.OnError(EngineUtils.GetExceptionDescription(e));
+                return Constants.E_ABORT;
             }
 
             return Constants.S_OK;
