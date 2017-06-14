@@ -26,10 +26,13 @@
         <Disp Icon="Dir" LocTbl="false" />
         <Item ItemId=";(...) scription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
-            <Val><![CDATA[If true, failures from the command should be ignored. Defaults to false.]]></Val>
+            <Val><![CDATA[If true, failures from the command should be ignored. ]A;Defaults to false.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[如果为 true，应忽略此命令的失败。默认为 false。]]></Val>
+              <Val><![CDATA[如果为 true，应忽略此命令的失败。]A;默认为 false。]]></Val>
             </Tgt>
+            <Prev Cat="Text">
+              <Val><![CDATA[If true, failures from the command should be ignored. Defaults to false.]]></Val>
+            </Prev>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -125,10 +128,43 @@
         <Disp Icon="Dir" LocTbl="false" />
         <Item ItemId=";(...) ption" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
-            <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>
+            <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? If 'false', the debugger command will no longer be automatically quoted. ]A;Default is 'true'.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[如果单个参数包含字符(如空格或制表符)，是否应引用该字符? 默认为 "true"。如果设置为 false，将不再自动引用调试程序命令。]]></Val>
+              <Val><![CDATA[如果单个参数包含字符(如空格或制表符)，是否应进行引用? 如果设置为 false，将不再自动引用调试程序命令。]A;默认为 "true"。]]></Val>
             </Tgt>
+            <Prev Cat="Text">
+              <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>
+            </Prev>
+          </Str>
+          <Disp Icon="Str" />
+        </Item>
+      </Item>
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.properties.editorPath.descr" ItemType="0" PsrId="306" Leaf="false">
+        <Disp Icon="Dir" LocTbl="false" />
+        <Item ItemId=";(...) iption" ItemType="0" PsrId="306" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[The location of the source code for the editor to locate.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[要查找的编辑器的源代码的位置。]]></Val>
+            </Tgt>
+          </Str>
+          <Disp Icon="Str" />
+        </Item>
+      </Item>
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.properties.useForBreakpoint" ItemType="0" PsrId="306" Leaf="false">
+        <Disp Icon="Dir" LocTbl="false" />
+        <Item ItemId=";(...) s.description" ItemType="0" PsrId="306" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[When setting breakpoints, this source mapping should be used. ]A;If 'false', only the filename and line number is used for setting breakpoints. ]A;If 'true', breakpoints will be set with the full path to the file and line number only when this source mapping is used. Otherwise just filename and line number will be used when setting breakpoints. ]A;Default is 'true'.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[设置断点时，应使用此源映射。]A;如果为 "false"，仅文件名和行号用于设置断点。]A;如果为 "true"，仅当使用此源映射时，才使用文件和行号的完整路径来设置断点。否则设置断点时仅使用文件名和行号。]A;默认为 "true"。]]></Val>
+            </Tgt>
+          </Str>
+          <Disp Icon="Str" />
+        </Item>
+        <Item ItemId=";(...) s.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[boolean]]></Val>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -196,6 +232,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio ]A;and the MI-enabled debugger (such as gdb).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[如果存在，将告知调试程序使用其他可执行文件作为管道连接到远程计算机，此管道将在 Visual Studio ]A;和已启用 MI 的调试程序(如 gdb)之间中继标准输入/输入。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.debuggerPath.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
@@ -238,12 +283,27 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.properties.editorPath.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[string]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[object]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.MIMode.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. Allowed values are "gdb" "lldb".]]></Val>
+          <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. ]A;Allowed values are "gdb", "lldb".]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[指示 MIDebugEngine 将连接到的已启用 MI 的控制台调试程序的类型。允许的值为 "gdb" "lldb"。]]></Val>
+            <Val><![CDATA[指示 MIDebugEngine 将连接到的已启用 MI 的控制台调试程序的类型。]A;允许的值为 "gdb"、"lldb"。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. Allowed values are "gdb" "lldb".]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -276,10 +336,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.coreDumpPath.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional full path to a core dump file for the specified program. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional full path to a core dump file for the specified program. ]A;Defaults to null.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[指定程序的核心转储文件的可选完整路径。默认为 null。]]></Val>
+            <Val><![CDATA[指定的程序的核心转储文件的可选完整路径。]A;默认为 null。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional full path to a core dump file for the specified program. Defaults to null.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -291,10 +354,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.customLaunchSetupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. ]A;For example, this can be "-target-attach" in order to attach to a target process. ]A;An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. ]A;Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[如果已提供，将使用其他命令替换用于启动目标的默认命令。例如，附加到目标进程的命令可以为 "-target-attach"。如果是空命令列表，将不会用任何内容替换启动命令。此功能可在向调试程序提供启动选项作为命令行选项时很有用。示例: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;。]]></Val>
+            <Val><![CDATA[如果已提供，将使用其他命令替换用于启动目标的默认命令。]A;例如，附加到目标进程的命令可以为 "-target-attach"。]A;如果是空命令列表，将不会用任何内容替换启动命令。此功能可在向调试程序提供启动选项作为命令行选项时很有用。]A;示例: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -327,10 +393,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerArgs.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional debug server args. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional debug server args. ]A;Defaults to null.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[可选调试服务器参数。默认为 null。]]></Val>
+            <Val><![CDATA[可选调试服务器参数。]A;默认为 null。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional debug server args. Defaults to null.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -342,10 +411,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerPath.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional full path to debug server to launch. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional full path to debug server to launch. ]A;Defaults to null.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[要启动的调试服务器的可选完整路径。默认为 null。]]></Val>
+            <Val><![CDATA[要启动的调试服务器的可选完整路径。]A;默认为 null。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional full path to debug server to launch. Defaults to null.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -357,20 +429,23 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
+          <Val><![CDATA[Environment variables to add to the environment for the program. ]A;Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[要添加到程序环境的环境变量。示例: [ { "name": "squid", "value": "clam" } ]5D;。]]></Val>
+            <Val><![CDATA[要添加到程序环境的环境变量。]A;示例: [ { "name": "squid", "value": "clam" } ]5D;。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.value" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.value.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
@@ -390,10 +465,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.externalConsole.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
+          <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. ]A;Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[如果为 true，将对调试对象启动控制台。如果为 false，将不启动任何控制台。默认为 false。注意: 由于技术原因，在某些情况下将忽略此选项。]]></Val>
+            <Val><![CDATA[如果为 true，将对调试对象启动控制台。如果为 false，将不启动任何控制台。]A;默认为 false。注意: 由于技术原因，在某些情况下将忽略此选项。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -405,10 +483,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStderr.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false.]]></Val>
+          <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. ]A;Defaults to false.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[在 stderr 流中搜索服务器启动模式，并将 stderr 记录到调试输出。默认为 false。]]></Val>
+            <Val><![CDATA[在 stderr 流中搜索服务器启动模式，并将 stderr 记录到调试输出。]A;默认为 false。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -420,10 +501,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStdout.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true.]]></Val>
+          <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. ]A;Defaults to true.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[在 stdout 流中搜索服务器启动模式，并将 stdout 记录到默认输出。默认为 true。]]></Val>
+            <Val><![CDATA[在 stdout 流中搜索服务器启动模式，并将 stdout 记录到调试输出。]A;默认为 true。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -435,10 +519,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.launchCompleteCommand.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".]]></Val>
+          <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. ]A;Allowed values are "exec-run", "exec-continue", "None". ]A;The default value is "exec-run".]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[调试程序完全安装后，为了使目标进程运行而执行的命令。允许的值为 "exec-run"、"exec-continue"、"None"。默认值为 "exec-run"。]]></Val>
+            <Val><![CDATA[调试程序完全安装后，为了使目标进程运行而执行的命令。]A;允许的值为 "exec-run"、"exec-continue"、"None"。]A;默认值为 "exec-run"。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -483,10 +570,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.miDebuggerServerAddress.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. Example: localhost:1234.]]></Val>
+          <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. ]A;Example: localhost:1234.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[要连接到的已启动 MI 的调试程序服务器的网络地址。示例: localhost:1234。]]></Val>
+            <Val><![CDATA[要连接到的已启动 MI 的调试程序服务器的网络地址。]A;示例: localhost:1234。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. Example: localhost:1234.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -499,15 +589,6 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.pipeTransport.$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cpp_schema/definitions/pipeTransportOptions]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.pipeTransport.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio and the MI-enabled debugger (such as gdb).]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[如果存在，将告知调试程序使用其他可执行文件作为管道连接到远程计算机，此管道将在 Visual Studio 和已启用 MI 的调试程序(如 gdb)之间中继标准输入/输入。]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -558,10 +639,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.serverStarted.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional server-started pattern to look for in the debug server output. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional server-started pattern to look for in the debug server output. ]A;Defaults to null.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[要在调试服务器输出中查找的可选服务器启动模式。默认为 null。]]></Val>
+            <Val><![CDATA[要在调试服务器输出中查找的可选服务器启动模式。]A;默认为 null。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional server-started pattern to look for in the debug server output. Defaults to null.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -573,10 +657,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.setupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
+          <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. ]A;Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[为了安装基础调试程序而执行的一个或多个 GDB/LLDB 命令。示例: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;。]]></Val>
+            <Val><![CDATA[为了安装基础调试程序而执行的一个或多个 GDB/LLDB 命令。]A;示例: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -592,7 +679,13 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.additionalProperties.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.additionalProperties.anyOf.$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[#/definitions/cpp_schema/definitions/sourceFileMapOptions]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.additionalProperties.anyOf.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
@@ -600,10 +693,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
+          <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[传递给调试引擎的可选源文件映射。格式: '{ "编辑器源位置": "已编译的源位置" }'。示例: '{ "C:\foo": "/home/user/foo" }'。]]></Val>
+            <Val><![CDATA[传递给调试引擎的可选源文件映射。格式: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -615,10 +711,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.targetArchitecture.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
+          <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. ]A;Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[调试对象的体系结构。如果未设置此参数，将进行自动检测。允许的值有 x86、arm、arm64、mips、x64、amd64、x86_64。]]></Val>
+            <Val><![CDATA[调试对象的体系结构。如果未设置此参数，将进行自动检测。]A;允许的值有 x86、arm、arm64、mips、x64、amd64、x86_64。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -660,7 +759,16 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[1]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
+          <Val><![CDATA[*.out]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[2]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
           <Val><![CDATA[makefile]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[生成文件]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -726,7 +834,16 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[1]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
+          <Val><![CDATA[*.out]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[2]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
           <Val><![CDATA[makefile]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[生成文件]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

@@ -26,10 +26,13 @@
         <Disp Icon="Dir" LocTbl="false" />
         <Item ItemId=";(...) scription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
-            <Val><![CDATA[If true, failures from the command should be ignored. Defaults to false.]]></Val>
+            <Val><![CDATA[If true, failures from the command should be ignored. ]A;Defaults to false.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[Bei "true" werden durch den Befehl verursachte Fehler ignoriert. Der Standardwert ist "false".]]></Val>
+              <Val><![CDATA[Bei "true" werden durch den Befehl verursachte Fehler ignoriert. ]A;Der Standardwert ist "false".]]></Val>
             </Tgt>
+            <Prev Cat="Text">
+              <Val><![CDATA[If true, failures from the command should be ignored. Defaults to false.]]></Val>
+            </Prev>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -125,10 +128,40 @@
         <Disp Icon="Dir" LocTbl="false" />
         <Item ItemId=";(...) ption" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
-            <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>
+            <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? If 'false', the debugger command will no longer be automatically quoted. ]A;Default is 'true'.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[Gibt an, ob der Befehl in Anführungszeichen gesetzt wird, wenn einzelne Argumente Zeichen enthalten (z. B. Leerzeichen oder Tabstopps). Der Standardwert ist "true". Bei Einstellung auf "false" wird der Debuggerbefehl nicht mehr automatisch in Anführungszeichen gesetzt.]]></Val>
+              <Val><![CDATA[Gibt an, ob der Befehl in Anführungszeichen gesetzt wird, wenn einzelne Argumente Zeichen enthalten (z. B. Leerzeichen oder Tabstopps). Bei "false" wird der Debuggerbefehl nicht mehr automatisch in Anführungszeichen gesetzt. ]A;Der Standardwert ist "true".]]></Val>
             </Tgt>
+            <Prev Cat="Text">
+              <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>
+            </Prev>
+          </Str>
+          <Disp Icon="Str" />
+        </Item>
+      </Item>
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.properties.editorPath.descr" ItemType="0" PsrId="306" Leaf="false">
+        <Disp Icon="Dir" LocTbl="false" />
+        <Item ItemId=";(...) iption" ItemType="0" PsrId="306" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[The location of the source code for the editor to locate.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Der Speicherort des Quellcodes, den der Editor sucht.]]></Val>
+            </Tgt>
+          </Str>
+          <Disp Icon="Str" />
+        </Item>
+      </Item>
+      <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.properties.useForBreakpoint" ItemType="0" PsrId="306" Leaf="false">
+        <Disp Icon="Dir" LocTbl="false" />
+        <Item ItemId=";(...) s.description" ItemType="0" PsrId="306" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[When setting breakpoints, this source mapping should be used. ]A;If 'false', only the filename and line number is used for setting breakpoints. ]A;If 'true', breakpoints will be set with the full path to the file and line number only when this source mapping is used. Otherwise just filename and line number will be used when setting breakpoints. ]A;Default is 'true'.]]></Val>
+          </Str>
+          <Disp Icon="Str" />
+        </Item>
+        <Item ItemId=";(...) s.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+          <Str Cat="Text">
+            <Val><![CDATA[boolean]]></Val>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -196,6 +229,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio ]A;and the MI-enabled debugger (such as gdb).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Falls angegeben, weist diese Option den Debugger an, eine Verbindung mit einem Remotecomputer mithilfe einer anderen ausführbaren Datei als Pipe herzustellen, die Standardeingaben/-ausgaben zwischen Visual Studio ]A;und dem MI-fähigen Debugger weiterleitet (z. B. gdb).]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.debuggerPath.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
@@ -238,12 +280,27 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.properties.editorPath.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[string]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[object]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.MIMode.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. Allowed values are "gdb" "lldb".]]></Val>
+          <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. ]A;Allowed values are "gdb", "lldb".]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Gibt den Typ des MI-fähigen Konsolendebuggers an, mit dem MIDebugEngine eine Verbindung herstellt. Zulässige Werte sind "gdb" und "lldb".]]></Val>
+            <Val><![CDATA[Gibt den Typ des MI-fähigen Konsolendebuggers an, mit dem MIDebugEngine eine Verbindung herstellt. ]A;Zulässige Werte sind "gdb" und "lldb".]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. Allowed values are "gdb" "lldb".]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -276,10 +333,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.coreDumpPath.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional full path to a core dump file for the specified program. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional full path to a core dump file for the specified program. ]A;Defaults to null.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Optionaler vollständiger Pfad zu einer Kern-Speicherabbilddatei für das angegebene Programm. Der Standardwert ist "NULL".]]></Val>
+            <Val><![CDATA[Optionaler vollständiger Pfad zu einer Kern-Speicherabbilddatei für das angegebene Programm. ]A;Der Standardwert ist "NULL".]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional full path to a core dump file for the specified program. Defaults to null.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -291,10 +351,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.customLaunchSetupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. ]A;For example, this can be "-target-attach" in order to attach to a target process. ]A;An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. ]A;Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Wenn diese Option angegeben wird, werden die Standardbefehle zum Starten eines Ziels durch einige andere Befehle ersetzt. Zum Anfügen eines Zielprozesses kann dies z. B. "-target-attach" sein. Im Fall einer leeren Befehlsliste werden die Startbefehle durch nichts ersetzt. Dies kann nützlich sein, wenn für den Debugger Startoptionen als Befehlszeilenoptionen angegeben werden. Beispiel: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -327,7 +390,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerArgs.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional debug server args. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional debug server args. ]A;Defaults to null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Optionale Debugserverargumente. ]A;Der Standardwert ist "null".]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional debug server args. Defaults to null.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -339,7 +408,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerPath.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional full path to debug server to launch. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional full path to debug server to launch. ]A;Defaults to null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Optionaler vollständiger Pfad zum zu startenden Debugserver. ]A;Der Standardwert ist "null".]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional full path to debug server to launch. Defaults to null.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -351,20 +426,23 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
+          <Val><![CDATA[Environment variables to add to the environment for the program. ]A;Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Umgebungsvariablen, die der Umgebung für das Programm hinzugefügt werden sollen. Beispiel: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
+            <Val><![CDATA[Umgebungsvariablen, die der Umgebung für das Programm hinzugefügt werden sollen. ]A;Beispiel: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.value" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.value.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
@@ -384,10 +462,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.externalConsole.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
+          <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. ]A;Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Bei "true" wird eine Konsole für die zu debuggende Komponente gestartet. Bei "false" wird keine Konsole gestartet. Der Standardwert ist "false". HINWEIS: In manchen Fällen wird diese Option aus technischen Gründen ignoriert.]]></Val>
+            <Val><![CDATA[Bei "true" wird eine Konsole für die zu debuggende Komponente gestartet. Bei "false" wird keine Konsole gestartet. ]A;Der Standardwert ist "false". HINWEIS: In manchen Fällen wird diese Option aus technischen Gründen ignoriert.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -399,10 +480,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStderr.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false.]]></Val>
+          <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. ]A;Defaults to false.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[stderr-Stream für ein vom Server gestartetes Muster suchen und stderr in der Debugausgabe protokollieren. Der Standardwert ist "false".]]></Val>
+            <Val><![CDATA[stderr-Stream für ein vom Server gestartetes Muster suchen und stderr in der Debugausgabe protokollieren. ]A;Der Standardwert ist "false".]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -414,10 +498,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStdout.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true.]]></Val>
+          <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. ]A;Defaults to true.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[stdout-Stream für ein vom Server gestartetes Muster suchen und stdout in der Debugausgabe protokollieren. Der Standardwert ist "true".]]></Val>
+            <Val><![CDATA[stdout-Stream für ein vom Server gestartetes Muster suchen und stdout in der Debugausgabe protokollieren. ]A;Der Standardwert ist "true".]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -429,10 +516,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.launchCompleteCommand.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".]]></Val>
+          <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. ]A;Allowed values are "exec-run", "exec-continue", "None". ]A;The default value is "exec-run".]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Der Befehl, der nach der vollständigen Einrichtung des Debuggers ausgeführt wird, um den Zielprozess auszuführen. Zulässige Werte sind "exec-run", "exec-continue" und "None". Der Standardwert ist "exec-run".]]></Val>
+            <Val><![CDATA[Der Befehl, der nach der vollständigen Einrichtung des Debuggers ausgeführt wird, um den Zielprozess auszuführen. ]A;Zulässige Werte sind "exec-run", "exec-continue" und "None". ]A;Der Standardwert ist "exec-run".]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -477,10 +567,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.miDebuggerServerAddress.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. Example: localhost:1234.]]></Val>
+          <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. ]A;Example: localhost:1234.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Netzwerkadresse des MI-fähigen Debuggerservers, mit dem eine Verbindung hergestellt werden soll. Beispiel: localhost:1234.]]></Val>
+            <Val><![CDATA[Netzwerkadresse des MI-fähigen Debuggerservers, mit dem eine Verbindung hergestellt werden soll. ]A;Beispiel: localhost:1234.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. Example: localhost:1234.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -493,15 +586,6 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.pipeTransport.$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cpp_schema/definitions/pipeTransportOptions]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.pipeTransport.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio and the MI-enabled debugger (such as gdb).]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Falls angegeben, weist diese Option den Debugger an, eine Verbindung mit einem Remotecomputer mithilfe einer anderen ausführbaren Datei als Pipe herzustellen, die Standardeingaben/-ausgaben zwischen Visual Studio und dem MI-fähigen Debugger weiterleitet (z. B. gdb).]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -552,7 +636,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.serverStarted.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional server-started pattern to look for in the debug server output. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional server-started pattern to look for in the debug server output. ]A;Defaults to null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Optionales vom Server gestartetes Muster, nach dem in der Ausgabe des Debugservers gesucht wird. ]A;Der Standardwert ist "null".]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional server-started pattern to look for in the debug server output. Defaults to null.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -564,10 +654,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.setupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
+          <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. ]A;Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ein oder mehrere GDB/LLDB-Befehle, die zum Einrichten des zugrunde liegenden Debuggers ausgeführt werden. Beispiel: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
+            <Val><![CDATA[Mindestens ein GDB/LLDB-Befehl, der zum Einrichten des zugrunde liegenden Debuggers ausgeführt wird. ]A;Beispiel: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -583,7 +676,13 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.additionalProperties.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.additionalProperties.anyOf.$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[#/definitions/cpp_schema/definitions/sourceFileMapOptions]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.additionalProperties.anyOf.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
@@ -591,10 +690,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[Optionale Quelldateizuordnungen, die an das Debugmodul übergeben werden. Format: "{ "Editor-Quellort": "Ort der kompilierten Quelle" }". Beispiel: "{ "C:\foo": "/home/user/foo" }".]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -606,10 +708,13 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.targetArchitecture.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
+          <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. ]A;Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Die Architektur der zu debuggenden Komponente. Falls dieser Parameter nicht festgelegt ist, wird die Architektur automatisch erkannt. Zulässige Werte sind "x86", "arm", "arm64", "mips", "x64", "amd64" und "x86_64".]]></Val>
+            <Val><![CDATA[Die Architektur der zu debuggenden Komponente. Falls dieser Parameter nicht festgelegt ist, wird die Architektur automatisch erkannt. ]A;Zulässige Werte sind "x86", "arm", "arm64", "mips", "x64", "amd64" und "x86_64".]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -651,7 +756,16 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[1]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
+          <Val><![CDATA[*.out]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[2]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
           <Val><![CDATA[makefile]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Makefile]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -717,7 +831,16 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[1]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
+          <Val><![CDATA[*.out]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[2]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
           <Val><![CDATA[makefile]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Makefile]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

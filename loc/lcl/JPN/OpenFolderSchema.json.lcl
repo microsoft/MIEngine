@@ -292,6 +292,9 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.customLaunchSetupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[指定した場合、ターゲットを起動するために使われる既定のコマンドが、他のいくつかのコマンドに置き換えられます。たとえば、ターゲット プロセスにアタッチするためには、"-target-attach" と指定します。空のコマンド リストを指定すると、起動コマンドは何とも置き換えられません。これは、デバッガーにコマンド ライン オプションとして起動オプションが提供されている場合に便利です。例: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -502,6 +505,9 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.pipeTransport.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio and the MI-enabled debugger (such as gdb).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[これを指定した場合、デバッガーは、Visual Studio と MI 対応デバッガー (gdb など) の間で標準入力/出力をリレーするパイプとして別の実行可能ファイルを利用し、リモート コンピューターに接続します。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
