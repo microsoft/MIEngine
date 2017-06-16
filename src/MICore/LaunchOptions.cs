@@ -341,20 +341,24 @@ namespace MICore
             {
                 if (item.Value is String)
                 {
-                    sourceMaps.Add(new SourceMapEntry() {
+                    sourceMaps.Add(new SourceMapEntry()
+                    {
                         CompileTimePath = item.Key,
                         EditorPath = (String)item.Value,
-                        UseForBreakpoints = true });
+                        UseForBreakpoints = true
+                    });
                 }
                 else if (item.Value is JObject)
                 {
-                    Json.LaunchOptions.SourceFileMapOptions sourceMapItem = 
+                    Json.LaunchOptions.SourceFileMapOptions sourceMapItem =
                         ((JObject)item.Value).ToObject<Json.LaunchOptions.SourceFileMapOptions>();
-                    sourceMaps.Add(new SourceMapEntry() {
+                    sourceMaps.Add(new SourceMapEntry()
+                    {
                         CompileTimePath = item.Key,
                         EditorPath = sourceMapItem.EditorPath,
-                        UseForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true) });
-                }                
+                        UseForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true)
+                    });
+                }
                 else
                 {
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_SourceFileMapFormat, item.Key));
@@ -1109,9 +1113,10 @@ namespace MICore
         {
             get
             {
-                if (this is LocalLaunchOptions)
+                if (this is LocalLaunchOptions && PlatformUtilities.IsWindows())
                 {
-                    return !PlatformUtilities.IsWindows();
+                    // If MIDebuggerServerAddress is specified, then we also need to use Unix symbol paths
+                    return !String.IsNullOrWhiteSpace(((LocalLaunchOptions)this).MIDebuggerServerAddress);
                 }
                 else
                 {
