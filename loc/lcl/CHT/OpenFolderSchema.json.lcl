@@ -27,8 +27,8 @@
         <Item ItemId=";(...) scription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[If true, failures from the command should be ignored. ]A;Defaults to false.]]></Val>
-            <Tgt Cat="Text" Stat="Update" Orig="New">
-              <Val><![CDATA[若為 ture，應略過命令產生的失敗。預設為 false。]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[若為 ture，應略過命令產生的失敗。]A;預設為 false。]]></Val>
             </Tgt>
             <Prev Cat="Text">
               <Val><![CDATA[If true, failures from the command should be ignored. Defaults to false.]]></Val>
@@ -129,8 +129,8 @@
         <Item ItemId=";(...) ption" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? If 'false', the debugger command will no longer be automatically quoted. ]A;Default is 'true'.]]></Val>
-            <Tgt Cat="Text" Stat="Update" Orig="New">
-              <Val><![CDATA[若個別引數包含字元 (例如空格或定位字元)，是否應該加上引號? 預設為 'true'。若設定為 false，偵錯工具命令不會再自動加上引號。]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[若個別引數包含字元 (例如空格或定位字元)，是否應該加上引號? 若為 'false'，偵錯工具命令不會再自動加上引號。]A;預設為 'true'。]]></Val>
             </Tgt>
             <Prev Cat="Text">
               <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>
@@ -144,6 +144,9 @@
         <Item ItemId=";(...) iption" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[The location of the source code for the editor to locate.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[編輯器所要尋找原始程式碼的位置。]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -153,6 +156,9 @@
         <Item ItemId=";(...) s.description" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[When setting breakpoints, this source mapping should be used. ]A;If 'false', only the filename and line number is used for setting breakpoints. ]A;If 'true', breakpoints will be set with the full path to the file and line number only when this source mapping is used. Otherwise just filename and line number will be used when setting breakpoints. ]A;Default is 'true'.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[設定中斷點時，應使用此來源對應。]A;若為 'false'，只會使用檔案名稱及行號來設定中斷點。]A;若為 'true'，只會在有使用此來源對應的情況下，使用檔案的完整路徑及行號設定中斷點。否則設定中斷點時只會使用檔案名稱及行號。]A;預設為 'true'。]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -229,6 +235,9 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio ]A;and the MI-enabled debugger (such as gdb).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[有出現時，這會告知偵錯工具使用其他可執行檔作為管道來連線到遠端電腦，]A;該管道會在 Visual Studio 與已啟用 MI 的偵錯工具 (例如 gdb) 之間轉送標準輸入/輸出。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -289,8 +298,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.MIMode.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. ]A;Allowed values are "gdb", "lldb".]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[指出已啟用 MI 的主控台偵錯工具類型，這是 MIDebugEngine 的連線目標。允許的值為 "gdb" "lldb"。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[指出已啟用 MI 的主控台偵錯工具類型，這是 MIDebugEngine 的連線目標。]A;允許的值為 "gdb"、"lldb"。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. Allowed values are "gdb" "lldb".]]></Val>
@@ -328,8 +337,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.coreDumpPath.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Optional full path to a core dump file for the specified program. ]A;Defaults to null.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[指定程式的核心傾印檔案選擇性完整路徑。預設為 null。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[指定程式的核心傾印檔案選擇性完整路徑。]A;預設為 null。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Optional full path to a core dump file for the specified program. Defaults to null.]]></Val>
@@ -346,8 +355,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.customLaunchSetupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. ]A;For example, this can be "-target-attach" in order to attach to a target process. ]A;An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. ]A;Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[如有提供，這會以其他命令取代用於啟動目標的預設命令。舉例來說，這可以是 "-target-attach" 以附加到目標處理序。空的命令清單會將啟動命令取代為沒有任何項目，這在將啟動選項作為命令列選項提供給偵錯工具時相當實用。範例: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[如有提供，這會以其他命令取代用於啟動目標的預設命令。]A;舉例來說，這可以是 "-target-attach" 以附加到目標處理序。]A;空的命令清單會將啟動命令取代為沒有任何項目，這在將啟動選項作為命令列選項提供給偵錯工具時相當實用。]A;範例: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
@@ -385,8 +394,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerArgs.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Optional debug server args. ]A;Defaults to null.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[選擇性偵錯伺服器引數。預設為 null。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[選擇性偵錯伺服器引數。]A;預設為 null。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Optional debug server args. Defaults to null.]]></Val>
@@ -403,8 +412,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerPath.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Optional full path to debug server to launch. ]A;Defaults to null.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[要啟動的偵錯伺服器選擇性完整路徑。預設為 null。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[要啟動的偵錯伺服器選擇性完整路徑。]A;預設為 null。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Optional full path to debug server to launch. Defaults to null.]]></Val>
@@ -421,8 +430,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Environment variables to add to the environment for the program. ]A;Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[要新增至程式環境的環境變數。範例: [ { "name": "squid", "value": "clam" } ]5D;。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[要新增至程式環境的環境變數。]A;範例: [ { "name": "squid", "value": "clam" } ]5D;。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
@@ -457,8 +466,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.externalConsole.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. ]A;Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[若為 true，會為偵錯項目啟動主控台。若為 false，不會啟動主控台。預設為 false。注意: 基於技術問題，在某些情況下會略過這個選項。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[若為 true，會為偵錯項目啟動主控台。若為 false，不會啟動主控台。]A;預設為 false。注意: 基於技術問題，在某些情況下會略過這個選項。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
@@ -475,8 +484,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStderr.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. ]A;Defaults to false.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[搜尋 stderr 資料流以取得伺服器啟動的模式，並將 stderr 記錄到偵錯輸出。預設為 false。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[搜尋 stderr 資料流以取得伺服器啟動的模式，並將 stderr 記錄到偵錯輸出。]A;預設為 false。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false.]]></Val>
@@ -493,8 +502,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStdout.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. ]A;Defaults to true.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[搜尋 stdout 資料流以取得伺服器啟動的模式，並將 stdout 記錄到偵錯輸出。預設為 true。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[搜尋 stdout 資料流以取得伺服器啟動的模式，並將 stdout 記錄到偵錯輸出。]A;預設為 true。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true.]]></Val>
@@ -511,8 +520,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.launchCompleteCommand.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. ]A;Allowed values are "exec-run", "exec-continue", "None". ]A;The default value is "exec-run".]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[為了讓目標處理序執行，而要在偵錯工具完全設定後執行的命令。允許的值為 "exec-run"、"exec-continue" 及 "None"。預設值為 "exec-run"。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[為了讓目標處理序執行，而要在偵錯工具完全設定後執行的命令。]A;允許的值為 "exec-run"、"exec-continue" 及 "None"。]A;預設值為 "exec-run"。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".]]></Val>
@@ -562,8 +571,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.miDebuggerServerAddress.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. ]A;Example: localhost:1234.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[已啟用 MI 的偵錯工具伺服器要連線的目標網路位址。範例: localhost:1234。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[已啟用 MI 的偵錯工具伺服器要連線的目標網路位址。]A;範例: localhost:1234。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. Example: localhost:1234.]]></Val>
@@ -631,8 +640,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.serverStarted.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Optional server-started pattern to look for in the debug server output. ]A;Defaults to null.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[要在偵錯伺服器輸出中尋找的選擇性伺服器啟動模式。預設為 null。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[要在偵錯伺服器輸出中尋找的選擇性伺服器啟動模式。]A;預設為 null。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Optional server-started pattern to look for in the debug server output. Defaults to null.]]></Val>
@@ -649,8 +658,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.setupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. ]A;Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[為了安裝基礎偵錯工具而要執行的一或多個 GDB/LLDB 命令。範例: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[為了安裝基礎偵錯工具而要執行的一或多個 GDB/LLDB 命令。]A;範例: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
@@ -685,8 +694,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[傳遞至偵錯引擎的選擇性來源檔案對應。格式: '{ "編輯器來源位置": "編譯的來源位置" }'。範例: '{ "C:\foo": "/home/user/foo" }'。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[傳遞至偵錯引擎的選擇性來源檔案對應。格式 : '{ "<編譯器來源位置>": "<編輯器來源位置>" }' 或 '{ "<編譯器來源位置>": { "editorPath": "<編輯器來源位置>", "useForBreakpoints": true } }'。]A;範例: '{ "/home/user/foo": "C:\foo" }' 或 '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
@@ -703,8 +712,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.targetArchitecture.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. ]A;Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[偵錯項目的架構。除非設定此參數，否則將會受到自動偵測。允許的值為 x86、arm、arm64、mips、x64、amd64 及 x86_64。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[偵錯項目的架構。除非設定此參數，否則將會受到自動偵測。]A;允許的值為 x86、arm、arm64、mips、x64、amd64 及 x86_64。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>

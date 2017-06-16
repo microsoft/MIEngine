@@ -156,6 +156,9 @@
         <Item ItemId=";(...) s.description" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[When setting breakpoints, this source mapping should be used. ]A;If 'false', only the filename and line number is used for setting breakpoints. ]A;If 'true', breakpoints will be set with the full path to the file and line number only when this source mapping is used. Otherwise just filename and line number will be used when setting breakpoints. ]A;Default is 'true'.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Beim Festlegen von Haltepunkten sollte diese Quellzuordnung verwendet werden. ]A;Bei "false" werden nur der Dateiname und die Zeilennummer zum Festlegen von Haltepunkten verwendet. ]A;Bei "true" werden Haltepunkte nur dann mit dem vollständigen Pfad zur Datei und zur Zeilennummer festgelegt, wenn diese Quellzuordnung verwendet wird. Andernfalls werden nur der Dateiname und die Zeilennummer beim Festlegen von Haltepunkten verwendet. ]A;Der Standardwert ist "true".]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -352,8 +355,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.customLaunchSetupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. ]A;For example, this can be "-target-attach" in order to attach to a target process. ]A;An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. ]A;Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Wenn diese Option angegeben wird, werden die Standardbefehle zum Starten eines Ziels durch einige andere Befehle ersetzt. Zum Anfügen eines Zielprozesses kann dies z. B. "-target-attach" sein. Im Fall einer leeren Befehlsliste werden die Startbefehle durch nichts ersetzt. Dies kann nützlich sein, wenn für den Debugger Startoptionen als Befehlszeilenoptionen angegeben werden. Beispiel: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wenn diese Option angegeben ist, werden die Standardbefehle zum Starten eines Ziels durch einige andere Befehle ersetzt. ]A;Zum Anfügen eines Zielprozesses kann dies z. B. "-target-attach" sein. ]A;Im Fall einer leeren Befehlsliste werden die Startbefehle durch nichts ersetzt. Dies kann nützlich sein, wenn für den Debugger Startoptionen als Befehlszeilenoptionen angegeben werden. ]A;Beispiel: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
@@ -691,8 +694,8 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Optionale Quelldateizuordnungen, die an das Debugmodul übergeben werden. Format: "{ "Editor-Quellort": "Ort der kompilierten Quelle" }". Beispiel: "{ "C:\foo": "/home/user/foo" }".]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Optionale Quelldateizuordnungen, die an das Debugmodul übergeben werden. Format: "{ "<Compiler source location>": "<Editor source location>" }" ODER "{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }". ]A;Beispiel: "{ "/home/user/foo": "C:\foo" }" ODER "{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }".]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
