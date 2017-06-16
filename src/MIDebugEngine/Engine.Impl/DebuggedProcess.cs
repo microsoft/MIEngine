@@ -401,7 +401,7 @@ namespace Microsoft.MIDebugEngine
                     await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
                     _childProcessHandler?.ThreadCreatedEvent(result.Results);
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     // Avoid crashing VS
                 }
@@ -1059,6 +1059,9 @@ namespace Microsoft.MIDebugEngine
                         // LLDB requires this command to be issued after the process has started.
                         await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
                     }
+
+                    // Delete the entry point breakpoint
+                    await MICommandFactory.BreakDelete(bkptno);
 
                     _callback.OnEntryPoint(thread);
                 }
