@@ -1248,9 +1248,10 @@ namespace Microsoft.MIDebugEngine
         {
             get { return _worker; }
         }
+
         internal string EscapePath(string path, bool ignoreSpaces = false)
         {
-            if (_launchOptions.UseUnixSymbolPaths)
+            if (this.UseUnixSymbolPaths)
             {
                 path = path.Replace('\\', '/');
             }
