@@ -49,6 +49,7 @@ namespace Microsoft.MIDebugEngine
         private bool _needTerminalReset;
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _childProcessHandler;
+        private bool _deleteEntryPointBreakpoint;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
@@ -59,6 +60,7 @@ namespace Microsoft.MIDebugEngine
             Engine = engine;
             _libraryLoaded = new List<string>();
             _loadOrder = 0;
+            _deleteEntryPointBreakpoint = false;
             MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
             _waitDialog = (MICommandFactory.SupportsStopOnDynamicLibLoad() && launchOptions.WaitDynamicLibLoad) ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
             Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString);
@@ -724,6 +726,7 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
+                    this._deleteEntryPointBreakpoint = true;
 
                     if (null != localLaunchOptions)
                     {
@@ -1030,6 +1033,15 @@ namespace Microsoft.MIDebugEngine
                 bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
+
+                // If we haven't deleted the entrypoint bp and we can't find a bp, then we assume this is the breakpoint.
+                if (this._deleteEntryPointBreakpoint && bkpt == null)
+                {
+                    // Delete what we think is the entry point breakpoint
+                    await MICommandFactory.BreakDelete(bkptno);
+                    this._deleteEntryPointBreakpoint = false;
+                }
+
                 if (bkpt != null)
                 {
                     if (frame != null && addr != 0)
@@ -1041,8 +1053,12 @@ namespace Microsoft.MIDebugEngine
                         }
                     }
 
-                    // Hitting a bp before the entrypoint overrules entrypoint processing.
-                    this.EntrypointHit = true;
+                    if (!this.EntrypointHit)
+                    {
+                        // Hitting a bp before the entrypoint overrules entrypoint processing.
+                        this.EntrypointHit = true;
+                        this.OnFirstBreakpointHit();
+                    }
 
                     List<object> bplist = new List<object>();
                     bplist.AddRange(bkpt);
@@ -1051,17 +1067,7 @@ namespace Microsoft.MIDebugEngine
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
-
-                    if (this.MICommandFactory.Mode == MIMode.Lldb)
-                    {
-                        // When the terminal window is closed, a SIGHUP is sent to lldb-mi and LLDB's default is to stop.
-                        // We want to not stop (break) when this happens and the SIGHUP to be sent to the debuggee process.
-                        // LLDB requires this command to be issued after the process has started.
-                        await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
-                    }
-
-                    // Delete the entry point breakpoint
-                    await MICommandFactory.BreakDelete(bkptno);
+                    this.OnFirstBreakpointHit();
 
                     _callback.OnEntryPoint(thread);
                 }
@@ -1185,6 +1191,20 @@ namespace Microsoft.MIDebugEngine
             if (IsExternalBreakRequest(breakRequest))
             {
                 _callback.OnStopComplete(thread);
+            }
+        }
+
+        /// <summary>
+        /// Tasks to run when the first breakpoint is hit.
+        /// </summary>
+        private async void OnFirstBreakpointHit()
+        {
+            if (this.MICommandFactory.Mode == MIMode.Lldb)
+            {
+                // When the terminal window is closed, a SIGHUP is sent to lldb-mi and LLDB's default is to stop.
+                // We want to not stop (break) when this happens and the SIGHUP to be sent to the debuggee process.
+                // LLDB requires this command to be issued after the process has started.
+                await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
             }
         }
 
