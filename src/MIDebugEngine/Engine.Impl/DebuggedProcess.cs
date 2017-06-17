@@ -567,7 +567,7 @@ namespace Microsoft.MIDebugEngine
 
             // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
             string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
-            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
+            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapeSymbolPath(path, ignoreSpaces: true)));
             if (!string.IsNullOrWhiteSpace(escapedSearchPath))
             {
                 if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
@@ -624,7 +624,7 @@ namespace Microsoft.MIDebugEngine
                     this.AddGetTargetArchitectureCommand(commands);
 
                     // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
-                    string coreDump = _launchOptions.UseUnixSymbolPaths ? _launchOptions.CoreDumpPath : EscapePath(_launchOptions.CoreDumpPath);
+                    string coreDump = this.UseUnixPathSeparators ? _launchOptions.CoreDumpPath : this.EscapePath(_launchOptions.CoreDumpPath);
                     string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
@@ -692,7 +692,7 @@ namespace Microsoft.MIDebugEngine
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
-                        string escapedDir = EscapePath(_launchOptions.WorkingDirectory);
+                        string escapedDir = this.EscapePath(_launchOptions.WorkingDirectory);
                         commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
 
@@ -777,7 +777,7 @@ namespace Microsoft.MIDebugEngine
 
         private void AddExecutablePathCommand(IList<LaunchCommand> commands)
         {
-            string exe = EscapePath(_launchOptions.ExePath);
+            string exe = this.EscapePath(_launchOptions.ExePath);
             string description = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath);
 
             Action<string> failureHandler = (string miError) =>
@@ -1249,7 +1249,22 @@ namespace Microsoft.MIDebugEngine
             get { return _worker; }
         }
 
-        internal string EscapePath(string path, bool ignoreSpaces = false)
+        internal string EscapePath(string path)
+        {
+            if (this.UseUnixPathSeparators)
+            {
+                path = path.Replace('\\', '/');
+            }
+            else
+            {
+                path = path.Trim();
+                path = path.Replace(@"\", @"\\");
+            }
+
+            return path;
+        }
+
+        internal string EscapeSymbolPath(string path, bool ignoreSpaces = false)
         {
             if (this.UseUnixSymbolPaths)
             {
@@ -1266,6 +1281,24 @@ namespace Microsoft.MIDebugEngine
                 path = '"' + path + '"';
             }
             return path;
+        }
+
+        internal bool UseUnixPathSeparators
+        {
+            get
+            {
+                if (PlatformUtilities.IsWindows())
+                {
+                    if (_launchOptions is LocalLaunchOptions)
+                    {
+                        // If MIDebuggerServerAddress is specified, then we also need to use Unix symbol paths
+                        return !String.IsNullOrWhiteSpace(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress);
+
+                    }
+                }
+
+                return true;
+            }
         }
 
         internal bool UseUnixSymbolPaths { get { return _launchOptions.UseUnixSymbolPaths; } }

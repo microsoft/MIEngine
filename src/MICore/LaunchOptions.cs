@@ -1113,10 +1113,9 @@ namespace MICore
         {
             get
             {
-                if (this is LocalLaunchOptions && PlatformUtilities.IsWindows())
+                if (this is LocalLaunchOptions)
                 {
-                    // If MIDebuggerServerAddress is specified, then we also need to use Unix symbol paths
-                    return !String.IsNullOrWhiteSpace(((LocalLaunchOptions)this).MIDebuggerServerAddress);
+                    return !PlatformUtilities.IsWindows();
                 }
                 else
                 {
