@@ -49,6 +49,8 @@ namespace MICore
 
         public bool IsCygwin { get; protected set; }
 
+        public bool SendNewLineAfterCmd { get; protected set; }
+
         public virtual void FlushBreakStateData()
         {
         }
@@ -284,18 +286,21 @@ namespace MICore
             this.ProcessState = ProcessState.Stopped;
             FlushBreakStateData();
 
-            if (!results.Contains("frame") && !_terminating)
+            if (!_terminating)
             {
-                if (ModuleLoadEvent != null)
+                if (!results.Contains("frame"))
                 {
-                    ModuleLoadEvent(this, new ResultEventArgs(results));
+                    if (ModuleLoadEvent != null)
+                    {
+                        ModuleLoadEvent(this, new ResultEventArgs(results));
+                    }
                 }
-            }
-            else if (BreakModeEvent != null)
-            {
-                BreakRequest request = _requestingRealAsyncBreak;
-                _requestingRealAsyncBreak = BreakRequest.None;
-                BreakModeEvent(this, new StoppingEventArgs(results, request));
+                else if (BreakModeEvent != null)
+                {
+                    BreakRequest request = _requestingRealAsyncBreak;
+                    _requestingRealAsyncBreak = BreakRequest.None;
+                    BreakModeEvent(this, new StoppingEventArgs(results, request));
+                }
             }
         }
 
@@ -419,6 +424,10 @@ namespace MICore
             _lastCommandId = 1000;
             _transport = transport;
             FlushBreakStateData();
+
+            this.SendNewLineAfterCmd = (options is LocalLaunchOptions &&
+                PlatformUtilities.IsWindows() &&
+                this.MICommandFactory.Mode == MIMode.Gdb);
 
             _transport.Init(this, options, Logger, waitLoop);
         }
@@ -1445,6 +1454,14 @@ namespace MICore
         private void SendToTransport(string cmd)
         {
             _transport.Send(cmd);
+
+            // https://github.com/Microsoft/MIEngine/issues/616 :
+            // If it is local gdb (MinGW/Cygwin) on Windows, we need to send an extra line after commands 
+            // so that if it errors, the error will come through. 
+            if (this.SendNewLineAfterCmd)
+            {
+                _transport.Send(String.Empty);
+            }
         }
 
         public static ulong ParseAddr(string addr, bool throwOnError = false)

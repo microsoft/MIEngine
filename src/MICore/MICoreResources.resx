@@ -280,4 +280,12 @@ Error: {1}</value>
     <comment>{0} pipe program
 {1} error message</comment>
   </data>
+  <data name="Error_SourceFileMapFormat" xml:space="preserve">
+    <value>The format of source file map entry '{0}' is incorrect.  </value>
+    <comment>{0} source file map entry</comment>
+  </data>
+  <data name="Error_InvalidLaunchCompleteCommandValue" xml:space="preserve">
+    <value>Unknown launchCompleteCommand value '{0}'. Expected values are 'exec-run', 'exec-continue' and 'None'.</value>
+    <comment>{0} value</comment>
+  </data>
 </root>

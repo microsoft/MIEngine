@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="OpenFolderSchema.json" PsrId="306" FileType="1" SrcCul="en-US" Desc="Commenting file created by LCXAdmin. For more information, please visit http://localizability/longhorn/LcxAdmin.asp" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="E:\A\_work\17\s\bin\Lab.Release\OpenFolderSchema.json" PsrId="306" FileType="1" SrcCul="en-US" TgtCul="es-ES" Desc="Commenting file created by LCXAdmin. For more information, please visit http://localizability/longhorn/LcxAdmin.asp" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
@@ -15,6 +15,9 @@
         <Item ItemId=";(...) iption" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[Optional description for the command.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Descripción opcional del comando.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -23,7 +26,10 @@
         <Disp Icon="Dir" LocTbl="false" />
         <Item ItemId=";(...) scription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
-            <Val><![CDATA[If true, failures from the command should be ignored. Defaults to false.]]></Val>
+            <Val><![CDATA[If true, failures from the command should be ignored. ]A;Defaults to false.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Si es true, los errores del comando deben omitirse. ]A;El valor predeterminado es false.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -35,9 +41,6 @@
             <Val><![CDATA[boolean]]></Val>
           </Str>
           <Disp Icon="Str" />
-          <Cmts>
-            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-          </Cmts>
         </Item>
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.debuggerPath.des" ItemType="0" PsrId="306" Leaf="false">
@@ -45,6 +48,9 @@
         <Item ItemId=";(...) cription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[The full path to the debugger on the target machine, for example /usr/bin/gdb.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Ruta de acceso completa al depurador en la máquina de destino. Por ejemplo, /usr/bin/gdb.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -54,6 +60,9 @@
         <Item ItemId=";(...) tion" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[Command line arguments passed to the pipe program to configure the connection.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Argumentos de la línea de comandos que se pasan al programa de canalización para configurar la conexión.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -65,9 +74,6 @@
             <Val><![CDATA[string]]></Val>
           </Str>
           <Disp Icon="Str" />
-          <Cmts>
-            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-          </Cmts>
         </Item>
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeCwd.descript" ItemType="0" PsrId="306" Leaf="false">
@@ -75,23 +81,20 @@
         <Item ItemId=";(...) ion" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[The fully qualified path to the working directory for the pipe program.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Ruta de acceso completa al directorio de trabajo del programa de canalización.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.addition" ItemType="0" PsrId="306" InstFlg="true" Leaf="false">
         <Disp Icon="Dir" LocTbl="false" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
         <Item ItemId=";(...) alProperties.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[string]]></Val>
           </Str>
           <Disp Icon="Str" />
-          <Cmts>
-            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-          </Cmts>
         </Item>
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.descript" ItemType="0" PsrId="306" Leaf="false">
@@ -99,6 +102,9 @@
         <Item ItemId=";(...) ion" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[Environment variables passed to the pipe program.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Variables de entorno que se pasan al programa de canalización.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -108,6 +114,9 @@
         <Item ItemId=";(...) ription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[The fully qualified pipe command to execute.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Comando de canalización completo para ejecutar.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -116,7 +125,10 @@
         <Disp Icon="Dir" LocTbl="false" />
         <Item ItemId=";(...) ption" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
-            <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>
+            <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? If 'false', the debugger command will no longer be automatically quoted. ]A;Default is 'true'.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Si los argumentos individuales contienen caracteres (como espacios o tabulaciones), ¿debe incluirse entre comillas? Si es "false", el comando del depurador dejará de incluirse entre comillas automáticamente. ]A;El valor predeterminado es "true".]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -126,6 +138,9 @@
         <Item ItemId=";(...) iption" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[The location of the source code for the editor to locate.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Ubicación del código fuente que debe encontrarse para el editor.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -134,18 +149,18 @@
         <Disp Icon="Dir" LocTbl="false" />
         <Item ItemId=";(...) s.description" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
-            <Val><![CDATA[Use this source mapping for breakpoint binding? Default is true.]]></Val>
+            <Val><![CDATA[When setting breakpoints, this source mapping should be used. ]A;If 'false', only the filename and line number is used for setting breakpoints. ]A;If 'true', breakpoints will be set with the full path to the file and line number only when this source mapping is used. Otherwise just filename and line number will be used when setting breakpoints. ]A;Default is 'true'.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Al establecer puntos de interrupción, se debe usar esta asignación de origen. ]A;Si es "false", solo se usan el nombre de archivo y el número de línea para establecer los puntos de interrupción. ]A;Si es "true", los puntos de interrupción se establecen con la ruta de acceso completa al archivo y el número de línea, solo cuando se usa esta asignación de origen. De lo contrario, solo se usan el nombre de archivo y el número de línea al establecer los puntos de interrupción. ]A;El valor predeterminado es "true".]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
-        <Item ItemId=";(...) s.type" ItemType="0" PsrId="306" Leaf="true">
+        <Item ItemId=";(...) s.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[boolean]]></Val>
           </Str>
           <Disp Icon="Str" />
-          <Cmts>
-            <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-          </Cmts>
         </Item>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.VsDebugTargetInfo4.bstrCurDir" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
@@ -153,67 +168,49 @@
           <Val><![CDATA[${workspaceRoot}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.VsDebugTargetInfo4.bstrExe" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${debugInfo.target}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.VsDebugTargetInfo4.bstrOptions" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[*]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.configuration" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cppTemplateLayout]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cppTemplateLayout.allOf[0].$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/default]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cppTemplateLayout.allOf[1].$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cpp_schema]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.launchSetupCommands.properties.description.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.launchSetupCommands.properties.text.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The debugger command to execute.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Comando del depurador para ejecutar.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -222,121 +219,97 @@
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.launchSetupCommands.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio ]A;and the MI-enabled debugger (such as gdb).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cuando está presente, indica al depurador que se conecte a un equipo remoto, con otro ejecutable como canalización, que transmita la entrada o salida estándar entre Visual Studio ]A;y el depurador habilitado para MI (como gdb).]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.debuggerPath.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeArgs.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[array]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeCwd.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeEnv.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeProgram.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.quoteArgs.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[boolean]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.properties.editorPath.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.sourceFileMapOptions.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.MIMode.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. Allowed values are "gdb" "lldb".]]></Val>
+          <Val><![CDATA[Indicates the type of MI-enabled console debugger that the MIDebugEngine will connect to. ]A;Allowed values are "gdb", "lldb".]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Indica el tipo de depurador de consola habilitado para MI al que MIDebugEngine se conectará. ]A;Los valores permitidos son "gdb" y "lldb".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="gdb"} {Locked="lldb"} {Locked="MIDebugEngine"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.MIMode.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.args.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Command line arguments passed to the program.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Argumentos de la línea de comandos que se pasan al programa.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -345,22 +318,19 @@
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.args.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[array]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.coreDumpPath.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional full path to a core dump file for the specified program. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional full path to a core dump file for the specified program. ]A;Defaults to null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ruta de acceso completa opcional a un archivo de volcado de memoria básico para el programa especificado. ]A;El valor predeterminado es null.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -369,40 +339,34 @@
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.customLaunchSetupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. ]A;For example, this can be "-target-attach" in order to attach to a target process. ]A;An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. ]A;Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Si se proporciona, se reemplazan los comandos predeterminados que se usan para iniciar un destino por otros comandos. ]A;Por ejemplo, puede ser "-target-attach" para asociar a un proceso de destino. ]A;Una lista de comandos vacía reemplaza los comandos de inicio por un valor vacío, lo que puede ser útil si el depurador ha proporcionado opciones de inicio como opciones de la línea de comandos. ]A;Ejemplo: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="\"-target-attach"} {Locked="\"customLaunchSetupCommands\": [ { \"text\": \"target-run\", \"description\": \"run target\", \"ignoreFailures\": false }]5D;"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.customLaunchSetupCommands.items.$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cpp_schema/definitions/launchSetupCommands]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.customLaunchSetupCommands.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[array]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.cwd.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The working directory of the target.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Directorio de trabajo del destino.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -411,247 +375,190 @@
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerArgs.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional debug server args. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional debug server args. ]A;Defaults to null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Argumentos opcionales del servidor de depuración. ]A;El valor predeterminado es null.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="null"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerArgs.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerPath.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional full path to debug server to launch. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional full path to debug server to launch. ]A;Defaults to null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ruta de acceso completa opcional al servidor de depuración que se va a iniciar. ]A;El valor predeterminado es null.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="null"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debugServerPath.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
+          <Val><![CDATA[Environment variables to add to the environment for the program. ]A;Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Variables de entorno para agregar al entorno del programa. ]A;Ejemplo: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="[ { \"name\": \"squid\", \"value\": \"clam\" } ]5D;"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.name.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.properties.value.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.items.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[array]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.externalConsole.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
+          <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. ]A;Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Si es true, se inicia una consola para el depurado. Si es false, no se inicia ninguna consola. ]A;El valor predeterminado es false. NOTA: Esta opción se omite en algunos casos por motivos técnicos.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="false"} {Locked="true"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.externalConsole.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[boolean]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStderr.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. Defaults to false.]]></Val>
+          <Val><![CDATA[Search stderr stream for server-started pattern and log stderr to debug output. ]A;Defaults to false.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Busca la secuencia stderr para el patrón iniciado por el servidor y registra stderr en la salida de depuración. ]A;El valor predeterminado es false.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="stderr"} {Locked="false"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStderr.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[boolean]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStdout.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. Defaults to true.]]></Val>
+          <Val><![CDATA[Search stdout stream for server-started pattern and log stdout to debug output. ]A;Defaults to true.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Busca la secuencia stdout para el patrón iniciado por el servidor y registra stdout en la salida de depuración. ]A;El valor predeterminado es true.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="stdout"} {Locked="true"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.filterStdout.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[boolean]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.launchCompleteCommand.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".]]></Val>
+          <Val><![CDATA[The command to execute after the debugger is fully setup in order to cause the target process to run. ]A;Allowed values are "exec-run", "exec-continue", "None". ]A;The default value is "exec-run".]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Comando que debe ejecutarse una vez que el depurador se ha configurado por completo para hacer que se ejecute el proceso de destino. ]A;Los valores permitidos son "exec-run", "exec-continue", "None". ]A;El valor predeterminado es "exec-run".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="exec-run"} {Locked="exec-continue"} {Locked="None"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.launchCompleteCommand.enum[0]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[exec-run]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.launchCompleteCommand.enum[1]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[exec-continue]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.launchCompleteCommand.enum[2]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[None]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.launchCompleteCommand.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.miDebuggerPath.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The path to the MI-enabled debugger (such as gdb). When unspecified, it will search PATH first for the debugger.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ruta de acceso al depurador habilitado para MI (como gdb). Si no se especifica, se busca primero el depurador en PATH.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="PATH"} {Locked="gdb"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.miDebuggerPath.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.miDebuggerServerAddress.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. Example: localhost:1234.]]></Val>
+          <Val><![CDATA[Network address of the MI-enabled debugger server to connect to. ]A;Example: localhost:1234.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Dirección de red del servidor del depurador habilitado para MI al que conectarse. ]A;Ejemplo: localhost:1234.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked=": localhost:1234"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.miDebuggerServerAddress.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.pipeTransport.$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cpp_schema/definitions/pipeTransportOptions]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
-      </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.pipeTransport.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio and the MI-enabled debugger (such as gdb).]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="gdb"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.processId.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Optional process id to attach the debugger to.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Identificador del proceso opcional al que se va a asociar el depurador.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -660,13 +567,13 @@
           <Val><![CDATA[integer]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.program.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Full path to program executable.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ruta de acceso completa al ejecutable del programa.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -675,333 +582,267 @@
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.serverLaunchTimeout.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Optional time, in milliseconds, for the debugger to wait for the debugServer to start up. Default is 10000.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Tiempo opcional, en milisegundos, que el depurador debe esperar a que se inicie debugServer. El valor predeterminado es 10000.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="debugServer"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.serverLaunchTimeout.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[integer]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.serverStarted.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional server-started pattern to look for in the debug server output. Defaults to null.]]></Val>
+          <Val><![CDATA[Optional server-started pattern to look for in the debug server output. ]A;Defaults to null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Patrón opcional iniciado por el servidor para buscar en la salida del servidor de depuración. ]A;El valor predeterminado es null.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="null"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.serverStarted.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.setupCommands.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
+          <Val><![CDATA[One or more GDB/LLDB commands to execute in order to setup the underlying debugger. ]A;Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Uno o varios comandos GDB/LLDB que deben ejecutarse para configurar el depurador subyacente. ]A;Ejemplo: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }]5D;.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="\"setupCommands\": [ { \"text\": \"-enable-pretty-printing\", \"description\": \"Enable GDB pretty printing\", \"ignoreFailures\": true }]5D;"} {Locked="GDB/LLDB"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.setupCommands.items.$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cpp_schema/definitions/launchSetupCommands]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.setupCommands.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[array]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.additionalProperties.anyOf.$ref" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cpp_schema/definitions/sourceFileMapOptions]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.additionalProperties.anyOf.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
+          <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Asignaciones de archivo de código fuente opcionales que se pasan al motor de depuración. Formato: "{ "<Ubicación de origen del compilador>": "<Ubicación de origen del editor>" }" O "{ "<Ubicación de origen del compilador>": { "editorPath": "<Ubicación de origen del editor>", "useForBreakpoints": true } }". ]A;Ejemplo: "{ "/home/user/foo": "C:\foo" }" O "{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="\"C:\foo\""} {Locked="\"/home/user/foo\""}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.sourceFileMap.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.targetArchitecture.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
+          <Val><![CDATA[The architecture of the debuggee. This will automatically be detected unless this parameter is set. ]A;Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Arquitectura del depurado. Se detectará automáticamente, a menos que se haya establecido este parámetro. ]A;Los valores permitidos son x86, arm, arm64, mips, x64, amd64 y x86_64.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="arm64"} {Locked="mips"} {Locked="x64"} {Locked="amd64"} {Locked="x86_64"} {Locked="x86"} {Locked="arm"} ]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.targetArchitecture.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[string]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debug launch configuration for C/C++ hosted in MinGW or Cygwin.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Configuración de inicio de depuración para C/C++ que se hospeda en MinGW o Cygwin.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="MinGW"} {Locked="Cygwin"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].displayName" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[C/C++ Launch for MinGW/Cygwin (gdb)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inicio de C/C++ para MinGW/Cygwin (gdb)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="MinGW"} {Locked="Cygwin"} {Locked="gdb"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[0]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[*.exe]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[1]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[makefile]]></Val>
+          <Val><![CDATA[*.out]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[2]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[makefile]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Archivo Make]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.MIMode" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[gdb]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.cwd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${workspaceRoot}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.externalConsole" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[True]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.miDebuggerPath" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${env.MINGW_PREFIX}\bin\gdb.exe]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.program" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${debugInfo.target}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].templateId" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[launch]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debug attach configuration for C/C++ hosted in MinGW or Cygwin.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Configuración de asociación de depuración para C/C++ que se hospeda en MinGW o Cygwin.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="MinGW"} {Locked="Cygwin"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].displayName" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[C/C++ Attach for MinGW/Cygwin (gdb)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Asociación de C/C++ para MinGW/Cygwin (gdb)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked="Cygwin"} {Locked="MinGW"} {Locked="gdb"}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[0]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[*.exe]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[1]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[makefile]]></Val>
+          <Val><![CDATA[*.out]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[2]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[makefile]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Archivo Make]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.MIMode" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[gdb]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.cwd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${workspaceRoot}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.externalConsole" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[True]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.miDebuggerPath" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${env.MINGW_PREFIX}\bin\gdb.exe]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.processId" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[0]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.program" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${debugInfo.target}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[1].templateId" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[attach]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.vsDebugEngineGuid" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{ea6637c6-17df-45b5-a183-0951c54243bc}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="LcxAdmin"><![CDATA[{Locked}]]></Cmt>
-        </Cmts>
       </Item>
     </Item>
   </Item>

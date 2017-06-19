@@ -187,6 +187,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown launchCompleteCommand value &apos;{0}&apos;. Expected values are &apos;exec-run&apos;, &apos;exec-continue&apos; and &apos;None&apos;..
+        /// </summary>
+        public static string Error_InvalidLaunchCompleteCommandValue {
+            get {
+                return ResourceManager.GetString("Error_InvalidLaunchCompleteCommandValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launch options string provided by the project system is invalid. {0}.
         /// </summary>
         public static string Error_InvalidLaunchOptions {
@@ -363,6 +372,15 @@ namespace MICore {
         public static string Error_ResultFormat {
             get {
                 return ResourceManager.GetString("Error_ResultFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The format of source file map entry &apos;{0}&apos; is incorrect.  .
+        /// </summary>
+        public static string Error_SourceFileMapFormat {
+            get {
+                return ResourceManager.GetString("Error_SourceFileMapFormat", resourceCulture);
             }
         }
         

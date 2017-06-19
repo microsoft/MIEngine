@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+using System.Xml.Serialization;
 
 namespace MICoreUnitTests
 {
@@ -307,6 +309,34 @@ namespace MICoreUnitTests
             {
                 Assert.True(e.Message.StartsWith("Launch options", StringComparison.Ordinal));
             }
+        }
+
+        /// <summary>
+        /// Compilation test, do not execute.
+        /// Verify that types relied upon by launcher extensions are exported by MIEngine in current build. 
+        /// Don't change this test without checking with C++ team.
+        /// </summary>
+        public void VerifyCoreApisPresent()
+        {
+            LaunchOptions launchOptions = new LocalLaunchOptions("/usr/bin/gdb", "10.10.10.10:2345", new List<EnvironmentEntry>());
+            launchOptions.ExePath = @"c:\users\me\myapp.out";
+            launchOptions.AdditionalSOLibSearchPath = @"c:\temp;e:\foo\bar";
+            launchOptions.TargetArchitecture = TargetArchitecture.ARM;
+            launchOptions.WorkingDirectory = "/home/user";
+            launchOptions.DebuggerMIMode = MIMode.Gdb;
+            launchOptions.WaitDynamicLibLoad = false;
+            launchOptions.VisualizerFile = @"c:\myproject\file.natvis";
+            launchOptions.SourceMap = new ReadOnlyCollection<SourceMapEntry>(new List<SourceMapEntry>());
+            Microsoft.DebugEngineHost.HostConfigurationStore configStore = null;
+            IDeviceAppLauncherEventCallback eventCallback = null;
+            IPlatformAppLauncher iLauncher = null;
+            IPlatformAppLauncherSerializer iSerializer = null;
+            iLauncher.Initialize(configStore, eventCallback);
+            iLauncher.OnResume();
+            iLauncher.SetLaunchOptions(string.Empty, string.Empty, string.Empty, (object)null, TargetEngine.Native);
+            iLauncher.SetupForDebugging(out launchOptions);
+            iLauncher.Dispose();
+            XmlSerializer serializer = iSerializer.GetXmlSerializer("foobar");
         }
 
         private LaunchOptions GetLaunchOptions(string content)

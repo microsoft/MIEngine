@@ -333,13 +333,36 @@ namespace MICore
             return new ReadOnlyCollection<SourceMapEntry>(pathArray);
         }
 
-        public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, string> source)
+        public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, object> source)
         {
-            // TODO: Change json schema to support changing the boolean value of UseBreakpoints to false. 
-            IList<SourceMapEntry> sourceMaps = source?.Select(x => new SourceMapEntry() { EditorPath = x.Key, CompileTimePath = x.Value, UseForBreakpoints = true }).ToList();
-            if (sourceMaps == null)
+            IList<SourceMapEntry> sourceMaps = new List<SourceMapEntry>(source.Keys.Count());
+
+            foreach (var item in source)
             {
-                sourceMaps = new List<SourceMapEntry>(0);
+                if (item.Value is String)
+                {
+                    sourceMaps.Add(new SourceMapEntry()
+                    {
+                        CompileTimePath = item.Key,
+                        EditorPath = (String)item.Value,
+                        UseForBreakpoints = true
+                    });
+                }
+                else if (item.Value is JObject)
+                {
+                    Json.LaunchOptions.SourceFileMapOptions sourceMapItem =
+                        ((JObject)item.Value).ToObject<Json.LaunchOptions.SourceFileMapOptions>();
+                    sourceMaps.Add(new SourceMapEntry()
+                    {
+                        CompileTimePath = item.Key,
+                        EditorPath = sourceMapItem.EditorPath,
+                        UseForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true)
+                    });
+                }
+                else
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_SourceFileMapFormat, item.Key));
+                }
             }
             return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);
         }
@@ -436,7 +459,7 @@ namespace MICore
 
             if (launchOptions == null)
             {
-                throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidLaunchOptions);
+                throw new InvalidLaunchOptionsException(MICoreResources.Error_UnknownLaunchOptions);
             }
 
             MIMode mi = ConvertMIModeString(RequireAttribute(launchOptions.MIMode, nameof(launchOptions.MIMode)));
@@ -1678,18 +1701,7 @@ namespace MICore
 
             if (launch.LaunchCompleteCommand.HasValue)
             {
-                switch (launch.LaunchCompleteCommand.Value)
-                {
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_continue:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.ExecContinue;
-                        break;
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.Exec_run:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.ExecRun;
-                        break;
-                    case Json.LaunchOptions.LaunchOptions.LaunchCompleteCommandValue.None:
-                        this.LaunchCompleteCommand = LaunchCompleteCommand.None;
-                        break;
-                }
+                this.LaunchCompleteCommand = launch.LaunchCompleteCommand.Value;
             }
         }
 

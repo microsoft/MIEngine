@@ -142,8 +142,12 @@ namespace MICore
         }
         protected void Echo(string cmd)
         {
-            Logger?.WriteLine("<-" + cmd);
-            Logger?.Flush();
+            if (!String.IsNullOrWhiteSpace(cmd))
+            {
+                Logger?.WriteLine("<-" + cmd);
+                Logger?.Flush();
+            }
+
             lock (_locker)
             {
                 _writer?.WriteLine(cmd);
