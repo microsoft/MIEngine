@@ -50,6 +50,7 @@ namespace Microsoft.MIDebugEngine
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _childProcessHandler;
         private bool _deleteEntryPointBreakpoint;
+        private string _entryPointBreakpoint = String.Empty;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
@@ -724,10 +725,31 @@ namespace Microsoft.MIDebugEngine
                     {
                         commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
                     }
+                    
+                    Func<string, Task> breakMainSuccessHandler = (string bkptResult) =>
+                    {
+                        int index = bkptResult.IndexOf("number=", StringComparison.Ordinal);
+                        if (index > 0)
+                        {
+                            string trimmedInnerText = bkptResult.Substring(index).Trim('\r', '\n', '{', '}');
+                            Dictionary<string, string> dict = trimmedInnerText
+                                .Split(',')
+                                .Select(value => value.Split('='))
+                                .Where(x => x.Length == 2)
+                                .ToDictionary(x => x.First(), x => x.Last());
 
-                    commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true));
-                    this._deleteEntryPointBreakpoint = true;
+                            if (dict.Keys.Contains("number"))
+                            {
+                                this._entryPointBreakpoint = dict["number"];
+                                this._deleteEntryPointBreakpoint = true;
+                            }
+                        }
 
+                        return Task.FromResult(0);
+                    };
+
+                    commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true, successHandler: breakMainSuccessHandler));
+                    
                     if (null != localLaunchOptions)
                     {
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
@@ -1023,6 +1045,7 @@ namespace Microsoft.MIDebugEngine
             else if (reason == "entry-point-hit")
             {
                 this.EntrypointHit = true;
+                this.OnEntrypointHit();
                 _callback.OnEntryPoint(thread);
             }
             else if (reason == "breakpoint-hit")
@@ -1034,15 +1057,7 @@ namespace Microsoft.MIDebugEngine
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
 
-                // If we haven't deleted the entrypoint bp and we can't find a bp, then we assume this is the breakpoint.
-                if (this._deleteEntryPointBreakpoint && bkpt == null)
-                {
-                    // Delete what we think is the entry point breakpoint
-                    await MICommandFactory.BreakDelete(bkptno);
-                    this._deleteEntryPointBreakpoint = false;
-                }
-
-                if (bkpt != null)
+                 if (bkpt != null)
                 {
                     if (frame != null && addr != 0)
                     {
@@ -1057,7 +1072,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         // Hitting a bp before the entrypoint overrules entrypoint processing.
                         this.EntrypointHit = true;
-                        this.OnFirstBreakpointHit();
+                        this.OnEntrypointHit();
                     }
 
                     List<object> bplist = new List<object>();
@@ -1067,7 +1082,7 @@ namespace Microsoft.MIDebugEngine
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
-                    this.OnFirstBreakpointHit();
+                    this.OnEntrypointHit();
 
                     _callback.OnEntryPoint(thread);
                 }
@@ -1195,9 +1210,9 @@ namespace Microsoft.MIDebugEngine
         }
 
         /// <summary>
-        /// Tasks to run when the first breakpoint is hit.
+        /// Tasks to run when the entry point is hit.
         /// </summary>
-        private async void OnFirstBreakpointHit()
+        private async void OnEntrypointHit()
         {
             if (this.MICommandFactory.Mode == MIMode.Lldb)
             {
@@ -1205,6 +1220,12 @@ namespace Microsoft.MIDebugEngine
                 // We want to not stop (break) when this happens and the SIGHUP to be sent to the debuggee process.
                 // LLDB requires this command to be issued after the process has started.
                 await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
+            }
+
+            if(this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
+            {
+                await MICommandFactory.BreakDelete(this._entryPointBreakpoint);
+                this._deleteEntryPointBreakpoint = false;
             }
         }
 
