@@ -567,7 +567,7 @@ namespace Microsoft.MIDebugEngine
 
             // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
             string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
-            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapePath(path, ignoreSpaces: true)));
+            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapeSymbolPath(path, ignoreSpaces: true)));
             if (!string.IsNullOrWhiteSpace(escapedSearchPath))
             {
                 if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
@@ -624,7 +624,7 @@ namespace Microsoft.MIDebugEngine
                     this.AddGetTargetArchitectureCommand(commands);
 
                     // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
-                    string coreDump = _launchOptions.UseUnixSymbolPaths ? _launchOptions.CoreDumpPath : EscapePath(_launchOptions.CoreDumpPath);
+                    string coreDump = this.UseUnixPathSeparators ? _launchOptions.CoreDumpPath : this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath);
                     string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
@@ -692,7 +692,7 @@ namespace Microsoft.MIDebugEngine
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
-                        string escapedDir = EscapePath(_launchOptions.WorkingDirectory);
+                        string escapedDir = this.EnsureProperPathSeparators(_launchOptions.WorkingDirectory);
                         commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
 
@@ -777,7 +777,7 @@ namespace Microsoft.MIDebugEngine
 
         private void AddExecutablePathCommand(IList<LaunchCommand> commands)
         {
-            string exe = EscapePath(_launchOptions.ExePath);
+            string exe = this.EnsureProperPathSeparators(_launchOptions.ExePath);
             string description = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath);
 
             Action<string> failureHandler = (string miError) =>
@@ -1249,7 +1249,34 @@ namespace Microsoft.MIDebugEngine
             get { return _worker; }
         }
 
-        internal string EscapePath(string path, bool ignoreSpaces = false)
+        /// <summary>
+        /// Use to ensure path separators are correct for files that exist on the target debugger's machine.
+        /// If you are debugging on Windows to a remote instance of gdb or gdbserver, it will update it to Unix path separators.
+        /// </summary>
+        internal string EnsureProperPathSeparators(string path)
+        {
+            if (this.UseUnixPathSeparators)
+            {
+                path = path.Replace('\\', '/');
+            }
+            else
+            {
+                path = path.Trim();
+                path = path.Replace(@"\", @"\\");
+            }
+
+            if (path.IndexOf(' ') != -1)
+            {
+                path = '"' + path + '"';
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// This method should be used to escape paths that are used by GDB (and NOT gdbserver) locally. 
+        /// Any path that gdbserver would use in remote server scenarios should use EnsureProperPathSeparators instead.
+        /// </summary>
+        internal string EscapeSymbolPath(string path, bool ignoreSpaces = false)
         {
             if (this.UseUnixSymbolPaths)
             {
@@ -1266,6 +1293,26 @@ namespace Microsoft.MIDebugEngine
                 path = '"' + path + '"';
             }
             return path;
+        }
+
+        /// <summary>
+        /// Check to see when to use Unix Path separators. Will check if we're doing a local Windows Launch. If it is, then
+        /// verify if a) we're doing a device launch and b) if MIDebuggerServerAddress is used. Device launch needs Windows path separators, 
+        /// but when gdbserver is used on Linux, then we need Unix separators.
+        /// </summary>
+        internal bool UseUnixPathSeparators
+        {
+            get
+            {
+                if (PlatformUtilities.IsWindows() && _launchOptions is LocalLaunchOptions)
+                {
+                    // If not a device launch (Android) and MIDebuggerServerAddress is specified, then we also need to use Unix symbol paths
+                    return _launchOptions.DeviceAppLauncher == null &&
+                        !String.IsNullOrWhiteSpace(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress);
+                }
+
+                return true;
+            }
         }
 
         internal bool UseUnixSymbolPaths { get { return _launchOptions.UseUnixSymbolPaths; } }
@@ -2012,7 +2059,7 @@ namespace Microsoft.MIDebugEngine
                             continue;   // match didn't end at a directory separator, not actually a match
                         }
                         compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
-                        if (compilerSrc.IndexOf('\\') < 0)
+                        if (compilerSrc.IndexOf('\\') > 0)
                         {
                             compilerSrc = compilerSrc.Replace('\\', '/'); // use Unix notation for the compiled path
                         }
