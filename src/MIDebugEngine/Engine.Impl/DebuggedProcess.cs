@@ -1265,6 +1265,10 @@ namespace Microsoft.MIDebugEngine
                 path = path.Replace(@"\", @"\\");
             }
 
+            if (path.IndexOf(' ') != -1)
+            {
+                path = '"' + path + '"';
+            }
             return path;
         }
 
@@ -1291,14 +1295,20 @@ namespace Microsoft.MIDebugEngine
             return path;
         }
 
+        /// <summary>
+        /// Check to see when to use Unix Path separators. Will check if we're doing a local Windows Launch. If it is, then
+        /// verify if a) we're doing a device launch and b) if MIDebuggerServerAddress is used. Device launch needs Windows path separators, 
+        /// but when gdbserver is used on Linux, then we need Unix separators.
+        /// </summary>
         internal bool UseUnixPathSeparators
         {
             get
             {
                 if (PlatformUtilities.IsWindows() && _launchOptions is LocalLaunchOptions)
                 {
-                    // If MIDebuggerServerAddress is specified, then we also need to use Unix symbol paths
-                    return !String.IsNullOrWhiteSpace(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress);
+                    // If not a device launch (Android) and MIDebuggerServerAddress is specified, then we also need to use Unix symbol paths
+                    return _launchOptions.DeviceAppLauncher == null &&
+                        !String.IsNullOrWhiteSpace(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress);
                 }
 
                 return true;
@@ -2049,7 +2059,7 @@ namespace Microsoft.MIDebugEngine
                             continue;   // match didn't end at a directory separator, not actually a match
                         }
                         compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
-                        if (compilerSrc.IndexOf('\\') < 0)
+                        if (compilerSrc.IndexOf('\\') > 0)
                         {
                             compilerSrc = compilerSrc.Replace('\\', '/'); // use Unix notation for the compiled path
                         }
