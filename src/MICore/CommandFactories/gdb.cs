@@ -207,6 +207,7 @@ namespace MICore
             // that isn't actually supported by gdb. 
             await _debugger.CmdAsync("kill", ResultClass.None);
         }
+
         private static string TypeBySize(uint size)
         {
             switch (size)
