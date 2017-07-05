@@ -576,23 +576,18 @@ namespace MICore
 
         internal bool IsLocalGdb()
         {
-            if (this.MICommandFactory.Mode == MIMode.Gdb &&
+            return (this.MICommandFactory.Mode == MIMode.Gdb &&
                this._launchOptions is LocalLaunchOptions &&
-               String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
-               )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+               String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress));
+
         }
 
         private bool IsRemoteGdb()
         {
             return this.MICommandFactory.Mode == MIMode.Gdb &&
-               this._launchOptions is PipeLaunchOptions;
+               (this._launchOptions is PipeLaunchOptions ||
+               (this._launchOptions is LocalLaunchOptions
+                    && !String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)));
         }
 
         protected bool IsCoreDump
@@ -608,10 +603,12 @@ namespace MICore
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern IntPtr OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
+        private static extern IntPtr OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
+        private static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr hHandle);
 
         public async Task<Results> CmdTerminate()
         {
@@ -625,7 +622,9 @@ namespace MICore
                     // the normal path of sending an internal async break so we can exit doesn't work.
                     // Therefore, we will call TerminateProcess on the debuggee with the exit code of 0
                     // to terminate debugging. 
-                    if ((this.IsCygwin || this.IsMinGW) && _debuggeePids.Count > 0)
+                    if (this.IsLocalGdb() &&
+                        (this.IsCygwin || this.IsMinGW) && 
+                        _debuggeePids.Count > 0)
                     {
                         int debuggeePid = _debuggeePids.First().Value;
                         IntPtr handle = IntPtr.Zero;
@@ -643,7 +642,10 @@ namespace MICore
                         finally
                         {
                             if (handle != IntPtr.Zero)
-                                Marshal.FreeCoTaskMem(handle);
+                            {
+                                bool close = CloseHandle(handle);
+                                Debug.Assert(close, "Why did CloseHandle fail?");
+                            }
                         }
                     }
                     else
