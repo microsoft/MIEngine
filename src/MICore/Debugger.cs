@@ -602,14 +602,6 @@ namespace MICore
             }
         }
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr hHandle);
-
         public async Task<Results> CmdTerminate()
         {
             if (!_terminating)
@@ -623,29 +615,14 @@ namespace MICore
                     // Therefore, we will call TerminateProcess on the debuggee with the exit code of 0
                     // to terminate debugging. 
                     if (this.IsLocalGdb() &&
-                        (this.IsCygwin || this.IsMinGW) && 
+                        (this.IsCygwin || this.IsMinGW) &&
                         _debuggeePids.Count > 0)
                     {
-                        int debuggeePid = _debuggeePids.First().Value;
-                        IntPtr handle = IntPtr.Zero;
-                        try
+                        if (TerminateAllPids())
                         {
-                            // 0x1 = Terminate
-                            handle = OpenProcess(0x1, false, debuggeePid);
-                            if (handle != IntPtr.Zero && TerminateProcess(handle, 0))
-                            {
-                                // OperationThread's _runningOpCompleteEvent is doing WaitOne(). Calling MICommandFactory.Terminate() will Set() it, unblocking the UI. 
-                                await MICommandFactory.Terminate();
-                                return new Results(ResultClass.done);
-                            }
-                        }
-                        finally
-                        {
-                            if (handle != IntPtr.Zero)
-                            {
-                                bool close = CloseHandle(handle);
-                                Debug.Assert(close, "Why did CloseHandle fail?");
-                            }
+                            // OperationThread's _runningOpCompleteEvent is doing WaitOne(). Calling MICommandFactory.Terminate() will Set() it, unblocking the UI. 
+                            await MICommandFactory.Terminate();
+                            return new Results(ResultClass.done);
                         }
                     }
                     else
@@ -661,6 +638,50 @@ namespace MICore
 
             return new Results(ResultClass.done);
         }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr hHandle);
+
+        /// <summary>
+        /// Call PInvoke to terminate all debuggee PIDs. This is to solve MinGW/Cygwin issues in Windows and SHOULD NOT be used in other cases.
+        /// </summary>
+        /// <returns>True if any pids were terminated successfully</returns>
+        private bool TerminateAllPids()
+        {
+            var terminated = false;
+            foreach (var pid in _debuggeePids)
+            {
+                int debuggeePid = pid.Value;
+                IntPtr handle = IntPtr.Zero;
+                try
+                {
+                    // 0x1 = Terminate
+                    handle = OpenProcess(0x1, false, debuggeePid);
+                    if (handle != IntPtr.Zero && TerminateProcess(handle, 0))
+                    {
+                        terminated = true;
+                    }
+                }
+                finally
+                {
+                    if (handle != IntPtr.Zero)
+                    {
+                        bool close = CloseHandle(handle);
+                        Debug.Assert(close, "Why did CloseHandle fail?");
+                    }
+                }
+            }
+
+            return terminated;
+        }
+
 
         public async Task<Results> CmdDetach()
         {
