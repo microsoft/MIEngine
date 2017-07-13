@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Linq;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.DebugEngineHost;
+using System.Runtime.InteropServices;
 
 namespace MICore
 {
@@ -48,6 +49,8 @@ namespace MICore
         public bool EntrypointHit { get; protected set; }
 
         public bool IsCygwin { get; protected set; }
+
+        public bool IsMinGW { get; protected set; }
 
         public bool SendNewLineAfterCmd { get; protected set; }
 
@@ -233,7 +236,7 @@ namespace MICore
                         _retryCount = 0;
                         _waitingToStop = true;
 
-                        // When using signals to stop the proces, do not kick off another break attempt. The debug break injection and
+                        // When using signals to stop the process, do not kick off another break attempt. The debug break injection and
                         // signal based models are reliable so no retries are needed. Cygwin can't currently async-break reliably, so
                         // use retries there.
                         if (!IsLocalGdb() && !this.IsCygwin)
@@ -573,23 +576,18 @@ namespace MICore
 
         internal bool IsLocalGdb()
         {
-            if (this.MICommandFactory.Mode == MIMode.Gdb &&
+            return (this.MICommandFactory.Mode == MIMode.Gdb &&
                this._launchOptions is LocalLaunchOptions &&
-               String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)
-               )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+               String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress));
+
         }
 
         private bool IsRemoteGdb()
         {
             return this.MICommandFactory.Mode == MIMode.Gdb &&
-               this._launchOptions is PipeLaunchOptions;
+               (this._launchOptions is PipeLaunchOptions ||
+               (this._launchOptions is LocalLaunchOptions
+                    && !String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)));
         }
 
         protected bool IsCoreDump
@@ -609,9 +607,28 @@ namespace MICore
             if (!_terminating)
             {
                 _terminating = true;
-                if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
+                if (ProcessState == ProcessState.Running &&
+                    this.MICommandFactory.Mode != MIMode.Clrdbg)
                 {
-                    await AddInternalBreakAction(() => MICommandFactory.Terminate());
+                    // MinGW and Cygwin on Windows don't support async break. Because of this,
+                    // the normal path of sending an internal async break so we can exit doesn't work.
+                    // Therefore, we will call TerminateProcess on the debuggee with the exit code of 0
+                    // to terminate debugging. 
+                    if (this.IsLocalGdb() &&
+                        (this.IsCygwin || this.IsMinGW) &&
+                        _debuggeePids.Count > 0)
+                    {
+                        if (TerminateAllPids())
+                        {
+                            // OperationThread's _runningOpCompleteEvent is doing WaitOne(). Calling MICommandFactory.Terminate() will Set() it, unblocking the UI. 
+                            await MICommandFactory.Terminate();
+                            return new Results(ResultClass.done);
+                        }
+                    }
+                    else
+                    {
+                        await AddInternalBreakAction(() => MICommandFactory.Terminate());
+                    }
                 }
                 else
                 {
@@ -621,6 +638,50 @@ namespace MICore
 
             return new Results(ResultClass.done);
         }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr hHandle);
+
+        /// <summary>
+        /// Call PInvoke to terminate all debuggee PIDs. This is to solve MinGW/Cygwin issues in Windows and SHOULD NOT be used in other cases.
+        /// </summary>
+        /// <returns>True if any pids were terminated successfully</returns>
+        private bool TerminateAllPids()
+        {
+            var terminated = false;
+            foreach (var pid in _debuggeePids)
+            {
+                int debuggeePid = pid.Value;
+                IntPtr handle = IntPtr.Zero;
+                try
+                {
+                    // 0x1 = Terminate
+                    handle = OpenProcess(0x1, false, debuggeePid);
+                    if (handle != IntPtr.Zero && TerminateProcess(handle, 0))
+                    {
+                        terminated = true;
+                    }
+                }
+                finally
+                {
+                    if (handle != IntPtr.Zero)
+                    {
+                        bool close = CloseHandle(handle);
+                        Debug.Assert(close, "Why did CloseHandle fail?");
+                    }
+                }
+            }
+
+            return terminated;
+        }
+
 
         public async Task<Results> CmdDetach()
         {

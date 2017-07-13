@@ -790,6 +790,7 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
+                        this.IsMinGW = true;
                         // Gdb on windows and not cygwin implies mingw
                         _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
                     }

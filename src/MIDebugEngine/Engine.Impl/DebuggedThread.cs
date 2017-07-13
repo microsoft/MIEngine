@@ -217,7 +217,11 @@ namespace Microsoft.MIDebugEngine
                 Results results = await _debugger.MICommandFactory.ThreadInfo(tid);
                 if (results.ResultClass != ResultClass.done)
                 {
-                    Debug.Fail("Thread info not successful");
+                    // This can happen on some versions of gdb where thread-info is not supported while running, so only assert if we're also not running. 
+                    if (this._debugger.ProcessState != ProcessState.Running)
+                    {
+                        Debug.Fail("Thread info not successful");
+                    }
                 }
                 else
                 {
