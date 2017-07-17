@@ -47,7 +47,7 @@
   <Target Name="RestoreDesktopPackages">
       <!-- Restore from packages.config instead of project.json when building for desktop -->
     <Exec Condition="'$(IsCoreClr)' == 'false'" 
-          Command="&quot;$(MIEngineRoot)tools/NuGet/NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(ProjectDir)packages.config&quot;" />
+          Command="&quot;$(MIEngineRoot)tools/NuGet/NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(ProjectDir)packages.config&quot; -ConfigFile &quot;$(MIEngineRoot)src\.nuget\NuGet.Config&quot;" />
   </Target>
 
   <Target Name="GenerateMonoSymbols"
@@ -57,8 +57,8 @@
   </Target>
 
   <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != ''" AfterTargets="Build">
-	<MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />
-	<Copy SourceFiles="@(GlassDirCopy)" DestinationFolder="$(GlassDir)" />
+    <MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />
+    <Copy SourceFiles="@(GlassDirCopy)" DestinationFolder="$(GlassDir)" />
   </Target>
 
   <!-- Depends on PrepareForBuild because the latter is responsible for calling MakeDir(IntermediateOutputPath). 

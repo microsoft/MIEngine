@@ -63,6 +63,35 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
+        private DisassemblyData FetchBadInstruction(enum_DISASSEMBLY_STREAM_FIELDS dwFields)
+        {
+            DisassemblyData dis = new DisassemblyData();
+            if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_ADDRESS) != 0)
+            {
+                dis.dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_ADDRESS;
+                dis.bstrAddress = EngineUtils.AsAddr(_addr, _engine.DebuggedProcess.Is64BitArch);
+            }
+
+            if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODELOCATIONID) != 0)
+            {
+                dis.dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODELOCATIONID;
+                dis.uCodeLocationId = _addr;
+            }
+
+            if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_SYMBOL) != 0)
+            {
+                dis.dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_SYMBOL;
+                dis.bstrSymbol = string.Empty;
+            }
+
+            if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_OPCODE) != 0)
+            {
+                dis.dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_OPCODE;
+                dis.bstrOpcode = "??";
+            }
+            return dis;
+        }
+
         public int Read(uint dwInstructions, enum_DISASSEMBLY_STREAM_FIELDS dwFields, out uint pdwInstructionsRead, DisassemblyData[] prgDisassembly)
         {
             uint iOp = 0;
@@ -72,51 +101,108 @@ namespace Microsoft.MIDebugEngine
             {
                 instructions = await _engine.DebuggedProcess.Disassembly.FetchInstructions(_addr, (int)dwInstructions);
             });
-
-            if (instructions != null)
+            if (instructions == null || (instructions.First().Addr - _addr > dwInstructions))
             {
-                foreach (DisasmInstruction instruction in instructions)
+                // bad address range, return '??'
+                for (iOp = 0; iOp < dwInstructions; _addr++, ++iOp)
                 {
-                    if (iOp >= dwInstructions)
-                    {
-                        break;
-                    }
-                    _addr = instruction.Addr;
-
-                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_ADDRESS) != 0)
-                    {
-                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_ADDRESS;
-                        prgDisassembly[iOp].bstrAddress = instruction.AddressString;
-                    }
-
-                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODELOCATIONID) != 0)
-                    {
-                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODELOCATIONID;
-                        prgDisassembly[iOp].uCodeLocationId = instruction.Addr;
-                    }
-
-                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_SYMBOL) != 0)
-                    {
-                        if (instruction.Offset == 0)
-                        {
-                            prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_SYMBOL;
-                            prgDisassembly[iOp].bstrSymbol = instruction.Symbol ?? string.Empty;
-                        }
-                    }
-
-                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_OPCODE) != 0)
-                    {
-                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_OPCODE;
-                        prgDisassembly[iOp].bstrOpcode = instruction.Opcode;
-                    }
-
-                    iOp++;
-                };
+                    prgDisassembly[iOp] = FetchBadInstruction(dwFields);
+                }
+                pdwInstructionsRead = iOp;
+                return Constants.S_OK;
             }
 
+            // return '??' for bad addresses at start of range
+            for (iOp = 0; _addr < instructions.First().Addr; _addr++, iOp++)
+            {
+                prgDisassembly[iOp] = FetchBadInstruction(dwFields);
+            }
+            foreach (DisasmInstruction instruction in instructions)
+            {
+                if (iOp >= dwInstructions)
+                {
+                    break;
+                }
+                _addr = instruction.Addr;
+
+                if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_ADDRESS) != 0)
+                {
+                    prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_ADDRESS;
+                    prgDisassembly[iOp].bstrAddress = instruction.AddressString;
+                }
+
+                if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODELOCATIONID) != 0)
+                {
+                    prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODELOCATIONID;
+                    prgDisassembly[iOp].uCodeLocationId = instruction.Addr;
+                }
+
+                if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_SYMBOL) != 0)
+                {
+                    if (instruction.Offset == 0)
+                    {
+                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_SYMBOL;
+                        prgDisassembly[iOp].bstrSymbol = instruction.Symbol ?? string.Empty;
+                    }
+                }
+
+                if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_OPCODE) != 0)
+                {
+                    prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_OPCODE;
+                    prgDisassembly[iOp].bstrOpcode = instruction.Opcode;
+                }
+
+                iOp++;
+            };
+
+            if (iOp < dwInstructions)
+            {
+                // Didn't get enough instructions. Must have run out of valid memory address range.
+                Tuple<ulong, ulong> range = new Tuple<ulong, ulong>(0,0);
+                _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                {
+                    range = await _engine.DebuggedProcess.FindValidMemoryRange(_addr, 10, 0);
+                });
+                // return '??' for bad addresses at end of range
+                for (_addr = range.Item2; iOp < dwInstructions; _addr++, iOp++)
+                {
+                    prgDisassembly[iOp] = FetchBadInstruction(dwFields);
+                }
+            }
             pdwInstructionsRead = iOp;
 
             return pdwInstructionsRead != 0 ? Constants.S_OK : Constants.S_FALSE;
+        }
+
+        private int SeekForward(long iInstructions)
+        {
+            ICollection<DisasmInstruction> instructions = null;
+            _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+            {
+                instructions = await _engine.DebuggedProcess.Disassembly.FetchInstructions(_addr, (int)iInstructions+1);
+            });
+            if (instructions == null)
+            {
+                // bad address range, no instructions. 
+                _addr = (ulong)((long)_addr + iInstructions);  // forward iInstructions bytes
+                return Constants.S_OK;
+            }
+            _addr = instructions.Last().Addr;
+            if (instructions.Count < iInstructions)
+            {
+                // not enough instructions were fetched; forward one byte for each missing instruction
+                _addr += (ulong)(iInstructions - instructions.Count);   // TODO: length of last instruction is unknown and not accounted for
+            }
+            return Constants.S_OK;
+        }
+
+        private int SeekBack(long iInstructions)
+        {
+            _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+            {
+                _addr = await _engine.DebuggedProcess.Disassembly.SeekBack(_addr, (int)iInstructions);
+            });
+            return Constants.S_OK;
         }
 
         public int Seek(enum_SEEK_START dwSeekStart, IDebugCodeContext2 pCodeContext, ulong uCodeLocationId, long iInstructions)
@@ -131,22 +217,15 @@ namespace Microsoft.MIDebugEngine
                 _addr = uCodeLocationId;
             }
 
-            if (iInstructions != 0)
+            if (iInstructions >= 0)
             {
-                IEnumerable<DisasmInstruction> instructions = null;
-                _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
-                {
-                    instructions = await _engine.DebuggedProcess.Disassembly.FetchInstructions(_addr, (int)iInstructions);
-                });
-                if (instructions == null)
-                {
-                    return Constants.E_FAIL;
-                }
-                _addr = instructions.ElementAt(0).Addr;
+                return SeekForward(iInstructions);
             }
-            return Constants.S_OK;
+            else
+            {
+                return SeekBack(-iInstructions);
+            }
         }
-
         #endregion
     }
 }

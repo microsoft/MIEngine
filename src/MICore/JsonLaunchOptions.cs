@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Diagnostics;
+using System.Globalization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace MICore.Json.LaunchOptions
@@ -70,7 +70,7 @@ namespace MICore.Json.LaunchOptions
         /// Optional source file mappings passed to the debug engine. Example: '{ "/original/source/path":"/current/source/path" }'
         /// </summary>
         [JsonProperty("sourceFileMap", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, string> SourceFileMap { get; protected set; }
+        public Dictionary<string, object> SourceFileMap { get; protected set; }
 
         /// <summary>
         /// When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between VS Code and the MI-enabled debugger backend executable (such as gdb).
@@ -82,7 +82,7 @@ namespace MICore.Json.LaunchOptions
     public partial class AttachOptions : BaseOptions
     {
         #region Public Properties for Serialization
-        
+
         [JsonProperty("processId")]
         public int ProcessId { get; private set; }
 
@@ -92,10 +92,22 @@ namespace MICore.Json.LaunchOptions
 
         public AttachOptions()
         {
-            this.SourceFileMap = new Dictionary<string, string>();
+            this.SourceFileMap = new Dictionary<string, object>();
         }
 
-        public AttachOptions(string program, int processId, string type = null, string targetArchitecture = null, string visualizerFile = null, bool? showDisplayString = null, string additionalSOLibSearchPath = null, string MIMode = null, string miDebuggerPath = null, string miDebuggerServerAddress = null, Dictionary<string, string> sourceFileMap = null, PipeTransport pipeTransport = null)
+        public AttachOptions(
+            string program,
+            int processId,
+            string type = null,
+            string targetArchitecture = null,
+            string visualizerFile = null,
+            bool? showDisplayString = null,
+            string additionalSOLibSearchPath = null,
+            string MIMode = null,
+            string miDebuggerPath = null,
+            string miDebuggerServerAddress = null,
+            Dictionary<string, object> sourceFileMap = null,
+            PipeTransport pipeTransport = null)
         {
             this.Program = program;
             this.Type = type;
@@ -172,20 +184,10 @@ namespace MICore.Json.LaunchOptions
         /// <summary>
         /// The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".
         /// </summary>
-        [JsonProperty("launchCompleteCommand", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public LaunchCompleteCommandValue? LaunchCompleteCommand { get; set; }
-
-        [JsonConverter(typeof(StringEnumConverter))]
-        public enum LaunchCompleteCommandValue
-        {
-            [EnumMember(Value = "exec-run")]
-            Exec_run,
-            [EnumMember(Value = "exec-continue")]
-            Exec_continue,
-            [EnumMember(Value = "None")]
-            None,
-        }
-
+        [JsonProperty("launchCompleteCommand", DefaultValueHandling = DefaultValueHandling.Ignore),
+        JsonConverter(typeof(LaunchCompleteCommandConverter))]
+        public LaunchCompleteCommand? LaunchCompleteCommand { get; set; }
+        
         /// <summary>
         /// Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ].
         /// </summary>
@@ -256,10 +258,36 @@ namespace MICore.Json.LaunchOptions
             this.SetupCommands = new List<SetupCommand>();
             this.CustomLaunchSetupCommands = new List<SetupCommand>();
             this.Environment = new List<Environment>();
-            this.SourceFileMap = new Dictionary<string, string>();
+            this.SourceFileMap = new Dictionary<string, object>();
         }
 
-        public LaunchOptions(string program, List<string> args = null, string type = null, string targetArchitecture = null, string cwd = null, List<SetupCommand> setupCommands = null, List<SetupCommand> customLaunchSetupCommands = null, LaunchCompleteCommandValue? launchCompleteCommand = null, string visualizerFile = null, bool? showDisplayString = null, List<Environment> environment = null, string additionalSOLibSearchPath = null, string MIMode = null, string miDebuggerPath = null, string miDebuggerServerAddress = null, bool? stopAtEntry = null, string debugServerPath = null, string debugServerArgs = null, string serverStarted = null, bool? filterStdout = null, bool? filterStderr = null, int? serverLaunchTimeout = null, string coreDumpPath = null, bool? externalConsole = null, Dictionary<string, string> sourceFileMap = null, PipeTransport pipeTransport = null)
+        public LaunchOptions(
+            string program,
+            List<string> args = null,
+            string type = null,
+            string targetArchitecture = null,
+            string cwd = null,
+            List<SetupCommand> setupCommands = null,
+            List<SetupCommand> customLaunchSetupCommands = null,
+            LaunchCompleteCommand? launchCompleteCommand = null,
+            string visualizerFile = null,
+            bool? showDisplayString = null,
+            List<Environment> environment = null,
+            string additionalSOLibSearchPath = null,
+            string MIMode = null,
+            string miDebuggerPath = null,
+            string miDebuggerServerAddress = null,
+            bool? stopAtEntry = null,
+            string debugServerPath = null,
+            string debugServerArgs = null,
+            string serverStarted = null,
+            bool? filterStdout = null,
+            bool? filterStderr = null,
+            int? serverLaunchTimeout = null,
+            string coreDumpPath = null,
+            bool? externalConsole = null,
+            Dictionary<string, object> sourceFileMap = null,
+            PipeTransport pipeTransport = null)
         {
             this.Program = program;
             this.Args = args;
@@ -289,6 +317,49 @@ namespace MICore.Json.LaunchOptions
             this.PipeTransport = pipeTransport;
         }
 
+        #endregion
+
+        #region Private class
+        /// <summary>
+        /// Custom converter to avoid dependency on System.Runtime.Serialization.Primitives.dll
+        /// </summary>
+        private class LaunchCompleteCommandConverter : JsonConverter
+        {
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (objectType == typeof(LaunchCompleteCommand?) && reader.TokenType == JsonToken.String)
+                {
+                    String value = reader.Value.ToString();
+                    if (value.Equals("exec-continue", StringComparison.Ordinal))
+                    {
+                        return MICore.LaunchCompleteCommand.ExecContinue;
+                    }
+                    if (value.Equals("exec-run", StringComparison.Ordinal))
+                    {
+                        return MICore.LaunchCompleteCommand.ExecRun;
+                    }
+                    if (value.Equals("None", StringComparison.Ordinal))
+                    {
+                        return MICore.LaunchCompleteCommand.None;
+                    }
+
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_InvalidLaunchCompleteCommandValue, reader.Value));
+                }
+
+                Debug.Fail(String.Format(CultureInfo.CurrentUICulture, "Unexpected objectType '{0}' passed for launchCompleteCommand serialization.", objectType.ToString()));
+                return null;
+            }
+
+            public override bool CanConvert(Type objectType)
+            {
+                return objectType == typeof(LaunchCompleteCommand?);
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
+        }
         #endregion
     }
 
@@ -324,7 +395,13 @@ namespace MICore.Json.LaunchOptions
         /// Environment variables passed to the pipe program.
         /// </summary>
         [JsonProperty("pipeEnv", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, object> PipeEnv { get; private set; }
+        public Dictionary<string, string> PipeEnv { get; private set; }
+
+        /// <summary>
+        /// Should arguments that contain characters that need to be quoted (example: spaces) be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.
+        /// </summary>
+        [JsonProperty("quoteArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? QuoteArgs { get; private set; }
 
         #endregion
 
@@ -333,16 +410,17 @@ namespace MICore.Json.LaunchOptions
         public PipeTransport()
         {
             this.PipeArgs = new List<string>();
-            this.PipeEnv = new Dictionary<string, object>();
+            this.PipeEnv = new Dictionary<string, string>();
         }
 
-        public PipeTransport(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, object> pipeEnv = null)
+        public PipeTransport(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, string> pipeEnv = null, bool? quoteArgs = null)
         {
             this.PipeCwd = pipeCwd;
             this.PipeProgram = pipeProgram;
             this.PipeArgs = pipeArgs;
             this.DebuggerPath = debuggerPath;
             this.PipeEnv = pipeEnv;
+            this.QuoteArgs = quoteArgs;
         }
 
         #endregion
@@ -386,5 +464,79 @@ namespace MICore.Json.LaunchOptions
         }
 
         #endregion
+    }
+
+    public partial class SourceFileMapOptions
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// The editor's path.
+        /// </summary>
+        [JsonProperty("editorPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string EditorPath { get; set; }
+
+        /// <summary>
+        /// Use this source mapping for breakpoint binding? Default is true.
+        /// </summary>
+        [JsonProperty("useForBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? UseForBreakpoints { get; set; }
+
+        #endregion
+
+        #region Constructors
+
+        public SourceFileMapOptions()
+        {
+        }
+
+        public SourceFileMapOptions(string editorPath = null, bool? useForBreakpoints = null)
+        {
+            this.EditorPath = editorPath;
+            this.UseForBreakpoints = useForBreakpoints;
+        }
+
+        #endregion
+    }
+
+    public static class LaunchOptionHelpers
+    {
+        public static BaseOptions GetLaunchOrAttachOptions(JObject parsedJObject)
+        {
+            BaseOptions baseOptions = null;
+            string requestType = parsedJObject["request"]?.Value<string>();
+            if (String.IsNullOrWhiteSpace(requestType))
+            {
+                // If request isn't specified, see if we can determine what it is
+                if (!String.IsNullOrWhiteSpace(parsedJObject["processId"]?.Value<string>()))
+                {
+                    requestType = "attach";
+                }
+                else if (!String.IsNullOrWhiteSpace(parsedJObject["program"]?.Value<string>()))
+                {
+                    requestType = "launch";
+                }
+                else
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "program"));
+                }
+            }
+
+            switch (requestType)
+            {
+                case "launch":
+                    // handle launch case
+                    baseOptions = parsedJObject.ToObject<Json.LaunchOptions.LaunchOptions>();
+                    break;
+                case "attach":
+                    // handle attach case
+                    baseOptions = parsedJObject.ToObject<Json.LaunchOptions.AttachOptions>();
+                    break;
+                default:
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "request"));
+            }
+
+            return baseOptions;
+        }
     }
 }

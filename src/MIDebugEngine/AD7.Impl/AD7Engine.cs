@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using MICore;
 using System.Globalization;
 using Microsoft.DebugEngineHost;
-
 using Logger = MICore.Logger;
 
 namespace Microsoft.MIDebugEngine
@@ -205,7 +204,7 @@ namespace Microsoft.MIDebugEngine
                 exception = e;
             }
 
-            // If we just return the exception as an HRESULT, we will loose our message, so we instead send up an error event, and
+            // If we just return the exception as an HRESULT, we will lose our message, so we instead send up an error event, and
             // return that the attach was canceled
             OnStartDebuggingFailed(exception);
             return AD7_HRESULT.E_ATTACH_USER_CANCELED;
@@ -529,7 +528,7 @@ namespace Microsoft.MIDebugEngine
                 // Return from the catch block so that we can let the exception unwind - the stack can get kind of big
             }
 
-            // If we just return the exception as an HRESULT, we will loose our message, so we instead send up an error event, and then
+            // If we just return the exception as an HRESULT, we will lose our message, so we instead send up an error event, and then
             // return E_ABORT.
             OnStartDebuggingFailed(exception);
 
@@ -761,6 +760,11 @@ namespace Microsoft.MIDebugEngine
             {
                 return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
             }
+            catch (Exception e)
+            {
+                _engineCallback.OnError(EngineUtils.GetExceptionDescription(e));
+                return Constants.E_ABORT;
+            }
 
             return Constants.S_OK;
         }
@@ -948,6 +952,11 @@ namespace Microsoft.MIDebugEngine
             catch (InvalidCoreDumpOperationException)
             {
                 return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+            }
+            catch (Exception e)
+            {
+                _engineCallback.OnError(EngineUtils.GetExceptionDescription(e));
+                return Constants.E_ABORT;
             }
 
             return Constants.S_OK;
