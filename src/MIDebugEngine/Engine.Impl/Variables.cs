@@ -134,6 +134,9 @@ namespace Microsoft.MIDebugEngine
                     case NodeType.ArrayElement:
                         _fullname = '(' + _parent.FullName() + ')' + Name;
                         break;
+                    case NodeType.AnonymousUnion:
+                        _fullname = _parent.FullName();
+                        break;
                     default:
                         _fullname = String.Empty;
                         break;
@@ -266,6 +269,10 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.ArrayElement;
             }
+            else if (Name == "<anonymous union>")
+            {
+                VariableNodeType = NodeType.AnonymousUnion;
+            }
             else
             {
                 _strippedName = Name;
@@ -296,7 +303,7 @@ namespace Microsoft.MIDebugEngine
                 return var;
             }
             VariableInformation baseChild = null;
-            var = Array.Find(Children, (c) => c.VariableNodeType == NodeType.BaseClass && (baseChild = c.FindChildByName(name)) != null);
+            var = Array.Find(Children, (c) => (c.VariableNodeType == NodeType.BaseClass || c.VariableNodeType == NodeType.AnonymousUnion) && (baseChild = c.FindChildByName(name)) != null);
             return baseChild;
         }
 
@@ -318,7 +325,8 @@ namespace Microsoft.MIDebugEngine
             ArrayElement,
             BaseClass,
             AccessQualifier,
-            Synthetic
+            Synthetic,
+            AnonymousUnion
         };
 
         public NodeType VariableNodeType { get; private set; }
