@@ -650,7 +650,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Необязательное сопоставление исходных файлов, передаваемое в модуль отладки. Формат: { "<исходное расположение компилятора>": "<исходное расположение редактора>" } ИЛИ { "<исходное расположение компилятора>": { "editorPath": "<исходное расположение редактора>", "useForBreakpoints": true } }. ]A;Пример: { "/home/user/foo": "C:\foo" } ИЛИ { "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }.]]></Val>
+            <Val><![CDATA[Необязательное сопоставление исходных файлов, передаваемое в модуль отладки. Формат: { "<исходное расположение компилятора>": "<исходное расположение редактора>" } OR { "<исходное расположение компилятора>": { "editorPath": "<исходное расположение редактора>", "useForBreakpoints": true } }. ]A;Пример: { "/home/user/foo": "C:\foo" } OR { "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

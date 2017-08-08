@@ -695,7 +695,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[傳遞至偵錯引擎的選擇性來源檔案對應。格式 : '{ "<編譯器來源位置>": "<編輯器來源位置>" }' 或 '{ "<編譯器來源位置>": { "editorPath": "<編輯器來源位置>", "useForBreakpoints": true } }'。]A;範例: '{ "/home/user/foo": "C:\foo" }' 或 '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'。]]></Val>
+            <Val><![CDATA[傳遞給偵錯引擎的選擇性來源檔案對應。格式 : '{ "<Compiler source location>": "<Editor source location>" }' 或 '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'。]A;範例: '{ "/home/user/foo": "C:\foo" }' 或 '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
