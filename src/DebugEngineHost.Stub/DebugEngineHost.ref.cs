@@ -64,6 +64,15 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Returns true if on the main thread.
+        /// </summary>
+        /// <returns></returns>
+        public static bool OnMainThread()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>

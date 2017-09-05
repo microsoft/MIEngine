@@ -34,7 +34,11 @@ namespace Microsoft.MIDebugEngine
         private bool _deleted;
         private bool _pendingDelete;
 
-        public DebuggedProcess DebuggedProcess {  get { return _engine.DebuggedProcess;  } }
+        private IDebugFunctionPosition2 _functionPosition;
+        private IDebugCodeContext2 _codePosition;
+        private IDebugDocumentPosition2 _docPosition;
+
+        public DebuggedProcess DebuggedProcess { get { return _engine.DebuggedProcess; } }
 
         internal string BreakpointId
         {
@@ -116,14 +120,13 @@ namespace Microsoft.MIDebugEngine
         {
             if ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE)
             {
-                IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
                 string documentName;
-                EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
+                EngineUtils.CheckOk(_docPosition.GetFileName(out documentName));
 
                 // Get the location in the document that the breakpoint is in.
                 TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
                 TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
-                EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                EngineUtils.CheckOk(_docPosition.GetRange(startPosition, endPosition));
 
                 AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, address, functionName);
 
@@ -167,8 +170,28 @@ namespace Microsoft.MIDebugEngine
             {
                 if (CanBind())
                 {
-                    Task bindTask = null;
+                    // Make sure that HostMarshal calls happen on main thread instead of poll thread.
+                    lock (_boundBreakpoints)
+                    {
+                        if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0)
+                        {
+                            Debug.Assert(Host.OnMainThread(), "Operation should be on main thread.");
+                            switch ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType)
+                            {
+                                case enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET:
+                                    _functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                                    break;
+                                case enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT:
+                                    _codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_bpRequestInfo.bpLocation.unionmember1);
+                                    break;
+                                case enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE:
+                                    _docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                                    break;
+                            }
+                        }
+                    }
 
+                    Task bindTask = null;
                     _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
                     {
                         bindTask = _engine.DebuggedProcess.AddInternalBreakAction(this.BindAsync);
@@ -248,29 +271,25 @@ namespace Microsoft.MIDebugEngine
                         {
                             case enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET:
                                 {
-                                    IDebugFunctionPosition2 functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
-                                    EngineUtils.CheckOk(functionPosition.GetFunctionName(out functionName));
+                                    EngineUtils.CheckOk(_functionPosition.GetFunctionName(out functionName));
                                     break;
                                 }
                             case enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT:
                                 {
-                                    IDebugCodeContext2 codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_bpRequestInfo.bpLocation.unionmember1);
-                                    if (!(codePosition is AD7MemoryAddress))
+                                    if (!(_codePosition is AD7MemoryAddress))
                                     {
                                         goto default;   // context is not from this engine
                                     }
-                                    codeAddress = ((AD7MemoryAddress)codePosition).Address;
+                                    codeAddress = ((AD7MemoryAddress)_codePosition).Address;
                                     break;
                                 }
                             case enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE:
                                 {
-                                    IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
-
                                     // Get the name of the document that the breakpoint was put in
-                                    EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
+                                    EngineUtils.CheckOk(_docPosition.GetFileName(out documentName));
 
                                     // Get the location in the document that the breakpoint is in.
-                                    EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
+                                    EngineUtils.CheckOk(_docPosition.GetRange(startPosition, endPosition));
 
                                     // Get the document checksum
                                     // TODO: This and all other AD7 interface calls need to be moved so that they are only
