@@ -780,7 +780,7 @@ namespace Microsoft.MIDebugEngine
                 _pollThread.RunOperation(() => _debuggedProcess.CmdDetach());
                 _debuggedProcess.Detach();
             }
-            catch (DebuggerDisposedException) 
+            catch (DebuggerDisposedException)
             {
                 // Detach command could cause DebuggerDisposedException and we ignore that.
             }
