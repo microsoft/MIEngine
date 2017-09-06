@@ -358,6 +358,16 @@ public sealed class HostLogger
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// In VS, calls Marshal.Release on IUnknown to derefcount when we are done with object.
+        /// </summary>
+        /// <param name="unknownId">In VS, the IUnknown</param>
+        /// <returns>In VS, the result from calling Marshal.Release</returns>
+        public static int Release(IntPtr unknownId)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
