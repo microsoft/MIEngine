@@ -38,6 +38,16 @@ namespace Microsoft.MIDebugEngine
         private IDebugCodeContext2 _codePosition;
         private IDebugDocumentPosition2 _docPosition;
 
+        private string _documentName = null;
+        private string _functionName = null;
+        private TEXT_POSITION[] _startPosition = new TEXT_POSITION[1];
+        private TEXT_POSITION[] _endPosition = new TEXT_POSITION[1];
+        private string _condition = null;
+        private string _address = null;
+        private ulong _codeAddress = 0;
+        private uint _size = 0;
+        private IEnumerable<Checksum> _checksums = null;
+
         public DebuggedProcess DebuggedProcess { get { return _engine.DebuggedProcess; } }
 
         internal string BreakpointId
@@ -173,6 +183,16 @@ namespace Microsoft.MIDebugEngine
                     // Make sure that HostMarshal calls happen on main thread instead of poll thread.
                     lock (_boundBreakpoints)
                     {
+                        if (_bp != null)   // already bound
+                        {
+                            Debug.Fail("Breakpoint already bound");
+                            return Constants.S_FALSE;
+                        }
+                        if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0
+                            && _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE)
+                        {
+                            _condition = _bpRequestInfo.bpCondition.bstrCondition;
+                        }
                         if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0)
                         {
                             Debug.Assert(Host.OnMainThread(), "Operation should be on main thread.");
@@ -180,13 +200,51 @@ namespace Microsoft.MIDebugEngine
                             {
                                 case enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET:
                                     _functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                                    EngineUtils.CheckOk(_functionPosition.GetFunctionName(out _functionName));
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT:
                                     _codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_bpRequestInfo.bpLocation.unionmember1);
+                                    if (!(_codePosition is AD7MemoryAddress))
+                                    {
+                                        goto default;   // context is not from this engine
+                                    }
+                                    _codeAddress = ((AD7MemoryAddress)_codePosition).Address;
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE:
                                     _docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                                    // Get the name of the document that the breakpoint was put in
+                                    EngineUtils.CheckOk(_docPosition.GetFileName(out _documentName));
+
+                                    // Get the location in the document that the breakpoint is in.
+                                    EngineUtils.CheckOk(_docPosition.GetRange(_startPosition, _endPosition));
+
+                                    // Get the document checksum
+                                    if (_engine.DebuggedProcess.MICommandFactory.SupportsBreakpointChecksums())
+                                    {
+                                        try
+                                        {
+                                            _checksums = GetSHA1Checksums();
+                                        }
+                                        catch (Exception)
+                                        {
+                                            // If we fail to get a checksum there's nothing else we can do
+                                        }
+                                    }
+
                                     break;
+                                case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
+                                    _address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    _size = (uint)_bpRequestInfo.bpLocation.unionmember4;
+                                    if (_condition != null)
+                                    {
+                                        goto default;   // mi has no conditions on watchpoints
+                                    }
+                                    break;
+
+                                default:
+                                    this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint), true);
+                                    return Constants.S_FALSE;
+
                             }
                         }
                     }
@@ -243,107 +301,23 @@ namespace Microsoft.MIDebugEngine
         {
             if (CanBind())
             {
-                string documentName = null;
-                string functionName = null;
-                TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
-                TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
-                string condition = null;
-                string address = null;
-                ulong codeAddress = 0;
-                uint size = 0;
-                IEnumerable<Checksum> checksums = null;
-
-                lock (_boundBreakpoints)
-                {
-                    if (_bp != null)   // already bound
-                    {
-                        Debug.Fail("Breakpoint already bound");
-                        return;
-                    }
-                    if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0
-                        && _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE)
-                    {
-                        condition = _bpRequestInfo.bpCondition.bstrCondition;
-                    }
-                    if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0)
-                    {
-                        switch ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType)
-                        {
-                            case enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET:
-                                {
-                                    EngineUtils.CheckOk(_functionPosition.GetFunctionName(out functionName));
-                                    break;
-                                }
-                            case enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT:
-                                {
-                                    if (!(_codePosition is AD7MemoryAddress))
-                                    {
-                                        goto default;   // context is not from this engine
-                                    }
-                                    codeAddress = ((AD7MemoryAddress)_codePosition).Address;
-                                    break;
-                                }
-                            case enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE:
-                                {
-                                    // Get the name of the document that the breakpoint was put in
-                                    EngineUtils.CheckOk(_docPosition.GetFileName(out documentName));
-
-                                    // Get the location in the document that the breakpoint is in.
-                                    EngineUtils.CheckOk(_docPosition.GetRange(startPosition, endPosition));
-
-                                    // Get the document checksum
-                                    // TODO: This and all other AD7 interface calls need to be moved so that they are only
-                                    // executed from the main thread.
-                                    // Github issue: https://github.com/Microsoft/MIEngine/issues/350
-                                    if (_engine.DebuggedProcess.MICommandFactory.SupportsBreakpointChecksums())
-                                    {
-                                        try
-                                        {
-                                            checksums = GetSHA1Checksums();
-                                        }
-                                        catch (Exception)
-                                        {
-                                            // If we fail to get a checksum there's nothing else we can do
-                                        }
-                                    }
-
-                                    break;
-                                }
-                            case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
-                                {
-                                    address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
-                                    size = (uint)_bpRequestInfo.bpLocation.unionmember4;
-                                    if (condition != null)
-                                    {
-                                        goto default;   // mi has no conditions on watchpoints
-                                    }
-                                    break;
-                                }
-                            default:
-                                {
-                                    this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedBreakpoint), true);
-                                    return;
-                                }
-                        }
-                    }
-                }
                 PendingBreakpoint.BindResult bindResult;
                 // Bind all breakpoints that match this source and line number.
-                if (documentName != null)
+                if (_documentName != null)
                 {
-                    bindResult = await PendingBreakpoint.Bind(documentName, startPosition[0].dwLine + 1, startPosition[0].dwColumn, _engine.DebuggedProcess, condition, _enabled, checksums, this);
+                    bindResult = await PendingBreakpoint.Bind(_documentName, _startPosition[0].dwLine + 1, _startPosition[0].dwColumn, _engine.DebuggedProcess, _condition, _enabled, _checksums, this);
                 }
-                else if (functionName != null)
+                else if (_functionName != null)
                 {
-                    bindResult = await PendingBreakpoint.Bind(functionName, _engine.DebuggedProcess, condition, _enabled, this);
+                    bindResult = await PendingBreakpoint.Bind(_functionName, _engine.DebuggedProcess, _condition, _enabled, this);
                 }
-                else if (codeAddress != 0)
+                else if (_codeAddress != 0)
                 {
-                    bindResult = await PendingBreakpoint.Bind(codeAddress, _engine.DebuggedProcess, condition, _enabled, this);
+                    bindResult = await PendingBreakpoint.Bind(_codeAddress, _engine.DebuggedProcess, _condition, _enabled, this);
                 }
                 else
                 {
-                    bindResult = await PendingBreakpoint.Bind(address, size, _engine.DebuggedProcess, condition, this);
+                    bindResult = await PendingBreakpoint.Bind(_address, _size, _engine.DebuggedProcess, _condition, this);
                 }
 
                 lock (_boundBreakpoints)
