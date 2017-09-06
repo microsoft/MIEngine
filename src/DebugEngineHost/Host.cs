@@ -78,7 +78,7 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
-        public static bool OnMainThread()
+        internal static bool IsOnMainThread()
         {
             Debug.Assert(s_initialized, "EnsureMainThreadInitialized() not called first.");
             return s_initialized && (s_mainThreadId == Thread.CurrentThread.ManagedThreadId);

@@ -64,15 +64,6 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
-
-        /// <summary>
-        /// Returns true if on the main thread.
-        /// </summary>
-        /// <returns></returns>
-        public static bool OnMainThread()
-        {
-            throw new NotImplementedException();
-        }
     }
 
     /// <summary>
@@ -364,6 +355,16 @@ public sealed class HostLogger
         /// <returns>In VS, a thread-safe wrapper on top of the underlying SDM event callback which allows
         /// sending events on any thread. In VS Code, this just returns the provided ad7Callback. </returns>
         public static IDebugEventCallback2 GetThreadSafeEventCallback(IDebugEventCallback2 ad7Callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// In VS, calls Marshal.Release on IUnknown to derefcount when we are done with object.
+        /// </summary>
+        /// <param name="unk">In VS, the IUnknown</param>
+        /// <returns>In VS, the result from calling Marshal.Release</returns>
+        public static int Release(IntPtr unk)
         {
             throw new NotImplementedException();
         }

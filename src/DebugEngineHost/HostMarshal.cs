@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -29,6 +30,12 @@ namespace Microsoft.DebugEngineHost
         /// that allows VS Code to get back to the object.</returns>
         public static IntPtr RegisterCodeContext(IDebugCodeContext2 codeContext)
         {
+            if (!Host.IsOnMainThread())
+            {
+                Debug.Fail("Operation should be on main thread.");
+                throw new MethodAccessException("COM Operation must occur on main thread.");
+            }
+
             return Marshal.GetComInterfaceForObject(codeContext, typeof(IDebugCodeContext2));
         }
 
@@ -41,6 +48,11 @@ namespace Microsoft.DebugEngineHost
         public static IDebugDocumentPosition2 GetDocumentPositionForIntPtr(IntPtr documentPositionId)
         {
             // TODO: It looks like the MIEngine currently leaks the native document position. Fix that.
+            if (!Host.IsOnMainThread())
+            {
+                Debug.Fail("Operation should be on main thread.");
+                throw new MethodAccessException("COM Operation must occur on main thread.");
+            }
 
             return (IDebugDocumentPosition2)Marshal.GetObjectForIUnknown(documentPositionId);
         }
@@ -54,6 +66,11 @@ namespace Microsoft.DebugEngineHost
         public static IDebugFunctionPosition2 GetDebugFunctionPositionForIntPtr(IntPtr locationId)
         {
             // TODO: It looks like the MIEngine currently leaks the native document position. Fix that.
+            if (!Host.IsOnMainThread())
+            {
+                Debug.Fail("Operation should be on main thread.");
+                throw new MethodAccessException("COM Operation must occur on main thread.");
+            }
 
             return (IDebugFunctionPosition2)Marshal.GetObjectForIUnknown(locationId);
         }
@@ -65,6 +82,12 @@ namespace Microsoft.DebugEngineHost
         /// <returns></returns>
         public static string GetDataBreakpointStringForIntPtr(IntPtr stringId)
         {
+            if (!Host.IsOnMainThread())
+            {
+                Debug.Fail("Operation should be on main thread.");
+                throw new MethodAccessException("COM Operation must occur on main thread.");
+            }
+
             return (string)Marshal.PtrToStringBSTR(stringId);
         }
 
@@ -75,6 +98,12 @@ namespace Microsoft.DebugEngineHost
         /// <returns>IntPtr to a BSTR which can be returned to VS.</returns>
         public static IntPtr GetIntPtrForDataBreakpointAddress(string address)
         {
+            if (!Host.IsOnMainThread())
+            {
+                Debug.Fail("Operation should be on main thread.");
+                throw new MethodAccessException("COM Operation must occur on main thread.");
+            }
+
             return Marshal.StringToBSTR(address);
         }
 
@@ -87,6 +116,11 @@ namespace Microsoft.DebugEngineHost
         public static IDebugCodeContext2 GetDebugCodeContextForIntPtr(IntPtr contextId)
         {
             // TODO: It looks like the MIEngine currently leaks the code context. Fix that.
+            if (!Host.IsOnMainThread())
+            {
+                Debug.Fail("Operation should be on main thread.");
+                throw new MethodAccessException("COM Operation must occur on main thread.");
+            }
 
             return (IDebugCodeContext2)Marshal.GetObjectForIUnknown(contextId);
         }
@@ -100,6 +134,11 @@ namespace Microsoft.DebugEngineHost
         public static IDebugEventCallback2 GetThreadSafeEventCallback(IDebugEventCallback2 ad7Callback)
         {
             return new VSImpl.VSEventCallbackWrapper(ad7Callback);
+        } 
+
+        public static int Release(IntPtr unk)
+        {
+            return Marshal.Release(unk);
         }
     }
 }

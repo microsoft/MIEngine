@@ -34,10 +34,6 @@ namespace Microsoft.MIDebugEngine
         private bool _deleted;
         private bool _pendingDelete;
 
-        private IDebugFunctionPosition2 _functionPosition;
-        private IDebugCodeContext2 _codePosition;
-        private IDebugDocumentPosition2 _docPosition;
-
         private string _documentName = null;
         private string _functionName = null;
         private TEXT_POSITION[] _startPosition = new TEXT_POSITION[1];
@@ -130,17 +126,9 @@ namespace Microsoft.MIDebugEngine
         {
             if ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE)
             {
-                string documentName;
-                EngineUtils.CheckOk(_docPosition.GetFileName(out documentName));
-
-                // Get the location in the document that the breakpoint is in.
-                TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
-                TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
-                EngineUtils.CheckOk(_docPosition.GetRange(startPosition, endPosition));
-
                 AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, address, functionName);
 
-                return new AD7DocumentContext(new MITextPosition(documentName, startPosition[0], startPosition[0]), codeContext, _engine.DebuggedProcess);
+                return new AD7DocumentContext(new MITextPosition(_documentName, _startPosition[0], _startPosition[0]), codeContext, _engine.DebuggedProcess);
             }
             else
             {
@@ -195,28 +183,48 @@ namespace Microsoft.MIDebugEngine
                         }
                         if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_BPLOCATION) != 0)
                         {
-                            Debug.Assert(Host.OnMainThread(), "Operation should be on main thread.");
                             switch ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType)
                             {
                                 case enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET:
-                                    _functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
-                                    EngineUtils.CheckOk(_functionPosition.GetFunctionName(out _functionName));
+                                    try
+                                    {
+                                        IDebugFunctionPosition2 functionPosition = HostMarshal.GetDebugFunctionPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                                        EngineUtils.CheckOk(functionPosition.GetFunctionName(out _functionName));
+                                    }
+                                    finally
+                                    {
+                                        HostMarshal.Release(_bpRequestInfo.bpLocation.unionmember2);
+                                    }
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT:
-                                    _codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_bpRequestInfo.bpLocation.unionmember1);
-                                    if (!(_codePosition is AD7MemoryAddress))
+                                    try
                                     {
-                                        goto default;   // context is not from this engine
+                                        IDebugCodeContext2 codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_bpRequestInfo.bpLocation.unionmember1);
+                                        if (!(codePosition is AD7MemoryAddress))
+                                        {
+                                            goto default;   // context is not from this engine
+                                        }
+                                        _codeAddress = ((AD7MemoryAddress)codePosition).Address;
                                     }
-                                    _codeAddress = ((AD7MemoryAddress)_codePosition).Address;
+                                    finally
+                                    {
+                                        HostMarshal.Release(_bpRequestInfo.bpLocation.unionmember1);
+                                    }
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE:
-                                    _docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
-                                    // Get the name of the document that the breakpoint was put in
-                                    EngineUtils.CheckOk(_docPosition.GetFileName(out _documentName));
+                                    try
+                                    {
+                                        IDebugDocumentPosition2 docPosition = HostMarshal.GetDocumentPositionForIntPtr(_bpRequestInfo.bpLocation.unionmember2);
+                                        // Get the name of the document that the breakpoint was put in
+                                        EngineUtils.CheckOk(docPosition.GetFileName(out _documentName));
 
-                                    // Get the location in the document that the breakpoint is in.
-                                    EngineUtils.CheckOk(_docPosition.GetRange(_startPosition, _endPosition));
+                                        // Get the location in the document that the breakpoint is in.
+                                        EngineUtils.CheckOk(docPosition.GetRange(_startPosition, _endPosition));
+                                    }
+                                    finally
+                                    {
+                                        HostMarshal.Release(_bpRequestInfo.bpLocation.unionmember2);
+                                    }
 
                                     // Get the document checksum
                                     if (_engine.DebuggedProcess.MICommandFactory.SupportsBreakpointChecksums())
