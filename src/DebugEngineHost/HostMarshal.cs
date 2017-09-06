@@ -136,9 +136,9 @@ namespace Microsoft.DebugEngineHost
             return new VSImpl.VSEventCallbackWrapper(ad7Callback);
         } 
 
-        public static int Release(IntPtr unk)
+        public static int Release(IntPtr unknownId)
         {
-            return Marshal.Release(unk);
+            return Marshal.Release(unknownId);
         }
     }
 }
