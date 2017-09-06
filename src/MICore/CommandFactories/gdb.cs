@@ -26,6 +26,8 @@ namespace MICore
         public override void DefineCurrentThread(int threadId)
         {
             _currentThreadId = threadId;
+            // If current threadId is changed, reset _currentFrameLevel
+            _currentFrameLevel = 0;
         }
 
         public override bool SupportsStopOnDynamicLibLoad()
