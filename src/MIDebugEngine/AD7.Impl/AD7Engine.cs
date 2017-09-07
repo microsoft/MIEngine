@@ -370,7 +370,7 @@ namespace Microsoft.MIDebugEngine
                 object timeoutExtension = _configStore.GetEngineMetric("BpLongBindTimeoutExtension");
                 if (timeoutExtension != null && timeoutExtension is int && ((int)timeoutExtension == 1))
                 {
-                    s_bpLongBindTimeout = 2500; // if its set, make it 10x
+                    s_bpLongBindTimeout = 50000; // if its set, make it longer
                 }
             }
             return s_bpLongBindTimeout;
