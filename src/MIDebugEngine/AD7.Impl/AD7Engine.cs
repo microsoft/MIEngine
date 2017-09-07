@@ -62,6 +62,8 @@ namespace Microsoft.MIDebugEngine
 
         private static List<int> s_childProcessLaunch;
 
+        private static int s_bpLongBindTimeout = 0;
+
         static AD7Engine()
         {
             s_childProcessLaunch = new List<int>();
@@ -357,6 +359,21 @@ namespace Microsoft.MIDebugEngine
             }
 
             return Constants.S_OK;
+        }
+
+        public int GetBPLongBindTimeout()
+        {
+            if (s_bpLongBindTimeout == 0)
+            {
+                s_bpLongBindTimeout = 250; // default is to wait a quarter of a second
+
+                object timeoutExtension = _configStore.GetEngineMetric("BpLongBindTimeoutExtension");
+                if (timeoutExtension != null && timeoutExtension is int && ((int)timeoutExtension == 1))
+                {
+                    s_bpLongBindTimeout = 2500; // if its set, make it 10x
+                }
+            }
+            return s_bpLongBindTimeout;
         }
 
         // Informs a DE that the program specified has been atypically terminated and that the DE should
