@@ -848,6 +848,12 @@ namespace Microsoft.MIDebugEngine
                 string trimmedExePath = exePath.Trim();
                 try
                 {
+                    // If the folder contains a space, we need to quote the path.
+                    if (trimmedExePath.Contains(' '))
+                    {
+                        trimmedExePath = "\"" + trimmedExePath + "\"";
+                    }
+
                     await CmdAsync("-file-exec-and-symbols " + trimmedExePath, ResultClass.done);
                 }
                 catch (UnexpectedMIResultException miException)

@@ -45,8 +45,8 @@ namespace Microsoft.MIDebugEngine
                 location.bpType = (uint)_breakType;
                 if (_breakType == enum_BP_TYPE.BPT_CODE)
                 {
-                    // The debugger will not QI the IDebugCodeContex2 interface returned here. We must pass the pointer
-                    // to IDebugCodeContex2 and not IUnknown.
+                    // The debugger will not QI the IDebugCodeContext2 interface returned here. We must pass the pointer
+                    // to IDebugCodeContext2 and not IUnknown.
                     AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, Addr, _functionName);
                     codeContext.SetDocumentContext(_documentContext);
                     location.unionmember1 = HostMarshal.RegisterCodeContext(codeContext);
