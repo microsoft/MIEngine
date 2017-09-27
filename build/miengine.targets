@@ -26,6 +26,27 @@
     </Task>
   </UsingTask>
 
+    <!-- Localize the output assembly if requested -->
+  <ItemGroup Condition=" '$(LocalizeOutputAssembly)'=='true' ">
+    <FilesToLocalize Include="$(TargetPath)">
+      <TranslationFile>$(RepositoryRoot)LOC\LCL\{Lang}\$(TargetFileName).lcl</TranslationFile>
+      <LciCommentFile>$(RepositoryRoot)LOC\LCI\$(TargetFileName).lci</LciCommentFile>
+    </FilesToLocalize>
+    <!-- Ensure new localized assemblies are signed -->
+    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning" />
+  </ItemGroup>
+
+  <!-- Custom target that will be invoked before signing (and after localization).
+       This target is conditioned to only run if localization is currently turned on. -->
+  <Target Name="GatherLocalizedOutputsForSigning" Condition="'$(LocalizationEnabled)' == 'true'">
+    <ItemGroup>
+      <FilesToSign Include="$(OutDir)\localize\**\$(TargetName).resources.dll" >
+        <Authenticode>Microsoft</Authenticode>
+        <StrongName>StrongName</StrongName>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
   <Target Name="DetermineCompilerBinary">
     <GetRuntime>
       <Output PropertyName="IsMonoRuntime" TaskParameter="IsMonoRuntime" />
