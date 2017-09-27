@@ -457,6 +457,17 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to GDB version {0} is not supported on Windows. Consider upgrading.
+        ///
+        ///{1}.
+        /// </summary>
+        public static string Error_UnsupportedWindowsGdb {
+            get {
+                return ResourceManager.GetString("Error_UnsupportedWindowsGdb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Installing debugger on the remote machine..
         /// </summary>
         public static string Info_InstallingDebuggerOnRemote {

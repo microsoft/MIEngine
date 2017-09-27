@@ -134,4 +134,23 @@ namespace MICore
             }
         }
     }
+
+    public class MIDebuggerInitializeFailedUnsupportedGdbException : MIDebuggerInitializeFailedException
+    {
+        private readonly string _gdbVersion;
+
+        public MIDebuggerInitializeFailedUnsupportedGdbException(string debuggerName, IReadOnlyList<string> errorLines, IReadOnlyList<string> outputLines, string gdbVersion)
+            : base(debuggerName, errorLines, outputLines)
+        {
+            _gdbVersion = gdbVersion;
+        }
+
+        public override string Message
+        {
+            get
+            {
+                return string.Format(CultureInfo.InvariantCulture, MICoreResources.Error_UnsupportedWindowsGdb, _gdbVersion, base.Message);
+            }
+        }
+    }
 }
