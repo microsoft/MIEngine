@@ -288,4 +288,10 @@ Error: {1}</value>
     <value>Unknown launchCompleteCommand value '{0}'. Expected values are 'exec-run', 'exec-continue' and 'None'.</value>
     <comment>{0} value</comment>
   </data>
+  <data name="Error_UnsupportedWindowsGdb" xml:space="preserve">
+    <value>GDB version {0} is not supported on Windows. Consider upgrading.
+
+{1}</value>
+    <comment>GDB is an acronym and should not be localized. {0} represents a dotted decimal version number. {1} represents a more detailed error message.</comment>
+  </data>
 </root>
