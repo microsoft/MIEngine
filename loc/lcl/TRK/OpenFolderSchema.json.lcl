@@ -356,7 +356,7 @@
         <Str Cat="Text">
           <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. ]A;For example, this can be "-target-attach" in order to attach to a target process. ]A;An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. ]A;Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Belirtilmesi durumunda, başka komutlarla hedef başlatmak için kullanılan varsayılan komutların yerine geçer. ]A;Örneğin, bir hedef işleme bağlama işlemi için bu, "-target-attach" olabilir. ]A;Boş bir komut listesi, başlatma komutlarını hiçbir şeyle değiştirmez ve hata ayıklayıcısına komut satırı seçeneği olarak başlatma seçenekleri sağlandığı durumlarda yararlı olabilir. ]A;Örnek: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
+            <Val><![CDATA[Belirtilmesi durumunda, başka komutlarla hedef başlatmak için kullanılan varsayılan komutların yerine geçer. ]A;Örneğin, bir hedef işleme iliştirme işlemi için bu, "-target-attach" olabilir. ]A;Boş bir komut listesi, başlatma komutlarını hiçbir şeyle değiştirmez ve hata ayıklayıcısına komut satırı seçeneği olarak başlatma seçenekleri sağlandığı durumlarda yararlı olabilir. ]A;Örnek: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }]5D;.]]></Val>
@@ -784,12 +784,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.externalConsole" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[True]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.miDebuggerPath" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${env.MINGW_PREFIX}\bin\gdb.exe]]></Val>
@@ -812,7 +806,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Debug attach configuration for C/C++ hosted in MinGW or Cygwin.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[MinGW veya Cygwin içinde barındırılan C/C++ için hata ayıklama ekleme yapılandırması.]]></Val>
+            <Val><![CDATA[MinGW veya Cygwin içinde barındırılan C/C++ için hata ayıklama iliştirme yapılandırması.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -821,7 +815,7 @@
         <Str Cat="Text">
           <Val><![CDATA[C/C++ Attach for MinGW/Cygwin (gdb)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[MinGW/Cygwin (gdb) için C/C++ Ekleme]]></Val>
+            <Val><![CDATA[MinGW/Cygwin (gdb) için C/C++ İliştirme]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -856,12 +850,6 @@
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.cwd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${workspaceRoot}]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.externalConsole" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[True]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
