@@ -14,7 +14,7 @@ namespace MICore
     {
         internal const string FifoPrefix = "Microsoft-MIEngine-fifo-";
         internal const string SudoPath = "/usr/bin/sudo";
-        // Mono seems to hang when the is a large response unless we specify a larger buffer here
+        // Mono seems to stop responding when the is a large response unless we specify a larger buffer here
         internal const int StreamBufferSize = 1024 * 4;
         private const string PKExecPath = "/usr/bin/pkexec";
 
