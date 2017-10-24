@@ -54,7 +54,7 @@ namespace Microsoft.DebugEngineHost
                 var globalProvider = Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider;
 
 #if LAB
-                // Force the IVsTelemetryService to complete its lazy loading. There is a hang caused by trying to
+                // Force the IVsTelemetryService to complete its lazy loading. It will stop responding because it is trying to
                 // send telemetry while Visual Studio is launching the debugger if the telemetry helper also needs 
                 // to load the telemetry service on the main thread.
                 // Do not remove this this, even though the return value goes unused.
