@@ -8,7 +8,7 @@ if ($xdeProcess.count -gt 0)
 {
     if ($killRunningEmulator)
     {
-        <# Kill emulator if already started, otherwise the hanging issue is more likely to repro. #>
+        <# Kill emulator if already started, otherwise the issue where we stop responding is more likely to repro. #>
         $xdeProcess | Stop-Process
     }
     else 

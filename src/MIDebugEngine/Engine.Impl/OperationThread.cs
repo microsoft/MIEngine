@@ -26,7 +26,7 @@ namespace Microsoft.MIDebugEngine
     {
         private readonly AutoResetEvent _opSet;
         private readonly ManualResetEvent _runningOpCompleteEvent; // fired when either m_syncOp finishes, or the kick off of m_async
-        private readonly Object _eventLock = new object(); // Locking on an event directly can hang in Mono
+        private readonly Object _eventLock = new object(); // Locking on an event directly can cause Mono to stop responding.
         private readonly Queue<Operation> _postedOperations; // queue of fire-and-forget operations
 
         public event EventHandler<Exception> PostedOperationErrorEvent;

@@ -12,6 +12,7 @@ using System.Linq;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.DebugEngineHost;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace MICore
 {
@@ -25,6 +26,9 @@ namespace MICore
 
     public class Debugger : ITransportCallback
     {
+        private const string Event_UnsupportedWindowsGdb = "VS/Diagnostics/Debugger/MIEngine/UnsupportedWindowsGdb";
+        private const string Property_GdbVersion = "VS.Diagnostics.Debugger.MIEngine.GdbVersion";
+
         public event EventHandler BreakModeEvent;
         public event EventHandler RunModeEvent;
         public event EventHandler ProcessExitEvent;
@@ -943,7 +947,25 @@ namespace MICore
                     {
                         if (_consoleDebuggerInitializeCompletionSource != null)
                         {
-                            MIDebuggerInitializeFailedException exception = new MIDebuggerInitializeFailedException(this.MICommandFactory.Name, _initialErrors.ToList().AsReadOnly(), _initializationLog.ToList().AsReadOnly());
+                            MIDebuggerInitializeFailedException exception;
+                            string version = GdbVersionFromLog();
+
+                            // We can't use IsMinGW or IsCygwin because we never connected to the debugger
+                            bool isMinGWOrCygwin = _launchOptions is LocalLaunchOptions &&
+                                    PlatformUtilities.IsWindows() &&
+                                    this.MICommandFactory.Mode == MIMode.Gdb;
+                            if (isMinGWOrCygwin && version != null && IsUnsupportedWindowsGdbVersion(version))
+                            {
+                                exception = new MIDebuggerInitializeFailedUnsupportedGdbException(
+                                    this.MICommandFactory.Name, _initialErrors.ToList().AsReadOnly(), _initializationLog.ToList().AsReadOnly(), version);
+                                SendUnsupportedWindowsGdbEvent(version);
+                            }
+                            else
+                            {
+                                exception = new MIDebuggerInitializeFailedException(
+                                    this.MICommandFactory.Name, _initialErrors.ToList().AsReadOnly(), _initializationLog.ToList().AsReadOnly());
+                            }
+
                             _initialErrors = null;
                             _initializationLog = null;
 
@@ -976,6 +998,33 @@ namespace MICore
                     }
                 }
             }
+        }
+
+        string GdbVersionFromLog()
+        {
+            foreach (string line in _initializationLog)
+            {
+                // Second set of parenthesis looks for a Cygwin-specific version number
+                // Cygwin example: GNU gdb (GDB) (Cygwin 7.11.1-2) 7.11.1
+                // MinGW example:  GNU gdb (GDB) 8.0.1
+                Match match = Regex.Match(line, "GNU gdb \\(GDB\\) (?:\\(Cygwin (\\d+[\\d\\.-]*)\\) )?(\\d+[\\d\\.-]*)");
+                if (match.Success)
+                {
+                    return match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
+                }
+            }
+
+            return null;
+        }
+
+        bool IsUnsupportedWindowsGdbVersion(string version)
+        {
+            return new string[] { "7.12", "7.12-1", "7.12-2", "7.12-3", "7.12.1", "7.12.1-1" }.Contains(version);
+        }
+
+        void SendUnsupportedWindowsGdbEvent(string version)
+        {
+            HostTelemetry.SendEvent(Event_UnsupportedWindowsGdb, new KeyValuePair<string, object>(Property_GdbVersion, version));
         }
 
         void ITransportCallback.AppendToInitializationLog(string line)
