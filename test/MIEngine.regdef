@@ -7,6 +7,8 @@ Windows Registry Editor Version 5.00
 ; "AddressBP"=dword:00000001
 "AlwaysLoadLocal"=dword:00000001
 "AlwaysLoadProgramProviderLocal"=dword:00000001
+; BpLongBindTimeoutExtension is added for glass tests to prevent false error from failing the test.
+"BpLongBindTimeoutExtension"=dword:00000001
 ; "CallStackBP"=dword:00000001
 ; "ConditionalBP"=dword:00000001
 ; "DataBP"=dword:00000001

@@ -263,8 +263,7 @@ namespace Microsoft.MIDebugEngine
                         bindTask = _engine.DebuggedProcess.AddInternalBreakAction(this.BindAsync);
                     });
 
-                    bindTask.Wait(250); //wait a quarter of a second
-
+                    bindTask.Wait(_engine.GetBPLongBindTimeout()); 
                     if (!bindTask.IsCompleted)
                     {
                         //send a low severity warning bp. This will allow the UI to respond quickly, and if the mi debugger doesn't end up binding, this warning will get 
