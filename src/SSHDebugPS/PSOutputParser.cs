@@ -118,7 +118,7 @@ namespace Microsoft.SSHDebugPS
                     if (process == null)
                         continue;
 
-                    if (process.CommandLine.EndsWith(PSCommandLine))
+                    if (process.CommandLine.EndsWith(PSCommandLine, StringComparison.Ordinal))
                         continue; // ignore the 'ps' process that we spawned
 
                     processList.Add(process);
@@ -138,7 +138,7 @@ namespace Microsoft.SSHDebugPS
             if (userNameLine == null)
                 return false;
 
-            if (!userNameLine.StartsWith(UserNamePrefix))
+            if (!userNameLine.StartsWith(UserNamePrefix, StringComparison.Ordinal))
                 return false;
 
             _currentUserName = userNameLine.Substring(UserNamePrefix.Length).Trim();

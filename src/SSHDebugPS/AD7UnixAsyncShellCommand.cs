@@ -8,6 +8,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -29,8 +30,8 @@ namespace Microsoft.SSHDebugPS
             _streamingShell = streamingShell;
             _callback = callback;
             Guid id = Guid.NewGuid();
-            _beginMessage = string.Format("Begin:{0}", id);
-            _exitMessagePrefix = string.Format("Exit:{0}-", id);
+            _beginMessage = string.Format(CultureInfo.InvariantCulture, "Begin:{0}", id);
+            _exitMessagePrefix = string.Format(CultureInfo.InvariantCulture, "Exit:{0}-", id);
             _streamingShell.OutputReceived += OnOutputReceived;
             _streamingShell.Closed += OnClosedOrDisconnected;
             _streamingShell.Disconnected += OnClosedOrDisconnected;
@@ -43,7 +44,7 @@ namespace Microsoft.SSHDebugPS
             // Invoking bash as the first command to make sure of that.
             _streamingShell.WriteLine("/bin/bash");
 
-            _startCommand = string.Format("echo \"{0}\"; {1}; echo \"{2}$?\"", _beginMessage, commandText, _exitMessagePrefix);
+            _startCommand = string.Format(CultureInfo.InvariantCulture, "echo \"{0}\"; {1}; echo \"{2}$?\"", _beginMessage, commandText, _exitMessagePrefix);
             _streamingShell.WriteLine(_startCommand);
             _streamingShell.Flush();
             _streamingShell.BeginOutputRead();
@@ -111,7 +112,7 @@ namespace Microsoft.SSHDebugPS
                     continue;
                 }
 
-                int endCommandIndex = line.IndexOf(_exitMessagePrefix);
+                int endCommandIndex = line.IndexOf(_exitMessagePrefix, StringComparison.Ordinal);
                 if (endCommandIndex >= 0)
                 {
                     if (Interlocked.CompareExchange(ref _firedOnExit, 1, 0) == 0)
