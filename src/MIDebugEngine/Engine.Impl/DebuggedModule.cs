@@ -117,6 +117,6 @@ namespace Microsoft.MIDebugEngine
 
         public uint GetLoadOrder() { return _loadOrder; }
 
-        public Object Client { get; set; }      // really AD7Module
+        public Object Client { get; internal set; }      // really AD7Module
     }
 }
