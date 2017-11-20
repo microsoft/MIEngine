@@ -341,7 +341,7 @@ namespace Microsoft.MIDebugPackage
                 else
                     message = e.Message;
 
-                commandWindow.Print(string.Format("Error: {0}\r\n", message));
+                commandWindow.Print(string.Format(CultureInfo.CurrentCulture, "Error: {0}\r\n", message));
                 return;
             }
 
