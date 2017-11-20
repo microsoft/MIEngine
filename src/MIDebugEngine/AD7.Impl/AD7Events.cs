@@ -483,36 +483,6 @@ namespace Microsoft.MIDebugEngine
         #endregion
     }
 
-    // This interface is sent by the debug engine (DE) to indicate the results of searching for symbols for a module in the debuggee
-    internal sealed class AD7SymbolSearchEvent : AD7AsynchronousEvent, IDebugSymbolSearchEvent2
-    {
-        public const string IID = "638F7C54-C160-4c7b-B2D0-E0337BC61F8C";
-
-        private AD7Module _module;
-        private string _searchInfo;
-        private enum_MODULE_INFO_FLAGS _symbolFlags;
-
-        public AD7SymbolSearchEvent(AD7Module module, string searchInfo, enum_MODULE_INFO_FLAGS symbolFlags)
-        {
-            _module = module;
-            _searchInfo = searchInfo;
-            _symbolFlags = symbolFlags;
-        }
-
-        #region IDebugSymbolSearchEvent2 Members
-
-        int IDebugSymbolSearchEvent2.GetSymbolSearchInfo(out IDebugModule3 pModule, ref string pbstrDebugMessage, enum_MODULE_INFO_FLAGS[] pdwModuleInfoFlags)
-        {
-            pModule = _module;
-            pbstrDebugMessage = _searchInfo;
-            pdwModuleInfoFlags[0] = _symbolFlags;
-
-            return Constants.S_OK;
-        }
-
-        #endregion
-    }
-
     // This interface is sent when a pending breakpoint has been bound in the debuggee.
     internal sealed class AD7BreakpointBoundEvent : AD7AsynchronousEvent, IDebugBreakpointBoundEvent2
     {

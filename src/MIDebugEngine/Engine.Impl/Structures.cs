@@ -99,7 +99,6 @@ namespace Microsoft.MIDebugEngine
         void OnAsyncBreakComplete(DebuggedThread thread);
         void OnLoadComplete(DebuggedThread thread);
         //void OnProgramDestroy(uint exitCode);
-        void OnSymbolSearch(DebuggedModule module, string status, uint dwStatsFlags);
         void OnBreakpointBound(Object objPendingBreakpoint);
         void OnEntryPoint(DebuggedThread thread);
         void OnStopComplete(DebuggedThread thread);
