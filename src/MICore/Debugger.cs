@@ -598,11 +598,7 @@ namespace MICore
         {
             get
             {
-                LocalLaunchOptions localOptions = this._launchOptions as LocalLaunchOptions;
-                if (null == localOptions)
-                    return false;
-
-                return localOptions.IsCoreDump;
+                return this._launchOptions.IsCoreDump;
             }
         }
 
