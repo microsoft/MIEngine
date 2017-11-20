@@ -26,43 +26,6 @@
     </Task>
   </UsingTask>
 
-    <!-- Localize the output assembly if requested -->
-  <ItemGroup Condition=" '$(LocalizeOutputAssembly)'=='true' ">
-    <FilesToLocalize Include="$(TargetPath)">
-      <TranslationFile>$(RepositoryRoot)loc\lcl\{Lang}\$(TargetFileName).lcl</TranslationFile>
-      <LciCommentFile>$(RepositoryRoot)loc\lci\$(TargetFileName).lci</LciCommentFile>
-    </FilesToLocalize>
-    <!-- Ensure new localized assemblies are signed -->
-    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning" />
-  </ItemGroup>
-
-  <!-- Custom target that will be invoked before signing (and after localization).
-       This target is conditioned to only run if localization is currently turned on. -->
-  <Target Name="GatherLocalizedOutputsForSigning" Condition="'$(LocalizationEnabled)' == 'true'">
-    <ItemGroup>
-      <FilesToSign Include="$(OutDir)\localize\**\$(TargetName).resources.dll" >
-        <Authenticode>Microsoft</Authenticode>
-        <StrongName>StrongName</StrongName>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
-
-  <!-- Custom target that will be invoked after signing and loc to copy signed satellite assemblies
-       to the drop location.
-       This target is conditioned to only run if localization is currently turned on. -->
-  <Target Name="CopySatellitesToDrop" AfterTargets="SignFiles" Condition="'$(LocalizationEnabled)'=='true'">
-    <PropertyGroup>
-      <SatellitesBinDir>$(OutDir)localize\</SatellitesBinDir>
-      <SatellitesDropDir>$(DropRootDir)\loc\</SatellitesDropDir>
-    </PropertyGroup>
-    <ItemGroup>
-      <LocFilesToDrop Include="$(SatellitesBinDir)**\$(TargetName).resources.dll" />
-      <LocFilesToDrop Include="$(SatellitesBinDir)**\$(TargetName).dll.lcg" />
-    </ItemGroup>
-    <Copy DestinationFiles="@(LocFilesToDrop->'$(SatellitesDropDir)%(RecursiveDir)%(Filename)%(Extension)')"
-          SourceFiles="@(LocFilesToDrop)" />
-  </Target>
-
   <Target Name="DetermineCompilerBinary">
     <GetRuntime>
       <Output PropertyName="IsMonoRuntime" TaskParameter="IsMonoRuntime" />
