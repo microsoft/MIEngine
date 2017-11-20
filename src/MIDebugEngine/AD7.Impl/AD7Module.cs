@@ -20,8 +20,8 @@ namespace Microsoft.MIDebugEngine
 
         public AD7Module(DebuggedModule debuggedModule, DebuggedProcess process)
         {
-            Debug.Assert(debuggedModule.Client == null, "Why is the client of the module already set?");
             Debug.Assert(debuggedModule != null, "No module provided?");
+            Debug.Assert(debuggedModule.Client == null, "Why is the client of the module already set?");
             Debug.Assert(process != null, "No process provided?");
 
             this.DebuggedModule = debuggedModule;
