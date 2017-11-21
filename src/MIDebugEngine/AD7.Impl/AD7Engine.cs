@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using MICore;
 using System.Globalization;
 using Microsoft.DebugEngineHost;
@@ -860,12 +861,9 @@ namespace Microsoft.MIDebugEngine
         {
             DebuggedModule[] modules = _debuggedProcess.GetModules();
 
-            AD7Module[] moduleObjects = new AD7Module[modules.Length];
-            for (int i = 0; i < modules.Length; i++)
-            {
-                moduleObjects[i] = new AD7Module(modules[i], _debuggedProcess);
-            }
-
+            AD7Module[] moduleObjects = modules.Select(backendModule => backendModule.Client as AD7Module)
+                .Where(ad7Module => ad7Module != null) // Ignore any modules that we haven't quite sent the module load event for
+                .ToArray();
             ppEnum = new Microsoft.MIDebugEngine.AD7ModuleEnum(moduleObjects);
 
             return Constants.S_OK;
