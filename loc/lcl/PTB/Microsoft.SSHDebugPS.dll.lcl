@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <LCX SchemaVersion="6.0" Name="E:\A\_work\9\s\bin\Lab.Release\Microsoft.SSHDebugPS.dll" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="pt-BR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
@@ -29,9 +29,6 @@
           <Val><![CDATA[The specified directory {0} could not be created or accessed.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} directory name.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Error_PSFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -44,18 +41,12 @@
           <Val><![CDATA[Source file '{0}' not found]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} file]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";HeaderTextFormat" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enter credentials to connect to {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the network address being connected to]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PSDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -74,18 +65,12 @@
           <Val><![CDATA[Connecting to {0}...]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the network address being connected to]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";WaitingOp_ExecutingCommand" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Running command '{0}' on the remote system...]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the command description.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";WaitingOp_ExecutingPS" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -117,7 +102,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[14.0.41121.1]]></Val>
+        <Val><![CDATA[14.0.41123.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -130,6 +115,9 @@
     <Item ItemId=";LegalCopyright" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[© Microsoft Corporation. All rights reserved.]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[© Microsoft Corporation. Todos os direitos reservados.]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -142,12 +130,15 @@
     <Item ItemId=";ProductName" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Microsoft ® Visual Studio ®]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Microsoft ® Visual Studio ®]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[14.0.41121.1 commit:3e1979b894b648242742bce61a5704eda0f190eb]]></Val>
+        <Val><![CDATA[14.0.41123.1 commit:2d6498679d460f4ec4122789b11a580ba97608d9]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
