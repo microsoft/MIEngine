@@ -589,7 +589,7 @@ namespace MICore
         private bool IsRemoteGdb()
         {
             return this.MICommandFactory.Mode == MIMode.Gdb &&
-               (this._launchOptions is PipeLaunchOptions ||
+               (this._launchOptions is PipeLaunchOptions || this._launchOptions is UnixShellPortLaunchOptions ||
                (this._launchOptions is LocalLaunchOptions
                     && !String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)));
         }
@@ -733,6 +733,14 @@ namespace MICore
             {
                 int pid = PidByInferior("i1");
                 if (pid != 0 && ((PipeTransport)_transport).Interrupt(pid))
+                {
+                    return Task.FromResult<Results>(new Results(ResultClass.done));
+                }
+            }
+            else if (IsRemoteGdb() && _transport is UnixShellPortTransport)
+            {
+                int pid = PidByInferior("i1");
+                if (pid != 0 && ((UnixShellPortTransport)_transport).Interrupt(pid))
                 {
                     return Task.FromResult<Results>(new Results(ResultClass.done));
                 }

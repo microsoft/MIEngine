@@ -196,5 +196,29 @@ namespace MICore
         {
             return true;
         }
+
+        public bool Interrupt(int pid)
+        {
+            int exitCode = -1;
+            string output = null;
+            string error = null;
+            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
+
+            try
+            {
+                exitCode = ExecuteSyncCommand(MICoreResources.Info_KillingPipeProcess, killCmd, System.Threading.Timeout.Infinite, out output, out error);
+
+                if (exitCode != 0)
+                {
+                    this._callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessExit, killCmd, exitCode));
+                }
+            }
+            catch (Exception e)
+            {
+                this._callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessException, killCmd, e.Message));
+            }
+
+            return exitCode == 0;
+        }
     }
 }
