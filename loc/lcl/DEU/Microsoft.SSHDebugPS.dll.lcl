@@ -21,6 +21,9 @@
       <Item ItemId=";AuthenticationFailureHeader" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Authentication Failure]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Authentifizierungsfehler]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -63,6 +66,9 @@
       <Item ItemId=";WaitingOp_Connecting" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Connecting to {0}...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Verbindung mit "{0}" wird hergestellt...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -97,12 +103,15 @@
     <Item ItemId=";FileDescription" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[SSHDebugPS]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[SSHDebugPS]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[14.0.41123.1]]></Val>
+        <Val><![CDATA[14.0.41127.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -138,7 +147,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[14.0.41123.1 commit:2d6498679d460f4ec4122789b11a580ba97608d9]]></Val>
+        <Val><![CDATA[14.0.41127.1 commit:3a4c8a91b3a9edd55e9b9c42c0f50e8a68992323]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
