@@ -725,7 +725,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
                     }
-                    
+
                     Func<string, Task> breakMainSuccessHandler = (string bkptResult) =>
                     {
                         int index = bkptResult.IndexOf("number=", StringComparison.Ordinal);
@@ -749,7 +749,7 @@ namespace Microsoft.MIDebugEngine
                     };
 
                     commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true, successHandler: breakMainSuccessHandler));
-                    
+
                     if (null != localLaunchOptions)
                     {
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
@@ -1064,7 +1064,7 @@ namespace Microsoft.MIDebugEngine
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
 
-                 if (bkpt != null)
+                if (bkpt != null)
                 {
                     if (frame != null && addr != 0)
                     {
@@ -1229,7 +1229,7 @@ namespace Microsoft.MIDebugEngine
                 await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
             }
 
-            if(this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
+            if (this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
             {
                 await MICommandFactory.BreakDelete(this._entryPointBreakpoint);
                 this._deleteEntryPointBreakpoint = false;
@@ -1747,7 +1747,8 @@ namespace Microsoft.MIDebugEngine
         //NOTE: eval is not called
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {
-            var frames = await MICommandFactory.StackListArguments(values || types ? PrintValues.SimpleValues : PrintValues.NoValues, thread.Id, low, high);
+            // If values are requested, request simple values, otherwise we'll use -var-create to get the type of argument it is.
+            var frames = await MICommandFactory.StackListArguments(values ? PrintValues.SimpleValues : PrintValues.NoValues, thread.Id, low, high);
             List<ArgumentList> parameters = new List<ArgumentList>();
 
             foreach (var f in frames)
@@ -1771,13 +1772,31 @@ namespace Microsoft.MIDebugEngine
                         string[] names = ((ResultListValue)argList).FindAllStrings("name");
                         foreach (var n in names)
                         {
-                            args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, null));
+                            // If the types of the arguments are requested, get that from a call to -var-create
+                            if (types)
+                            {
+                                Debug.Assert(!values, "GetParameterInfoOnly should not reach here if values is true");
+                                Results results = await MICommandFactory.VarCreate(n, thread.Id, (uint)level, 0);
+
+                                string type = results.FindString("type");
+                                args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, String.IsNullOrWhiteSpace(type) ? null : type));
+
+                                string varName = results.TryFindString("name");
+                                if (!String.IsNullOrWhiteSpace(varName))
+                                {
+                                    // Remove the variable we created as we don't track it.
+                                    await MICommandFactory.VarDelete(varName);
+                                }
+                            }
+                            else
+                            {
+                                args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, null));
+                            }
                         }
                     }
                 }
                 parameters.Add(new ArgumentList(level, args));
             }
-
             return parameters;
         }
 
