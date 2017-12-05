@@ -196,7 +196,7 @@ namespace Microsoft.MIDebugEngine
                     localTransport = new LocalUnixTerminalTransport();
 
                     // Only need to clear terminal for Linux and OS X local launch
-                    _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                    _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
                 }
                 else
                 {
@@ -632,7 +632,7 @@ namespace Microsoft.MIDebugEngine
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
-                else if (_launchOptions.ProcessId != 0)
+                else if (_launchOptions.ProcessId.HasValue)
                 {
                     // This is an attach
 
@@ -679,7 +679,7 @@ namespace Microsoft.MIDebugEngine
                         }
                     };
 
-                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId, ignoreFailures: false, failureHandler: failureHandler));
+                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value, ignoreFailures: false, failureHandler: failureHandler));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -826,11 +826,11 @@ namespace Microsoft.MIDebugEngine
             if (launchOptions.UnixPort.IsOSX())
             {
                 // Usually the first FD=txt in the output of lsof points to the executable.
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId);
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId.HasValue ? _launchOptions.ProcessId.Value : 0);
             }
             else if (launchOptions.UnixPort.IsLinux())
             {
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId.HasValue ? _launchOptions.ProcessId.Value : 0);
             }
             else
             {
@@ -1173,7 +1173,7 @@ namespace Microsoft.MIDebugEngine
                     bool stoppedAtSIGSTOP = false;
                     if (sigName == "SIGSTOP")
                     {
-                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId))
+                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId.HasValue ? _launchOptions.ProcessId.Value : 0))
                         {
                             stoppedAtSIGSTOP = true;
                         }
@@ -1566,12 +1566,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                bool attach = false;
-                int attachPid = _launchOptions.ProcessId;
-                if (attachPid != 0)
-                {
-                    attach = true;
-                }
+                bool attach = _launchOptions.ProcessId.HasValue;
 
                 if (!attach)
                 {

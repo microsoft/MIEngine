@@ -52,6 +52,11 @@ namespace Microsoft.MIDebugEngine
             _bp = bp;
         }
 
+        public void IsHit()
+        {
+            _bp.IsHit();
+        }
+
         #region IDebugBoundBreakpoint2 Members
 
         // Called when the breakpoint is being deleted by the user.
@@ -131,7 +136,8 @@ namespace Microsoft.MIDebugEngine
         // resets a breakpoint's hit count.
         int IDebugBoundBreakpoint2.SetHitCount(uint dwHitCount)
         {
-            throw new NotImplementedException();
+            _bp.ResetHitCount(dwHitCount);
+            return Constants.S_OK;
         }
 
         // The sample engine does not support pass counts on breakpoints.

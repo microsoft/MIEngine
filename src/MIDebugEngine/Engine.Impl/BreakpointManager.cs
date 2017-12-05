@@ -222,6 +222,7 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 hitBoundBreakpoints.Add(currBoundBp);
+                currBoundBp.IsHit();
             }
 
 

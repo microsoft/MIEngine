@@ -418,6 +418,16 @@ namespace Microsoft.MIDebugEngine
             return new AD7DocumentContext(_textPosition, new AD7MemoryAddress(engine, Addr, this.FunctionName), engine.DebuggedProcess);
         }
 
+        internal void IsHit()
+        {
+            this.HitCount++;
+        }
+
+        internal void ResetHitCount(uint count)
+        {
+            this.HitCount = count;
+        }
+
         /// <summary>
         /// Returns the start line of the breakpoint.
         /// NOTE: If set this overwrites any column or multiline information.
