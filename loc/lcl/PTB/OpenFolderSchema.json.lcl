@@ -236,7 +236,7 @@
         <Str Cat="Text">
           <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio ]A;and the MI-enabled debugger (such as gdb).]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Quando presente, diz para o depurador para se conectar a um computador remoto usando outro executável como um pipe que retransmitirá a entrada/saída padrão entre o Visual Studio e ]A;o depurador habilitado para MI (como gdb).]]></Val>
+            <Val><![CDATA[Quando presente, diz para o depurador se conectar a um computador remoto usando outro executável como um pipe que retransmitirá a entrada/saída padrão entre o Visual Studio e ]A;o depurador habilitado para MI (como gdb).]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

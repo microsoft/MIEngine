@@ -746,7 +746,7 @@
         <Str Cat="Text">
           <Val><![CDATA[C/C++ Launch for MinGW/Cygwin (gdb)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Uruchamianie C/C++ dla środowiska MinGW/Cygwin (gdb)]]></Val>
+            <Val><![CDATA[Uruchamianie procesu języka C/C++ dla środowiska MinGW/Cygwin (gdb)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -784,12 +784,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.externalConsole" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[True]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.miDebuggerPath" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${env.MINGW_PREFIX}\bin\gdb.exe]]></Val>
@@ -821,7 +815,7 @@
         <Str Cat="Text">
           <Val><![CDATA[C/C++ Attach for MinGW/Cygwin (gdb)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Dołączanie C/C++ dla środowiska MinGW/Cygwin (gdb)]]></Val>
+            <Val><![CDATA[Dołączanie do procesu języka C/C++ dla środowiska MinGW/Cygwin (gdb)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -856,12 +850,6 @@
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.cwd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${workspaceRoot}]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.externalConsole" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[True]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
