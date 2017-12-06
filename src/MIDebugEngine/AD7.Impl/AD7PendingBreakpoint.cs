@@ -114,7 +114,7 @@ namespace Microsoft.MIDebugEngine
             if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
             {
                 this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
-                return true;
+                return false;
             }
 
             return true;
