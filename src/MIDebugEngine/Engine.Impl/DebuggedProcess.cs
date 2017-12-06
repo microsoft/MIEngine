@@ -830,7 +830,8 @@ namespace Microsoft.MIDebugEngine
             }
             else if (launchOptions.UnixPort.IsLinux())
             {
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId.HasValue ? _launchOptions.ProcessId.Value : 0);
+                Debug.Assert(_launchOptions.ProcessId.HasValue, "ProcessId should have a value.");
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId.Value);
             }
             else
             {
@@ -1171,9 +1172,9 @@ namespace Microsoft.MIDebugEngine
                         code = EngineUtils.SignalMap.Instance[sigName];
                     }
                     bool stoppedAtSIGSTOP = false;
-                    if (sigName == "SIGSTOP")
+                    if (sigName == "SIGSTOP" && _launchOptions.ProcessId.HasValue)
                     {
-                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId.HasValue ? _launchOptions.ProcessId.Value : 0))
+                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId.Value))
                         {
                             stoppedAtSIGSTOP = true;
                         }
