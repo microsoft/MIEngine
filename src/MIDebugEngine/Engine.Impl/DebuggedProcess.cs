@@ -1792,7 +1792,7 @@ namespace Microsoft.MIDebugEngine
                             {
                                 args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, null));
                             }
-                        }
+                        }                        
                     }
                 }
                 parameters.Add(new ArgumentList(level, args));
