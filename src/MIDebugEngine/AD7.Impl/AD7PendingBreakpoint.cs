@@ -34,8 +34,6 @@ namespace Microsoft.MIDebugEngine
         private bool _deleted;
         private bool _pendingDelete;
 
-        private uint hitCount;
-
         private string _documentName = null;
         private string _functionName = null;
         private TEXT_POSITION[] _startPosition = new TEXT_POSITION[1];
@@ -115,8 +113,7 @@ namespace Microsoft.MIDebugEngine
             }
             if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
             {
-                hitCount = _bpRequestInfo.bpPassCount.dwPassCount;
-                //this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
+                this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
                 return true;
             }
 
