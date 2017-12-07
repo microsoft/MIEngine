@@ -196,7 +196,7 @@ namespace Microsoft.MIDebugEngine
                     localTransport = new LocalUnixTerminalTransport();
 
                     // Only need to clear terminal for Linux and OS X local launch
-                    _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                    _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
                 }
                 else
                 {
@@ -632,7 +632,7 @@ namespace Microsoft.MIDebugEngine
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
-                else if (_launchOptions.ProcessId != 0)
+                else if (_launchOptions.ProcessId.HasValue)
                 {
                     // This is an attach
 
@@ -679,7 +679,7 @@ namespace Microsoft.MIDebugEngine
                         }
                     };
 
-                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId, ignoreFailures: false, failureHandler: failureHandler));
+                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value, ignoreFailures: false, failureHandler: failureHandler));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -817,20 +817,24 @@ namespace Microsoft.MIDebugEngine
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
         {
-            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
+           // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
             // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
             // embedded error text in lsof output like "(readlink error)". 
             string absoluteExePath;
+
+            // Must have a processId
+            Debug.Assert(_launchOptions.ProcessId.HasValue, "ProcessId should have a value.");
+
             if (launchOptions.UnixPort.IsOSX())
             {
                 // Usually the first FD=txt in the output of lsof points to the executable.
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId);
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId.Value);
             }
             else if (launchOptions.UnixPort.IsLinux())
             {
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId.Value);
             }
             else
             {
@@ -1171,9 +1175,9 @@ namespace Microsoft.MIDebugEngine
                         code = EngineUtils.SignalMap.Instance[sigName];
                     }
                     bool stoppedAtSIGSTOP = false;
-                    if (sigName == "SIGSTOP")
+                    if (sigName == "SIGSTOP" && _launchOptions.ProcessId.HasValue)
                     {
-                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId))
+                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId.Value))
                         {
                             stoppedAtSIGSTOP = true;
                         }
@@ -1566,12 +1570,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                bool attach = false;
-                int attachPid = _launchOptions.ProcessId;
-                if (attachPid != 0)
-                {
-                    attach = true;
-                }
+                bool attach = _launchOptions.ProcessId.HasValue;
 
                 if (!attach)
                 {

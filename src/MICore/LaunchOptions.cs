@@ -981,12 +981,12 @@ namespace MICore
             }
         }
 
-        private int _processId;
+        private int? _processId;
 
         /// <summary>
         /// [Optional] If supplied, the debugger will attach to the process rather than launching a new one. Note that some operating systems will require admin rights to do this.
         /// </summary>
-        public int ProcessId
+        public int? ProcessId
         {
             get { return _processId; }
             protected set
@@ -1676,7 +1676,11 @@ namespace MICore
                 this.DebugChildProcesses = source.DebugChildProcesses;
             }
 
-            this.ProcessId = source.ProcessId;
+            if (source.ProcessIdSpecified)
+            {
+                this.ProcessId = source.ProcessId;
+            }
+
             this.CoreDumpPath = source.CoreDumpPath;
 
             // Ensure that CoreDumpPath and ProcessId are not specified at the same time

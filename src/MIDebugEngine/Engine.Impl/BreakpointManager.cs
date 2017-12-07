@@ -224,8 +224,6 @@ namespace Microsoft.MIDebugEngine
                 hitBoundBreakpoints.Add(currBoundBp);
             }
 
-
-
             fContinue = (hitBoundBreakpoints.Count == 0 && hitBps.Length != 0);
             return hitBoundBreakpoints.Count != 0 ? hitBoundBreakpoints.ToArray() : null;
         }
