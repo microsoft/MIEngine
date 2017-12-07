@@ -217,31 +217,31 @@ namespace MICore
         public async Task ExecStep(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-step";
-            await ThreadCmdAsync(command, resultClass, threadId);
+            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
         public async Task ExecNext(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-next";
-            await ThreadCmdAsync(command, resultClass, threadId);
+            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
         public async Task ExecFinish(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-finish";
-            await ThreadCmdAsync(command, resultClass, threadId);
+            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
         public async Task ExecStepInstruction(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-step-instruction";
-            await ThreadCmdAsync(command, resultClass, threadId);
+            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
         public async Task ExecNextInstruction(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-next-instruction";
-            await ThreadCmdAsync(command, resultClass, threadId);
+            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
         /// <summary>
@@ -331,6 +331,7 @@ namespace MICore
 
         #region Variable Objects
 
+        // Calls to VarCreate will change the current debugger thread and frame selection to what is passed in. This is because it needs to be queried in the context of a thread/frame id.
         public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             string quoteEscapedExpression = EscapeQuotes(expression);

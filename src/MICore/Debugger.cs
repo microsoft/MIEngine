@@ -1329,7 +1329,7 @@ namespace MICore
             {
                 if (PlatformUtilities.IsWindows() &&
                     this.LaunchOptions is LocalLaunchOptions &&
-                    ((LocalLaunchOptions)this.LaunchOptions).ProcessId != 0 &&
+                    ((LocalLaunchOptions)this.LaunchOptions).ProcessId.HasValue &&
                     this.MICommandFactory.Mode == MIMode.Gdb &&
                     !this.IsCygwin
                     )
