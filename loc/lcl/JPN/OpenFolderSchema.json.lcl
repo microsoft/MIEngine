@@ -130,7 +130,7 @@
           <Str Cat="Text">
             <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? If 'false', the debugger command will no longer be automatically quoted. ]A;Default is 'true'.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[個々の引数にスペースやタブなどの文字が含まれる場合に引用符で囲むかどうか。'false' に設定すると、デバッガー コマンドが自動的に引用符で囲むことはなくなります。]A;既定値は 'true' です。]]></Val>
+              <Val><![CDATA[個々の引数にスペースやタブなどの文字が含まれる場合に引用符で囲むかどうか。'false' に設定すると、デバッガー コマンドを自動的に引用符で囲むことはなくなります。]A;既定値は 'true' です。]]></Val>
             </Tgt>
             <Prev Cat="Text">
               <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>
@@ -467,7 +467,7 @@
         <Str Cat="Text">
           <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. ]A;Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[true の場合、デバッグ対象のためにコンソールが起動します。false の場合、コンソールは起動しません。]A;既定値は false です。メモ: このオプションは、いくつかのケースに技術的な理由で無視されることがあります。]]></Val>
+            <Val><![CDATA[true の場合、デバッグ対象のためにコンソールが起動します。false の場合、コンソールは起動しません。]A;既定値は false です。メモ: このオプションは、場合によっては技術的な理由で無視されます。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[If true, a console is launched for the debuggee. If false, no console is launched. Defaults to false. NOTE: This option is ignored in some cases for technical reasons.]]></Val>
@@ -784,12 +784,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.externalConsole" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[True]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";debugExtensions.cppdbg.templates[0].initialConfiguration.miDebuggerPath" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${env.MINGW_PREFIX}\bin\gdb.exe]]></Val>
@@ -856,12 +850,6 @@
       <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.cwd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[${workspaceRoot}]]></Val>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";debugExtensions.cppdbg.templates[1].initialConfiguration.externalConsole" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[True]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
