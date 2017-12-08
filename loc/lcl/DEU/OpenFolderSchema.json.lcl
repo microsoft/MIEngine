@@ -130,7 +130,7 @@
           <Str Cat="Text">
             <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? If 'false', the debugger command will no longer be automatically quoted. ]A;Default is 'true'.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[Gibt an, ob der Befehl in Anführungszeichen gesetzt wird, wenn einzelne Argumente Zeichen enthalten (z. B. Leerzeichen oder Tabstopps). Bei "false" wird der Debuggerbefehl nicht mehr automatisch in Anführungszeichen gesetzt. ]A;Der Standardwert ist "true".]]></Val>
+              <Val><![CDATA[Gibt an, ob der Befehl in Anführungszeichen gesetzt wird, wenn einzelne Argumente Zeichen enthalten (z. B. Leerräume oder Tabstopps). Bei "false" wird der Debuggerbefehl nicht mehr automatisch in Anführungszeichen gesetzt. ]A;Der Standardwert ist "true".]]></Val>
             </Tgt>
             <Prev Cat="Text">
               <Val><![CDATA[If individual arguments contain characters (such as spaces or tabs), should it be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.]]></Val>

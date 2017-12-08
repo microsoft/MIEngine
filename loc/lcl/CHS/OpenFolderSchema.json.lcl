@@ -145,7 +145,7 @@
           <Str Cat="Text">
             <Val><![CDATA[The location of the source code for the editor to locate.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[要查找的编辑器的源代码的位置。]]></Val>
+              <Val><![CDATA[编辑器要查找的源代码位置。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" />

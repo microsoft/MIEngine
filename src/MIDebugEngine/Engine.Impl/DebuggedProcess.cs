@@ -196,7 +196,7 @@ namespace Microsoft.MIDebugEngine
                     localTransport = new LocalUnixTerminalTransport();
 
                     // Only need to clear terminal for Linux and OS X local launch
-                    _needTerminalReset = (localLaunchOptions.ProcessId == 0 && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                    _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
                 }
                 else
                 {
@@ -632,7 +632,7 @@ namespace Microsoft.MIDebugEngine
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
-                else if (_launchOptions.ProcessId != 0)
+                else if (_launchOptions.ProcessId.HasValue)
                 {
                     // This is an attach
 
@@ -679,7 +679,7 @@ namespace Microsoft.MIDebugEngine
                         }
                     };
 
-                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId, ignoreFailures: false, failureHandler: failureHandler));
+                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value, ignoreFailures: false, failureHandler: failureHandler));
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -725,7 +725,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
                     }
-                    
+
                     Func<string, Task> breakMainSuccessHandler = (string bkptResult) =>
                     {
                         int index = bkptResult.IndexOf("number=", StringComparison.Ordinal);
@@ -749,7 +749,7 @@ namespace Microsoft.MIDebugEngine
                     };
 
                     commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true, successHandler: breakMainSuccessHandler));
-                    
+
                     if (null != localLaunchOptions)
                     {
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
@@ -817,20 +817,24 @@ namespace Microsoft.MIDebugEngine
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
         {
-            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
+           // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
             // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
             // embedded error text in lsof output like "(readlink error)". 
             string absoluteExePath;
+
+            // Must have a processId
+            Debug.Assert(_launchOptions.ProcessId.HasValue, "ProcessId should have a value.");
+
             if (launchOptions.UnixPort.IsOSX())
             {
                 // Usually the first FD=txt in the output of lsof points to the executable.
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId);
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId.Value);
             }
             else if (launchOptions.UnixPort.IsLinux())
             {
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId);
+                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId.Value);
             }
             else
             {
@@ -1064,7 +1068,7 @@ namespace Microsoft.MIDebugEngine
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
 
-                 if (bkpt != null)
+                if (bkpt != null)
                 {
                     if (frame != null && addr != 0)
                     {
@@ -1171,9 +1175,9 @@ namespace Microsoft.MIDebugEngine
                         code = EngineUtils.SignalMap.Instance[sigName];
                     }
                     bool stoppedAtSIGSTOP = false;
-                    if (sigName == "SIGSTOP")
+                    if (sigName == "SIGSTOP" && _launchOptions.ProcessId.HasValue)
                     {
-                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId))
+                        if (AD7Engine.RemoveChildProcess(_launchOptions.ProcessId.Value))
                         {
                             stoppedAtSIGSTOP = true;
                         }
@@ -1229,7 +1233,7 @@ namespace Microsoft.MIDebugEngine
                 await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
             }
 
-            if(this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
+            if (this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
             {
                 await MICommandFactory.BreakDelete(this._entryPointBreakpoint);
                 this._deleteEntryPointBreakpoint = false;
@@ -1566,12 +1570,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                bool attach = false;
-                int attachPid = _launchOptions.ProcessId;
-                if (attachPid != 0)
-                {
-                    attach = true;
-                }
+                bool attach = _launchOptions.ProcessId.HasValue;
 
                 if (!attach)
                 {
@@ -1747,7 +1746,8 @@ namespace Microsoft.MIDebugEngine
         //NOTE: eval is not called
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {
-            var frames = await MICommandFactory.StackListArguments(values || types ? PrintValues.SimpleValues : PrintValues.NoValues, thread.Id, low, high);
+            // If values are requested, request simple values, otherwise we'll use -var-create to get the type of argument it is.
+            var frames = await MICommandFactory.StackListArguments(values ? PrintValues.SimpleValues : PrintValues.NoValues, thread.Id, low, high);
             List<ArgumentList> parameters = new List<ArgumentList>();
 
             foreach (var f in frames)
@@ -1771,13 +1771,31 @@ namespace Microsoft.MIDebugEngine
                         string[] names = ((ResultListValue)argList).FindAllStrings("name");
                         foreach (var n in names)
                         {
-                            args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, null));
-                        }
+                            // If the types of the arguments are requested, get that from a call to -var-create
+                            if (types)
+                            {
+                                Debug.Assert(!values, "GetParameterInfoOnly should not reach here if values is true");
+                                Results results = await MICommandFactory.VarCreate(n, thread.Id, (uint)level, 0);
+
+                                string type = results.FindString("type");
+                                args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, String.IsNullOrWhiteSpace(type) ? null : type));
+
+                                string varName = results.TryFindString("name");
+                                if (!String.IsNullOrWhiteSpace(varName))
+                                {
+                                    // Remove the variable we created as we don't track it.
+                                    await MICommandFactory.VarDelete(varName);
+                                }
+                            }
+                            else
+                            {
+                                args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, null));
+                            }
+                        }                        
                     }
                 }
                 parameters.Add(new ArgumentList(level, args));
             }
-
             return parameters;
         }
 

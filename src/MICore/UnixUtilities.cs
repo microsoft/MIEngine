@@ -83,7 +83,7 @@ namespace MICore
                 bool isRoot = UnixNativeMethods.GetEUid() == 0;
 
                 // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
-                if (localOptions.ProcessId != 0 && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
+                if (localOptions.ProcessId.HasValue && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
                 {
                     prompt = String.Format(CultureInfo.CurrentCulture, "read -n 1 -p \\\"{0}\\\" yn; if [[ ! $yn =~ ^[Yy]$ ]] ; then exit 0; fi; ", MICoreResources.Warn_AttachAsRootProcess);
 
