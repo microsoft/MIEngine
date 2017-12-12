@@ -1777,8 +1777,8 @@ namespace Microsoft.MIDebugEngine
                             {
                                 Debug.Assert(!values, "GetParameterInfoOnly should not reach here if values is true");
                                 Results results = await MICommandFactory.VarCreate(n, thread.Id, (uint)level, 0, ResultClass.None);
-                                // Only get the type if the result wasn't an error
-                                if (results.ResultClass != ResultClass.error)
+                                // Only get the type if the result is "done"
+                                if (results.ResultClass == ResultClass.done)
                                 {
                                     typeString = results.TryFindString("type");
 
