@@ -817,7 +817,7 @@ namespace Microsoft.MIDebugEngine
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
         {
-           // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
+            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
             // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
@@ -1772,26 +1772,27 @@ namespace Microsoft.MIDebugEngine
                         foreach (var n in names)
                         {
                             // If the types of the arguments are requested, get that from a call to -var-create
+                            string typeString = null;
                             if (types)
                             {
                                 Debug.Assert(!values, "GetParameterInfoOnly should not reach here if values is true");
-                                Results results = await MICommandFactory.VarCreate(n, thread.Id, (uint)level, 0);
-
-                                string type = results.FindString("type");
-                                args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, String.IsNullOrWhiteSpace(type) ? null : type));
-
-                                string varName = results.TryFindString("name");
-                                if (!String.IsNullOrWhiteSpace(varName))
+                                Results results = await MICommandFactory.VarCreate(n, thread.Id, (uint)level, 0, ResultClass.None);
+                                // Only get the type if the result wasn't an error
+                                if (results.ResultClass != ResultClass.error)
                                 {
-                                    // Remove the variable we created as we don't track it.
-                                    await MICommandFactory.VarDelete(varName);
+                                    typeString = results.TryFindString("type");
+
+                                    string varName = results.TryFindString("name");
+                                    if (!String.IsNullOrWhiteSpace(varName))
+                                    {
+                                        // Remove the variable we created as we don't track it.
+                                        await MICommandFactory.VarDelete(varName);
+                                    }
                                 }
                             }
-                            else
-                            {
-                                args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, null));
-                            }
-                        }                        
+
+                            args.Add(new SimpleVariableInformation(n, /*isParam*/ true, /*value*/null, String.IsNullOrWhiteSpace(typeString) ? null : typeString));
+                        }
                     }
                 }
                 parameters.Add(new ArgumentList(level, args));
