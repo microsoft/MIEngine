@@ -1126,7 +1126,11 @@ namespace MICore
                     {
                         miError = results.FindString("msg");
                     }
-
+                    else
+                    {
+                        miError = results.ResultClass.ToString();
+                    }
+                
                     _completionSource.SetException(new UnexpectedMIResultException(commandFactory.Name, this.Command, miError));
                 }
                 else
