@@ -1126,6 +1126,10 @@ namespace MICore
                     {
                         miError = results.FindString("msg");
                     }
+                    else
+                    {
+                        miError = String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnexpectedResultClass, Enum.GetName(typeof(ResultClass), _expectedResultClass), Enum.GetName(typeof(ResultClass), results.ResultClass));
+                    }
 
                     _completionSource.SetException(new UnexpectedMIResultException(commandFactory.Name, this.Command, miError));
                 }
