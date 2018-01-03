@@ -1128,9 +1128,9 @@ namespace MICore
                     }
                     else
                     {
-                        miError = results.ResultClass.ToString();
+                        miError = String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnexpectedResultClass, Enum.GetName(typeof(ResultClass), _expectedResultClass), Enum.GetName(typeof(ResultClass), results.ResultClass));
                     }
-                
+
                     _completionSource.SetException(new UnexpectedMIResultException(commandFactory.Name, this.Command, miError));
                 }
                 else
