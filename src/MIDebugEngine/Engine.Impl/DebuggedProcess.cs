@@ -817,7 +817,7 @@ namespace Microsoft.MIDebugEngine
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
         {
-           // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
+            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
             // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
@@ -1056,7 +1056,7 @@ namespace Microsoft.MIDebugEngine
             else if (reason == "entry-point-hit")
             {
                 this.EntrypointHit = true;
-                this.OnEntrypointHit();
+                await this.OnEntrypointHit();
                 _callback.OnEntryPoint(thread);
             }
             else if (reason == "breakpoint-hit")
@@ -1083,7 +1083,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         // Hitting a bp before the entrypoint overrules entrypoint processing.
                         this.EntrypointHit = true;
-                        this.OnEntrypointHit();
+                        await this.OnEntrypointHit();
                     }
 
                     List<object> bplist = new List<object>();
@@ -1093,7 +1093,7 @@ namespace Microsoft.MIDebugEngine
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
-                    this.OnEntrypointHit();
+                    await this.OnEntrypointHit();
 
                     _callback.OnEntryPoint(thread);
                 }
@@ -1223,7 +1223,7 @@ namespace Microsoft.MIDebugEngine
         /// <summary>
         /// Tasks to run when the entry point is hit.
         /// </summary>
-        private async void OnEntrypointHit()
+        private async Task OnEntrypointHit()
         {
             if (this.MICommandFactory.Mode == MIMode.Lldb)
             {
@@ -1235,7 +1235,8 @@ namespace Microsoft.MIDebugEngine
 
             if (this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
             {
-                await MICommandFactory.BreakDelete(this._entryPointBreakpoint);
+                // Try and delete the entrypoint breakpoint. We only try this once but in some cases this won't succeed
+                await MICommandFactory.BreakDelete(this._entryPointBreakpoint, ResultClass.None);
                 this._deleteEntryPointBreakpoint = false;
             }
         }
@@ -1772,26 +1773,27 @@ namespace Microsoft.MIDebugEngine
                         foreach (var n in names)
                         {
                             // If the types of the arguments are requested, get that from a call to -var-create
+                            string typeString = null;
                             if (types)
                             {
                                 Debug.Assert(!values, "GetParameterInfoOnly should not reach here if values is true");
-                                Results results = await MICommandFactory.VarCreate(n, thread.Id, (uint)level, 0);
-
-                                string type = results.FindString("type");
-                                args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, String.IsNullOrWhiteSpace(type) ? null : type));
-
-                                string varName = results.TryFindString("name");
-                                if (!String.IsNullOrWhiteSpace(varName))
+                                Results results = await MICommandFactory.VarCreate(n, thread.Id, (uint)level, 0, ResultClass.None);
+                                // Only get the type if the result is "done"
+                                if (results.ResultClass == ResultClass.done)
                                 {
-                                    // Remove the variable we created as we don't track it.
-                                    await MICommandFactory.VarDelete(varName);
+                                    typeString = results.TryFindString("type");
+
+                                    string varName = results.TryFindString("name");
+                                    if (!String.IsNullOrWhiteSpace(varName))
+                                    {
+                                        // Remove the variable we created as we don't track it.
+                                        await MICommandFactory.VarDelete(varName);
+                                    }
                                 }
                             }
-                            else
-                            {
-                                args.Add(new SimpleVariableInformation(n, /*isParam*/ true, null, null));
-                            }
-                        }                        
+
+                            args.Add(new SimpleVariableInformation(n, /*isParam*/ true, /*value*/null, String.IsNullOrWhiteSpace(typeString) ? null : typeString));
+                        }
                     }
                 }
                 parameters.Add(new ArgumentList(level, args));
