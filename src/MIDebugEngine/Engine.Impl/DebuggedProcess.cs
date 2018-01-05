@@ -1056,7 +1056,7 @@ namespace Microsoft.MIDebugEngine
             else if (reason == "entry-point-hit")
             {
                 this.EntrypointHit = true;
-                this.OnEntrypointHit();
+                await this.OnEntrypointHit();
                 _callback.OnEntryPoint(thread);
             }
             else if (reason == "breakpoint-hit")
@@ -1083,7 +1083,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         // Hitting a bp before the entrypoint overrules entrypoint processing.
                         this.EntrypointHit = true;
-                        this.OnEntrypointHit();
+                        await this.OnEntrypointHit();
                     }
 
                     List<object> bplist = new List<object>();
@@ -1093,7 +1093,7 @@ namespace Microsoft.MIDebugEngine
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
-                    this.OnEntrypointHit();
+                    await this.OnEntrypointHit();
 
                     _callback.OnEntryPoint(thread);
                 }
@@ -1223,7 +1223,7 @@ namespace Microsoft.MIDebugEngine
         /// <summary>
         /// Tasks to run when the entry point is hit.
         /// </summary>
-        private async void OnEntrypointHit()
+        private async Task OnEntrypointHit()
         {
             if (this.MICommandFactory.Mode == MIMode.Lldb)
             {
@@ -1235,7 +1235,8 @@ namespace Microsoft.MIDebugEngine
 
             if (this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
             {
-                await MICommandFactory.BreakDelete(this._entryPointBreakpoint);
+                // Try and delete the entrypoint breakpoint. We only try this once but in some cases this won't succeed
+                await MICommandFactory.BreakDelete(this._entryPointBreakpoint, ResultClass.None);
                 this._deleteEntryPointBreakpoint = false;
             }
         }

@@ -522,9 +522,9 @@ namespace MICore
             }
         }
 
-        public virtual async Task BreakDelete(string bkptno)
+        public virtual async Task BreakDelete(string bkptno, ResultClass resultClass = ResultClass.done)
         {
-            await _debugger.CmdAsync("-break-delete " + bkptno, ResultClass.done);
+            await _debugger.CmdAsync("-break-delete " + bkptno, resultClass);
         }
 
         public virtual async Task BreakCondition(string bkptno, string expr)

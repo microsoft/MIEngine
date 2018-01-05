@@ -430,6 +430,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unexpected ResultClass from MI Debugger. Expected &apos;{0}&apos; but received &apos;{1}&apos;..
+        /// </summary>
+        public static string Error_UnexpectedResultClass {
+            get {
+                return ResourceManager.GetString("Error_UnexpectedResultClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal error: unable to serialize launch options..
         /// </summary>
         public static string Error_UnknownLaunchOptions {
