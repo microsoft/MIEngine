@@ -383,8 +383,7 @@ namespace Microsoft.MIDebugEngine
             {
                 // Called to determine if a pending breakpoint can be bound. 
                 // The breakpoint may not be bound for many reasons such as an invalid location, an invalid expression, etc...
-                // The sample engine does not support this, but a real world engine will want to return a valid enumeration of IDebugErrorBreakpoint2.
-                // The debugger will then display information about why the breakpoint did not bind to the user.
+                // The debugger will display information about why the breakpoint did not bind to the user.
                 ppErrorEnum = new AD7ErrorBreakpointsEnum(new[] { this._BPError });
                 return Constants.S_FALSE;
             }
