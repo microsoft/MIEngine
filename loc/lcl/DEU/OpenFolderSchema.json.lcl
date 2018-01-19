@@ -695,7 +695,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "<Compiler source location>": "<Editor source location>" }' OR '{ "<Compiler source location>": { "editorPath": "<Editor source location>", "useForBreakpoints": true } }'. ]A;Example: '{ "/home/user/foo": "C:\foo" }' OR '{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Optionale Quelldateizuordnungen, die an das Debugmodul übergeben werden. Format: "{ "<Compiler-Quellspeicherort>": "<Editor-Quellspeicherort>" }" ODER "{ "<Compiler-Quellspeicherort>": { "editorPath": "<Editor-Quellspeicherort>", "useForBreakpoints": true } }". ]A;Beispiel: "{ "/home/user/foo": "C:\foo" }" ODER "{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }".]]></Val>
+            <Val><![CDATA[Optionale Quelldateizuordnungen, die an die Debug-Engine übergeben werden. Format: "{ "<Compiler-Quellspeicherort>": "<Editor-Quellspeicherort>" }" ODER "{ "<Compiler-Quellspeicherort>": { "editorPath": "<Editor-Quellspeicherort>", "useForBreakpoints": true } }". ]A;Beispiel: "{ "/home/user/foo": "C:\foo" }" ODER "{ "/home/user/foo": { "editorPath": "c:\foo", "useForBreakpoints": true } }".]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Optional source file mappings passed to the debug engine. Format: '{ "Editor Source Location": "Compiled Source Location" }'. Example: '{ "C:\foo": "/home/user/foo" }'.]]></Val>
