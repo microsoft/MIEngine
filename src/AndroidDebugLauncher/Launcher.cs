@@ -541,7 +541,16 @@ namespace AndroidDebugLauncher
         {
             Debug.Assert(_shell != null, "GetProcessIds called before m_shell is set");
 
-            ExecCommandNoLog("ps");
+            int sdkVersion = VerifySdkVersion();
+            if (sdkVersion >= 26)
+            {
+                ExecCommandNoLog("ps -A");
+            }
+            else
+            {
+                ExecCommandNoLog("ps");
+            }
+            
             var processList = new ProcessListParser(_shell.Out);
 
             return processList.FindProcesses(processName);
@@ -657,7 +666,15 @@ namespace AndroidDebugLauncher
         {
             Debug.Assert(_shell != null, "KillOldInstances called before m_shell is set");
 
-            ExecCommand("ps");
+            int sdkVersion = VerifySdkVersion();
+            if (sdkVersion >= 26)
+            {
+                ExecCommand("ps -A");
+            }
+            else
+            {
+                ExecCommand("ps");
+            }
             var processList = new ProcessListParser(_shell.Out);
 
             if (!_launchOptions.IsAttach)
