@@ -187,10 +187,10 @@
     <value>Unsupported Breakpoint Type</value>
   </data>
   <data name="UnsupportedConditionalBreakpoint" xml:space="preserve">
-    <value>Conditional breakpoints are not supported</value>
+    <value>Conditional breakpoints are not supported.</value>
   </data>
   <data name="UnsupportedPassCountBreakpoint" xml:space="preserve">
-    <value>Hit counts on breakpoints are not supported</value>
+    <value>Hit counts on breakpoints are not supported.</value>
   </data>
   <data name="VisualizedView" xml:space="preserve">
     <value>[Visualized View]</value>
