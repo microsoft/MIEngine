@@ -4,7 +4,7 @@
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
     <Cmt Name="Loc" />
-    <Cmt Name="Rccx" />
+    <Cmt  Name="RCCX" />
   </OwnedComments>
   <Item ItemId=";String Table" ItemType="0" PsrId="306" Leaf="false">
     <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
