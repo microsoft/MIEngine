@@ -127,7 +127,7 @@ namespace Microsoft.SSHDebugPS
             return _remoteSystem.FileSystem.GetDirectory(liblinux.IO.SpecialDirectory.Home).FullPath;
         }
 
-        public string AttachToProcess(uint pid, string preAttachCommand)
+        public string AttachToProcess(int pid, string preAttachCommand)
         {
             var gdbStart = new liblinux.Services.GdbServerStartInfo();
             gdbStart.ProcessId = pid;   // indicates an attach operation

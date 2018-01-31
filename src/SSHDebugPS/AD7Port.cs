@@ -207,7 +207,7 @@ namespace Microsoft.SSHDebugPS
             return GetConnection(ConnectionReason.Deferred).GetUserHomeDirectory();
         }
 
-        public string AttachToProcess(uint id, string preAttachCommand)
+        public string AttachToProcess(int id, string preAttachCommand)
         {
             return GetConnection(ConnectionReason.Deferred).AttachToProcess(id, preAttachCommand);
         }

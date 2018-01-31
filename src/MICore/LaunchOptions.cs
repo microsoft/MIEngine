@@ -1396,7 +1396,7 @@ namespace MICore
             LaunchOptions options;
             if (isServerMode)
             {
-                string addr = unixPort.AttachToProcess((uint)processId, attachOptions.ServerOptions.PreAttachCommand);
+                string addr = unixPort.AttachToProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
                 options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, null);
                 options._miMode = miMode;
                 options.ExePath = attachOptions.ServerOptions.ExePath;
