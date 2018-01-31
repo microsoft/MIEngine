@@ -62,11 +62,24 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// <returns>Home directory of the user.</returns>
         string GetUserHomeDirectory();
 
+        /// <summary>
+        /// Attaches gdbserver to a process.
+        /// </summary>
+        /// <param name="processId">Id of the process.</param>
+        /// <param name="preAttachCommand">Command to run before starting gdbserver.</param>
+        /// <returns>Communications addr:port</returns>
+        string AttachToProcess(uint processId, string preAttachCommand);
+
         /// <returns>True if the remote machine is OSX.</returns>
         bool IsOSX();
 
         /// <returns>True if the remote machine is Linux.</returns>
         bool IsLinux();
+
+        /// <summary>
+        /// Clean up debugging resources
+        /// </summary>
+        void Clean();
     }
 
     /// <summary>

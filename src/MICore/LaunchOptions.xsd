@@ -371,6 +371,102 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:complexType name="ServerOptions">
+    <xs:annotation>
+      <xs:documentation>Instructions for how to setup and run the remote debugging server.</xs:documentation>
+    </xs:annotation>
+          <xs:attribute name="PreAttachCommand" type="xs:string" use="optional">
+            <xs:annotation>
+              <xs:documentation>Command to run remotely before starting the server.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="MIDebuggerPath" type="xs:string" use="required">
+            <xs:annotation>
+              <xs:documentation>Local path to the MI Debugger executable.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+    <xs:attribute name="ExePath" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>Path to the executable file. This is a path on the Windows machine.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="AttachOptionsForConnection">
+      <xs:sequence>
+        <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
+          <xs:annotation>
+            <xs:documentation>One or more GDB/LLDB/CLRDBG commands to execute in order to setup the underlying debugger. These are not required.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="SourceMap" type="SourceMapList" minOccurs="0" maxOccurs="1">
+        </xs:element>
+        <xs:element name="ServerOptions" type="ServerOptions" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>If specified then attach using client-server mode.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="AdditionalSOLibSearchPath" type="xs:string" use="optional">
+        <xs:annotation>
+          <xs:documentation>Semicolon separated list of directories to use to search for .so files. Example: 'c:\dir1;c:\dir2'</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="MIMode" type="MIMode" use="required"/>
+    <xs:attribute name="WorkingDirectory" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>Working directory on the remote device if remote debugging, on the local device if client-server debugging.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+      <xs:attribute name="DebugChildProcesses" type="xs:boolean" use="optional">
+        <xs:annotation>
+          <xs:documentation>
+            If true, automatically attach debugger to any child processes created.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="VisualizerFile" type="xs:string" use="optional">
+        <xs:annotation>
+          <xs:documentation>.natvis file to be used when debugging this platform</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="ShowDisplayString" type="xs:boolean" use="optional">
+        <xs:annotation>
+          <xs:documentation>
+            If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
+            Should only be enabled if debugger is fast enough providing the value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    <xs:attribute name="ConnectionName" type="xs:string" use="optional">
+        <xs:annotation>
+          <xs:documentation>
+            Specific connection these options apply to. If missing or specified as '*' then all connections are matched.
+            Matching is done in the order of appearance in a list.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType> 
+
+  <xs:complexType name="AttachConnectionList">
+    <xs:sequence>
+      <xs:element name="AttachOptionsForConnection" minOccurs="0" maxOccurs="unbounded" type="AttachOptionsForConnection"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="SupplementalAttachOptions">
+    <xs:annotation>
+      <xs:documentation>Option values that supplement the xml that arrives via the attach command.</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="OptionsForConnection" type="AttachConnectionList" minOccurs="0" maxOccurs="1">
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+
   <!--base type for LocalLaunchOptions, PipeLaunchOptions, and TcpLaunchOptions -->
   <xs:complexType name="BaseLaunchOptions">
     <xs:sequence>

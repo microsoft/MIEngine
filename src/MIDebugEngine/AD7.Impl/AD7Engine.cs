@@ -65,6 +65,8 @@ namespace Microsoft.MIDebugEngine
 
         private static int s_bpLongBindTimeout = 0;
 
+        private IDebugUnixShellPort _unixPort;
+
         static AD7Engine()
         {
             s_childProcessLaunch = new List<int>();
@@ -82,6 +84,10 @@ namespace Microsoft.MIDebugEngine
             if (_pollThread != null)
             {
                 _pollThread.Close();
+            }
+            if (_unixPort != null)
+            {
+                _unixPort.Clean();
             }
         }
 
@@ -150,6 +156,8 @@ namespace Microsoft.MIDebugEngine
         {
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
+            Logger.LoadMIDebugLogger(_configStore);
+
             if (celtPrograms != 1)
             {
                 Debug.Fail("SampleEngine only expects to see one program in a process");
@@ -185,6 +193,10 @@ namespace Microsoft.MIDebugEngine
 
                     _engineCallback = new EngineCallback(this, ad7Callback);
                     LaunchOptions launchOptions = CreateAttachLaunchOptions(processId.dwProcessId, port);
+                    if (port is IDebugUnixShellPort)
+                    {
+                        _unixPort = (IDebugUnixShellPort)port;
+                    }
                     StartDebugging(launchOptions);
                 }
                 else
@@ -245,17 +257,13 @@ namespace Microsoft.MIDebugEngine
                 string remoteDebuggerInstallationSubDirectory = GetMetric("RemoteInstallationSubDirectory") as string;
                 string clrDbgVersion = GetMetric("ClrDbgVersion") as string;
 
-                launchOptions = UnixShellPortLaunchOptions.CreateForAttachRequest(unixPort,
-                                                                                (int)processId,
-                                                                                miMode,
-                                                                                getClrDbgUrl,
-                                                                                remoteDebuggerInstallationDirectory,
-                                                                                remoteDebuggerInstallationSubDirectory,
-                                                                                clrDbgVersion);
-
-                // TODO: Add a tools option page for:
-                // AdditionalSOLibSearchPath
-                // VisualizerFile?
+                launchOptions = LaunchOptions.CreateForAttachRequest(unixPort,
+                                                                    (int)processId,
+                                                                    miMode,
+                                                                    getClrDbgUrl,
+                                                                    remoteDebuggerInstallationDirectory,
+                                                                    remoteDebuggerInstallationSubDirectory,
+                                                                    clrDbgVersion, Logger);
             }
             else
             {

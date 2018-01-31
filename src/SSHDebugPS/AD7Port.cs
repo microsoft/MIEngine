@@ -207,6 +207,11 @@ namespace Microsoft.SSHDebugPS
             return GetConnection(ConnectionReason.Deferred).GetUserHomeDirectory();
         }
 
+        public string AttachToProcess(uint id, string preAttachCommand)
+        {
+            return GetConnection(ConnectionReason.Deferred).AttachToProcess(id, preAttachCommand);
+        }
+
         public bool IsOSX()
         {
             return GetConnection(ConnectionReason.Deferred).IsOSX();
@@ -216,5 +221,11 @@ namespace Microsoft.SSHDebugPS
         {
             return GetConnection(ConnectionReason.Deferred).IsLinux();
         }
+
+        public void Clean()
+        {
+            GetConnection(ConnectionReason.Deferred).Clean();
+        }
+
     }
 }

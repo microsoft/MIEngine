@@ -343,44 +343,287 @@ namespace MICore.Xml.LaunchOptions {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public partial class EnvironmentEntry {
+    public partial class ServerOptions {
         
-        private string nameField;
+        private string preAttachCommandField;
         
-        private string valueField;
+        private string pathField;
         
-        private string value1Field;
+        private int portField;
+        
+        private string mIDebuggerPathField;
+        
+        public ServerOptions() {
+            this.portField = 61234;
+        }
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string Name {
+        public string PreAttachCommand {
             get {
-                return this.nameField;
+                return this.preAttachCommandField;
             }
             set {
-                this.nameField = value;
+                this.preAttachCommandField = value;
             }
         }
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Path {
+            get {
+                return this.pathField;
+            }
+            set {
+                this.pathField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(61234)]
+        public int Port {
+            get {
+                return this.portField;
+            }
+            set {
+                this.portField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string MIDebuggerPath {
+            get {
+                return this.mIDebuggerPathField;
+            }
+            set {
+                this.mIDebuggerPathField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public partial class AttachOptionsForConnection {
+        
+        private Command[] setupCommandsField;
+        
+        private SourceMapEntry[] sourceMapField;
+        
+        private ServerOptions serverOptionsField;
+        
+        private string additionalSOLibSearchPathField;
+        
+        private MIMode mIModeField;
+        
+        private string workingDirectoryField;
+        
+        private bool debugChildProcessesField;
+        
+        private bool debugChildProcessesFieldSpecified;
+        
+        private string visualizerFileField;
+        
+        private bool showDisplayStringField;
+        
+        private bool showDisplayStringFieldSpecified;
+        
+        private string connectionNameField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public Command[] SetupCommands {
+            get {
+                return this.setupCommandsField;
+            }
+            set {
+                this.setupCommandsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public SourceMapEntry[] SourceMap {
+            get {
+                return this.sourceMapField;
+            }
+            set {
+                this.sourceMapField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public ServerOptions ServerOptions {
+            get {
+                return this.serverOptionsField;
+            }
+            set {
+                this.serverOptionsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string AdditionalSOLibSearchPath {
+            get {
+                return this.additionalSOLibSearchPathField;
+            }
+            set {
+                this.additionalSOLibSearchPathField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public MIMode MIMode {
+            get {
+                return this.mIModeField;
+            }
+            set {
+                this.mIModeField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string WorkingDirectory {
+            get {
+                return this.workingDirectoryField;
+            }
+            set {
+                this.workingDirectoryField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool DebugChildProcesses {
+            get {
+                return this.debugChildProcessesField;
+            }
+            set {
+                this.debugChildProcessesField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool DebugChildProcessesSpecified {
+            get {
+                return this.debugChildProcessesFieldSpecified;
+            }
+            set {
+                this.debugChildProcessesFieldSpecified = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string VisualizerFile {
+            get {
+                return this.visualizerFileField;
+            }
+            set {
+                this.visualizerFileField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool ShowDisplayString {
+            get {
+                return this.showDisplayStringField;
+            }
+            set {
+                this.showDisplayStringField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ShowDisplayStringSpecified {
+            get {
+                return this.showDisplayStringFieldSpecified;
+            }
+            set {
+                this.showDisplayStringFieldSpecified = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ConnectionName {
+            get {
+                return this.connectionNameField;
+            }
+            set {
+                this.connectionNameField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public partial class Command {
+        
+        private bool ignoreFailuresField;
+        
+        private bool ignoreFailuresFieldSpecified;
+        
+        private string descriptionField;
+        
+        private string valueField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool IgnoreFailures {
+            get {
+                return this.ignoreFailuresField;
+            }
+            set {
+                this.ignoreFailuresField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool IgnoreFailuresSpecified {
+            get {
+                return this.ignoreFailuresFieldSpecified;
+            }
+            set {
+                this.ignoreFailuresFieldSpecified = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Description {
+            get {
+                return this.descriptionField;
+            }
+            set {
+                this.descriptionField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
         public string Value {
             get {
                 return this.valueField;
             }
             set {
                 this.valueField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlTextAttribute()]
-        public string Value1 {
-            get {
-                return this.value1Field;
-            }
-            set {
-                this.value1Field = value;
             }
         }
     }
@@ -457,57 +700,44 @@ namespace MICore.Xml.LaunchOptions {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    public partial class Command {
+    public partial class EnvironmentEntry {
         
-        private bool ignoreFailuresField;
-        
-        private bool ignoreFailuresFieldSpecified;
-        
-        private string descriptionField;
+        private string nameField;
         
         private string valueField;
         
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public bool IgnoreFailures {
-            get {
-                return this.ignoreFailuresField;
-            }
-            set {
-                this.ignoreFailuresField = value;
-            }
-        }
+        private string value1Field;
         
         /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool IgnoreFailuresSpecified {
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Name {
             get {
-                return this.ignoreFailuresFieldSpecified;
+                return this.nameField;
             }
             set {
-                this.ignoreFailuresFieldSpecified = value;
+                this.nameField = value;
             }
         }
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string Description {
-            get {
-                return this.descriptionField;
-            }
-            set {
-                this.descriptionField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlTextAttribute()]
         public string Value {
             get {
                 return this.valueField;
             }
             set {
                 this.valueField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string Value1 {
+            get {
+                return this.value1Field;
+            }
+            set {
+                this.value1Field = value;
             }
         }
     }
@@ -1436,6 +1666,29 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.sourceMapField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
+    public partial class SupplementalAttachOptions {
+        
+        private AttachOptionsForConnection[] optionsForConnectionField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
+        public AttachOptionsForConnection[] OptionsForConnection {
+            get {
+                return this.optionsForConnectionField;
+            }
+            set {
+                this.optionsForConnectionField = value;
             }
         }
     }

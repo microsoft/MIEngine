@@ -2847,6 +2847,16 @@
 			ret
 		}
 		.method public hidebysig specialname 
+			instance valuetype [mscorlib]'System.Nullable`1'<uint32> get_ProcessId()
+		{
+			ret
+		}
+		.method public hidebysig specialname 
+			instance void set_ProcessId(valuetype [mscorlib]'System.Nullable`1'<uint32> 'value')
+		{
+			ret
+		}
+		.method public hidebysig specialname 
 			instance void .ctor()
 		{
 			ret
@@ -2865,6 +2875,11 @@
 		{
 			.get instance string liblinux.Services.GdbServerStartInfo::get_PreLaunchCommand()
 			.set instance void liblinux.Services.GdbServerStartInfo::set_PreLaunchCommand(string)
+		}
+		.property instance valuetype [mscorlib]'System.Nullable`1'<uint32> ProcessId()
+		{
+			.get instance valuetype [mscorlib]'System.Nullable`1'<uint32> liblinux.Services.GdbServerStartInfo::get_ProcessId()
+			.set instance void liblinux.Services.GdbServerStartInfo::set_ProcessId(valuetype [mscorlib]'System.Nullable`1'<uint32>)
 		}
 		.property instance string RemotePath()
 		{

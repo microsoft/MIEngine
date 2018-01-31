@@ -649,7 +649,7 @@ namespace Microsoft.MIDebugEngine
 
                             DetermineAndAddExecutablePathCommand(commands, _launchOptions as UnixShellPortLaunchOptions);
                         }
-                        else
+                        else if (!string.IsNullOrWhiteSpace(_launchOptions.ExePath))
                         {
                             this.AddExecutablePathCommand(commands);
                         }
@@ -679,7 +679,10 @@ namespace Microsoft.MIDebugEngine
                         }
                     };
 
-                    commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value, ignoreFailures: false, failureHandler: failureHandler));
+                    if (localLaunchOptions == null) // gdbserver is already attached when using LocalLaunchOptions
+                    {
+                        commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value, ignoreFailures: false, failureHandler: failureHandler));
+                    }
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
