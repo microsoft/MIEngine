@@ -62,12 +62,45 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// <returns>Home directory of the user.</returns>
         string GetUserHomeDirectory();
 
-        /// <returns>True if the remote machine is OSX.</returns>
+       /// <returns>True if the remote machine is OSX.</returns>
         bool IsOSX();
 
         /// <returns>True if the remote machine is Linux.</returns>
         bool IsLinux();
     }
+
+    /// <summary>
+    /// Interface implemented by a port that supports explicit cleanup
+    /// </summary>
+    [ComImport()]
+    [ComVisible(true)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("1ECAAA80-36DB-4DA8-88B3-B298B0221BF6")]
+    public interface IDebugPortCleanup
+    {
+        /// <summary>
+        /// Clean up debugging resources
+        /// </summary>
+        void Clean();
+    }
+
+    /// <summary>
+    /// Interface implemented by an IDebugPort2 that supports using gdbserver to attach to a remote process
+    /// </summary>
+    [ComImport()]
+    [ComVisible(true)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("C517EE50-4852-4D95-916E-1A1C89710466")]
+    public interface IDebugGdbServerAttach
+    {
+        /// <summary>
+        /// Attaches gdbserver to a process.
+        /// </summary>
+        /// <param name="processId">Id of the process.</param>
+        /// <param name="preAttachCommand">Command to run before starting gdbserver.</param>
+        /// <returns>Communications addr:port</returns>
+        string GdbServerAttachProcess(int processId, string preAttachCommand);
+   }
 
     /// <summary>
     /// Interface representing an executing asynchronous command. This is returned from 

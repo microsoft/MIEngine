@@ -16,7 +16,8 @@ namespace Microsoft.SSHDebugPS
 {
     internal class Connection
     {
-        private readonly liblinux.UnixSystem _remoteSystem;
+        private liblinux.UnixSystem _remoteSystem;
+        private liblinux.Services.GdbServer _gdbserver = null;
 
         public Connection(liblinux.UnixSystem remoteSystem)
         {
@@ -126,6 +127,15 @@ namespace Microsoft.SSHDebugPS
             return _remoteSystem.FileSystem.GetDirectory(liblinux.IO.SpecialDirectory.Home).FullPath;
         }
 
+        public string AttachToProcess(int pid, string preAttachCommand)
+        {
+            var gdbStart = new liblinux.Services.GdbServerStartInfo();
+            gdbStart.ProcessId = pid;   // indicates an attach operation
+            gdbStart.PreLaunchCommand = preAttachCommand;
+            _gdbserver = _remoteSystem.Services.GdbServer.Start(gdbStart); // throws on failure
+            return "localhost:" + _gdbserver.StartInfo.LocalPort.ToString();
+        }
+
         internal bool IsOSX()
         {
             return _remoteSystem.Properties.Id == SystemId.OSX;
@@ -140,6 +150,20 @@ namespace Microsoft.SSHDebugPS
             }
 
             return command.Output.Trim().Equals("Linux");
+        }
+
+        internal void Clean()
+        {
+            if (_gdbserver != null)
+            {
+                _gdbserver.Stop();
+                _gdbserver = null;
+            }
+            if (_remoteSystem != null)
+            {
+                _remoteSystem.Dispose();
+                _remoteSystem = null;
+            }
         }
     }
 }
