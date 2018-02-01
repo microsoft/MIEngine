@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.SSHDebugPS
 {
-    internal class AD7Port : IDebugPort2, IDebugUnixShellPort, IConnectionPointContainer, IConnectionPoint
+    internal class AD7Port : IDebugPort2, IDebugUnixShellPort, IDebugPortCleanup, IDebugGdbServerAttach, IConnectionPointContainer, IConnectionPoint
     {
         private readonly object _lock = new object();
         private readonly AD7PortSupplier _portSupplier;
@@ -207,7 +207,7 @@ namespace Microsoft.SSHDebugPS
             return GetConnection(ConnectionReason.Deferred).GetUserHomeDirectory();
         }
 
-        public string AttachToProcess(int id, string preAttachCommand)
+        public string GdbServerAttachProcess(int id, string preAttachCommand)
         {
             return GetConnection(ConnectionReason.Deferred).AttachToProcess(id, preAttachCommand);
         }
@@ -224,8 +224,8 @@ namespace Microsoft.SSHDebugPS
 
         public void Clean()
         {
-            GetConnection(ConnectionReason.Deferred).Clean();
+            if (_connection != null)
+                _connection.Clean();
         }
-
     }
 }

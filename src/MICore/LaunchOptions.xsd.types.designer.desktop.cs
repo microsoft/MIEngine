@@ -347,15 +347,9 @@ namespace MICore.Xml.LaunchOptions {
         
         private string preAttachCommandField;
         
-        private string pathField;
-        
-        private int portField;
-        
         private string mIDebuggerPathField;
         
-        public ServerOptions() {
-            this.portField = 61234;
-        }
+        private string exePathField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -370,35 +364,23 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string Path {
-            get {
-                return this.pathField;
-            }
-            set {
-                this.pathField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(61234)]
-        public int Port {
-            get {
-                return this.portField;
-            }
-            set {
-                this.portField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string MIDebuggerPath {
             get {
                 return this.mIDebuggerPathField;
             }
             set {
                 this.mIDebuggerPathField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ExePath {
+            get {
+                return this.exePathField;
+            }
+            set {
+                this.exePathField = value;
             }
         }
     }
@@ -1658,6 +1640,8 @@ namespace MICore.Xml.LaunchOptions {
         
         private SourceMapEntry[] sourceMapField;
         
+        private AttachOptionsForConnection[] attachOptionsField;
+        
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
         public SourceMapEntry[] SourceMap {
@@ -1668,27 +1652,15 @@ namespace MICore.Xml.LaunchOptions {
                 this.sourceMapField = value;
             }
         }
-    }
-    
-    /// <remarks/>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.81.0")]
-    [System.SerializableAttribute()]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014", IsNullable=false)]
-    public partial class SupplementalAttachOptions {
-        
-        private AttachOptionsForConnection[] optionsForConnectionField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
-        public AttachOptionsForConnection[] OptionsForConnection {
+        public AttachOptionsForConnection[] AttachOptions {
             get {
-                return this.optionsForConnectionField;
+                return this.attachOptionsField;
             }
             set {
-                this.optionsForConnectionField = value;
+                this.attachOptionsField = value;
             }
         }
     }

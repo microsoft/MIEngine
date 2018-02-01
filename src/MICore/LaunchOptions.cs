@@ -1383,20 +1383,20 @@ namespace MICore
                                                             string debuggerVersion,
                                                             Logger logger)
         {
-            var suppOptions = GetOptionsFromFile<Xml.LaunchOptions.SupplementalAttachOptions>("Microsoft.MIEngine.Attach.Options.xml", logger);
+            var suppOptions = GetOptionsFromFile(logger);
             string connection;
             ((IDebugPort2)unixPort).GetPortName(out connection);
             AttachOptionsForConnection attachOptions = null;
-            if (suppOptions != null)
+            if (suppOptions != null && suppOptions.AttachOptions != null)
             {
-                attachOptions = suppOptions.OptionsForConnection.FirstOrDefault((o) => o.ConnectionName == connection || o.ConnectionName == "*" || string.IsNullOrWhiteSpace(o.ConnectionName));
+                attachOptions = suppOptions.AttachOptions.FirstOrDefault((o) => o.ConnectionName == connection || o.ConnectionName == "*" || string.IsNullOrWhiteSpace(o.ConnectionName));
             }
             bool isServerMode = attachOptions?.ServerOptions != null;
 
             LaunchOptions options;
-            if (isServerMode)
+            if (isServerMode && unixPort is Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)
             {
-                string addr = unixPort.AttachToProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
+                string addr = ((Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)unixPort).GdbServerAttachProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
                 options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, null);
                 options._miMode = miMode;
                 options.ExePath = attachOptions.ServerOptions.ExePath;
@@ -1424,14 +1424,13 @@ namespace MICore
             return options;
         }
 
-
-        internal static T GetOptionsFromFile<T>(string filename, Logger logger)
+        internal static SupplementalLaunchOptions GetOptionsFromFile(Logger logger)
         {
             // load supplemental options from the solution root
             string slnRoot = HostNatvisProject.FindSolutionRoot();
             if (!string.IsNullOrEmpty(slnRoot))
             {
-                string optFile = Path.Combine(slnRoot, filename);
+                string optFile = Path.Combine(slnRoot, "Microsoft.MIEngine.Options.xml");
                 if (File.Exists(optFile))
                 {
                     var reader = File.OpenText(optFile);
@@ -1442,8 +1441,8 @@ namespace MICore
                         {
                             logger?.WriteTextBlock("SupplementalOptions", suppOptions);
                             XmlReader xmlRrd = OpenXml(suppOptions);
-                            XmlSerializer serializer = GetXmlSerializer(typeof(T));
-                            return (T)Deserialize(serializer, xmlRrd);
+                            XmlSerializer serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.SupplementalLaunchOptions));
+                            return (Xml.LaunchOptions.SupplementalLaunchOptions)Deserialize(serializer, xmlRrd);
                         }
                         catch (Exception e)
                         {
@@ -1452,7 +1451,7 @@ namespace MICore
                     }
                 }
             }
-            return default(T);
+            return null;
         }
 
         internal void LoadSupplementalOptions(Logger logger)
@@ -1461,7 +1460,7 @@ namespace MICore
             {
                 SourceMap = new ReadOnlyCollection<SourceMapEntry>(new List<SourceMapEntry>());
             }
-            var options = GetOptionsFromFile<Xml.LaunchOptions.SupplementalLaunchOptions>("Microsoft.MIEngine.Options.xml", null);
+            var options = GetOptionsFromFile(null);
             if (options != null)
                 Merge(options);
         }

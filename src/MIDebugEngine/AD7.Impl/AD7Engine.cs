@@ -85,9 +85,9 @@ namespace Microsoft.MIDebugEngine
             {
                 _pollThread.Close();
             }
-            if (_unixPort != null)
+            if (_unixPort != null && _unixPort is IDebugPortCleanup)
             {
-                _unixPort.Clean();
+                ((IDebugPortCleanup)_unixPort).Clean();
             }
         }
 
