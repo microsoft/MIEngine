@@ -1389,7 +1389,7 @@ namespace MICore
             AttachOptionsForConnection attachOptions = null;
             if (suppOptions != null)
             {
-                attachOptions = suppOptions.OptionsForConnection.FirstOrDefault((o) => o.ConnectionName == connection || o.ConnectionName == "*" || o.ConnectionName == null);
+                attachOptions = suppOptions.OptionsForConnection.FirstOrDefault((o) => o.ConnectionName == connection || o.ConnectionName == "*" || string.IsNullOrWhiteSpace(o.ConnectionName));
             }
             bool isServerMode = attachOptions?.ServerOptions != null;
 
