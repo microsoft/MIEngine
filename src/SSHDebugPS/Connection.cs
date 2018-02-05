@@ -133,7 +133,7 @@ namespace Microsoft.SSHDebugPS
             gdbStart.ProcessId = pid;   // indicates an attach operation
             gdbStart.PreLaunchCommand = preAttachCommand;
             _gdbserver = _remoteSystem.Services.GdbServer.Start(gdbStart); // throws on failure
-            return "localhost:" + _gdbserver.StartInfo.LocalPort.ToString();
+            return "localhost:" + _gdbserver.StartInfo.LocalPort.ToString(CultureInfo.InvariantCulture);
         }
 
         internal bool IsOSX()
