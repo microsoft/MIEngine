@@ -830,31 +830,6 @@ namespace MICore
             }
         }
 
-        public static UnixShellPortLaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
-            int processId,
-            MIMode miMode,
-            string getClrDbgUrl,
-            string remoteDebuggingDirectory,
-            string remoteDebuggingSubDirectory,
-            string debuggerVersion)
-        {
-            var @this = new UnixShellPortLaunchOptions(startRemoteDebuggerCommand: null,
-                                                       unixPort: unixPort,
-                                                       miMode: miMode,
-                                                       baseLaunchOptions: null,
-                                                       getClrDbgUrl: getClrDbgUrl,
-                                                       remoteDebuggerInstallationDirectory: remoteDebuggingDirectory,
-                                                       remoteDebuggerInstallationSubDirectory: remoteDebuggingSubDirectory,
-                                                       clrdbgVersion: debuggerVersion);
-
-            @this.ProcessId = processId;
-            @this.SetupCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
-            @this.LoadSupplementalOptions(null);
-            @this.SetInitializationComplete();
-
-            return @this;
-        }
-
         /// <summary>
         /// Records for a specific portname, the remote launch was successful.
         /// </summary>
@@ -1399,12 +1374,58 @@ namespace MICore
             return launchOptions;
         }
 
-        internal void LoadSupplementalOptions(Logger logger)
+        public static LaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
+                                                            int processId,
+                                                            MIMode miMode,
+                                                            string getClrDbgUrl,
+                                                            string remoteDebuggingDirectory,
+                                                            string remoteDebuggingSubDirectory,
+                                                            string debuggerVersion,
+                                                            Logger logger)
         {
-            if (SourceMap == null)
+            var suppOptions = GetOptionsFromFile(logger);
+            string connection;
+            ((IDebugPort2)unixPort).GetPortName(out connection);
+            AttachOptionsForConnection attachOptions = null;
+            if (suppOptions != null && suppOptions.AttachOptions != null)
             {
-                SourceMap = new ReadOnlyCollection<SourceMapEntry>(new List<SourceMapEntry>());
+                attachOptions = suppOptions.AttachOptions.FirstOrDefault((o) => o.ConnectionName == connection || o.ConnectionName == "*" || string.IsNullOrWhiteSpace(o.ConnectionName));
             }
+            bool isServerMode = attachOptions?.ServerOptions != null;
+
+            LaunchOptions options;
+            if (isServerMode && unixPort is Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)
+            {
+                string addr = ((Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)unixPort).GdbServerAttachProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
+                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, null);
+                options._miMode = miMode;
+                options.ExePath = attachOptions.ServerOptions.ExePath;
+            }
+            else
+            {
+                options = new UnixShellPortLaunchOptions(startRemoteDebuggerCommand: null,
+                                                           unixPort: unixPort,
+                                                           miMode: miMode,
+                                                           baseLaunchOptions: null,
+                                                           getClrDbgUrl: getClrDbgUrl,
+                                                           remoteDebuggerInstallationDirectory: remoteDebuggingDirectory,
+                                                           remoteDebuggerInstallationSubDirectory: remoteDebuggingSubDirectory,
+                                                           clrdbgVersion: debuggerVersion);
+            }
+
+            options.ProcessId = processId;
+            options.SetupCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
+            if (attachOptions != null)
+            {
+                options.Merge(attachOptions);
+            }
+            options.SetInitializationComplete();
+
+            return options;
+        }
+
+        internal static SupplementalLaunchOptions GetOptionsFromFile(Logger logger)
+        {
             // load supplemental options from the solution root
             string slnRoot = HostNatvisProject.FindSolutionRoot();
             if (!string.IsNullOrEmpty(slnRoot))
@@ -1418,11 +1439,10 @@ namespace MICore
                     {
                         try
                         {
-                            logger?.WriteTextBlock("SupplementalLaunchOptions", suppOptions);
+                            logger?.WriteTextBlock("SupplementalOptions", suppOptions);
                             XmlReader xmlRrd = OpenXml(suppOptions);
                             XmlSerializer serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.SupplementalLaunchOptions));
-                            var xmlSuppOptions = (Xml.LaunchOptions.SupplementalLaunchOptions)Deserialize(serializer, xmlRrd);
-                            Merge(xmlSuppOptions);
+                            return (Xml.LaunchOptions.SupplementalLaunchOptions)Deserialize(serializer, xmlRrd);
                         }
                         catch (Exception e)
                         {
@@ -1431,15 +1451,27 @@ namespace MICore
                     }
                 }
             }
+            return null;
         }
 
-        private void Merge(SupplementalLaunchOptions suppOptions)
+        internal void LoadSupplementalOptions(Logger logger)
+        {
+            if (SourceMap == null)
+            {
+                SourceMap = new ReadOnlyCollection<SourceMapEntry>(new List<SourceMapEntry>());
+            }
+            var options = GetOptionsFromFile(null);
+            if (options != null)
+                Merge(options);
+        }
+
+        void MergeMap(Xml.LaunchOptions.SourceMapEntry[] inMap)
         {
             // merge the source mapping lists
             List<SourceMapEntry> map = new List<SourceMapEntry>();
-            if (suppOptions.SourceMap != null)
+            if (inMap != null)
             {
-                foreach (var e in suppOptions.SourceMap)    // add new entries from the supplemental options
+                foreach (var e in inMap)    // add new entries from the supplemental options
                 {
                     map.Add(new SourceMapEntry(e));
                 }
@@ -1452,6 +1484,55 @@ namespace MICore
                 }
             }
             SourceMap = new ReadOnlyCollection<SourceMapEntry>(map);
+        }
+
+        private void Merge(AttachOptionsForConnection suppOptions)
+        {
+            if (this._miMode != (MIMode)suppOptions.MIMode)
+            {
+                return;
+            }
+
+            var setupCmds = this.SetupCommands.ToList();
+            var newSetupCmds = LaunchCommand.CreateCollection(suppOptions.SetupCommands);
+            setupCmds.AddRange(newSetupCmds);
+            SetupCommands = new ReadOnlyCollection<LaunchCommand>(setupCmds);
+
+            MergeMap(suppOptions.SourceMap);
+            if (!string.IsNullOrWhiteSpace(suppOptions.AdditionalSOLibSearchPath))
+            {
+                if (string.IsNullOrWhiteSpace(AdditionalSOLibSearchPath))
+                {
+                    AdditionalSOLibSearchPath = suppOptions.AdditionalSOLibSearchPath;
+                }
+                else
+                {
+                    AdditionalSOLibSearchPath += ';' + suppOptions.AdditionalSOLibSearchPath;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(WorkingDirectory))
+            {
+                WorkingDirectory = suppOptions.WorkingDirectory;
+            }
+            if (suppOptions.DebugChildProcessesSpecified)
+            {
+                DebugChildProcesses = suppOptions.DebugChildProcesses;
+            }
+            if (string.IsNullOrWhiteSpace(VisualizerFile))
+            {
+                VisualizerFile = suppOptions.VisualizerFile;
+            }
+            if (suppOptions.ShowDisplayStringSpecified)
+            {
+                ShowDisplayString = suppOptions.ShowDisplayString;
+            }
+        }
+
+        private void Merge(SupplementalLaunchOptions suppOptions)
+        {
+            // merge the source mapping lists
+            List<SourceMapEntry> map = new List<SourceMapEntry>();
+            MergeMap(suppOptions.SourceMap);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",

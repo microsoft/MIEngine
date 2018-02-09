@@ -4,7 +4,7 @@
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
     <Cmt Name="Loc" />
-    <Cmt Name="Rccx" />
+    <Cmt Name="RCCX" />
   </OwnedComments>
   <Item ItemId=";String Table" ItemType="0" PsrId="306" Leaf="false">
     <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
@@ -139,7 +139,7 @@
           <Str Cat="Text">
             <Val><![CDATA[The location of the source code for the editor to locate.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[Ubicación del código fuente que debe encontrarse para el editor.]]></Val>
+              <Val><![CDATA[Ubicación del código fuente para que el editor lo encuentre.]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" />
@@ -230,7 +230,7 @@
         <Str Cat="Text">
           <Val><![CDATA[When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between Visual Studio ]A;and the MI-enabled debugger (such as gdb).]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Cuando está presente, indica al depurador que se conecte a un equipo remoto, con otro ejecutable como canalización, que transmita la entrada o salida estándar entre Visual Studio ]A;y el depurador habilitado para MI (como gdb).]]></Val>
+            <Val><![CDATA[Cuando está presente, indica al depurador que se conecte a un equipo remoto usando otro ejecutable como canalización, que reenviará la entrada o salida estándar entre Visual Studio ]A;y el depurador habilitado para MI (como gdb).]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -770,7 +770,7 @@
         <Str Cat="Text">
           <Val><![CDATA[C/C++ Attach for MinGW/Cygwin (gdb)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Asociación de C/C++ para MinGW/Cygwin (gdb)]]></Val>
+            <Val><![CDATA[Asociación a C/C++ para MinGW/Cygwin (gdb)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
