@@ -815,7 +815,7 @@ namespace Microsoft.MIDebugEngine
                 throw new LaunchErrorException(message);
             };
 
-            commands.Add(new LaunchCommand("-file-exec-and-symbols \"" + exe + "\"", description, ignoreFailures: false, failureHandler: failureHandler));
+            commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures: false, failureHandler: failureHandler));
         }
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
@@ -1321,7 +1321,7 @@ namespace Microsoft.MIDebugEngine
                 path = path.Replace(@"\", @"\\");
             }
 
-            if (path.IndexOf(' ') != -1)
+            if (path.IndexOf(' ') != -1 || path.IndexOf('\'') != -1)
             {
                 path = '"' + path + '"';
             }
