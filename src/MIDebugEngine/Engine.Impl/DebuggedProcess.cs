@@ -1321,7 +1321,7 @@ namespace Microsoft.MIDebugEngine
                 path = path.Replace(@"\", @"\\");
             }
 
-            if (path.IndexOf(' ') != -1)
+            if (path.IndexOfAny(new char[] {' ', '\''}) != -1)
             {
                 path = '"' + path + '"';
             }
