@@ -513,6 +513,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debugger was unable to set the process running..
+        /// </summary>
+        public static string Info_UnableToContinue {
+            get {
+                return ResourceManager.GetString("Info_UnableToContinue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Module containing this breakpoint has not yet loaded or the breakpoint address could not be obtained..
         /// </summary>
         public static string Status_BreakpointPending {

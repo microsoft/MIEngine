@@ -301,4 +301,7 @@ Error: {1}</value>
   <data name="Error_CommandAborted" xml:space="preserve">
     <value>Command aborted. See the output window for additional details.</value>
   </data>
+  <data name="Info_UnableToContinue" xml:space="preserve">
+    <value>Debugger was unable to set the process running.</value>
+  </data>
 </root>
