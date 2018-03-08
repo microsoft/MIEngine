@@ -513,7 +513,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Debugger was unable to set the process running..
+        ///   Looks up a localized string similar to Debugger was unable to continue the process..
         /// </summary>
         public static string Info_UnableToContinue {
             get {

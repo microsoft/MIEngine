@@ -97,6 +97,8 @@ namespace MICore
         {
         }
 
+        public virtual int CurrentThread { get; }
+
         public virtual async Task<Results> ThreadInfo(uint? threadid = null)
         {
             string command = "-thread-info";

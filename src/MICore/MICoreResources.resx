@@ -302,6 +302,6 @@ Error: {1}</value>
     <value>Command aborted. See the output window for additional details.</value>
   </data>
   <data name="Info_UnableToContinue" xml:space="preserve">
-    <value>Debugger was unable to set the process running.</value>
+    <value>Debugger was unable to continue the process.</value>
   </data>
 </root>
