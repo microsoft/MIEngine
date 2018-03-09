@@ -401,7 +401,12 @@ namespace Microsoft.MIDebugEngine
                     {
                         // assume that it was a continue command that got aborted and return to stopped state:
                         // this occurs when using openocd to debug embedded devices and it runs out of hardware breakpoints.
-                        ScheduleStdOutProcessing(string.Format(CultureInfo.CurrentCulture, @"*stopped,reason=""exception-received"",signal-name=""SIGINT"",thread-id=""1"",exception=""{0}""", MICoreResources.Info_UnableToContinue));
+                        int currentThread = MICommandFactory.CurrentThread;
+                        if (currentThread==0)
+                        {
+                            currentThread = 1;  // default to main thread is current doesn't have a valid value for some reason
+                        }
+                        ScheduleStdOutProcessing(string.Format(CultureInfo.CurrentCulture, @"*stopped,reason=""exception-received"",signal-name=""SIGINT"",thread-id=""{1}"",exception=""{0}""", MICoreResources.Info_UnableToContinue, currentThread));
                     }
                 }
                 _callback.OnError(message);
