@@ -33,6 +33,9 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsCoreClr)' == 'false'">
+    <!-- override with lab key. This is to allow public scenario of building custom MIEngine for the vscode-cpptools release which uses the actual implementation of DebugEngineHost from OpenDebugAD7, which is lab signed -->
+    <AssemblyOriginatorKeyFile>..\..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>true</DelaySign>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
 
