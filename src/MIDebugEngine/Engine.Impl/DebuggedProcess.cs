@@ -664,23 +664,22 @@ namespace Microsoft.MIDebugEngine
                     {
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
                     }
-
-                    Action<string> failureHandler = (string miError) =>
+                    else // gdbserver is already attached when using LocalLaunchOptions
                     {
-                        if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
+                        Action<string> failureHandler = (string miError) =>
                         {
-                            string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
-                            throw new LaunchErrorException(message);
-                        }
-                        else
-                        {
-                            string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
-                            throw new LaunchErrorException(message);
-                        }
-                    };
+                            if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
+                                throw new LaunchErrorException(message);
+                            }
+                            else
+                            {
+                                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                                throw new LaunchErrorException(message);
+                            }
+                        };
 
-                    if (localLaunchOptions == null) // gdbserver is already attached when using LocalLaunchOptions
-                    {
                         commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value, ignoreFailures: false, failureHandler: failureHandler));
                     }
 
@@ -1321,7 +1320,7 @@ namespace Microsoft.MIDebugEngine
                 path = path.Replace(@"\", @"\\");
             }
 
-            if (path.IndexOfAny(new char[] {' ', '\''}) != -1)
+            if (path.IndexOfAny(new char[] { ' ', '\'' }) != -1)
             {
                 path = '"' + path + '"';
             }
