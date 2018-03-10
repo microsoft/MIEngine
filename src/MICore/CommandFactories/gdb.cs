@@ -30,6 +30,8 @@ namespace MICore
             _currentFrameLevel = 0;
         }
 
+        public override int CurrentThread { get { return _currentThreadId; } }
+
         public override bool SupportsStopOnDynamicLibLoad()
         {
             return true;
