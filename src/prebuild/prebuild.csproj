@@ -52,8 +52,6 @@
 
     <ItemGroup Condition="'$(IsMonoRuntime)'=='false'">
       <DesktopProjects Include="../IOSDebugLauncher/IOSDebugLauncher.csproj" />
-      <DesktopProjects Include="../MICoreUnitTests/MICoreUnitTests.csproj" />
-      <DesktopProjects Include="../JDbgUnitTests/JDbgUnitTests.csproj" />
       <DesktopProjects Include="../MIDebugPackage/MIDebugPackage.csproj" />
     </ItemGroup>
 

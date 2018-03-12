@@ -13,10 +13,10 @@
     <OutDir Condition=" '$(OutDir)'=='' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutDir>
     <SourceHome Condition=" '$(SourceHome)'=='' ">$(MSBuildThisFileDirectory)src\</SourceHome>
     <ToolsHome Condition=" '$(ToolsHome)'=='' ">$(MSBuildThisFileDirectory)tools\</ToolsHome>
-	
-	<!--Don't run unit tests for lab builds -->
-	<TargetsToRun>Build;Test</TargetsToRun>
-	<TargetsToRun Condition="'$(Lab)' == 'true'">Build</TargetsToRun>
+
+    <!--Don't run unit tests for lab builds -->
+    <TargetsToRun>Build;Test</TargetsToRun>
+    <TargetsToRun Condition="'$(Lab)' == 'true'">Build</TargetsToRun>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,7 +44,7 @@
              Projects="@(Solution)" />
   </Target>
   
-  <Target Name="Test">
+  <Target Name="Test" Condition="'$(Configuration)' != 'Desktop.Debug' and '$(Configuration)' != 'Desktop.Release'">
  
     <ItemGroup>
       <TestAssemblies Include="bin\$(Configuration)\**\*UnitTests.dll"/>
