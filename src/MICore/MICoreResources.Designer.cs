@@ -80,6 +80,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Command aborted. See the output window for additional details..
+        /// </summary>
+        public static string Error_CommandAborted {
+            get {
+                return ResourceManager.GetString("Error_CommandAborted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal error in MIEngine. Exception of type &apos;{0}&apos; was thrown.
         ///
         ///{1}.
@@ -500,6 +509,15 @@ namespace MICore {
         public static string Info_StartingUnixCommand {
             get {
                 return ResourceManager.GetString("Info_StartingUnixCommand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugger was unable to continue the process..
+        /// </summary>
+        public static string Info_UnableToContinue {
+            get {
+                return ResourceManager.GetString("Info_UnableToContinue", resourceCulture);
             }
         }
         
