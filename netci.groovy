@@ -16,7 +16,7 @@ def branch = GithubBranchName
         Utilities.setMachineAffinity(newJob, 'Windows_NT', 'latest-or-auto')
         Utilities.standardJobSetup(newJob, project, isPR, "*/${branch}")
         
-        if (!configuration.StartsWith('Desktop.')) {
+        if (!configuration.startsWith('Desktop.')) {
             Utilities.addXUnitDotNETResults(newJob, 'bin/**/TestResults.xml')
         }
         
