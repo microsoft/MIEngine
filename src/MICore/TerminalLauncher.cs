@@ -62,8 +62,8 @@ namespace MICore
                     WorkingDirectory = workingDirectory,
                     FileName = GetProcessExecutable(),
                     Arguments = GetProcessArgs(),
+                    RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    RedirectStandardOutput = true
                 }
             };
 
