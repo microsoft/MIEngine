@@ -28,6 +28,24 @@ namespace MICore
         private const string ErrorPrefix = "Error:";
         private const string ShellScriptName = "GetClrDbg.sh";
 
+        private class UnixShellAsyncCommandCallback: IDebugUnixShellCommandCallback
+        {
+            UnixShellPortTransport _parent;
+            public UnixShellAsyncCommandCallback(UnixShellPortTransport parent)
+            {
+                this._parent = parent;
+            }
+
+            public void OnOutputLine(string line)
+            {
+                ((IDebugUnixShellCommandCallback)_parent).OnOutputLine(line);
+            }
+
+            public void OnExit(string exitCode)
+            {
+            }
+        }
+
         public UnixShellPortTransport()
         {
         }
@@ -199,26 +217,21 @@ namespace MICore
 
         public bool Interrupt(int pid)
         {
-            int exitCode = -1;
-            string output = null;
-            string error = null;
             string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
 
             try
             {
-                exitCode = ExecuteSyncCommand(MICoreResources.Info_KillingPipeProcess, killCmd, System.Threading.Timeout.Infinite, out output, out error);
-
-                if (exitCode != 0)
-                {
-                    this._callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessExit, killCmd, exitCode));
-                }
+                IDebugUnixShellAsyncCommand asyncCommand;
+                UnixShellAsyncCommandCallback callbacks = new UnixShellAsyncCommandCallback(this);
+                _launchOptions.UnixPort.BeginExecuteAsyncCommand(killCmd, false, callbacks, out asyncCommand);
             }
             catch (Exception e)
             {
                 this._callback.OnStdErrorLine(string.Format(CultureInfo.InvariantCulture, MICoreResources.Warn_ProcessException, killCmd, e.Message));
+                return false;
             }
 
-            return exitCode == 0;
+            return true;
         }
     }
 }
