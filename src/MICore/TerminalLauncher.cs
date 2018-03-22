@@ -62,8 +62,10 @@ namespace MICore
                     WorkingDirectory = workingDirectory,
                     FileName = GetProcessExecutable(),
                     Arguments = GetProcessArgs(),
+                    // Redirect stdout and stderr to logging
+                    // or else it will send to the default stdout and stderr
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true,
+                    RedirectStandardError = true
                 }
             };
 
