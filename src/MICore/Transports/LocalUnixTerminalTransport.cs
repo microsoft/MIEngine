@@ -66,7 +66,7 @@ namespace MICore
                 new ReadOnlyCollection<EnvironmentEntry>(new EnvironmentEntry[] { }); ;
 
             TerminalLauncher terminal = TerminalLauncher.MakeTerminal("DebuggerTerminal", launchDebuggerCommand, localOptions.Environment);
-            terminal.Launch(debuggeeDir);
+            terminal.Launch(debuggeeDir, Logger);
 
             int shellPid = -1;
 

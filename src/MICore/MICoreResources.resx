@@ -298,4 +298,10 @@ Error: {1}</value>
     <value>Unexpected ResultClass from MI Debugger. Expected '{0}' but received '{1}'.</value>
     <comment>{0} expected value, {1} received value</comment>
   </data>
+  <data name="Error_CommandAborted" xml:space="preserve">
+    <value>Command aborted. See the output window for additional details.</value>
+  </data>
+  <data name="Info_UnableToContinue" xml:space="preserve">
+    <value>Debugger was unable to continue the process.</value>
+  </data>
 </root>

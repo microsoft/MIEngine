@@ -393,6 +393,22 @@ namespace Microsoft.MIDebugEngine
                 {
                     message = result.Results.TryFindString("message");
                 }
+                // if the command was abort (usually because of breakpoints failing to bind) then gdb writes messages into the output
+                if (this.MICommandFactory.Mode == MIMode.Gdb && message == "Command aborted.")
+                {
+                    message = MICoreResources.Error_CommandAborted;
+                    if (ProcessState == ProcessState.Running)
+                    {
+                        // assume that it was a continue command that got aborted and return to stopped state:
+                        // this occurs when using openocd to debug embedded devices and it runs out of hardware breakpoints.
+                        int currentThread = MICommandFactory.CurrentThread;
+                        if (currentThread==0)
+                        {
+                            currentThread = 1;  // default to main thread is current doesn't have a valid value for some reason
+                        }
+                        ScheduleStdOutProcessing(string.Format(CultureInfo.CurrentCulture, @"*stopped,reason=""exception-received"",signal-name=""SIGINT"",thread-id=""{1}"",exception=""{0}""", MICoreResources.Info_UnableToContinue, currentThread));
+                    }
+                }
                 _callback.OnError(message);
             };
 
