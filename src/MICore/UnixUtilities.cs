@@ -172,7 +172,7 @@ namespace MICore
             return UnixNativeMethods.GetPGid(processId) >= 0;
         }
 
-        public static bool IsBinarySigned(string filePath, Action<string> stdoutCallback, Action<string> stderrCallback)
+        public static bool IsBinarySigned(string filePath, Action<string> outputCallback)
         {
             if (!PlatformUtilities.IsOSX())
             {
@@ -193,12 +193,12 @@ namespace MICore
             };
             p.OutputDataReceived += (sender, e) =>
             {
-                stdoutCallback(e.Data);
+                outputCallback("stdout: " + e.Data);
             };
 
             p.ErrorDataReceived += (sender, e) =>
             {
-                stderrCallback(e.Data);
+                outputCallback("stderr: " + e.Data);
             };
 
             p.Start();
