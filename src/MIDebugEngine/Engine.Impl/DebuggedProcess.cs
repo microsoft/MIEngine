@@ -178,7 +178,7 @@ namespace Microsoft.MIDebugEngine
                 if (PlatformUtilities.IsOSX() &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Lldb &&
-                    !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath))
+                    !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath, _callback.OnOutputString))
                 {
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_DarwinDebuggerUnsigned, localLaunchOptions.MIDebuggerPath);
                     _callback.OnOutputMessage(new OutputMessage(
