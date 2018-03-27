@@ -41,6 +41,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Android", "Android", "{2865
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CF02407C-BF37-4D51-83F4-845A7F36C101}"
 	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
 		IDECodeAnalysis.ruleset = IDECodeAnalysis.ruleset
 	EndProjectSection
 EndProject

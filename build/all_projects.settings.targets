@@ -20,4 +20,10 @@
     <MIDefaultOutputPath>$(MIEngineRoot)bin\$(Configuration)\</MIDefaultOutputPath>
     <ToolsHome>$(MIEngineRoot)\tools</ToolsHome>
   </PropertyGroup>
+  
+  <!-- Source Link -->
+  <PropertyGroup>
+    <EnableSourceLink>true</EnableSourceLink>
+  </PropertyGroup>
+  
 </Project>
