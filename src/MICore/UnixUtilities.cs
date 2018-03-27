@@ -172,7 +172,7 @@ namespace MICore
             return UnixNativeMethods.GetPGid(processId) >= 0;
         }
 
-        public static bool IsBinarySigned(string filePath)
+        public static bool IsBinarySigned(string filePath, Action<string> outputCallback)
         {
             if (!PlatformUtilities.IsOSX())
             {
@@ -186,11 +186,24 @@ namespace MICore
                     CreateNoWindow = true,
                     UseShellExecute = true,
                     FileName = CodeSignPath,
-                    Arguments = "--display " + filePath
+                    Arguments = "--display " + filePath,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
                  }
+            };
+            p.OutputDataReceived += (sender, e) =>
+            {
+                outputCallback("stdout: " + e.Data);
+            };
+
+            p.ErrorDataReceived += (sender, e) =>
+            {
+                outputCallback("stderr: " + e.Data);
             };
 
             p.Start();
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
             p.WaitForExit();
             return p.ExitCode == 0;
         }
