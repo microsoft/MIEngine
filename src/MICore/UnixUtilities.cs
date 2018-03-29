@@ -194,12 +194,12 @@ namespace MICore
 
             p.OutputDataReceived += (sender, e) =>
             {
-                OutputNonEmptyString(e.Data, "stdout: ", logger);
+                OutputNonEmptyString(e.Data, "binSign-stdout: ", logger);
             };
 
             p.ErrorDataReceived += (sender, e) =>
             {
-                OutputNonEmptyString(e.Data, "stderr: ", logger);
+                OutputNonEmptyString(e.Data, "binSign-stderr: ", logger);
             };
 
             p.Start();
@@ -209,7 +209,7 @@ namespace MICore
             return p.ExitCode == 0;
         }
 
-        private static void OutputNonEmptyString(string str, string prefix, Logger logger)
+        public static void OutputNonEmptyString(string str, string prefix, Logger logger)
         {
             if (!String.IsNullOrWhiteSpace(str) && logger != null)
             {
