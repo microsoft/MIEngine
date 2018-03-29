@@ -184,7 +184,7 @@ namespace MICore
                 StartInfo =
                 {
                     CreateNoWindow = true,
-                    UseShellExecute = true,
+                    UseShellExecute = false,
                     FileName = CodeSignPath,
                     Arguments = "--display " + filePath,
                     RedirectStandardOutput = true,
