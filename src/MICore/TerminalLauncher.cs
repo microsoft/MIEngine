@@ -71,12 +71,12 @@ namespace MICore
 
             _terminalProcess.OutputDataReceived += (sender, e) =>
             {
-                logger?.WriteLine("term-stdout: " + e.Data);
+                UnixUtilities.OutputNonEmptyString(e.Data, "term-stdout: ", logger);
             };
 
             _terminalProcess.ErrorDataReceived += (sender, e) =>
             {
-                logger?.WriteLine("term-stderr: " + e.Data);
+                UnixUtilities.OutputNonEmptyString(e.Data, "term-stderr:", logger);
             };
 
             SetNewProcessEnvironment(_terminalProcess.StartInfo);

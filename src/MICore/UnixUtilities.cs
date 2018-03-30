@@ -172,7 +172,7 @@ namespace MICore
             return UnixNativeMethods.GetPGid(processId) >= 0;
         }
 
-        public static bool IsBinarySigned(string filePath, Action<string> outputCallback)
+        public static bool IsBinarySigned(string filePath, Logger logger)
         {
             if (!PlatformUtilities.IsOSX())
             {
@@ -184,21 +184,22 @@ namespace MICore
                 StartInfo =
                 {
                     CreateNoWindow = true,
-                    UseShellExecute = true,
+                    UseShellExecute = false,
                     FileName = CodeSignPath,
                     Arguments = "--display " + filePath,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                  }
             };
+
             p.OutputDataReceived += (sender, e) =>
             {
-                outputCallback("stdout: " + e.Data);
+                OutputNonEmptyString(e.Data, "codeSign-stdout: ", logger);
             };
 
             p.ErrorDataReceived += (sender, e) =>
             {
-                outputCallback("stderr: " + e.Data);
+                OutputNonEmptyString(e.Data, "codeSign-stderr: ", logger);
             };
 
             p.Start();
@@ -206,6 +207,14 @@ namespace MICore
             p.BeginErrorReadLine();
             p.WaitForExit();
             return p.ExitCode == 0;
+        }
+
+        internal static void OutputNonEmptyString(string str, string prefix, Logger logger)
+        {
+            if (!String.IsNullOrWhiteSpace(str) && logger != null)
+            {
+                logger.WriteLine(prefix + str);
+            }
         }
 
         internal static void KillProcessTree(Process p)
