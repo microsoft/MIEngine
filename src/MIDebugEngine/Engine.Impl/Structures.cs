@@ -102,6 +102,7 @@ namespace Microsoft.MIDebugEngine
         void OnBreakpointBound(Object objPendingBreakpoint);
         void OnEntryPoint(DebuggedThread thread);
         void OnStopComplete(DebuggedThread thread);
+        void OnSymbolsLoaded(DebuggedModule module);
     };
 
     public class Constants
