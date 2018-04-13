@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Threading;
 using MICore;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -174,7 +175,8 @@ namespace Microsoft.MIDebugEngine
         // when the module is loaded.
         int IDebugModule3.LoadSymbols()
         {
-            throw new NotImplementedException();
+            Process.LoadSymbols(DebuggedModule);
+            return Constants.S_OK;
         }
 
         // Used to support the JustMyCode features of the debugger.
