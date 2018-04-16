@@ -117,17 +117,14 @@ namespace Microsoft.MIDebugEngine
             get { return _debuggedProcess; }
         }
 
-        internal uint CurrentRadix()
+        internal async Task<uint> CurrentRadixAsync()
         {
             uint radix;
             if (_settingsCallback != null && _settingsCallback.GetDisplayRadix(out radix) == Constants.S_OK)
             {
                 if (radix != _debuggedProcess.MICommandFactory.Radix)
                 {
-                    _debuggedProcess.WorkerThread.RunOperation(async () =>
-                    {
-                        await _debuggedProcess.MICommandFactory.SetRadix(radix);
-                    });
+                       await _debuggedProcess.MICommandFactory.SetRadix(radix);
                 }
             }
             return _debuggedProcess.MICommandFactory.Radix;

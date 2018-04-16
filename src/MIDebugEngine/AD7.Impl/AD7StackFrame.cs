@@ -245,7 +245,11 @@ namespace Microsoft.MIDebugEngine
 
         private void EnsureLocalsAndParameters()
         {
-            uint radix = Engine.CurrentRadix();
+            uint radix = _radix;
+            Engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+            {
+                radix = await Engine.CurrentRadixAsync();
+            });
             if (_textPosition != null && (!_hasGottenLocalsAndParams || radix != _radix))
             {
                 _radix = radix;
