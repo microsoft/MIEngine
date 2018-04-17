@@ -37,6 +37,7 @@ namespace Microsoft.MIDebugPackage
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(GuidList.guidMIDebugPackagePkgString)]
+    [ProvideBindingPath]
     public sealed class MIDebugPackagePackage : Package, IOleCommandTarget
     {
         private IOleCommandTarget _packageCommandTarget;
