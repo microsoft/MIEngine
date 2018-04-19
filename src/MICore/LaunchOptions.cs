@@ -1858,7 +1858,7 @@ namespace MICore
                     }
                     else
                     {
-                        ((IPlatformJsonAppLauncher)deviceAppLauncher).SetJsonLaunchOptions(exePath, args, dir, launcherOptions, targetEngine);
+                        ((IPlatformJsonAppLauncher)deviceAppLauncher).SetJsonLaunchOptions(exePath, args, dir, (JObject)launcherOptions, targetEngine);
                     }
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, logger, reportOnlyCorrupting: true))
@@ -2122,7 +2122,7 @@ namespace MICore
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="launcherJsonOptions">[Required] JObject options structure</param>
         /// <param name="targetEngine">Indicates the type of debugging being done.</param>
-        void SetJsonLaunchOptions(string exePath, string args, string dir, object launcherJsonOptions, TargetEngine targetEngine);
+        void SetJsonLaunchOptions(string exePath, string args, string dir, JObject launcherJsonOptions, TargetEngine targetEngine);
     }
 
     /// <summary>
