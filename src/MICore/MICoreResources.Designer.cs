@@ -250,15 +250,6 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CustomLauncher does not support json options &apos;{0}&apos;..
-        /// </summary>
-        public static string Error_LauncherJsonNotSupported {
-            get {
-                return ResourceManager.GetString("Error_LauncherJsonNotSupported", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Device App Launcher {0} could not be found..
         /// </summary>
         public static string Error_LauncherNotFound {
