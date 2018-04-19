@@ -1243,10 +1243,6 @@ namespace MICore
                         {
                             throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, customLauncherName));
                         }
-                        if (jsonLauncher as IPlatformJsonAppLauncher == null)
-                        {
-                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherJsonNotSupported, customLauncherName));
-                        }
                         launchOptions = ExecuteLauncher(configStore, (IPlatformAppLauncher)jsonLauncher, exePath, args, dir, parsedOptions, eventCallback, targetEngine, logger);
                     }
                     else if (parsedOptions["pipeTransport"] != null && parsedOptions["pipeTransport"].HasValues)
@@ -1852,14 +1848,7 @@ namespace MICore
                 try
                 {
                     deviceAppLauncher.Initialize(configStore, eventCallback);
-                    if (launcherOptions as JObject == null)
-                    {
-                        deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherOptions, targetEngine);
-                    }
-                    else
-                    {
-                        ((IPlatformJsonAppLauncher)deviceAppLauncher).SetJsonLaunchOptions(exePath, args, dir, (JObject)launcherOptions, targetEngine);
-                    }
+                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherOptions, targetEngine);
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, logger, reportOnlyCorrupting: true))
                 {
@@ -2072,9 +2061,9 @@ namespace MICore
         /// <param name="exePath">[Required] Path to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
-        /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
+        /// <param name="launcherOptions">[Required] Deserialized XML options structure or, when using json options, a JObject</param>
         /// <param name="targetEngine">Indicates the type of debugging being done.</param>
-        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
+        void SetLaunchOptions(string exePath, string args, string dir, object launcherOptions, TargetEngine targetEngine);
 
         /// <summary>
         /// Does whatever steps are necessary to setup for debugging. On Android this will include launching
@@ -2104,25 +2093,6 @@ namespace MICore
     public interface IPlatformAppLauncherSerializer : IDisposable
     {
         XmlSerializer GetXmlSerializer(string name);
-    }
-
-    /// <summary>
-    /// Optionally used when implementing a launcher extention. The extention implements this interface in order to support json launch options
-    /// </summary>
-    [ComVisible(true)]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("B9EED3FB-4905-40B2-B865-6B4061E80A44")]
-    public interface IPlatformJsonAppLauncher : IDisposable
-    {
-        /// <summary>
-        /// Initializes the launcher from the json launch settings
-        /// </summary>
-        /// <param name="exePath">[Required] Path to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
-        /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
-        /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
-        /// <param name="launcherJsonOptions">[Required] JObject options structure</param>
-        /// <param name="targetEngine">Indicates the type of debugging being done.</param>
-        void SetJsonLaunchOptions(string exePath, string args, string dir, JObject launcherJsonOptions, TargetEngine targetEngine);
     }
 
     /// <summary>
