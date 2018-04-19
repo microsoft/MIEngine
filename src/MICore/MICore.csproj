@@ -108,6 +108,7 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
     </Reference>
+<!-- NOTE: MIEngine's usage of Newtonsoft.Json's flows through public interfaces exposed by MICore (IPlatformAppLauncher). So this version needs to be within the binding redirect range used by devenv.exe (currently 4.5.0.0-9.0.0.0) -->
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>$(NuGetPackagesDirectory)/Newtonsoft.Json.6.0.8/lib/portable-net45+wp80+win8+wpa81+aspnetcore50/Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>

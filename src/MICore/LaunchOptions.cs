@@ -1229,7 +1229,23 @@ namespace MICore
                 try
                 {
                     JObject parsedOptions = JObject.Parse(options);
-                    if (parsedOptions["pipeTransport"] != null && parsedOptions["pipeTransport"].HasValues)
+
+                    // if the customLauncher element is present then try using the custom launcher implementation from the config store
+                    if (parsedOptions["customLauncher"] != null && !string.IsNullOrWhiteSpace(parsedOptions["customLauncher"].Value<string>()))
+                    {
+                        string customLauncherName = parsedOptions["customLauncher"].Value<string>();
+                        var jsonLauncher = configStore?.GetCustomLauncher(customLauncherName);
+                        if (jsonLauncher == null)
+                        {
+                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownCustomLauncher, customLauncherName));
+                        }
+                        if (jsonLauncher as IPlatformAppLauncher == null)
+                        {
+                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, customLauncherName));
+                        }
+                        launchOptions = ExecuteLauncher(configStore, (IPlatformAppLauncher)jsonLauncher, exePath, args, dir, parsedOptions, eventCallback, targetEngine, logger);
+                    }
+                    else if (parsedOptions["pipeTransport"] != null && parsedOptions["pipeTransport"].HasValues)
                     {
                         launchOptions = PipeLaunchOptions.CreateFromJson(parsedOptions);
                     }
@@ -1823,7 +1839,7 @@ namespace MICore
             return ExecuteLauncher(configStore, deviceAppLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
         }
 
-        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, IPlatformAppLauncher deviceAppLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
+        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, IPlatformAppLauncher deviceAppLauncher, string exePath, string args, string dir, object launcherOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
         {
             bool success = false;
 
@@ -1832,7 +1848,7 @@ namespace MICore
                 try
                 {
                     deviceAppLauncher.Initialize(configStore, eventCallback);
-                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
+                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherOptions, targetEngine);
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, logger, reportOnlyCorrupting: true))
                 {
@@ -2045,9 +2061,9 @@ namespace MICore
         /// <param name="exePath">[Required] Path to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
-        /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
+        /// <param name="launcherOptions">[Required] Deserialized XML options structure or, when using json options, a JObject</param>
         /// <param name="targetEngine">Indicates the type of debugging being done.</param>
-        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
+        void SetLaunchOptions(string exePath, string args, string dir, object launcherOptions, TargetEngine targetEngine);
 
         /// <summary>
         /// Does whatever steps are necessary to setup for debugging. On Android this will include launching

@@ -448,6 +448,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unrecognized json customLauncher element &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_UnknownCustomLauncher {
+            get {
+                return ResourceManager.GetString("Error_UnknownCustomLauncher", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal error: unable to serialize launch options..
         /// </summary>
         public static string Error_UnknownLaunchOptions {
