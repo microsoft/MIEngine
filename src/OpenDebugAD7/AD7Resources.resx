@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Error_CorruptingException" xml:space="preserve">
+    <value>Internal error in OpenDebugAD7. Exception of type '{0}' was thrown.
+
+{1}</value>
+  </data>
+  <data name="Error_LaunchFailedNoError" xml:space="preserve">
+    <value>DNX runtime process exited unexpectedly with error code {0}.</value>
+  </data>
+  <data name="Error_LaunchFailedWithError" xml:space="preserve">
+    <value>DNX Runtime failed to start. Error output:
+
+{0}</value>
+  </data>
+  <data name="Error_MissingOutParam" xml:space="preserve">
+    <value>Internal implementation error. Missing required output param.</value>
+  </data>
+  <data name="Error_Scenario_Evaluate" xml:space="preserve">
+    <value>Unable to evaluate expression. {0}</value>
+  </data>
+  <data name="Error_Scenario_Launch" xml:space="preserve">
+    <value>Unable to launch. {0}</value>
+  </data>
+  <data name="Error_Scenario_Attach" xml:space="preserve">
+    <value>Unable to attach. {0}</value>
+  </data>
+  <data name="Locals_Scope_Name" xml:space="preserve">
+    <value>Locals</value>
+  </data>
+  <data name="Msg_COMQC_E_BAD_MESSAGE" xml:space="preserve">
+    <value>The message is improperly formatted or was damaged in transit.</value>
+  </data>
+  <data name="Msg_E_ACCESSDENIED" xml:space="preserve">
+    <value>Access is denied.</value>
+  </data>
+  <data name="Msg_RPC_E_DISCONNECTED" xml:space="preserve">
+    <value>The object invoked has disconnected from its clients.</value>
+  </data>
+  <data name="Msg_RPC_E_SERVERFAULT" xml:space="preserve">
+    <value>The debug engine threw an exception.</value>
+  </data>
+  <data name="Msg_UnknownError" xml:space="preserve">
+    <value>Operation failed with error code 0x{0:x8}.</value>
+  </data>
+  <data name="DebugConsoleStartMessage" xml:space="preserve">
+    <value>Execute debugger commands using "-exec &lt;command&gt;", for example "-exec info registers" will list registers in use (when GDB is the debugger)</value>
+  </data>
+  <data name="ProcessExitMessage" xml:space="preserve">
+    <value>The program '{0}' has exited with code {1} (0x{1:x8}).
+</value>
+    <comment>{0} is the process name (ex: example.exe)
+{1} is the exit code</comment>
+  </data>
+  <data name="Warning_Scenario_TerminateProcess" xml:space="preserve">
+    <value>WARNING: Unable to terminate '{0}' process. {1}
+</value>
+    <comment>{0} is the name of the executable.</comment>
+  </data>
+  <data name="MissingDebuggerTerminationEvent" xml:space="preserve">
+    <value>Debugger failed to signal process termination.</value>
+  </data>
+  <data name="Prefix_Error" xml:space="preserve">
+    <value>ERROR: </value>
+  </data>
+  <data name="Prefix_Warning" xml:space="preserve">
+    <value>WARNING: </value>
+  </data>
+  <data name="Info_LaunchBrowser" xml:space="preserve">
+    <value>Launching browser ({0} {1})</value>
+  </data>
+  <data name="Warning_LaunchBrowserFailed" xml:space="preserve">
+    <value>WARNING: Launching browser failed. Error = {0}</value>
+  </data>
+  <data name="Error_UnableToSetBreakpoint" xml:space="preserve">
+    <value>Error setting breakpoint. {0}</value>
+  </data>
+  <data name="Msg_E_CRASHDUMP_UNSUPPORTED" xml:space="preserve">
+    <value>This operation is not supported when debugging dump files.</value>
+  </data>
+  <data name="Error_Scenario_Step_Next" xml:space="preserve">
+    <value>Unable to step next. {0}</value>
+  </data>
+  <data name="Error_Scenario_Step_In" xml:space="preserve">
+    <value>Unable to step in. {0}</value>
+  </data>
+  <data name="Error_Scenario_Step_Out" xml:space="preserve">
+    <value>Unable to step out. {0}</value>
+  </data>
+  <data name="Error_Scenario_Continue" xml:space="preserve">
+    <value>Unable to continue. {0}</value>
+  </data>
+  <data name="Error_ConditionBreakpoint" xml:space="preserve">
+    <value>Condition "{0}" : {1}</value>
+    <comment>{0} is the condition, {1} is error message</comment>
+  </data>
+  <data name="Error_FunctionBreakpoint" xml:space="preserve">
+    <value>Breakpoint Error: function "{0}", {1}</value>
+    <comment>{0} is function name, {1} is error message</comment>
+  </data>
+  <data name="Error_SourceFileMapEntryInvalid" xml:space="preserve">
+    <value>Specified path '{0}' in sourceFileMap is invalid</value>
+  </data>
+  <data name="Error_SourceFileMapEntryNull" xml:space="preserve">
+    <value>Specified path in sourceFileMap is empty</value>
+  </data>
+  <data name="Warning_LaunchBrowserCannotDetectUrl" xml:space="preserve">
+    <value>Could not detect launch url.</value>
+  </data>
+  <data name="Error_TargetNotStopped" xml:space="preserve">
+    <value>Unable to perform this action because the process is running.</value>
+  </data>
+  <data name="Error_ConflictingEnvProps" xml:space="preserve">
+    <value>'Env' and 'Environment' properties cannot both be defined.</value>
+  </data>
+  <data name="DebuggerDisconnectMessage" xml:space="preserve">
+    <value>Debugger has disconnected from the program '{0}'.</value>
+    <comment>{0} is the name of the executable.</comment>
+  </data>
+  <data name="Error_Internal_Launch" xml:space="preserve">
+    <value>Internal Error. Launch type '{0}' unsupported. Args '{1}'</value>
+    <comment>{0} is the launch type, {1} is the json args.</comment>
+  </data>
+  <data name="Error_PropertyMissing" xml:space="preserve">
+    <value>{0}: property '{1}' is missing, null, or empty</value>
+    <comment>{0} is the name of the command, {1} is the name of the property</comment>
+  </data>
+  <data name="Error_SetVariableFailed" xml:space="preserve">
+    <value>Could not set variable</value>
+  </data>
+  <data name="Error_StackFrameNotFound" xml:space="preserve">
+    <value>Unable to get the current stack frame</value>
+  </data>
+  <data name="Error_VariableNotFound" xml:space="preserve">
+    <value>Could not find variable</value>
+  </data>
+  <data name="Error_VariableIsReadonly" xml:space="preserve">
+    <value>'{0}' cannot be assigned to</value>
+  </data>
+</root>
