@@ -19,6 +19,7 @@ namespace Microsoft.MIDebugEngine
         public string Symbol;
         public uint Offset;
         public string Opcode;
+        public string CodeBytes;
         public string File;
         public uint Line;
         public uint OffsetInLine;
@@ -306,7 +307,7 @@ namespace Microsoft.MIDebugEngine
         // this is inefficient so we try and grab everything in one gulp
         internal static async Task<DisasmInstruction[]> Disassemble(DebuggedProcess process, ulong startAddr, ulong endAddr)
         {
-            string cmd = "-data-disassemble -s " + EngineUtils.AsAddr(startAddr, process.Is64BitArch) + " -e " + EngineUtils.AsAddr(endAddr, process.Is64BitArch) + " -- 0";
+            string cmd = "-data-disassemble -s " + EngineUtils.AsAddr(startAddr, process.Is64BitArch) + " -e " + EngineUtils.AsAddr(endAddr, process.Is64BitArch) + " -- 2";
             Results results = await process.CmdAsync(cmd, ResultClass.None);
             if (results.ResultClass != ResultClass.done)
             {
@@ -344,6 +345,7 @@ namespace Microsoft.MIDebugEngine
                 inst.Symbol = items[i].TryFindString("func-name");
                 inst.Offset = items[i].Contains("offset") ? items[i].FindUint("offset") : 0;
                 inst.Opcode = items[i].FindString("inst");
+                inst.CodeBytes = items[i].TryFindString("opcodes");
                 inst.Line = 0;
                 inst.File = null;
                 instructions[i] = inst;
@@ -366,6 +368,7 @@ namespace Microsoft.MIDebugEngine
                     disassemblyData.Symbol = asm_item.TryFindString("func-name");
                     disassemblyData.Offset = asm_item.Contains("offset") ? asm_item.FindUint("offset") : 0;
                     disassemblyData.Opcode = asm_item.FindString("inst");
+                    disassemblyData.CodeBytes = asm_item.TryFindString("opcodes");
                     disassemblyData.Line = line;
                     disassemblyData.File = file;
                     if (lineOffset == 0)

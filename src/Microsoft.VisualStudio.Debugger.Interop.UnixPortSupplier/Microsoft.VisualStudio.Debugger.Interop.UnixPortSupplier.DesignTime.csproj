@@ -25,6 +25,7 @@
     <DebugSymbols>false</DebugSymbols>
     <DebugType>none</DebugType>
     <NonShipping>true</NonShipping>
+    <EnableSourceLink>false</EnableSourceLink>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
     <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>

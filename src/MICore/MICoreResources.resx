@@ -304,4 +304,7 @@ Error: {1}</value>
   <data name="Info_UnableToContinue" xml:space="preserve">
     <value>Debugger was unable to continue the process.</value>
   </data>
+  <data name="Error_UnknownCustomLauncher" xml:space="preserve">
+    <value>Unrecognized json customLauncher element '{0}'.</value>
+  </data>
 </root>

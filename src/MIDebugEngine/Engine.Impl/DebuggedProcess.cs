@@ -178,7 +178,7 @@ namespace Microsoft.MIDebugEngine
                 if (PlatformUtilities.IsOSX() &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Lldb &&
-                    !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath))
+                    !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath, engine.Logger))
                 {
                     string message = String.Format(CultureInfo.CurrentCulture, ResourceStrings.Warning_DarwinDebuggerUnsigned, localLaunchOptions.MIDebuggerPath);
                     _callback.OnOutputMessage(new OutputMessage(
@@ -1392,6 +1392,26 @@ namespace Microsoft.MIDebugEngine
         {
             return unixPath.Replace('/', '\\');
         }
+
+        internal void LoadSymbols(DebuggedModule module)
+        {
+            if (MICommandFactory.Mode == MIMode.Gdb)
+            {
+                if (!module.SymbolsLoaded && !string.IsNullOrWhiteSpace(module.SymbolPath))
+                {
+                    Task evalTask = Task.Run(async () =>
+                    {
+                        await ConsoleCmdAsync("sharedlibrary " + module.Name);
+                        await CheckModules();
+                    });
+                }
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         private async Task CheckModules()
         {
             // NOTE: The version of GDB that comes in the Android SDK doesn't support -file-list-shared-library
@@ -1457,6 +1477,11 @@ namespace Microsoft.MIDebugEngine
                         }
 
                         _callback.OnModuleLoad(module);
+                    }
+                    else if (!module.SymbolsLoaded && symbolsLoaded)
+                    {
+                        module.SymbolsLoaded = true;
+                        _callback.OnSymbolsLoaded(module);
                     }
                 }
             }

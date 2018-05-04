@@ -117,6 +117,7 @@ namespace Microsoft.MIDebugEngine
             {
                 prgDisassembly[iOp] = FetchBadInstruction(dwFields);
             }
+
             foreach (DisasmInstruction instruction in instructions)
             {
                 if (iOp >= dwInstructions)
@@ -150,6 +151,15 @@ namespace Microsoft.MIDebugEngine
                 {
                     prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_OPCODE;
                     prgDisassembly[iOp].bstrOpcode = instruction.Opcode;
+                }
+
+                if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODEBYTES) != 0)
+                {
+                    if (!string.IsNullOrWhiteSpace(instruction.CodeBytes))
+                    {
+                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODEBYTES;
+                        prgDisassembly[iOp].bstrCodeBytes = instruction.CodeBytes;
+                    }
                 }
 
                 iOp++;

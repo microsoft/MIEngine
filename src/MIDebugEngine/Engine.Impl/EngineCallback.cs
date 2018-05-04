@@ -85,6 +85,12 @@ namespace Microsoft.MIDebugEngine
             Send(eventObject, AD7ModuleLoadEvent.IID, null);
         }
 
+        public void OnSymbolsLoaded(DebuggedModule module)
+        {
+            var eventObject = new AD7SymbolLoadEvent(module.Client as AD7Module);
+            Send(eventObject, AD7SymbolLoadEvent.IID, null);
+        }
+
         public void OnModuleUnload(DebuggedModule debuggedModule)
         {
             Debug.Assert(_engine.DebuggedProcess.WorkerThread.IsPollThread());

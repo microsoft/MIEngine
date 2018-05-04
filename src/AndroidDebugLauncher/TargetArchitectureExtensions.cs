@@ -17,7 +17,7 @@ namespace AndroidDebugLauncher
                     return "x86";
 
                 case TargetArchitecture.X64:
-                    return "x64";
+                    return "x86_64";
 
                 case TargetArchitecture.ARM:
                     return "arm";
