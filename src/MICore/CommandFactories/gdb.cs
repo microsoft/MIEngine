@@ -264,6 +264,10 @@ namespace MICore
                     {
                         return TargetArchitecture.ARM64;
                     }
+                    else if (resultLine.IndexOf("aarch64", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return TargetArchitecture.ARM64;
+                    }
                     else if (resultLine.IndexOf("arm", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         return TargetArchitecture.ARM;

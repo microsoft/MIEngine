@@ -888,51 +888,48 @@ namespace Microsoft.MIDebugEngine
             commands.Add(new LaunchCommand(absoluteExePath, ignoreFailures: false, failureHandler: failureHandler, successHandler: successHandler));
         }
 
-        private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
+        private TargetArchitecture DefaultArch()
         {
-            if (_launchOptions.TargetArchitecture == TargetArchitecture.Unknown)
+            if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
             {
-                Action<string> failureHandler = (string miError) =>
-                {
-                    string message = ResourceStrings.Error_FailedToGetTargetArchitecture;
-                    throw new LaunchErrorException(message);
-                };
-
-                Func<string, Task> successHandler = (string resultsStr) =>
-                {
-                    TargetArchitecture arch = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
-
-                    if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
-                    {
-                        arch = LaunchOptions.TargetArchitecture;
-                    }
-                    else if (arch == TargetArchitecture.Unknown)
-                    {
-                        // Use X64 as default if the arch couldn't be detected and wasn't specified
-                        // in the launch options
-                        WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
-                        arch = TargetArchitecture.X64;
-                    }
-
-                    SetTargetArch(arch);
-
-                    return Task.FromResult(0);
-                };
-
-                string cmd = MICommandFactory.GetTargetArchitectureCommand();
-
-                if (cmd != null)
-                {
-                    commands.Add(new LaunchCommand(cmd, ignoreFailures: false, successHandler: successHandler, failureHandler: failureHandler));
-                }
-                else
-                {
-                    SetTargetArch(MICommandFactory.ParseTargetArchitectureResult(""));
-                }
+                return LaunchOptions.TargetArchitecture;
             }
             else
             {
-                SetTargetArch(_launchOptions.TargetArchitecture);
+                // Use X64 as default if the arch couldn't be detected and wasn't specified
+                // in the launch options
+                WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
+                return TargetArchitecture.X64;
+            }
+        }
+
+        private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
+        {
+            // User may specify the wrong architecture, e.g. ARM instead of ARM64, so use the target's real architecture if available:
+            // 1. if the command factory can discover the target architecture then use that
+            // 2. else if the user specified an architecture then use that
+            // 3. otherwise default to x64
+            TargetArchitecture arch = DefaultArch();
+
+            Task successHandler(string resultsStr)
+            {
+                var archFromTarget = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
+
+                if (archFromTarget != TargetArchitecture.Unknown)
+                {
+                    arch = archFromTarget;
+                }
+
+                SetTargetArch(arch);
+
+                return Task.FromResult(0);
+            }
+
+            string cmd = MICommandFactory.GetTargetArchitectureCommand();
+
+            if (cmd != null)
+            {
+                commands.Add(new LaunchCommand(cmd, ignoreFailures: false, successHandler: successHandler));
             }
         }
 
