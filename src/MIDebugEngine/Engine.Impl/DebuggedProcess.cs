@@ -909,27 +909,25 @@ namespace Microsoft.MIDebugEngine
             // 1. if the command factory can discover the target architecture then use that
             // 2. else if the user specified an architecture then use that
             // 3. otherwise default to x64
-            TargetArchitecture arch = DefaultArch();
+            SetTargetArch( DefaultArch() ); // set the default value based on user input
 
-            Task successHandler(string resultsStr)
-            {
+            Func<string, Task> successHandler = (string resultsStr) => {
                 var archFromTarget = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
 
                 if (archFromTarget != TargetArchitecture.Unknown)
                 {
-                    arch = archFromTarget;
+                    SetTargetArch(archFromTarget);
                 }
 
-                SetTargetArch(arch);
-
                 return Task.FromResult(0);
-            }
+            };
 
             string cmd = MICommandFactory.GetTargetArchitectureCommand();
 
             if (cmd != null)
             {
-                commands.Add(new LaunchCommand(cmd, ignoreFailures: false, successHandler: successHandler));
+                // schedule a command to fetch the the debuggers actual target achitecture 
+                commands.Add(new LaunchCommand(cmd, ignoreFailures: true, successHandler: successHandler));
             }
         }
 
