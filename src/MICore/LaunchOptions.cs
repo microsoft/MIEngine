@@ -377,13 +377,14 @@ namespace MICore
 
         private const int DefaultLaunchTimeout = 10 * 1000; // 10 seconds
 
-        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, IList<EnvironmentEntry> environmentEntries)
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs, IList<EnvironmentEntry> environmentEntries)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
+            this.MIDebuggerArgs = MIDebuggerArgs;
 
             if (environmentEntries == null)
             {
@@ -467,6 +468,7 @@ namespace MICore
 
             LocalLaunchOptions localLaunchOptions = new LocalLaunchOptions(RequireAttribute(miDebuggerPath, nameof(miDebuggerPath)),
                 launchOptions.MiDebuggerServerAddress,
+                launchOptions.MiDebuggerArgs,
                 GetEnvironmentEntries(
                     (launchOptions is Json.LaunchOptions.LaunchOptions) ?
                         ((Json.LaunchOptions.LaunchOptions)launchOptions).Environment
@@ -499,6 +501,7 @@ namespace MICore
             var options = new LocalLaunchOptions(
                 RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
                 source.MIDebuggerServerAddress,
+                source.MIDebuggerArgs,
                 GetEnvironmentEntries(source.Environment));
             options.InitializeCommonOptions(source);
             options.InitializeServerOptions(source);
@@ -608,6 +611,11 @@ namespace MICore
         /// [Required] Path to the MI Debugger Executable.
         /// </summary>
         public string MIDebuggerPath { get; private set; }
+
+        /// <summary>
+        /// [Required] Path to the MI Debugger Executable.
+        /// </summary>
+        public string MIDebuggerArgs { get; private set; }
 
         /// <summary>
         /// [Optional] Server address that MI Debugger server is listening to
@@ -1413,7 +1421,7 @@ namespace MICore
             if (isServerMode && unixPort is Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)
             {
                 string addr = ((Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)unixPort).GdbServerAttachProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
-                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, null);
+                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, String.Empty, null);
                 options._miMode = miMode;
                 options.ExePath = attachOptions.ServerOptions.ExePath;
             }

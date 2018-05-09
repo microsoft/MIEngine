@@ -61,6 +61,12 @@ namespace MICore.Json.LaunchOptions
         public string MiDebuggerPath { get; set; }
 
         /// <summary>
+        /// Arguments for the mi debugger.
+        /// </summary>
+        [JsonProperty("miDebuggerArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string MiDebuggerArgs { get; set; }
+
+        /// <summary>
         /// Network address of the MI Debugger Server to connect to (example: localhost:1234).
         /// </summary>
         [JsonProperty("miDebuggerServerAddress", DefaultValueHandling = DefaultValueHandling.Ignore)]

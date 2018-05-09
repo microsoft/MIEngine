@@ -74,9 +74,16 @@ namespace MICore
 
         internal static string GetDebuggerCommand(LocalLaunchOptions localOptions)
         {
+            string miDebuggerCommand = localOptions.MIDebuggerPath;
+
+            if (!String.IsNullOrEmpty(localOptions.MIDebuggerArgs))
+            {
+                miDebuggerCommand = String.Concat(miDebuggerCommand, " " + localOptions.MIDebuggerArgs);
+            }
+
             if (PlatformUtilities.IsLinux())
             {
-                string debuggerPathCorrectElevation = localOptions.MIDebuggerPath;
+                string debuggerPathCorrectElevation = miDebuggerCommand;
                 string prompt = string.Empty;
 
                 // If running as root, make sure the new console is also root. 
@@ -106,7 +113,7 @@ namespace MICore
             }
             else
             {
-                return localOptions.MIDebuggerPath;
+                return miDebuggerCommand;
             }
         }
 
