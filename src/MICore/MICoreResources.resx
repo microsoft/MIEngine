@@ -246,10 +246,6 @@ Error: {1}</value>
     <value>Starting unix command: '{0}'</value>
     <comment>{0} command run on the remote unix machine.</comment>
   </data>
-  <data name="Warning_DownloadingClrDbgToRemote" xml:space="preserve">
-    <value>Warning: Downloading .NET debugger to remote machine failed with error {0}.</value>
-    <comment>{0} exception error</comment>
-  </data>
   <data name="Info_KillingPipeProcess" xml:space="preserve">
     <value>Killing pipe process</value>
   </data>

@@ -376,7 +376,6 @@ namespace Microsoft.MIDebugEngine
 
         internal BoundBreakpoint(PendingBreakpoint parent, TupleValue bindinfo)
         {
-            // CLRDBG TODO: Support clr addresses for breakpoints
             this.Addr = bindinfo.TryFindAddr("addr") ?? 0;
             this.FunctionName = bindinfo.TryFindString("func");
             this.Enabled = bindinfo.TryFindString("enabled") == "n" ? false : true;

@@ -77,8 +77,6 @@ namespace Microsoft.MIDebugEngine
         // Gets the language associated with this document context.
         int IDebugDocumentContext2.GetLanguageInfo(ref string pbstrLanguage, ref Guid pguidLanguage)
         {
-            // CLRDBG TODO: Add 'language' to the MI
-
             string fileExtension = _textPosition.GetFileExtension();
 
             if (fileExtension.Equals(".cs", StringComparison.OrdinalIgnoreCase))

@@ -44,7 +44,6 @@ namespace MICore
         public event EventHandler ThreadCreatedEvent;
         public event EventHandler ThreadExitedEvent;
         public event EventHandler ThreadGroupExitedEvent;
-        public event EventHandler<ResultEventArgs> MessageEvent;
         public event EventHandler<ResultEventArgs> TelemetryEvent;
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
@@ -607,8 +606,7 @@ namespace MICore
             if (!_terminating)
             {
                 _terminating = true;
-                if (ProcessState == ProcessState.Running &&
-                    this.MICommandFactory.Mode != MIMode.Clrdbg)
+                if (ProcessState == ProcessState.Running)
                 {
                     // MinGW and Cygwin on Windows don't support async break. Because of this,
                     // the normal path of sending an internal async break so we can exit doesn't work.
@@ -686,7 +684,7 @@ namespace MICore
         public async Task<Results> CmdDetach()
         {
             _detaching = true;
-            if (ProcessState == ProcessState.Running && this.MICommandFactory.Mode != MIMode.Clrdbg)
+            if (ProcessState == ProcessState.Running)
             {
                 await AddInternalBreakAction(() => CmdAsync("-target-detach", ResultClass.done));
             }
@@ -1409,15 +1407,6 @@ namespace MICore
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-exited,".Length));
                 ThreadExitedEvent(this, new ResultEventArgs(results, 0));
-            }
-            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
-            else if (cmd.StartsWith("message,", StringComparison.Ordinal))
-            {
-                results = _miResults.ParseResultList(cmd.Substring("message,".Length));
-                if (this.MessageEvent != null)
-                {
-                    this.MessageEvent(this, new ResultEventArgs(results));
-                }
             }
             else if (cmd.StartsWith("telemetry,", StringComparison.Ordinal))
             {

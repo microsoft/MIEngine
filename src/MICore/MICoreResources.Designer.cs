@@ -10,7 +10,6 @@
 
 namespace MICore {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace MICore {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MICore.MICoreResources", typeof(MICoreResources).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MICore.MICoreResources", typeof(MICoreResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -563,15 +562,6 @@ namespace MICore {
         public static string Warn_ProcessExit {
             get {
                 return ResourceManager.GetString("Warn_ProcessExit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: Downloading .NET debugger to remote machine failed with error {0}..
-        /// </summary>
-        public static string Warning_DownloadingClrDbgToRemote {
-            get {
-                return ResourceManager.GetString("Warning_DownloadingClrDbgToRemote", resourceCulture);
             }
         }
     }

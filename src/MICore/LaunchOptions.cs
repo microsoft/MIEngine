@@ -732,85 +732,17 @@ namespace MICore
         public Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort UnixPort { get; private set; }
 
         /// <summary>
-        /// After a successful launch of ClrDbg from a VS session, the subsequent debugging in the same VS will not attempt to download ClrDbg on the remote machine.
-        /// This keeps track of the ports where the debugger was successfully launched.
-        /// </summary>
-        private static HashSet<string> s_LaunchSuccessSet = new HashSet<string>();
-
-        /// <summary>
-        /// Url to get the GetClrDbg.sh script from.
-        /// </summary>
-        public string GetClrDbgUrl { get; private set; } = "https://aka.ms/getclrdbgsh";
-
-        /// <summary>
         /// Default location of the debugger on the remote machine.
         /// </summary>
         public string DebuggerInstallationDirectory { get; private set; } = ".vs-debugger";
 
-        /// <summary>
-        /// Meta version of the clrdbg.
-        /// </summary>
-        /// TODO: rajkumar42, placeholder. Needs to be fixed in the pkgdef as well.
-        public string ClrDbgVersion { get; private set; } = "vs2015u2";
-
-        /// <summary>
-        /// Sub directory where the clrdbg should be downloaded relative to <see name="DebuggerInstallationDirectory"/>
-        /// </summary>
-        public string ClrDbgInstallationSubDirectory { get; private set; } = "vs2015u2";
-
-        /// <summary>
-        /// Shell command invoked after a successful launch of clrdbg. 
-        /// Launches the existing clrdbg.
-        /// </summary>
-        /// /// <remarks>
-        /// {0} - Base directory of debugger
-        /// {1} - clrdbg version.
-        /// {2} - Subdirectory where clrdbg should be installed.
-        /// </remarks>
-        private const string ClrdbgFirstLaunchCommand = "cd {0} && chmod +x ./GetClrDbg.sh && ./GetClrDbg.sh -v {1} -l {0}/{2} -d";
-
-        /// <summary>
-        /// Shell command invoked after a successful launch of clrdbg. 
-        /// Launches the existing clrdbg.
-        /// </summary>
-        /// /// <remarks>
-        /// {0} - Base directory of debugger
-        /// {1} - clrdbg version.
-        /// {2} - Subdirectory where clrdbg should be installed.
-        /// </remarks>
-        private const string ClrdbgSubsequentLaunchCommand = "cd {0} && ./GetClrDbg.sh -v {1} -l {0}/{2} -d -s";
-
         public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand,
                 Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
                 MIMode miMode,
-                BaseLaunchOptions baseLaunchOptions,
-                string getClrDbgUrl = null,
-                string remoteDebuggerInstallationDirectory = null,
-                string remoteDebuggerInstallationSubDirectory = null,
-                string clrdbgVersion = null)
+                BaseLaunchOptions baseLaunchOptions)
         {
             this.UnixPort = unixPort;
             this.DebuggerMIMode = miMode;
-
-            if (!string.IsNullOrWhiteSpace(getClrDbgUrl))
-            {
-                GetClrDbgUrl = getClrDbgUrl;
-            }
-
-            if (!string.IsNullOrWhiteSpace(remoteDebuggerInstallationDirectory))
-            {
-                DebuggerInstallationDirectory = remoteDebuggerInstallationDirectory;
-            }
-
-            if (!string.IsNullOrWhiteSpace(remoteDebuggerInstallationSubDirectory))
-            {
-                ClrDbgInstallationSubDirectory = remoteDebuggerInstallationSubDirectory;
-            }
-
-            if (!string.IsNullOrWhiteSpace(clrdbgVersion))
-            {
-                ClrDbgVersion = clrdbgVersion;
-            }
 
             if (string.IsNullOrEmpty(startRemoteDebuggerCommand))
             {
@@ -822,27 +754,6 @@ namespace MICore
                     case MIMode.Lldb:
                         // TODO: Someday we should likely use a download script here too
                         startRemoteDebuggerCommand = "lldb-mi --interpreter=mi";
-                        break;
-                    case MIMode.Clrdbg:
-                        string debuggerHomeDirectory;
-                        if (DebuggerInstallationDirectory.StartsWith("/", StringComparison.OrdinalIgnoreCase))
-                        {
-                            debuggerHomeDirectory = DebuggerInstallationDirectory;
-                        }
-                        else
-                        {
-                            string userHomeDirectory = UnixPort.GetUserHomeDirectory();
-                            debuggerHomeDirectory = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", userHomeDirectory, DebuggerInstallationDirectory);
-                        }
-
-                        if (!HasSuccessfulPreviousLaunch(this))
-                        {
-                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgFirstLaunchCommand, debuggerHomeDirectory, ClrDbgVersion, ClrDbgInstallationSubDirectory);
-                        }
-                        else
-                        {
-                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgSubsequentLaunchCommand, debuggerHomeDirectory, ClrDbgVersion, ClrDbgInstallationSubDirectory);
-                        }
                         break;
 
                     default:
@@ -857,54 +768,6 @@ namespace MICore
                 this.InitializeCommonOptions(baseLaunchOptions);
                 this.BaseOptions = baseLaunchOptions;
             }
-        }
-
-        /// <summary>
-        /// Records for a specific portname, the remote launch was successful.
-        /// </summary>
-        /// <param name="launchOptions">launch options</param>
-        public static void SetSuccessfulLaunch(UnixShellPortLaunchOptions launchOptions)
-        {
-            IDebugPort2 debugPort = launchOptions.UnixPort as IDebugPort2;
-            if (debugPort != null)
-            {
-                string portName = null;
-                debugPort.GetPortName(out portName);
-                if (!string.IsNullOrWhiteSpace(portName))
-                {
-                    lock (s_LaunchSuccessSet)
-                    {
-                        // If it is successful once, we expect the clrdbg launch to be successful atleast till the end of the current VS session. 
-                        // The portname will not be removed from the list.
-                        s_LaunchSuccessSet.Add(portName);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns true if the previous launch was ever successful on the same session false otherwise.
-        /// </summary>
-        /// <param name="launchOptions">launch options</param>
-        public static bool HasSuccessfulPreviousLaunch(UnixShellPortLaunchOptions launchOptions)
-        {
-            IDebugPort2 debugPort = launchOptions.UnixPort as IDebugPort2;
-            if (debugPort != null)
-            {
-                string portName = null;
-                debugPort.GetPortName(out portName);
-                if (!string.IsNullOrWhiteSpace(portName))
-                {
-                    lock (s_LaunchSuccessSet)
-                    {
-                        // If it is successful once, we expect the clrdbg launch to be successful atleast till the end of the current VS session. 
-                        // The portname will not be removed from the list.
-                        return s_LaunchSuccessSet.Contains(portName);
-                    }
-                }
-            }
-
-            return false;
         }
     }
 
@@ -1422,10 +1285,6 @@ namespace MICore
         public static LaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
                                                             int processId,
                                                             MIMode miMode,
-                                                            string getClrDbgUrl,
-                                                            string remoteDebuggingDirectory,
-                                                            string remoteDebuggingSubDirectory,
-                                                            string debuggerVersion,
                                                             Logger logger)
         {
             var suppOptions = GetOptionsFromFile(logger);
@@ -1451,11 +1310,7 @@ namespace MICore
                 options = new UnixShellPortLaunchOptions(startRemoteDebuggerCommand: null,
                                                            unixPort: unixPort,
                                                            miMode: miMode,
-                                                           baseLaunchOptions: null,
-                                                           getClrDbgUrl: getClrDbgUrl,
-                                                           remoteDebuggerInstallationDirectory: remoteDebuggingDirectory,
-                                                           remoteDebuggerInstallationSubDirectory: remoteDebuggingSubDirectory,
-                                                           clrdbgVersion: debuggerVersion);
+                                                           baseLaunchOptions: null);
             }
 
             options.ProcessId = processId;
@@ -2022,8 +1877,6 @@ namespace MICore
                     return MIMode.Gdb;
                 case "lldb":
                     return MIMode.Lldb;
-                case "clrdbg":
-                    return MIMode.Clrdbg;
                 default:
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "MIMode"));
             }
@@ -2033,7 +1886,6 @@ namespace MICore
         {
             Debug.Assert((uint)MIMode.Gdb == (uint)Xml.LaunchOptions.MIMode.gdb, "Enum values don't line up!");
             Debug.Assert((uint)MIMode.Lldb == (uint)Xml.LaunchOptions.MIMode.lldb, "Enum values don't line up!");
-            Debug.Assert((uint)MIMode.Clrdbg == (uint)Xml.LaunchOptions.MIMode.clrdbg, "Enum values don't line up!");
             return (MIMode)source;
         }
 

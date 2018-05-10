@@ -332,9 +332,6 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         lldb,
-        
-        /// <remarks/>
-        clrdbg,
     }
     
     /// <remarks/>

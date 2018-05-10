@@ -41,8 +41,6 @@ namespace Microsoft.MIDebugEngine
         /// <returns>[Optional] Module, if the frame has one</returns>
         internal DebuggedModule FindModule(DebuggedProcess process)
         {
-            // CLRDBG TODO: Use module id to find the module
-
             if (this.pc.HasValue)
             {
                 return process.ResolveAddress(this.pc.Value);

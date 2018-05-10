@@ -60,11 +60,7 @@ namespace MICore
                 debuggerCmd,
                 localOptions.GetMiDebuggerArgs());
 
-            // Only pass the environment to launch clrdbg. For other modes, there are commands that set the environment variables
-            // directly for the debuggee.
-            ReadOnlyCollection<EnvironmentEntry> environmentForDebugger = localOptions.DebuggerMIMode == MIMode.Clrdbg ?
-                localOptions.Environment :
-                new ReadOnlyCollection<EnvironmentEntry>(new EnvironmentEntry[] { }); ;
+            ReadOnlyCollection<EnvironmentEntry> environmentForDebugger = new ReadOnlyCollection<EnvironmentEntry>(new EnvironmentEntry[] { });
 
             TerminalLauncher terminal = TerminalLauncher.MakeTerminal("DebuggerTerminal", launchDebuggerCommand, localOptions.Environment);
             terminal.Launch(debuggeeDir, Logger);

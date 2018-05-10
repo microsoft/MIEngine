@@ -17,8 +17,7 @@ namespace MICore
     public enum MIMode
     {
         Gdb,
-        Lldb,
-        Clrdbg
+        Lldb
     }
 
     public enum PrintValues
@@ -55,9 +54,6 @@ namespace MICore
                     break;
                 case MIMode.Lldb:
                     commandFactory = new LlldbMICommandFactory();
-                    break;
-                case MIMode.Clrdbg:
-                    commandFactory = new ClrdbgMICommandFactory();
                     break;
                 default:
                     throw new ArgumentException("mode");

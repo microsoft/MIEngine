@@ -22,14 +22,10 @@ namespace Microsoft.MIDebugEngine
         private const string Value_Windows_Runtime_Environment_Cygwin = "Cygwin";
         private const string Value_Windows_Runtime_Environment_MinGW = "MinGW";
 
-
-        private KeyValuePair<string, object>[] _clrdbgProcessCreateProperties;
-
         public bool DecodeTelemetryEvent(Results results, out string eventName, out KeyValuePair<string, object>[] properties)
         {
             properties = null;
 
-            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
             eventName = results.TryFindString("event-name");
             if (string.IsNullOrEmpty(eventName) || !char.IsLetter(eventName[0]) || !eventName.Contains('/'))
             {
@@ -74,12 +70,6 @@ namespace Microsoft.MIDebugEngine
 
             properties = propertyList.ToArray();
 
-            // If we are processing a clrdbg ProcessCreate event, save the event properties so we can use them to send other events
-            if (eventName == "VS/Diagnostics/Debugger/clrdbg/ProcessCreate")
-            {
-                _clrdbgProcessCreateProperties = properties;
-            }
-
             return true;
         }
 
@@ -91,11 +81,6 @@ namespace Microsoft.MIDebugEngine
             if (!string.IsNullOrEmpty(debuggerExitCode))
             {
                 eventProperties.Add(new KeyValuePair<string, object>(Property_DebuggerExitCode, debuggerExitCode));
-            }
-
-            if (_clrdbgProcessCreateProperties != null)
-            {
-                eventProperties.AddRange(_clrdbgProcessCreateProperties);
             }
 
             HostTelemetry.SendEvent(Event_DebuggerAborted, eventProperties.ToArray());
