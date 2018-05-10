@@ -35,13 +35,15 @@ namespace MICore
         /// <param name="dbgStdOutName">File where the stdout for the debugger process is redirected to</param>
         /// <param name="pidFifo">File where the debugger pid is written to</param>
         /// <param name="debuggerCmd">Command to the debugger</param>
+        /// <param name="debuggerArgs">MIDebugger arguments</param>
         /// <returns></returns>
         internal static string LaunchLocalDebuggerCommand(
             string debuggeeDir,
             string dbgStdInName,
             string dbgStdOutName,
             string pidFifo,
-            string debuggerCmd)
+            string debuggerCmd,
+            string debuggerArgs)
         {
             // On OSX, 'wait' will return once there is a status change from the launched process rather than for it to exit, so
             // we need to use 'fg' there. This works as our bash prompt is launched through apple script rather than 'bash -c'.
@@ -55,7 +57,7 @@ namespace MICore
                 "cd {0}; " +
                 "DbgTerm=`tty`; " +
                 "trap 'rm {1} {2} {3}' EXIT; " +
-                "{4} --interpreter=mi --tty=$DbgTerm < {1} > {2} & " +
+                "{4} {6} --tty=$DbgTerm < {1} > {2} & " +
                 // Clear the output of executing a process in the background: [job number] pid
                 "clear; " +
                 // echo and wait the debugger pid to know whether
@@ -68,7 +70,8 @@ namespace MICore
                 dbgStdOutName, /* 2 */
                 pidFifo, /* 3 */
                 debuggerCmd, /* 4 */
-                waitForCompletionCommand /* 5 */
+                waitForCompletionCommand, /* 5 */
+                debuggerArgs /* 6 */
                 );
         }
 
