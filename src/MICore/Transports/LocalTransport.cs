@@ -22,12 +22,7 @@ namespace MICore
         {
             LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
             string miDebuggerDir = System.IO.Path.GetDirectoryName(localOptions.MIDebuggerPath);
-            string miDebuggerArgs = "--interpreter=mi";
-
-            if (!String.IsNullOrEmpty(localOptions.MIDebuggerArgs))
-            {
-                miDebuggerArgs = String.Concat(miDebuggerArgs, " " + localOptions.MIDebuggerArgs);
-            }
+            string miDebuggerArgs = localOptions.GetMiDebuggerArgs();
 
             Process proc = new Process();
             proc.StartInfo.FileName = localOptions.MIDebuggerPath;

@@ -377,14 +377,13 @@ namespace MICore
 
         private const int DefaultLaunchTimeout = 10 * 1000; // 10 seconds
 
-        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs, IList<EnvironmentEntry> environmentEntries)
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, IList<EnvironmentEntry> environmentEntries)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
                 throw new ArgumentNullException("MIDebuggerPath");
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
-            this.MIDebuggerArgs = MIDebuggerArgs;
 
             if (environmentEntries == null)
             {
@@ -392,6 +391,12 @@ namespace MICore
             }
 
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentEntries);
+        }
+
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs, IList<EnvironmentEntry> environmentEntries): 
+            this(MIDebuggerPath, MIDebuggerServerAddress, environmentEntries)
+        {
+            this.MIDebuggerArgs = MIDebuggerArgs;
         }
 
         private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
@@ -452,6 +457,22 @@ namespace MICore
         public bool IsValidMiDebuggerPath()
         {
             return File.Exists(MIDebuggerPath);
+        }
+
+        /// <summary>
+        /// Generates arguments for the MIDebuggerCommand. 
+        /// </summary>
+        /// <returns></returns>
+        public string GetMiDebuggerArgs()
+        {
+            string miDebuggerArgs = "--interpreter=mi";
+
+            if (!String.IsNullOrEmpty(this.MIDebuggerArgs))
+            {
+                miDebuggerArgs = String.Concat(miDebuggerArgs, " " + this.MIDebuggerArgs);
+            }
+
+            return miDebuggerArgs;
         }
 
         static internal LocalLaunchOptions CreateFromJson(JObject parsedOptions)
@@ -1421,7 +1442,7 @@ namespace MICore
             if (isServerMode && unixPort is Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)
             {
                 string addr = ((Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)unixPort).GdbServerAttachProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
-                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, String.Empty, null);
+                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, null);
                 options._miMode = miMode;
                 options.ExePath = attachOptions.ServerOptions.ExePath;
             }

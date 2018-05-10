@@ -318,7 +318,7 @@ namespace MICoreUnitTests
         /// </summary>
         public void VerifyCoreApisPresent()
         {
-            LaunchOptions launchOptions = new LocalLaunchOptions("/usr/bin/gdb", "10.10.10.10:2345", String.Empty, new List<EnvironmentEntry>());
+            LaunchOptions launchOptions = new LocalLaunchOptions("/usr/bin/gdb", "10.10.10.10:2345", new List<EnvironmentEntry>());
             launchOptions.ExePath = @"c:\users\me\myapp.out";
             launchOptions.AdditionalSOLibSearchPath = @"c:\temp;e:\foo\bar";
             launchOptions.TargetArchitecture = TargetArchitecture.ARM;
