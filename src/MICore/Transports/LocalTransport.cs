@@ -22,11 +22,10 @@ namespace MICore
         {
             LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
             string miDebuggerDir = System.IO.Path.GetDirectoryName(localOptions.MIDebuggerPath);
-            string miDebuggerArgs = localOptions.GetMiDebuggerArgs();
 
             Process proc = new Process();
             proc.StartInfo.FileName = localOptions.MIDebuggerPath;
-            proc.StartInfo.Arguments = miDebuggerArgs;
+            proc.StartInfo.Arguments = localOptions.GetMiDebuggerArgs();
 
             // LLDB has the -environment-cd mi command that is used to set the working dir for gdb/clrdbg, but it doesn't work.
             // So, set lldb's working dir to the user's requested folder before launch.

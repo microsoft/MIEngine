@@ -397,6 +397,11 @@
         <xs:documentation>Local path to the MI Debugger executable.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="MIDebuggerArgs" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>Arguments for the MI Debugger executable.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attribute name="ExePath" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>Path to the executable file. This is a path on the Windows machine.</xs:documentation>

@@ -634,7 +634,7 @@ namespace MICore
         public string MIDebuggerPath { get; private set; }
 
         /// <summary>
-        /// [Required] Path to the MI Debugger Executable.
+        /// [Required] Arguments for the MI Debugger.
         /// </summary>
         public string MIDebuggerArgs { get; private set; }
 
@@ -1442,7 +1442,7 @@ namespace MICore
             if (isServerMode && unixPort is Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)
             {
                 string addr = ((Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)unixPort).GdbServerAttachProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
-                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, null);
+                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, attachOptions.ServerOptions.MIDebuggerArgs, null);
                 options._miMode = miMode;
                 options.ExePath = attachOptions.ServerOptions.ExePath;
             }

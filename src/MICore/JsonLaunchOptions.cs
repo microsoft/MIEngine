@@ -111,6 +111,7 @@ namespace MICore.Json.LaunchOptions
             string additionalSOLibSearchPath = null,
             string MIMode = null,
             string miDebuggerPath = null,
+            string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null)
@@ -123,6 +124,7 @@ namespace MICore.Json.LaunchOptions
             this.AdditionalSOLibSearchPath = additionalSOLibSearchPath;
             this.MIMode = MIMode;
             this.MiDebuggerPath = miDebuggerPath;
+            this.MiDebuggerArgs = miDebuggerArgs;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
             this.ProcessId = processId;
             this.SourceFileMap = sourceFileMap;
@@ -282,6 +284,7 @@ namespace MICore.Json.LaunchOptions
             string additionalSOLibSearchPath = null,
             string MIMode = null,
             string miDebuggerPath = null,
+            string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
             bool? stopAtEntry = null,
             string debugServerPath = null,
@@ -309,6 +312,7 @@ namespace MICore.Json.LaunchOptions
             this.AdditionalSOLibSearchPath = additionalSOLibSearchPath;
             this.MIMode = MIMode;
             this.MiDebuggerPath = miDebuggerPath;
+            this.MiDebuggerArgs = miDebuggerArgs;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
             this.StopAtEntry = stopAtEntry;
             this.DebugServerPath = debugServerPath;

@@ -349,6 +349,8 @@ namespace MICore.Xml.LaunchOptions {
         
         private string mIDebuggerPathField;
         
+        private string mIDebuggerArgsField;
+        
         private string exePathField;
         
         /// <remarks/>
@@ -370,6 +372,17 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.mIDebuggerPathField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string MIDebuggerArgs {
+            get {
+                return this.mIDebuggerArgsField;
+            }
+            set {
+                this.mIDebuggerArgsField = value;
             }
         }
         
