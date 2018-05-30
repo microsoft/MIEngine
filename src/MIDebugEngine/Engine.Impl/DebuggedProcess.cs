@@ -402,7 +402,7 @@ namespace Microsoft.MIDebugEngine
                         // assume that it was a continue command that got aborted and return to stopped state:
                         // this occurs when using openocd to debug embedded devices and it runs out of hardware breakpoints.
                         int currentThread = MICommandFactory.CurrentThread;
-                        if (currentThread==0)
+                        if (currentThread == 0)
                         {
                             currentThread = 1;  // default to main thread is current doesn't have a valid value for some reason
                         }
@@ -457,7 +457,15 @@ namespace Microsoft.MIDebugEngine
                 }
             };
 
-            BreakChangeEvent += _breakpointManager.BreakpointModified;
+            BreakChangeEvent += async delegate (object o, EventArgs args)
+            {
+                try
+                {
+                    await _breakpointManager.BreakpointModified(o, args);
+                }
+                catch (Exception)
+                { }
+            };
         }
 
         private async Task EnsureModulesLoaded()
@@ -909,9 +917,10 @@ namespace Microsoft.MIDebugEngine
             // 1. if the command factory can discover the target architecture then use that
             // 2. else if the user specified an architecture then use that
             // 3. otherwise default to x64
-            SetTargetArch( DefaultArch() ); // set the default value based on user input
+            SetTargetArch(DefaultArch()); // set the default value based on user input
 
-            Func<string, Task> successHandler = (string resultsStr) => {
+            Func<string, Task> successHandler = (string resultsStr) =>
+            {
                 var archFromTarget = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
 
                 if (archFromTarget != TargetArchitecture.Unknown)
@@ -1083,14 +1092,6 @@ namespace Microsoft.MIDebugEngine
 
                 if (bkpt != null)
                 {
-                    if (frame != null && addr != 0)
-                    {
-                        string sourceFile = frame.TryFindString("fullname");
-                        if (!String.IsNullOrEmpty(sourceFile))
-                        {
-                            await this.VerifySourceFileTimestamp(addr, sourceFile);
-                        }
-                    }
 
                     if (!this.EntrypointHit)
                     {
@@ -1099,15 +1100,33 @@ namespace Microsoft.MIDebugEngine
                         await this.OnEntrypointHit();
                     }
 
-                    List<object> bplist = new List<object>();
-                    bplist.AddRange(bkpt);
-                    _callback.OnBreakpoint(thread, bplist.AsReadOnly());
+                    if (bkptno.Equals(this._entryPointBreakpoint))
+                    {
+
+                        _callback.OnEntryPoint(thread);
+                    }
+                    else
+                    {
+
+
+                        if (frame != null && addr != 0)
+                        {
+                            string sourceFile = frame.TryFindString("fullname");
+                            if (!String.IsNullOrEmpty(sourceFile))
+                            {
+                                await this.VerifySourceFileTimestamp(addr, sourceFile);
+                            }
+                        }
+
+                        List<object> bplist = new List<object>();
+                        bplist.AddRange(bkpt);
+                        _callback.OnBreakpoint(thread, bplist.AsReadOnly());
+                    }
                 }
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
                     await this.OnEntrypointHit();
-
                     _callback.OnEntryPoint(thread);
                 }
                 else if (bkptno == "<EMBEDDED>")
@@ -1613,6 +1632,9 @@ namespace Microsoft.MIDebugEngine
 
                 if (!attach)
                 {
+                    // Clear the SourceLineCache because when gdb starts running, the addresses will change.
+                    this.SourceLineCache.Clear();
+
                     switch (_launchOptions.LaunchCompleteCommand)
                     {
                         case LaunchCompleteCommand.ExecRun:

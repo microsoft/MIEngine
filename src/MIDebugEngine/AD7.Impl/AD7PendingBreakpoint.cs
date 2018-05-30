@@ -362,6 +362,12 @@ namespace Microsoft.MIDebugEngine
                 //check can bind one last time. If the pending breakpoint was deleted before now, we need to clean up gdb side
                 if (CanBind())
                 {
+                    foreach( var boundBp in _boundBreakpoints.Where((b) => b.PendingBreakpoint.BreakpointId == boundBreakpoint.PendingBreakpoint.BreakpointId).ToList())
+                    {
+                        _engine.Callback.OnBreakpointUnbound(boundBp, enum_BP_UNBOUND_REASON.BPUR_BREAKPOINT_REBIND);
+                        _boundBreakpoints.Remove(boundBp);
+                    }
+
                     _boundBreakpoints.Add(boundBreakpoint);
                     PendingBreakpoint.AddedBoundBreakpoint();
                     _engine.Callback.OnBreakpointBound(boundBreakpoint);
