@@ -166,7 +166,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    bbp = pending.AddBoundBreakpoint(new BoundBreakpoint(pending.PendingBreakpoint, addr, frame));
+                    bbp = pending.AddBoundBreakpoint(new BoundBreakpoint(pending.PendingBreakpoint, addr, frame, bkptno));
                 }
             }
             return pending;

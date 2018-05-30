@@ -420,7 +420,7 @@ namespace Microsoft.MIDebugEngine
                     await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
                     _childProcessHandler?.ThreadCreatedEvent(result.Results);
                 }
-                catch (Exception)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
                     // Avoid crashing VS
                 }
@@ -463,7 +463,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     await _breakpointManager.BreakpointModified(o, args);
                 }
-                catch (Exception)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 { }
             };
         }
@@ -1092,6 +1092,14 @@ namespace Microsoft.MIDebugEngine
 
                 if (bkpt != null)
                 {
+                    if (frame != null && addr != 0)
+                    {
+                        string sourceFile = frame.TryFindString("fullname");
+                        if (!String.IsNullOrEmpty(sourceFile))
+                        {
+                            await this.VerifySourceFileTimestamp(addr, sourceFile);
+                        }
+                    }
 
                     if (!this.EntrypointHit)
                     {
@@ -1100,33 +1108,15 @@ namespace Microsoft.MIDebugEngine
                         await this.OnEntrypointHit();
                     }
 
-                    if (bkptno.Equals(this._entryPointBreakpoint))
-                    {
-
-                        _callback.OnEntryPoint(thread);
-                    }
-                    else
-                    {
-
-
-                        if (frame != null && addr != 0)
-                        {
-                            string sourceFile = frame.TryFindString("fullname");
-                            if (!String.IsNullOrEmpty(sourceFile))
-                            {
-                                await this.VerifySourceFileTimestamp(addr, sourceFile);
-                            }
-                        }
-
-                        List<object> bplist = new List<object>();
-                        bplist.AddRange(bkpt);
-                        _callback.OnBreakpoint(thread, bplist.AsReadOnly());
-                    }
+                    List<object> bplist = new List<object>();
+                    bplist.AddRange(bkpt);
+                    _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
                     await this.OnEntrypointHit();
+
                     _callback.OnEntryPoint(thread);
                 }
                 else if (bkptno == "<EMBEDDED>")
@@ -1632,7 +1622,6 @@ namespace Microsoft.MIDebugEngine
 
                 if (!attach)
                 {
-                    // Clear the SourceLineCache because when gdb starts running, the addresses will change.
                     this.SourceLineCache.Clear();
 
                     switch (_launchOptions.LaunchCompleteCommand)

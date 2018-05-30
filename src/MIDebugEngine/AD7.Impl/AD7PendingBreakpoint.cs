@@ -263,7 +263,7 @@ namespace Microsoft.MIDebugEngine
                         bindTask = _engine.DebuggedProcess.AddInternalBreakAction(this.BindAsync);
                     });
 
-                    bindTask.Wait(_engine.GetBPLongBindTimeout()); 
+                    bindTask.Wait(_engine.GetBPLongBindTimeout());
                     if (!bindTask.IsCompleted)
                     {
                         //send a low severity warning bp. This will allow the UI to respond quickly, and if the mi debugger doesn't end up binding, this warning will get 
@@ -362,7 +362,7 @@ namespace Microsoft.MIDebugEngine
                 //check can bind one last time. If the pending breakpoint was deleted before now, we need to clean up gdb side
                 if (CanBind())
                 {
-                    foreach( var boundBp in _boundBreakpoints.Where((b) => b.PendingBreakpoint.BreakpointId == boundBreakpoint.PendingBreakpoint.BreakpointId).ToList())
+                    foreach (var boundBp in _boundBreakpoints.Where((b) => b.Number.Equals(boundBreakpoint.Number, StringComparison.Ordinal)).ToList())
                     {
                         _engine.Callback.OnBreakpointUnbound(boundBp, enum_BP_UNBOUND_REASON.BPUR_BREAKPOINT_REBIND);
                         _boundBreakpoints.Remove(boundBp);

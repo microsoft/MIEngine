@@ -231,7 +231,7 @@ namespace Microsoft.MIDebugEngine
             string number = bkpt.FindString("number");
 
             PendingBreakpoint bp = new PendingBreakpoint(pbreak, number, MIBreakpointState.Single);
-            BoundBreakpoint bbp = new BoundBreakpoint(bp, MICore.Debugger.ParseAddr(address), size);
+            BoundBreakpoint bbp = new BoundBreakpoint(bp, MICore.Debugger.ParseAddr(address), size, number);
             return new BindResult(bp, bbp);
         }
 
@@ -355,7 +355,7 @@ namespace Microsoft.MIDebugEngine
     internal class BoundBreakpoint
     {
         private PendingBreakpoint _parent;
-
+        internal readonly string Number;
         internal ulong Addr { get; set; }
         /*OPTIONAL*/
         public string FunctionName { get; private set; }
@@ -373,15 +373,17 @@ namespace Microsoft.MIDebugEngine
             this.Enabled = bindinfo.TryFindString("enabled") == "n" ? false : true;
             this.HitCount = 0;
             this.CompiledFileName = bindinfo.Contains("fullname") ? bindinfo.FindString("fullname") : bindinfo.TryFindString("file");
+            this.Number = bindinfo.Contains("number") ? bindinfo.FindString("number") : parent.Number;
             _parent = parent;
             _textPosition = MITextPosition.TryParse(parent.DebuggedProcess, bindinfo);
         }
 
-        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, /*optional*/ TupleValue frame)
+        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, /*optional*/ TupleValue frame, string bkptno)
         {
             Addr = addr;
             HitCount = 0;
             Enabled = true;
+            this.Number = bkptno;
             _parent = parent;
 
             if (frame != null)
@@ -391,10 +393,11 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, uint size)
+        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, uint size, string bkptno)
         {
             Addr = addr;
             Enabled = true;
+            this.Number = bkptno;
             _parent = parent;
         }
 

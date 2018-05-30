@@ -55,7 +55,10 @@ namespace Microsoft.MIDebugEngine
 
         public void Clear()
         {
-            this._mapFileToLinenums.Clear();
+            lock (_mapFileToLinenums)
+            {
+                this._mapFileToLinenums.Clear();
+            }
         }
 
         internal async Task<SourceLineMap> GetLinesForFile(string file)
