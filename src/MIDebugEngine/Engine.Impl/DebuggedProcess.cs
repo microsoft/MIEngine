@@ -402,7 +402,7 @@ namespace Microsoft.MIDebugEngine
                         // assume that it was a continue command that got aborted and return to stopped state:
                         // this occurs when using openocd to debug embedded devices and it runs out of hardware breakpoints.
                         int currentThread = MICommandFactory.CurrentThread;
-                        if (currentThread==0)
+                        if (currentThread == 0)
                         {
                             currentThread = 1;  // default to main thread is current doesn't have a valid value for some reason
                         }
@@ -420,7 +420,7 @@ namespace Microsoft.MIDebugEngine
                     await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
                     _childProcessHandler?.ThreadCreatedEvent(result.Results);
                 }
-                catch (Exception)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
                     // Avoid crashing VS
                 }
@@ -457,7 +457,15 @@ namespace Microsoft.MIDebugEngine
                 }
             };
 
-            BreakChangeEvent += _breakpointManager.BreakpointModified;
+            BreakChangeEvent += async delegate (object o, EventArgs args)
+            {
+                try
+                {
+                    await _breakpointManager.BreakpointModified(o, args);
+                }
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
+                { }
+            };
         }
 
         private async Task EnsureModulesLoaded()
@@ -909,9 +917,10 @@ namespace Microsoft.MIDebugEngine
             // 1. if the command factory can discover the target architecture then use that
             // 2. else if the user specified an architecture then use that
             // 3. otherwise default to x64
-            SetTargetArch( DefaultArch() ); // set the default value based on user input
+            SetTargetArch(DefaultArch()); // set the default value based on user input
 
-            Func<string, Task> successHandler = (string resultsStr) => {
+            Func<string, Task> successHandler = (string resultsStr) =>
+            {
                 var archFromTarget = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
 
                 if (archFromTarget != TargetArchitecture.Unknown)
@@ -1613,6 +1622,8 @@ namespace Microsoft.MIDebugEngine
 
                 if (!attach)
                 {
+                    this.SourceLineCache.Clear();
+
                     switch (_launchOptions.LaunchCompleteCommand)
                     {
                         case LaunchCompleteCommand.ExecRun:

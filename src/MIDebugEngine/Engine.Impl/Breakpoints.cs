@@ -90,14 +90,14 @@ namespace Microsoft.MIDebugEngine
         {
             process.VerifyNotDebuggingCoreDump();
 
-            return EvalBindResult(await process.MICommandFactory.BreakInsert(functionName, condition, enabled, ResultClass.None), pbreak);
+            return await EvalBindResult(await process.MICommandFactory.BreakInsert(functionName, condition, enabled, ResultClass.None), pbreak);
         }
 
         internal static async Task<BindResult> Bind(ulong codeAddress, DebuggedProcess process, string condition, bool enabled, AD7PendingBreakpoint pbreak)
         {
             process.VerifyNotDebuggingCoreDump();
 
-            return EvalBindResult(await process.MICommandFactory.BreakInsert(codeAddress, condition, enabled, ResultClass.None), pbreak);
+            return await EvalBindResult(await process.MICommandFactory.BreakInsert(codeAddress, condition, enabled, ResultClass.None), pbreak);
         }
 
         internal static async Task<BindResult> Bind(string address, uint size, DebuggedProcess process, string condition, AD7PendingBreakpoint pbreak)
@@ -116,28 +116,10 @@ namespace Microsoft.MIDebugEngine
             {
                 compilerSrcName = Path.GetFileName(documentName);   
             }
-            BindResult bindResults = EvalBindResult(await process.MICommandFactory.BreakInsert(compilerSrcName, process.UseUnixSymbolPaths, line, condition, enabled, checksums, ResultClass.None), pbreak);
-
-            // On GDB, the returned line information is from the pending breakpoint instead of the bound breakpoint.
-            // Check the address mapping to make sure the line info is correct.
-            if (process.MICommandFactory.Mode == MIMode.Gdb &&
-                bindResults.BoundBreakpoints != null)
-            {
-                foreach (var boundBreakpoint in bindResults.BoundBreakpoints)
-                {
-                    string matchFile = compilerSrcName;
-                    if (!string.IsNullOrEmpty(boundBreakpoint.CompiledFileName))
-                    {
-                        matchFile = boundBreakpoint.CompiledFileName;   // get the file name as it appears in the symbolic info
-                    }
-                    boundBreakpoint.Line = await process.LineForStartAddress(matchFile, boundBreakpoint.Addr);
-                }
-            }
-
-            return bindResults;
+            return await EvalBindResult(await process.MICommandFactory.BreakInsert(compilerSrcName, process.UseUnixSymbolPaths, line, condition, enabled, checksums, ResultClass.None), pbreak);
         }
 
-        private static BindResult EvalBindResult(Results bindResult, AD7PendingBreakpoint pbreak)
+        private static async Task<BindResult> EvalBindResult(Results bindResult, AD7PendingBreakpoint pbreak)
         {
             string errormsg = "Unknown error";
             if (bindResult.ResultClass == ResultClass.error)
@@ -193,7 +175,7 @@ namespace Microsoft.MIDebugEngine
             bp = new PendingBreakpoint(pbreak, number, StringToBreakpointState(addr));
             if (list == null)   // single breakpoint
             {
-                BoundBreakpoint bbp = bp.GetBoundBreakpoint(bkpt);
+                BoundBreakpoint bbp = await bp.GetBoundBreakpoint(bkpt);
 
                 if (bbp == null)
                 {
@@ -206,7 +188,7 @@ namespace Microsoft.MIDebugEngine
                 BindResult res = new BindResult(bp);
                 for (int i = 1; i < list.Content.Length; ++i)
                 {
-                    BoundBreakpoint bbp = bp.GetBoundBreakpoint(list.Content[i] as TupleValue);
+                    BoundBreakpoint bbp = await bp.GetBoundBreakpoint(list.Content[i] as TupleValue);
                     res.BoundBreakpoints.Add(bbp);
                 }
                 return res;
@@ -249,7 +231,7 @@ namespace Microsoft.MIDebugEngine
             string number = bkpt.FindString("number");
 
             PendingBreakpoint bp = new PendingBreakpoint(pbreak, number, MIBreakpointState.Single);
-            BoundBreakpoint bbp = new BoundBreakpoint(bp, MICore.Debugger.ParseAddr(address), size);
+            BoundBreakpoint bbp = new BoundBreakpoint(bp, MICore.Debugger.ParseAddr(address), size, number);
             return new BindResult(bp, bbp);
         }
 
@@ -259,7 +241,7 @@ namespace Microsoft.MIDebugEngine
         /// </summary>
         /// <param name="bkpt">breakpoint description</param>
         /// <returns>null if breakpoint is pending</returns>
-        private BoundBreakpoint GetBoundBreakpoint(TupleValue bkpt)
+        private async Task<BoundBreakpoint> GetBoundBreakpoint(TupleValue bkpt)
         {
             string addrString = bkpt.TryFindString("addr");
             MIBreakpointState state = StringToBreakpointState(addrString);
@@ -279,16 +261,25 @@ namespace Microsoft.MIDebugEngine
                 return null;
             }
 
-            return new BoundBreakpoint(this, bkpt);
+            var bbp = new BoundBreakpoint(this, bkpt);
+
+            // On GDB, the returned line information is from the pending breakpoint instead of the bound breakpoint. 
+            // Check the address mapping to make sure the line info is correct. 
+            if (this.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb && !string.IsNullOrEmpty(bbp.CompiledFileName))
+            {
+                bbp.Line =  await this.DebuggedProcess.LineForStartAddress(bbp.CompiledFileName, bbp.Addr);
+            }
+
+            return bbp;
         }
 
         internal async Task<List<BoundBreakpoint>> SyncBreakpoint(DebuggedProcess process)
         {
             ResultValue bkpt = await process.MICommandFactory.BreakInfo(Number);
-            return BindAddresses(bkpt);
+            return await BindAddresses(bkpt);
         }
 
-        internal List<BoundBreakpoint> BindAddresses(ResultValue bkpt)
+        internal async Task<List<BoundBreakpoint>> BindAddresses(ResultValue bkpt)
         {
             List<BoundBreakpoint> resultList = new List<BoundBreakpoint>();
             if (bkpt == null)
@@ -301,7 +292,7 @@ namespace Microsoft.MIDebugEngine
                 var list = (ValueListValue)bkpt;
                 for (int i = 1; i < list.Content.Length; ++i)
                 {
-                    bbp = GetBoundBreakpoint(list.Content[i] as TupleValue);
+                    bbp = await GetBoundBreakpoint(list.Content[i] as TupleValue);
                     if (bbp != null)
                         resultList.Add(bbp);
                 }
@@ -309,7 +300,7 @@ namespace Microsoft.MIDebugEngine
             else
             {
                 _breakState = StringToBreakpointState(bkpt.TryFindString("addr"));
-                bbp = GetBoundBreakpoint(bkpt as TupleValue);
+                bbp = await GetBoundBreakpoint(bkpt as TupleValue);
                 if (bbp != null)
                     resultList.Add(bbp);
             }
@@ -364,7 +355,7 @@ namespace Microsoft.MIDebugEngine
     internal class BoundBreakpoint
     {
         private PendingBreakpoint _parent;
-
+        internal readonly string Number;
         internal ulong Addr { get; set; }
         /*OPTIONAL*/
         public string FunctionName { get; private set; }
@@ -382,15 +373,17 @@ namespace Microsoft.MIDebugEngine
             this.Enabled = bindinfo.TryFindString("enabled") == "n" ? false : true;
             this.HitCount = 0;
             this.CompiledFileName = bindinfo.Contains("fullname") ? bindinfo.FindString("fullname") : bindinfo.TryFindString("file");
+            this.Number = bindinfo.Contains("number") ? bindinfo.FindString("number") : parent.Number;
             _parent = parent;
             _textPosition = MITextPosition.TryParse(parent.DebuggedProcess, bindinfo);
         }
 
-        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, /*optional*/ TupleValue frame)
+        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, /*optional*/ TupleValue frame, string bkptno)
         {
             Addr = addr;
             HitCount = 0;
             Enabled = true;
+            this.Number = bkptno;
             _parent = parent;
 
             if (frame != null)
@@ -400,10 +393,11 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, uint size)
+        internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, uint size, string bkptno)
         {
             Addr = addr;
             Enabled = true;
+            this.Number = bkptno;
             _parent = parent;
         }
 
@@ -428,6 +422,7 @@ namespace Microsoft.MIDebugEngine
             {
                 return _textPosition.BeginPosition.dwLine;
             }
+
             set
             {
                 if (this.Line == value || value == 0)
