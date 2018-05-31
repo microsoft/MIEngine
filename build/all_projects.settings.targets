@@ -18,6 +18,7 @@
     <NuGetPackagesDirectory>$(MIEngineRoot)src\packages</NuGetPackagesDirectory>
     <GeneratedAssembliesDir>$(ILDir)GeneratedAssemblies\</GeneratedAssembliesDir>
     <MIDefaultOutputPath>$(MIEngineRoot)bin\$(Configuration)\</MIDefaultOutputPath>
+    <DropDir>$(MIEngineRoot)bin\$(Configuration)</DropDir>
     <ToolsHome>$(MIEngineRoot)\tools</ToolsHome>
   </PropertyGroup>
   

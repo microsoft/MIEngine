@@ -750,7 +750,7 @@ namespace MICore
         /// <summary>
         /// Meta version of the clrdbg.
         /// </summary>
-        /// TODO: rajkumar42, placeholder. Needs to be fixed in the pkgdef as well.
+        /// TODO: placeholder. Needs to be fixed in the pkgdef as well.
         public string ClrDbgVersion { get; private set; } = "vs2015u2";
 
         /// <summary>
