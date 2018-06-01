@@ -127,7 +127,6 @@
   <ItemGroup>
     <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe" />
     <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe.config" />
-    <DropSignedFile Condition="'$(IsCoreClr)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.dll" />
     <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
     <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
     <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
