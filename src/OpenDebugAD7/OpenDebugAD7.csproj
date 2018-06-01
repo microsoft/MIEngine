@@ -19,6 +19,7 @@
     <StartAction>Program</StartAction>
     <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
+    <DropSubDir>vscode</DropSubDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
     <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
@@ -124,15 +125,20 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutDir)\OpenDebugAD7.exe" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutDir)\OpenDebugAD7.exe.config" />
-    <DropSignedFile Condition="'$(IsCoreClr)' == 'true'" Include="$(OutDir)\OpenDebugAD7.dll" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutDir)\OpenDebugAD7.exe.mdb" />
+    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe" />
+    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe.config" />
+    <DropSignedFile Condition="'$(IsCoreClr)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.dll" />
+    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
+    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
+    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
+    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
+    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
+    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Newtonsoft.Json.dll" />
   </ItemGroup>
   <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
   <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFilesVSCode">
     <ItemGroup>
-      <DropUnsignedFile Condition="'$(IsMonoRuntime)' == 'false'" Include="$(OutDir)\OpenDebugAD7.pdb" />
+      <DropUnsignedFile Condition="'$(IsMonoRuntime)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.pdb" />
     </ItemGroup>
   </Target>
   <ItemGroup>
@@ -146,6 +152,7 @@
   <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\PackageNuGet.targets" />
+  <Import Project="..\..\build\DropFiles.targets" />
   <!-- Force the project to be an exe before the compile step. This is used by CoreCLR builds. -->
   <Target Name="BeforeBuild">
     <PropertyGroup>
