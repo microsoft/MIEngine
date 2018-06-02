@@ -150,7 +150,6 @@
   <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
-  <Import Project="..\..\build\PackageNuGet.targets" />
   <Import Project="..\..\build\DropFiles.targets" />
   <!-- Force the project to be an exe before the compile step. This is used by CoreCLR builds. -->
   <Target Name="BeforeBuild">
