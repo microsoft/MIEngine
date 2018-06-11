@@ -122,15 +122,20 @@ namespace Microsoft.MIDebugEngine
             uint radix;
             if (_settingsCallback != null && _settingsCallback.GetDisplayRadix(out radix) == Constants.S_OK)
             {
-                if (radix != _debuggedProcess.MICommandFactory.Radix)
-                {
-                    _debuggedProcess.WorkerThread.RunOperation(async () =>
-                    {
-                        await _debuggedProcess.MICommandFactory.SetRadix(radix);
-                    });
-                }
+                return radix;
             }
-            return _debuggedProcess.MICommandFactory.Radix;
+            else
+            {
+                return _debuggedProcess.MICommandFactory.Radix;
+            }
+        }
+
+        internal async Task UpdateRadixAsync(uint radix)
+        {
+            if (radix != _debuggedProcess.MICommandFactory.Radix)
+            {
+                    await _debuggedProcess.MICommandFactory.SetRadix(radix);
+            }
         }
 
         internal bool ProgramCreateEventSent

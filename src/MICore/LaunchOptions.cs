@@ -393,6 +393,12 @@ namespace MICore
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentEntries);
         }
 
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs, IList<EnvironmentEntry> environmentEntries): 
+            this(MIDebuggerPath, MIDebuggerServerAddress, environmentEntries)
+        {
+            this.MIDebuggerArgs = MIDebuggerArgs;
+        }
+
         private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
         {
             if (!String.IsNullOrWhiteSpace(launchOptions.MiDebuggerServerAddress))
@@ -453,6 +459,22 @@ namespace MICore
             return File.Exists(MIDebuggerPath);
         }
 
+        /// <summary>
+        /// Generates arguments for the MIDebuggerCommand. 
+        /// </summary>
+        /// <returns></returns>
+        public string GetMiDebuggerArgs()
+        {
+            string miDebuggerArgs = "--interpreter=mi";
+
+            if (!String.IsNullOrEmpty(this.MIDebuggerArgs))
+            {
+                miDebuggerArgs = String.Concat(miDebuggerArgs, " " + this.MIDebuggerArgs);
+            }
+
+            return miDebuggerArgs;
+        }
+
         static internal LocalLaunchOptions CreateFromJson(JObject parsedOptions)
         {
             Json.LaunchOptions.BaseOptions launchOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
@@ -467,6 +489,7 @@ namespace MICore
 
             LocalLaunchOptions localLaunchOptions = new LocalLaunchOptions(RequireAttribute(miDebuggerPath, nameof(miDebuggerPath)),
                 launchOptions.MiDebuggerServerAddress,
+                launchOptions.MiDebuggerArgs,
                 GetEnvironmentEntries(
                     (launchOptions is Json.LaunchOptions.LaunchOptions) ?
                         ((Json.LaunchOptions.LaunchOptions)launchOptions).Environment
@@ -499,6 +522,7 @@ namespace MICore
             var options = new LocalLaunchOptions(
                 RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
                 source.MIDebuggerServerAddress,
+                source.MIDebuggerArgs,
                 GetEnvironmentEntries(source.Environment));
             options.InitializeCommonOptions(source);
             options.InitializeServerOptions(source);
@@ -608,6 +632,11 @@ namespace MICore
         /// [Required] Path to the MI Debugger Executable.
         /// </summary>
         public string MIDebuggerPath { get; private set; }
+
+        /// <summary>
+        /// [Required] Arguments for the MI Debugger.
+        /// </summary>
+        public string MIDebuggerArgs { get; private set; }
 
         /// <summary>
         /// [Optional] Server address that MI Debugger server is listening to
@@ -721,7 +750,7 @@ namespace MICore
         /// <summary>
         /// Meta version of the clrdbg.
         /// </summary>
-        /// TODO: rajkumar42, placeholder. Needs to be fixed in the pkgdef as well.
+        /// TODO: placeholder. Needs to be fixed in the pkgdef as well.
         public string ClrDbgVersion { get; private set; } = "vs2015u2";
 
         /// <summary>
@@ -1229,7 +1258,23 @@ namespace MICore
                 try
                 {
                     JObject parsedOptions = JObject.Parse(options);
-                    if (parsedOptions["pipeTransport"] != null && parsedOptions["pipeTransport"].HasValues)
+
+                    // if the customLauncher element is present then try using the custom launcher implementation from the config store
+                    if (parsedOptions["customLauncher"] != null && !string.IsNullOrWhiteSpace(parsedOptions["customLauncher"].Value<string>()))
+                    {
+                        string customLauncherName = parsedOptions["customLauncher"].Value<string>();
+                        var jsonLauncher = configStore?.GetCustomLauncher(customLauncherName);
+                        if (jsonLauncher == null)
+                        {
+                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnknownCustomLauncher, customLauncherName));
+                        }
+                        if (jsonLauncher as IPlatformAppLauncher == null)
+                        {
+                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_LauncherNotFound, customLauncherName));
+                        }
+                        launchOptions = ExecuteLauncher(configStore, (IPlatformAppLauncher)jsonLauncher, exePath, args, dir, parsedOptions, eventCallback, targetEngine, logger);
+                    }
+                    else if (parsedOptions["pipeTransport"] != null && parsedOptions["pipeTransport"].HasValues)
                     {
                         launchOptions = PipeLaunchOptions.CreateFromJson(parsedOptions);
                     }
@@ -1397,7 +1442,7 @@ namespace MICore
             if (isServerMode && unixPort is Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)
             {
                 string addr = ((Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)unixPort).GdbServerAttachProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
-                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, null);
+                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, attachOptions.ServerOptions.MIDebuggerArgs, null);
                 options._miMode = miMode;
                 options.ExePath = attachOptions.ServerOptions.ExePath;
             }
@@ -1823,7 +1868,7 @@ namespace MICore
             return ExecuteLauncher(configStore, deviceAppLauncher, exePath, args, dir, launcherXmlOptions, eventCallback, targetEngine, logger);
         }
 
-        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, IPlatformAppLauncher deviceAppLauncher, string exePath, string args, string dir, object launcherXmlOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
+        private static LaunchOptions ExecuteLauncher(HostConfigurationStore configStore, IPlatformAppLauncher deviceAppLauncher, string exePath, string args, string dir, object launcherOptions, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
         {
             bool success = false;
 
@@ -1832,7 +1877,7 @@ namespace MICore
                 try
                 {
                     deviceAppLauncher.Initialize(configStore, eventCallback);
-                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherXmlOptions, targetEngine);
+                    deviceAppLauncher.SetLaunchOptions(exePath, args, dir, launcherOptions, targetEngine);
                 }
                 catch (Exception e) when (!(e is InvalidLaunchOptionsException) && ExceptionHelper.BeforeCatch(e, logger, reportOnlyCorrupting: true))
                 {
@@ -2045,9 +2090,9 @@ namespace MICore
         /// <param name="exePath">[Required] Path to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="args">[Optional] Arguments to the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
         /// <param name="dir">[Optional] Working directory of the executable provided in the VsDebugTargetInfo by the project system. Some launchers may ignore this.</param>
-        /// <param name="launcherXmlOptions">[Required] Deserialized XML options structure</param>
+        /// <param name="launcherOptions">[Required] Deserialized XML options structure or, when using json options, a JObject</param>
         /// <param name="targetEngine">Indicates the type of debugging being done.</param>
-        void SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine);
+        void SetLaunchOptions(string exePath, string args, string dir, object launcherOptions, TargetEngine targetEngine);
 
         /// <summary>
         /// Does whatever steps are necessary to setup for debugging. On Android this will include launching

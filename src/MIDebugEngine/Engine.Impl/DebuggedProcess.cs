@@ -402,7 +402,7 @@ namespace Microsoft.MIDebugEngine
                         // assume that it was a continue command that got aborted and return to stopped state:
                         // this occurs when using openocd to debug embedded devices and it runs out of hardware breakpoints.
                         int currentThread = MICommandFactory.CurrentThread;
-                        if (currentThread==0)
+                        if (currentThread == 0)
                         {
                             currentThread = 1;  // default to main thread is current doesn't have a valid value for some reason
                         }
@@ -420,7 +420,7 @@ namespace Microsoft.MIDebugEngine
                     await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
                     _childProcessHandler?.ThreadCreatedEvent(result.Results);
                 }
-                catch (Exception)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
                     // Avoid crashing VS
                 }
@@ -457,7 +457,15 @@ namespace Microsoft.MIDebugEngine
                 }
             };
 
-            BreakChangeEvent += _breakpointManager.BreakpointModified;
+            BreakChangeEvent += async delegate (object o, EventArgs args)
+            {
+                try
+                {
+                    await _breakpointManager.BreakpointModified(o, args);
+                }
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
+                { }
+            };
         }
 
         private async Task EnsureModulesLoaded()
@@ -835,7 +843,7 @@ namespace Microsoft.MIDebugEngine
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
         {
-            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
+            // TODO: connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
             // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
@@ -888,51 +896,47 @@ namespace Microsoft.MIDebugEngine
             commands.Add(new LaunchCommand(absoluteExePath, ignoreFailures: false, failureHandler: failureHandler, successHandler: successHandler));
         }
 
-        private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
+        private TargetArchitecture DefaultArch()
         {
-            if (_launchOptions.TargetArchitecture == TargetArchitecture.Unknown)
+            if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
             {
-                Action<string> failureHandler = (string miError) =>
-                {
-                    string message = ResourceStrings.Error_FailedToGetTargetArchitecture;
-                    throw new LaunchErrorException(message);
-                };
-
-                Func<string, Task> successHandler = (string resultsStr) =>
-                {
-                    TargetArchitecture arch = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
-
-                    if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
-                    {
-                        arch = LaunchOptions.TargetArchitecture;
-                    }
-                    else if (arch == TargetArchitecture.Unknown)
-                    {
-                        // Use X64 as default if the arch couldn't be detected and wasn't specified
-                        // in the launch options
-                        WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
-                        arch = TargetArchitecture.X64;
-                    }
-
-                    SetTargetArch(arch);
-
-                    return Task.FromResult(0);
-                };
-
-                string cmd = MICommandFactory.GetTargetArchitectureCommand();
-
-                if (cmd != null)
-                {
-                    commands.Add(new LaunchCommand(cmd, ignoreFailures: false, successHandler: successHandler, failureHandler: failureHandler));
-                }
-                else
-                {
-                    SetTargetArch(MICommandFactory.ParseTargetArchitectureResult(""));
-                }
+                return LaunchOptions.TargetArchitecture;
             }
             else
             {
-                SetTargetArch(_launchOptions.TargetArchitecture);
+                // Use X64 as default if the arch couldn't be detected and wasn't specified
+                // in the launch options
+                WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
+                return TargetArchitecture.X64;
+            }
+        }
+
+        private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
+        {
+            // User may specify the wrong architecture, e.g. ARM instead of ARM64, so use the target's real architecture if available:
+            // 1. if the command factory can discover the target architecture then use that
+            // 2. else if the user specified an architecture then use that
+            // 3. otherwise default to x64
+            SetTargetArch(DefaultArch()); // set the default value based on user input
+
+            Func<string, Task> successHandler = (string resultsStr) =>
+            {
+                var archFromTarget = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
+
+                if (archFromTarget != TargetArchitecture.Unknown)
+                {
+                    SetTargetArch(archFromTarget);
+                }
+
+                return Task.FromResult(0);
+            };
+
+            string cmd = MICommandFactory.GetTargetArchitectureCommand();
+
+            if (cmd != null)
+            {
+                // schedule a command to fetch the the debuggers actual target achitecture 
+                commands.Add(new LaunchCommand(cmd, ignoreFailures: true, successHandler: successHandler));
             }
         }
 
@@ -1392,6 +1396,26 @@ namespace Microsoft.MIDebugEngine
         {
             return unixPath.Replace('/', '\\');
         }
+
+        internal void LoadSymbols(DebuggedModule module)
+        {
+            if (MICommandFactory.Mode == MIMode.Gdb)
+            {
+                if (!module.SymbolsLoaded && !string.IsNullOrWhiteSpace(module.SymbolPath))
+                {
+                    Task evalTask = Task.Run(async () =>
+                    {
+                        await ConsoleCmdAsync("sharedlibrary " + module.Name);
+                        await CheckModules();
+                    });
+                }
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         private async Task CheckModules()
         {
             // NOTE: The version of GDB that comes in the Android SDK doesn't support -file-list-shared-library
@@ -1457,6 +1481,11 @@ namespace Microsoft.MIDebugEngine
                         }
 
                         _callback.OnModuleLoad(module);
+                    }
+                    else if (!module.SymbolsLoaded && symbolsLoaded)
+                    {
+                        module.SymbolsLoaded = true;
+                        _callback.OnSymbolsLoaded(module);
                     }
                 }
             }
@@ -1593,6 +1622,8 @@ namespace Microsoft.MIDebugEngine
 
                 if (!attach)
                 {
+                    this.SourceLineCache.Clear();
+
                     switch (_launchOptions.LaunchCompleteCommand)
                     {
                         case LaunchCompleteCommand.ExecRun:

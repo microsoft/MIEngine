@@ -425,7 +425,7 @@ namespace Microsoft.MIDebugEngine
         {
             this.VerifyNotDisposed();
 
-            _engine.CurrentRadix();    // ensure the radix value is up-to-date
+            await _engine.UpdateRadixAsync(_engine.CurrentRadix());    // ensure the radix value is up-to-date
 
             string execCommandString = "-exec ";
             if (_strippedName.StartsWith(execCommandString))

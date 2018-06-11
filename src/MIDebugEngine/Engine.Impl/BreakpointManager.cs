@@ -51,7 +51,7 @@ namespace Microsoft.MIDebugEngine
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        public void BreakpointModified(object sender, EventArgs args)
+        public async Task BreakpointModified(object sender, EventArgs args)
         {
             MICore.Debugger.ResultEventArgs res = args as MICore.Debugger.ResultEventArgs;
             MICore.ResultValue bkpt = res.Results.Find("bkpt");
@@ -85,7 +85,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                var bindList = pending.PendingBreakpoint.BindAddresses(bkpt);
+                var bindList = await pending.PendingBreakpoint.BindAddresses(bkpt);
                 RebindAddresses(pending, bindList);
             }
         }
@@ -166,7 +166,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    bbp = pending.AddBoundBreakpoint(new BoundBreakpoint(pending.PendingBreakpoint, addr, frame));
+                    bbp = pending.AddBoundBreakpoint(new BoundBreakpoint(pending.PendingBreakpoint, addr, frame, bkptno));
                 }
             }
             return pending;

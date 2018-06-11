@@ -112,7 +112,7 @@ namespace Microsoft.MIDebugEngine
         public string Name { get; private set; }
         public ulong BaseAddress { get { return TextSection.BaseAddress; } }
         public ulong Size { get { return TextSection.Size; } }
-        public bool SymbolsLoaded { get; private set; }
+        public bool SymbolsLoaded { get; set; }
         public string SymbolPath { get; private set; }
 
         public uint GetLoadOrder() { return _loadOrder; }

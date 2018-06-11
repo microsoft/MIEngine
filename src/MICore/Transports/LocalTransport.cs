@@ -25,7 +25,7 @@ namespace MICore
 
             Process proc = new Process();
             proc.StartInfo.FileName = localOptions.MIDebuggerPath;
-            proc.StartInfo.Arguments = "--interpreter=mi";
+            proc.StartInfo.Arguments = localOptions.GetMiDebuggerArgs();
 
             // LLDB has the -environment-cd mi command that is used to set the working dir for gdb/clrdbg, but it doesn't work.
             // So, set lldb's working dir to the user's requested folder before launch.
