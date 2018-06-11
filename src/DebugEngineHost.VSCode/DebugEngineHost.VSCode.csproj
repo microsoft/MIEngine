@@ -6,8 +6,9 @@
     <AssemblyVersion>1.0.0</AssemblyVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <Import Project="$(NugetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NugetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
+  <!-- miengine.settings.targets must be imported first as it sets $(NuGetPackagesDirectory) -->
   <Import Project="..\..\build\miengine.settings.targets" />
+  <Import Project="$(NugetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NugetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
