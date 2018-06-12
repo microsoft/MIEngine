@@ -50,7 +50,7 @@ namespace Microsoft.MIDebugEngine
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _childProcessHandler;
         private bool _deleteEntryPointBreakpoint;
-        private string _entryPointBreakpoint = String.Empty;
+        private string _entryPointBreakpoint = string.Empty;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
@@ -549,6 +549,11 @@ namespace Microsoft.MIDebugEngine
                             {
                                 await command.SuccessHandler(results.ToString());
                             }
+
+                            if (command.SuccessResultsHandler != null)
+                            {
+                                await command.SuccessResultsHandler(results);
+                            }
                         }
                     }
                     else
@@ -752,29 +757,33 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
                     }
 
-                    Func<string, Task> breakMainSuccessHandler = (string bkptResult) =>
+                    Func<Results, Task> breakMainSuccessResultsHandler = (Results bkptResult) =>
                     {
-                        int index = bkptResult.IndexOf("number=", StringComparison.Ordinal);
-                        if (index > 0)
+                        if (bkptResult.Contains("bkpt"))
                         {
-                            string trimmedInnerText = bkptResult.Substring(index).Trim('\r', '\n', '{', '}');
-                            Dictionary<string, string> dict = trimmedInnerText
-                                .Split(',')
-                                .Select(value => value.Split('='))
-                                .Where(x => x.Length == 2)
-                                .ToDictionary(x => x.First(), x => x.Last());
-
-                            if (dict.Keys.Contains("number"))
+                            ResultValue b = bkptResult.Find("bkpt");
+                            TupleValue bkpt = null;
+                            if (b is TupleValue)
                             {
-                                this._entryPointBreakpoint = dict["number"];
+                                bkpt = b as TupleValue;
+                            }
+                            else if (b is ValueListValue) // Used when main breakpoint binds in more than one location
+                            {
+                                // Grab the first one as this is usually the <MULTIPLE> one that we can unbind them all with.
+                                // This is usually "1" when the children manifest as "1.1", "1.2", etc
+                                bkpt = (b as ValueListValue).Content[0] as TupleValue;
+                            }
+
+                            if (bkpt != null)
+                            {
+                                this._entryPointBreakpoint = bkpt.FindString("number");
                                 this._deleteEntryPointBreakpoint = true;
                             }
                         }
-
                         return Task.FromResult(0);
                     };
 
-                    commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true, successHandler: breakMainSuccessHandler));
+                    commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
 
                     if (null != localLaunchOptions)
                     {
