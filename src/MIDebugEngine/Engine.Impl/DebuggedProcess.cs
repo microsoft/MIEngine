@@ -767,8 +767,10 @@ namespace Microsoft.MIDebugEngine
                             {
                                 bkpt = b as TupleValue;
                             }
-                            else if (b is ValueListValue)
+                            else if (b is ValueListValue) // Used when main breakpoint binds in more than one location
                             {
+                                // Grab the first one as this is usually the <MULTIPLE> one that we can unbind them all with.
+                                // This is usually "1" when the children manifest as "1.1", "1.2", etc
                                 bkpt = (b as ValueListValue).Content[0] as TupleValue;
                             }
 
