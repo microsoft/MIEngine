@@ -179,7 +179,7 @@ namespace MICore
             if (File.Exists(GnomeTerminalPath))
             {
                 _terminalPath = GnomeTerminalPath;
-                _bashCommandPrefix = String.Format(CultureInfo.InvariantCulture, "--title {0} -x", _title);
+                _bashCommandPrefix = String.Format(CultureInfo.InvariantCulture, "--title {0} --", _title);
             }
             else if (File.Exists(XTermPath))
             {
