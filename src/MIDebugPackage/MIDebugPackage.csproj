@@ -197,11 +197,6 @@
     <VSIXSourceItem Include="@(RequiredNetFX46FacadeAssemblies)" />
     <GlassDirCopy Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="$(ToolsHome)\InstallToVSCode\coreclr\coreclr.ad7Engine.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
   <ItemDefinitionGroup Condition="'$(LocalizationEnabled)'=='true'">
     <FilesToLocalize>
       <Languages>$(VS)</Languages>
@@ -356,22 +351,14 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
-  <Import Project="..\..\build\PackageNuGet.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
-  <Import Project="..\..\build\DropFiles.targets" />
-  <!--
+    <!--
   Target to drop the built files into a directory.
   For the official build, we need to drop files to the build share
   For normal builds, we drop files to <enlistment-root>\bin\debug\drop for easy sharing
   -->
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <Import Project="..\..\build\DropFiles.targets" />
   <!-- Extra empty msbuild targets to make it happy -->
   <Target Name="SetDevPathEnvironment" />
 </Project>

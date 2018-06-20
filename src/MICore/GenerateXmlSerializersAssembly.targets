@@ -74,12 +74,9 @@
   </Target>
 
   <!-- This target is used to generate an XML serializers assembly for the types in LaunchOptions.xsd. We can't embed these types
-  into MICore as CoreCLR doesn't expose the types needed to make that code work.
-  NOTE: We don't do this in the Debug-PortablePDB configuration as having this file messes up unix, and when we use 'InstallToVSCode link'
-  the CLR will try and load the assembly directly from the output directory. -->
+  into MICore as CoreCLR doesn't expose the types needed to make that code work. -->
   <Target Name="GenerateXmlSerializersAssembly"
           AfterTargets="Compile"
-          Condition="'$(Configuration)'!='Debug-PortablePDB'"
           Inputs="$(XsdCodeFile);$(AssemblyOriginatorKeyFile)"
           Outputs="$(IntermediateOutputPath)sgen/$(AssemblyName).XmlSerializers.dll">
     <PropertyGroup>
