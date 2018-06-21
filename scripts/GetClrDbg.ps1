@@ -55,7 +55,21 @@ Param (
 function DownloadAndExtract([string]$url, [string]$targetLocation) {
     Add-Type -assembly "System.IO.Compression.FileSystem"
     Add-Type -assembly "System.IO.Compression"
-    $zipStream = (New-Object System.Net.WebClient).OpenRead($url)
+
+    Try {
+        $zipStream = (New-Object System.Net.WebClient).OpenRead($url)
+    }
+    Catch {
+        Write-Host "Info: Opening stream failed, trying again with proxy settings."
+        $proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+        $proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+        $webClient = New-Object System.Net.WebClient
+        $webClient.UseDefaultCredentials = $false
+        $webClient.proxy = $proxy
+
+        $zipStream = $webClient.OpenRead($url)
+    }
+    
     $zipArchive = New-Object System.IO.Compression.ZipArchive -ArgumentList $zipStream
     [System.IO.Compression.ZipFileExtensions]::ExtractToDirectory($zipArchive, $targetLocation)
     $zipArchive.Dispose()
