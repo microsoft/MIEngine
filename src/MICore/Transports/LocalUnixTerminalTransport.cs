@@ -57,7 +57,8 @@ namespace MICore
                 _dbgStdInName,
                 _dbgStdOutName,
                 pidFifo,
-                debuggerCmd);
+                debuggerCmd,
+                localOptions.GetMiDebuggerArgs());
 
             // Only pass the environment to launch clrdbg. For other modes, there are commands that set the environment variables
             // directly for the debuggee.

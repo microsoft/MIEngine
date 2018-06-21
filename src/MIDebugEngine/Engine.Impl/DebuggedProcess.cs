@@ -50,7 +50,7 @@ namespace Microsoft.MIDebugEngine
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
         private ProcessSequence _childProcessHandler;
         private bool _deleteEntryPointBreakpoint;
-        private string _entryPointBreakpoint = String.Empty;
+        private string _entryPointBreakpoint = string.Empty;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
@@ -402,7 +402,7 @@ namespace Microsoft.MIDebugEngine
                         // assume that it was a continue command that got aborted and return to stopped state:
                         // this occurs when using openocd to debug embedded devices and it runs out of hardware breakpoints.
                         int currentThread = MICommandFactory.CurrentThread;
-                        if (currentThread==0)
+                        if (currentThread == 0)
                         {
                             currentThread = 1;  // default to main thread is current doesn't have a valid value for some reason
                         }
@@ -420,7 +420,7 @@ namespace Microsoft.MIDebugEngine
                     await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
                     _childProcessHandler?.ThreadCreatedEvent(result.Results);
                 }
-                catch (Exception)
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
                     // Avoid crashing VS
                 }
@@ -457,7 +457,15 @@ namespace Microsoft.MIDebugEngine
                 }
             };
 
-            BreakChangeEvent += _breakpointManager.BreakpointModified;
+            BreakChangeEvent += async delegate (object o, EventArgs args)
+            {
+                try
+                {
+                    await _breakpointManager.BreakpointModified(o, args);
+                }
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
+                { }
+            };
         }
 
         private async Task EnsureModulesLoaded()
@@ -540,6 +548,11 @@ namespace Microsoft.MIDebugEngine
                             if (command.SuccessHandler != null)
                             {
                                 await command.SuccessHandler(results.ToString());
+                            }
+
+                            if (command.SuccessResultsHandler != null)
+                            {
+                                await command.SuccessResultsHandler(results);
                             }
                         }
                     }
@@ -744,29 +757,33 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
                     }
 
-                    Func<string, Task> breakMainSuccessHandler = (string bkptResult) =>
+                    Func<Results, Task> breakMainSuccessResultsHandler = (Results bkptResult) =>
                     {
-                        int index = bkptResult.IndexOf("number=", StringComparison.Ordinal);
-                        if (index > 0)
+                        if (bkptResult.Contains("bkpt"))
                         {
-                            string trimmedInnerText = bkptResult.Substring(index).Trim('\r', '\n', '{', '}');
-                            Dictionary<string, string> dict = trimmedInnerText
-                                .Split(',')
-                                .Select(value => value.Split('='))
-                                .Where(x => x.Length == 2)
-                                .ToDictionary(x => x.First(), x => x.Last());
-
-                            if (dict.Keys.Contains("number"))
+                            ResultValue b = bkptResult.Find("bkpt");
+                            TupleValue bkpt = null;
+                            if (b is TupleValue)
                             {
-                                this._entryPointBreakpoint = dict["number"];
+                                bkpt = b as TupleValue;
+                            }
+                            else if (b is ValueListValue) // Used when main breakpoint binds in more than one location
+                            {
+                                // Grab the first one as this is usually the <MULTIPLE> one that we can unbind them all with.
+                                // This is usually "1" when the children manifest as "1.1", "1.2", etc
+                                bkpt = (b as ValueListValue).Content[0] as TupleValue;
+                            }
+
+                            if (bkpt != null)
+                            {
+                                this._entryPointBreakpoint = bkpt.FindString("number");
                                 this._deleteEntryPointBreakpoint = true;
                             }
                         }
-
                         return Task.FromResult(0);
                     };
 
-                    commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true, successHandler: breakMainSuccessHandler));
+                    commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
 
                     if (null != localLaunchOptions)
                     {
@@ -835,7 +852,7 @@ namespace Microsoft.MIDebugEngine
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
         {
-            // TODO: rajkumar42, connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
+            // TODO: connecting to OSX via SSH doesn't work yet. Show error after connection manager dialog gets dismissed.
 
             // Runs a shell command to get the full path of the exe.
             // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
@@ -888,51 +905,47 @@ namespace Microsoft.MIDebugEngine
             commands.Add(new LaunchCommand(absoluteExePath, ignoreFailures: false, failureHandler: failureHandler, successHandler: successHandler));
         }
 
-        private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
+        private TargetArchitecture DefaultArch()
         {
-            if (_launchOptions.TargetArchitecture == TargetArchitecture.Unknown)
+            if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
             {
-                Action<string> failureHandler = (string miError) =>
-                {
-                    string message = ResourceStrings.Error_FailedToGetTargetArchitecture;
-                    throw new LaunchErrorException(message);
-                };
-
-                Func<string, Task> successHandler = (string resultsStr) =>
-                {
-                    TargetArchitecture arch = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
-
-                    if (LaunchOptions.TargetArchitecture != TargetArchitecture.Unknown)
-                    {
-                        arch = LaunchOptions.TargetArchitecture;
-                    }
-                    else if (arch == TargetArchitecture.Unknown)
-                    {
-                        // Use X64 as default if the arch couldn't be detected and wasn't specified
-                        // in the launch options
-                        WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
-                        arch = TargetArchitecture.X64;
-                    }
-
-                    SetTargetArch(arch);
-
-                    return Task.FromResult(0);
-                };
-
-                string cmd = MICommandFactory.GetTargetArchitectureCommand();
-
-                if (cmd != null)
-                {
-                    commands.Add(new LaunchCommand(cmd, ignoreFailures: false, successHandler: successHandler, failureHandler: failureHandler));
-                }
-                else
-                {
-                    SetTargetArch(MICommandFactory.ParseTargetArchitectureResult(""));
-                }
+                return LaunchOptions.TargetArchitecture;
             }
             else
             {
-                SetTargetArch(_launchOptions.TargetArchitecture);
+                // Use X64 as default if the arch couldn't be detected and wasn't specified
+                // in the launch options
+                WriteOutput(ResourceStrings.Warning_UsingDefaultArchitecture);
+                return TargetArchitecture.X64;
+            }
+        }
+
+        private void AddGetTargetArchitectureCommand(IList<LaunchCommand> commands)
+        {
+            // User may specify the wrong architecture, e.g. ARM instead of ARM64, so use the target's real architecture if available:
+            // 1. if the command factory can discover the target architecture then use that
+            // 2. else if the user specified an architecture then use that
+            // 3. otherwise default to x64
+            SetTargetArch(DefaultArch()); // set the default value based on user input
+
+            Func<string, Task> successHandler = (string resultsStr) =>
+            {
+                var archFromTarget = MICommandFactory.ParseTargetArchitectureResult(resultsStr);
+
+                if (archFromTarget != TargetArchitecture.Unknown)
+                {
+                    SetTargetArch(archFromTarget);
+                }
+
+                return Task.FromResult(0);
+            };
+
+            string cmd = MICommandFactory.GetTargetArchitectureCommand();
+
+            if (cmd != null)
+            {
+                // schedule a command to fetch the the debuggers actual target achitecture 
+                commands.Add(new LaunchCommand(cmd, ignoreFailures: true, successHandler: successHandler));
             }
         }
 
@@ -1618,6 +1631,8 @@ namespace Microsoft.MIDebugEngine
 
                 if (!attach)
                 {
+                    this.SourceLineCache.Clear();
+
                     switch (_launchOptions.LaunchCompleteCommand)
                     {
                         case LaunchCompleteCommand.ExecRun:

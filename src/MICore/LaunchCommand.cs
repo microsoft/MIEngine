@@ -23,8 +23,9 @@ namespace MICore
         public readonly bool IsMICommand;
         public /*OPTIONAL*/ Action<string> FailureHandler { get; private set; }
         public /*OPTIONAL*/ Func<string, Task> SuccessHandler { get; private set; }
+        public /*Optional*/ Func<Results, Task> SuccessResultsHandler { get; private set; }
 
-        public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false, Action<string> failureHandler = null, Func<string, Task> successHandler = null)
+        public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false, Action<string> failureHandler = null, Func<string, Task> successHandler = null, Func<Results, Task> successResultsHandler = null)
         {
             if (commandText == null)
                 throw new ArgumentNullException("commandText");
@@ -40,6 +41,7 @@ namespace MICore
             this.IgnoreFailures = ignoreFailures;
             this.FailureHandler = failureHandler;
             this.SuccessHandler = successHandler;
+            this.SuccessResultsHandler = successResultsHandler;
         }
 
         public static ReadOnlyCollection<LaunchCommand> CreateCollection(List<Json.LaunchOptions.SetupCommand> source)

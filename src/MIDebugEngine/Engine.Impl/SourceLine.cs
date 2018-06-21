@@ -52,6 +52,15 @@ namespace Microsoft.MIDebugEngine
             _process = process;
             _mapFileToLinenums = new Dictionary<string, SourceLineMap>();
         }
+
+        public void Clear()
+        {
+            lock (_mapFileToLinenums)
+            {
+                this._mapFileToLinenums.Clear();
+            }
+        }
+
         internal async Task<SourceLineMap> GetLinesForFile(string file)
         {
             string fileKey = file;

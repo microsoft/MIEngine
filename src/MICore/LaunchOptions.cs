@@ -393,6 +393,12 @@ namespace MICore
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(environmentEntries);
         }
 
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs, IList<EnvironmentEntry> environmentEntries): 
+            this(MIDebuggerPath, MIDebuggerServerAddress, environmentEntries)
+        {
+            this.MIDebuggerArgs = MIDebuggerArgs;
+        }
+
         private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
         {
             if (!String.IsNullOrWhiteSpace(launchOptions.MiDebuggerServerAddress))
@@ -453,6 +459,22 @@ namespace MICore
             return File.Exists(MIDebuggerPath);
         }
 
+        /// <summary>
+        /// Generates arguments for the MIDebuggerCommand. 
+        /// </summary>
+        /// <returns></returns>
+        public string GetMiDebuggerArgs()
+        {
+            string miDebuggerArgs = "--interpreter=mi";
+
+            if (!String.IsNullOrEmpty(this.MIDebuggerArgs))
+            {
+                miDebuggerArgs = String.Concat(miDebuggerArgs, " " + this.MIDebuggerArgs);
+            }
+
+            return miDebuggerArgs;
+        }
+
         static internal LocalLaunchOptions CreateFromJson(JObject parsedOptions)
         {
             Json.LaunchOptions.BaseOptions launchOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
@@ -467,6 +489,7 @@ namespace MICore
 
             LocalLaunchOptions localLaunchOptions = new LocalLaunchOptions(RequireAttribute(miDebuggerPath, nameof(miDebuggerPath)),
                 launchOptions.MiDebuggerServerAddress,
+                launchOptions.MiDebuggerArgs,
                 GetEnvironmentEntries(
                     (launchOptions is Json.LaunchOptions.LaunchOptions) ?
                         ((Json.LaunchOptions.LaunchOptions)launchOptions).Environment
@@ -499,6 +522,7 @@ namespace MICore
             var options = new LocalLaunchOptions(
                 RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
                 source.MIDebuggerServerAddress,
+                source.MIDebuggerArgs,
                 GetEnvironmentEntries(source.Environment));
             options.InitializeCommonOptions(source);
             options.InitializeServerOptions(source);
@@ -608,6 +632,11 @@ namespace MICore
         /// [Required] Path to the MI Debugger Executable.
         /// </summary>
         public string MIDebuggerPath { get; private set; }
+
+        /// <summary>
+        /// [Required] Arguments for the MI Debugger.
+        /// </summary>
+        public string MIDebuggerArgs { get; private set; }
 
         /// <summary>
         /// [Optional] Server address that MI Debugger server is listening to
@@ -721,7 +750,7 @@ namespace MICore
         /// <summary>
         /// Meta version of the clrdbg.
         /// </summary>
-        /// TODO: rajkumar42, placeholder. Needs to be fixed in the pkgdef as well.
+        /// TODO: placeholder. Needs to be fixed in the pkgdef as well.
         public string ClrDbgVersion { get; private set; } = "vs2015u2";
 
         /// <summary>
@@ -1413,7 +1442,7 @@ namespace MICore
             if (isServerMode && unixPort is Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)
             {
                 string addr = ((Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugGdbServerAttach)unixPort).GdbServerAttachProcess(processId, attachOptions.ServerOptions.PreAttachCommand);
-                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, null);
+                options = new LocalLaunchOptions(attachOptions.ServerOptions.MIDebuggerPath, addr, attachOptions.ServerOptions.MIDebuggerArgs, null);
                 options._miMode = miMode;
                 options.ExePath = attachOptions.ServerOptions.ExePath;
             }

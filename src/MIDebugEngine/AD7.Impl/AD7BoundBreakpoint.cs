@@ -35,11 +35,8 @@ namespace Microsoft.MIDebugEngine
         }
 
         internal bool Deleted { get { return _deleted; } }
-        internal ulong Addr
-        {
-            get
-            { return _bp.Addr; }
-        }
+        internal ulong Addr { get { return _bp.Addr; } }
+        internal string Number { get { return _bp.Number; } }
         internal AD7PendingBreakpoint PendingBreakpoint { get { return _pendingBreakpoint; } }
         internal bool IsDataBreakpoint { get { return PendingBreakpoint.IsDataBreakpoint; } }
 
