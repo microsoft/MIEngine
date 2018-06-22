@@ -103,13 +103,13 @@ namespace OpenDebugAD7.AD7Impl
         public int GetProcess(out IDebugProcess2 process)
         {
             process = _process;
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int GetProgramId(out Guid guidProgramId)
         {
             guidProgramId = _id;
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int Step(IDebugThread2 pThread, enum_STEPKIND sk, enum_STEPUNIT Step)

@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
+using OpenDebugAD7;
 
 namespace OpenDebug
 {
@@ -20,13 +22,10 @@ namespace OpenDebug
     {
         private const int DEFAULT_PORT = 4711;
 
-        private static bool s_trace_requests;
-        private static bool s_trace_responses;
-        private static bool s_engine_logging;
-
         private static int Main(string[] argv)
         {
             int port = -1;
+            List<LoggingCategory> loggingCategories = new List<LoggingCategory>();
 
             // parse command line arguments
             foreach (var a in argv)
@@ -57,14 +56,14 @@ namespace OpenDebug
                         return 1;
 
                     case "--trace":
-                        s_trace_requests = true;
+                        loggingCategories.Add(LoggingCategory.AdapterTrace);
                         break;
                     case "--trace=response":
-                        s_trace_requests = true;
-                        s_trace_responses = true;
+                        loggingCategories.Add(LoggingCategory.AdapterTrace);
+                        loggingCategories.Add(LoggingCategory.AdapterResponse);
                         break;
                     case "--engineLogging":
-                        s_engine_logging = true;
+                        loggingCategories.Add(LoggingCategory.EngineLogging);
                         HostLogger.EnableHostLogging();
                         break;
                     case "--server":
@@ -137,14 +136,14 @@ namespace OpenDebug
             if (port > 0)
             {
                 // TCP/IP server
-                RunServer(port);
+                RunServer(port, loggingCategories);
             }
 
             try
             {
                 // stdin/stdout
                 Console.Error.WriteLine("waiting for v8 protocol on stdin/stdout");
-                Dispatch(Console.OpenStandardInput(), Console.OpenStandardOutput());
+                Dispatch(Console.OpenStandardInput(), Console.OpenStandardOutput(), loggingCategories);
             }
             catch (Exception e)
             {
@@ -154,7 +153,7 @@ namespace OpenDebug
             return 0;
         }
 
-        private static async void RunServer(int port)
+        private static async void RunServer(int port, List<LoggingCategory> loggingCategories)
         {
             TcpListener serverSocket = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
             DisableInheritance(serverSocket.Server);
@@ -176,7 +175,7 @@ namespace OpenDebug
                         {
                             try
                             {
-                                Dispatch(networkStream, networkStream);
+                                Dispatch(networkStream, networkStream, loggingCategories);
                             }
                             catch (Exception e)
                             {
@@ -191,121 +190,11 @@ namespace OpenDebug
             }
         }
 
-        private static void Dispatch(Stream inputStream, Stream outputStream)
+        private static void Dispatch(Stream inputStream, Stream outputStream, List<LoggingCategory> loggingCategories)
         {
-            DispatcherProtocol protocol = new DispatcherProtocol(inputStream, outputStream);
+            AD7DebugSession debugSession = new AD7DebugSession(inputStream, outputStream, loggingCategories);
 
-            Action<string> traceResponseCallback = s => Console.Error.WriteLine(s);
-
-            if (s_trace_requests)
-                protocol.TraceCallback = traceResponseCallback;
-
-            if (s_trace_responses)
-                protocol.ResponseCallback = traceResponseCallback;
-
-            if (s_engine_logging && HostLogger.Instance?.LogFilePath == null)
-                HostLogger.Instance.LogCallback = s => Console.WriteLine(s);
-
-            IDebugSession debugSession = null;
-
-            protocol.Start((string command, dynamic args, IResponder responder) =>
-            {
-                if (args == null)
-                {
-                    args = new { };
-                }
-
-                if (command == "initialize")
-                {
-                    string adapterID = Utilities.GetString(args, "adapterID");
-                    if (adapterID == null)
-                    {
-                        responder.SetBody(new ErrorResponseBody(new Message(1101, "initialize: property 'adapterID' is missing or empty")));
-                        return;
-                    }
-
-                    DebugProtocolCallbacks debugProtocolCallbacks = new DebugProtocolCallbacks()
-                    {
-                        Send = e => protocol.SendEvent(e.type, e),
-                        SendRaw = e => protocol.SendRawEvent(e.type, e),
-                        SendLater = e => protocol.SendEventLater(e.type, e),
-                        SetTraceLogger = t => protocol.TraceCallback = t,
-                        SetResponseLogger = t => protocol.ResponseCallback = t,
-                        SetEngineLogger = t =>
-                        {
-                            HostLogger.EnableHostLogging();
-                            HostLogger.Instance.LogCallback = t;
-                        }
-                    };
-
-                    debugSession = OpenDebugAD7.EngineFactory.CreateDebugSession(adapterID, debugProtocolCallbacks);
-                    if (debugSession == null)
-                    {
-                        responder.SetBody(new ErrorResponseBody(new Message(1103, "initialize: can't create debug session for adapter '{_id}'", new { _id = adapterID })));
-                        return;
-                    }
-                }
-
-                if (debugSession != null)
-                {
-                    try
-                    {
-                        DebugResult dr = debugSession.Dispatch(command, args);
-                        if (dr != null)
-                        {
-                            responder.SetBody(dr.Body);
-
-                            if (dr.Events != null)
-                            {
-                                foreach (var e in dr.Events)
-                                {
-                                    responder.AddEvent(e.type, e);
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        AggregateException aggregateException = e as AggregateException;
-                        bool bodySet = false;
-                        if (aggregateException != null)
-                        {
-                            if (aggregateException.InnerExceptions.Count == 1)
-                            {
-                                e = aggregateException.InnerException;
-                            }
-                            else
-                            {
-                                string exceptionMessages = string.Join(", ", aggregateException.InnerExceptions.Select((x) => Utilities.GetExceptionDescription(x)));
-                                responder.SetBody(new ErrorResponseBody(new Message(1104, "error while processing request '{_request}' (exceptions: {_messages})", new { _request = command, _messages = exceptionMessages })));
-                                bodySet = true;
-                            }
-                        }
-
-                        if (!bodySet)
-                        {
-                            if (Utilities.IsCorruptingException(e))
-                            {
-                                Utilities.ReportException(e);
-                            }
-
-                            if (e is OpenDebugAD7.AD7Exception)
-                            {
-                                responder.SetBody(new ErrorResponseBody(new Message(1104, e.Message)));
-                            }
-                            else
-                            {
-                                responder.SetBody(new ErrorResponseBody(new Message(1104, "error while processing request '{_request}' (exception: {_exception})", new { _request = command, _exception = Utilities.GetExceptionDescription(e) })));
-                            }
-                        }
-                    }
-
-                    if (command == "disconnect")
-                    {
-                        protocol.Stop();
-                    }
-                }
-            }).Wait();
+            debugSession.Protocol.Run();
         }
 
         public static void DisableInheritance(Socket s)

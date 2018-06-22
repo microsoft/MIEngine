@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
+using System.IO;
 
 namespace OpenDebugAD7
 {
@@ -25,7 +27,7 @@ namespace OpenDebugAD7
             this.Column = column;
         }
 
-        public static TextPositionTuple GetTextPositionOfFrame(AD7DebugSession session, IDebugStackFrame2 frame)
+        public static TextPositionTuple GetTextPositionOfFrame(PathConverter converter, IDebugStackFrame2 frame)
         {
             IDebugDocumentContext2 documentContext;
             if (frame.GetDocumentContext(out documentContext) == 0 &&
@@ -38,8 +40,14 @@ namespace OpenDebugAD7
                 string filePath;
                 documentContext.GetName(enum_GETNAME_TYPE.GN_FILENAME, out filePath);
 
-                Source source = new Source(session.ConvertDebuggerPathToClient(filePath));
-                int line = session.ConvertDebuggerLineToClient((int)beginPosition[0].dwLine);
+                string convertedFilePath = converter.ConvertDebuggerPathToClient(filePath);
+
+                Source source = new Source()
+                {
+                    Path = convertedFilePath,
+                    Name = Path.GetFileName(convertedFilePath)
+                };
+                int line = converter.ConvertDebuggerLineToClient((int)beginPosition[0].dwLine);
                 int column = unchecked((int)(beginPosition[0].dwColumn + 1));
 
                 return new TextPositionTuple(source, line, column);

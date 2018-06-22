@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,522 +8,181 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
+using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
+using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Utilities;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OpenDebug;
+using OpenDebug.CustomProtocolObjects;
 using OpenDebugAD7.AD7Impl;
-using StackFrame = OpenDebug.StackFrame;
-using Thread = OpenDebug.Thread;
-using System.Text.RegularExpressions;
+using ProtocolMessages = Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 
 namespace OpenDebugAD7
 {
-    internal class AD7DebugSession : DebugSession, IDebugSession, IDebugEventCallback2, IDebugPortNotify2
+    internal class AD7DebugSession : DebugAdapterBase, IDebugPortNotify2, IDebugEventCallback2
     {
-        private class VariableEvaluationData
-        {
-            internal IDebugProperty2 DebugProperty;
-            internal enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags;
-        }
-
-        private class ThreadFrameEnumInfo
-        {
-            internal IEnumDebugFrameInfo2 FrameEnum { get; private set; }
-            internal uint TotalFrames { get; private set; }
-            internal uint CurrentPosition { get; set; }
-
-            internal ThreadFrameEnumInfo(IEnumDebugFrameInfo2 frameEnum, uint totalFrames)
-            {
-                FrameEnum = frameEnum;
-                TotalFrames = totalFrames;
-                CurrentPosition = 0;
-            }
-        }
-
-        // POST_PREVIEW_TODO: no-func-eval support, radix, timeout
-        private const uint EvaluationRadix = 10;
-        private const uint EvaluationTimeout = 5000;
-        private const int DisconnectTimeout = 2000;
-
         // This is a general purpose lock. Don't hold it across long operations.
-        private readonly object _lock = new object();
-        private readonly DebugProtocolCallbacks _debugProtocolCallbacks;
-        private readonly EngineConfiguration _engineConfig;
-        private readonly SessionConfiguration _sessionConfig = new SessionConfiguration();
-        private readonly DebugEventLogger _logger;
-        private readonly IDebugEngine2 _engine;
-        private readonly IDebugEngineLaunch2 _engineLaunch;
-        private IDebugProcess2 _process;
-        private string _processName;
-        private IDebugProgram2 _program;
-        private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> _breakpoints;
-        private Dictionary<string, IDebugPendingBreakpoint2> _functionBreakpoints;
-        private readonly Dictionary<int, IDebugThread2> _threads = new Dictionary<int, IDebugThread2>();
-        private readonly Dictionary<int, ThreadFrameEnumInfo> _threadFrameEnumInfos = new Dictionary<int, ThreadFrameEnumInfo>();
-        private readonly HandleCollection<Object> _variableHandles;
-        private readonly HandleCollection<IDebugStackFrame2> _frameHandles;
-        private readonly AD7Port _port;
-        private readonly TaskCompletionSource<object> _configurationDoneTCS = new TaskCompletionSource<object>();
-        private readonly Dictionary<Guid, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2>> _syncEventHandler = new Dictionary<Guid, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2>>();
-        private readonly Dictionary<Guid, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task>> _asyncEventHandler = new Dictionary<Guid, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task>>();
-        private CurrentLaunchState _currentLaunchState;
-        private PathMapper _pathMapper;
-        private readonly ManualResetEvent _disconnectedOrTerminated;
-        private int _firstStoppingEvent;
-        private uint _breakCounter = 0;
-        private bool _isAttach;
-        private bool _isCoreDump;
-        private bool _isStopped = false;
+        private readonly object m_lock = new object();
 
-        public AD7DebugSession(DebugProtocolCallbacks debugProtocolCallbacks, EngineConfiguration config) : base(false)
+        private IDebugProcess2 m_process;
+        private string m_processName;
+        private IDebugEngineLaunch2 m_engineLaunch;
+        private IDebugEngine2 m_engine;
+        private EngineConfiguration m_engineConfiguration;
+        private AD7Port m_port;
+
+        private readonly DebugEventLogger m_logger;
+        private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
+        private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
+        private readonly Dictionary<int, ThreadFrameEnumInfo> m_threadFrameEnumInfos = new Dictionary<int, ThreadFrameEnumInfo>();
+        private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
+
+        private IDebugProgram2 m_program;
+        private readonly Dictionary<int, IDebugThread2> m_threads = new Dictionary<int, IDebugThread2>();
+
+        private ManualResetEvent m_disconnectedOrTerminated;
+        private int m_firstStoppingEvent;
+        private uint m_breakCounter = 0;
+        private bool m_isAttach;
+        private bool m_isCoreDump;
+        private bool m_isStopped = false;
+
+        private readonly TaskCompletionSource<object> m_configurationDoneTCS = new TaskCompletionSource<object>();
+
+        private readonly SessionConfiguration m_sessionConfig = new SessionConfiguration();
+
+        private PathConverter m_pathConverter = new PathConverter();
+
+        private VariableManager m_variableManager;
+
+        private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
+
+        #region Constructor
+
+        public AD7DebugSession(Stream debugAdapterStdIn, Stream debugAdapterStdOut, List<LoggingCategory> loggingCategories)
         {
-            _debugProtocolCallbacks = debugProtocolCallbacks;
-            _logger = new DebugEventLogger(_debugProtocolCallbacks.Send, _debugProtocolCallbacks.SendRaw);
-            _engineConfig = config;
-            _variableHandles = new HandleCollection<Object>();
-            _frameHandles = new HandleCollection<IDebugStackFrame2>();
-            _breakpoints = new Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>>();
-            _functionBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
+            // This initializes this.Protocol with the streams
+            base.InitializeProtocolClient(debugAdapterStdIn, debugAdapterStdOut);
+            Debug.Assert(Protocol != null, "InitializeProtocolClient should have initialized this.Protocol");
 
-            _engine = (IDebugEngine2)_engineConfig.LoadEngine();
+            RegisterAD7EventCallbacks();
+            m_logger = new DebugEventLogger(Protocol.SendEvent, loggingCategories);
 
-            TypeInfo engineType = _engine.GetType().GetTypeInfo();
-            HostTelemetry.InitializeTelemetry(SendTelemetryEvent, engineType, _engineConfig.AdapterId);
-            DebuggerTelemetry.InitializeTelemetry(_debugProtocolCallbacks.Send, engineType, typeof(Host).GetTypeInfo(), _engineConfig.AdapterId);
+            // Register message logger
+            Protocol.LogMessage += m_logger.TraceLogger_EventHandler;
 
-            HostOutputWindow.InitializeLaunchErrorCallback((error) => _logger.WriteLine(LoggingCategory.DebuggerError, error));
+            m_frameHandles = new HandleCollection<IDebugStackFrame2>();
+            m_breakpoints = new Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>>();
+            m_functionBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
+            m_variableManager = new VariableManager();
+        }
 
-            _engineLaunch = (IDebugEngineLaunch2)_engine;
-            _engine.SetRegistryRoot(_engineConfig.AdapterId);
-            _port = new AD7Port(this);
-            _disconnectedOrTerminated = new ManualResetEvent(false);
-            _firstStoppingEvent = 0;
+        #endregion
 
-            RegisterSyncEventHandler(typeof(IDebugEngineCreateEvent2), (engine, process, program, thread, eventObject) =>
+        #region Utility
+
+        private void SendTelemetryEvent(string eventName, KeyValuePair<string, object>[] eventProperties)
+        {
+            Dictionary<string, object> propertiesDictionary = null;
+            if (eventProperties != null)
             {
-                // Send configuration settings (e.g. Just My Code) to the engine.
-                _engine.SetMetric("JustMyCodeStepping", _sessionConfig.JustMyCode ? "1" : "0");
-                _engine.SetMetric("EnableStepFiltering", _sessionConfig.EnableStepFiltering ? "1" : "0");
-            });
-            RegisterSyncEventHandler(typeof(IDebugStepCompleteEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                FireStoppedEvent(thread, "step");
-            });
-            RegisterSyncEventHandler(typeof(IDebugEntryPointEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                if (_sessionConfig.StopAtEntrypoint)
+                propertiesDictionary = new Dictionary<string, object>();
+                foreach (var pair in eventProperties)
                 {
-                    FireStoppedEvent(thread, "step");
+                    propertiesDictionary[pair.Key] = pair.Value;
                 }
-                else
+            }
+
+            m_logger.Write(LoggingCategory.Telemetry, eventName, propertiesDictionary);
+        }
+
+        private ProtocolException CreateProtocolExceptionAndLogTelemetry(string telemetryEventName, int error, string message)
+        {
+            DebuggerTelemetry.ReportError(telemetryEventName, error);
+            return new ProtocolException(message, new Message(error, message));
+        }
+
+        private bool ValidateProgramPath(ref string program)
+        {
+            // Make sure the slashes go in the correct direction
+            char directorySeparatorChar = Path.DirectorySeparatorChar;
+            char wrongSlashChar = directorySeparatorChar == '\\' ? '/' : '\\';
+
+            if (program.Contains(wrongSlashChar))
+            {
+                program = program.Replace(wrongSlashChar, directorySeparatorChar);
+            }
+
+            program = m_pathConverter.ConvertLaunchPathForVsCode(program);
+            if (!File.Exists(program))
+            {
+                // On Windows, check if we are just missing a '.exe' from the file name. This way we can use the same
+                // launch.json on all platforms.
+                if (Utilities.IsWindows())
                 {
-                    BeforeContinue();
-                    _program.Continue(thread);
-                }
-            });
-            RegisterSyncEventHandler(typeof(IDebugBreakpointEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                FireStoppedEvent(thread, "breakpoint");
-            });
-            RegisterSyncEventHandler(typeof(IDebugBreakEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                DebuggerTelemetry.ReportEvent(DebuggerTelemetry.TelemetryPauseEventName);
-                FireStoppedEvent(thread, "pause");
-            });
-            RegisterSyncEventHandler(typeof(IDebugExceptionEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                Stopped(thread);
-                IDebugExceptionEvent2 ee = (IDebugExceptionEvent2)eventObject;
-                string text;
-                ee.GetExceptionDescription(out text);
-                FireStoppedEvent(thread, "exception", text);
-            });
-            RegisterAsyncEventHandler(typeof(IDebugProgramCreateEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                Debug.Assert(_program == null, "Multiple program create events?");
-                if (_program == null)
-                {
-                    _program = program;
-                    _debugProtocolCallbacks.SendLater(new InitializedEvent());
-                }
-
-                return _configurationDoneTCS.Task;
-            });
-            RegisterSyncEventHandler(typeof(IDebugProgramDestroyEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                if (process == null)
-                {
-                    process = _process;
-                }
-                _process = null;
-
-                if (process != null)
-                {
-                    _port.RemoveProcess(process);
-                }
-
-                string exitMessage;
-                uint ec = 0;
-                if (_isAttach)
-                {
-                    exitMessage = string.Format(CultureInfo.CurrentCulture, AD7Resources.DebuggerDisconnectMessage, _processName);
-                }
-                else
-                {
-                    IDebugProgramDestroyEvent2 ee = (IDebugProgramDestroyEvent2)eventObject;
-                    ee.GetExitCode(out ec);
-                    exitMessage = string.Format(CultureInfo.CurrentCulture, AD7Resources.ProcessExitMessage, _processName, (int)ec);
-                }
-
-                _logger.WriteLine(LoggingCategory.ProcessExit, exitMessage);
-
-                _debugProtocolCallbacks.Send(new ExitedEvent((int)ec));
-                _debugProtocolCallbacks.Send(new TerminatedEvent());
-
-
-                this.SendDebugCompletedTelemetry();
-                _disconnectedOrTerminated.Set();
-            });
-            RegisterSyncEventHandler(typeof(IDebugThreadCreateEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                int id = thread.Id();
-                _threads[id] = thread;
-                _debugProtocolCallbacks.Send(new ThreadEvent("started", id));
-            });
-            RegisterSyncEventHandler(typeof(IDebugThreadDestroyEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                int id = thread.Id();
-                _threads.Remove(id);
-                _debugProtocolCallbacks.Send(new ThreadEvent("exited", id));
-            });
-            RegisterSyncEventHandler(typeof(IDebugModuleLoadEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                IDebugModule2 module;
-                string moduleLoadMessage = null;
-                int isLoad = 0;
-                ((IDebugModuleLoadEvent2)eventObject).GetModule(out module, ref moduleLoadMessage, ref isLoad);
-
-                _logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
-            });
-            RegisterSyncEventHandler(typeof(IDebugBreakpointBoundEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                var breakpointBoundEvent = (IDebugBreakpointBoundEvent2)eventObject;
-
-                foreach (var boundBreakpoint in GetBoundBreakpoints(breakpointBoundEvent))
-                {
-                    IDebugPendingBreakpoint2 pendingBreakpoint;
-                    if (boundBreakpoint.GetPendingBreakpoint(out pendingBreakpoint) == Constants.S_OK)
+                    if (!program.EndsWith(".", StringComparison.OrdinalIgnoreCase) && !program.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                     {
-                        IDebugBreakpointRequest2 breakpointRequest;
-                        if (pendingBreakpoint.GetBreakpointRequest(out breakpointRequest) == Constants.S_OK)
+                        string programWithExe = program + ".exe";
+                        if (File.Exists(programWithExe))
                         {
-                            AD7BreakPointRequest ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-
-                            // Once bound, attempt to get the bound line number from the breakpoint.
-                            // If the AD7 calls fail, fallback to the original pending breakpoint line number.
-                            int? lineNumber = this.GetBoundBreakpointLineNumber(boundBreakpoint);
-                            if (lineNumber == null && ad7BPRequest.DocumentPosition != null)
-                                lineNumber = ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line);
-
-                            Breakpoint bp = new Breakpoint(ad7BPRequest.Id, true, lineNumber ?? 0);
-
-                            ad7BPRequest.BindResult = bp;
-                            _debugProtocolCallbacks.SendLater(new BreakpointEvent(BreakpointEvent.Reason.changed, bp));
+                            program = programWithExe;
+                            return true;
                         }
                     }
                 }
-            });
-            RegisterSyncEventHandler(typeof(IDebugBreakpointErrorEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                var breakpointErrorEvent = (IDebugBreakpointErrorEvent2)eventObject;
-
-                IDebugErrorBreakpoint2 errorBreakpoint;
-                if (breakpointErrorEvent.GetErrorBreakpoint(out errorBreakpoint) == 0)
-                {
-                    IDebugPendingBreakpoint2 pendingBreakpoint;
-                    if (errorBreakpoint.GetPendingBreakpoint(out pendingBreakpoint) == 0)
-                    {
-                        IDebugBreakpointRequest2 breakpointRequest;
-                        if (pendingBreakpoint.GetBreakpointRequest(out breakpointRequest) == 0)
-                        {
-                            string errorMsg = string.Empty;
-
-                            IDebugErrorBreakpointResolution2 errorBreakpointResolution;
-                            if (errorBreakpoint.GetBreakpointResolution(out errorBreakpointResolution) == 0)
-                            {
-                                BP_ERROR_RESOLUTION_INFO[] bpInfo = new BP_ERROR_RESOLUTION_INFO[1];
-                                if (errorBreakpointResolution.GetResolutionInfo(enum_BPERESI_FIELDS.BPERESI_MESSAGE, bpInfo) == 0)
-                                {
-                                    errorMsg = bpInfo[0].bstrMessage;
-                                }
-                            }
-
-                            AD7BreakPointRequest ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-                            Breakpoint bp = null;
-                            if (ad7BPRequest.DocumentPosition != null)
-                            {
-                                if (string.IsNullOrWhiteSpace(ad7BPRequest.Condition))
-                                {
-                                    bp = new Breakpoint(ad7BPRequest.Id, false, ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line), errorMsg);
-                                }
-                                else
-                                {
-                                    bp = new Breakpoint(ad7BPRequest.Id, false, ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line),
-                                        string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_ConditionBreakpoint, ad7BPRequest.Condition, errorMsg));
-                                }
-                            }
-                            else
-                            {
-                                bp = new Breakpoint(ad7BPRequest.Id, false, 0, errorMsg);
-
-                                // TODO: currently VSCode will ignore the error message from "breakpoint" event, the workaround is to log the error to output window
-                                string outputMsg = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_FunctionBreakpoint, ad7BPRequest.FunctionPosition.Name, errorMsg);
-                                _logger.WriteLine(LoggingCategory.DebuggerError, outputMsg);
-                            }
-
-                            ad7BPRequest.BindResult = bp;
-                            _debugProtocolCallbacks.SendLater(new BreakpointEvent(BreakpointEvent.Reason.changed, bp));
-                        }
-                    }
-                }
-            });
-            RegisterSyncEventHandler(typeof(IDebugOutputStringEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                // OutputStringEvent will include program output if the external console is disabled.
-
-                var outputStringEvent = (IDebugOutputStringEvent2)eventObject;
-                string text;
-                if (outputStringEvent.GetString(out text) == 0)
-                {
-                    _logger.Write(LoggingCategory.StdOut, text);
-                }
-            });
-            RegisterSyncEventHandler(typeof(IDebugMessageEvent2), (engine, process, program, thread, eventObject) =>
-            {
-                var outputStringEvent = (IDebugMessageEvent2)eventObject;
-                string text;
-                enum_MESSAGETYPE[] messageType = new enum_MESSAGETYPE[1];
-                uint type, helpId;
-                string helpFileName;
-                // TODO: Add VS Code support for message box based events, for now we will just output them
-                // to the console since that is the best we can do.
-                if (outputStringEvent.GetMessage(messageType, out text, out type, out helpFileName, out helpId) == 0)
-                {
-                    const uint MB_ICONERROR = 0x00000010;
-                    const uint MB_ICONWARNING = 0x00000030;
-
-                    if ((messageType[0] & enum_MESSAGETYPE.MT_TYPE_MASK) == enum_MESSAGETYPE.MT_MESSAGEBOX)
-                    {
-                        MessagePrefix prefix = MessagePrefix.None;
-                        uint icon = type & 0xf0;
-                        if (icon == MB_ICONERROR)
-                            prefix = MessagePrefix.Error;
-                        else if (icon == MB_ICONWARNING)
-                            prefix = MessagePrefix.Warning;
-
-                        // If we get an error message event during the launch, save it, as we may well want to return that as the launch failure message back to VS Code.
-                        if (_currentLaunchState != null && prefix != MessagePrefix.None)
-                        {
-                            lock (_lock)
-                            {
-                                if (_currentLaunchState != null && _currentLaunchState.CurrentError == null)
-                                {
-                                    _currentLaunchState.CurrentError = new Tuple<MessagePrefix, string>(prefix, text);
-                                    return;
-                                }
-                            }
-                        }
-
-                        SendMessageEvent(prefix, text);
-                    }
-                    else if ((messageType[0] & enum_MESSAGETYPE.MT_REASON_MASK) == enum_MESSAGETYPE.MT_REASON_EXCEPTION)
-                    {
-                        _logger.Write(LoggingCategory.Exception, text);
-                    }
-                    else
-                    {
-                        LoggingCategory category = LoggingCategory.DebuggerStatus;
-                        // Check if the message looks like an error or warning. We will check with whatever
-                        // our localized error/warning prefix might be and we will also accept the English
-                        // version of the string.
-                        if (text.StartsWith(AD7Resources.Prefix_Error, StringComparison.OrdinalIgnoreCase) ||
-                            text.StartsWith(AD7Resources.Prefix_Warning, StringComparison.OrdinalIgnoreCase) ||
-                            text.StartsWith("Error:", StringComparison.OrdinalIgnoreCase) ||
-                            text.StartsWith("Warning:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            category = LoggingCategory.DebuggerError;
-                        }
-
-                        _logger.Write(category, text);
-                    }
-                }
-            });
-        }
-
-        /// <summary>
-        /// Attempts to get the line number of the bound breakpoint.
-        /// Does not report any errors encountered.
-        /// </summary>
-        /// <returns>The line number, or null if the line information was not found</returns>
-        private int? GetBoundBreakpointLineNumber(IDebugBoundBreakpoint2 boundBreakpoint)
-        {
-            int hr;
-            IDebugBreakpointResolution2 breakpointResolution;
-            hr = boundBreakpoint.GetBreakpointResolution(out breakpointResolution);
-            if (hr != Constants.S_OK)
-                return null;
-
-            BP_RESOLUTION_INFO[] resolutionInfo = new BP_RESOLUTION_INFO[1];
-            hr = breakpointResolution.GetResolutionInfo(enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION, resolutionInfo);
-            if (hr != Constants.S_OK)
-                return null;
-
-            BP_RESOLUTION_LOCATION location = resolutionInfo[0].bpResLocation;
-            enum_BP_TYPE bpType = (enum_BP_TYPE)location.bpType;
-            if (bpType != enum_BP_TYPE.BPT_CODE || location.unionmember1 == IntPtr.Zero)
-                return null;
-
-            IDebugCodeContext2 codeContext;
-            try
-            {
-                codeContext = HostMarshal.GetCodeContextForIntPtr(location.unionmember1);
-                HostMarshal.ReleaseCodeContextId(location.unionmember1);
-                location.unionmember1 = IntPtr.Zero;
+                return false;
             }
-            catch (ArgumentException)
-            {
-                return null;
-            }
-            IDebugDocumentContext2 docContext;
-            hr = codeContext.GetDocumentContext(out docContext);
-            if (hr != Constants.S_OK)
-                return null;
-
-            // VSTS 237376: Shared library compiled without symbols will still bind a bp, but not have a docContext
-            if (null == docContext)
-                return null;
-
-            TEXT_POSITION[] begin = new TEXT_POSITION[1];
-            TEXT_POSITION[] end = new TEXT_POSITION[1];
-            hr = docContext.GetStatementRange(begin, end);
-            if (hr != Constants.S_OK)
-                return null;
-
-            return this.ConvertDebuggerLineToClient((int)begin[0].dwLine);
+            return true;
         }
 
-        /// <summary>
-        /// Wrap COM enum APIs to IEnumerable for getting bound breakpoints.
-        /// Does not report any errors encountered.
-        /// </summary>
-        private static IEnumerable<IDebugBoundBreakpoint2> GetBoundBreakpoints(IDebugBreakpointBoundEvent2 breakpointBoundEvent)
-        {
-            int hr;
-            IEnumDebugBoundBreakpoints2 boundBreakpointsEnum;
-            hr = breakpointBoundEvent.EnumBoundBreakpoints(out boundBreakpointsEnum);
-            if (hr != Constants.S_OK)
-                return Enumerable.Empty<IDebugBoundBreakpoint2>();
-
-            uint bufferSize;
-            hr = boundBreakpointsEnum.GetCount(out bufferSize);
-            if (hr != Constants.S_OK)
-                return Enumerable.Empty<IDebugBoundBreakpoint2>();
-
-            IDebugBoundBreakpoint2[] boundBreakpoints = new IDebugBoundBreakpoint2[bufferSize];
-            uint fetched = 0;
-            hr = boundBreakpointsEnum.Next(bufferSize, boundBreakpoints, ref fetched);
-            if (hr != Constants.S_OK || fetched != bufferSize)
-                return Enumerable.Empty<IDebugBoundBreakpoint2>();
-
-            return boundBreakpoints;
-        }
-
-        private void RegisterSyncEventHandler(Type type, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2> handler)
-        {
-            _syncEventHandler.Add(type.GetTypeInfo().GUID, handler);
-        }
-        private void RegisterAsyncEventHandler(Type type, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task> handler)
-        {
-            _asyncEventHandler.Add(type.GetTypeInfo().GUID, handler);
-        }
-
-        public int Event(IDebugEngine2 engine, IDebugProcess2 process, IDebugProgram2 program, IDebugThread2 thread, IDebugEvent2 eventObject, ref Guid riidEvent, uint dwAttrib)
-        {
-            enum_EVENTATTRIBUTES attributes = unchecked((enum_EVENTATTRIBUTES)dwAttrib);
-
-            Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2> syncEventHandler;
-            if (_syncEventHandler.TryGetValue(riidEvent, out syncEventHandler))
-            {
-                syncEventHandler(engine, process, program, thread, eventObject);
-            }
-
-            Task task = null;
-            Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task> asyncEventHandler;
-            if (_asyncEventHandler.TryGetValue(riidEvent, out asyncEventHandler))
-            {
-                task = asyncEventHandler(engine, process, program, thread, eventObject);
-            }
-
-            if (attributes.HasFlag(enum_EVENTATTRIBUTES.EVENT_SYNCHRONOUS))
-            {
-                if (task == null)
-                {
-                    engine.ContinueFromSynchronousEvent(eventObject);
-                }
-                else
-                {
-                    task.ContinueWith((j) => engine.ContinueFromSynchronousEvent(eventObject));
-                }
-            }
-
-            return 0;
-        }
-
-        // Sets the debug settings that are common between launch and attach scenarios
-        private void SetCommonDebugSettings(dynamic args, out int sourceFileMappings)
+        private void SetCommonDebugSettings(Dictionary<string, JToken> args, out int sourceFileMappings)
         {
             // Save the Just My Code setting. We will set it once the engine is created.
-            _sessionConfig.JustMyCode = ((bool?)args.justMyCode) ?? _sessionConfig.JustMyCode;
-            _sessionConfig.RequireExactSource = ((bool?)args.requireExactSource) ?? _sessionConfig.RequireExactSource;
-            _sessionConfig.EnableStepFiltering = ((bool?)args.enableStepFiltering) ?? _sessionConfig.EnableStepFiltering;
+            m_sessionConfig.JustMyCode = args.GetValueAsBool("justMyCode") ?? m_sessionConfig.JustMyCode;
+            m_sessionConfig.RequireExactSource = args.GetValueAsBool("requireExactSource") ?? m_sessionConfig.RequireExactSource;
+            m_sessionConfig.EnableStepFiltering = args.GetValueAsBool("enableStepFiltering") ?? m_sessionConfig.EnableStepFiltering;
 
-            if (args.logging != null)
+            JObject logging = args.GetValueAsObject("logging");
+
+            if (logging != null)
             {
-                _logger.SetLoggingConfiguration(LoggingCategory.Exception, (bool?)args.logging.exceptions ?? true);
-                _logger.SetLoggingConfiguration(LoggingCategory.Module, (bool?)args.logging.moduleLoad ?? true);
-                _logger.SetLoggingConfiguration(LoggingCategory.StdOut, (bool?)args.logging.programOutput ?? true);
-                _logger.SetLoggingConfiguration(LoggingCategory.StdErr, (bool?)args.logging.programOutput ?? true);
+                m_logger.SetLoggingConfiguration(LoggingCategory.Exception, logging.GetValueAsBool("exceptions") ?? true);
+                m_logger.SetLoggingConfiguration(LoggingCategory.Module, logging.GetValueAsBool("moduleLoad") ?? true);
+                m_logger.SetLoggingConfiguration(LoggingCategory.StdOut, logging.GetValueAsBool("programOutput") ?? true);
+                m_logger.SetLoggingConfiguration(LoggingCategory.StdErr, logging.GetValueAsBool("programOutput") ?? true);
 
-                bool? engineLogging = (bool?)args.logging.engineLogging;
+                bool? engineLogging = logging.GetValueAsBool("engineLogging");
                 if (engineLogging.HasValue)
                 {
-                    _logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, engineLogging.Value);
-                    _debugProtocolCallbacks.SetEngineLogger(s => _logger.WriteLineRaw(LoggingCategory.EngineLogging, s));
+                    m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, engineLogging.Value);
+                    HostLogger.EnableHostLogging();
+                    HostLogger.Instance.LogCallback = s => m_logger.WriteLine(LoggingCategory.EngineLogging, s);
                 }
 
-                bool? trace = (bool?)args.logging.trace;
-                bool? traceResponse = (bool?)args.logging.traceResponse;
+                bool? trace = logging.GetValueAsBool("trace");
+                bool? traceResponse = logging.GetValueAsBool("traceResponse");
                 if (trace.HasValue || traceResponse.HasValue)
                 {
-                    _logger.SetLoggingConfiguration(LoggingCategory.AdapterTrace, (trace ?? false) || (traceResponse ?? false));
-                    _debugProtocolCallbacks.SetTraceLogger(s => _logger.WriteLineRaw(LoggingCategory.AdapterTrace, s));
+                    m_logger.SetLoggingConfiguration(LoggingCategory.AdapterTrace, (trace ?? false) || (traceResponse ?? false));
                 }
 
                 if (traceResponse.HasValue)
                 {
-                    _logger.SetLoggingConfiguration(LoggingCategory.AdapterResponse, traceResponse.Value);
-                    _debugProtocolCallbacks.SetResponseLogger(s => _logger.WriteLineRaw(LoggingCategory.AdapterResponse, s));
+                    m_logger.SetLoggingConfiguration(LoggingCategory.AdapterResponse, traceResponse.Value);
                 }
             }
 
             sourceFileMappings = 0;
             Dictionary<string, string> sourceFileMap = null;
             {
-                dynamic sourceFileMapProperty = args.sourceFileMap;
+                dynamic sourceFileMapProperty = args.GetValueAsObject("sourceFileMap");
                 if (sourceFileMapProperty != null)
                 {
                     try
@@ -539,29 +197,403 @@ namespace OpenDebugAD7
                     }
                 }
             }
-            _pathMapper = new PathMapper(sourceFileMap);
+            m_pathConverter.m_pathMapper = new PathMapper(sourceFileMap);
         }
-        
-#pragma warning disable 1998
-        public async override Task<DebugResult> Launch(dynamic args)
+
+        private ProtocolException VerifyLocalProcessId(string processId, string telemetryEventName, out int pid)
+        {
+            ProtocolException protocolException = VerifyProcessId(processId, telemetryEventName, out pid);
+
+            if (protocolException != null)
+            {
+                return protocolException;
+            }
+
+            try
+            {
+                Process.GetProcessById(pid);
+            }
+            catch (ArgumentException)
+            {
+                return CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1006, string.Format(CultureInfo.CurrentCulture, "attach: no process with the given id:{0} found", pid));
+            }
+
+            return null;
+        }
+
+        private ProtocolException VerifyProcessId(string processId, string telemetryEventName, out int pid)
+        {
+            if (!int.TryParse(processId, out pid))
+            {
+                return CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1005, "attach: unable to parse the process id");
+            }
+
+            if (pid == 0)
+            {
+                return CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1008, "attach: launch.json must be configured. Change 'processId' to the process you want to debug.");
+            }
+
+            return null;
+        }
+
+        #endregion
+
+        #region AD7EventHandlers helper methods
+
+        public void BeforeContinue()
+        {
+            if (!m_isCoreDump)
+            {
+                m_isStopped = false;
+                m_variableManager.Reset();
+                m_frameHandles.Reset();
+                m_threadFrameEnumInfos.Clear();
+            }
+        }
+
+        public void Stopped(IDebugThread2 thread)
+        {
+            Debug.Assert(m_variableManager.IsEmpty(), "Why do we have variable handles?");
+            Debug.Assert(m_frameHandles.IsEmpty, "Why do we have frame handles?");
+            Debug.Assert(m_threadFrameEnumInfos.Count == 0, "Why do we have thread frame enums?");
+            m_isStopped = true;
+        }
+
+        internal void FireStoppedEvent(IDebugThread2 thread, StoppedEvent.ReasonValue reason, string text = null)
+        {
+            Stopped(thread);
+
+            // Switch to another thread as engines may not expect to be called back on their event thread
+            ThreadPool.QueueUserWorkItem((o) =>
+            {
+                IEnumDebugFrameInfo2 frameInfoEnum;
+                thread.EnumFrameInfo(enum_FRAMEINFO_FLAGS.FIF_FRAME | enum_FRAMEINFO_FLAGS.FIF_FLAGS, Constants.EvaluationRadix, out frameInfoEnum);
+
+                TextPositionTuple textPosition = TextPositionTuple.Nil;
+                if (frameInfoEnum != null)
+                {
+                    while (true)
+                    {
+                        FRAMEINFO[] frameInfoArray = new FRAMEINFO[1];
+                        uint cFetched = 0;
+                        frameInfoEnum.Next(1, frameInfoArray, ref cFetched);
+                        if (cFetched != 1)
+                        {
+                            break;
+                        }
+
+                        if (AD7Utils.IsAnnotatedFrame(ref frameInfoArray[0]))
+                        {
+                            continue;
+                        }
+
+                        textPosition = TextPositionTuple.GetTextPositionOfFrame(m_pathConverter, frameInfoArray[0].m_pFrame) ?? TextPositionTuple.Nil;
+                        break;
+                    }
+                }
+
+                lock (m_lock)
+                {
+                    m_breakCounter++;
+                }
+                Protocol.SendEvent(new OpenDebugStoppedEvent
+                {
+                    Reason = reason,
+                    Source = textPosition.Source,
+                    Line = textPosition.Line,
+                    Column = textPosition.Column,
+                    Text = text,
+                    ThreadId = thread.Id()
+                });
+            });
+
+            if (Interlocked.Exchange(ref m_firstStoppingEvent, 1) == 0)
+            {
+                m_logger.WriteLine(LoggingCategory.DebuggerStatus, AD7Resources.DebugConsoleStartMessage);
+            }
+        }
+
+        private void SendDebugCompletedTelemetry()
+        {
+            Dictionary<string, object> properties = new Dictionary<string, object>();
+            lock (m_lock)
+            {
+                properties.Add(DebuggerTelemetry.TelemetryBreakCounter, m_breakCounter);
+            }
+            DebuggerTelemetry.ReportEvent(DebuggerTelemetry.TelemetryDebugCompletedEventName, properties);
+        }
+
+        private static IEnumerable<IDebugBoundBreakpoint2> GetBoundBreakpoints(IDebugBreakpointBoundEvent2 breakpointBoundEvent)
+        {
+            int hr;
+            IEnumDebugBoundBreakpoints2 boundBreakpointsEnum;
+            hr = breakpointBoundEvent.EnumBoundBreakpoints(out boundBreakpointsEnum);
+            if (hr != HRConstants.S_OK)
+            {
+                return Enumerable.Empty<IDebugBoundBreakpoint2>();
+            }
+
+            uint bufferSize;
+            hr = boundBreakpointsEnum.GetCount(out bufferSize);
+            if (hr != HRConstants.S_OK)
+            {
+                return Enumerable.Empty<IDebugBoundBreakpoint2>();
+            }
+
+            IDebugBoundBreakpoint2[] boundBreakpoints = new IDebugBoundBreakpoint2[bufferSize];
+            uint fetched = 0;
+            hr = boundBreakpointsEnum.Next(bufferSize, boundBreakpoints, ref fetched);
+            if (hr != HRConstants.S_OK || fetched != bufferSize)
+            {
+                return Enumerable.Empty<IDebugBoundBreakpoint2>();
+            }
+
+            return boundBreakpoints;
+        }
+
+        private int? GetBoundBreakpointLineNumber(IDebugBoundBreakpoint2 boundBreakpoint)
+        {
+            int hr;
+            IDebugBreakpointResolution2 breakpointResolution;
+            hr = boundBreakpoint.GetBreakpointResolution(out breakpointResolution);
+            if (hr != HRConstants.S_OK)
+            {
+                return null;
+            }
+
+            BP_RESOLUTION_INFO[] resolutionInfo = new BP_RESOLUTION_INFO[1];
+            hr = breakpointResolution.GetResolutionInfo(enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION, resolutionInfo);
+            if (hr != HRConstants.S_OK)
+            {
+                return null;
+            }
+
+            BP_RESOLUTION_LOCATION location = resolutionInfo[0].bpResLocation;
+            enum_BP_TYPE bpType = (enum_BP_TYPE)location.bpType;
+            if (bpType != enum_BP_TYPE.BPT_CODE || location.unionmember1 == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            IDebugCodeContext2 codeContext;
+            try
+            {
+                codeContext = HostMarshal.GetCodeContextForIntPtr(location.unionmember1);
+                HostMarshal.ReleaseCodeContextId(location.unionmember1);
+                location.unionmember1 = IntPtr.Zero;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+            IDebugDocumentContext2 docContext;
+            hr = codeContext.GetDocumentContext(out docContext);
+            if (hr != HRConstants.S_OK)
+            {
+                return null;
+            }
+
+            // VSTS 237376: Shared library compiled without symbols will still bind a bp, but not have a docContext
+            if (null == docContext)
+            {
+                return null;
+            }
+
+            TEXT_POSITION[] begin = new TEXT_POSITION[1];
+            TEXT_POSITION[] end = new TEXT_POSITION[1];
+            hr = docContext.GetStatementRange(begin, end);
+            if (hr != HRConstants.S_OK)
+            {
+                return null;
+            }
+
+            return m_pathConverter.ConvertDebuggerLineToClient((int)begin[0].dwLine);
+        }
+
+        private enum MessagePrefix
+        {
+            None,
+            Warning,
+            Error
+        };
+
+        private class CurrentLaunchState
+        {
+            public Tuple<MessagePrefix, string> CurrentError { get; set; }
+        }
+
+        private CurrentLaunchState m_currentLaunchState;
+
+        private void SendMessageEvent(MessagePrefix prefix, string text)
+        {
+            string prefixString = string.Empty;
+            LoggingCategory category = LoggingCategory.DebuggerStatus;
+            switch (prefix)
+            {
+                case MessagePrefix.Warning:
+                    prefixString = AD7Resources.Prefix_Warning;
+                    category = LoggingCategory.DebuggerError;
+                    break;
+                case MessagePrefix.Error:
+                    prefixString = AD7Resources.Prefix_Error;
+                    category = LoggingCategory.DebuggerError;
+                    break;
+            }
+
+            m_logger.WriteLine(category, prefixString + text);
+        }
+
+        private VariablesResponse VariablesFromFrame(IDebugStackFrame2 frame)
+        {
+            VariablesResponse response = new VariablesResponse();
+
+            uint n;
+            IEnumDebugPropertyInfo2 varEnum;
+            if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
+            {
+                DEBUG_PROPERTY_INFO[] props = new DEBUG_PROPERTY_INFO[1];
+                uint nProps;
+                while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
+                {
+                    response.Variables.Add(m_variableManager.CreateVariable(props[0].pProperty, GetDefaultPropertyInfoFlags()));
+                }
+            }
+
+            return response;
+        }
+
+        public enum_DEBUGPROP_INFO_FLAGS GetDefaultPropertyInfoFlags()
+        {
+            enum_DEBUGPROP_INFO_FLAGS flags =
+                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME |
+                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE |
+                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_TYPE |
+                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB |
+                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP |
+                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME |
+                (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_FORCE_REAL_FUNCEVAL;
+
+            if (m_sessionConfig.JustMyCode)
+            {
+                flags |= (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_NO_NONPUBLIC_MEMBERS;
+            }
+
+            return flags;
+        }
+        private void SetAllExceptions(enum_EXCEPTION_STATE state)
+        {
+            foreach (ExceptionSettings.CategoryConfiguration category in m_engineConfiguration.ExceptionSettings.Categories)
+            {
+                var exceptionInfo = new EXCEPTION_INFO[1];
+                exceptionInfo[0].dwState = state;
+                exceptionInfo[0].guidType = category.Id;
+                exceptionInfo[0].bstrExceptionName = category.Name;
+                m_engine.SetException(exceptionInfo);
+            }
+        }
+
+        private void StepInternal(int threadId, enum_STEPKIND stepKind, enum_STEPUNIT stepUnit, string errorMessage)
+        {
+            // If we are already running ignore additional step requests
+            if (m_isStopped)
+            {
+
+                IDebugThread2 thread = null;
+                lock (m_threads)
+                {
+                    if (!m_threads.TryGetValue(threadId, out thread))
+                    {
+                        throw new AD7Exception(errorMessage);
+                    }
+                }
+
+                BeforeContinue();
+                ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
+                try
+                {
+                    builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
+                }
+                catch (AD7Exception)
+                {
+                    m_isStopped = true;
+                    throw;
+                }
+            }
+        }
+
+        #endregion
+
+        #region DebugAdapterBase
+
+        protected override void HandleInitializeRequestAsync(IRequestResponder<InitializeArguments, InitializeResponse> responder)
+        {
+            InitializeArguments arguments = responder.Arguments;
+
+            m_engineConfiguration = EngineConfiguration.TryGet(arguments.AdapterID);
+
+            m_engine = (IDebugEngine2)m_engineConfiguration.LoadEngine();
+
+            TypeInfo engineType = m_engine.GetType().GetTypeInfo();
+            HostTelemetry.InitializeTelemetry(SendTelemetryEvent, engineType, m_engineConfiguration.AdapterId);
+            DebuggerTelemetry.InitializeTelemetry(Protocol.SendEvent, engineType, typeof(Host).GetTypeInfo(), m_engineConfiguration.AdapterId);
+
+            HostOutputWindow.InitializeLaunchErrorCallback((error) => m_logger.WriteLine(LoggingCategory.DebuggerError, error));
+
+            m_engineLaunch = (IDebugEngineLaunch2)m_engine;
+            m_engine.SetRegistryRoot(m_engineConfiguration.AdapterId);
+            m_port = new AD7Port(this);
+            m_disconnectedOrTerminated = new ManualResetEvent(false);
+            m_firstStoppingEvent = 0;
+
+            m_pathConverter.ClientLinesStartAt1 = arguments.LinesStartAt1.GetValueOrDefault(true);
+
+            // Default is that they are URIs
+            m_pathConverter.ClientPathsAreURI = !(arguments.PathFormat.GetValueOrDefault(InitializeArguments.PathFormatValue.Unknown) == InitializeArguments.PathFormatValue.Path);
+
+            InitializeResponse initializeResponse = new InitializeResponse
+            {
+                SupportsConfigurationDoneRequest = true,
+                SupportsEvaluateForHovers = true,
+                SupportsSetVariable = true,
+                SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
+                SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
+                ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList()
+            };
+
+            responder.SetResponse(initializeResponse);
+        }
+
+        protected override void HandleLaunchRequestAsync(IRequestResponder<LaunchArguments> responder)
         {
             int hr;
             DateTime launchStartTime = DateTime.Now;
 
-            string program = ((string)args.program)?.Trim();
+            string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program")?.Trim();
             if (string.IsNullOrEmpty(program))
             {
-                return CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "launch: property 'program' is missing or empty");
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "launch: property 'program' is missing or empty"));
+                return;
             }
 
-            // If program is still in the default state, yell
-            if (program.EndsWith(">") && program.Contains('<'))
+            // If program is still in the default state, raise error
+            if (program.EndsWith(">", StringComparison.Ordinal) && program.Contains('<'))
             {
-                return CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "launch: launch.json must be configured. Change 'program' to the path to the executable file that you would like to debug.");
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "launch: launch.json must be configured. Change 'program' to the path to the executable file that you would like to debug."));
+                return;
             }
+
+            // Should not have a pid in launch
+            if (responder.Arguments.ConfigurationProperties.ContainsKey("processId"))
+            {
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "launch: The parameter: 'processId' should not be specified on Launch. Please use request type: 'attach'"));
+                return;
+            }
+
+            JToken pipeTransport = responder.Arguments.ConfigurationProperties.GetValueAsObject("pipeTransport");
+            string miDebuggerServerAddress = responder.Arguments.ConfigurationProperties.GetValueAsString("miDebuggerServerAddress");
 
             // Pipe trasport can talk to remote machines so paths and files should not be checked in this case.
-            bool skipFilesystemChecks = (args.pipeTransport != null || args.miDebuggerServerAddress != null);
+            bool skipFilesystemChecks = (pipeTransport != null || miDebuggerServerAddress != null);
 
             // For a remote scenario, we assume whatever input user has provided is correct.
             // The target remote could be any OS, so we don't try to change anything.
@@ -569,45 +601,43 @@ namespace OpenDebugAD7
             {
                 if (!ValidateProgramPath(ref program))
                 {
-                    return CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1002, String.Format("launch: program '{0}' does not exist", program));
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1002, String.Format(CultureInfo.CurrentCulture, "launch: program '{0}' does not exist", program)));
+                    return;
                 }
             }
 
-            string workingDirectory = (string)args.cwd;
+            string workingDirectory = responder.Arguments.ConfigurationProperties.GetValueAsString("cwd");
             if (string.IsNullOrEmpty(workingDirectory))
             {
-                return CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1003, "launch: property 'cwd' is missing or empty");
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1003, "launch: property 'cwd' is missing or empty"));
+                return;
             }
 
             if (!skipFilesystemChecks)
             {
-                workingDirectory = ConvertLaunchPathForVsCode(workingDirectory);
+                workingDirectory = m_pathConverter.ConvertLaunchPathForVsCode(workingDirectory);
                 if (!Directory.Exists(workingDirectory))
                 {
-                    return CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1004, String.Format("launch: workingDirectory '{0}' does not exist", workingDirectory));
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1004, String.Format(CultureInfo.CurrentCulture, "launch: workingDirectory '{0}' does not exist", workingDirectory)));
+                    return;
                 }
             }
 
-            if (!String.IsNullOrEmpty((string)args.processId))
-            {
-                return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "The parameter: processId should not be specified on Launch. Please use request type: attach");
-            }
-
             int sourceFileMappings = 0;
-            SetCommonDebugSettings(args, sourceFileMappings: out sourceFileMappings);
+            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties, sourceFileMappings: out sourceFileMappings);
 
             bool success = false;
             try
             {
-                lock (_lock)
+                lock (m_lock)
                 {
-                    Debug.Assert(_currentLaunchState == null, "Concurrent launches??");
-                    _currentLaunchState = new CurrentLaunchState();
+                    Debug.Assert(m_currentLaunchState == null, "Concurrent launches??");
+                    m_currentLaunchState = new CurrentLaunchState();
                 }
                 var eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Launch);
 
                 // Don't convert the workingDirectory string if we are a pipeTransport connection. We are assuming that the user has the correct directory separaters for their target OS
-                string workingDirectoryString = args.pipeTransport != null ? workingDirectory : ConvertClientPathToDebugger(workingDirectory);
+                string workingDirectoryString = pipeTransport != null ? workingDirectory : m_pathConverter.ConvertClientPathToDebugger(workingDirectory);
 
                 bool debugServerUsed = false;
                 bool isOpenOCD = false;
@@ -616,26 +646,27 @@ namespace OpenDebugAD7
                 string launchOptions = MILaunchOptions.CreateLaunchOptions(
                     program: program,
                     workingDirectory: workingDirectoryString,
-                    args: args,
+                    args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
+                    isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
                     stopAtEntry: out stopAtEntrypoint,
-                    isCoreDump: out _isCoreDump,
+                    isCoreDump: out m_isCoreDump,
                     debugServerUsed: out debugServerUsed,
                     isOpenOCD: out isOpenOCD,
                     visualizerFileUsed: out visualizerFileUsed);
 
-                _sessionConfig.StopAtEntrypoint = stopAtEntrypoint;
+                m_sessionConfig.StopAtEntrypoint = stopAtEntrypoint;
 
-                _processName = program;
+                m_processName = program;
 
                 enum_LAUNCH_FLAGS flags = enum_LAUNCH_FLAGS.LAUNCH_DEBUG;
-                if ((bool?)args.noDebug ?? false)
+                if (responder.Arguments.NoDebug.GetValueOrDefault(false))
                 {
                     flags = enum_LAUNCH_FLAGS.LAUNCH_NODEBUG;
                 }
 
                 // Then attach
-                hr = _engineLaunch.LaunchSuspended(null,
-                    _port,
+                hr = m_engineLaunch.LaunchSuspended(null,
+                    m_port,
                     program,
                     null,
                     null,
@@ -646,34 +677,35 @@ namespace OpenDebugAD7
                     0,
                     0,
                     this,
-                    out _process);
-                if (hr != Constants.S_OK)
+                    out m_process);
+                if (hr != HRConstants.S_OK)
                 {
                     // If the engine raised a message via an error event, fire that instead
-                    if (hr == Constants.E_ABORT)
+                    if (hr == HRConstants.E_ABORT)
                     {
                         string message;
-                        lock (_lock)
+                        lock (m_lock)
                         {
-                            message = _currentLaunchState?.CurrentError?.Item2;
-                            _currentLaunchState = null;
+                            message = m_currentLaunchState?.CurrentError?.Item2;
+                            m_currentLaunchState = null;
                         }
                         if (message != null)
                         {
-                            throw new AD7Exception(message);
+                            responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1005, message));
+                            return;
                         }
                     }
 
                     eb.ThrowHR(hr);
                 }
 
-                hr = _engineLaunch.ResumeProcess(_process);
+                hr = m_engineLaunch.ResumeProcess(m_process);
                 if (hr < 0)
                 {
                     // try to terminate the process if we can
                     try
                     {
-                        _engineLaunch.TerminateProcess(_process);
+                        m_engineLaunch.TerminateProcess(m_process);
                     }
                     catch
                     {
@@ -685,7 +717,7 @@ namespace OpenDebugAD7
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
 
-                properties.Add(DebuggerTelemetry.TelemetryIsCoreDump, _isCoreDump);
+                properties.Add(DebuggerTelemetry.TelemetryIsCoreDump, m_isCoreDump);
                 if (debugServerUsed)
                 {
                     properties.Add(DebuggerTelemetry.TelemetryUsesDebugServer, isOpenOCD ? "openocd" : "other");
@@ -706,15 +738,15 @@ namespace OpenDebugAD7
             {
                 // Clear _currentLaunchState
                 CurrentLaunchState currentLaunchState;
-                lock (_lock)
+                lock (m_lock)
                 {
-                    currentLaunchState = _currentLaunchState;
-                    _currentLaunchState = null;
+                    currentLaunchState = m_currentLaunchState;
+                    m_currentLaunchState = null;
                 }
 
                 if (!success)
                 {
-                    _process = null;
+                    m_process = null;
                 }
 
                 // If we had an error event that we didn't wind up returning as an exception, raise it as an event
@@ -725,117 +757,76 @@ namespace OpenDebugAD7
                 }
             }
 
-            return new DebugResult();
+            responder.SetResponse(new LaunchResponse());
         }
-#pragma warning restore 1998
 
-#pragma warning disable 1998
-        public async override Task<DebugResult> Attach(dynamic args)
+        protected override void HandleAttachRequestAsync(IRequestResponder<AttachArguments> responder)
         {
-            string processName = (string)args.processName;
-            string processId = (string)args.processId;
-            string miDebuggerServerAddress = (string)args.miDebuggerServerAddress;
+            // ProcessId can be either a string or an int. We attempt to parse as int, if that does not exist we attempt to parse as a string.
+            string processId = responder.Arguments.ConfigurationProperties.GetValueAsInt("processId")?.ToString(CultureInfo.InvariantCulture) ?? responder.Arguments.ConfigurationProperties.GetValueAsString("processId");
+            string miDebuggerServerAddress = responder.Arguments.ConfigurationProperties.GetValueAsString("miDebuggerServerAddress");
             DateTime attachStartTime = DateTime.Now;
-            bool isPipeTransport = (args.pipeTransport != null);
+            JObject pipeTransport = responder.Arguments.ConfigurationProperties.GetValueAsObject("pipeTransport");
+            bool isPipeTransport = (pipeTransport != null);
             bool isLocal = string.IsNullOrEmpty(miDebuggerServerAddress) && !isPipeTransport;
             bool visualizerFileUsed = false;
             int sourceFileMappings = 0;
 
             if (isLocal)
             {
-                if (string.IsNullOrEmpty(processName) && string.IsNullOrEmpty(processId))
+                if (string.IsNullOrEmpty(processId))
                 {
-                    return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1001, "attach: property 'processName' or 'processId' needs to be specified");
-                }
-                else if (!string.IsNullOrEmpty(processName) && !string.IsNullOrEmpty(processId))
-                {
-                    return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1002, "attach: properties 'processName' and 'processId' cannot be used together");
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1001, "attach: property 'processId' needs to be specified"));
+                    return;
                 }
             }
             else
             {
                 string propertyCausingRemote = !string.IsNullOrEmpty(miDebuggerServerAddress) ? "miDebuggerServerAddress" : "pipeTransport";
 
-                if (!string.IsNullOrEmpty(miDebuggerServerAddress) && (!string.IsNullOrEmpty(processName) || !string.IsNullOrEmpty(processId)))
+                if (!string.IsNullOrEmpty(miDebuggerServerAddress) && !string.IsNullOrEmpty(processId))
                 {
-                    return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1002, "attach: properties 'processName' and 'processId' cannot be used with " + propertyCausingRemote);
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1002, "attach: 'processId' cannot be used with " + propertyCausingRemote));
+                    return;
                 }
-                else if (isPipeTransport && !string.IsNullOrEmpty(processName))
+                else if (isPipeTransport && (string.IsNullOrEmpty(processId) || string.IsNullOrEmpty(pipeTransport.GetValueAsString("debuggerPath"))))
                 {
-                    return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1002, "attach: properties 'processName' and cannot be used with " + propertyCausingRemote);
-                }
-                else if (isPipeTransport && string.IsNullOrEmpty(processId) || string.IsNullOrEmpty((string)args.pipeTransport.debuggerPath))
-                {
-                    return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1001, "attach: properties 'processId' and 'debuggerPath' needs to be specified with " + propertyCausingRemote);
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1001, "attach: properties 'processId' and 'debuggerPath' needs to be specified with " + propertyCausingRemote));
+                    return;
                 }
             }
 
             int pid = 0;
 
-            // Get pid and error checking on name / id. Handling common errors here because the error messages from clrdbg are a bit more cryptic.
-            if (!string.IsNullOrEmpty(processName))
+            ProtocolException protocolException = isLocal ? VerifyLocalProcessId(processId, DebuggerTelemetry.TelemetryAttachEventName, out pid) : VerifyProcessId(processId, DebuggerTelemetry.TelemetryAttachEventName, out pid);
+
+            if (protocolException != null)
             {
-                // GetProcessesByName requires process name without .exe extension
-                string processFriendlyName = processName;
-
-                if (processName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                {
-                    processFriendlyName = processName.Substring(0, processName.Length - 4);
-                }
-
-                Process[] processes = Process.GetProcessesByName(processFriendlyName);
-
-                if (processes.Length == 0)
-                {
-                    return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1003, "attach: no process with the given name found");
-                }
-                else if (processes.Length > 1)
-                {
-                    return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1004, "attach: more than 1 process with the given name found. Use 'processId' to specify which process to attach to");
-                }
-                else
-                {
-                    pid = processes[0].Id;
-                }
-            }
-            else
-            {
-                DebugResult result;
-                if (isLocal)
-                {
-                    result = VerifyLocalProcessId(processId, DebuggerTelemetry.TelemetryAttachEventName, out pid);
-                }
-                else
-                {
-                    result = VerifyProcessId(processId, DebuggerTelemetry.TelemetryAttachEventName, out pid);
-                }
-
-                if (!result.Success)
-                {
-                    return result;
-                }
+                responder.SetError(protocolException);
+                return;
             }
 
-            SetCommonDebugSettings(args, sourceFileMappings: out sourceFileMappings);
+            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties, sourceFileMappings: out sourceFileMappings);
 
+            string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program");
             string executable = null;
             string launchOptions = null;
             bool success = false;
             try
             {
-                lock (_lock)
+                lock (m_lock)
                 {
-                    Debug.Assert(_currentLaunchState == null, "Concurrent launches??");
-                    _currentLaunchState = new CurrentLaunchState();
+                    Debug.Assert(m_currentLaunchState == null, "Concurrent launches??");
+                    m_currentLaunchState = new CurrentLaunchState();
                 }
                 var eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Attach);
 
                 if (isPipeTransport)
                 {
-                    string program = ((string)args.program)?.Trim() ?? String.Empty;
-                    if (string.IsNullOrEmpty((string)args.pipeTransport.debuggerPath))
+                    if (string.IsNullOrEmpty(pipeTransport.GetValueAsString("debuggerPath")))
                     {
-                        return this.CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1011, "debuggerPath is required for attachTransport.");
+                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1011, "debuggerPath is required for attachTransport."));
+                        return;
                     }
                     bool debugServerUsed = false;
                     bool isOpenOCD = false;
@@ -844,9 +835,10 @@ namespace OpenDebugAD7
                     launchOptions = MILaunchOptions.CreateLaunchOptions(
                         program: program,
                         workingDirectory: String.Empty, // No cwd for attach
-                        args: args,
+                        args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
+                        isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
                         stopAtEntry: out stopAtEntrypoint,
-                        isCoreDump: out _isCoreDump,
+                        isCoreDump: out m_isCoreDump,
                         debugServerUsed: out debugServerUsed,
                         isOpenOCD: out isOpenOCD,
                         visualizerFileUsed: out visualizerFileUsed);
@@ -854,25 +846,27 @@ namespace OpenDebugAD7
 
                     if (string.IsNullOrEmpty(program))
                     {
-                        return CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1009, "attach: property 'program' is missing or empty");
+                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1009, "attach: property 'program' is missing or empty"));
+                        return;
                     }
                     else
                     {
                         executable = program;
                     }
-                    _isAttach = true;
+                    m_isAttach = true;
                 }
                 else
                 {
-                    string program = ((string)args.program)?.Trim();
                     if (string.IsNullOrEmpty(program))
                     {
-                        return CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1009, "attach: property 'program' is missing or empty");
+                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1009, "attach: property 'program' is missing or empty"));
+                        return;
                     }
 
                     if (!ValidateProgramPath(ref program))
                     {
-                        return CreateErrorDebugResultAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1010, String.Format("attach: program path '{0}' does not exist", program));
+                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1010, String.Format(CultureInfo.CurrentCulture, "attach: program path '{0}' does not exist", program)));
+                        return;
                     }
 
                     bool debugServerUsed = false;
@@ -881,49 +875,50 @@ namespace OpenDebugAD7
                     launchOptions = MILaunchOptions.CreateLaunchOptions(
                         program: program,
                         workingDirectory: string.Empty,
-                        args: args,
+                        args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
+                        isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
                         stopAtEntry: out stopAtEntrypoint,
-                        isCoreDump: out _isCoreDump,
+                        isCoreDump: out m_isCoreDump,
                         debugServerUsed: out debugServerUsed,
                         isOpenOCD: out isOpenOCD,
                         visualizerFileUsed: out visualizerFileUsed);
                     executable = program;
-                    _isAttach = true;
+                    m_isAttach = true;
                 }
 
-                _processName = processName ?? string.Empty;
+                m_processName = program ?? string.Empty;
 
                 // attach
-                int hr = _engineLaunch.LaunchSuspended(null, _port, executable, null, null, null, launchOptions, 0, 0, 0, 0, this, out _process);
+                int hr = m_engineLaunch.LaunchSuspended(null, m_port, executable, null, null, null, launchOptions, 0, 0, 0, 0, this, out m_process);
 
-                if (hr != Constants.S_OK)
+                if (hr != HRConstants.S_OK)
                 {
                     // If the engine raised a message via an error event, fire that instead
-                    if (hr == Constants.E_ABORT)
+                    if (hr == HRConstants.E_ABORT)
                     {
                         string message;
-                        lock (_lock)
+                        lock (m_lock)
                         {
-                            message = _currentLaunchState?.CurrentError?.Item2;
-                            _currentLaunchState = null;
+                            message = m_currentLaunchState?.CurrentError?.Item2;
+                            m_currentLaunchState = null;
                         }
                         if (message != null)
                         {
-                            DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryAttachEventName, message);
-                            throw new AD7Exception(message);
+                            responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1012, message));
+                            return;
                         }
                     }
 
                     eb.ThrowHR(hr);
                 }
 
-                hr = _engineLaunch.ResumeProcess(_process);
+                hr = m_engineLaunch.ResumeProcess(m_process);
                 if (hr < 0)
                 {
                     // try to terminate the process if we can
                     try
                     {
-                        _engineLaunch.TerminateProcess(_process);
+                        m_engineLaunch.TerminateProcess(m_process);
                     }
                     catch
                     {
@@ -939,20 +934,21 @@ namespace OpenDebugAD7
 
                 DebuggerTelemetry.ReportTimedEvent(DebuggerTelemetry.TelemetryAttachEventName, DateTime.Now - attachStartTime, properties);
                 success = true;
+
+                responder.SetResponse(new AttachResponse());
+            }
+            catch (AD7Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
             }
             finally
             {
                 // Clear _currentLaunchState
                 CurrentLaunchState currentLaunchState;
-                lock (_lock)
+                lock (m_lock)
                 {
-                    currentLaunchState = _currentLaunchState;
-                    _currentLaunchState = null;
-                }
-
-                if (!success)
-                {
-                    _process = null;
+                    currentLaunchState = m_currentLaunchState;
+                    m_currentLaunchState = null;
                 }
 
                 // If we had an error event that we didn't wind up returning as an exception, raise it as an event
@@ -961,25 +957,30 @@ namespace OpenDebugAD7
                 {
                     SendMessageEvent(currentError.Item1, currentError.Item2);
                 }
+
+                if (!success)
+                {
+                    m_process = null;
+                    this.Protocol.Stop();
+                }
             }
-
-            return new DebugResult();
         }
-#pragma warning restore 1998
 
-        public override Task<DebugResult> Disconnect()
+        protected override void HandleDisconnectRequestAsync(IRequestResponder<DisconnectArguments> responder)
         {
             int hr;
 
             // If we are waiting to continue program create, stop waiting
-            _configurationDoneTCS.TrySetResult(null);
+            m_configurationDoneTCS.TrySetResult(null);
 
-            if (_process != null)
+            if (m_process != null)
             {
                 string errorReason = null;
                 try
                 {
-                    hr = _isAttach ? _program.Detach() : _engineLaunch.TerminateProcess(_process);
+                    // Detach if it is attach or TerminateDebuggee is set to false
+                    bool shouldDetach = m_isAttach || !responder.Arguments.TerminateDebuggee.GetValueOrDefault(true);
+                    hr = shouldDetach ? m_program.Detach() : m_engineLaunch.TerminateProcess(m_process);
 
                     if (hr < 0)
                     {
@@ -988,7 +989,7 @@ namespace OpenDebugAD7
                     else
                     {
                         // wait for termination event
-                        if (!_disconnectedOrTerminated.WaitOne(DisconnectTimeout))
+                        if (!m_disconnectedOrTerminated.WaitOne(Constants.DisconnectTimeout))
                         {
                             errorReason = AD7Resources.MissingDebuggerTerminationEvent;
                         }
@@ -1002,31 +1003,52 @@ namespace OpenDebugAD7
                 // VS Code ignores the result of Disconnect. So send an output event instead.
                 if (errorReason != null)
                 {
-                    string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Warning_Scenario_TerminateProcess, _processName, errorReason);
-                    _logger.WriteLine(LoggingCategory.DebuggerError, message);
+                    string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Warning_Scenario_TerminateProcess, m_processName, errorReason);
+                    m_logger.WriteLine(LoggingCategory.DebuggerError, message);
                 }
             }
 
-            return Task.FromResult(new DebugResult());
+            responder.SetResponse(new DisconnectResponse());
+
+            // Disconnect should terminate protocol
+            this.Protocol.Stop();
         }
 
-        public override Task<DebugResult> ConfigurationDone()
+        protected override void HandleConfigurationDoneRequestAsync(IRequestResponder<ConfigurationDoneArguments> responder)
         {
             // If we are waiting to continue program create, mark that we have now finished initializing settings
-            _configurationDoneTCS.TrySetResult(null);
+            m_configurationDoneTCS.TrySetResult(null);
 
-            return Task.FromResult(new DebugResult());
+            responder.SetResponse(new ConfigurationDoneResponse());
         }
 
-        public override Task<DebugResult> Continue(int threadId)
+        protected override void HandleNextRequestAsync(IRequestResponder<NextArguments> responder)
         {
+            try
+            {
+                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_OVER, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_Next);
+                responder.SetResponse(new NextResponse());
+            }
+            catch (AD7Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+            }
+        }
+
+        protected override void HandleContinueRequestAsync(IRequestResponder<ContinueArguments, ContinueResponse> responder)
+        {
+            int threadId = responder.Arguments.ThreadId;
+
             // Sometimes we can get a threadId of 0. Make sure we don't look it up in this case, otherwise we will crash.
             IDebugThread2 thread = null;
-            if (threadId != 0 && !_threads.TryGetValue(threadId, out thread))
+            lock (m_threads)
             {
-                // We do not accept nonzero unknown threadIds.
-                Debug.Fail("Unknown threadId passed to Continue!");
-                return Task.FromResult(new DebugResult());
+                if (threadId != 0 && !m_threads.TryGetValue(threadId, out thread))
+                {
+                    // We do not accept nonzero unknown threadIds.
+                    Debug.Fail("Unknown threadId passed to Continue!");
+                    return;
+                }
             }
 
             BeforeContinue();
@@ -1035,257 +1057,562 @@ namespace OpenDebugAD7
             bool succeeded = false;
             try
             {
-                builder.CheckHR(_program.Continue(thread));
+                builder.CheckHR(m_program.Continue(thread));
                 succeeded = true;
+                responder.SetResponse(new ContinueResponse());
+            }
+            catch (AD7Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
             }
             finally
             {
                 if (!succeeded)
                 {
-                    _isStopped = true;
+                    m_isStopped = true;
                 }
             }
-
-            return Task.FromResult(new DebugResult());
         }
 
-        public override Task<DebugResult> Next(int threadId)
+        protected override void HandleStepInRequestAsync(IRequestResponder<StepInArguments> responder)
         {
-            return StepInternal(threadId, enum_STEPKIND.STEP_OVER, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_Next);
-        }
+            StepInResponse response = new StepInResponse();
 
-        public override Task<DebugResult> StepIn(int threadId)
-        {
-            return StepInternal(threadId, enum_STEPKIND.STEP_INTO, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_In);
-        }
-
-        public override Task<DebugResult> StepOut(int threadId)
-        {
-            return StepInternal(threadId, enum_STEPKIND.STEP_OUT, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_Out);
-        }
-
-        private Task<DebugResult> StepInternal(int threadId, enum_STEPKIND stepKind, enum_STEPUNIT stepUnit, string errorMessage)
-        {
-            Task<DebugResult> result = Task.FromResult(new DebugResult());
-
-            // If we are already running ignore additional step requests
-            if (!_isStopped)
-            {
-                return result;
-            }
-
-            IDebugThread2 thread = null;
-            if (!_threads.TryGetValue(threadId, out thread))
-            {
-                throw new AD7Exception(errorMessage);
-            }
-
-            BeforeContinue();
-            ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
             try
             {
-                builder.CheckHR(_program.Step(thread, stepKind, stepUnit));
+                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_INTO, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_In);
+                responder.SetResponse(response);
             }
-            catch (AD7Exception)
+            catch (AD7Exception e)
             {
-                _isStopped = true;
-                throw;
+                if (m_isCoreDump)
+                {
+                    responder.SetError(new ProtocolException(e.Message));
+                }
             }
-
-            return result;
         }
 
-        public override Task<DebugResult> Pause(int threadId)
+        protected override void HandleStepOutRequestAsync(IRequestResponder<StepOutArguments> responder)
+        {
+            try
+            {
+                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_OUT, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_Out);
+                responder.SetResponse(new StepOutResponse());
+            }
+            catch (AD7Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+            }
+        }
+
+        protected override void HandlePauseRequestAsync(IRequestResponder<PauseArguments> responder)
         {
             // TODO: wait for break event
-            _program.CauseBreak();
-            return Task.FromResult(new DebugResult());
+            m_program.CauseBreak();
+            responder.SetResponse(new PauseResponse());
         }
 
-        public override Task<DebugResult> SetFunctionBreakpoints(FunctionBreakpoint[] breakpoints)
+        protected override void HandleStackTraceRequestAsync(IRequestResponder<StackTraceArguments, StackTraceResponse> responder)
         {
-            var newBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
-            foreach (var b in _functionBreakpoints)
-            {
-                if (Array.Find(breakpoints, (p) => p.name == b.Key) != null)
-                {
-                    newBreakpoints[b.Key] = b.Value;    // breakpoint still in new list
-                }
-                else
-                {
-                    b.Value.Delete();   // not in new list so delete it
-                }
-            }
+            int threadReference = responder.Arguments.ThreadId;
+            int startFrame = responder.Arguments.StartFrame ?? 0;
+            int levels = responder.Arguments.Levels ?? 0;
 
-            var resBreakpoints = new List<Breakpoint>();
-            foreach (var b in breakpoints)
+            StackTraceResponse response = new StackTraceResponse()
             {
-                // bind the new function names
-                if (!_functionBreakpoints.ContainsKey(b.name))
-                {
-                    IDebugPendingBreakpoint2 pendingBp;
-                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(b.name);
+                TotalFrames = 0
+            };
 
-                    int hr = _engine.CreatePendingBreakpoint(pBPRequest, out pendingBp);
-                    if (hr == Constants.S_OK && pendingBp != null)
+            // Make sure we are stopped and receiving valid input or else return an empty stack trace
+            if (m_isStopped && startFrame >= 0 && levels >= 0)
+            {
+                ThreadFrameEnumInfo frameEnumInfo;
+                if (!m_threadFrameEnumInfos.TryGetValue(threadReference, out frameEnumInfo))
+                {
+                    IDebugThread2 thread;
+                    lock (m_threads)
                     {
-                        hr = pendingBp.Bind();
+                        if (m_threads.TryGetValue(threadReference, out thread))
+                        {
+                            var flags = enum_FRAMEINFO_FLAGS.FIF_FRAME |   // need a frame object
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME |        // need a function name
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE | // with the module specified
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |   // with argument names and types
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES |
+                                enum_FRAMEINFO_FLAGS.FIF_FLAGS;
+
+                            IEnumDebugFrameInfo2 frameEnum;
+                            thread.EnumFrameInfo(flags, Constants.EvaluationRadix, out frameEnum);
+                            uint totalFrames;
+                            frameEnum.GetCount(out totalFrames);
+
+                            frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                            m_threadFrameEnumInfos.Add(threadReference, frameEnumInfo);
+                        }
                     }
-                    if (hr == Constants.S_OK)
+                }
+
+                if (startFrame < frameEnumInfo.TotalFrames)
+                {
+                    if (startFrame != frameEnumInfo.CurrentPosition)
                     {
-                        newBreakpoints[b.name] = pendingBp;
-                        resBreakpoints.Add(new Breakpoint(pBPRequest.Id, true, 0));    // success
+                        frameEnumInfo.FrameEnum.Reset();
+                        frameEnumInfo.CurrentPosition = (uint)startFrame;
+
+                        if (startFrame > 0)
+                        {
+                            frameEnumInfo.FrameEnum.Skip((uint)startFrame);
+                        }
+                    }
+
+                    if (levels == 0)
+                    {
+                        // take the rest of the stack frames
+                        levels = (int)frameEnumInfo.TotalFrames - startFrame;
                     }
                     else
                     {
-                        resBreakpoints.Add(new Breakpoint(pBPRequest.Id, false, 0));   // couldn't create and/or bind
+                        levels = Math.Min((int)frameEnumInfo.TotalFrames - startFrame, levels);
+                    }
+
+                    FRAMEINFO[] frameInfoArray = new FRAMEINFO[levels];
+                    uint framesFetched = 0;
+                    frameEnumInfo.FrameEnum.Next((uint)frameInfoArray.Length, frameInfoArray, ref framesFetched);
+                    frameEnumInfo.CurrentPosition += framesFetched;
+
+                    for (int i = 0; i < framesFetched; i++)
+                    {
+                        // TODO: annotated frames?
+                        var frameInfo = frameInfoArray[i];
+                        IDebugStackFrame2 frame = frameInfo.m_pFrame;
+
+                        int frameReference = 0;
+                        TextPositionTuple textPosition = TextPositionTuple.Nil;
+
+                        if (frame != null)
+                        {
+                            frameReference = m_frameHandles.Create(frame);
+                            textPosition = TextPositionTuple.GetTextPositionOfFrame(m_pathConverter, frame) ?? TextPositionTuple.Nil;
+                        }
+
+                        response.StackFrames.Add(new ProtocolMessages.StackFrame
+                        {
+                            Id = frameReference,
+                            Name = frameInfo.m_bstrFuncName,
+                            Source = textPosition.Source,
+                            Line = textPosition.Line,
+                            Column = textPosition.Column
+                        });
+                    }
+
+                    response.TotalFrames = (int)frameEnumInfo.TotalFrames;
+                }
+            }
+
+            responder.SetResponse(response);
+        }
+
+        protected override void HandleScopesRequestAsync(IRequestResponder<ScopesArguments, ScopesResponse> responder)
+        {
+            int frameReference = responder.Arguments.FrameId;
+            ScopesResponse response = new ScopesResponse();
+
+            // if we are not stopped return empty scopes
+            if (!m_isStopped)
+            {
+                responder.SetError(new ProtocolException(AD7Resources.Error_TargetNotStopped, new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
+            }
+
+            IDebugStackFrame2 frame;
+            if (m_frameHandles.TryGet(frameReference, out frame))
+            {
+                uint n;
+                IEnumDebugPropertyInfo2 varEnum;
+                if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
+                {
+                    if (n > 0)
+                    {
+                        response.Scopes.Add(new Scope
+                        {
+                            Name = AD7Resources.Locals_Scope_Name,
+                            VariablesReference = m_variableManager.Create(frame),
+                            Expensive = false
+                        });
                     }
                 }
+            }
+
+            responder.SetResponse(response);
+        }
+
+        protected override void HandleVariablesRequestAsync(IRequestResponder<VariablesArguments, VariablesResponse> responder)
+        {
+            int reference = responder.Arguments.VariablesReference;
+            VariablesResponse response = new VariablesResponse();
+
+            // if we are not stopped return empty variables
+            if (!m_isStopped)
+            {
+                responder.SetError(new ProtocolException(AD7Resources.Error_TargetNotStopped, new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
+            }
+
+            Object container;
+            if (m_variableManager.TryGet(reference, out container))
+            {
+                if (container is IDebugStackFrame2)
+                {
+                    response = VariablesFromFrame(container as IDebugStackFrame2);
+                }
                 else
-                {   // already created
-                    IDebugBreakpointRequest2 breakpointRequest;
-                    if (_functionBreakpoints[b.name].GetBreakpointRequest(out breakpointRequest) == 0)
+                {
+                    if (container is VariableEvaluationData)
                     {
-                        var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-                        if (ad7BPRequest.BindResult != null)
+                        VariableEvaluationData variableEvaluationData = (VariableEvaluationData)container;
+                        IDebugProperty2 property = variableEvaluationData.DebugProperty;
+
+                        Guid empty = Guid.Empty;
+                        IEnumDebugPropertyInfo2 childEnum;
+                        if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, Constants.EvaluationRadix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out childEnum) == 0)
                         {
-                            resBreakpoints.Add(ad7BPRequest.BindResult);
+                            uint count;
+                            childEnum.GetCount(out count);
+                            if (count > 0)
+                            {
+                                DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
+                                childEnum.Next(count, childProperties, out count);
+
+                                for (uint c = 0; c < count; c++)
+                                {
+                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags));
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "Unexpected type in _variableHandles collection");
+                    }
+                }
+            }
+
+            responder.SetResponse(response);
+        }
+
+        protected override void HandleSetVariableRequestAsync(IRequestResponder<SetVariableArguments, SetVariableResponse> responder)
+        {
+            string name = responder.Arguments.Name;
+            string value = responder.Arguments.Value;
+            int reference = responder.Arguments.VariablesReference;
+
+            // if we are not stopped don't try to set
+            if (!m_isStopped)
+            {
+                responder.SetError(new ProtocolException(AD7Resources.Error_TargetNotStopped, new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
+            }
+
+            object container;
+            if (!m_variableManager.TryGet(reference, out container))
+            {
+                responder.SetError(new ProtocolException(AD7Resources.Error_VariableNotFound, new Message(1106, AD7Resources.Error_VariableNotFound)));
+                return;
+            }
+
+            enum_DEBUGPROP_INFO_FLAGS flags = GetDefaultPropertyInfoFlags();
+            IDebugProperty2 property = null;
+            IEnumDebugPropertyInfo2 varEnum = null;
+            int hr = HRConstants.E_FAIL;
+            if (container is IDebugStackFrame2)
+            {
+                uint n;
+                hr = ((IDebugStackFrame2)container).EnumProperties(
+                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
+                    Constants.EvaluationRadix,
+                    ref s_guidFilterAllLocalsPlusArgs,
+                    Constants.EvaluationTimeout,
+                    out n,
+                    out varEnum);
+            }
+            else if (container is VariableEvaluationData)
+            {
+                IDebugProperty2 debugProperty = ((VariableEvaluationData)container).DebugProperty;
+                if (debugProperty == null)
+                {
+                    responder.SetError(new ProtocolException(AD7Resources.Error_VariableNotFound, new Message(1106, AD7Resources.Error_VariableNotFound)));
+                    return;
+                }
+
+                hr = debugProperty.EnumChildren(
+                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
+                    Constants.EvaluationRadix,
+                    ref s_guidFilterAllLocalsPlusArgs,
+                    enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL,
+                    name,
+                    Constants.EvaluationTimeout,
+                    out varEnum);
+            }
+
+            if (hr == HRConstants.S_OK && varEnum != null)
+            {
+                DEBUG_PROPERTY_INFO[] props = new DEBUG_PROPERTY_INFO[1];
+                uint nProps;
+                while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
+                {
+                    DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
+                    props[0].pProperty.GetPropertyInfo(flags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
+
+                    if (propertyInfo[0].bstrName == name)
+                    {
+                        // Make sure we can assign to this variable.
+                        if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
+                        {
+                            string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, name);
+                            responder.SetError(new ProtocolException(message, new Message(1107, message)));
+                            return;
+                        }
+
+                        property = propertyInfo[0].pProperty;
+                        break;
+                    }
+                }
+            }
+
+            if (property == null)
+            {
+                responder.SetError(new ProtocolException(AD7Resources.Error_VariableNotFound, new Message(1106, AD7Resources.Error_VariableNotFound)));
+                return;
+            }
+
+            string error = null;
+            if (property is IDebugProperty3)
+            {
+                hr = ((IDebugProperty3)property).SetValueAsStringWithError(value, Constants.EvaluationRadix, Constants.EvaluationTimeout, out error);
+            }
+            else
+            {
+                hr = property.SetValueAsString(value, Constants.EvaluationRadix, Constants.EvaluationTimeout);
+            }
+
+            if (hr != HRConstants.S_OK)
+            {
+                string message = error ?? AD7Resources.Error_SetVariableFailed;
+                responder.SetError(new ProtocolException(message, new Message(1107, message)));
+                return;
+            }
+
+            responder.SetResponse(new SetVariableResponse
+            {
+                Value = m_variableManager.CreateVariable(property, flags).Value
+            });
+        }
+
+        protected override void HandleSourceRequestAsync(IRequestResponder<SourceArguments, SourceResponse> responder)
+        {
+            base.HandleSourceRequestAsync(responder);
+        }
+
+        protected override void HandleThreadsRequestAsync(IRequestResponder<ThreadsArguments, ThreadsResponse> responder)
+        {
+            ThreadsResponse response = new ThreadsResponse();
+
+            // Make a copy of the threads list
+            Dictionary<int, IDebugThread2> threads;
+            lock (m_threads)
+            {
+                threads = new Dictionary<int, IDebugThread2>(m_threads);
+            }
+
+            // iterate over the collection asking the engine for the name
+            foreach (var pair in threads)
+            {
+                string name;
+                pair.Value.GetName(out name);
+                response.Threads.Add(new OpenDebugThread(pair.Key, name));
+            }
+
+            responder.SetResponse(response);
+        }
+
+        protected override void HandleSetBreakpointsRequestAsync(IRequestResponder<SetBreakpointsArguments, SetBreakpointsResponse> responder)
+        {
+            SetBreakpointsResponse response = new SetBreakpointsResponse();
+
+            string path = null;
+            string name = null;
+
+            if (responder.Arguments.Source != null)
+            {
+                string p = responder.Arguments.Source.Path;
+                if (p != null && p.Trim().Length > 0)
+                {
+                    path = p;
+                }
+                string nm = responder.Arguments.Source.Name;
+                if (nm != null && nm.Trim().Length > 0)
+                {
+                    name = nm;
+                }
+            }
+
+            var source = new Source
+            {
+                Name = name,
+                Path = path,
+                SourceReference = 0
+            };
+
+            List<SourceBreakpoint> breakpoints = responder.Arguments.Breakpoints;
+
+            bool sourceModified = responder.Arguments.SourceModified ?? false;
+
+            // we do not support other sources than 'path'
+            if (source.Path != null)
+            {
+                ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_UnableToSetBreakpoint);
+
+                try
+                {
+                    string convertedPath = m_pathConverter.ConvertClientPathToDebugger(source.Path);
+
+                    if (Utilities.IsWindows() && convertedPath.Length > 2)
+                    {
+                        // vscode may send drive letters with inconsistent casing which will mess up the key
+                        // in the dictionary.  see https://github.com/Microsoft/vscode/issues/6268
+                        // Normalize the drive letter casing. Note that drive letters
+                        // are not localized so invariant is safe here.
+                        string drive = convertedPath.Substring(0, 2);
+                        if (char.IsLower(drive[0]) && drive.EndsWith(":", StringComparison.Ordinal))
+                        {
+                            convertedPath = String.Concat(drive.ToUpperInvariant(), convertedPath.Substring(2));
+                        }
+                    }
+
+                    HashSet<int> lines = new HashSet<int>(breakpoints.Select((b) => b.Line));
+
+                    Dictionary<int, IDebugPendingBreakpoint2> dict = null;
+                    if (m_breakpoints.ContainsKey(convertedPath))
+                    {
+                        dict = m_breakpoints[convertedPath];
+                        var keys = new int[dict.Keys.Count];
+                        dict.Keys.CopyTo(keys, 0);
+                        foreach (var l in keys)
+                        {
+                            // Delete all breakpoints that are no longer listed.
+                            // In the case of modified source, delete everything.
+                            if (!lines.Contains(l) || sourceModified)
+                            {
+                                var bp = dict[l];
+                                bp.Delete();
+                                dict.Remove(l);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        dict = new Dictionary<int, IDebugPendingBreakpoint2>();
+                        m_breakpoints[convertedPath] = dict;
+                    }
+
+                    var resBreakpoints = new List<Breakpoint>();
+                    foreach (var bp in breakpoints)
+                    {
+                        if (!dict.ContainsKey(bp.Line))
+                        {
+                            IDebugPendingBreakpoint2 pendingBp;
+                            AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(m_sessionConfig, convertedPath, m_pathConverter.ConvertClientLineToDebugger(bp.Line), bp.Condition);
+
+                            try
+                            {
+                                eb.CheckHR(m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp));
+                                eb.CheckHR(pendingBp.Bind());
+
+                                dict[bp.Line] = pendingBp;
+                                resBreakpoints.Add(new Breakpoint
+                                {
+                                    Id = (int)pBPRequest.Id,
+                                    Verified = true,
+                                    Line = bp.Line
+                                });
+                            }
+                            catch (Exception e)
+                            {
+                                e = Utilities.GetInnerMost(e);
+                                if (Utilities.IsCorruptingException(e))
+                                {
+                                    Utilities.ReportException(e);
+                                }
+
+                                resBreakpoints.Add(new Breakpoint
+                                {
+                                    Id = (int)pBPRequest.Id,
+                                    Verified = false,
+                                    Line = bp.Line,
+                                    Message = eb.GetMessageForException(e)
+                                });
+                            }
                         }
                         else
-                        {
-                            resBreakpoints.Add(new Breakpoint(ad7BPRequest.Id, true, 0));
+                        {   // already created
+                            IDebugBreakpointRequest2 breakpointRequest;
+                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0)
+                            {
+                                var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
+                                if (ad7BPRequest.BindResult != null)
+                                {
+                                    // use the breakpoint created from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
+                                    resBreakpoints.Add(ad7BPRequest.BindResult);
+                                }
+                                else
+                                {
+                                    resBreakpoints.Add(new Breakpoint
+                                    {
+                                        Id = (int)ad7BPRequest.Id,
+                                        Verified = true,
+                                        Line = bp.Line
+                                    });
+                                }
+                            }
                         }
                     }
+
+                    response.Breakpoints = resBreakpoints;
+                }
+                catch (Exception e)
+                {
+                    // If setBreakpoints returns an error vscode aborts launch, so we never want to return an error,
+                    // so convert this to failure results
+
+                    e = Utilities.GetInnerMost(e);
+                    if (Utilities.IsCorruptingException(e))
+                    {
+                        Utilities.ReportException(e);
+                    }
+
+                    string message = eb.GetMessageForException(e);
+                    List<Breakpoint> resBreakpoints = breakpoints.Select(bp => new Breakpoint
+                    {
+                        Id = (int)AD7BreakPointRequest.GetNextBreakpointId(),
+                        Verified = false,
+                        Line = bp.Line,
+                        Message = message
+                    }).ToList();
+
+                    response.Breakpoints = resBreakpoints;
                 }
             }
-            _functionBreakpoints = newBreakpoints;
 
-            return Task.FromResult(new DebugResult(new SetBreakpointsResponseBody(resBreakpoints)));
+            responder.SetResponse(response);
         }
 
-        public override Task<SetBreakpointsResponseBody> SetBreakpoints(Source source, SourceBreakpoint[] breakpoints, bool sourceModified = false)
+        protected override void HandleSetExceptionBreakpointsRequestAsync(IRequestResponder<SetExceptionBreakpointsArguments> responder)
         {
-            if (source.path == null)
+            List<string> filter = responder.Arguments.Filters;
+            if (m_engineConfiguration.ExceptionSettings.Categories.Count > 0)
             {
-                // we do not support other sources than 'path'
-                return Task.FromResult(new SetBreakpointsResponseBody());
-            }
-
-            ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_UnableToSetBreakpoint);
-
-            try
-            {
-                string path = ConvertClientPathToDebugger(source.path);
-
-                if (Utilities.IsWindows() && path.Length > 2)
-                {
-                    // vscode may send drive letters with inconsistent casing which will mess up the key
-                    // in the dictionary.  see https://github.com/Microsoft/vscode/issues/6268
-                    // Normalize the drive letter casing. Note that drive letters
-                    // are not localized so invariant is safe here.
-                    string drive = path.Substring(0, 2);
-                    if (char.IsLower(drive[0]) && drive.EndsWith(":", StringComparison.Ordinal))
-                    {
-                        path = String.Concat(drive.ToUpperInvariant(), path.Substring(2));
-                    }
-                }
-
-                HashSet<int> lines = new HashSet<int>(breakpoints.Select((b) => b.line));
-
-                Dictionary<int, IDebugPendingBreakpoint2> dict = null;
-                if (_breakpoints.ContainsKey(path))
-                {
-                    dict = _breakpoints[path];
-                    var keys = new int[dict.Keys.Count];
-                    dict.Keys.CopyTo(keys, 0);
-                    foreach (var l in keys)
-                    {
-                        // Delete all breakpoints that are no longer listed.
-                        // In the case of modified source, delete everything.
-                        if (!lines.Contains(l) || sourceModified)
-                        {
-                            var bp = dict[l];
-                            bp.Delete();
-                            dict.Remove(l);
-                        }
-                    }
-                }
-                else
-                {
-                    dict = new Dictionary<int, IDebugPendingBreakpoint2>();
-                    _breakpoints[path] = dict;
-                }
-
-                var resBreakpoints = new List<Breakpoint>();
-                foreach (var bp in breakpoints)
-                {
-                    if (!dict.ContainsKey(bp.line))
-                    {
-                        IDebugPendingBreakpoint2 pendingBp;
-                        AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(_sessionConfig, path, ConvertClientLineToDebugger(bp.line), bp.condition);
-
-                        try
-                        {
-                            eb.CheckHR(_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp));
-                            eb.CheckHR(pendingBp.Bind());
-
-                            dict[bp.line] = pendingBp;
-                            resBreakpoints.Add(new Breakpoint(pBPRequest.Id, true, bp.line));
-                        }
-                        catch (Exception e)
-                        {
-                            e = Utilities.GetInnerMost(e);
-                            if (Utilities.IsCorruptingException(e))
-                            {
-                                Utilities.ReportException(e);
-                            }
-
-                            resBreakpoints.Add(new Breakpoint(pBPRequest.Id, false, bp.line, eb.GetMessageForException(e)));
-                        }
-                    }
-                    else
-                    {   // already created
-                        IDebugBreakpointRequest2 breakpointRequest;
-                        if (dict[bp.line].GetBreakpointRequest(out breakpointRequest) == 0)
-                        {
-                            var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-                            if (ad7BPRequest.BindResult != null)
-                            {
-                                // use the breakpoint created from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
-                                resBreakpoints.Add(ad7BPRequest.BindResult);
-                            }
-                            else
-                            {
-                                resBreakpoints.Add(new Breakpoint(ad7BPRequest.Id, true, bp.line));
-                            }
-                        }
-                    }
-                }
-
-                return Task.FromResult(new SetBreakpointsResponseBody(resBreakpoints));
-            }
-            catch (Exception e)
-            {
-                // If setBreakpoints returns an error vscode aborts launch, so we never want to return an error,
-                // so convert this to failure results
-
-                e = Utilities.GetInnerMost(e);
-                if (Utilities.IsCorruptingException(e))
-                {
-                    Utilities.ReportException(e);
-                }
-
-                string message = eb.GetMessageForException(e);
-                List<Breakpoint> resBreakpoints = breakpoints.Select(bp => new Breakpoint(AD7BreakPointRequest.GetNextBreakpointId(), false, bp.line, message)).ToList();
-                return Task.FromResult(new SetBreakpointsResponseBody(resBreakpoints));
-            }
-        }
-
-        public override Task<DebugResult> SetExceptionBreakpoints(string[] filter)
-        {
-            if (_engineConfig.ExceptionSettings.Categories.Count > 0)
-            {
-                if (filter == null || filter.Length == 0)
+                if (filter == null || filter.Count == 0)
                 {
                     SetAllExceptions(enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE);
                 }
@@ -1314,329 +1641,121 @@ namespace OpenDebugAD7
                 }
             }
 
-            return Task.FromResult(new DebugResult(new ResponseBody()));
+            responder.SetResponse(new SetExceptionBreakpointsResponse());
         }
 
-        private void SetAllExceptions(enum_EXCEPTION_STATE state)
+        protected override void HandleSetFunctionBreakpointsRequestAsync(IRequestResponder<SetFunctionBreakpointsArguments, SetFunctionBreakpointsResponse> responder)
         {
-            foreach (ExceptionSettings.CategoryConfiguration category in _engineConfig.ExceptionSettings.Categories)
+            if (responder.Arguments.Breakpoints == null)
             {
-                var exceptionInfo = new EXCEPTION_INFO[1];
-                exceptionInfo[0].dwState = state;
-                exceptionInfo[0].guidType = category.Id;
-                exceptionInfo[0].bstrExceptionName = category.Name;
-                _engine.SetException(exceptionInfo);
-            }
-        }
-
-        public override Task<DebugResult> StackTrace(int threadReference, int startFrame, int levels)
-        {
-            var result = new List<StackFrame>();
-
-            // if we are not stopped or receive invalid input just return an empty stack trace
-            if (!_isStopped || startFrame < 0 || levels < 0)
-            {
-                return Task.FromResult(new DebugResult(new StackTraceResponseBody(result, 0)));
+                responder.SetError(new ProtocolException("SetFunctionBreakpointRequest failed: Missing 'breakpoints'."));
+                return;
             }
 
-            ThreadFrameEnumInfo frameEnumInfo;
-            if (!_threadFrameEnumInfos.TryGetValue(threadReference, out frameEnumInfo))
+            List<FunctionBreakpoint> breakpoints = responder.Arguments.Breakpoints;
+            Dictionary<string, IDebugPendingBreakpoint2> newBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
+
+            SetFunctionBreakpointsResponse response = new SetFunctionBreakpointsResponse();
+
+            foreach (KeyValuePair<string, IDebugPendingBreakpoint2> b in m_functionBreakpoints)
             {
-                IDebugThread2 thread;
-                if (_threads.TryGetValue(threadReference, out thread))
+                if (breakpoints.Find((p) => p.Name == b.Key) != null)
                 {
-                    var flags = enum_FRAMEINFO_FLAGS.FIF_FRAME |   // need a frame object
-                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME |        // need a function name
-                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE | // with the module specified
-                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |   // with argument names and types
-                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
-                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES |
-                        enum_FRAMEINFO_FLAGS.FIF_FLAGS;
-
-                    IEnumDebugFrameInfo2 frameEnum;
-                    thread.EnumFrameInfo(flags, EvaluationRadix, out frameEnum);
-                    uint totalFrames;
-                    frameEnum.GetCount(out totalFrames);
-
-                    frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
-                    _threadFrameEnumInfos.Add(threadReference, frameEnumInfo);
-                }
-            }
-
-            if (startFrame >= frameEnumInfo.TotalFrames)
-            {
-                return Task.FromResult(new DebugResult(new StackTraceResponseBody(result, 0)));
-            }
-
-            if (startFrame != frameEnumInfo.CurrentPosition)
-            {
-                frameEnumInfo.FrameEnum.Reset();
-                frameEnumInfo.CurrentPosition = (uint)startFrame;
-
-                if (startFrame > 0)
-                {
-                    frameEnumInfo.FrameEnum.Skip((uint)startFrame);
-                }
-            }
-
-            if (levels == 0)
-            {
-                // take the rest of the stack frames
-                levels = (int)frameEnumInfo.TotalFrames - startFrame;
-            }
-            else
-            {
-                levels = Math.Min((int)frameEnumInfo.TotalFrames - startFrame, levels);
-            }
-
-            FRAMEINFO[] frameInfoArray = new FRAMEINFO[levels];
-            uint framesFetched = 0;
-            frameEnumInfo.FrameEnum.Next((uint)frameInfoArray.Length, frameInfoArray, ref framesFetched);
-            frameEnumInfo.CurrentPosition += framesFetched;
-
-            for (int i = 0; i < framesFetched; i++)
-            {
-                // TODO: annotated frames?
-                var frameInfo = frameInfoArray[i];
-                IDebugStackFrame2 frame = frameInfo.m_pFrame;
-
-                int frameReference = 0;
-                TextPositionTuple textPosition = TextPositionTuple.Nil;
-
-                if (frame != null)
-                {
-                    frameReference = _frameHandles.Create(frame);
-                    textPosition = TextPositionTuple.GetTextPositionOfFrame(this, frame) ?? TextPositionTuple.Nil;
-                }
-
-                result.Add(new StackFrame(frameReference, frameInfo.m_bstrFuncName, textPosition.Source, textPosition.Line, textPosition.Column));
-            }
-
-            return Task.FromResult(new DebugResult(new StackTraceResponseBody(result, (int)frameEnumInfo.TotalFrames)));
-        }
-
-        static private Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
-
-        public override Task<DebugResult> Scopes(int frameReference)
-        {
-            var scopes = new List<Scope>();
-
-            // if we are not stopped return empty scopes
-            if (!_isStopped)
-            {
-                return Task.FromResult(new DebugResult(new ErrorResponseBody(new Message(1105, AD7Resources.Error_TargetNotStopped))));
-            }
-
-            IDebugStackFrame2 frame;
-            if (_frameHandles.TryGet(frameReference, out frame))
-            {
-                uint n;
-                IEnumDebugPropertyInfo2 varEnum;
-                if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == Constants.S_OK)
-                {
-                    if (n > 0)
-                    {
-                        scopes.Add(new Scope(AD7Resources.Locals_Scope_Name, _variableHandles.Create(frame)));
-                    }
-                }
-            }
-            return Task.FromResult(new DebugResult(new ScopesResponseBody(scopes)));
-        }
-
-        private Task<DebugResult> VariablesFromFrame(IDebugStackFrame2 frame)
-        {
-            List<Variable> locals = new List<Variable>();
-
-            uint n;
-            IEnumDebugPropertyInfo2 varEnum;
-            if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == Constants.S_OK)
-            {
-                DEBUG_PROPERTY_INFO[] props = new DEBUG_PROPERTY_INFO[1];
-                uint nProps;
-                while (varEnum.Next(1, props, out nProps) == Constants.S_OK)
-                {
-                    locals.Add(CreateVariable(props[0].pProperty, GetDefaultPropertyInfoFlags()));
-                }
-            }
-            return Task.FromResult(new DebugResult(new VariablesResponseBody(locals)));
-        }
-
-        public override Task<DebugResult> Variables(int reference)
-        {
-            List<Variable> children = new List<Variable>();
-
-            // if we are not stopped return empty variables
-            if (!_isStopped)
-            {
-                return Task.FromResult(new DebugResult(new ErrorResponseBody(new Message(1105, AD7Resources.Error_TargetNotStopped))));
-            }
-
-            Object container;
-            if (_variableHandles.TryGet(reference, out container))
-            {
-                if (container is IDebugStackFrame2)
-                {
-                    return VariablesFromFrame(container as IDebugStackFrame2);
-                }
-
-                if (container is VariableEvaluationData)
-                {
-                    VariableEvaluationData variableEvaluationData = (VariableEvaluationData)container;
-                    IDebugProperty2 property = variableEvaluationData.DebugProperty;
-
-                    Guid empty = Guid.Empty;
-                    IEnumDebugPropertyInfo2 childEnum;
-                    if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, EvaluationRadix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, EvaluationTimeout, out childEnum) == 0)
-                    {
-                        uint count;
-                        childEnum.GetCount(out count);
-                        if (count > 0)
-                        {
-                            DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
-                            childEnum.Next(count, childProperties, out count);
-
-                            for (uint c = 0; c < count; c++)
-                            {
-                                children.Add(CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags));
-                            }
-                        }
-                    }
+                    newBreakpoints[b.Key] = b.Value;    // breakpoint still in new list
                 }
                 else
                 {
-                    Debug.Assert(false, "Unexpected type in _variableHandles collection");
+                    b.Value.Delete();   // not in new list so delete it
                 }
             }
-            return Task.FromResult(new DebugResult(new VariablesResponseBody(children)));
-        }
 
-        public override Task<DebugResult> SetVariable(int reference, string name, string value)
-        {
-            // if we are not stopped don't try to set
-            if (!_isStopped)
+            foreach (FunctionBreakpoint b in breakpoints)
             {
-                return Task.FromResult(new DebugResult(1105, AD7Resources.Error_TargetNotStopped));
-            }
-
-            object container;
-            if (!_variableHandles.TryGet(reference, out container))
-            {
-                return Task.FromResult(new DebugResult(1106, AD7Resources.Error_VariableNotFound));
-            }
-
-            enum_DEBUGPROP_INFO_FLAGS flags = GetDefaultPropertyInfoFlags();
-            IDebugProperty2 property = null;
-            IEnumDebugPropertyInfo2 varEnum = null;
-            int hr = Constants.E_FAIL;
-            if (container is IDebugStackFrame2)
-            {
-                uint n;
-                hr = ((IDebugStackFrame2)container).EnumProperties(
-                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
-                    EvaluationRadix,
-                    ref s_guidFilterAllLocalsPlusArgs,
-                    EvaluationTimeout,
-                    out n,
-                    out varEnum);
-            }
-            else if (container is VariableEvaluationData)
-            {
-                IDebugProperty2 debugProperty = ((VariableEvaluationData)container).DebugProperty;
-                if (debugProperty == null)
+                // bind the new function names
+                if (!m_functionBreakpoints.ContainsKey(b.Name))
                 {
-                    return Task.FromResult(new DebugResult(1106, AD7Resources.Error_VariableNotFound));
-                }
+                    IDebugPendingBreakpoint2 pendingBp;
+                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(b.Name);
 
-                hr = debugProperty.EnumChildren(
-                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
-                    EvaluationRadix,
-                    ref s_guidFilterAllLocalsPlusArgs,
-                    enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL,
-                    name,
-                    EvaluationTimeout,
-                    out varEnum);
-            }
+                    int hr = m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp);
 
-            if (hr == Constants.S_OK && varEnum != null)
-            {
-                DEBUG_PROPERTY_INFO[] props = new DEBUG_PROPERTY_INFO[1];
-                uint nProps;
-                while (varEnum.Next(1, props, out nProps) == Constants.S_OK)
-                {
-                    DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
-                    props[0].pProperty.GetPropertyInfo(flags, EvaluationRadix, EvaluationTimeout, null, 0, propertyInfo);
-
-                    if (propertyInfo[0].bstrName == name)
+                    if (hr == HRConstants.S_OK && pendingBp != null)
                     {
-                        // Make sure we can assign to this variable.
-                        if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
-                        {
-                            return Task.FromResult(new DebugResult(1107, string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, name)));
-                        }
+                        hr = pendingBp.Bind();
+                    }
 
-                        property = propertyInfo[0].pProperty;
-                        break;
+                    if (hr == HRConstants.S_OK)
+                    {
+                        newBreakpoints[b.Name] = pendingBp;
+                        response.Breakpoints.Add(new Breakpoint()
+                        {
+                            Id = (int)pBPRequest.Id,
+                            Verified = true,
+                            Line = 0
+                        }); // success
+                    }
+                    else
+                    {
+                        response.Breakpoints.Add(new Breakpoint()
+                        {
+                            Id = (int)pBPRequest.Id,
+                            Verified = false,
+                            Line = 0
+                        }); // couldn't create and/or bind
+                    }
+                }
+                else
+                {   // already created
+                    IDebugBreakpointRequest2 breakpointRequest;
+                    if (m_functionBreakpoints[b.Name].GetBreakpointRequest(out breakpointRequest) == 0)
+                    {
+                        var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
+                        if (ad7BPRequest.BindResult != null)
+                        {
+                            response.Breakpoints.Add(ad7BPRequest.BindResult);
+                        }
+                        else
+                        {
+                            response.Breakpoints.Add(new Breakpoint()
+                            {
+                                Id = (int)ad7BPRequest.Id,
+                                Verified = true,
+                                Line = 0
+                            });
+
+                        }
                     }
                 }
             }
 
-            if (property == null)
-            {
-                return Task.FromResult(new DebugResult(1106, AD7Resources.Error_VariableNotFound));
-            }
+            m_functionBreakpoints = newBreakpoints;
 
-            string error = null;
-            if (property is IDebugProperty3)
-            {
-                hr = ((IDebugProperty3)property).SetValueAsStringWithError(value, EvaluationRadix, EvaluationTimeout, out error);
-            }
-            else
-            {
-                hr = property.SetValueAsString(value, EvaluationRadix, EvaluationTimeout);
-            }
-
-            if (hr != Constants.S_OK)
-            {
-                return Task.FromResult(new DebugResult(1107, error ?? AD7Resources.Error_SetVariableFailed));
-            }
-
-            return Task.FromResult(new DebugResult(new SetVariablesResponseBody(CreateVariable(property, flags).value)));
+            responder.SetResponse(response);
         }
 
-        public override Task<DebugResult> Threads()
+        protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
         {
-            var threadResultList = new List<Thread>();
+            EvaluateArguments.ContextValue context = responder.Arguments.Context.GetValueOrDefault(EvaluateArguments.ContextValue.Unknown);
+            int frameId = responder.Arguments.FrameId ?? -1;
+            string expression = responder.Arguments.Expression;
 
-            // Make a copy of the threads list
-            Dictionary<int, IDebugThread2> threads;
-            lock (_threads)
+            if (expression == null)
             {
-                threads = new Dictionary<int, IDebugThread2>(_threads);
+                responder.SetError(new ProtocolException("Failed to handle EvaluateRequest: Missing 'expression'"));
+                return;
             }
 
-            // iterate over the collection asking the engine for the name
-            foreach (var pair in threads)
-            {
-                string name;
-                pair.Value.GetName(out name);
-                threadResultList.Add(new Thread(pair.Key, name));
-            }
-
-            return Task.FromResult(new DebugResult(new ThreadsResponseBody(threadResultList)));
-        }
-
-        public override Task<DebugResult> Evaluate(string context, int frameId, string expression)
-        {
             // if we are not stopped, return evaluation failure
-            if (!_isStopped)
+            if (!m_isStopped)
             {
-                return Task.FromResult(new DebugResult(new ErrorResponseBody(new Message(1105, AD7Resources.Error_TargetNotStopped))));
+                responder.SetError(new ProtocolException("Failed to handle EvaluateRequest", new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
             }
             DateTime evaluationStartTime = DateTime.Now;
 
             bool isExecInConsole = false;
             // If this is an -exec command, log telemetry
-            if (!String.IsNullOrEmpty(expression) && expression.StartsWith("-exec", StringComparison.Ordinal))
+            if (!String.IsNullOrEmpty(expression) && expression.StartsWith("-exec", StringComparison.Ordinal) && context == EvaluateArguments.ContextValue.Repl)
             {
                 isExecInConsole = true;
             }
@@ -1649,11 +1768,11 @@ namespace OpenDebugAD7
             if (frameId == -1 && isExecInConsole)
             {
                 // If exec in console and no stack frame, evaluate off the top frame.
-                success = _frameHandles.TryGetFirst(out frame);
+                success = m_frameHandles.TryGetFirst(out frame);
             }
             else
             {
-                success = _frameHandles.TryGet(frameId, out frame);
+                success = m_frameHandles.TryGet(frameId, out frame);
             }
 
             if (!success)
@@ -1662,7 +1781,8 @@ namespace OpenDebugAD7
                 properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
                 properties.Add(DebuggerTelemetry.TelemetryExecuteInConsole, isExecInConsole);
                 DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
-                return Task.FromResult(new DebugResult(1108, "Cannot evaluate expression on the specified stack frame."));
+                responder.SetError(new ProtocolException("Cannot evaluate expression on the specified stack frame."));
+                return;
             }
 
             IDebugExpressionContext2 expressionContext;
@@ -1678,7 +1798,8 @@ namespace OpenDebugAD7
             {
                 // TODO: Is this how errors should be returned?
                 DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
-                return Task.FromResult(new DebugResult(4001, error));
+                responder.SetError(new ProtocolException(error));
+                return;
             }
             eb.CheckHR(hr);
             eb.CheckOutput(expressionObject);
@@ -1688,36 +1809,37 @@ namespace OpenDebugAD7
                 enum_EVALFLAGS.EVAL_NOEVENTS |
                 (enum_EVALFLAGS)enum_EVALFLAGS110.EVAL110_FORCE_REAL_FUNCEVAL;
 
-            if (context == "hover") // No side effects for data tips
+            if (context == EvaluateArguments.ContextValue.Hover) // No side effects for data tips
             {
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
             IDebugProperty2 property;
-            hr = expressionObject.EvaluateSync(flags, EvaluationTimeout, null, out property);
+            hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
             eb.CheckHR(hr);
             eb.CheckOutput(property);
 
             DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
             enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags = GetDefaultPropertyInfoFlags();
 
-            if (context == "hover") // No side effects for data tips
+            if (context == EvaluateArguments.ContextValue.Hover) // No side effects for data tips
             {
                 propertyInfoFlags |= (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_NOSIDEEFFECTS;
             }
 
-            property.GetPropertyInfo(propertyInfoFlags, EvaluationRadix, EvaluationTimeout, null, 0, propertyInfo);
+            property.GetPropertyInfo(propertyInfoFlags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
 
             // If the expression evaluation produces an error result and we are trying to get the expression for data tips
             // return a failure result so that VS code won't display the error message in data tips
-            if (((propertyInfo[0].dwAttrib & enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) == enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) && context == "hover")
+            if (((propertyInfo[0].dwAttrib & enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) == enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) && context == EvaluateArguments.ContextValue.Hover)
             {
-                return Task.FromResult(new DebugResult(1101, "Evaluation error"));
+                responder.SetError(new ProtocolException("Evaluation error"));
+                return;
             }
 
-            Variable variable = CreateVariable(ref propertyInfo[0], propertyInfoFlags);
+            Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags);
 
-            if (context != "hover")
+            if (context != EvaluateArguments.ContextValue.Hover)
             {
                 DebuggerTelemetry.ReportEvaluation(
                     ((propertyInfo[0].dwAttrib & enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) == enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR),
@@ -1725,444 +1847,418 @@ namespace OpenDebugAD7
                     isExecInConsole ? new Dictionary<string, object>() { { DebuggerTelemetry.TelemetryExecuteInConsole, true } } : null);
             }
 
-            return Task.FromResult(new DebugResult(new EvaluateResponseBody(variable.value, variable.variablesReference, variable.type)));
-        }
-
-        private enum_DEBUGPROP_INFO_FLAGS GetDefaultPropertyInfoFlags()
-        {
-            enum_DEBUGPROP_INFO_FLAGS flags =
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_TYPE |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME |
-                (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_FORCE_REAL_FUNCEVAL;
-
-            if (_sessionConfig.JustMyCode)
+            responder.SetResponse(new EvaluateResponse()
             {
-                flags |= (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_NO_NONPUBLIC_MEMBERS;
-            }
-
-            return flags;
-        }
-
-        public override Capabilities Capabilities
-        {
-            get
-            {
-                return new Capabilities
-                {
-                    supportsConfigurationDoneRequest = true,
-                    supportsEvaluateForHovers = true,
-                    supportsSetVariable = true,
-                    supportsFunctionBreakpoints = _engineConfig.FunctionBP,
-                    supportsConditionalBreakpoints = _engineConfig.ConditionalBP,
-                    exceptionBreakpointFilters = _engineConfig.ExceptionSettings.Breakpoints
-                };
-            }
-        }
-
-        //---- private ------------------------------------------
-
-        private void Stopped(IDebugThread2 thread)
-        {
-            Debug.Assert(_variableHandles.IsEmpty, "Why do we have variable handles?");
-            Debug.Assert(_frameHandles.IsEmpty, "Why do we have frame handles?");
-            Debug.Assert(_threadFrameEnumInfos.Count == 0, "Why do we have thread frame enums?");
-            _isStopped = true;
-        }
-
-        private void BeforeContinue()
-        {
-            if (!_isCoreDump)
-            {
-                _isStopped = false;
-                _variableHandles.Reset();
-                _frameHandles.Reset();
-                _threadFrameEnumInfos.Clear();
-            }
-        }
-
-        private void FireStoppedEvent(IDebugThread2 thread, string reason, string text = null)
-        {
-            Stopped(thread);
-
-            // Switch to another thread as engines may not expect to be called back on their event thread
-            ThreadPool.QueueUserWorkItem((o) =>
-            {
-                IEnumDebugFrameInfo2 frameInfoEnum;
-                thread.EnumFrameInfo(enum_FRAMEINFO_FLAGS.FIF_FRAME | enum_FRAMEINFO_FLAGS.FIF_FLAGS, EvaluationRadix, out frameInfoEnum);
-
-                TextPositionTuple textPosition = TextPositionTuple.Nil;
-                if (frameInfoEnum != null)
-                {
-                    while (true)
-                    {
-                        FRAMEINFO[] frameInfoArray = new FRAMEINFO[1];
-                        uint cFetched = 0;
-                        frameInfoEnum.Next(1, frameInfoArray, ref cFetched);
-                        if (cFetched != 1)
-                            break;
-
-                        if (AD7Utils.IsAnnotatedFrame(ref frameInfoArray[0]))
-                            continue;
-
-                        textPosition = TextPositionTuple.GetTextPositionOfFrame(this, frameInfoArray[0].m_pFrame) ?? TextPositionTuple.Nil;
-                        break;
-                    }
-                }
-
-                lock (_lock)
-                {
-                    _breakCounter++;
-                }
-                _debugProtocolCallbacks.SendLater(new StoppedEvent(reason, textPosition.Source, textPosition.Line, textPosition.Column, text, thread.Id()));
+                Result = variable.Value,
+                Type = variable.Type,
+                VariablesReference = variable.VariablesReference
             });
 
-            if (Interlocked.Exchange(ref _firstStoppingEvent, 1) == 0)
-            {
-                _logger.WriteLine(LoggingCategory.DebuggerStatus, AD7Resources.DebugConsoleStartMessage);
-            }
         }
 
-        private Variable CreateVariable(IDebugProperty2 property, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)
-        {
-            DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
-            property.GetPropertyInfo(propertyInfoFlags, EvaluationRadix, EvaluationTimeout, null, 0, propertyInfo);
+        #endregion
 
-            return CreateVariable(ref propertyInfo[0], propertyInfoFlags);
-        }
-
-        private Variable CreateVariable(ref DEBUG_PROPERTY_INFO propertyInfo, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)
-        {
-            string name = propertyInfo.bstrName;
-            string val = propertyInfo.bstrValue;
-            string type = null;
-
-            // If we have a type string, and the value isn't just the type string in brackets, encode the shorthand for the type in the name value.
-            if (!string.IsNullOrEmpty(propertyInfo.bstrType))
-            {
-                type = propertyInfo.bstrType;
-            }
-
-            int handle = GetVariableHandle(propertyInfo, propertyInfoFlags);
-            return new Variable(name, val, type, handle, propertyInfo.bstrFullName);
-        }
-
-        /// <summary>
-        /// Returns true if 'value' is '[type-name]' or '{type-name}'
-        /// </summary>
-        private static bool IsBracketedType(string value, string typeName)
-        {
-            if (string.IsNullOrEmpty(value))
-                return false;
-
-            if (value.Length != typeName.Length + 2)
-                return false;
-
-            char firstChar = value[0];
-            char lastChar = value[value.Length - 1];
-            bool isBracketed =
-                ((firstChar == '[' && lastChar == ']') ||
-                (firstChar == '{' && lastChar == '}'));
-            if (!isBracketed)
-                return false;
-
-            return string.CompareOrdinal(value, 1, typeName, 0, typeName.Length) == 0;
-        }
-
-        /// <summary>
-        /// Attempts to get a short type name from the full name.
-        /// </summary>
-        /// <param name="fullTypeName">The full type name.</param>
-        /// <param name="shortTypeName">[Out] The shortened type name.</param>
-        /// <returns>True if the type name could be shortened, otherwise false.</returns>
-        public static bool TryGetCSharpShortTypeName(string fullTypeName, out string shortTypeName)
-        {
-            // Remove the namespace and any generics.
-            var match = Regex.Match(fullTypeName,
-                @"^                                 # Beginning of type
-                  (?:                               # GROUP: Namespaces
-                      (?:                           #     GROUP: Namespace
-                          (?![\d<])                 #         Not an invalid leading character!
-                          (?:                       #         Namespace
-                              \w+                   #             Valid identifier characters
-                              (?:                   #             GROUP: Generics
-                                  \<                #                 Match an opening bracket
-                                  (?>               #                 Then match either:
-                                      [^<>]+|       #                     Any non-generic character, or
-                                      \<(?<Level>)| #                     Another opening bracket (more depth), or
-                                      \>(?<-Level>) #                     A closing bracket (less depth)
-                                  )*                #                 As many times as possible
-                                  (?(Level)(?!))    #                 But not so many that depth is not zero
-                                  \>                #                 Then match the last closing bracket
-                              )?                    #             END GROUP: Generics (optional)
-                          )\.                       #         Namespaces must end in a dot!
-                      )*                            #     END GROUP: Namespace (repeat as many times as possible)
-                  )?                                # END GROUP: Namespaces
-                  (?<Type>(?!\d)\w+)                # GROUP/END GROUP: Type
-                  (?:                               # GROUP: Generics
-                      \<                            #     Match an opening bracket
-                      (?>                           #     Then match either:
-                          [^<>]+|                   #         Any non-generic character, or
-                          \<(?<Level>)|             #         Another opening bracket (more depth), or
-                          \>(?<-Level>)             #         A closing bracket (less depth)
-                      )*                            #     As many times as possible
-                      (?(Level)(?!))                #     But not so many that depth is not zero
-                      \>                            #     Then match the last closing bracket
-                  )?                                # END GROUP: Generics (optional)
-                  (?<Array>\[[\[,\]]*\])?           # GROUP/END GROUP: Arrays
-                  (?:\ \{.*\})?                     # GROUP/END GROUP: Instance type
-                  $                                 # End of type",
-                RegexOptions.IgnorePatternWhitespace);
-
-            if (match.Success)
-            {
-                var typeName = match.Groups["Type"].Value;
-
-                if (!string.IsNullOrEmpty(typeName))
-                {
-                    // Optional named groups will have the empty string as their value if they aren't
-                    // matched, so we can just concatenate the array group.
-                    shortTypeName = typeName + match.Groups["Array"].Value;
-                    return true;
-                }
-            }
-
-            // Unable to shorten the type name.
-            shortTypeName = null;
-            return false;
-        }
-
-        private int GetVariableHandle(DEBUG_PROPERTY_INFO propertyInfo, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)
-        {
-            int handle = 0;
-            if (propertyInfo.dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_OBJ_IS_EXPANDABLE))
-            {
-                handle = _variableHandles.Create(new VariableEvaluationData { DebugProperty = propertyInfo.pProperty, propertyInfoFlags = propertyInfoFlags });
-            }
-
-            return handle;
-        }
-
-        /// <summary>
-        /// Create a DebugResult with error information and log a telemetry event. Note: the message should not contain PII.
-        /// </summary>
-        /// <param name="telemetryEventName">Name of the method with the error</param>
-        /// <param name="error">Error code</param>
-        /// <param name="message">Error message</param>
-        /// <returns>DebugResult with the error details</returns>
-        private DebugResult CreateErrorDebugResultAndLogTelemetry(string telemetryEventName, int error, string message)
-        {
-            DebuggerTelemetry.ReportError(telemetryEventName, error);
-            return new DebugResult(error, message);
-        }
-
-        public new string ConvertClientPathToDebugger(string path)
-        {
-            if (Path.DirectorySeparatorChar == '/')
-            {
-                path = path.Replace('\\', '/');
-            }
-            else if (!_clientPathsAreURI)
-            {
-                path = path.Replace('/', '\\');
-            }
-            return base.ConvertClientPathToDebugger(path);
-        }
-
-        public new string ConvertDebuggerPathToClient(string path)
-        {
-            path = _pathMapper.ResolveSymbolPath(path);
-
-            if (Path.DirectorySeparatorChar == '/')
-            {
-                path = path.Replace('\\', '/');
-            }
-            else if (!_debuggerPathsAreURI)
-            {
-                path = path.Replace('/', '\\');
-            }
-
-            path = Utilities.NormalizeFileName(path, fixCasing: (Utilities.IsWindows() || Utilities.IsOSX()));
-
-            return base.ConvertDebuggerPathToClient(path);
-        }
-
-        public new int ConvertDebuggerLineToClient(int line)
-        {
-            return base.ConvertDebuggerLineToClient(line);
-        }
+        #region IDebugPortNotify2
 
         int IDebugPortNotify2.AddProgramNode(IDebugProgramNode2 programNode)
         {
-            if (_process == null || _engine == null)
+            if (m_process == null || m_engine == null)
             {
                 throw new InvalidOperationException();
             }
 
-            IDebugProgram2[] programs = { new AD7Program(_process) };
+            IDebugProgram2[] programs = { new AD7Program(m_process) };
             IDebugProgramNode2[] programNodes = { programNode };
 
-            return _engine.Attach(programs, programNodes, 1, this, enum_ATTACH_REASON.ATTACH_REASON_LAUNCH);
+            return m_engine.Attach(programs, programNodes, 1, this, enum_ATTACH_REASON.ATTACH_REASON_LAUNCH);
         }
 
         int IDebugPortNotify2.RemoveProgramNode(IDebugProgramNode2 pProgramNode)
         {
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
-        private void SendTelemetryEvent(string eventName, KeyValuePair<string, object>[] eventProperties)
+        #endregion
+
+        #region IDebugEventCallback2
+
+        private readonly Dictionary<Guid, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2>> m_syncEventHandler = new Dictionary<Guid, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2>>();
+        private readonly Dictionary<Guid, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task>> m_asyncEventHandler = new Dictionary<Guid, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task>>();
+
+        private void RegisterAD7EventCallbacks()
         {
-            Dictionary<string, object> propertiesDictionary = null;
-            if (eventProperties != null)
+            // Sync Handlers
+            RegisterSyncEventHandler(typeof(IDebugEngineCreateEvent2), HandleIDebugEngineCreateEvent2);
+            RegisterSyncEventHandler(typeof(IDebugStepCompleteEvent2), HandleIDebugStepCompleteEvent2);
+            RegisterSyncEventHandler(typeof(IDebugEntryPointEvent2), HandleIDebugEntryPointEvent2);
+            RegisterSyncEventHandler(typeof(IDebugBreakpointEvent2), HandleIDebugBreakpointEvent2);
+            RegisterSyncEventHandler(typeof(IDebugBreakEvent2), HandleIDebugBreakEvent2);
+            RegisterSyncEventHandler(typeof(IDebugExceptionEvent2), HandleIDebugExceptionEvent2);
+            RegisterSyncEventHandler(typeof(IDebugProgramDestroyEvent2), HandleIDebugProgramDestroyEvent2);
+            RegisterSyncEventHandler(typeof(IDebugThreadCreateEvent2), HandleIDebugThreadCreateEvent2);
+            RegisterSyncEventHandler(typeof(IDebugThreadDestroyEvent2), HandleIDebugThreadDestroyEvent2);
+            RegisterSyncEventHandler(typeof(IDebugModuleLoadEvent2), HandleIDebugModuleLoadEvent2);
+            RegisterSyncEventHandler(typeof(IDebugBreakpointBoundEvent2), HandleIDebugBreakpointBoundEvent2);
+            RegisterSyncEventHandler(typeof(IDebugBreakpointErrorEvent2), HandleIDebugBreakpointErrorEvent2);
+            RegisterSyncEventHandler(typeof(IDebugOutputStringEvent2), HandleIDebugOutputStringEvent2);
+            RegisterSyncEventHandler(typeof(IDebugMessageEvent2), HandleIDebugMessageEvent2);
+
+            // Async Handlers
+            RegisterAsyncEventHandler(typeof(IDebugProgramCreateEvent2), HandleIDebugProgramCreateEvent2);
+        }
+
+        private void RegisterSyncEventHandler(Type type, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2> handler)
+        {
+            m_syncEventHandler.Add(type.GetTypeInfo().GUID, handler);
+        }
+
+        private void RegisterAsyncEventHandler(Type type, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task> handler)
+        {
+            m_asyncEventHandler.Add(type.GetTypeInfo().GUID, handler);
+        }
+
+        public int Event(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent, ref Guid riidEvent, uint dwAttrib)
+        {
+            enum_EVENTATTRIBUTES attributes = unchecked((enum_EVENTATTRIBUTES)dwAttrib);
+
+            Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2> syncEventHandler;
+            if (m_syncEventHandler.TryGetValue(riidEvent, out syncEventHandler))
             {
-                propertiesDictionary = new Dictionary<string, object>();
-                foreach (var pair in eventProperties)
+                syncEventHandler(pEngine, pProcess, pProgram, pThread, pEvent);
+            }
+
+            Task task = null;
+            Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task> asyncEventHandler;
+            if (m_asyncEventHandler.TryGetValue(riidEvent, out asyncEventHandler))
+            {
+                task = asyncEventHandler(pEngine, pProcess, pProgram, pThread, pEvent);
+            }
+
+            if (attributes.HasFlag(enum_EVENTATTRIBUTES.EVENT_SYNCHRONOUS))
+            {
+                if (task == null)
                 {
-                    propertiesDictionary[pair.Key] = pair.Value;
+                    pEngine.ContinueFromSynchronousEvent(pEvent);
+                }
+                else
+                {
+                    task.ContinueWith((j) => pEngine.ContinueFromSynchronousEvent(pEvent));
                 }
             }
 
-            _logger.Write(LoggingCategory.Telemetry, eventName, propertiesDictionary);
+            return 0;
         }
 
-        private void SendMessageEvent(MessagePrefix prefix, string text)
+        public void HandleIDebugEngineCreateEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            string prefixString = string.Empty;
-            LoggingCategory category = LoggingCategory.DebuggerStatus;
-            switch (prefix)
+            // Send configuration settings (e.g. Just My Code) to the engine.
+            m_engine.SetMetric("JustMyCodeStepping", m_sessionConfig.JustMyCode ? "1" : "0");
+            m_engine.SetMetric("EnableStepFiltering", m_sessionConfig.EnableStepFiltering ? "1" : "0");
+        }
+
+        public void HandleIDebugStepCompleteEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Step);
+        }
+
+        public void HandleIDebugEntryPointEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            if (m_sessionConfig.StopAtEntrypoint)
             {
-                case MessagePrefix.Warning:
-                    prefixString = AD7Resources.Prefix_Warning;
-                    category = LoggingCategory.DebuggerError;
-                    break;
-                case MessagePrefix.Error:
-                    prefixString = AD7Resources.Prefix_Error;
-                    category = LoggingCategory.DebuggerError;
-                    break;
+                FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Step);
+            }
+            else
+            {
+                BeforeContinue();
+                m_program.Continue(pThread);
+            }
+        }
+
+        public void HandleIDebugBreakpointEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+        }
+
+        public void HandleIDebugBreakEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            DebuggerTelemetry.ReportEvent(DebuggerTelemetry.TelemetryPauseEventName);
+            FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Pause);
+        }
+
+        public void HandleIDebugExceptionEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            Stopped(pThread);
+
+            IDebugExceptionEvent2 exceptionEvent = (IDebugExceptionEvent2)pEvent;
+            exceptionEvent.GetExceptionDescription(out string text);
+
+            FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Exception, text);
+        }
+
+        public Task HandleIDebugProgramCreateEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            Debug.Assert(m_program == null, "Multiple program create events?");
+            if (m_program == null)
+            {
+                m_program = pProgram;
+                Protocol.SendEvent(new InitializedEvent());
             }
 
-            _logger.WriteLine(category, prefixString + text);
+            return m_configurationDoneTCS.Task;
         }
 
-        private void SendDebugCompletedTelemetry()
+        public void HandleIDebugProgramDestroyEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            Dictionary<string, object> properties = new Dictionary<string, object>();
-            lock (_lock)
+            if (pProcess == null)
             {
-                properties.Add(DebuggerTelemetry.TelemetryBreakCounter, _breakCounter);
+                pProcess = m_process;
             }
-            DebuggerTelemetry.ReportEvent(DebuggerTelemetry.TelemetryDebugCompletedEventName, properties);
+            m_process = null;
+
+            if (pProcess != null)
+            {
+                m_port.RemoveProcess(pProcess);
+            }
+
+            string exitMessage;
+            uint ec = 0;
+            if (m_isAttach)
+            {
+                exitMessage = string.Format(CultureInfo.CurrentCulture, AD7Resources.DebuggerDisconnectMessage, m_processName);
+            }
+            else
+            {
+                IDebugProgramDestroyEvent2 ee = (IDebugProgramDestroyEvent2)pEvent;
+                ee.GetExitCode(out ec);
+                exitMessage = string.Format(CultureInfo.CurrentCulture, AD7Resources.ProcessExitMessage, m_processName, (int)ec);
+            }
+
+            m_logger.WriteLine(LoggingCategory.ProcessExit, exitMessage);
+
+            Protocol.SendEvent(new ExitedEvent((int)ec));
+            Protocol.SendEvent(new TerminatedEvent());
+
+
+            SendDebugCompletedTelemetry();
+            m_disconnectedOrTerminated.Set();
         }
 
-        private string ConvertLaunchPathForVsCode(string clientPath)
+        public void HandleIDebugThreadCreateEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            string path = ConvertClientPathToDebugger(clientPath);
-
-            if (Path.DirectorySeparatorChar == '/')
+            int id = pThread.Id();
+            lock (m_threads)
             {
-                // TODO/HACK: VSCode tries to take all paths and make them workspace relative. This works around this until
-                // we have a VSCode side fix.
-                int slashTiltaSlashIndex = path.LastIndexOf("/~/", StringComparison.Ordinal);
-                if (slashTiltaSlashIndex >= 0)
+                m_threads[id] = pThread;
+            }
+            Protocol.SendEvent(new ThreadEvent(ThreadEvent.ReasonValue.Started, id));
+        }
+
+        public void HandleIDebugThreadDestroyEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            int id = pThread.Id();
+
+            lock (m_threads)
+            {
+                m_threads.Remove(id);
+            }
+            Protocol.SendEvent(new ThreadEvent(ThreadEvent.ReasonValue.Exited, id));
+        }
+
+        public void HandleIDebugModuleLoadEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            IDebugModule2 module;
+            string moduleLoadMessage = null;
+            int isLoad = 0;
+            ((IDebugModuleLoadEvent2)pEvent).GetModule(out module, ref moduleLoadMessage, ref isLoad);
+
+            m_logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
+        }
+
+        public void HandleIDebugBreakpointBoundEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            var breakpointBoundEvent = (IDebugBreakpointBoundEvent2)pEvent;
+
+            foreach (var boundBreakpoint in GetBoundBreakpoints(breakpointBoundEvent))
+            {
+                IDebugPendingBreakpoint2 pendingBreakpoint;
+                if (boundBreakpoint.GetPendingBreakpoint(out pendingBreakpoint) == HRConstants.S_OK)
                 {
-                    string homePath = Environment.GetEnvironmentVariable("HOME");
-                    if (string.IsNullOrEmpty(homePath))
-                        throw new Exception("Environment variable 'HOME' is not defined.");
-
-                    path = Path.Combine(homePath, path.Substring(slashTiltaSlashIndex + 3));
-                }
-            }
-
-            return path;
-        }
-
-        /// <summary>
-        /// Validates the program path has the correct separators and has the .exe file extension (Windows)
-        /// </summary>
-        /// <param name="program"></param>
-        /// <returns>boolean on if the file Exists</returns>
-        private bool ValidateProgramPath(ref string program)
-        {
-            // Make sure the slashes go in the correct direction
-            char directorySeparatorChar = Path.DirectorySeparatorChar;
-            char wrongSlashChar = directorySeparatorChar == '\\' ? '/' : '\\';
-
-            if (program.Contains(wrongSlashChar))
-            {
-                program = program.Replace(wrongSlashChar, directorySeparatorChar);
-            }
-
-            program = ConvertLaunchPathForVsCode(program);
-            if (!File.Exists(program))
-            {
-                // On Windows, check if we are just missing a '.exe' from the file name. This way we can use the same
-                // launch.json on all platforms.
-                if (Utilities.IsWindows())
-                {
-                    if (!program.EndsWith(".", StringComparison.OrdinalIgnoreCase) && !program.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    IDebugBreakpointRequest2 breakpointRequest;
+                    if (pendingBreakpoint.GetBreakpointRequest(out breakpointRequest) == HRConstants.S_OK)
                     {
-                        string programWithExe = program + ".exe";
-                        if (File.Exists(programWithExe))
+                        AD7BreakPointRequest ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
+
+                        // Once bound, attempt to get the bound line number from the breakpoint.
+                        // If the AD7 calls fail, fallback to the original pending breakpoint line number.
+                        int? lineNumber = GetBoundBreakpointLineNumber(boundBreakpoint);
+                        if (lineNumber == null && ad7BPRequest.DocumentPosition != null)
                         {
-                            program = programWithExe;
-                            return true;
+                            lineNumber = m_pathConverter.ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line);
                         }
+
+                        Breakpoint bp = new Breakpoint
+                        {
+                            Verified = true,
+                            Id = (int)ad7BPRequest.Id,
+                            Line = lineNumber ?? 0
+                        };
+
+                        ad7BPRequest.BindResult = bp;
+                        Protocol.SendEvent(new BreakpointEvent(BreakpointEvent.ReasonValue.Changed, bp));
                     }
                 }
-                return false;
             }
-            return true;
         }
 
-        private DebugResult VerifyLocalProcessId(string processId, string telemetryEventName, out int pid)
+        public void HandleIDebugBreakpointErrorEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            DebugResult result = VerifyProcessId(processId, telemetryEventName, out pid);
+            var breakpointErrorEvent = (IDebugBreakpointErrorEvent2)pEvent;
 
-            if (!result.Success)
+            IDebugErrorBreakpoint2 errorBreakpoint;
+            if (breakpointErrorEvent.GetErrorBreakpoint(out errorBreakpoint) == 0)
             {
-                return result;
-            }
+                IDebugPendingBreakpoint2 pendingBreakpoint;
+                if (errorBreakpoint.GetPendingBreakpoint(out pendingBreakpoint) == 0)
+                {
+                    IDebugBreakpointRequest2 breakpointRequest;
+                    if (pendingBreakpoint.GetBreakpointRequest(out breakpointRequest) == 0)
+                    {
+                        string errorMsg = string.Empty;
 
-            try
-            {
-                Process.GetProcessById(pid);
-            }
-            catch (ArgumentException)
-            {
-                return this.CreateErrorDebugResultAndLogTelemetry(telemetryEventName, 1006, "attach: no process with the given id found");
-            }
+                        IDebugErrorBreakpointResolution2 errorBreakpointResolution;
+                        if (errorBreakpoint.GetBreakpointResolution(out errorBreakpointResolution) == 0)
+                        {
+                            BP_ERROR_RESOLUTION_INFO[] bpInfo = new BP_ERROR_RESOLUTION_INFO[1];
+                            if (errorBreakpointResolution.GetResolutionInfo(enum_BPERESI_FIELDS.BPERESI_MESSAGE, bpInfo) == 0)
+                            {
+                                errorMsg = bpInfo[0].bstrMessage;
+                            }
+                        }
 
-            return new DebugResult();
+                        AD7BreakPointRequest ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
+                        Breakpoint bp = null;
+                        if (ad7BPRequest.DocumentPosition != null)
+                        {
+                            if (string.IsNullOrWhiteSpace(ad7BPRequest.Condition))
+                            {
+                                bp = new Breakpoint
+                                {
+                                    Verified = false,
+                                    Id = (int)ad7BPRequest.Id,
+                                    Line = m_pathConverter.ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line),
+                                    Message = errorMsg
+                                };
+                            }
+                            else
+                            {
+                                bp = new Breakpoint
+                                {
+                                    Verified = false,
+                                    Id = (int)ad7BPRequest.Id,
+                                    Line = m_pathConverter.ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line),
+                                    Message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_ConditionBreakpoint, ad7BPRequest.Condition, errorMsg)
+                                };
+                            }
+                        }
+                        else
+                        {
+                            bp = new Breakpoint
+                            {
+                                Verified = false,
+                                Id = (int)ad7BPRequest.Id,
+                                Line = 0,
+                                Message = errorMsg
+                            };
+
+                            // TODO: currently VSCode will ignore the error message from "breakpoint" event, the workaround is to log the error to output window
+                            string outputMsg = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_FunctionBreakpoint, ad7BPRequest.FunctionPosition.Name, errorMsg);
+                            m_logger.WriteLine(LoggingCategory.DebuggerError, outputMsg);
+                        }
+
+                        ad7BPRequest.BindResult = bp;
+                        Protocol.SendEvent(new BreakpointEvent(BreakpointEvent.ReasonValue.Changed, bp));
+                    }
+                }
+            }
         }
 
-        private DebugResult VerifyProcessId(string processId, string telemetryEventName, out int pid)
+        public void HandleIDebugOutputStringEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            if (!int.TryParse(processId, out pid))
-            {
-                return this.CreateErrorDebugResultAndLogTelemetry(telemetryEventName, 1005, "attach: unable to parse the process id");
-            }
+            // OutputStringEvent will include program output if the external console is disabled.
 
-            if (pid == 0)
+            var outputStringEvent = (IDebugOutputStringEvent2)pEvent;
+            string text;
+            if (outputStringEvent.GetString(out text) == 0)
             {
-                return CreateErrorDebugResultAndLogTelemetry(telemetryEventName, 1008, "attach: launch.json must be configured. Change 'processId' to the process you want to debug.");
+                m_logger.Write(LoggingCategory.StdOut, text);
             }
-
-            return new DebugResult();
         }
 
-        private enum MessagePrefix
+        public void HandleIDebugMessageEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            None,
-            Warning,
-            Error
-        };
+            var outputStringEvent = (IDebugMessageEvent2)pEvent;
+            string text;
+            enum_MESSAGETYPE[] messageType = new enum_MESSAGETYPE[1];
+            uint type, helpId;
+            string helpFileName;
+            // TODO: Add VS Code support for message box based events, for now we will just output them
+            // to the console since that is the best we can do.
+            if (outputStringEvent.GetMessage(messageType, out text, out type, out helpFileName, out helpId) == 0)
+            {
+                const uint MB_ICONERROR = 0x00000010;
+                const uint MB_ICONWARNING = 0x00000030;
 
-        private class CurrentLaunchState
-        {
-            public Tuple<MessagePrefix, string> CurrentError { get; set; }
+                if ((messageType[0] & enum_MESSAGETYPE.MT_TYPE_MASK) == enum_MESSAGETYPE.MT_MESSAGEBOX)
+                {
+                    MessagePrefix prefix = MessagePrefix.None;
+                    uint icon = type & 0xf0;
+                    if (icon == MB_ICONERROR)
+                    {
+                        prefix = MessagePrefix.Error;
+                    }
+                    else if (icon == MB_ICONWARNING)
+                    {
+                        prefix = MessagePrefix.Warning;
+                    }
+
+                    // If we get an error message event during the launch, save it, as we may well want to return that as the launch failure message back to VS Code.
+                    if (m_currentLaunchState != null && prefix != MessagePrefix.None)
+                    {
+                        lock (m_lock)
+                        {
+                            if (m_currentLaunchState != null && m_currentLaunchState.CurrentError == null)
+                            {
+                                m_currentLaunchState.CurrentError = new Tuple<MessagePrefix, string>(prefix, text);
+                                return;
+                            }
+                        }
+                    }
+
+                    SendMessageEvent(prefix, text);
+                }
+                else if ((messageType[0] & enum_MESSAGETYPE.MT_REASON_MASK) == enum_MESSAGETYPE.MT_REASON_EXCEPTION)
+                {
+                    m_logger.Write(LoggingCategory.Exception, text);
+                }
+                else
+                {
+                    LoggingCategory category = LoggingCategory.DebuggerStatus;
+                    // Check if the message looks like an error or warning. We will check with whatever
+                    // our localized error/warning prefix might be and we will also accept the English
+                    // version of the string.
+                    if (text.StartsWith(AD7Resources.Prefix_Error, StringComparison.OrdinalIgnoreCase) ||
+                        text.StartsWith(AD7Resources.Prefix_Warning, StringComparison.OrdinalIgnoreCase) ||
+                        text.StartsWith("Error:", StringComparison.OrdinalIgnoreCase) ||
+                        text.StartsWith("Warning:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        category = LoggingCategory.DebuggerError;
+                    }
+
+                    m_logger.Write(category, text);
+                }
+            }
         }
+
+        #endregion
     }
 }

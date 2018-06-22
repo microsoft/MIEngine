@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using OpenDebug;
 
 namespace OpenDebugAD7
@@ -237,11 +238,16 @@ namespace OpenDebugAD7
         private void SendTelemetryEventBase(string eventName, Dictionary<string, object> properties)
         {
 #if LAB
-            this._callback?.Invoke(new OutputEvent(OutputEvent.Category.telemetry, eventName, properties));
+            this._callback?.Invoke(new OutputEvent()
+            {
+                Category = OutputEvent.CategoryValue.Telemetry,
+                Output = eventName,
+                Data = properties
+            });
 #endif
         }
 
-        #region private Static Methods
+#region private Static Methods
 
         private static string GetVersionAttributeValue(TypeInfo engineType)
         {
@@ -252,6 +258,6 @@ namespace OpenDebugAD7
             return attribute.Version;
         }
 
-        #endregion
+#endregion
     }
 }

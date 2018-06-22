@@ -94,7 +94,7 @@ namespace OpenDebugAD7.AD7Impl
 #else
             // TODO: IncrementalHash is the only thing we can use on .net core but it is not supported by mono
             // TODO: Make this work on mono somehow when checksums are needed for more than clrdbg
-            return Constants.E_NOTIMPL;
+            return HRConstants.E_NOTIMPL;
 #endif
         }
 
@@ -111,7 +111,7 @@ namespace OpenDebugAD7.AD7Impl
                 fChecksumEnabled = 0;
 #endif
             }
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int GetLanguage(out Guid pguidLanguage)
@@ -145,12 +145,12 @@ namespace OpenDebugAD7.AD7Impl
         public int GetFunctionName(out string pbstrFunctionName)
         {
             pbstrFunctionName = Name;
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int GetOffset(TEXT_POSITION[] pPosition)
         {
-            return Constants.E_NOTIMPL;
+            return HRConstants.E_NOTIMPL;
         }
     }
 }

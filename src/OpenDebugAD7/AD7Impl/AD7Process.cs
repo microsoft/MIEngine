@@ -71,19 +71,19 @@ namespace OpenDebugAD7.AD7Impl
         public int GetPhysicalProcessId(AD_PROCESS_ID[] pProcessId)
         {
             pProcessId[0] = this.PhysicalProcessId;
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int GetPort(out IDebugPort2 ppPort)
         {
             ppPort = _port;
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int GetProcessId(out Guid pguidProcessId)
         {
             pguidProcessId = _processId.Value;
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int GetServer(out IDebugCoreServer2 ppServer)
