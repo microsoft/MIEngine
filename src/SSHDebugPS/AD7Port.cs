@@ -224,8 +224,12 @@ namespace Microsoft.SSHDebugPS
 
         public void Clean()
         {
-            if (_connection != null)
-                _connection.Clean();
+            try
+            {
+                _connection?.Clean();
+            }
+            // Dev15 632648: Liblinux sometimes throws exceptions on shutdown - we are shutting down anyways, so ignore to not crash
+            catch (Exception) { }
         }
     }
 }
