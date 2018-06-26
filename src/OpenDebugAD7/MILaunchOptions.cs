@@ -292,10 +292,25 @@ namespace OpenDebugAD7
                     if (stringBuilder.Length != 0)
                         stringBuilder.Append(' ');
 
-                    stringBuilder.Append(Terminal.Quote(arg));
+                    stringBuilder.Append(QuoteArgument(arg));
                 }
             }
             return stringBuilder.ToString();
+        }
+
+        // gdb does not like parenthesis without being quoted
+        private static char[] s_CHARS_TO_QUOTE = { ' ', '\t', '(', ')' };
+        private static string QuoteArgument(string argument)
+        {
+            // Make sure its not empty or already quoted (starts with a quote)
+            if (!string.IsNullOrWhiteSpace(argument) && argument[0] != '"')
+            {
+                if (argument.IndexOfAny(s_CHARS_TO_QUOTE) >= 0)
+                {
+                    return '"' + argument + '"';
+                }
+            }
+            return argument;
         }
 
         private static void AddBaseLaunchOptionsElements(StringBuilder xmlLaunchOptions, JsonBaseLaunchOptions jsonLaunchOptions)
