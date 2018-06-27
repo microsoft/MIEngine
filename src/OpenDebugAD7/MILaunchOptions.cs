@@ -304,14 +304,10 @@ namespace OpenDebugAD7
         {
             if (!string.IsNullOrWhiteSpace(argument))
             {
+                // ensure all quotes already in the string are escaped. If use has already escaped it too, undo our escaping
+                argument = argument.Replace("\"", "\\\"").Replace("\\\\\"", "\\\"");
                 if (argument.IndexOfAny(s_CHARS_TO_QUOTE) >= 0)
                 {
-                    // if argument starts with a quote, escape start and ending quotes
-                    if (argument[0] == '\"')
-                    {
-                        argument = "\\\"" + argument.Trim('\"') + "\\\"";
-                    }
-
                     return '"' + argument + '"';
                 }
             }
