@@ -34,7 +34,7 @@ namespace Microsoft.MIDebugEngine
 
     [System.Runtime.InteropServices.ComVisible(true)]
     [System.Runtime.InteropServices.Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
-    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugEngine3, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110
+    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugEngine3, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110, IDisposable
     {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private EngineCallback _engineCallback;
@@ -79,17 +79,49 @@ namespace Microsoft.MIDebugEngine
             _breakpointManager = new BreakpointManager(this);
         }
 
+        #region Destructor/Dispose
+
         ~AD7Engine()
         {
-            if (_pollThread != null)
+            if (!this.IsDisposed)
             {
-                _pollThread.Close();
-            }
-            if (_unixPort != null && _unixPort is IDebugPortCleanup)
-            {
-                ((IDebugPortCleanup)_unixPort).Clean();
+                this.Dispose(isDisposing: false);
             }
         }
+
+        public void Dispose()
+        {
+            Debug.Assert(!this.IsDisposed, "This was already disposed");
+            if (!this.IsDisposed)
+            {
+                this.Dispose(isDisposing: true);
+                this.IsDisposed = true;
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the object is disposed.
+        /// </summary>
+        private bool IsDisposed { get; set; }
+
+        private void Dispose(bool isDisposing)
+        {
+            _debuggedProcess?.Close();
+            _pollThread?.Close();
+            (_unixPort as IDebugPortCleanup)?.Clean();
+
+            if (isDisposing)
+            {
+                _engineCallback = null;
+                _debuggedProcess = null;
+                _pollThread = null;
+                _ad7ProgramId = Guid.Empty;
+                _unixPort = null;
+            }
+        }
+
+        #endregion
 
         internal static void AddChildProcess(int processId)
         {
@@ -340,20 +372,6 @@ namespace Microsoft.MIDebugEngine
             }
 
             return Constants.S_OK;
-        }
-
-        private void Dispose()
-        {
-            WorkerThread pollThread = _pollThread;
-            DebuggedProcess debuggedProcess = _debuggedProcess;
-
-            _engineCallback = null;
-            _debuggedProcess = null;
-            _pollThread = null;
-            _ad7ProgramId = Guid.Empty;
-
-            debuggedProcess?.Close();
-            pollThread?.Close();
         }
 
         // Creates a pending breakpoint in the engine. A pending breakpoint is contains all the information needed to bind a breakpoint to
