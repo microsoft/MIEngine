@@ -306,10 +306,10 @@ namespace OpenDebugAD7
             {
                 if (argument.IndexOfAny(s_CHARS_TO_QUOTE) >= 0)
                 {
-                    // if argument starts with a quote, escape all quotes before quoting
+                    // if argument starts with a quote, escape start and ending quotes
                     if (argument[0] == '\"')
                     {
-                        argument = argument.Replace("\"", "\\\"");
+                        argument = "\\\"" + argument.Trim('\"') + "\\\"";
                     }
 
                     return '"' + argument + '"';
