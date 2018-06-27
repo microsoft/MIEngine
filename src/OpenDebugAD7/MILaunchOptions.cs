@@ -302,11 +302,16 @@ namespace OpenDebugAD7
         private static char[] s_CHARS_TO_QUOTE = { ' ', '\t', '(', ')' };
         private static string QuoteArgument(string argument)
         {
-            // Make sure its not empty or already quoted (starts with a quote)
-            if (!string.IsNullOrWhiteSpace(argument) && argument[0] != '"')
+            if (!string.IsNullOrWhiteSpace(argument))
             {
                 if (argument.IndexOfAny(s_CHARS_TO_QUOTE) >= 0)
                 {
+                    // if argument starts with a quote, escape all quotes before quoting
+                    if (argument[0] == '\"')
+                    {
+                        argument = argument.Replace("\"", "\\\"");
+                    }
+
                     return '"' + argument + '"';
                 }
             }
