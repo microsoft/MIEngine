@@ -310,16 +310,6 @@
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'false'">
-    <ProjectReference Include="..\DebugEngineHost.VSCode\DebugEngineHost.VSCode.csproj">
-      <Project>{81de2423-fb5e-4069-b3c5-4c13ce76dc0a}</Project>
-      <Name>DebugEngineHost.VSCode</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenDebugAD7\OpenDebugAD7.csproj">
-      <Project>{d582c0b6-032f-4686-b01d-eb55694059cb}</Project>
-      <Name>OpenDebugAD7</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
     <ProjectReference Include="..\SSHDebugPS\SSHDebugPS.csproj">
       <Project>{15bcbef4-1c2b-412b-925b-34a049097e62}</Project>
