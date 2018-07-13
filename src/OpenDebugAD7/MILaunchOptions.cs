@@ -303,7 +303,7 @@ namespace OpenDebugAD7
         private static string QuoteArgument(string argument)
         {
             // If user wants an empty or whitespace argument, make sure we quote it
-            if(string.IsNullOrWhiteSpace(argument))
+            if (string.IsNullOrWhiteSpace(argument))
             {
                 return '"' + argument + '"';
             }
