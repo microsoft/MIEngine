@@ -302,7 +302,12 @@ namespace OpenDebugAD7
         private static char[] s_CHARS_TO_QUOTE = { ' ', '\t', '(', ')' };
         private static string QuoteArgument(string argument)
         {
-            if (!string.IsNullOrWhiteSpace(argument))
+            // If user wants an empty or whitespace argument, make sure we quote it
+            if(string.IsNullOrWhiteSpace(argument))
+            {
+                return '"' + argument + '"';
+            }
+            else
             {
                 // ensure all quotes already in the string are escaped. If use has already escaped it too, undo our escaping
                 argument = argument.Replace("\"", "\\\"").Replace("\\\\\"", "\\\"");
