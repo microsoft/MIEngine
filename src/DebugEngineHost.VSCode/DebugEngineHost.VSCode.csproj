@@ -97,9 +97,9 @@
       <LastGenOutput>HostResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutDir)\Microsoft.DebugEngineHost.dll.mdb" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll.mdb" />
   </ItemGroup>
   <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
   <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFiles">

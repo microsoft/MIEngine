@@ -1,5 +1,6 @@
-bin
-obj
+bin/
+obj/
+.vs/
 *.suo
 *.user
 *.orig
@@ -22,7 +23,6 @@ intermediate
 *.VC.db
 packages/
 packages.Desktop/
-.vs/
 Microsoft.VisualStudio.Glass
 project.lock.json
 src/*/*.nuget.props

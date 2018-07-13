@@ -85,17 +85,6 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-PortablePDB|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
   <ItemGroup Condition="'$(IsCoreClr)' == 'true'">
     <None Include="project.json" />
     <!-- A reference to the entire .NET Framework is automatically included -->
@@ -195,7 +184,7 @@
   </ItemGroup>
   <ItemGroup>
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
-    <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" Condition="'$(Configuration)'!='Debug-PortablePDB'" />
+    <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" />
 	<GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json\6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll" Condition="'$(IsCoreClr)' == 'true'" />
     <GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json.6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll" Condition="'$(IsCoreClr)' == 'false'" />
   </ItemGroup>
@@ -207,7 +196,7 @@
   which adds the XmlSerializers as if it was a source item in our project with a 'CopyToOutputDirectory' child
   node. See the 'GetCopyToOutputDirectoryItems' target in C:\Program Files (x86)\MSBuild\14.0\Bin\Microsoft.Common.CurrentVersion.targets
   for more info. -->
-  <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="'$(Configuration)'!='Debug-PortablePDB'">
+  <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems" >
     <ItemGroup>
       <_GenerateXmlSerializersAssemblyOutput Include="$(IntermediateOutputPath)sgen/$(AssemblyName).XmlSerializers.dll" />
       <_SourceItemsToCopyToOutputDirectoryAlways Include="@(_GenerateXmlSerializersAssemblyOutput->'%(FullPath)')">
