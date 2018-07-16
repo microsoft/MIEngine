@@ -69,13 +69,13 @@ namespace MICore
                     catch (Exception e)
                     {
                         // Even if downloading & copying to remote fails, we will still try to invoke the script as it might already exist.
-                        string message = String.Format(CultureInfo.CurrentUICulture, MICoreResources.Warning_DownloadingClrDbgToRemote, e.Message);
+                        string message = String.Format(CultureInfo.CurrentCulture, MICoreResources.Warning_DownloadingClrDbgToRemote, e.Message);
                         _callback.AppendToInitializationLog(message);
                     }
                 }
             }
 
-            _callback.AppendToInitializationLog(string.Format(CultureInfo.CurrentUICulture, MICoreResources.Info_StartingUnixCommand, _startRemoteDebuggerCommand));
+            _callback.AppendToInitializationLog(string.Format(CultureInfo.CurrentCulture, MICoreResources.Info_StartingUnixCommand, _startRemoteDebuggerCommand));
             _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, true, this, out _asyncCommand);
         }
 

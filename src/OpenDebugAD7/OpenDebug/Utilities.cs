@@ -257,7 +257,7 @@ namespace OpenDebug
                 // Ensure the drive letter is lower case - GetPathRoot doesn't alter it
                 if (pathRoot.Length > 2 && pathRoot[1] == ':')
                 {
-                    pathRoot = String.Format(CultureInfo.CurrentUICulture, "{0}{1}", Char.ToLowerInvariant(pathRoot[0]), pathRoot.Substring(1));
+                    pathRoot = String.Format(CultureInfo.CurrentCulture, "{0}{1}", Char.ToLowerInvariant(pathRoot[0]), pathRoot.Substring(1));
                 }
 
                 string path = Path.Combine(pathRoot, Path.Combine(normalizedPathParts.Reverse().ToArray()));

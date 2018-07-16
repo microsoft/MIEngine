@@ -129,12 +129,12 @@ namespace Microsoft.MIDebugEngine
                     ResourceStrings.ModuleLoadedWithSymbols :
                     ResourceStrings.ModuleLoadedWithoutSymbols;
 
-                debugMessage = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ModuleLoadMessage, _module.DebuggedModule.Name, symbolLoadStatus);
+                debugMessage = string.Format(CultureInfo.CurrentCulture, ResourceStrings.ModuleLoadMessage, _module.DebuggedModule.Name, symbolLoadStatus);
                 fIsLoad = 1;
             }
             else
             {
-                debugMessage = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ModuleUnloadMessage, _module.DebuggedModule.Name);
+                debugMessage = string.Format(CultureInfo.CurrentCulture, ResourceStrings.ModuleUnloadMessage, _module.DebuggedModule.Name);
                 fIsLoad = 0;
             }
 
