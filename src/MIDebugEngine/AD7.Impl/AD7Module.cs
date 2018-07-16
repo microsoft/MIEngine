@@ -152,7 +152,7 @@ namespace Microsoft.MIDebugEngine
 
             if (this.DebuggedModule.SymbolsLoaded)
             {
-                pinfo[0].bstrVerboseSearchInfo = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.SymbolsLoadedInfo, this.DebuggedModule.SymbolPath);
+                pinfo[0].bstrVerboseSearchInfo = string.Format(CultureInfo.CurrentCulture, ResourceStrings.SymbolsLoadedInfo, this.DebuggedModule.SymbolPath);
             }
             else
             {

@@ -361,7 +361,7 @@ namespace MICore
                 }
                 else
                 {
-                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_SourceFileMapFormat, item.Key));
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapFormat, item.Key));
                 }
             }
             return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);
@@ -1914,7 +1914,7 @@ namespace MICore
                 ConstructorInfo constructor = serializerType?.GetConstructor(new Type[0]);
                 if (constructor == null)
                 {
-                    throw new Exception(string.Format(CultureInfo.CurrentUICulture, MICoreResources.Error_UnableToLoadSerializer, type.Name));
+                    throw new Exception(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnableToLoadSerializer, type.Name));
                 }
 
                 object serializer = constructor.Invoke(new object[0]);
