@@ -541,7 +541,8 @@ namespace OpenDebugAD7
             }
             _pathMapper = new PathMapper(sourceFileMap);
         }
-
+        
+#pragma warning disable 1998
         public async override Task<DebugResult> Launch(dynamic args)
         {
             int hr;
@@ -726,6 +727,7 @@ namespace OpenDebugAD7
 
             return new DebugResult();
         }
+#pragma warning restore 1998
 
 #pragma warning disable 1998
         public async override Task<DebugResult> Attach(dynamic args)

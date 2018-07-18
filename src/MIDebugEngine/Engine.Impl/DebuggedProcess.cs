@@ -691,7 +691,7 @@ namespace Microsoft.MIDebugEngine
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
                     if (!string.IsNullOrEmpty(destination))
                     {
-                        commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
+                        commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                     }
                     else // gdbserver is already attached when using LocalLaunchOptions
                     {
@@ -699,12 +699,12 @@ namespace Microsoft.MIDebugEngine
                         {
                             if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
                             {
-                                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
+                                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
                                 throw new LaunchErrorException(message);
                             }
                             else
                             {
-                                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
                                 throw new LaunchErrorException(message);
                             }
                         };
@@ -790,7 +790,7 @@ namespace Microsoft.MIDebugEngine
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
                         if (!string.IsNullOrEmpty(destination))
                         {
-                            commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ConnectingMessage, destination)));
+                            commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                         }
 
                         // Environment variables are set for the debuggee only with the modes that support that
@@ -839,11 +839,11 @@ namespace Microsoft.MIDebugEngine
         private void AddExecutablePathCommand(IList<LaunchCommand> commands)
         {
             string exe = this.EnsureProperPathSeparators(_launchOptions.ExePath);
-            string description = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath);
+            string description = string.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath);
 
             Action<string> failureHandler = (string miError) =>
             {
-                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
                 throw new LaunchErrorException(message);
             };
 
@@ -878,7 +878,7 @@ namespace Microsoft.MIDebugEngine
 
             Action<string> failureHandler = (string miError) =>
             {
-                string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_FailedToGetExePath, miError);
+                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_FailedToGetExePath, miError);
                 throw new LaunchErrorException(message);
             };
 
@@ -897,7 +897,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 catch (UnexpectedMIResultException miException)
                 {
-                    string message = string.Format(CultureInfo.CurrentUICulture, ResourceStrings.Error_ExePathInvalid, trimmedExePath, MICommandFactory.Name, miException.MIError);
+                    string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, trimmedExePath, MICommandFactory.Name, miException.MIError);
                     throw new LaunchErrorException(message);
                 }
             };
@@ -1008,7 +1008,7 @@ namespace Microsoft.MIDebugEngine
                 if (!this.IsStopDebuggingInProgress)
                 {
                     Debug.Fail("Failed to find thread on break event.");
-                    throw new Exception(String.Format(CultureInfo.CurrentUICulture, ResourceStrings.MissingThreadBreakEvent, tid));
+                    throw new Exception(String.Format(CultureInfo.CurrentCulture, ResourceStrings.MissingThreadBreakEvent, tid));
                 }
                 else
                 {
@@ -1029,7 +1029,7 @@ namespace Microsoft.MIDebugEngine
                 // See https://devdiv.visualstudio.com/DefaultCollection/DevDiv/VS%20Diag%20IntelliTrace/_workItems?_a=edit&id=197616&triage=true
                 // for a repro
                 Debug.Fail("Failed to find thread on break event.");
-                throw new Exception(String.Format(CultureInfo.CurrentUICulture, ResourceStrings.MissingThreadBreakEvent, tid));
+                throw new Exception(String.Format(CultureInfo.CurrentCulture, ResourceStrings.MissingThreadBreakEvent, tid));
             }
 
             ThreadCache.SendThreadEvents(this, null);   // make sure that new threads have been pushed to the UI

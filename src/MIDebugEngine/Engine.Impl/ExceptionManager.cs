@@ -403,7 +403,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 catch (MIException e)
                 {
-                    _callback.OnError(string.Format(CultureInfo.CurrentUICulture, ResourceStrings.ExceptionSettingsError, e.Message));
+                    _callback.OnError(string.Format(CultureInfo.CurrentCulture, ResourceStrings.ExceptionSettingsError, e.Message));
                 }
 
                 lock (_updateLock)
