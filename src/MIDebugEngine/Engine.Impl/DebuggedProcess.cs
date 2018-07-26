@@ -782,8 +782,8 @@ namespace Microsoft.MIDebugEngine
                         }
                         return Task.FromResult(0);
                     };
-
-                    commands.Add(new LaunchCommand("-break-insert main", ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
+                                       
+                    commands.Add(new LaunchCommand(GetBreakInsertMainCommand(), ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
 
                     if (null != localLaunchOptions)
                     {
@@ -808,6 +808,21 @@ namespace Microsoft.MIDebugEngine
             return commands;
         }
 
+        /// <summary>
+        /// Gets a break-insert command for main that will allow pending bps and supports different debuggers
+        /// </summary>
+        private string GetBreakInsertMainCommand()
+        {
+            // Allow main breakpoint to be pending.
+            string breakInsertMainFormat = "-break-insert -f{0} main";
+            if (this.MICommandFactory.Mode == MIMode.Lldb)
+            {
+                // break-insert -f requires 'on' in lldb scenario
+                return string.Format(CultureInfo.InvariantCulture, breakInsertMainFormat, " on");
+            }
+            return string.Format(CultureInfo.InvariantCulture, breakInsertMainFormat, string.Empty);
+        }
+
         private void CheckCygwin(List<LaunchCommand> commands, LocalLaunchOptions localLaunchOptions)
         {
             // If running locally on windows, determine if gdb is running from cygwin
@@ -826,8 +841,8 @@ namespace Microsoft.MIDebugEngine
                     else
                     {
                         this.IsMinGW = true;
-                        // Gdb on windows and not cygwin implies mingw
-                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
+                            // Gdb on windows and not cygwin implies mingw
+                            _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
                     }
 
                     return Task.FromResult(0);
@@ -887,8 +902,8 @@ namespace Microsoft.MIDebugEngine
                 string trimmedExePath = exePath.Trim();
                 try
                 {
-                    // If the folder contains a space, we need to quote the path.
-                    if (trimmedExePath.Contains(' '))
+                        // If the folder contains a space, we need to quote the path.
+                        if (trimmedExePath.Contains(' '))
                     {
                         trimmedExePath = "\"" + trimmedExePath + "\"";
                     }
