@@ -559,6 +559,7 @@ namespace OpenDebugAD7
 
                 if (pipeArgs != null)
                 {
+                    string pipeCommandArgs = CreateArgumentList(pipeArgs);
                     IEnumerable<string> allPipeArguments = pipeArgs;
                     string debuggerPath = jsonLaunchOptions.PipeTransport.DebuggerPath ?? "";
                     if (!string.IsNullOrEmpty(debuggerPath))
@@ -576,6 +577,10 @@ namespace OpenDebugAD7
 
                     string allArguments = CreateArgumentList(allPipeArguments);
                     xmlLaunchOptions.Append(String.Concat("  PipeArguments='", MILaunchOptions.XmlSingleQuotedAttributeEncode(allArguments), "'\n"));
+                    if (!string.IsNullOrEmpty(pipeCommandArgs))
+                    {
+                        xmlLaunchOptions.Append(String.Concat(" PipeCommandArguments='", MILaunchOptions.XmlSingleQuotedAttributeEncode(pipeCommandArgs), "'\n"));
+                    }
                 }
 
                 if (pipeCwd != null)
