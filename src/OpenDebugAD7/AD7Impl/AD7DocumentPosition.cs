@@ -1,16 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.Debugger.Interop;
 using System;
-using System.IO;
-using System.Collections;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Text;
-using System.Diagnostics;
-using Microsoft.DebugEngineHost;
 using System.Globalization;
+using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace OpenDebugAD7.AD7Impl
 {

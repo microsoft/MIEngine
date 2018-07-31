@@ -7,17 +7,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using Microsoft.DebugEngineHost.VSCode;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using OpenDebug;
-using Microsoft.DebugEngineHost.VSCode;
-using Newtonsoft.Json.Linq;
-using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Utilities;
 
 namespace OpenDebugAD7
 {

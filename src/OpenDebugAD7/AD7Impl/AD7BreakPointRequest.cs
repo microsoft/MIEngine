@@ -1,10 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop;
-using OpenDebug;
-using System;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 
 namespace OpenDebugAD7.AD7Impl
