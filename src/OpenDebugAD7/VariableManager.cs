@@ -17,6 +17,7 @@ namespace OpenDebugAD7
 
     internal class VariableManager
     {
+        // NOTE: The value being stored can be a IDebugStackFrame2 or a VariableEvaluationData
         private readonly HandleCollection<Object> m_variableHandles;
 
         internal VariableManager()

@@ -69,6 +69,7 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.12.0">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.12.0.dll</HintPath>
     </Reference>
+    <!-- Same version as in packages.config -->
     <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Shared.VsCodeDebugProtocol.15.8.20719.1/lib/net45/Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll</HintPath>
     </Reference>

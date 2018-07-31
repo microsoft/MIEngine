@@ -296,7 +296,7 @@ namespace OpenDebugAD7
                 {
                     m_breakCounter++;
                 }
-                Protocol.SendEvent(new OpenDebugStoppedEvent
+                Protocol.SendEvent(new OpenDebugStoppedEvent()
                 {
                     Reason = reason,
                     Source = textPosition.Source,
@@ -480,6 +480,7 @@ namespace OpenDebugAD7
 
             return flags;
         }
+
         private void SetAllExceptions(enum_EXCEPTION_STATE state)
         {
             foreach (ExceptionSettings.CategoryConfiguration category in m_engineConfiguration.ExceptionSettings.Categories)
@@ -550,7 +551,7 @@ namespace OpenDebugAD7
             // Default is that they are URIs
             m_pathConverter.ClientPathsAreURI = !(arguments.PathFormat.GetValueOrDefault(InitializeArguments.PathFormatValue.Unknown) == InitializeArguments.PathFormatValue.Path);
 
-            InitializeResponse initializeResponse = new InitializeResponse
+            InitializeResponse initializeResponse = new InitializeResponse()
             {
                 SupportsConfigurationDoneRequest = true,
                 SupportsEvaluateForHovers = true,
@@ -1196,7 +1197,7 @@ namespace OpenDebugAD7
                             textPosition = TextPositionTuple.GetTextPositionOfFrame(m_pathConverter, frame) ?? TextPositionTuple.Nil;
                         }
 
-                        response.StackFrames.Add(new ProtocolMessages.StackFrame
+                        response.StackFrames.Add(new ProtocolMessages.StackFrame()
                         {
                             Id = frameReference,
                             Name = frameInfo.m_bstrFuncName,
@@ -1234,7 +1235,7 @@ namespace OpenDebugAD7
                 {
                     if (n > 0)
                     {
-                        response.Scopes.Add(new Scope
+                        response.Scopes.Add(new Scope()
                         {
                             Name = AD7Resources.Locals_Scope_Name,
                             VariablesReference = m_variableManager.Create(frame),
@@ -1457,7 +1458,7 @@ namespace OpenDebugAD7
                 }
             }
 
-            var source = new Source
+            var source = new Source()
             {
                 Name = name,
                 Path = path,
@@ -1530,7 +1531,7 @@ namespace OpenDebugAD7
                                 eb.CheckHR(pendingBp.Bind());
 
                                 dict[bp.Line] = pendingBp;
-                                resBreakpoints.Add(new Breakpoint
+                                resBreakpoints.Add(new Breakpoint()
                                 {
                                     Id = (int)pBPRequest.Id,
                                     Verified = true,
@@ -1545,7 +1546,7 @@ namespace OpenDebugAD7
                                     Utilities.ReportException(e);
                                 }
 
-                                resBreakpoints.Add(new Breakpoint
+                                resBreakpoints.Add(new Breakpoint()
                                 {
                                     Id = (int)pBPRequest.Id,
                                     Verified = false,
@@ -1567,7 +1568,7 @@ namespace OpenDebugAD7
                                 }
                                 else
                                 {
-                                    resBreakpoints.Add(new Breakpoint
+                                    resBreakpoints.Add(new Breakpoint()
                                     {
                                         Id = (int)ad7BPRequest.Id,
                                         Verified = true,
@@ -1592,7 +1593,7 @@ namespace OpenDebugAD7
                     }
 
                     string message = eb.GetMessageForException(e);
-                    List<Breakpoint> resBreakpoints = breakpoints.Select(bp => new Breakpoint
+                    List<Breakpoint> resBreakpoints = breakpoints.Select(bp => new Breakpoint()
                     {
                         Id = (int)AD7BreakPointRequest.GetNextBreakpointId(),
                         Verified = false,
@@ -1990,9 +1991,11 @@ namespace OpenDebugAD7
             Stopped(pThread);
 
             IDebugExceptionEvent2 exceptionEvent = (IDebugExceptionEvent2)pEvent;
-            exceptionEvent.GetExceptionDescription(out string text);
 
-            FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Exception, text);
+            string exceptionDescription;
+            exceptionEvent.GetExceptionDescription(out exceptionDescription);
+
+            FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Exception, exceptionDescription);
         }
 
         public Task HandleIDebugProgramCreateEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
@@ -2096,7 +2099,7 @@ namespace OpenDebugAD7
                             lineNumber = m_pathConverter.ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line);
                         }
 
-                        Breakpoint bp = new Breakpoint
+                        Breakpoint bp = new Breakpoint()
                         {
                             Verified = true,
                             Id = (int)ad7BPRequest.Id,
@@ -2141,7 +2144,7 @@ namespace OpenDebugAD7
                         {
                             if (string.IsNullOrWhiteSpace(ad7BPRequest.Condition))
                             {
-                                bp = new Breakpoint
+                                bp = new Breakpoint()
                                 {
                                     Verified = false,
                                     Id = (int)ad7BPRequest.Id,
@@ -2151,7 +2154,7 @@ namespace OpenDebugAD7
                             }
                             else
                             {
-                                bp = new Breakpoint
+                                bp = new Breakpoint()
                                 {
                                     Verified = false,
                                     Id = (int)ad7BPRequest.Id,
@@ -2162,7 +2165,7 @@ namespace OpenDebugAD7
                         }
                         else
                         {
-                            bp = new Breakpoint
+                            bp = new Breakpoint()
                             {
                                 Verified = false,
                                 Id = (int)ad7BPRequest.Id,
