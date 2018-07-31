@@ -145,18 +145,18 @@ namespace OpenDebugAD7
         private void SetCommonDebugSettings(Dictionary<string, JToken> args, out int sourceFileMappings)
         {
             // Save the Just My Code setting. We will set it once the engine is created.
-            m_sessionConfig.JustMyCode = args.GetValueAsBool("justMyCode") ?? m_sessionConfig.JustMyCode;
-            m_sessionConfig.RequireExactSource = args.GetValueAsBool("requireExactSource") ?? m_sessionConfig.RequireExactSource;
-            m_sessionConfig.EnableStepFiltering = args.GetValueAsBool("enableStepFiltering") ?? m_sessionConfig.EnableStepFiltering;
+            m_sessionConfig.JustMyCode = args.GetValueAsBool("justMyCode").GetValueOrDefault(m_sessionConfig.JustMyCode);
+            m_sessionConfig.RequireExactSource = args.GetValueAsBool("requireExactSource").GetValueOrDefault(m_sessionConfig.RequireExactSource);
+            m_sessionConfig.EnableStepFiltering = args.GetValueAsBool("enableStepFiltering").GetValueOrDefault(m_sessionConfig.EnableStepFiltering);
 
             JObject logging = args.GetValueAsObject("logging");
 
             if (logging != null)
             {
-                m_logger.SetLoggingConfiguration(LoggingCategory.Exception, logging.GetValueAsBool("exceptions") ?? true);
-                m_logger.SetLoggingConfiguration(LoggingCategory.Module, logging.GetValueAsBool("moduleLoad") ?? true);
-                m_logger.SetLoggingConfiguration(LoggingCategory.StdOut, logging.GetValueAsBool("programOutput") ?? true);
-                m_logger.SetLoggingConfiguration(LoggingCategory.StdErr, logging.GetValueAsBool("programOutput") ?? true);
+                m_logger.SetLoggingConfiguration(LoggingCategory.Exception, logging.GetValueAsBool("exceptions").GetValueOrDefault(true));
+                m_logger.SetLoggingConfiguration(LoggingCategory.Module, logging.GetValueAsBool("moduleLoad").GetValueOrDefault(true));
+                m_logger.SetLoggingConfiguration(LoggingCategory.StdOut, logging.GetValueAsBool("programOutput").GetValueOrDefault(true));
+                m_logger.SetLoggingConfiguration(LoggingCategory.StdErr, logging.GetValueAsBool("programOutput").GetValueOrDefault(true));
 
                 bool? engineLogging = logging.GetValueAsBool("engineLogging");
                 if (engineLogging.HasValue)
@@ -170,7 +170,7 @@ namespace OpenDebugAD7
                 bool? traceResponse = logging.GetValueAsBool("traceResponse");
                 if (trace.HasValue || traceResponse.HasValue)
                 {
-                    m_logger.SetLoggingConfiguration(LoggingCategory.AdapterTrace, (trace ?? false) || (traceResponse ?? false));
+                    m_logger.SetLoggingConfiguration(LoggingCategory.AdapterTrace, (trace.GetValueOrDefault(false)) || (traceResponse.GetValueOrDefault(false)));
                 }
 
                 if (traceResponse.HasValue)
@@ -1116,8 +1116,8 @@ namespace OpenDebugAD7
         protected override void HandleStackTraceRequestAsync(IRequestResponder<StackTraceArguments, StackTraceResponse> responder)
         {
             int threadReference = responder.Arguments.ThreadId;
-            int startFrame = responder.Arguments.StartFrame ?? 0;
-            int levels = responder.Arguments.Levels ?? 0;
+            int startFrame = responder.Arguments.StartFrame.GetValueOrDefault(0);
+            int levels = responder.Arguments.Levels.GetValueOrDefault(0);
 
             StackTraceResponse response = new StackTraceResponse()
             {
@@ -1467,7 +1467,7 @@ namespace OpenDebugAD7
 
             List<SourceBreakpoint> breakpoints = responder.Arguments.Breakpoints;
 
-            bool sourceModified = responder.Arguments.SourceModified ?? false;
+            bool sourceModified = responder.Arguments.SourceModified.GetValueOrDefault(false);
 
             // we do not support other sources than 'path'
             if (source.Path != null)
@@ -1737,7 +1737,7 @@ namespace OpenDebugAD7
         protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
         {
             EvaluateArguments.ContextValue context = responder.Arguments.Context.GetValueOrDefault(EvaluateArguments.ContextValue.Unknown);
-            int frameId = responder.Arguments.FrameId ?? -1;
+            int frameId = responder.Arguments.FrameId.GetValueOrDefault(-1);
             string expression = responder.Arguments.Expression;
 
             if (expression == null)
@@ -2103,7 +2103,7 @@ namespace OpenDebugAD7
                         {
                             Verified = true,
                             Id = (int)ad7BPRequest.Id,
-                            Line = lineNumber ?? 0
+                            Line = lineNumber.GetValueOrDefault(0)
                         };
 
                         ad7BPRequest.BindResult = bp;
