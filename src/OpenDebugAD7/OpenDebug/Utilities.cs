@@ -398,11 +398,6 @@ namespace OpenDebug
             return s;
         }
 
-        internal static DebugResult CreateErrorResult(int errorCode, string format, params string[] formatparams)
-        {
-            return new DebugResult(errorCode, string.Format(CultureInfo.CurrentCulture, format, formatparams));
-        }
-
         internal static string GetExceptionDescription(Exception exception)
         {
             if (!IsCorruptingException(exception))

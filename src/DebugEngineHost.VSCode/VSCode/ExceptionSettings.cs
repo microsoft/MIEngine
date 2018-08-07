@@ -43,7 +43,7 @@ namespace Microsoft.DebugEngineHost.VSCode
         /// <summary>
         /// /*OPTIONAL*/ Set of exception breakpoints that appears in VS Code
         /// </summary>
-        public IList<ExceptionBreakpointFilter> Breakpoints
+        public IList<ExceptionBreakpointFilter> ExceptionBreakpointFilters
         {
             get { return _exceptionFilters; }
         }

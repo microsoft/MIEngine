@@ -53,7 +53,7 @@ namespace OpenDebugAD7.AD7Impl
             }
 
             ppProcess = process;
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum)
@@ -78,7 +78,7 @@ namespace OpenDebugAD7.AD7Impl
         public int GetPortNotify(out IDebugPortNotify2 portNotify)
         {
             portNotify = _portNotify;
-            return Constants.S_OK;
+            return HRConstants.S_OK;
         }
 
         public int GetServer(out IDebugCoreServer3 ppServer)

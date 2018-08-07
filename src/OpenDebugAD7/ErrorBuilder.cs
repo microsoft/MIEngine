@@ -44,27 +44,27 @@ namespace OpenDebugAD7
             // that some other engine would want to return.
             switch (hr)
             {
-                case Constants.E_NOTIMPL:
+                case HRConstants.E_NOTIMPL:
                     return new NotImplementedException().Message;
 
-                case Constants.COMQC_E_BAD_MESSAGE:
+                case HRConstants.COMQC_E_BAD_MESSAGE:
                     return AD7Resources.Msg_COMQC_E_BAD_MESSAGE;
 
-                case Constants.RPC_E_SERVERFAULT:
+                case HRConstants.RPC_E_SERVERFAULT:
                     return AD7Resources.Msg_RPC_E_SERVERFAULT;
 
-                case Constants.RPC_E_DISCONNECTED:
+                case HRConstants.RPC_E_DISCONNECTED:
                     return AD7Resources.Msg_RPC_E_DISCONNECTED;
 
-                case Constants.E_ACCESSDENIED:
+                case HRConstants.E_ACCESSDENIED:
                     return AD7Resources.Msg_E_ACCESSDENIED;
 
                 // The description for these messages are useless, so do what vsdebug does and return nothing for these
-                case Constants.E_FAIL:
-                case Constants.E_INVALIDARG:
+                case HRConstants.E_FAIL:
+                case HRConstants.E_INVALIDARG:
                     return string.Empty;
 
-                case Constants.E_CRASHDUMP_UNSUPPORTED:
+                case HRConstants.E_CRASHDUMP_UNSUPPORTED:
                     return AD7Resources.Msg_E_CRASHDUMP_UNSUPPORTED;
 
                 default:

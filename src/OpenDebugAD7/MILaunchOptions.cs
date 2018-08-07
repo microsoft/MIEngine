@@ -7,15 +7,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using Microsoft.DebugEngineHost.VSCode;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using OpenDebug;
-using Microsoft.DebugEngineHost.VSCode;
 
 namespace OpenDebugAD7
 {
@@ -348,16 +345,6 @@ namespace OpenDebugAD7
             }
         }
 
-        private static LaunchOptionType GetLaunchType(dynamic args)
-        {
-            if (args.pipeTransport != null)
-            {
-                return LaunchOptionType.Pipe;
-            }
-
-            return LaunchOptionType.Local;
-        }
-
         /// <summary>
         /// Returns the path to lldb-mi which is installed when the extension is installed
         /// </summary>
@@ -384,7 +371,8 @@ namespace OpenDebugAD7
         internal static string CreateLaunchOptions(
             string program,
             string workingDirectory,
-            dynamic args,
+            string args,
+            bool isPipeLaunch,
             out bool stopAtEntry,
             out bool isCoreDump,
             out bool debugServerUsed,
@@ -397,10 +385,11 @@ namespace OpenDebugAD7
             isOpenOCD = false;
             visualizerFileUsed = false;
 
-            LaunchOptionType launchType = GetLaunchType(args);
+            LaunchOptionType launchType = isPipeLaunch ? LaunchOptionType.Pipe : LaunchOptionType.Local;
+
             if (launchType == LaunchOptionType.Local)
             {
-                JsonLocalLaunchOptions jsonLaunchOptions = JsonConvert.DeserializeObject<JsonLocalLaunchOptions>(args.ToString());
+                JsonLocalLaunchOptions jsonLaunchOptions = JsonConvert.DeserializeObject<JsonLocalLaunchOptions>(args);
 
                 StringBuilder xmlLaunchOptions = new StringBuilder();
                 xmlLaunchOptions.Append("<LocalLaunchOptions xmlns='http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014'\n");
