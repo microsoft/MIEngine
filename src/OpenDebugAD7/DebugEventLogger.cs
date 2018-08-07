@@ -127,14 +127,18 @@ namespace OpenDebugAD7
 
         public void TraceLogger_EventHandler(object sender, LogEventArgs args)
         {
-            if (args.Message.Contains("<--  "))
+            string message = args.Message + Environment.NewLine;
+            LoggingCategory category = LoggingCategory.DebuggerError;
+            if (args.Message.StartsWith("<--  "))
             {
-                WriteTrace(LoggingCategory.AdapterTrace, args.Message + Environment.NewLine);
+                category = LoggingCategory.AdapterTrace;
             }
-            else
+            else if (args.Message.StartsWith("--> "))
             {
-                WriteTrace(LoggingCategory.AdapterResponse, args.Message + Environment.NewLine);
+                category = LoggingCategory.AdapterResponse;
             }
+
+            WriteTrace(category, message);
         }
 
         private void WriteTrace(LoggingCategory category, string message)
