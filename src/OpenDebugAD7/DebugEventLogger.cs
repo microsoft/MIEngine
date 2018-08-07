@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 
@@ -129,11 +130,12 @@ namespace OpenDebugAD7
         {
             string message = args.Message + Environment.NewLine;
             LoggingCategory category = LoggingCategory.DebuggerError;
-            if (args.Message.StartsWith("<--  "))
+
+            if (args.Message.StartsWith("<--  ", StringComparison.Ordinal))
             {
                 category = LoggingCategory.AdapterTrace;
             }
-            else if (args.Message.StartsWith("--> "))
+            else if (args.Message.StartsWith("--> ", StringComparison.Ordinal))
             {
                 category = LoggingCategory.AdapterResponse;
             }
