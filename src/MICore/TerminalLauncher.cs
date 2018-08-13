@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -168,20 +168,36 @@ namespace MICore
 
     internal class LinuxTerminalLauncher : TerminalLauncher
     {
-        private const string GnomeTerminalPath = "/usr/bin/gnome-terminal";
-        private const string XTermPath = "/usr/bin/xterm";
+        private const string GnomeTerminalPath = "gnome-terminal";
+        private const string XTermPath = "xterm";
         private string _terminalPath;
         private string _bashCommandPrefix;
+
+        private bool ExistInPath(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                return true;
+            }
+            foreach (var path in Environment.GetEnvironmentVariable("PATH").Split(':'))
+            {
+                if (File.Exists(Path.Combine(path, fileName)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public LinuxTerminalLauncher(string title, string initScript, ReadOnlyCollection<EnvironmentEntry> environment)
             : base(title, initScript, environment)
         {
-            if (File.Exists(GnomeTerminalPath))
+            if (ExistInPath(GnomeTerminalPath))
             {
                 _terminalPath = GnomeTerminalPath;
                 _bashCommandPrefix = String.Format(CultureInfo.InvariantCulture, "--title {0} --", _title);
             }
-            else if (File.Exists(XTermPath))
+            else if (ExistInPath(XTermPath))
             {
                 _terminalPath = XTermPath;
                 _bashCommandPrefix = String.Format(CultureInfo.InvariantCulture, "-title {0} -e", _title);
