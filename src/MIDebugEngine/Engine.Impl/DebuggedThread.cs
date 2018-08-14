@@ -243,7 +243,8 @@ namespace Microsoft.MIDebugEngine
 
                     if (bNew)
                     {
-                        _callback.OnThreadStart(thread);
+                        NewThreads.Add(thread);
+                        SendThreadEvents(null, null);
                     }
                 }
             }
@@ -466,33 +467,36 @@ namespace Microsoft.MIDebugEngine
 
         internal void SendThreadEvents(object sender, EventArgs e)
         {
-            List<DebuggedThread> deadThreads;
-            List<DebuggedThread> newThreads;
-            lock (_threadList)
+            if (_debugger.Engine.ProgramCreateEventSent)
             {
-                deadThreads = _deadThreads;
-                _deadThreads = null;
-                newThreads = _newThreads;
-                _newThreads = null;
-            }
-            if (newThreads != null)
-            {
-                foreach (var newt in newThreads)
+                List<DebuggedThread> deadThreads;
+                List<DebuggedThread> newThreads;
+                lock (_threadList)
                 {
-                    if (!newt.ChildThread)
+                    deadThreads = _deadThreads;
+                    _deadThreads = null;
+                    newThreads = _newThreads;
+                    _newThreads = null;
+                }
+                if (newThreads != null)
+                {
+                    foreach (var newt in newThreads)
                     {
-                        _callback.OnThreadStart(newt);
+                        if (!newt.ChildThread)
+                        {
+                            _callback.OnThreadStart(newt);
+                        }
                     }
                 }
-            }
-            if (deadThreads != null)
-            {
-                foreach (var dead in deadThreads)
+                if (deadThreads != null)
                 {
-                    if (!dead.ChildThread)
+                    foreach (var dead in deadThreads)
                     {
-                        // Send the destroy event outside the lock
-                        _callback.OnThreadExit(dead, 0);
+                        if (!dead.ChildThread)
+                        {
+                            // Send the destroy event outside the lock
+                            _callback.OnThreadExit(dead, 0);
+                        }
                     }
                 }
             }
