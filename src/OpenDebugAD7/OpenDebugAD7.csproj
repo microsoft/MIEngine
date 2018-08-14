@@ -125,15 +125,15 @@
       <Name>DebugEngineHost.VSCode</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe.config" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Newtonsoft.Json.dll" />
+  <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
+    <DropSignedFile Include="$(OutputPath)\OpenDebugAD7.exe" />
+    <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.exe.config" />
+    <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
   </ItemGroup>
   <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
   <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFilesVSCode">

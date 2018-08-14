@@ -57,7 +57,7 @@ namespace Microsoft.DebugEngineHost
             var category = _config.ExceptionSettings.Categories.FirstOrDefault((x) => x.Id == categoryId);
             if (category == null)
             {
-                throw new InvalidDataException(string.Format(CultureInfo.CurrentUICulture, HostResources.Error_ExceptionCategoryMissing, categoryId));
+                throw new InvalidDataException(string.Format(CultureInfo.CurrentCulture, HostResources.Error_ExceptionCategoryMissing, categoryId));
             }
 
             categoryName = category.Name;

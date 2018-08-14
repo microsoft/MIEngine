@@ -80,7 +80,7 @@ namespace Microsoft.SSHDebugPS
 
             if (!File.Exists(sourcePath))
             {
-                throw new FileNotFoundException(string.Format(CultureInfo.CurrentUICulture, StringResources.Error_SourceFileNotFound, sourcePath));
+                throw new FileNotFoundException(string.Format(CultureInfo.CurrentCulture, StringResources.Error_SourceFileNotFound, sourcePath));
             }
 
             _remoteSystem.FileSystem.UploadFile(sourcePath, destinationPath);
@@ -118,7 +118,7 @@ namespace Microsoft.SSHDebugPS
             else
             {
                 // This may happen if the user does not have permissions or if it is a file, etc.
-                throw new ArgumentException(string.Format(CultureInfo.CurrentUICulture, StringResources.Error_InvalidDirectory, path), nameof(path));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, StringResources.Error_InvalidDirectory, path), nameof(path));
             }
         }
 

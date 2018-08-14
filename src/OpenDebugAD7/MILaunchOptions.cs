@@ -292,10 +292,31 @@ namespace OpenDebugAD7
                     if (stringBuilder.Length != 0)
                         stringBuilder.Append(' ');
 
-                    stringBuilder.Append(Terminal.Quote(arg));
+                    stringBuilder.Append(QuoteArgument(arg));
                 }
             }
             return stringBuilder.ToString();
+        }
+
+        // gdb does not like parenthesis without being quoted
+        private static char[] s_CHARS_TO_QUOTE = { ' ', '\t', '(', ')' };
+        private static string QuoteArgument(string argument)
+        {
+            // If user wants an empty or whitespace argument, make sure we quote it
+            if (string.IsNullOrWhiteSpace(argument))
+            {
+                return '"' + argument + '"';
+            }
+            else
+            {
+                // ensure all quotes already in the string are escaped. If use has already escaped it too, undo our escaping
+                argument = argument.Replace("\"", "\\\"").Replace("\\\\\"", "\\\"");
+                if (argument.IndexOfAny(s_CHARS_TO_QUOTE) >= 0)
+                {
+                    return '"' + argument + '"';
+                }
+            }
+            return argument;
         }
 
         private static void AddBaseLaunchOptionsElements(StringBuilder xmlLaunchOptions, JsonBaseLaunchOptions jsonLaunchOptions)
@@ -538,6 +559,7 @@ namespace OpenDebugAD7
 
                 if (pipeArgs != null)
                 {
+                    string pipeCommandArgs = CreateArgumentList(pipeArgs);
                     IEnumerable<string> allPipeArguments = pipeArgs;
                     string debuggerPath = jsonLaunchOptions.PipeTransport.DebuggerPath ?? "";
                     if (!string.IsNullOrEmpty(debuggerPath))
@@ -555,6 +577,10 @@ namespace OpenDebugAD7
 
                     string allArguments = CreateArgumentList(allPipeArguments);
                     xmlLaunchOptions.Append(String.Concat("  PipeArguments='", MILaunchOptions.XmlSingleQuotedAttributeEncode(allArguments), "'\n"));
+                    if (!string.IsNullOrEmpty(pipeCommandArgs))
+                    {
+                        xmlLaunchOptions.Append(String.Concat(" PipeCommandArguments='", MILaunchOptions.XmlSingleQuotedAttributeEncode(pipeCommandArgs), "'\n"));
+                    }
                 }
 
                 if (pipeCwd != null)
