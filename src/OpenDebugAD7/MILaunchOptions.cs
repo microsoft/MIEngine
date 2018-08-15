@@ -566,9 +566,11 @@ namespace OpenDebugAD7
 
                     string allArguments = CreateArgumentList(allPipeArguments);
                     xmlLaunchOptions.Append(String.Concat("  PipeArguments='", MILaunchOptions.XmlSingleQuotedAttributeEncode(allArguments), "'\n"));
-                    if (!string.IsNullOrEmpty(pipeCommandArgs))
+
+                    // debuggerPath has to be specified. if it isn't then the debugger is specified in PipeArg which means we can't use the same arguments for pipeCommandArgs
+                    if (!string.IsNullOrEmpty(debuggerPath))
                     {
-                        xmlLaunchOptions.Append(String.Concat(" PipeCommandArguments='", MILaunchOptions.XmlSingleQuotedAttributeEncode(pipeCommandArgs), "'\n"));
+                        xmlLaunchOptions.Append(String.Concat("  PipeCommandArguments='", MILaunchOptions.XmlSingleQuotedAttributeEncode(pipeCommandArgs), "'\n"));
                     }
                 }
 
