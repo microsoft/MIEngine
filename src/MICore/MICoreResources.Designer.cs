@@ -10,7 +10,6 @@
 
 namespace MICore {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace MICore {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MICore.MICoreResources", typeof(MICoreResources).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MICore.MICoreResources", typeof(MICoreResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -399,6 +398,24 @@ namespace MICore {
         public static string Error_ResultFormat {
             get {
                 return ResourceManager.GetString("Error_ResultFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;RunInTerminalRequest&apos; failed with &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_RunInTerminalFailure {
+            get {
+                return ResourceManager.GetString("Error_RunInTerminalFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to send &apos;RunInTerminalRequest&apos; to Visual Studio Code..
+        /// </summary>
+        public static string Error_RunInTerminalUnavailable {
+            get {
+                return ResourceManager.GetString("Error_RunInTerminalUnavailable", resourceCulture);
             }
         }
         

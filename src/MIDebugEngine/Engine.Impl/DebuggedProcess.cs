@@ -187,20 +187,20 @@ namespace Microsoft.MIDebugEngine
                         OutputMessage.Severity.Warning));
                 }
 
-                ITransport localTransport = null;
+                ITransport localTransport = new VsCodeTerminalTransport();
                 // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
                 // uses fifos for debugger (e.g., gdb) communication.
                 if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
                     (PlatformUtilities.IsLinux() || (PlatformUtilities.IsOSX() && localLaunchOptions.DebuggerMIMode != MIMode.Lldb)))
                 {
-                    localTransport = new LocalUnixTerminalTransport();
+                    //localTransport = new LocalUnixTerminalTransport();
 
                     // Only need to clear terminal for Linux and OS X local launch
                     _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
                 }
                 else
                 {
-                    localTransport = new LocalTransport();
+                    //localTransport = new LocalTransport();
                 }
 
                 if (localLaunchOptions.ShouldStartServer())
@@ -220,7 +220,14 @@ namespace Microsoft.MIDebugEngine
                 // Only need to know the debugger pid on Linux and OS X local launch to detect whether
                 // the debugger is closed. If the debugger is not running anymore, the response (^exit)
                 // to the -gdb-exit command is faked to allow MIEngine to shut down.
-                SetDebuggerPid(localTransport.DebuggerPid);
+                if (localTransport is VsCodeTerminalTransport)
+                {
+                    ((VsCodeTerminalTransport)localTransport).RegisterDebuggerPidCallback(SetDebuggerPid);
+                }
+                else
+                {
+                    SetDebuggerPid(localTransport.DebuggerPid);
+                }
             }
             else if (_launchOptions is PipeLaunchOptions)
             {

@@ -37,9 +37,9 @@ namespace MICore
                     debuggeeDir = "/";
             }
 
-            _dbgStdInName = UnixUtilities.MakeFifo(Logger);
-            _dbgStdOutName = UnixUtilities.MakeFifo(Logger);
-            string pidFifo = UnixUtilities.MakeFifo(Logger);
+            _dbgStdInName = UnixUtilities.MakeFifo(identifier: "In", logger: Logger);
+            _dbgStdOutName = UnixUtilities.MakeFifo(identifier: "Out", logger: Logger);
+            string pidFifo = UnixUtilities.MakeFifo(identifier: "Pid", logger: Logger);
 
             // Used for testing
             Logger?.WriteLine(string.Concat("TempFile=", _dbgStdInName));
@@ -57,6 +57,7 @@ namespace MICore
                 _dbgStdInName,
                 _dbgStdOutName,
                 pidFifo,
+                string.Empty, /* dbgCmdScript is unused here*/
                 debuggerCmd,
                 localOptions.GetMiDebuggerArgs());
 

@@ -170,6 +170,7 @@
     <Compile Include="Transports\ServerTransport.cs" />
     <Compile Include="Transports\StreamTransport.cs" />
     <Compile Include="Transports\TcpTransport.cs" />
+    <Compile Include="Transports\VsCodeTerminalTransport.cs" />
     <Compile Include="UnixNativeMethods.cs" />
     <Compile Include="UnixUtilities.cs" />
   </ItemGroup>

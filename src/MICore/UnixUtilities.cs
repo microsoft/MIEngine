@@ -34,6 +34,7 @@ namespace MICore
         /// <param name="dbgStdInName">File where the stdin for the debugger process is redirected to</param>
         /// <param name="dbgStdOutName">File where the stdout for the debugger process is redirected to</param>
         /// <param name="pidFifo">File where the debugger pid is written to</param>
+        /// <param name="dbgCmdScript">Script file to pass the debugger launch command</param>
         /// <param name="debuggerCmd">Command to the debugger</param>
         /// <param name="debuggerArgs">MIDebugger arguments</param>
         /// <returns></returns>
@@ -42,6 +43,7 @@ namespace MICore
             string dbgStdInName,
             string dbgStdOutName,
             string pidFifo,
+            string dbgCmdScript,
             string debuggerCmd,
             string debuggerArgs)
         {
@@ -56,22 +58,23 @@ namespace MICore
                 "echo $$ > {3}; " +
                 "cd {0}; " +
                 "DbgTerm=`tty`; " +
-                "trap 'rm {1} {2} {3}' EXIT; " +
-                "{4} {6} --tty=$DbgTerm < {1} > {2} & " +
+                "trap 'rm {1} {2} {3} {4}' EXIT; " +
+                "{5} {7} --tty=$DbgTerm < {1} > {2} & " +
                 // Clear the output of executing a process in the background: [job number] pid
                 "clear; " +
                 // echo and wait the debugger pid to know whether
                 // we need to fake an exit by the debugger
                 "pid=$! ; " +
                 "echo $pid > {3}; " +
-                "{5}",
+                "{6}",
                 debuggeeDir, /* 0 */
                 dbgStdInName, /* 1 */
                 dbgStdOutName, /* 2 */
                 pidFifo, /* 3 */
-                debuggerCmd, /* 4 */
-                waitForCompletionCommand, /* 5 */
-                debuggerArgs /* 6 */
+                dbgCmdScript, /* 4 */
+                debuggerCmd, /* 5 */
+                waitForCompletionCommand, /* 6 */
+                debuggerArgs /* 7 */
                 );
         }
 
@@ -113,9 +116,9 @@ namespace MICore
             }
         }
 
-        internal static string MakeFifo(Logger logger = null)
+        internal static string MakeFifo(string identifier = null, Logger logger = null)
         {
-            string path = Path.Combine(Path.GetTempPath(), FifoPrefix + Path.GetRandomFileName());
+            string path = GetTemporaryFilename(identifier);
 
             // Mod is normally in octal, but C# has no octal values. This is 384 (rw owner, no rights anyone else)
             const int rw_owner = 384;
@@ -129,6 +132,14 @@ namespace MICore
                 logger?.WriteLine("Failed to create fifo");
                 throw new ArgumentException("MakeFifo failed to create fifo at path {0}", path);
             }
+
+            return path;
+        }
+
+        internal static string GetTemporaryFilename(string identifier = null)
+        {
+            string optionalIdentifier = string.IsNullOrEmpty(identifier) ? string.Empty : identifier + "_";
+            string path = Path.Combine(Path.GetTempPath(), FifoPrefix + optionalIdentifier + Path.GetRandomFileName());
 
             return path;
         }

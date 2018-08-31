@@ -2,12 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -51,7 +54,7 @@ namespace MICore
             _isRoot = UnixNativeMethods.GetEUid() == 0;
         }
 
-        public void Launch(string workingDirectory, Logger logger)
+        public virtual void Launch(string workingDirectory, Logger logger)
         {
             _terminalProcess = new Process
             {
@@ -217,6 +220,40 @@ namespace MICore
             {
                 processStartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
             }
+        }
+    }
+
+    internal class VSCodeRunInTerminalLauncher
+    {
+        private static string shellCmd = "sh";
+
+        private string _title;
+        private string _commandScript;
+        private Dictionary<string, string> _environment;
+
+        public VSCodeRunInTerminalLauncher(string title, string dbgCmd, ReadOnlyCollection<EnvironmentEntry> envEntries)
+        {
+            _title = title;
+            _commandScript = dbgCmd;
+            _environment = new Dictionary<string, string>();
+
+            if (envEntries != null && envEntries.Any())
+            {
+                foreach(var envEntry in envEntries)
+                {
+                    Debug.Assert(!_environment.ContainsKey(envEntry.Name), $"Duplicate key ${envEntry.Name} detected!");
+                    _environment[envEntry.Name] = envEntry.Value;
+                }
+            }
+        }
+
+        public bool Launch(bool useExternalConsole, Action<int?> launchCompleteAction, Action<string> launchFailureAction, Logger logger)
+        {
+            List<string> args = new List<string>();
+            args.Add(shellCmd);
+            args.Add(_commandScript);
+
+            return HostOutputWindow.TryRunInTerminal(_title, string.Empty, useExternalConsole, args, new ReadOnlyDictionary<string, string>(_environment), launchCompleteAction, launchFailureAction);
         }
     }
 }
