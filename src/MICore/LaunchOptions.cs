@@ -1093,6 +1093,44 @@ namespace MICore
             }
         }
 
+        private bool _siLoadAll;
+        /// <summary>
+        /// if true then load all symbols, else load no symbols
+        /// </summary>
+        public bool SymbolInfoLoadAll
+        {
+            get { return _siLoadAll;  }
+            set
+            {
+                VerifyCanModifyProperty("SymbolInfoLoadAll");
+                _siLoadAll = value;
+            }
+        }
+
+        private ReadOnlyCollection<string> _siExceptionList;
+        /// <summary>
+        /// List file names. Wildcards ('*') are allowed. Modifies behaviour of SymbolInfoLoadAll.
+        /// If SymbolInfoLoadAll is true then all symbols except for members of this list are loaded. Otherwise only members of this list are loaded.
+        /// </summary>
+        public ReadOnlyCollection<string> SymbolInfoExceptionList
+        {
+            get { return _siExceptionList; }
+            set
+            {
+                VerifyCanModifyProperty("SymbolInfoExceptionList");
+                _siExceptionList = value;
+            }
+        }
+
+        /// <summary>
+        /// Check is it is Ok to let the debugger load symbols on solib events without intervention
+        /// </summary>
+        /// <returns></returns>
+        public bool CanAutoLoadSymbols()
+        {
+            return SymbolInfoLoadAll && SymbolInfoExceptionList.Count == 0;
+        }
+
         /// <summary>
         /// If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
         /// Should only be enabled if debugger is fast enough providing the value.
@@ -1812,6 +1850,27 @@ namespace MICore
             // Ensure that CoreDumpPath and ProcessId are not specified at the same time
             if (!String.IsNullOrEmpty(source.CoreDumpPath) && source.ProcessIdSpecified)
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
+
+            SymbolInfoLoadAll = source.SymbolLoadInfo.LoadAllSpecified ? source.SymbolLoadInfo.LoadAll : true;
+            SymbolInfoExceptionList = new ReadOnlyCollection<string>(source.SymbolLoadInfo.ExceptionList == null ? new string[0] : source.SymbolLoadInfo.ExceptionList.Split(';'));
+
+            // Ensure that symbol loading options are consistent
+            if (!WaitDynamicLibLoad && SymbolInfoExceptionList.Count > 0)
+            {
+                throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidSymbolInfo);
+            }
+
+            foreach (var regex in SymbolInfoExceptionList)
+            {
+                try
+                {
+                    var exp = new System.Text.RegularExpressions.Regex(regex);
+                }
+                catch (System.ArgumentException)
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_InvalidRegularExpression, regex));
+                }
+            }
         }
 
         public void InitializeLaunchOptions(Json.LaunchOptions.LaunchOptions launch)

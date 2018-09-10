@@ -307,4 +307,11 @@ Error: {1}</value>
   <data name="Error_UnknownCustomLauncher" xml:space="preserve">
     <value>Unrecognized json customLauncher element '{0}'.</value>
   </data>
+  <data name="Error_InvalidRegularExpression" xml:space="preserve">
+    <value>Invalid regular expression in "ExceptionList": {0}</value>
+    <comment>{0} is the regular expression that failed to parse</comment>
+  </data>
+  <data name="Error_InvalidSymbolInfo" xml:space="preserve">
+    <value>Invalid SymbolInfo, cannot specify a list of solibs when "WaitDynamicLoad" is false.</value>
+  </data>
 </root>

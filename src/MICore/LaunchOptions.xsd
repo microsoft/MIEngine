@@ -423,6 +423,7 @@
           <xs:documentation>If specified then attach using client-server mode.</xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element name="SymbolLoadInfo" minOccurs="0" maxOccurs="1" type="SymbolLoadInfo"/>
     </xs:sequence>
     <xs:attribute name="AdditionalSOLibSearchPath" type="xs:string" use="optional">
       <xs:annotation>
@@ -525,6 +526,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element name="SymbolLoadInfo" minOccurs="0" maxOccurs="1" type="SymbolLoadInfo"/>
     </xs:sequence>
     <xs:attribute name="ExePath" type="xs:string" use="optional">
       <xs:annotation>
@@ -630,4 +632,25 @@
       <xs:element name="SourceMapEntry" minOccurs="0" maxOccurs="unbounded" type="SourceMapEntry"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:complexType name="SymbolLoadInfo">
+    <xs:annotation>
+      <xs:documentation>Supports explcit control of symbol loading. The processing of Exceptions lists and symserver entries requires WaitDynamicLoadLib to be true.</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="LoadAll" type="xs:boolean" use="optional">
+          <xs:annotation>
+            <xs:documentation>If true, symbols for all libs will be loaded, otherwise no solib symbols will be loaded. Modified by ExceptionList. Default value is true.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="ExceptionList" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>List of regular expressions. Modifies behavior of LoadAll. If LoadAll is true then don't load symbols for libs that match any regexp in the list. Otherwise only load symbols for libs that match.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
 </xs:schema>
