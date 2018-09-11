@@ -12,7 +12,6 @@ namespace MICore
 {
     public static class UnixUtilities
     {
-        internal const string FifoPrefix = "Microsoft-MIEngine-fifo-";
         internal const string SudoPath = "/usr/bin/sudo";
         // Mono seems to stop responding when the is a large response unless we specify a larger buffer here
         internal const int StreamBufferSize = 1024 * 4;
@@ -118,7 +117,7 @@ namespace MICore
 
         internal static string MakeFifo(string identifier = null, Logger logger = null)
         {
-            string path = GetTemporaryFilename(identifier);
+            string path = Path.Combine(Path.GetTempPath(), Utilities.GetMIEngineTemporaryFilename(identifier));
 
             // Mod is normally in octal, but C# has no octal values. This is 384 (rw owner, no rights anyone else)
             const int rw_owner = 384;
@@ -132,14 +131,6 @@ namespace MICore
                 logger?.WriteLine("Failed to create fifo");
                 throw new ArgumentException("MakeFifo failed to create fifo at path {0}", path);
             }
-
-            return path;
-        }
-
-        internal static string GetTemporaryFilename(string identifier = null)
-        {
-            string optionalIdentifier = string.IsNullOrEmpty(identifier) ? string.Empty : identifier + "_";
-            string path = Path.Combine(Path.GetTempPath(), FifoPrefix + optionalIdentifier + Path.GetRandomFileName());
 
             return path;
         }

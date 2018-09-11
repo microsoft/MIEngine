@@ -173,6 +173,7 @@
     <Compile Include="Transports\VsCodeTerminalTransport.cs" />
     <Compile Include="UnixNativeMethods.cs" />
     <Compile Include="UnixUtilities.cs" />
+    <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ExampleLaunchOptions.xml" />

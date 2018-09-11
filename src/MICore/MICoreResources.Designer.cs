@@ -402,7 +402,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;RunInTerminalRequest&apos; failed with &apos;{0}&apos;..
+        ///   Looks up a localized string similar to &apos;RunInTerminalRequest&apos; failed. &apos;{0}&apos;..
         /// </summary>
         public static string Error_RunInTerminalFailure {
             get {
@@ -443,6 +443,24 @@ namespace MICore {
         public static string Error_TargetProcessExited {
             get {
                 return ResourceManager.GetString("Error_TargetProcessExited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timeout waiting for connection..
+        /// </summary>
+        public static string Error_TimeoutWaitingForConnection {
+            get {
+                return ResourceManager.GetString("Error_TimeoutWaitingForConnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to establish a connection to the launcher..
+        /// </summary>
+        public static string Error_UnableToEstablishConnectionToLauncher {
+            get {
+                return ResourceManager.GetString("Error_UnableToEstablishConnectionToLauncher", resourceCulture);
             }
         }
         

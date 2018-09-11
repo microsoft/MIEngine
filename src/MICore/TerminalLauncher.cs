@@ -225,16 +225,14 @@ namespace MICore
 
     internal class VSCodeRunInTerminalLauncher
     {
-        private static string shellCmd = "sh";
 
         private string _title;
-        private string _commandScript;
+
         private Dictionary<string, string> _environment;
 
-        public VSCodeRunInTerminalLauncher(string title, string dbgCmd, ReadOnlyCollection<EnvironmentEntry> envEntries)
+        public VSCodeRunInTerminalLauncher(string title, ReadOnlyCollection<EnvironmentEntry> envEntries)
         {
             _title = title;
-            _commandScript = dbgCmd;
             _environment = new Dictionary<string, string>();
 
             if (envEntries != null && envEntries.Any())
@@ -247,13 +245,9 @@ namespace MICore
             }
         }
 
-        public bool Launch(bool useExternalConsole, Action<int?> launchCompleteAction, Action<string> launchFailureAction, Logger logger)
+        public bool Launch(List<string> cmdArgs, bool useExternalConsole, Action<int?> launchCompleteAction, Action<string> launchFailureAction, Logger logger)
         {
-            List<string> args = new List<string>();
-            args.Add(shellCmd);
-            args.Add(_commandScript);
-
-            return HostOutputWindow.TryRunInTerminal(_title, string.Empty, useExternalConsole, args, new ReadOnlyDictionary<string, string>(_environment), launchCompleteAction, launchFailureAction);
+            return HostOutputWindow.TryRunInTerminal(_title, string.Empty, useExternalConsole, cmdArgs, new ReadOnlyDictionary<string, string>(_environment), launchCompleteAction, launchFailureAction);
         }
     }
 }

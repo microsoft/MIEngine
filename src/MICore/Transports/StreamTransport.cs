@@ -157,9 +157,14 @@ namespace MICore
 
         private string GetLine()
         {
+            return GetLineFromStream(_reader);
+        }
+
+        protected string GetLineFromStream(StreamReader reader)
+        {
             try
             {
-                Task<string> task = _reader.ReadLineAsync();
+                Task<string> task = reader.ReadLineAsync();
                 task.Wait(_streamReadCancellationTokenSource.Token);
                 return task.Result;
             }
