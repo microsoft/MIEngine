@@ -646,7 +646,7 @@
         </xs:attribute>
         <xs:attribute name="ExceptionList" type="xs:string" use="optional">
           <xs:annotation>
-            <xs:documentation>List of regular expressions. Modifies behavior of LoadAll. If LoadAll is true then don't load symbols for libs that match any regexp in the list. Otherwise only load symbols for libs that match.</xs:documentation>
+            <xs:documentation>List of filenames (wildcards allowed). Modifies behavior of LoadAll. If LoadAll is true then don't load symbols for libs that match any name in the list. Otherwise only load symbols for libs that match.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
       </xs:extension>
