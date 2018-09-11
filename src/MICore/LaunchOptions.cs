@@ -1854,6 +1854,12 @@ namespace MICore
             if (source.SymbolLoadInfo != null)
             {
                 SymbolInfoLoadAll = source.SymbolLoadInfo.LoadAllSpecified ? source.SymbolLoadInfo.LoadAll : true;
+
+                if (DebuggerMIMode == MIMode.Lldb && !string.IsNullOrWhiteSpace(source.SymbolLoadInfo.ExceptionList))
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(source.SymbolLoadInfo.ExceptionList), nameof(MIMode.Lldb)));
+                }
+
                 SymbolInfoExceptionList.SetTo(source.SymbolLoadInfo.ExceptionList == null ? new string[0] : source.SymbolLoadInfo.ExceptionList.Split(';'));
 
                 // Ensure that symbol loading options are consistent

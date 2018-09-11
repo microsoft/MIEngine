@@ -310,4 +310,8 @@ Error: {1}</value>
   <data name="Error_InvalidSymbolInfo" xml:space="preserve">
     <value>Invalid SymbolInfo, cannot specify a list of solibs when "WaitDynamicLoad" is false.</value>
   </data>
+  <data name="Error_OptionNotSupported" xml:space="preserve">
+    <value>Error: Option {0} is not supported by {1}.</value>
+    <comment>{0} launch option {1} debugging mode</comment>
+  </data>
 </root>

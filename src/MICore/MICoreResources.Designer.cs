@@ -340,6 +340,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Option {0} is not supported by {1}..
+        /// </summary>
+        public static string Error_OptionNotSupported {
+            get {
+                return ResourceManager.GetString("Error_OptionNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to PipeProgram &apos;{0}&apos; could not be found..
         /// </summary>
         public static string Error_PipeProgramNotFound {
