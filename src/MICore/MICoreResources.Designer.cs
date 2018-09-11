@@ -250,6 +250,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid SymbolInfo, cannot specify a list of solibs when &quot;WaitDynamicLoad&quot; is false..
+        /// </summary>
+        public static string Error_InvalidSymbolInfo {
+            get {
+                return ResourceManager.GetString("Error_InvalidSymbolInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Device App Launcher {0} could not be found..
         /// </summary>
         public static string Error_LauncherNotFound {
@@ -327,6 +336,15 @@ namespace MICore {
         public static string Error_NoTerminalAvailable_Linux {
             get {
                 return ResourceManager.GetString("Error_NoTerminalAvailable_Linux", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Option {0} is not supported by {1}..
+        /// </summary>
+        public static string Error_OptionNotSupported {
+            get {
+                return ResourceManager.GetString("Error_OptionNotSupported", resourceCulture);
             }
         }
         

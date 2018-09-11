@@ -212,6 +212,9 @@ namespace MICore.Xml.LaunchOptions {
         public ServerOptions ServerOptions;
         
         /// <remarks/>
+        public SymbolLoadInfo SymbolLoadInfo;
+        
+        /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string AdditionalSOLibSearchPath;
         
@@ -303,6 +306,29 @@ namespace MICore.Xml.LaunchOptions {
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.1055.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public partial class SymbolLoadInfo {
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool LoadAll;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool LoadAllSpecified;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ExceptionList;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string Value;
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.1055.0")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
     public partial class EnvironmentEntry {
         
         /// <remarks/>
@@ -342,6 +368,9 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
         public SourceMapEntry[] SourceMap;
+        
+        /// <remarks/>
+        public SymbolLoadInfo SymbolLoadInfo;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]

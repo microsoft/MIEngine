@@ -476,6 +476,33 @@ namespace Microsoft.MIDebugEngine
 
                 try
                 {
+                    // custom symbol loading?
+                    //  Lookup each file in the exception list.
+                    //      If there then 
+                    //          if loadAll==false then load file
+                    //      else
+                    //          if loadAll==true then load file
+                    if (!_launchOptions.CanAutoLoadSymbols())
+                    {
+                        foreach (string file in _libraryLoaded)
+                        {
+                            if (_launchOptions.SymbolInfoExceptionList.Contains(file))
+                            {
+                                if (!_launchOptions.SymbolInfoLoadAll)
+                                {
+                                    await LoadSymbols(file);
+                                }
+                            }
+                            else
+                            {
+                                if (_launchOptions.SymbolInfoLoadAll)
+                                {
+                                    await LoadSymbols(file);
+                                }
+                            }
+                        }
+                    }
+
                     _libraryLoaded.Clear();
                     SourceLineCache.OnLibraryLoad();
 
@@ -589,6 +616,9 @@ namespace Microsoft.MIDebugEngine
             {
                 commands.Add(new LaunchCommand("-interpreter-exec console \"set pagination off\""));
             }
+
+            // When user specifies loading directives then the debugger cannot auto load symbols, the MIEngine must intervene at each solib-load event and make a determination
+            commands.Add(new LaunchCommand("-gdb-set auto-solib-add " + (_launchOptions.CanAutoLoadSymbols() ? "on" : "off")));
 
             // If the absolute prefix so path has not been specified, then don't set it to null
             // because the debugger might already have a default.
@@ -1429,7 +1459,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     Task evalTask = Task.Run(async () =>
                     {
-                        await ConsoleCmdAsync("sharedlibrary " + module.Name);
+                        await LoadSymbols(module.Name);
                         await CheckModules();
                     });
                 }
@@ -1438,6 +1468,11 @@ namespace Microsoft.MIDebugEngine
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private async Task<string> LoadSymbols(string filename)
+        {
+            return await ConsoleCmdAsync("sharedlibrary " + filename);
         }
 
         private async Task CheckModules()
