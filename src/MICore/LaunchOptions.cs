@@ -1093,7 +1093,7 @@ namespace MICore
             }
         }
 
-        private bool _siLoadAll;
+        private bool _siLoadAll = true;
         /// <summary>
         /// if true then load all symbols, else load no symbols
         /// </summary>
@@ -1107,7 +1107,7 @@ namespace MICore
             }
         }
 
-        private ReadOnlyCollection<string> _siExceptionList;
+        private ReadOnlyCollection<string> _siExceptionList = new ReadOnlyCollection<string>(new string[0]);
         /// <summary>
         /// List file names. Wildcards ('*') are allowed. Modifies behaviour of SymbolInfoLoadAll.
         /// If SymbolInfoLoadAll is true then all symbols except for members of this list are loaded. Otherwise only members of this list are loaded.
@@ -1851,24 +1851,27 @@ namespace MICore
             if (!String.IsNullOrEmpty(source.CoreDumpPath) && source.ProcessIdSpecified)
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
 
-            SymbolInfoLoadAll = source.SymbolLoadInfo.LoadAllSpecified ? source.SymbolLoadInfo.LoadAll : true;
-            SymbolInfoExceptionList = new ReadOnlyCollection<string>(source.SymbolLoadInfo.ExceptionList == null ? new string[0] : source.SymbolLoadInfo.ExceptionList.Split(';'));
-
-            // Ensure that symbol loading options are consistent
-            if (!WaitDynamicLibLoad && SymbolInfoExceptionList.Count > 0)
+            if (source.SymbolLoadInfo != null)
             {
-                throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidSymbolInfo);
-            }
+                SymbolInfoLoadAll = source.SymbolLoadInfo.LoadAllSpecified ? source.SymbolLoadInfo.LoadAll : true;
+                SymbolInfoExceptionList = new ReadOnlyCollection<string>(source.SymbolLoadInfo.ExceptionList == null ? new string[0] : source.SymbolLoadInfo.ExceptionList.Split(';'));
 
-            foreach (var regex in SymbolInfoExceptionList)
-            {
-                try
+                // Ensure that symbol loading options are consistent
+                if (!WaitDynamicLibLoad && SymbolInfoExceptionList.Count > 0)
                 {
-                    var exp = new System.Text.RegularExpressions.Regex(regex);
+                    throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidSymbolInfo);
                 }
-                catch (System.ArgumentException)
+
+                foreach (var regex in SymbolInfoExceptionList)
                 {
-                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_InvalidRegularExpression, regex));
+                    try
+                    {
+                        var exp = new System.Text.RegularExpressions.Regex(regex);
+                    }
+                    catch (System.ArgumentException)
+                    {
+                        throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_InvalidRegularExpression, regex));
+                    }
                 }
             }
         }
