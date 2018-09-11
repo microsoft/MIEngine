@@ -487,17 +487,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         foreach (string file in _libraryLoaded)
                         {
-                            bool matched = false;
-                            foreach (string regex in _launchOptions.SymbolInfoExceptionList)
-                            {
-                                string filename = Path.GetFileName(file);
-                                if (Regex.IsMatch(filename, regex))
-                                {
-                                    matched = true;
-                                    break;
-                                }
-                            }
-                            if (matched)
+                            if (_launchOptions.SymbolInfoExceptionList.Contains(file))
                             {
                                 if (!_launchOptions.SymbolInfoLoadAll)
                                 {

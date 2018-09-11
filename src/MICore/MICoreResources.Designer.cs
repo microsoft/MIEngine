@@ -250,15 +250,6 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid regular expression in &quot;ExceptionList&quot;: {0}.
-        /// </summary>
-        public static string Error_InvalidRegularExpression {
-            get {
-                return ResourceManager.GetString("Error_InvalidRegularExpression", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid SymbolInfo, cannot specify a list of solibs when &quot;WaitDynamicLoad&quot; is false..
         /// </summary>
         public static string Error_InvalidSymbolInfo {
