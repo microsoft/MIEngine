@@ -92,11 +92,9 @@ namespace MICore
             else
             {
                 // Do Linux style pipes
-                commandPipeName = UnixUtilities.MakeFifo(identifier: "In", logger: Logger);
-                outputPipeName = UnixUtilities.MakeFifo(identifier: "Out", logger: Logger);
-                pidPipeName = UnixUtilities.MakeFifo(identifier: "Pid", logger: Logger);
-
-                string dbgCmdScript = Path.Combine(Path.GetTempPath(), Utilities.GetMIEngineTemporaryFilename(identifier: "Cmd"));
+                commandPipeName = UnixUtilities.MakeFifo(identifier: "In", logger: logger);
+                outputPipeName = UnixUtilities.MakeFifo(identifier: "Out", logger: logger);
+                pidPipeName = UnixUtilities.MakeFifo(identifier: "Pid", logger: logger);
 
                 // Create filestreams
                 FileStream stdInStream = new FileStream(commandPipeName, FileMode.Open);
@@ -119,6 +117,7 @@ namespace MICore
                         debuggeeDir = "/";
                 }
 
+                string dbgCmdScript = Path.Combine(Path.GetTempPath(), Utilities.GetMIEngineTemporaryFilename(identifier: "Cmd"));
                 string launchDebuggerCommand = UnixUtilities.LaunchLocalDebuggerCommand(
                     debuggeeDir,
                     commandPipeName,
@@ -128,6 +127,8 @@ namespace MICore
                     debuggerCmd,
                     localOptions.GetMiDebuggerArgs());
 
+                logger?.WriteTextBlock("DbgCmd:", launchDebuggerCommand);
+
                 using (FileStream dbgCmdStream = new FileStream(dbgCmdScript, FileMode.CreateNew))
                 using (StreamWriter dbgCmdWriter = new StreamWriter(dbgCmdStream, encNoBom) { AutoFlush = true })
                 {
@@ -135,14 +136,34 @@ namespace MICore
                     dbgCmdWriter.Flush();
                 }
 
-                cmdArgs.Add("sh");
-                cmdArgs.Add(dbgCmdScript);
+                if (PlatformUtilities.IsOSX())
+                {
+                    string thisModulePath = typeof(VsCodeTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
+                    string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), "osxlaunchhelper.scpt");
+                    if (!File.Exists(launchScript))
+                    {
+                        string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchScript);
+                        throw new FileNotFoundException(message);
+                    }
+
+                    cmdArgs.Add("/usr/bin/osascript");
+                    cmdArgs.Add(launchScript);
+                    cmdArgs.Add(FormattableString.Invariant($"{Path.GetFileName(options.ExePath)}"));
+                    cmdArgs.Add(FormattableString.Invariant($"sh {dbgCmdScript} ; "));
+                }
+                else
+                {
+                    cmdArgs.Add("sh");
+                    cmdArgs.Add(dbgCmdScript);
+                }
 
                 _outputStream = stdOutStream;
                 _commandStream = stdInStream;
             }
 
-            VSCodeRunInTerminalLauncher launcher = new VSCodeRunInTerminalLauncher(Path.GetFileName(options.ExePath), localOptions.Environment);
+            VSCodeRunInTerminalLauncher launcher = new VSCodeRunInTerminalLauncher(
+                Path.GetFileName(options.ExePath), 
+                localOptions.Environment);
 
             if (!launcher.Launch(
                     cmdArgs,

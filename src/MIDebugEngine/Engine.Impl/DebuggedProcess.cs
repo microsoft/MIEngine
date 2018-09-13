@@ -366,7 +366,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (!this._connected)
                 {
-                    _initialBreakArgs = results;
+                    _initialBreakArgs = results; 
                     return;
                 }
 
@@ -770,7 +770,9 @@ namespace Microsoft.MIDebugEngine
                     // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
                     if (localLaunchOptions != null &&
                         this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                        (PlatformUtilities.IsWindows() || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
+                        (PlatformUtilities.IsWindows() 
+                        //|| (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)
+                        ))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }

@@ -52,29 +52,25 @@ namespace MICore
             // bash doesn't support fg in this mode, so we need to use 'wait' there.
             string waitForCompletionCommand = PlatformUtilities.IsOSX() ? "fg > /dev/null; " : "wait $pid; ";
 
-            return string.Format(CultureInfo.InvariantCulture,
+            return
                 // echo the shell pid so that we can monitor it
-                "echo $$ > {3}; " +
-                "cd {0}; " +
-                "DbgTerm=`tty`; " +
-                "trap 'rm {1} {2} {3} {4}' EXIT; " +
-                "{5} {7} --tty=$DbgTerm < {1} > {2} & " +
+                // Change to the current working directory
+                // find the tty
+                // enable monitor on the session
+                // set the trap command to remove the fifos
+                // execute the debugger command in the background
                 // Clear the output of executing a process in the background: [job number] pid
-                "clear; " +
-                // echo and wait the debugger pid to know whether
-                // we need to fake an exit by the debugger
-                "pid=$! ; " +
-                "echo $pid > {3}; " +
-                "{6}",
-                debuggeeDir, /* 0 */
-                dbgStdInName, /* 1 */
-                dbgStdOutName, /* 2 */
-                pidFifo, /* 3 */
-                dbgCmdScript, /* 4 */
-                debuggerCmd, /* 5 */
-                waitForCompletionCommand, /* 6 */
-                debuggerArgs /* 7 */
-                );
+                // echo and wait the debugger pid to know whether we need to fake an exit by the debugger
+                FormattableString.Invariant(
+                    $@"echo $$ > {pidFifo} ; cd {debuggeeDir} ; 
+                    DbgTerm=`tty` ; 
+                    set -o monitor ; 
+                    trap 'rm {dbgStdInName} {dbgStdOutName} {pidFifo} {dbgCmdScript}' EXIT ; 
+                    {debuggerCmd} {debuggerArgs} --tty=$DbgTerm < {dbgStdInName} > {dbgStdOutName} & clear ; 
+                    pid=$! ; 
+                    echo $pid > {pidFifo} ; 
+                    {waitForCompletionCommand} "
+                    );
         }
 
         internal static string GetDebuggerCommand(LocalLaunchOptions localOptions)

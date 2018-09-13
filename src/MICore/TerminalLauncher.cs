@@ -106,13 +106,12 @@ namespace MICore
         protected override string GetProcessArgs()
         {
             string thisModulePath = typeof(MacTerminalLauncher).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
-            string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), LaunchTerminalScript);
-            if (!File.Exists(launchScript))
+            string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), LaunchTerminalScript);if (!File.Exists(launchScript))
             {
                 string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchScript);
                 throw new FileNotFoundException(message);
             }
-
+            
             // NOTE: setEnvironmentScript will either be the empty string or end in a space, so '{2}' and '{3}' can be next to each other.
             string setEnvironmentScript = GetSetEnvironmentScript();
             return string.Format(CultureInfo.InvariantCulture, "{0} \"{1}\" \"{2}{3}\"", launchScript, _title, setEnvironmentScript, _initScript);
@@ -225,7 +224,6 @@ namespace MICore
 
     internal class VSCodeRunInTerminalLauncher
     {
-
         private string _title;
 
         private Dictionary<string, string> _environment;
@@ -239,7 +237,7 @@ namespace MICore
             {
                 foreach(var envEntry in envEntries)
                 {
-                    Debug.Assert(!_environment.ContainsKey(envEntry.Name), $"Duplicate key ${envEntry.Name} detected!");
+                    Debug.Assert(!_environment.ContainsKey(envEntry.Name), FormattableString.Invariant($"Duplicate key ${envEntry.Name} detected!"));
                     _environment[envEntry.Name] = envEntry.Value;
                 }
             }
