@@ -132,7 +132,7 @@ namespace MICore
                 using (StreamWriter dbgCmdWriter = new StreamWriter(dbgCmdStream, encNoBom) { AutoFlush = true })
                 {
                     dbgCmdWriter.Write(launchDebuggerCommand);
-                    dbgCmdWriter.Close();
+                    dbgCmdWriter.Flush();
                 }
 
                 cmdArgs.Add("sh");

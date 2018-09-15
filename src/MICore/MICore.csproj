@@ -21,13 +21,10 @@
     would take a fair amount of work.-->
     <NoWarn>$(NoWarn);1591</NoWarn>
     <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
     <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
-    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsCoreClr)' == 'false'">
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -191,8 +188,7 @@
     <GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json\6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll" Condition="'$(IsCoreClr)' == 'true'" />
     <GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json.6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll" Condition="'$(IsCoreClr)' == 'false'" />
   </ItemGroup>
-  <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="GenerateXmlSerializersAssembly.targets" />
   <!-- To get the seralization assembly copied to the vsix, and also to the output directory, we have this target
