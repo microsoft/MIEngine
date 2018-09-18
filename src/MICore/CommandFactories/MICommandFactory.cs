@@ -680,7 +680,6 @@ namespace MICore
         abstract public Task EnableTargetAsyncOption();
         abstract public Task<Results> ListTargetFeatures();
 
-
         public virtual bool SupportsBreakpointChecksums()
         {
             return false;
