@@ -546,7 +546,7 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 Results res = await this.MICommandFactory.ListTargetFeatures();
-                if (res.Contains("async"))
+                if (res != null && res.Contains("async"))
                 {
                     await this.MICommandFactory.EnableTargetAsyncOption();
                 }

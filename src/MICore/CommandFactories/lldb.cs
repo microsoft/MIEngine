@@ -110,7 +110,7 @@ namespace MICore
 
         public override Task<Results> ListTargetFeatures()
         {
-            return null;
+            return Task.FromResult(new Results(ResultClass.None));
         }
 
         public override Task EnableTargetAsyncOption()
