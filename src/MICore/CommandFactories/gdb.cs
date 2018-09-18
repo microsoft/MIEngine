@@ -198,11 +198,19 @@ namespace MICore
             return addresses;
         }
 
+        public override async Task<Results> ListTargetFeatures()
+        {
+            Results results = await _debugger.CmdAsync("-list-target-features", ResultClass.done);
+            return results;
+        }
+
         public override Task EnableTargetAsyncOption()
         {
             // Linux attach TODO: GDB will fail this command when attaching. This is worked around
             // by using signals for that case.
-            return _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
+
+            return _debugger.CmdAsync("-list-target-features", ResultClass.None);
+
         }
 
         public override async Task Terminate()

@@ -678,6 +678,8 @@ namespace MICore
         /// </summary>
         /// <returns>[Required] Task to track when this is complete</returns>
         abstract public Task EnableTargetAsyncOption();
+        abstract public Task<Results> ListTargetFeatures();
+
 
         public virtual bool SupportsBreakpointChecksums()
         {

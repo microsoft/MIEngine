@@ -108,6 +108,11 @@ namespace MICore
             return Task.FromResult<List<ulong>>(null);
         }
 
+        public override Task<Results> ListTargetFeatures()
+        {
+            return null;
+        }
+
         public override Task EnableTargetAsyncOption()
         {
             // lldb-mi doesn't support target-async mode, and doesn't seem to need to

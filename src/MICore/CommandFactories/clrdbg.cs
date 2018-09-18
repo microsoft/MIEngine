@@ -89,6 +89,11 @@ namespace MICore
             return Task.FromResult<List<ulong>>(null);
         }
 
+        public override Task<Results> ListTargetFeatures()
+        {
+            return null;
+        }
+
         public override Task EnableTargetAsyncOption()
         {
             // clrdbg is always in target-async mode
