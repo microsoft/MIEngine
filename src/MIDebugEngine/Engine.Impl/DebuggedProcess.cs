@@ -545,7 +545,11 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                await this.MICommandFactory.EnableTargetAsyncOption();
+                Results res = await this.MICommandFactory.ListTargetFeatures();
+                if (res.Contains("async"))
+                {
+                    await this.MICommandFactory.EnableTargetAsyncOption();
+                }
                 List<LaunchCommand> commands = GetInitializeCommands();
                 _childProcessHandler?.Enable();
 
