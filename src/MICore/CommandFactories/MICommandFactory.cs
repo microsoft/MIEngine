@@ -682,7 +682,7 @@ namespace MICore
         /// <summary>
         /// Obtains a Results object containing the set of features supported by the debugger.
         /// </summary>
-        /// <returns>Task that will contain the Results. The Results object is optional.</returns>
+        /// <returns>[Required] Task that will contain the Results.</returns>
         abstract public Task<Results> ListTargetFeatures();
 
         public virtual bool SupportsBreakpointChecksums()
