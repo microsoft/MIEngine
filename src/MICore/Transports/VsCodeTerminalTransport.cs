@@ -18,16 +18,16 @@ namespace MICore
     public class VsCodeTerminalTransport : StreamTransport
     {
         private int _debuggerPid;
-        private Stream _pidReader;
+        private StreamReader _pidReader;
 
         private ProcessMonitor _shellProcessMonitor;
         private CancellationTokenSource _streamReadPidCancellationTokenSource = new CancellationTokenSource();
         private Task _waitForConnection = null;
 
-        private Stream _commandStream = null;
-        private Stream _outputStream = null;
+        private StreamWriter _commandStream = null;
+        private StreamReader _outputStream = null;
 
-        private Stream _errorStream = null;
+        private StreamReader _errorStream = null;
 
         public override int DebuggerPid
         {
@@ -61,7 +61,7 @@ namespace MICore
                 NamedPipeServerStream errorFromDebugger = new NamedPipeServerStream(errorPipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte);
                 NamedPipeServerStream pidPipe = new NamedPipeServerStream(pidPipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte);
 
-                _pidReader = pidPipe;
+                _pidReader = new StreamReader(pidPipe, encNoBom, false, 1024 * 4);
 
                 string thisModulePath = typeof(VsCodeTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
                 string launchCommand = Path.Combine(Path.GetDirectoryName(thisModulePath), "WindowsDebugLauncher.exe");
@@ -85,9 +85,9 @@ namespace MICore
                         errorFromDebugger.WaitForConnectionAsync(),
                         pidPipe.WaitForConnectionAsync());
 
-                _commandStream = inputToDebugger;
-                _outputStream = outputFromDebugger;
-                _errorStream = errorFromDebugger;
+                _commandStream = new StreamWriter(inputToDebugger, encNoBom);
+                _outputStream = new StreamReader(outputFromDebugger, encNoBom, false, 1024 * 4);
+                _errorStream = new StreamReader(errorFromDebugger, encNoBom, false, 1024 * 4);
             }
             else
             {
@@ -99,7 +99,7 @@ namespace MICore
                 // Create filestreams
                 FileStream stdInStream = new FileStream(commandPipeName, FileMode.Open);
                 FileStream stdOutStream = new FileStream(outputPipeName, FileMode.Open);
-                _pidReader = new FileStream(pidPipeName, FileMode.Open);
+                _pidReader = new StreamReader(new FileStream(pidPipeName, FileMode.Open), encNoBom, false, 1024 * 4);
 
                 string debuggerCmd = UnixUtilities.GetDebuggerCommand(localOptions);
 
@@ -149,7 +149,7 @@ namespace MICore
                     cmdArgs.Add("/usr/bin/osascript");
                     cmdArgs.Add(launchScript);
                     cmdArgs.Add(FormattableString.Invariant($"{Path.GetFileName(options.ExePath)}"));
-                    cmdArgs.Add(FormattableString.Invariant($"sh {dbgCmdScript} ; "));
+                    cmdArgs.Add(FormattableString.Invariant($"sh {dbgCmdScript} ;")); // needs a semicolon because of the script it is running.
                 }
                 else
                 {
@@ -157,12 +157,17 @@ namespace MICore
                     cmdArgs.Add(dbgCmdScript);
                 }
 
-                _outputStream = stdOutStream;
-                _commandStream = stdInStream;
+                // Make sure to clear the con
+                cmdArgs.Add(";");
+                cmdArgs.Add("clear");
+
+                _outputStream = new StreamReader(stdOutStream, encNoBom, false, 1024 * 4);
+                _commandStream = new StreamWriter(stdInStream, encNoBom);
             }
 
+
             VSCodeRunInTerminalLauncher launcher = new VSCodeRunInTerminalLauncher(
-                Path.GetFileName(options.ExePath), 
+                Path.GetFileName(options.ExePath),
                 localOptions.Environment);
 
             if (!launcher.Launch(
@@ -193,11 +198,11 @@ namespace MICore
         {
             if (_errorStream != null)
             {
-                StreamReader reader = new StreamReader(_errorStream, new UTF8Encoding(), false, 1024 * 4);
-
                 while (!_streamReadPidCancellationTokenSource.IsCancellationRequested)
                 {
-                    string line = this.GetLineFromStream(reader);
+                    string line = this.GetLineFromStream(_errorStream);
+                    if (line == null)
+                        break;
                     Logger?.WriteTextBlock("dbgerr:", line);
                 }
             }
@@ -206,8 +211,8 @@ namespace MICore
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
             // Mono seems to stop responding when the debugger sends a large response unless we specify a larger buffer here
-            writer = new StreamWriter(_commandStream, new UTF8Encoding(false), UnixUtilities.StreamBufferSize);
-            reader = new StreamReader(_outputStream, new UTF8Encoding(false), false, UnixUtilities.StreamBufferSize);
+            writer = _commandStream;
+            reader = _outputStream;
         }
 
         private Action<int> debuggerPidCallback;
@@ -220,51 +225,49 @@ namespace MICore
         {
             if (_pidReader != null)
             {
-                using (StreamReader pidReader = new StreamReader(_pidReader, Encoding.UTF8, true, UnixUtilities.StreamBufferSize))
+                int shellPid;
+                Task<string> readShellPidTask = _pidReader.ReadLineAsync();
+                if (readShellPidTask.Wait(TimeSpan.FromSeconds(10)))
                 {
-                    int shellPid;
-                    Task<string> readShellPidTask = pidReader.ReadLineAsync();
-                    if (readShellPidTask.Wait(TimeSpan.FromSeconds(10)))
-                    {
-                        shellPid = int.Parse(readShellPidTask.Result, CultureInfo.InvariantCulture);
-                        // Used for testing
-                        Logger?.WriteLine(string.Concat("ShellPid=", shellPid));
-                    }
-                    else
-                    {
-                        // Something is wrong because we didn't get the pid of shell
-                        ForceDisposeStreamReader(pidReader);
-                        Close();
-                        throw new TimeoutException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, MICoreResources.Error_TimeoutWaitingForConnection));
-                    }
-
-                    if (!PlatformUtilities.IsWindows())
-                    {
-                        _shellProcessMonitor = new ProcessMonitor(shellPid);
-                        _shellProcessMonitor.ProcessExited += ShellExited;
-                        _shellProcessMonitor.Start();
-                    }
-                    else
-                    {
-                        Process shellProcess = Process.GetProcessById(shellPid);
-                        shellProcess.EnableRaisingEvents = true;
-                        shellProcess.Exited += ShellExited;
-                    }
-
-                    Task<string> readDebuggerPidTask = pidReader.ReadLineAsync();
-                    try
-                    {
-                        readDebuggerPidTask.Wait(_streamReadPidCancellationTokenSource.Token);
-                        _debuggerPid = int.Parse(readDebuggerPidTask.Result, CultureInfo.InvariantCulture);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        // Something is wrong because we didn't get the pid of the debugger
-                        ForceDisposeStreamReader(pidReader);
-                        Close();
-                        throw new OperationCanceledException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, MICoreResources.Error_UnableToEstablishConnectionToLauncher));
-                    }
+                    shellPid = int.Parse(readShellPidTask.Result, CultureInfo.InvariantCulture);
+                    // Used for testing
+                    Logger?.WriteLine(string.Concat("ShellPid=", shellPid));
                 }
+                else
+                {
+                    // Something is wrong because we didn't get the pid of shell
+                    ForceDisposeStreamReader(_pidReader);
+                    Close();
+                    throw new TimeoutException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, MICoreResources.Error_TimeoutWaitingForConnection));
+                }
+
+                if (!PlatformUtilities.IsWindows())
+                {
+                    _shellProcessMonitor = new ProcessMonitor(shellPid);
+                    _shellProcessMonitor.ProcessExited += ShellExited;
+                    _shellProcessMonitor.Start();
+                }
+                else
+                {
+                    Process shellProcess = Process.GetProcessById(shellPid);
+                    shellProcess.EnableRaisingEvents = true;
+                    shellProcess.Exited += ShellExited;
+                }
+
+                Task<string> readDebuggerPidTask = _pidReader.ReadLineAsync();
+                try
+                {
+                    readDebuggerPidTask.Wait(_streamReadPidCancellationTokenSource.Token);
+                    _debuggerPid = int.Parse(readDebuggerPidTask.Result, CultureInfo.InvariantCulture);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Something is wrong because we didn't get the pid of the debugger
+                    ForceDisposeStreamReader(_pidReader);
+                    Close();
+                    throw new OperationCanceledException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, MICoreResources.Error_UnableToEstablishConnectionToLauncher));
+                }
+
             }
 
             if (debuggerPidCallback != null)
@@ -300,9 +303,20 @@ namespace MICore
             try
             {
                 _commandStream?.Dispose();
-                _outputStream?.Dispose();
-                _errorStream?.Dispose();
-                _pidReader?.Dispose();
+                if (_outputStream != null)
+                {
+                    ForceDisposeStreamReader(_outputStream);
+                }
+
+                if (_errorStream != null)
+                {
+                    ForceDisposeStreamReader(_errorStream);
+                }
+
+                if (_pidReader != null)
+                {
+                    ForceDisposeStreamReader(_pidReader);
+                }
             }
             catch
             { }

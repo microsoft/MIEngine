@@ -767,12 +767,10 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
 
-                    // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
+                    // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux as LLDB's tty redirection doesn't work.
                     if (localLaunchOptions != null &&
-                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                        (PlatformUtilities.IsWindows() 
-                        //|| (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)
-                        ))
+                        (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && PlatformUtilities.IsWindows()) 
+                        || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
@@ -131,8 +132,8 @@ namespace WindowsDebugLauncher
             errThread.Name = "MIEngine.DbgErrorThread";
             errThread.Start();
 
-            _npPidStream.WriteLine(Process.GetCurrentProcess().Id.ToString());
-            _npPidStream.WriteLine(proc.Id.ToString());
+            _npPidStream.WriteLine(Process.GetCurrentProcess().Id.ToString(CultureInfo.CurrentCulture));
+            _npPidStream.WriteLine(proc.Id.ToString(CultureInfo.CurrentCulture));
         }
 
         private void OnProcessExited(object c, EventArgs e)
