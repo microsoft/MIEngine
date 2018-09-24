@@ -115,7 +115,7 @@ namespace WindowsDebugLauncher
 
         private static void GenerateError(string flag)
         {
-            Console.Error.WriteLine($"Value for flag:'{flag}' is missing or incorrect.");
+            Console.Error.WriteLine(FormattableString.Invariant($"Value for flag:'{flag}' is missing or incorrect."));
             HelpMessage();
         }
 
