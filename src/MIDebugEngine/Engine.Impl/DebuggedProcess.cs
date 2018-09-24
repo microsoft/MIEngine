@@ -228,6 +228,7 @@ namespace Microsoft.MIDebugEngine
                 // Only need to know the debugger pid on Linux and OS X local launch to detect whether
                 // the debugger is closed. If the debugger is not running anymore, the response (^exit)
                 // to the -gdb-exit command is faked to allow MIEngine to shut down.
+                // For RunInTransport, this needs to be updated via a callback.
                 if (localTransport is RunInTerminalTransport)
                 {
                     ((RunInTerminalTransport)localTransport).RegisterDebuggerPidCallback(SetDebuggerPid);

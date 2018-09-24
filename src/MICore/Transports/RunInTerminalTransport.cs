@@ -140,17 +140,12 @@ namespace MICore
 
                 if (PlatformUtilities.IsOSX())
                 {
-                    string thisModulePath = typeof(RunInTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
-                    string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), "osxlaunchhelper.scpt");
-                    if (!File.Exists(launchScript))
-                    {
-                        string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchScript);
-                        throw new FileNotFoundException(message);
-                    }
+                    string osxLaunchScript = GetOSXLaunchScript();
 
+                    // Call osascript with a path to the AppleScript. The apple script takes 2 parameters: a title for the terminal and the launch script.
                     cmdArgs.Add("/usr/bin/osascript");
-                    cmdArgs.Add(launchScript);
-                    cmdArgs.Add(FormattableString.Invariant($"{windowtitle}"));
+                    cmdArgs.Add(osxLaunchScript);
+                    cmdArgs.Add(FormattableString.Invariant($"\"{windowtitle}\""));
                     cmdArgs.Add(FormattableString.Invariant($"sh {dbgCmdScript} ;")); // needs a semicolon because this command is running through the launchscript.
                 }
                 else
@@ -159,7 +154,7 @@ namespace MICore
                     cmdArgs.Add(dbgCmdScript);
                 }
 
-                // Make sure to clear the con
+                // Make sure to clear the console
                 cmdArgs.Add(";");
                 cmdArgs.Add("clear");
 
@@ -167,9 +162,7 @@ namespace MICore
                 _commandStream = new StreamWriter(stdInStream, encNoBom);
             }
 
-            RunInTerminalLauncher launcher = new RunInTerminalLauncher(
-                windowtitle,
-                localOptions.Environment);
+            RunInTerminalLauncher launcher = new RunInTerminalLauncher(windowtitle, localOptions.Environment);
 
             launcher.Launch(
                      cmdArgs,
@@ -177,7 +170,7 @@ namespace MICore
                      LaunchSuccess,
                      (error) =>
                      {
-                         logger?.WriteTextBlock("console  error:", error);
+                         logger?.WriteTextBlock("RunInTerminalError: ", error);
                          throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, error));
                      },
                      logger);
@@ -189,6 +182,19 @@ namespace MICore
             }
 
             base.Init(transportCallback, options, logger, waitLoop);
+        }
+
+        private static string GetOSXLaunchScript()
+        {
+            string thisModulePath = typeof(RunInTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
+            string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), "osxlaunchhelper.scpt");
+            if (!File.Exists(launchScript))
+            {
+                string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchScript);
+                throw new FileNotFoundException(message);
+            }
+
+            return launchScript;
         }
 
         private void LogDebuggerErrors()
@@ -264,7 +270,6 @@ namespace MICore
                     Close();
                     throw new OperationCanceledException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, MICoreResources.Error_UnableToEstablishConnectionToLauncher));
                 }
-
             }
 
             if (debuggerPidCallback != null)
