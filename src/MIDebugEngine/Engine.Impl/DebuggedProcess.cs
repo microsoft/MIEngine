@@ -187,20 +187,28 @@ namespace Microsoft.MIDebugEngine
                         OutputMessage.Severity.Warning));
                 }
 
-                ITransport localTransport = new VsCodeTerminalTransport();
+                ITransport localTransport;
+
+                //Attempt to support RunInTerminal first
+                if (HostRunInTerminal.IsRunInTerminalAvailable()
+                    && String.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress)
+                    && IsCoreDump == false)
+                {
+                    localTransport = new RunInTerminalTransport();
+                }
                 // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
                 // uses fifos for debugger (e.g., gdb) communication.
-                if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
+                else if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
                     (PlatformUtilities.IsLinux() || (PlatformUtilities.IsOSX() && localLaunchOptions.DebuggerMIMode != MIMode.Lldb)))
                 {
-                    //localTransport = new LocalUnixTerminalTransport();
+                    localTransport = new LocalUnixTerminalTransport();
 
                     // Only need to clear terminal for Linux and OS X local launch
                     _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
                 }
                 else
                 {
-                    //localTransport = new LocalTransport();
+                    localTransport = new LocalTransport();
                 }
 
                 if (localLaunchOptions.ShouldStartServer())
@@ -220,9 +228,9 @@ namespace Microsoft.MIDebugEngine
                 // Only need to know the debugger pid on Linux and OS X local launch to detect whether
                 // the debugger is closed. If the debugger is not running anymore, the response (^exit)
                 // to the -gdb-exit command is faked to allow MIEngine to shut down.
-                if (localTransport is VsCodeTerminalTransport)
+                if (localTransport is RunInTerminalTransport)
                 {
-                    ((VsCodeTerminalTransport)localTransport).RegisterDebuggerPidCallback(SetDebuggerPid);
+                    ((RunInTerminalTransport)localTransport).RegisterDebuggerPidCallback(SetDebuggerPid);
                 }
                 else
                 {
@@ -366,7 +374,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (!this._connected)
                 {
-                    _initialBreakArgs = results; 
+                    _initialBreakArgs = results;
                     return;
                 }
 
@@ -769,7 +777,7 @@ namespace Microsoft.MIDebugEngine
 
                     // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux as LLDB's tty redirection doesn't work.
                     if (localLaunchOptions != null &&
-                        (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && PlatformUtilities.IsWindows()) 
+                        (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && PlatformUtilities.IsWindows())
                         || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));

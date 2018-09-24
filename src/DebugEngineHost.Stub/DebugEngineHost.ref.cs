@@ -418,17 +418,17 @@ public sealed class HostLogger
     }
 
     /// <summary>
-    /// Provides direct access to the underlying output window without going through debug events
+    /// Provides ability to launch in a VS Code protocol supported terminal
     /// </summary>
-    public static class HostOutputWindow
+    public static class HostRunInTerminal
     {
         /// <summary>
-        /// Write text to the Debug VS Output window pane directly. This is used to write information before the session create event.
+        /// Checks if RunInTerminal is available
         /// </summary>
-        /// <param name="outputMessage">Message to write</param>
-        public static void WriteLaunchError(string outputMessage)
+        /// <returns></returns>
+        public static bool IsRunInTerminalAvailable()
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         /// <summary>
@@ -444,7 +444,22 @@ public sealed class HostLogger
         /// <returns>true if the message is sent, false if not.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "cwd")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
-        public static bool TryRunInTerminal(string title, string workingDirectory, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string> environmentVariables, Action<int?> success, Action<string> failure)
+        public static void RunInTerminal(string title, string workingDirectory, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string> environmentVariables, Action<int?> success, Action<string> failure)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Provides direct access to the underlying output window without going through debug events
+    /// </summary>
+    public static class HostOutputWindow
+    {
+        /// <summary>
+        /// Write text to the Debug VS Output window pane directly. This is used to write information before the session create event.
+        /// </summary>
+        /// <param name="outputMessage">Message to write</param>
+        public static void WriteLaunchError(string outputMessage)
         {
             throw new NotImplementedException();
         }

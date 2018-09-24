@@ -2,15 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -106,12 +103,12 @@ namespace MICore
         protected override string GetProcessArgs()
         {
             string thisModulePath = typeof(MacTerminalLauncher).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
-            string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), LaunchTerminalScript);if (!File.Exists(launchScript))
+            string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), LaunchTerminalScript); if (!File.Exists(launchScript))
             {
                 string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchScript);
                 throw new FileNotFoundException(message);
             }
-            
+
             // NOTE: setEnvironmentScript will either be the empty string or end in a space, so '{2}' and '{3}' can be next to each other.
             string setEnvironmentScript = GetSetEnvironmentScript();
             return string.Format(CultureInfo.InvariantCulture, "{0} \"{1}\" \"{2}{3}\"", launchScript, _title, setEnvironmentScript, _initScript);
@@ -219,33 +216,6 @@ namespace MICore
             {
                 processStartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
             }
-        }
-    }
-
-    internal class VSCodeRunInTerminalLauncher
-    {
-        private string _title;
-
-        private Dictionary<string, string> _environment;
-
-        public VSCodeRunInTerminalLauncher(string title, ReadOnlyCollection<EnvironmentEntry> envEntries)
-        {
-            _title = title;
-            _environment = new Dictionary<string, string>();
-
-            if (envEntries != null && envEntries.Any())
-            {
-                foreach(var envEntry in envEntries)
-                {
-                    Debug.Assert(!_environment.ContainsKey(envEntry.Name), FormattableString.Invariant($"Duplicate key ${envEntry.Name} detected!"));
-                    _environment[envEntry.Name] = envEntry.Value;
-                }
-            }
-        }
-
-        public bool Launch(List<string> cmdArgs, bool useExternalConsole, Action<int?> launchCompleteAction, Action<string> launchFailureAction, Logger logger)
-        {
-            return HostOutputWindow.TryRunInTerminal(_title, string.Empty, useExternalConsole, cmdArgs, new ReadOnlyDictionary<string, string>(_environment), launchCompleteAction, launchFailureAction);
         }
     }
 }

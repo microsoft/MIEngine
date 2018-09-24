@@ -15,7 +15,7 @@ using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
-    public class VsCodeTerminalTransport : StreamTransport
+    public class RunInTerminalTransport : StreamTransport
     {
         private int _debuggerPid;
         private StreamReader _pidReader;
@@ -48,6 +48,8 @@ namespace MICore
             string pidPipeName;
             List<string> cmdArgs = new List<string>();
 
+            string windowtitle = FormattableString.Invariant($"cppdbg: {Path.GetFileName(options.ExePath)}");
+
             if (PlatformUtilities.IsWindows())
             {
                 // Create Windows Named pipes
@@ -61,9 +63,9 @@ namespace MICore
                 NamedPipeServerStream errorFromDebugger = new NamedPipeServerStream(errorPipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte);
                 NamedPipeServerStream pidPipe = new NamedPipeServerStream(pidPipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte);
 
-                _pidReader = new StreamReader(pidPipe, encNoBom, false, 1024 * 4);
+                _pidReader = new StreamReader(pidPipe, encNoBom, false, UnixUtilities.StreamBufferSize);
 
-                string thisModulePath = typeof(VsCodeTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
+                string thisModulePath = typeof(RunInTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
                 string launchCommand = Path.Combine(Path.GetDirectoryName(thisModulePath), "WindowsDebugLauncher.exe");
 
                 if (!File.Exists(launchCommand))
@@ -86,8 +88,8 @@ namespace MICore
                         pidPipe.WaitForConnectionAsync());
 
                 _commandStream = new StreamWriter(inputToDebugger, encNoBom);
-                _outputStream = new StreamReader(outputFromDebugger, encNoBom, false, 1024 * 4);
-                _errorStream = new StreamReader(errorFromDebugger, encNoBom, false, 1024 * 4);
+                _outputStream = new StreamReader(outputFromDebugger, encNoBom, false, UnixUtilities.StreamBufferSize);
+                _errorStream = new StreamReader(errorFromDebugger, encNoBom, false, UnixUtilities.StreamBufferSize);
             }
             else
             {
@@ -99,7 +101,7 @@ namespace MICore
                 // Create filestreams
                 FileStream stdInStream = new FileStream(commandPipeName, FileMode.Open);
                 FileStream stdOutStream = new FileStream(outputPipeName, FileMode.Open);
-                _pidReader = new StreamReader(new FileStream(pidPipeName, FileMode.Open), encNoBom, false, 1024 * 4);
+                _pidReader = new StreamReader(new FileStream(pidPipeName, FileMode.Open), encNoBom, false, UnixUtilities.StreamBufferSize);
 
                 string debuggerCmd = UnixUtilities.GetDebuggerCommand(localOptions);
 
@@ -138,7 +140,7 @@ namespace MICore
 
                 if (PlatformUtilities.IsOSX())
                 {
-                    string thisModulePath = typeof(VsCodeTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
+                    string thisModulePath = typeof(RunInTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
                     string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), "osxlaunchhelper.scpt");
                     if (!File.Exists(launchScript))
                     {
@@ -148,8 +150,8 @@ namespace MICore
 
                     cmdArgs.Add("/usr/bin/osascript");
                     cmdArgs.Add(launchScript);
-                    cmdArgs.Add(FormattableString.Invariant($"{Path.GetFileName(options.ExePath)}"));
-                    cmdArgs.Add(FormattableString.Invariant($"sh {dbgCmdScript} ;")); // needs a semicolon because of the script it is running.
+                    cmdArgs.Add(FormattableString.Invariant($"{windowtitle}"));
+                    cmdArgs.Add(FormattableString.Invariant($"sh {dbgCmdScript} ;")); // needs a semicolon because this command is running through the launchscript.
                 }
                 else
                 {
@@ -161,29 +163,24 @@ namespace MICore
                 cmdArgs.Add(";");
                 cmdArgs.Add("clear");
 
-                _outputStream = new StreamReader(stdOutStream, encNoBom, false, 1024 * 4);
+                _outputStream = new StreamReader(stdOutStream, encNoBom, false, UnixUtilities.StreamBufferSize);
                 _commandStream = new StreamWriter(stdInStream, encNoBom);
             }
 
-
-            VSCodeRunInTerminalLauncher launcher = new VSCodeRunInTerminalLauncher(
-                Path.GetFileName(options.ExePath),
+            RunInTerminalLauncher launcher = new RunInTerminalLauncher(
+                windowtitle,
                 localOptions.Environment);
 
-            if (!launcher.Launch(
-                    cmdArgs,
-                    localOptions.UseExternalConsole,
-                    LaunchSuccess,
-                    (error) =>
-                    {
-                        logger?.WriteTextBlock("console  error:", error);
-                        throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, error));
-                    },
-                    logger))
-            {
-                throw new InvalidOperationException(MICoreResources.Error_RunInTerminalUnavailable);
-            }
-
+            launcher.Launch(
+                     cmdArgs,
+                     localOptions.UseExternalConsole,
+                     LaunchSuccess,
+                     (error) =>
+                     {
+                         logger?.WriteTextBlock("console  error:", error);
+                         throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, error));
+                     },
+                     logger);
             logger?.WriteLine("Wait for connection completion.");
 
             if (_waitForConnection != null)
@@ -200,7 +197,7 @@ namespace MICore
             {
                 while (!_streamReadPidCancellationTokenSource.IsCancellationRequested)
                 {
-                    string line = this.GetLineFromStream(_errorStream);
+                    string line = this.GetLineFromStream(_errorStream, _streamReadPidCancellationTokenSource.Token);
                     if (line == null)
                         break;
                     Logger?.WriteTextBlock("dbgerr:", line);

@@ -157,15 +157,15 @@ namespace MICore
 
         private string GetLine()
         {
-            return GetLineFromStream(_reader);
+            return GetLineFromStream(_reader, _streamReadCancellationTokenSource.Token);
         }
 
-        protected string GetLineFromStream(StreamReader reader)
+        protected string GetLineFromStream(StreamReader reader, CancellationToken token)
         {
             try
             {
                 Task<string> task = reader.ReadLineAsync();
-                task.Wait(_streamReadCancellationTokenSource.Token);
+                task.Wait(token);
                 return task.Result;
             }
             catch (OperationCanceledException)

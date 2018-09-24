@@ -34,6 +34,10 @@ namespace WindowsDebugLauncher
                 DbgExeArgs = new List<string>();
             }
 
+            /// <summary>
+            /// Ensures all parameters have been set
+            /// </summary>
+            /// <returns></returns>
             public bool ValidateParameters()
             {
                 return !(string.IsNullOrEmpty(PipeServer)
@@ -44,19 +48,27 @@ namespace WindowsDebugLauncher
                     || string.IsNullOrEmpty(DbgExe));
             }
 
-            public string DbgExeArgsAsString()
+            public string ParametersAsString()
             {
                 StringBuilder argString = new StringBuilder();
                 foreach (var arg in DbgExeArgs.ToList())
                 {
-                    argString.Append(arg);
+                    if (arg.Contains(' '))
+                    {
+                        argString.Append("\"" + arg + "\"");
+                    }
+                    else
+                    {
+                        argString.Append(arg);
+                    }
+
                     argString.Append(' ');
                 }
 
                 return argString.ToString();
             }
         }
-        
+
         private LaunchParameters _parameters;
 
         private bool isRunning = true;
@@ -83,7 +95,7 @@ namespace WindowsDebugLauncher
             NamedPipeClientStream outputStream = new NamedPipeClientStream(_parameters.PipeServer, _parameters.StdOutPipeName, PipeDirection.Out, PipeOptions.None, TokenImpersonationLevel.Impersonation);
             NamedPipeClientStream errorStream = new NamedPipeClientStream(_parameters.PipeServer, _parameters.StdErrPipeName, PipeDirection.Out, PipeOptions.None, TokenImpersonationLevel.Impersonation);
             NamedPipeClientStream pidStream = new NamedPipeClientStream(_parameters.PipeServer, _parameters.PidPipeName, PipeDirection.Out, PipeOptions.None, TokenImpersonationLevel.Impersonation);
-            
+
             // Connect as soon as possible
             inputStream.Connect();
             outputStream.Connect();
@@ -104,7 +116,7 @@ namespace WindowsDebugLauncher
             }
 
             info.FileName = _parameters.DbgExe;
-            info.Arguments = _parameters.DbgExeArgsAsString();
+            info.Arguments = _parameters.ParametersAsString();
             info.UseShellExecute = false;
             info.RedirectStandardInput = true;
             info.RedirectStandardOutput = true;
