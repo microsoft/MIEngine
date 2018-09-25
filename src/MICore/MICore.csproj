@@ -157,11 +157,9 @@
     <Compile Include="ProcessMonitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RunInTerminalLauncher.cs" />
-    <Compile Include="TerminalLauncher.cs" />
     <Compile Include="Transports\ClientServerTransport.cs" />
     <Compile Include="Transports\ITransport.cs" />
     <Compile Include="Transports\LocalTransport.cs" />
-    <Compile Include="Transports\LocalUnixTerminalTransport.cs" />
     <Compile Include="Transports\MockTransport.cs" />
     <Compile Include="Transports\PipeTransport.cs" />
     <Compile Include="Transports\UnixShellPortTransport.cs" />
