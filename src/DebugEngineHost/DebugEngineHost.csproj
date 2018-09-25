@@ -125,6 +125,7 @@
     <Compile Include="HostConfigurationStore.cs" />
     <Compile Include="HostConfigurationException.cs" />
     <Compile Include="HostLogger.cs" />
+    <Compile Include="HostRunInTerminal.cs" />
     <Compile Include="HostTelemetry.cs" />
     <Compile Include="VSImpl\VSEventCallbackWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

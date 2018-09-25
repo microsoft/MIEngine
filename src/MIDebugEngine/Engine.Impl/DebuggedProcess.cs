@@ -189,22 +189,18 @@ namespace Microsoft.MIDebugEngine
 
                 ITransport localTransport;
 
-                //Attempt to support RunInTerminal first
+                // Attempt to support RunInTerminal first when it is a local launch and it is not debugging a coredump.
                 if (HostRunInTerminal.IsRunInTerminalAvailable()
                     && String.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress)
                     && IsCoreDump == false)
                 {
                     localTransport = new RunInTerminalTransport();
-                }
-                // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
-                // uses fifos for debugger (e.g., gdb) communication.
-                else if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                    (PlatformUtilities.IsLinux() || (PlatformUtilities.IsOSX() && localLaunchOptions.DebuggerMIMode != MIMode.Lldb)))
-                {
-                    localTransport = new LocalUnixTerminalTransport();
 
-                    // Only need to clear terminal for Linux and OS X local launch
-                    _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                    if(PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                    {
+                        // Only need to clear terminal for Linux and OS X local launch
+                        _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                    }
                 }
                 else
                 {
