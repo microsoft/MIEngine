@@ -101,7 +101,7 @@ namespace Microsoft.MIDebugEngine
             LibraryLoadEvent += delegate (object o, EventArgs args)
             {
                 ResultEventArgs results = args as MICore.Debugger.ResultEventArgs;
-                string file = results.Results.TryFindString("host-name");
+                string file = results.Results.TryFindString("id");
                 if (!string.IsNullOrEmpty(file) && MICommandFactory.SupportsStopOnDynamicLibLoad())
                 {
                     _libraryLoaded.Add(file);
@@ -486,18 +486,19 @@ namespace Microsoft.MIDebugEngine
                     {
                         foreach (string file in _libraryLoaded)
                         {
-                            if (_launchOptions.SymbolInfoExceptionList.Contains(file))
+                            string filename = Path.GetFileName(file);
+                            if (_launchOptions.SymbolInfoExceptionList.Contains(filename))
                             {
                                 if (!_launchOptions.SymbolInfoLoadAll)
                                 {
-                                    await LoadSymbols(file);
+                                    await LoadSymbols(filename);
                                 }
                             }
                             else
                             {
                                 if (_launchOptions.SymbolInfoLoadAll)
                                 {
-                                    await LoadSymbols(file);
+                                    await LoadSymbols(filename);
                                 }
                             }
                         }
@@ -1463,7 +1464,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     Task evalTask = Task.Run(async () =>
                     {
-                        await LoadSymbols(module.Name);
+                        await LoadSymbols(Path.GetFileName(module.Name));
                         await CheckModules();
                     });
                 }
@@ -1667,8 +1668,7 @@ namespace Microsoft.MIDebugEngine
             {
                 if (MICommandFactory.SupportsStopOnDynamicLibLoad())
                 {
-                    await CheckModules();
-                    _libraryLoaded.Clear();
+                    await EnsureModulesLoaded();
                 }
 
                 await HandleBreakModeEvent(_initialBreakArgs, BreakRequest.None);
