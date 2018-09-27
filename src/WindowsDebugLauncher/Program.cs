@@ -17,6 +17,7 @@ namespace WindowsDebugLauncher
         private static int Main(string[] argv)
         {
             DebugLauncher.LaunchParameters parameters = new DebugLauncher.LaunchParameters();
+            parameters.PipeServer = "."; // Currently only supporting local pipe connections
 
             foreach (var a in argv)
             {

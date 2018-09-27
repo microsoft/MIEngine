@@ -176,6 +176,11 @@ namespace MICore
             {
                 return null;
             }
+            // If this is a named pipe and it did not connect, reading from it will throw InvalidOperationException
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
             // I have seen the StreamReader throw both an ObjectDisposedException (which makes sense) and a NullReferenceException
             // (which seems like a bug) after it is closed. Since we have no exception back stop here, we are catching all exceptions
             // here (we don't want to crash VS).

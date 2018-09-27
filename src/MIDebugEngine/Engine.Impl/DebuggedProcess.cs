@@ -190,13 +190,15 @@ namespace Microsoft.MIDebugEngine
                 ITransport localTransport;
 
                 // Attempt to support RunInTerminal first when it is a local launch and it is not debugging a coredump.
+                // Also since we use gdb-set new-console on in windows for external console, we don't need to RunInTerminal
                 if (HostRunInTerminal.IsRunInTerminalAvailable()
                     && String.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress)
-                    && IsCoreDump == false)
+                    && IsCoreDump == false
+                    && PlatformUtilities.IsWindows())
                 {
                     localTransport = new RunInTerminalTransport();
 
-                    if(PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                    if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                     {
                         // Only need to clear terminal for Linux and OS X local launch
                         _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
@@ -774,19 +776,13 @@ namespace Microsoft.MIDebugEngine
 
                     // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux as LLDB's tty redirection doesn't work.
                     if (localLaunchOptions != null &&
-                        (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) && PlatformUtilities.IsWindows())
-                        || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb))
+                        ((PlatformUtilities.IsWindows() && localLaunchOptions.UseExternalConsole)
+                        || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
 
                     CheckCygwin(commands, localLaunchOptions);
-
-                    // Send client version to clrdbg to set the capabilities appropriately
-                    if (this.MICommandFactory.Mode == MIMode.Clrdbg)
-                    {
-                        commands.Add(new LaunchCommand("-gdb-set client-ui \"" + Host.GetHostUIIdentifier().ToString() + "\""));
-                    }
 
                     this.AddExecutablePathCommand(commands);
 

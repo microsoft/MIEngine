@@ -124,7 +124,7 @@ namespace WindowsDebugLauncher
 
             Process proc = new Process();
             proc.StartInfo = info;
-
+            proc.EnableRaisingEvents = true;
             proc.Exited += OnProcessExited;
 
             proc.Start();

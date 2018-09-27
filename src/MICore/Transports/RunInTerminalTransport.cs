@@ -70,7 +70,10 @@ namespace MICore
 
                 if (!File.Exists(launchCommand))
                 {
-                    throw new FileNotFoundException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchCommand));
+                    string errorMessage = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchCommand);
+                    transportCallback.OnStdErrorLine(errorMessage);
+                    transportCallback.OnDebuggerProcessExit(null);
+                    return;
                 }
 
                 cmdArgs.Add(launchCommand);
@@ -170,15 +173,24 @@ namespace MICore
                      LaunchSuccess,
                      (error) =>
                      {
-                         logger?.WriteTextBlock("RunInTerminalError: ", error);
-                         throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_RunInTerminalFailure, error));
+                         transportCallback.OnStdErrorLine(error);
+                         throw new InvalidOperationException(error);
                      },
                      logger);
             logger?.WriteLine("Wait for connection completion.");
 
             if (_waitForConnection != null)
             {
-                await _waitForConnection;
+                // Add a timeout for waiting for connection - 20 seconds
+                Task waitOrTimeout = Task.WhenAny(_waitForConnection, Task.Delay(5000));
+                await waitOrTimeout;
+                if (waitOrTimeout.Status != TaskStatus.RanToCompletion)
+                {
+                    string errorMessage = String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_DebuggerInitializeFailed_NoStdErr, "WindowsDebugLauncher.exe");
+                    transportCallback.OnStdErrorLine(errorMessage);
+                    transportCallback.OnDebuggerProcessExit(null);
+                    return;
+                }
             }
 
             base.Init(transportCallback, options, logger, waitLoop);
