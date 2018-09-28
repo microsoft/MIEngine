@@ -468,6 +468,24 @@ namespace Microsoft.MIDebugEngine
             };
         }
 
+        /// <summary>
+        /// GetFileName - returns all characters after the last directory separator
+        /// If no directory spearator is found or at least one charactar after the separator is not found 
+        /// then return the original string.
+        /// </summary>
+        private static string GetFileName(string path)
+        {
+            int index = path.LastIndexOfAny(new char[] { '/', '\\' });
+            if ( index >= 0 && index < path.Length-1 )
+            {
+                return path.Substring(index + 1);
+            }
+            else // no path separator or no characters after the separator, return the original string
+            {
+                return path;    
+            }
+        }
+
         private async Task EnsureModulesLoaded()
         {
             if (_libraryLoaded.Count != 0)
@@ -486,7 +504,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         foreach (string file in _libraryLoaded)
                         {
-                            string filename = Path.GetFileName(file);
+                            string filename = GetFileName(file);
                             if (_launchOptions.SymbolInfoExceptionList.Contains(filename))
                             {
                                 if (!_launchOptions.SymbolInfoLoadAll)
@@ -1464,7 +1482,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     Task evalTask = Task.Run(async () =>
                     {
-                        await LoadSymbols(Path.GetFileName(module.Name));
+                        await LoadSymbols(GetFileName(module.Name));
                         await CheckModules();
                     });
                 }
