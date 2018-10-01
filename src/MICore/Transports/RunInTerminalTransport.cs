@@ -83,7 +83,10 @@ namespace MICore
                 cmdArgs.Add("--pid=" + pidPipeName);
                 cmdArgs.Add("--dbgExe=" + localOptions.MIDebuggerPath);
                 cmdArgs.Add(localOptions.GetMiDebuggerArgs());
-
+#if !DEBUG
+                // clear the console
+                cmdArgs.Add("& cls");
+#endif
                 _waitForConnection = Task.WhenAll(
                         inputToDebugger.WaitForConnectionAsync(),
                         outputFromDebugger.WaitForConnectionAsync(),
@@ -157,9 +160,10 @@ namespace MICore
                     cmdArgs.Add(dbgCmdScript);
                 }
 
+#if !DEBUG
                 // Make sure to clear the console
-                cmdArgs.Add(";");
-                cmdArgs.Add("clear");
+                cmdArgs.Add("; clear");
+#endif
 
                 _outputStream = new StreamReader(stdOutStream, encNoBom, false, UnixUtilities.StreamBufferSize);
                 _commandStream = new StreamWriter(stdInStream, encNoBom);

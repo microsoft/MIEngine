@@ -194,7 +194,7 @@ namespace Microsoft.MIDebugEngine
                 if (HostRunInTerminal.IsRunInTerminalAvailable()
                     && String.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress)
                     && IsCoreDump == false
-                    && PlatformUtilities.IsWindows())
+                    && (PlatformUtilities.IsWindows() && !localLaunchOptions.UseExternalConsole))
                 {
                     localTransport = new RunInTerminalTransport();
 
@@ -790,10 +790,39 @@ namespace Microsoft.MIDebugEngine
                     this.AddGetTargetArchitectureCommand(commands);
 
                     // LLDB requires -exec-arguments after -file-exec-and-symbols has been run, or else it errors
-                    if (!string.IsNullOrWhiteSpace(_launchOptions.ExeArguments))
-                    {
-                        commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
-                    }
+                    //string exeArguments = _launchOptions.ExeArguments;
+                    //if (!string.IsNullOrWhiteSpace(exeArguments))
+                    //{
+                    //    if (PlatformUtilities.IsWindows()
+                    //        && !localLaunchOptions.UseExternalConsole
+                    //        && !IsCoreDump
+                    //        && string.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress))
+                    //    {
+                    //        string[] redirections = { ">", "<" };
+                    //        int index = -1;
+                    //        bool redirected = false;
+                    //        foreach (string redirection in redirections)
+                    //        {
+                    //            index = exeArguments.IndexOf(redirection);
+                    //            redirected = index >= 0;
+                    //            if (redirected)
+                    //            {
+                    //                if ((index == 0) || (index > 0 && exeArguments[index - 1] != '^'))
+                    //                {
+                    //                    break;
+                    //                }
+                    //                continue;
+                    //            }
+                    //        }
+
+                    //        if(!redirected)
+                    //        {
+                    //            exeArguments = string.Concat(exeArguments, " 2>CON 1>CON <CON")
+                    //        }
+                    //    }
+
+                    commands.Add(new LaunchCommand("-exec-arguments " + _launchOptions.ExeArguments));
+                    //}
 
                     Func<Results, Task> breakMainSuccessResultsHandler = (Results bkptResult) =>
                     {

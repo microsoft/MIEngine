@@ -198,7 +198,8 @@ namespace WindowsDebugLauncher
                 Debug.Assert(
                     e is OperationCanceledException
                     || e is IOException
-                    || e is ObjectDisposedException,
+                    || e is ObjectDisposedException
+                    || (e is AggregateException && ((AggregateException)e).InnerException is ArgumentException), // we get this when the host side is closed
                     "Exception throw from ReadLine when we haven't quit yet");
                 Shutdown();
                 return null;
