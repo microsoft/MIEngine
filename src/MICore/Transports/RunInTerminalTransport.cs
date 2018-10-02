@@ -85,7 +85,8 @@ namespace MICore
                 cmdArgs.Add(localOptions.GetMiDebuggerArgs());
 #if !DEBUG
                 // clear the console
-                cmdArgs.Add("& cls");
+                cmdArgs.Add("&");
+                cmdArgs.Add("cls");
 #endif
                 _waitForConnection = Task.WhenAll(
                         inputToDebugger.WaitForConnectionAsync(),
@@ -162,7 +163,8 @@ namespace MICore
 
 #if !DEBUG
                 // Make sure to clear the console
-                cmdArgs.Add("; clear");
+                cmdArgs.Add(";");
+                cmdArgs.Add("clear");
 #endif
 
                 _outputStream = new StreamReader(stdOutStream, encNoBom, false, UnixUtilities.StreamBufferSize);
