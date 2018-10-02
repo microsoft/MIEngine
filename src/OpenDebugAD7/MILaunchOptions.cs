@@ -273,7 +273,7 @@ namespace OpenDebugAD7
             {
                 var localLaunchOptions = (JsonLocalLaunchOptions)jsonLaunchOptions;
 
-                if (!localLaunchOptions.ExternalConsole 
+                if (!localLaunchOptions.ExternalConsole
                     && !localLaunchOptions.AvoidWindowsConsoleRedirection)
                 {
                     exeArgsArray = TryAddWindowsDebuggeeConsoleRedirection(exeArgsArray);
@@ -294,44 +294,56 @@ namespace OpenDebugAD7
         }
 
         /// <summary>
-        /// To support Windows RunInTerminal's IntegratedTerminal, we need to check and see if the exe arguments contain redirection
-        /// If they don't, we will add redirection to output/input to CON
+        /// To support Windows RunInTerminal's IntegratedTerminal, we will check each argument to see if it is a redirection of stdin, stderr, stdout and then will add
+        /// the redirection for the ones the user did not specify to go to Console.
         /// </summary>
-        /// <returns></returns>
-        private static string[] TryAddWindowsDebuggeeConsoleRedirection(string[] args)
+        private static string[] TryAddWindowsDebuggeeConsoleRedirection(string[] arguments)
         {
-            bool isRedirected = false;
-            foreach (var arg in args)
+            bool stdInRedirected = false;
+            bool stdOutRedirected = false;
+            bool stdErrRedirected = false;
+
+            foreach (string rawArgument in arguments)
             {
-                int index = arg.TrimStart().IndexOf('>');
-                if (index >= 0 && index < 2)
+                string argument = rawArgument.TrimStart();
+                if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
                 {
-                    isRedirected = true;
-                    break;
+                    stdErrRedirected = true;
                 }
-                else
+                if (argument.TrimStart().StartsWith("1>", StringComparison.Ordinal) || argument.TrimStart().StartsWith(">", StringComparison.Ordinal))
                 {
-                    index = arg.TrimStart().IndexOf('<');
-                    if (index == 0)
-                    {
-                        isRedirected = true;
-                        break;
-                    }
+                    stdOutRedirected = true;
+                }
+                if (argument.TrimStart().StartsWith("0>", StringComparison.Ordinal) || argument.TrimStart().StartsWith("<", StringComparison.Ordinal))
+                {
+                    stdInRedirected = true;
                 }
             }
 
-            if (!isRedirected)
+            if (!stdInRedirected || !stdOutRedirected || !stdErrRedirected)
             {
-                List<string> arguments = new List<string>(args.Length + 3);
-                arguments.AddRange(args);
-                arguments.Add("2>CON");
-                arguments.Add("1>CON");
-                arguments.Add("<CON");
+                List<string> argList = new List<string>(arguments.Length + 3);
+                argList.AddRange(arguments);
 
-                return arguments.ToArray();
+                if (!stdErrRedirected)
+                {
+                    argList.Add("2>CON");
+                }
+
+                if (!stdOutRedirected)
+                {
+                    argList.Add("1>CON");
+                }
+
+                if (!stdInRedirected)
+                {
+                    argList.Add("<CON");
+                }
+
+                return argList.ToArray<string>();
             }
-            else
-                return args;
+
+            return arguments;
         }
 
         private static string CreateArgumentList(IEnumerable<string> args)
