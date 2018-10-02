@@ -83,11 +83,7 @@ namespace MICore
                 cmdArgs.Add("--pid=" + pidPipeName);
                 cmdArgs.Add("--dbgExe=" + localOptions.MIDebuggerPath);
                 cmdArgs.Add(localOptions.GetMiDebuggerArgs());
-#if !DEBUG
-                // clear the console
-                cmdArgs.Add("&");
-                cmdArgs.Add("cls");
-#endif
+
                 _waitForConnection = Task.WhenAll(
                         inputToDebugger.WaitForConnectionAsync(),
                         outputFromDebugger.WaitForConnectionAsync(),
