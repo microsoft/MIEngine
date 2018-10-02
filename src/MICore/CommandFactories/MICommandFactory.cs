@@ -643,16 +643,6 @@ namespace MICore
             return isAsyncBreak;
         }
 
-        /// <summary>
-        /// Determines if a new external console should be spawned on non-Windows platforms for the debugger+app
-        /// </summary>
-        /// <param name="localLaunchOptions">[required] local launch options</param>
-        /// <returns>True if an external console should be used</returns>
-        public virtual bool UseExternalConsoleForLocalLaunch(LocalLaunchOptions localLaunchOptions)
-        {
-            return localLaunchOptions.UseExternalConsole && String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
-        }
-
         public Results IsModuleLoad(string cmd)
         {
             Results results = null;

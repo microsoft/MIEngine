@@ -307,11 +307,25 @@ Error: {1}</value>
   <data name="Error_UnknownCustomLauncher" xml:space="preserve">
     <value>Unrecognized json customLauncher element '{0}'.</value>
   </data>
+
   <data name="Error_InvalidSymbolInfo" xml:space="preserve">
     <value>Invalid SymbolInfo, cannot specify a list of solibs when "WaitDynamicLoad" is false.</value>
   </data>
   <data name="Error_OptionNotSupported" xml:space="preserve">
     <value>Error: Option {0} is not supported by {1}.</value>
     <comment>{0} launch option {1} debugging mode</comment>
+  </data>
+  <data name="Error_RunInTerminalFailure" xml:space="preserve">
+    <value>'RunInTerminalRequest' failed. '{0}'.</value>
+    <comment>{0} exception error from VSCode</comment>
+  </data>
+  <data name="Error_RunInTerminalUnavailable" xml:space="preserve">
+    <value>Unable to send 'RunInTerminalRequest' to Visual Studio Code.</value>
+  </data>
+  <data name="Error_TimeoutWaitingForConnection" xml:space="preserve">
+    <value>Timeout waiting for connection.</value>
+  </data>
+  <data name="Error_UnableToEstablishConnectionToLauncher" xml:space="preserve">
+    <value>Unable to establish a connection to the launcher.</value>
   </data>
 </root>

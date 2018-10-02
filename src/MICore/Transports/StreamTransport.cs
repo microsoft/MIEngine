@@ -157,10 +157,15 @@ namespace MICore
 
         private string GetLine()
         {
+            return GetLineFromStream(_reader, _streamReadCancellationTokenSource.Token);
+        }
+
+        protected string GetLineFromStream(StreamReader reader, CancellationToken token)
+        {
             try
             {
-                Task<string> task = _reader.ReadLineAsync();
-                task.Wait(_streamReadCancellationTokenSource.Token);
+                Task<string> task = reader.ReadLineAsync();
+                task.Wait(token);
                 return task.Result;
             }
             catch (OperationCanceledException)
@@ -168,6 +173,11 @@ namespace MICore
                 return null;
             }
             catch (ObjectDisposedException)
+            {
+                return null;
+            }
+            // If this is a named pipe and it did not connect, reading from it will throw InvalidOperationException
+            catch (InvalidOperationException)
             {
                 return null;
             }

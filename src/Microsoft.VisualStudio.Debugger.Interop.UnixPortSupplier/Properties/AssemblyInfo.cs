@@ -21,26 +21,3 @@ using System;
 
 // Add the PrimaryInteropAssemblyAttribute so that this assembly can be used with 'Embed Interop Types'
 [assembly: System.Runtime.InteropServices.PrimaryInteropAssemblyAttribute(1, 0)]
-
-#if CORECLR
-// There is no portable definition for PrimaryInteropAssemblyAttribute, so define our own here to make the C# compiler happy
-namespace System.Runtime.InteropServices
-{
-    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = true)]
-    [System.Runtime.InteropServices.ComVisible(true)]
-    internal sealed class PrimaryInteropAssemblyAttribute : Attribute
-    {
-        internal int _major;
-        internal int _minor;
-
-        public PrimaryInteropAssemblyAttribute(int major, int minor)
-        {
-            _major = major;
-            _minor = minor;
-        }
-
-        public int MajorVersion { get { return _major; } }
-        public int MinorVersion { get { return _minor; } }
-    }
-}
-#endif

@@ -154,6 +154,9 @@ namespace OpenDebugAD7
 
             [JsonProperty]
             public bool ExternalConsole { get; set; }
+
+            [JsonProperty]
+            public bool AvoidWindowsConsoleRedirection { get; set; }
         }
 
         [JsonObject]
@@ -229,8 +232,6 @@ namespace OpenDebugAD7
             string program,
             string workingDirectory)
         {
-            StringBuilder exeArguments = new StringBuilder();
-
             xmlLaunchOptions.Append(String.Concat("  ExePath='", XmlSingleQuotedAttributeEncode(program), "'\n"));
 
             if (!String.IsNullOrEmpty(workingDirectory))
@@ -263,20 +264,90 @@ namespace OpenDebugAD7
                 xmlLaunchOptions.Append(String.Concat(" CoreDumpPath='", jsonLaunchOptions.CoreDumpPath, "'\n"));
             }
 
-            if (exeArguments.Length > 0 && jsonLaunchOptions.Args != null && jsonLaunchOptions.Args.Length > 0)
+            string[] exeArgsArray = jsonLaunchOptions.Args;
+
+            // Check to see if we need to redirect app stdin/out/err in Windows case for IntegratedTerminalSupport.
+            if (Utilities.IsWindows()
+                && jsonLaunchOptions is JsonLocalLaunchOptions
+                && String.IsNullOrWhiteSpace(jsonLaunchOptions.CoreDumpPath))
             {
-                exeArguments.Append(' ');
+                var localLaunchOptions = (JsonLocalLaunchOptions)jsonLaunchOptions;
+
+                if (!localLaunchOptions.ExternalConsole
+                    && !localLaunchOptions.AvoidWindowsConsoleRedirection)
+                {
+                    exeArgsArray = TryAddWindowsDebuggeeConsoleRedirection(exeArgsArray);
+                }
             }
 
             // ExeArguments
-            exeArguments.Append(CreateArgumentList(jsonLaunchOptions.Args));
+            // Build the exe's argument list as a string
+            StringBuilder exeArguments = new StringBuilder();
+            exeArguments.Append(CreateArgumentList(exeArgsArray));
             XmlSingleQuotedAttributeEncode(exeArguments);
             xmlLaunchOptions.Append(String.Concat("  ExeArguments='", exeArguments, "'\n"));
 
             if (jsonLaunchOptions.MIMode != null)
             {
-                xmlLaunchOptions.Append(String.Concat(" MIMode='", jsonLaunchOptions.MIMode, "'\n"));
+                xmlLaunchOptions.Append(String.Concat("  MIMode='", jsonLaunchOptions.MIMode, "'\n"));
             }
+        }
+
+        /// <summary>
+        /// To support Windows RunInTerminal's IntegratedTerminal, we will check each argument to see if it is a redirection of stdin, stderr, stdout and then will add
+        /// the redirection for the ones the user did not specify to go to Console.
+        /// </summary>
+        private static string[] TryAddWindowsDebuggeeConsoleRedirection(string[] arguments)
+        {
+            if (Utilities.IsWindows()) // Only do this on Windows
+            {
+                bool stdInRedirected = false;
+                bool stdOutRedirected = false;
+                bool stdErrRedirected = false;
+
+                foreach (string rawArgument in arguments)
+                {
+                    string argument = rawArgument.TrimStart();
+                    if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
+                    {
+                        stdErrRedirected = true;
+                    }
+                    if (argument.TrimStart().StartsWith("1>", StringComparison.Ordinal) || argument.TrimStart().StartsWith(">", StringComparison.Ordinal))
+                    {
+                        stdOutRedirected = true;
+                    }
+                    if (argument.TrimStart().StartsWith("0>", StringComparison.Ordinal) || argument.TrimStart().StartsWith("<", StringComparison.Ordinal))
+                    {
+                        stdInRedirected = true;
+                    }
+                }
+
+                // If one (or more) are not redirected, then add redirection
+                if (!stdInRedirected || !stdOutRedirected || !stdErrRedirected)
+                {
+                    List<string> argList = new List<string>(arguments.Length + 3);
+                    argList.AddRange(arguments);
+
+                    if (!stdErrRedirected)
+                    {
+                        argList.Add("2>CON");
+                    }
+
+                    if (!stdOutRedirected)
+                    {
+                        argList.Add("1>CON");
+                    }
+
+                    if (!stdInRedirected)
+                    {
+                        argList.Add("<CON");
+                    }
+
+                    return argList.ToArray<string>();
+                }
+            }
+
+            return arguments;
         }
 
         private static string CreateArgumentList(IEnumerable<string> args)
@@ -390,11 +461,9 @@ namespace OpenDebugAD7
             if (launchType == LaunchOptionType.Local)
             {
                 JsonLocalLaunchOptions jsonLaunchOptions = JsonConvert.DeserializeObject<JsonLocalLaunchOptions>(args);
-
                 StringBuilder xmlLaunchOptions = new StringBuilder();
                 xmlLaunchOptions.Append("<LocalLaunchOptions xmlns='http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014'\n");
                 AddBaseLaunchOptionsAttributes(xmlLaunchOptions, jsonLaunchOptions, program, workingDirectory);
-
 
                 string lldbPath = null;
                 if (String.Equals(jsonLaunchOptions.MIMode, "lldb", StringComparison.Ordinal)
