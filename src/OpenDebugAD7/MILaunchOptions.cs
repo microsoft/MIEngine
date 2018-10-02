@@ -289,7 +289,7 @@ namespace OpenDebugAD7
 
             if (jsonLaunchOptions.MIMode != null)
             {
-                xmlLaunchOptions.Append(String.Concat(" MIMode='", jsonLaunchOptions.MIMode, "'\n"));
+                xmlLaunchOptions.Append(String.Concat("  MIMode='", jsonLaunchOptions.MIMode, "'\n"));
             }
         }
 
@@ -299,48 +299,52 @@ namespace OpenDebugAD7
         /// </summary>
         private static string[] TryAddWindowsDebuggeeConsoleRedirection(string[] arguments)
         {
-            bool stdInRedirected = false;
-            bool stdOutRedirected = false;
-            bool stdErrRedirected = false;
-
-            foreach (string rawArgument in arguments)
+            if (Utilities.IsWindows()) // Only do this on Windows
             {
-                string argument = rawArgument.TrimStart();
-                if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
-                {
-                    stdErrRedirected = true;
-                }
-                if (argument.TrimStart().StartsWith("1>", StringComparison.Ordinal) || argument.TrimStart().StartsWith(">", StringComparison.Ordinal))
-                {
-                    stdOutRedirected = true;
-                }
-                if (argument.TrimStart().StartsWith("0>", StringComparison.Ordinal) || argument.TrimStart().StartsWith("<", StringComparison.Ordinal))
-                {
-                    stdInRedirected = true;
-                }
-            }
+                bool stdInRedirected = false;
+                bool stdOutRedirected = false;
+                bool stdErrRedirected = false;
 
-            if (!stdInRedirected || !stdOutRedirected || !stdErrRedirected)
-            {
-                List<string> argList = new List<string>(arguments.Length + 3);
-                argList.AddRange(arguments);
-
-                if (!stdErrRedirected)
+                foreach (string rawArgument in arguments)
                 {
-                    argList.Add("2>CON");
+                    string argument = rawArgument.TrimStart();
+                    if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
+                    {
+                        stdErrRedirected = true;
+                    }
+                    if (argument.TrimStart().StartsWith("1>", StringComparison.Ordinal) || argument.TrimStart().StartsWith(">", StringComparison.Ordinal))
+                    {
+                        stdOutRedirected = true;
+                    }
+                    if (argument.TrimStart().StartsWith("0>", StringComparison.Ordinal) || argument.TrimStart().StartsWith("<", StringComparison.Ordinal))
+                    {
+                        stdInRedirected = true;
+                    }
                 }
 
-                if (!stdOutRedirected)
+                // If one (or more) are not redirected, then add redirection
+                if (!stdInRedirected || !stdOutRedirected || !stdErrRedirected)
                 {
-                    argList.Add("1>CON");
-                }
+                    List<string> argList = new List<string>(arguments.Length + 3);
+                    argList.AddRange(arguments);
 
-                if (!stdInRedirected)
-                {
-                    argList.Add("<CON");
-                }
+                    if (!stdErrRedirected)
+                    {
+                        argList.Add("2>CON");
+                    }
 
-                return argList.ToArray<string>();
+                    if (!stdOutRedirected)
+                    {
+                        argList.Add("1>CON");
+                    }
+
+                    if (!stdInRedirected)
+                    {
+                        argList.Add("<CON");
+                    }
+
+                    return argList.ToArray<string>();
+                }
             }
 
             return arguments;

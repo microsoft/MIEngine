@@ -60,7 +60,7 @@ namespace MICore
             // execute the debugger command in the background
             // Clear the output of executing a process in the background: [job number] pid
             // echo and wait the debugger pid to know whether we need to fake an exit by the debugger
-            return FormattableString.Invariant($"echo $$ > {pidFifo} ; cd {debuggeeDir} ; DbgTerm=`tty` ; set -o monitor ; trap 'rm {dbgStdInName} {dbgStdOutName} {pidFifo} {dbgCmdScript}' EXIT ; {debuggerCmd} {debuggerArgs} --tty=$DbgTerm < {dbgStdInName} > {dbgStdOutName} & clear ; pid=$! ; echo $pid > {pidFifo} ; {waitForCompletionCommand} ");
+            return FormattableString.Invariant($"echo $$ > {pidFifo} ; cd {debuggeeDir} ; DbgTerm=`tty` ; set -o monitor ; trap 'rm {dbgStdInName} {dbgStdOutName} {pidFifo} {dbgCmdScript}' EXIT ; {debuggerCmd} {debuggerArgs} --tty=$DbgTerm < {dbgStdInName} > {dbgStdOutName}; pid=$! ; echo $pid > {pidFifo} ; {waitForCompletionCommand}");
         }
 
         internal static string GetDebuggerCommand(LocalLaunchOptions localOptions)
