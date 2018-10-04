@@ -1,6 +1,7 @@
 ﻿{
   "dependencies": {
-    "Microsoft.VisualStudio.Debugger.Interop.Portable": "1.0.1"
+    "Microsoft.VisualStudio.Debugger.Interop.Portable": "1.0.1",
+    "Microsoft.VisualStudio.Debugger.Interop.15.0": "15.8.28010",
   },
   "frameworks": {
     "net462": {
