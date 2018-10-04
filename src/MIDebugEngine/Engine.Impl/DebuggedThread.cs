@@ -480,6 +480,11 @@ namespace Microsoft.MIDebugEngine
                 }
                 if (newThreads != null)
                 {
+                    if (newThreads.Count == _threadList.Count)
+                    {
+                        // These are the first threads. Send a processInfoUpdateEvent too.
+                        AD7ProcessInfoUpdatedEvent.Send(_debugger.Engine, _debugger.LaunchOptions.ExePath, (uint)_debugger.PidByInferior("i1"));
+                    }
                     foreach (var newt in newThreads)
                     {
                         if (!newt.ChildThread)
