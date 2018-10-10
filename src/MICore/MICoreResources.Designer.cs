@@ -250,6 +250,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid SymbolInfo, cannot specify a list of solibs when &quot;WaitDynamicLoad&quot; is false..
+        /// </summary>
+        public static string Error_InvalidSymbolInfo {
+            get {
+                return ResourceManager.GetString("Error_InvalidSymbolInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Device App Launcher {0} could not be found..
         /// </summary>
         public static string Error_LauncherNotFound {
@@ -331,6 +340,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Option {0} is not supported by {1}..
+        /// </summary>
+        public static string Error_OptionNotSupported {
+            get {
+                return ResourceManager.GetString("Error_OptionNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to PipeProgram &apos;{0}&apos; could not be found..
         /// </summary>
         public static string Error_PipeProgramNotFound {
@@ -385,6 +403,24 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;RunInTerminalRequest&apos; failed. &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_RunInTerminalFailure {
+            get {
+                return ResourceManager.GetString("Error_RunInTerminalFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to send &apos;RunInTerminalRequest&apos; to Visual Studio Code..
+        /// </summary>
+        public static string Error_RunInTerminalUnavailable {
+            get {
+                return ResourceManager.GetString("Error_RunInTerminalUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The format of source file map entry &apos;{0}&apos; is incorrect.  .
         /// </summary>
         public static string Error_SourceFileMapFormat {
@@ -408,6 +444,24 @@ namespace MICore {
         public static string Error_TargetProcessExited {
             get {
                 return ResourceManager.GetString("Error_TargetProcessExited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timeout waiting for connection..
+        /// </summary>
+        public static string Error_TimeoutWaitingForConnection {
+            get {
+                return ResourceManager.GetString("Error_TimeoutWaitingForConnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to establish a connection to the launcher..
+        /// </summary>
+        public static string Error_UnableToEstablishConnectionToLauncher {
+            get {
+                return ResourceManager.GetString("Error_UnableToEstablishConnectionToLauncher", resourceCulture);
             }
         }
         

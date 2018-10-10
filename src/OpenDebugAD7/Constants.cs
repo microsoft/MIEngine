@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace OpenDebugAD7
 {
-    internal static class Constants
+    internal static class HRConstants
     {
         public const int S_OK = 0;
         public const int S_FALSE = 1;
@@ -22,5 +22,13 @@ namespace OpenDebugAD7
         public const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
         public const int E_ACCESSDENIED = unchecked((int)0x80070005);
         public const int E_CRASHDUMP_UNSUPPORTED = unchecked((int)0x80040211);
+    }
+
+    internal static class Constants
+    {
+        // POST_PREVIEW_TODO: no-func-eval support, radix, timeout
+        public const uint EvaluationRadix = 10;
+        public const uint EvaluationTimeout = 5000;
+        public const int DisconnectTimeout = 2000;
     }
 }

@@ -643,16 +643,6 @@ namespace MICore
             return isAsyncBreak;
         }
 
-        /// <summary>
-        /// Determines if a new external console should be spawned on non-Windows platforms for the debugger+app
-        /// </summary>
-        /// <param name="localLaunchOptions">[required] local launch options</param>
-        /// <returns>True if an external console should be used</returns>
-        public virtual bool UseExternalConsoleForLocalLaunch(LocalLaunchOptions localLaunchOptions)
-        {
-            return localLaunchOptions.UseExternalConsole && String.IsNullOrEmpty(localLaunchOptions.MIDebuggerServerAddress) && !localLaunchOptions.IsCoreDump;
-        }
-
         public Results IsModuleLoad(string cmd)
         {
             Results results = null;
@@ -678,6 +668,12 @@ namespace MICore
         /// </summary>
         /// <returns>[Required] Task to track when this is complete</returns>
         abstract public Task EnableTargetAsyncOption();
+
+        /// <summary>
+        /// Obtains a Results object containing the set of features supported by the debugger.
+        /// </summary>
+        /// <returns>[Required] Task that will contain the Results.</returns>
+        abstract public Task<Results> ListTargetFeatures();
 
         public virtual bool SupportsBreakpointChecksums()
         {

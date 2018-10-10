@@ -101,7 +101,7 @@ namespace Microsoft.MIDebugEngine
             LibraryLoadEvent += delegate (object o, EventArgs args)
             {
                 ResultEventArgs results = args as MICore.Debugger.ResultEventArgs;
-                string file = results.Results.TryFindString("host-name");
+                string file = results.Results.TryFindString("id");
                 if (!string.IsNullOrEmpty(file) && MICommandFactory.SupportsStopOnDynamicLibLoad())
                 {
                     _libraryLoaded.Add(file);
@@ -187,16 +187,22 @@ namespace Microsoft.MIDebugEngine
                         OutputMessage.Severity.Warning));
                 }
 
-                ITransport localTransport = null;
-                // For local Linux and OS X launch, use the local Unix transport which creates a new terminal and
-                // uses fifos for debugger (e.g., gdb) communication.
-                if (this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                    (PlatformUtilities.IsLinux() || (PlatformUtilities.IsOSX() && localLaunchOptions.DebuggerMIMode != MIMode.Lldb)))
-                {
-                    localTransport = new LocalUnixTerminalTransport();
+                ITransport localTransport;
 
-                    // Only need to clear terminal for Linux and OS X local launch
-                    _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                // Attempt to support RunInTerminal first when it is a local launch and it is not debugging a coredump.
+                // Also since we use gdb-set new-console on in windows for external console, we don't need to RunInTerminal
+                if (HostRunInTerminal.IsRunInTerminalAvailable()
+                    && string.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress)
+                    && IsCoreDump == false
+                    && (PlatformUtilities.IsWindows() ? !localLaunchOptions.UseExternalConsole : true))
+                {
+                    localTransport = new RunInTerminalTransport();
+
+                    if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                    {
+                        // Only need to clear terminal for Linux and OS X local launch
+                        _needTerminalReset = (!localLaunchOptions.ProcessId.HasValue && _launchOptions.DebuggerMIMode == MIMode.Gdb);
+                    }
                 }
                 else
                 {
@@ -220,7 +226,15 @@ namespace Microsoft.MIDebugEngine
                 // Only need to know the debugger pid on Linux and OS X local launch to detect whether
                 // the debugger is closed. If the debugger is not running anymore, the response (^exit)
                 // to the -gdb-exit command is faked to allow MIEngine to shut down.
-                SetDebuggerPid(localTransport.DebuggerPid);
+                // For RunInTransport, this needs to be updated via a callback.
+                if (localTransport is RunInTerminalTransport)
+                {
+                    ((RunInTerminalTransport)localTransport).RegisterDebuggerPidCallback(SetDebuggerPid);
+                }
+                else
+                {
+                    SetDebuggerPid(localTransport.DebuggerPid);
+                }
             }
             else if (_launchOptions is PipeLaunchOptions)
             {
@@ -468,6 +482,24 @@ namespace Microsoft.MIDebugEngine
             };
         }
 
+        /// <summary>
+        /// GetFileName - returns all characters after the last directory separator
+        /// If no directory spearator is found or at least one charactar after the separator is not found 
+        /// then return the original string.
+        /// </summary>
+        private static string GetFileName(string path)
+        {
+            int index = path.LastIndexOfAny(new char[] { '/', '\\' });
+            if ( index >= 0 && index < path.Length-1 )
+            {
+                return path.Substring(index + 1);
+            }
+            else // no path separator or no characters after the separator, return the original string
+            {
+                return path;    
+            }
+        }
+
         private async Task EnsureModulesLoaded()
         {
             if (_libraryLoaded.Count != 0)
@@ -476,6 +508,34 @@ namespace Microsoft.MIDebugEngine
 
                 try
                 {
+                    // custom symbol loading?
+                    //  Lookup each file in the exception list.
+                    //      If there then 
+                    //          if loadAll==false then load file
+                    //      else
+                    //          if loadAll==true then load file
+                    if (!_launchOptions.CanAutoLoadSymbols())
+                    {
+                        foreach (string file in _libraryLoaded)
+                        {
+                            string filename = GetFileName(file);
+                            if (_launchOptions.SymbolInfoExceptionList.Contains(filename))
+                            {
+                                if (!_launchOptions.SymbolInfoLoadAll)
+                                {
+                                    await LoadSymbols(filename);
+                                }
+                            }
+                            else
+                            {
+                                if (_launchOptions.SymbolInfoLoadAll)
+                                {
+                                    await LoadSymbols(filename);
+                                }
+                            }
+                        }
+                    }
+
                     _libraryLoaded.Clear();
                     SourceLineCache.OnLibraryLoad();
 
@@ -518,7 +578,11 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                await this.MICommandFactory.EnableTargetAsyncOption();
+                Results res = await this.MICommandFactory.ListTargetFeatures();
+                if (res.Contains("async"))
+                {
+                    await this.MICommandFactory.EnableTargetAsyncOption();
+                }
                 List<LaunchCommand> commands = GetInitializeCommands();
                 _childProcessHandler?.Enable();
 
@@ -589,6 +653,9 @@ namespace Microsoft.MIDebugEngine
             {
                 commands.Add(new LaunchCommand("-interpreter-exec console \"set pagination off\""));
             }
+
+            // When user specifies loading directives then the debugger cannot auto load symbols, the MIEngine must intervene at each solib-load event and make a determination
+            commands.Add(new LaunchCommand("-gdb-set auto-solib-add " + (_launchOptions.CanAutoLoadSymbols() ? "on" : "off")));
 
             // If the absolute prefix so path has not been specified, then don't set it to null
             // because the debugger might already have a default.
@@ -730,21 +797,15 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
 
-                    // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux
+                    // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux as LLDB's tty redirection doesn't work.
                     if (localLaunchOptions != null &&
-                        this.MICommandFactory.UseExternalConsoleForLocalLaunch(localLaunchOptions) &&
-                        (PlatformUtilities.IsWindows() || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
+                        ((PlatformUtilities.IsWindows() && localLaunchOptions.UseExternalConsole)
+                        || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
 
                     CheckCygwin(commands, localLaunchOptions);
-
-                    // Send client version to clrdbg to set the capabilities appropriately
-                    if (this.MICommandFactory.Mode == MIMode.Clrdbg)
-                    {
-                        commands.Add(new LaunchCommand("-gdb-set client-ui \"" + Host.GetHostUIIdentifier().ToString() + "\""));
-                    }
 
                     this.AddExecutablePathCommand(commands);
 
@@ -1429,7 +1490,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     Task evalTask = Task.Run(async () =>
                     {
-                        await ConsoleCmdAsync("sharedlibrary " + module.Name);
+                        await LoadSymbols(GetFileName(module.Name));
                         await CheckModules();
                     });
                 }
@@ -1438,6 +1499,11 @@ namespace Microsoft.MIDebugEngine
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private async Task<string> LoadSymbols(string filename)
+        {
+            return await ConsoleCmdAsync("sharedlibrary " + filename);
         }
 
         private async Task CheckModules()
@@ -1628,8 +1694,7 @@ namespace Microsoft.MIDebugEngine
             {
                 if (MICommandFactory.SupportsStopOnDynamicLibLoad())
                 {
-                    await CheckModules();
-                    _libraryLoaded.Clear();
+                    await EnsureModulesLoaded();
                 }
 
                 await HandleBreakModeEvent(_initialBreakArgs, BreakRequest.None);

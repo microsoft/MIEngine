@@ -564,6 +564,32 @@ namespace Microsoft.MIDebugEngine
         public const string IID = "3DCA9DCD-FB09-4AF1-A926-45F293D48B2D";
     }
 
+    internal sealed class AD7ProcessInfoUpdatedEvent : AD7AsynchronousEvent, IDebugProcessInfoUpdatedEvent158
+    {
+        public const string IID = "96C242FC-F584-4C3E-8FED-384D3D13EF36";
+        private readonly string _name;
+        private readonly uint _pid;
+
+        public AD7ProcessInfoUpdatedEvent(string name, uint pid)
+        {
+            _name = name;
+            _pid = pid;
+        }
+
+        public int GetUpdatedProcessInfo(out string pbstrName, out uint pdwSystemProcessId)
+        {
+            pbstrName = _name;
+            pdwSystemProcessId = _pid;
+            return Constants.S_OK;
+        }
+
+        internal static void Send(AD7Engine engine, string name, uint pid)
+        {
+            AD7ProcessInfoUpdatedEvent eventObject = new AD7ProcessInfoUpdatedEvent(name, pid);
+            engine.Callback.Send(eventObject, IID, engine, null);
+        }
+    }
+
     internal sealed class AD7CustomDebugEvent : AD7AsynchronousEvent, IDebugCustomEvent110
     {
         public const string IID = "2615D9BC-1948-4D21-81EE-7A963F20CF59";
