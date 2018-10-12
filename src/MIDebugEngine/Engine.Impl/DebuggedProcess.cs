@@ -194,7 +194,8 @@ namespace Microsoft.MIDebugEngine
                 if (HostRunInTerminal.IsRunInTerminalAvailable()
                     && string.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress)
                     && IsCoreDump == false
-                    && (PlatformUtilities.IsWindows() ? !localLaunchOptions.UseExternalConsole : true))
+                    && (PlatformUtilities.IsWindows() ? !localLaunchOptions.UseExternalConsole : true)
+                    && !PlatformUtilities.IsOSX())
                 {
                     localTransport = new RunInTerminalTransport();
 
@@ -799,8 +800,9 @@ namespace Microsoft.MIDebugEngine
 
                     // TODO: The last clause for LLDB may need to be changed when we support LLDB on Linux as LLDB's tty redirection doesn't work.
                     if (localLaunchOptions != null &&
-                        ((PlatformUtilities.IsWindows() && localLaunchOptions.UseExternalConsole)
-                        || (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
+                        localLaunchOptions.UseExternalConsole &&
+                        (PlatformUtilities.IsWindows() ||
+                            (PlatformUtilities.IsOSX() && this.MICommandFactory.Mode == MIMode.Lldb)))
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
