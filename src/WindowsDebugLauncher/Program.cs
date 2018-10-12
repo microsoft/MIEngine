@@ -152,6 +152,8 @@ namespace WindowsDebugLauncher
                         case ' ':
                             builder.Append(" ");
                             break;
+                        default:
+                            throw new ArgumentException(FormattableString.Invariant($"Invalid escape sequence: \\{c}"));
                     }
 
                     isEscape = false;
