@@ -77,7 +77,7 @@ namespace WindowsDebugLauncher
                         else if (a.StartsWith("--pid=", StringComparison.OrdinalIgnoreCase))
                         {
                             string pid = a.Substring("--pid=".Length);
-                            if(string.IsNullOrWhiteSpace(pid))
+                            if (string.IsNullOrWhiteSpace(pid))
                             {
                                 GenerateError("--pid");
                                 return -1;
@@ -96,7 +96,7 @@ namespace WindowsDebugLauncher
                         }
                         else
                         {
-                            parameters.DbgExeArgs.Add(a);
+                            parameters.DbgExeArgs.AddRange(ParseDebugExeArgs(a));
                         }
                         break;
                 }
@@ -118,6 +118,84 @@ namespace WindowsDebugLauncher
         {
             Console.Error.WriteLine(FormattableString.Invariant($"Value for flag:'{flag}' is missing or incorrect."));
             HelpMessage();
+        }
+
+        private static List<string> ParseDebugExeArgs(string line)
+        {
+            List<string> args = new List<string>();
+            bool inQuotedString = false;
+            bool isEscape = false;
+
+            StringBuilder builder = new StringBuilder();
+            foreach (char c in line)
+            {
+                if (isEscape)
+                {
+                    switch (c)
+                    {
+                        case 'n':
+                            builder.Append("\n");
+                            break;
+
+                        case 'r':
+                            builder.Append("\r");
+                            break;
+
+                        case '\\':
+                            builder.Append("\\");
+                            break;
+
+                        case '"':
+                            builder.Append("\"");
+                            break;
+
+                        case ' ':
+                            builder.Append(" ");
+                            break;
+                    }
+
+                    isEscape = false;
+                    continue;
+                }
+
+                if (c == '\\')
+                {
+                    isEscape = true;
+                    continue;
+                }
+
+                if (!inQuotedString && c == '"')
+                {
+                    inQuotedString = true;
+                    continue;
+                }
+
+                if (inQuotedString && c == '"')
+                {
+                    inQuotedString = false;
+                    continue;
+                }
+
+                if (!inQuotedString && c == ' ')
+                {
+                    if (builder.Length > 0)
+                    {
+                        args.Add(builder.ToString());
+                        builder.Clear();
+                    }
+
+                    continue;
+                }
+
+                builder.Append(c);
+            }
+
+            if (builder.Length > 0)
+            {
+                args.Add(builder.ToString());
+            }
+
+            return args;
         }
 
         private static void HelpMessage()
