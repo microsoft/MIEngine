@@ -120,6 +120,9 @@ namespace WindowsDebugLauncher
             HelpMessage();
         }
 
+        /// <summary>
+        /// Parse dbgargs for spaces and quoted strings
+        /// </summary>
         private static List<string> ParseDebugExeArgs(string line)
         {
             List<string> args = new List<string>();
@@ -136,19 +139,15 @@ namespace WindowsDebugLauncher
                         case 'n':
                             builder.Append("\n");
                             break;
-
                         case 'r':
                             builder.Append("\r");
                             break;
-
                         case '\\':
                             builder.Append("\\");
                             break;
-
                         case '"':
                             builder.Append("\"");
                             break;
-
                         case ' ':
                             builder.Append(" ");
                             break;
