@@ -36,7 +36,7 @@ namespace Microsoft.MIDebugEngine
             {
                 if ((variable = _engine.DebuggedProcess.Natvis.Cache.VisualizeOnRefresh(_variableInformation)) == null)
                 {
-                    return AD7ErrorProperty.ConstructErrorPropertyInfo(dwFields, _variableInformation.Name, ResourceStrings.NoSideEffectsVisualizerMessage, this);
+                    return AD7ErrorProperty.ConstructErrorPropertyInfo(dwFields, _variableInformation.Name, ResourceStrings.NoSideEffectsVisualizerMessage, this, _variableInformation.FullName());
                 }
             }
 
@@ -488,10 +488,15 @@ namespace Microsoft.MIDebugEngine
             throw new NotImplementedException();
         }
 
-        public static DEBUG_PROPERTY_INFO ConstructErrorPropertyInfo(enum_DEBUGPROP_INFO_FLAGS dwFields, string name, string error, IDebugProperty2 prop)
+        public static DEBUG_PROPERTY_INFO ConstructErrorPropertyInfo(enum_DEBUGPROP_INFO_FLAGS dwFields, string name, string error, IDebugProperty2 prop, string varFullName)
         {
-            DEBUG_PROPERTY_INFO property = new DEBUG_PROPERTY_INFO(); ;
-
+            DEBUG_PROPERTY_INFO property = new DEBUG_PROPERTY_INFO();
+            // Add the parent fullname to fullname so when it is refreshed, it will evaluate.
+            if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME) != 0)
+            {
+                property.bstrFullName = varFullName;
+                property.dwFields |= enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME;
+            }
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME) != 0)
             {
                 property.bstrName = name;
@@ -516,7 +521,7 @@ namespace Microsoft.MIDebugEngine
 
         public int GetPropertyInfo(enum_DEBUGPROP_INFO_FLAGS dwFields, uint dwRadix, uint dwTimeout, IDebugReference2[] rgpArgs, uint dwArgCount, DEBUG_PROPERTY_INFO[] pPropertyInfo)
         {
-            pPropertyInfo[0] = ConstructErrorPropertyInfo(dwFields, _name, _message, this);
+            pPropertyInfo[0] = ConstructErrorPropertyInfo(dwFields, _name, _message, this, null);
             rgpArgs = null;
             return Constants.S_OK;
         }
