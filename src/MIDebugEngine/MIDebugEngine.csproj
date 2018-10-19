@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
+    <GlassDirCopy Include="$(OutDir)Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ResourceStrings.resx">
