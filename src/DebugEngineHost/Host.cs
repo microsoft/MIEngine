@@ -49,10 +49,9 @@ namespace Microsoft.DebugEngineHost
             {
                 s_mainThreadId = Thread.CurrentThread.ManagedThreadId;
                 s_initialized = true;
-                // This call is to initialize the global service provider while we are still on the main thread.
-                // Do not remove this this, even though the return value goes unused.
-                var globalProvider = Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider;
 
+                // For glass testing, we want the first two to be set even though the global provider may not be loaded.
+                EnsureGlobalProviderLoaded();
 #if LAB
                 // Force the IVsTelemetryService to complete its lazy loading. It will stop responding because it is trying to
                 // send telemetry while Visual Studio is launching the debugger if the telemetry helper also needs 
@@ -60,6 +59,13 @@ namespace Microsoft.DebugEngineHost
                 // Do not remove this this, even though the return value goes unused.
                 var telemetryService = TelemetryHelper.TelemetryService;
 #endif
+            }
+            
+            internal static void EnsureGlobalProviderLoaded()
+            {
+                // This call is to initialize the global service provider while we are still on the main thread.
+                // Do not remove this this, even though the return value goes unused.
+                var globalProvider = Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider;
             }
         }
 
