@@ -154,7 +154,7 @@
       <BoundBreakpoint  IgnoreCase="True" RegEx="^31,0 to 31,0 in (\[Unknown\]|liblocals.so)!SimpleClass::TestMe\(\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^48,0 to 48,0 in (\[Unknown\]|liblocals.so)!DerivedClass::DerivedClass\(int, int\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^58,0 to 58,0 in (\[Unknown\]|liblocals.so)!DerivedClass::DerivedClass\(int, int\)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
       <BoundBreakpoint  IgnoreCase="True" RegEx="^65,0 to 65,0 in (\[Unknown\]|liblocals.so)!DerivedClass::TestMe\(\)$"></BoundBreakpoint>
@@ -229,11 +229,11 @@
     <LocalType>float</LocalType>
     <LocalIsExpandable>False</LocalIsExpandable>
     <Local>name</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.*&gt; &quot;TEST NAME&quot;">0xa1b7fc1c "TEST NAME"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &quot;TEST NAME&quot;">0xa1b7fc1c "TEST NAME"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>const_name</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.*&gt; &quot;TEST NAME&quot;">0xa1b7fc1c "TEST NAME"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &quot;TEST NAME&quot;">0xa1b7fc1c "TEST NAME"</LocalValue>
     <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>name_array</Local>
@@ -265,11 +265,11 @@
     <LocalType>DerivedClass *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.*&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 "Hello\n\tWorld!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>const_escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.*&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 "Hello\n\tWorld!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>state</Local>
@@ -303,11 +303,11 @@
     <LocalType>float</LocalType>
     <LocalIsExpandable>False</LocalIsExpandable>
     <Local>name</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.*&gt; &quot;TEST NAME&quot;">0xa1b7fc1c "TEST NAME"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &quot;TEST NAME&quot;">0xa1b7fc1c "TEST NAME"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>const_name</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.*&gt; &quot;TEST NAME&quot;">0xa1b7fc1c "TEST NAME"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &quot;TEST NAME&quot;">0xa1b7fc1c "TEST NAME"</LocalValue>
     <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>name_array</Local>
@@ -339,11 +339,11 @@
     <LocalType>DerivedClass *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.*&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 "Hello\n\tWorld!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>const_escaped</Local>
-    <LocalValue RegEx="0x[a-f0-9]{8} &lt;.*&gt; &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 "Hello\n\tWorld!\n"</LocalValue>
+    <LocalValue RegEx="0x[a-f0-9]{8} &quot;Hello\\n(\\t|\t)World!\\n&quot;">0xa1b7fc26 "Hello\n\tWorld!\n"</LocalValue>
     <LocalType>const char *</LocalType>
     <LocalIsExpandable>True</LocalIsExpandable>
     <Local>state</Local>
