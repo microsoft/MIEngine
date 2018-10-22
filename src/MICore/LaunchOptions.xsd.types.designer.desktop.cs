@@ -412,6 +412,8 @@ namespace MICore.Xml.LaunchOptions {
         
         private ServerOptions serverOptionsField;
         
+        private SymbolLoadInfo symbolLoadInfoField;
+        
         private string additionalSOLibSearchPathField;
         
         private MIMode mIModeField;
@@ -459,6 +461,16 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.serverOptionsField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public SymbolLoadInfo SymbolLoadInfo {
+            get {
+                return this.symbolLoadInfoField;
+            }
+            set {
+                this.symbolLoadInfoField = value;
             }
         }
         
@@ -695,6 +707,67 @@ namespace MICore.Xml.LaunchOptions {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
+    public partial class SymbolLoadInfo {
+        
+        private bool loadAllField;
+        
+        private bool loadAllFieldSpecified;
+        
+        private string exceptionListField;
+        
+        private string valueField;
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool LoadAll {
+            get {
+                return this.loadAllField;
+            }
+            set {
+                this.loadAllField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool LoadAllSpecified {
+            get {
+                return this.loadAllFieldSpecified;
+            }
+            set {
+                this.loadAllFieldSpecified = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ExceptionList {
+            get {
+                return this.exceptionListField;
+            }
+            set {
+                this.exceptionListField = value;
+            }
+        }
+        
+        /// <remarks/>
+        [System.Xml.Serialization.XmlTextAttribute()]
+        public string Value {
+            get {
+                return this.valueField;
+            }
+            set {
+                this.valueField = value;
+            }
+        }
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.1055.0")]
+    [System.SerializableAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014")]
     public partial class EnvironmentEntry {
         
         private string nameField;
@@ -754,6 +827,8 @@ namespace MICore.Xml.LaunchOptions {
         private bool launchCompleteCommandFieldSpecified;
         
         private SourceMapEntry[] sourceMapField;
+        
+        private SymbolLoadInfo symbolLoadInfoField;
         
         private string exePathField;
         
@@ -846,6 +921,16 @@ namespace MICore.Xml.LaunchOptions {
             }
             set {
                 this.sourceMapField = value;
+            }
+        }
+        
+        /// <remarks/>
+        public SymbolLoadInfo SymbolLoadInfo {
+            get {
+                return this.symbolLoadInfoField;
+            }
+            set {
+                this.symbolLoadInfoField = value;
             }
         }
         

@@ -60,11 +60,21 @@
   <Target Name="GetCopyToOutputDirectoryItems" />
   <Target Name="BuiltProjectOutputGroupDependencies" />
   <Target Name="BuiltProjectOutputGroup" />
+  <Target Name="SatelliteDllsProjectOutputGroupDependencies" />
   <Target Name="SatelliteDllsProjectOutputGroup" />
+  <Target Name="DebugSymbolsProjectOutputGroupDependencies" />
   <Target Name="DebugSymbolsProjectOutputGroup" />
+  <Target Name="DocumentationProjectOutputGroupDependencies" />
+  <Target Name="DocumentationProjectOutputGroup" />
   <Target Name="GetPackagingOutputs" />
   <Target Name="GetTargetPath" />
   <Target Name="GetTargetFrameworkProperties" />
+  <Target Name="DebugSymbolsProjectOutputGroupDependencies" />
+  <Target Name="DocumentationProjectOutputGroup" />
+  <Target Name="DocumentationProjectOutputGroupDependencies" />
+  <Target Name="SatelliteDllsProjectOutputGroupDependencies" />
+  <Target Name="SGenFilesOutputGroupDependencies" />
+  <Target Name="SGenFilesOutputGroup" />
   <!-- Older versions of NuGet don't respect the ProjectReference.ReferenceOutputAssembly attribute and will attempt to parse this
        project anyway, so include a fake target to keep it happy -->
   <Target Name="_NuGet_GetProjectsReferencingProjectJsonInternal" />

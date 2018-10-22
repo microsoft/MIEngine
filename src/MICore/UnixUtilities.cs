@@ -12,7 +12,6 @@ namespace MICore
 {
     public static class UnixUtilities
     {
-        internal const string FifoPrefix = "Microsoft-MIEngine-fifo-";
         internal const string SudoPath = "/usr/bin/sudo";
         // Mono seems to stop responding when the is a large response unless we specify a larger buffer here
         internal const int StreamBufferSize = 1024 * 4;
@@ -34,6 +33,7 @@ namespace MICore
         /// <param name="dbgStdInName">File where the stdin for the debugger process is redirected to</param>
         /// <param name="dbgStdOutName">File where the stdout for the debugger process is redirected to</param>
         /// <param name="pidFifo">File where the debugger pid is written to</param>
+        /// <param name="dbgCmdScript">Script file to pass the debugger launch command</param>
         /// <param name="debuggerCmd">Command to the debugger</param>
         /// <param name="debuggerArgs">MIDebugger arguments</param>
         /// <returns></returns>
@@ -42,6 +42,7 @@ namespace MICore
             string dbgStdInName,
             string dbgStdOutName,
             string pidFifo,
+            string dbgCmdScript,
             string debuggerCmd,
             string debuggerArgs)
         {
@@ -51,28 +52,15 @@ namespace MICore
             // bash doesn't support fg in this mode, so we need to use 'wait' there.
             string waitForCompletionCommand = PlatformUtilities.IsOSX() ? "fg > /dev/null; " : "wait $pid; ";
 
-            return string.Format(CultureInfo.InvariantCulture,
-                // echo the shell pid so that we can monitor it
-                "echo $$ > {3}; " +
-                "cd {0}; " +
-                "DbgTerm=`tty`; " +
-                "trap 'rm {1} {2} {3}' EXIT; " +
-                "{4} {6} --tty=$DbgTerm < {1} > {2} & " +
-                // Clear the output of executing a process in the background: [job number] pid
-                "clear; " +
-                // echo and wait the debugger pid to know whether
-                // we need to fake an exit by the debugger
-                "pid=$! ; " +
-                "echo $pid > {3}; " +
-                "{5}",
-                debuggeeDir, /* 0 */
-                dbgStdInName, /* 1 */
-                dbgStdOutName, /* 2 */
-                pidFifo, /* 3 */
-                debuggerCmd, /* 4 */
-                waitForCompletionCommand, /* 5 */
-                debuggerArgs /* 6 */
-                );
+            // echo the shell pid so that we can monitor it
+            // Change to the current working directory
+            // find the tty
+            // enable monitor on the session
+            // set the trap command to remove the fifos
+            // execute the debugger command in the background
+            // Clear the output of executing a process in the background: [job number] pid
+            // echo and wait the debugger pid to know whether we need to fake an exit by the debugger
+            return FormattableString.Invariant($"echo $$ > {pidFifo} ; cd {debuggeeDir} ; DbgTerm=`tty` ; set -o monitor ; trap 'rm {dbgStdInName} {dbgStdOutName} {pidFifo} {dbgCmdScript}' EXIT ; {debuggerCmd} {debuggerArgs} --tty=$DbgTerm < {dbgStdInName} > {dbgStdOutName} & clear; pid=$! ; echo $pid > {pidFifo} ; {waitForCompletionCommand}");
         }
 
         internal static string GetDebuggerCommand(LocalLaunchOptions localOptions)
@@ -113,9 +101,9 @@ namespace MICore
             }
         }
 
-        internal static string MakeFifo(Logger logger = null)
+        internal static string MakeFifo(string identifier = null, Logger logger = null)
         {
-            string path = Path.Combine(Path.GetTempPath(), FifoPrefix + Path.GetRandomFileName());
+            string path = Path.Combine(Path.GetTempPath(), Utilities.GetMIEngineTemporaryFilename(identifier));
 
             // Mod is normally in octal, but C# has no octal values. This is 384 (rw owner, no rights anyone else)
             const int rw_owner = 384;

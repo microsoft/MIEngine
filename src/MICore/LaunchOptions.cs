@@ -1093,6 +1093,44 @@ namespace MICore
             }
         }
 
+        private bool _siLoadAll = true;
+        /// <summary>
+        /// if true then load all symbols, else load no symbols
+        /// </summary>
+        public bool SymbolInfoLoadAll
+        {
+            get { return _siLoadAll;  }
+            set
+            {
+                VerifyCanModifyProperty("SymbolInfoLoadAll");
+                _siLoadAll = value;
+            }
+        }
+
+        private SymbolLocator.IncludeExcludeList _siExceptionList = new SymbolLocator.IncludeExcludeList();
+        /// <summary>
+        /// List file names. Wildcards ('*') are allowed. Modifies behaviour of SymbolInfoLoadAll.
+        /// If SymbolInfoLoadAll is true then all symbols except for members of this list are loaded. Otherwise only members of this list are loaded.
+        /// </summary>
+        public SymbolLocator.IncludeExcludeList SymbolInfoExceptionList
+        {
+            get { return _siExceptionList; }
+            set
+            {
+                VerifyCanModifyProperty("SymbolInfoExceptionList");
+                _siExceptionList = value;
+            }
+        }
+
+        /// <summary>
+        /// Check is it is Ok to let the debugger load symbols on solib events without intervention
+        /// </summary>
+        /// <returns></returns>
+        public bool CanAutoLoadSymbols()
+        {
+            return SymbolInfoLoadAll && SymbolInfoExceptionList.IsEmpty;
+        }
+
         /// <summary>
         /// If true, instead of showing Natvis-DisplayString value as a child of a dummy element, it is shown immediately.
         /// Should only be enabled if debugger is fast enough providing the value.
@@ -1472,7 +1510,16 @@ namespace MICore
         internal static SupplementalLaunchOptions GetOptionsFromFile(Logger logger)
         {
             // load supplemental options from the solution root
-            string slnRoot = HostNatvisProject.FindSolutionRoot();
+            string slnRoot = null;
+            
+            // During glass testing, the Shell assembly is not available
+            try
+            {
+                slnRoot = HostNatvisProject.FindSolutionRoot();
+            }
+            catch (FileNotFoundException)
+            { }
+            
             if (!string.IsNullOrEmpty(slnRoot))
             {
                 string optFile = Path.Combine(slnRoot, "Microsoft.MIEngine.Options.xml");
@@ -1812,6 +1859,24 @@ namespace MICore
             // Ensure that CoreDumpPath and ProcessId are not specified at the same time
             if (!String.IsNullOrEmpty(source.CoreDumpPath) && source.ProcessIdSpecified)
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_CannotSpecifyBoth, nameof(source.CoreDumpPath), nameof(source.ProcessId)));
+
+            if (source.SymbolLoadInfo != null)
+            {
+                SymbolInfoLoadAll = source.SymbolLoadInfo.LoadAllSpecified ? source.SymbolLoadInfo.LoadAll : true;
+
+                if (DebuggerMIMode == MIMode.Lldb && !string.IsNullOrWhiteSpace(source.SymbolLoadInfo.ExceptionList))
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(source.SymbolLoadInfo.ExceptionList), nameof(MIMode.Lldb)));
+                }
+
+                SymbolInfoExceptionList.SetTo(source.SymbolLoadInfo.ExceptionList == null ? new string[0] : source.SymbolLoadInfo.ExceptionList.Split(';'));
+
+                // Ensure that symbol loading options are consistent
+                if (!WaitDynamicLibLoad && !SymbolInfoExceptionList.IsEmpty)
+                {
+                    throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidSymbolInfo);
+                }
+            }
         }
 
         public void InitializeLaunchOptions(Json.LaunchOptions.LaunchOptions launch)
