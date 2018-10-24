@@ -926,7 +926,12 @@ namespace MICore
                         case 'n': c = '\n'; break;
                         case 'r': c = '\r'; break;
                         case 't': c = '\t'; break;
-                        default: break;
+                        default:
+                            if (c >= '0' && c <= '3')
+                            {
+                                c = DecodeOctalLiteral(_resultString, i-1, ref i);
+                            }
+                            break;
                     }
                 }
                 output.Append(c);
@@ -938,6 +943,31 @@ namespace MICore
             }
             rest = input.AdvanceTo(i);
             return new ConstValue(output.ToString());
+        }
+
+        // return the character encoded in octal format, update the string position
+        private char DecodeOctalLiteral(string str, int i, ref int p)
+        {
+            if (i+2 >= str.Length)
+            {
+                return _resultString[i];
+            }
+            int v = 0;
+            p = i;
+            for (; p < i+3; ++p)
+            {
+                char c = str[p];
+                if (c >= '0' && c <= '7')
+                {
+                    v = (v << 3) + (c - '0');
+                }
+                else
+                {
+                    // error, just return the character found at i
+                    return _resultString[i];
+                }
+            }
+            return (char)v;
         }
 
         private delegate bool EdgeCondition(Span s, ref int i);
