@@ -71,7 +71,7 @@ namespace WindowsDebugLauncher
 
         private LaunchParameters _parameters;
 
-        private bool isRunning = true;
+        private bool _isRunning = true;
 
         private StreamWriter _debuggerCommandStream;
         private StreamReader _debuggerOutputStream;
@@ -82,7 +82,7 @@ namespace WindowsDebugLauncher
         private StreamWriter _npOutputStream;
         private StreamWriter _npPidStream;
 
-        private Process dbgProcess;
+        private Process _dbgProcess;
 
         CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -126,15 +126,15 @@ namespace WindowsDebugLauncher
                 info.RedirectStandardOutput = true;
                 info.RedirectStandardError = true;
 
-                dbgProcess = new Process();
-                dbgProcess.StartInfo = info;
-                dbgProcess.EnableRaisingEvents = true;
-                dbgProcess.Exited += OnProcessExited;
+                _dbgProcess = new Process();
+                _dbgProcess.StartInfo = info;
+                _dbgProcess.EnableRaisingEvents = true;
+                _dbgProcess.Exited += OnProcessExited;
 
-                dbgProcess.Start();
-                _debuggerCommandStream = new StreamWriter(dbgProcess.StandardInput.BaseStream, encNoBom) { AutoFlush = true };
-                _debuggerOutputStream = dbgProcess.StandardOutput;
-                _debuggerErrorStream = dbgProcess.StandardError;
+                _dbgProcess.Start();
+                _debuggerCommandStream = new StreamWriter(_dbgProcess.StandardInput.BaseStream, encNoBom) { AutoFlush = true };
+                _debuggerOutputStream = _dbgProcess.StandardOutput;
+                _debuggerErrorStream = _dbgProcess.StandardError;
 
                 Thread readThread = new Thread(() => ReadWriteLoop(_npCommandStream, _debuggerCommandStream, _cancellationTokenSource.Token));
                 readThread.Name = "MIEngine.DbgInputThread";
@@ -149,11 +149,11 @@ namespace WindowsDebugLauncher
                 errThread.Start();
 
                 _npPidStream.WriteLine(Process.GetCurrentProcess().Id.ToString(CultureInfo.CurrentCulture));
-                _npPidStream.WriteLine(dbgProcess.Id.ToString(CultureInfo.CurrentCulture));
+                _npPidStream.WriteLine(_dbgProcess.Id.ToString(CultureInfo.CurrentCulture));
             }
             catch (Exception e)
             {
-                Debug.Fail($"Exception caught in StartPipeConnection. Message: {e.Message} ");
+                Debug.Fail($"Exception caught in StartPipeConnection. Message: {e.Message}");
                 ReportExceptionAndShutdown(e);
             }
         }
@@ -165,12 +165,12 @@ namespace WindowsDebugLauncher
 
         private void Shutdown()
         {
-            if (isRunning)
+            if (_isRunning)
             {
-                isRunning = false;
+                _isRunning = false;
                 _cancellationTokenSource.Cancel();
-                dbgProcess?.Close();
-                dbgProcess = null;
+                _dbgProcess?.Close();
+                _dbgProcess = null;
             }
         }
 
@@ -178,7 +178,7 @@ namespace WindowsDebugLauncher
         {
             try
             {
-                while (isRunning)
+                while (_isRunning)
                 {
                     string line = ReadLine(reader, token);
                     {
@@ -193,7 +193,7 @@ namespace WindowsDebugLauncher
             }
             catch (Exception e)
             {
-                Debug.Fail($"Exception caught in ReadWriteLoop. Message: {e.Message} ");
+                Debug.Fail($"Exception caught in ReadWriteLoop. Message: {e.Message}");
                 ReportExceptionAndShutdown(e);
             }
         }
@@ -202,7 +202,7 @@ namespace WindowsDebugLauncher
         {
             try
             {
-                _npErrorStream.WriteLine($"Exception while debugging. {e.Message}. Shutting down.");
+                _npErrorStream.WriteLine(FormattableString.Invariant($"Exception while debugging. {e.Message}. Shutting down."));
             }
             catch (Exception) { } // Eat any exceptions
             finally
@@ -239,7 +239,7 @@ namespace WindowsDebugLauncher
         {
             if (disposing)
             {
-                if (isRunning)
+                if (_isRunning)
                 {
                     Shutdown();
                 }
