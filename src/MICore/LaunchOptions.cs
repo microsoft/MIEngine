@@ -1510,7 +1510,16 @@ namespace MICore
         internal static SupplementalLaunchOptions GetOptionsFromFile(Logger logger)
         {
             // load supplemental options from the solution root
-            string slnRoot = HostNatvisProject.FindSolutionRoot();
+            string slnRoot = null;
+            
+            // During glass testing, the Shell assembly is not available
+            try
+            {
+                slnRoot = HostNatvisProject.FindSolutionRoot();
+            }
+            catch (FileNotFoundException)
+            { }
+            
             if (!string.IsNullOrEmpty(slnRoot))
             {
                 string optFile = Path.Combine(slnRoot, "Microsoft.MIEngine.Options.xml");

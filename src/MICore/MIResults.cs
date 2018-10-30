@@ -899,6 +899,7 @@ namespace MICore
             }
             int i = input.Start + 1;
             bool endFound = false;
+
             for (; i < input.Extent; i++)
             {
                 char c = _resultString[i];
@@ -926,7 +927,17 @@ namespace MICore
                         case 'n': c = '\n'; break;
                         case 'r': c = '\r'; break;
                         case 't': c = '\t'; break;
-                        default: break;
+                        default:
+                            if (c >= '0' && c <= '3')
+                            {
+                                i = i - 1;
+                                if (SpanOctalChars(_resultString, ref i, output))
+                                {
+                                    continue;   // handled the output of the octal-encoded chars
+                                }
+                                c = _resultString[i]; // just emit the '\\'
+                            }
+                            break;
                     }
                 }
                 output.Append(c);
@@ -938,6 +949,54 @@ namespace MICore
             }
             rest = input.AdvanceTo(i);
             return new ConstValue(output.ToString());
+        }
+
+        /// <summary>
+        /// convert a string of octal encode bytes into chars using an utf8 decoder and write resulting chars to output
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="i"></param>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        bool SpanOctalChars(string str, ref int i, StringBuilder output)
+        {
+            int s = i;
+            bool error = false;
+            int cChars = 0;
+            byte[] bytes = new byte[str.Length];
+            while (!error && i + 3 < str.Length && str[i] == '\\' && str[i+1] >= '0' && str[i+1] <= '3')
+            {
+                int v = 0;
+                for (int n = 1; n <= 3; ++n)
+                {
+                    char c = str[i+n];
+                    if (c >= '0' && c <= '7')
+                    {
+                        v = (v << 3) + (c - '0');
+                    }
+                    else
+                    {
+                        error = true;
+                        continue;
+                    }
+                }
+                Debug.Assert(v < 255, "Value too large");
+                bytes[cChars++] = (byte)v;
+                i += 4;
+            }
+            if (error || cChars == 0)
+            {
+                i = s;
+                return false;
+            }
+            char[] chars = new char[cChars];
+            int cCount = Encoding.UTF8.GetDecoder().GetChars(bytes, 0, cChars, chars, 0);
+            for (int j = 0; j < cCount; ++j)
+            {
+                output.Append(chars[j]);
+            }
+            --i;
+            return true;
         }
 
         private delegate bool EdgeCondition(Span s, ref int i);

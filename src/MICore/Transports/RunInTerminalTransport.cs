@@ -157,12 +157,6 @@ namespace MICore
                     cmdArgs.Add(dbgCmdScript);
                 }
 
-#if !DEBUG
-                // Make sure to clear the console
-                cmdArgs.Add(";");
-                cmdArgs.Add("clear");
-#endif
-
                 _outputStream = new StreamReader(stdOutStream, encNoBom, false, UnixUtilities.StreamBufferSize);
                 _commandStream = new StreamWriter(stdInStream, encNoBom);
             }
