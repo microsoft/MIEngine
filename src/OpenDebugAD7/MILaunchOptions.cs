@@ -273,7 +273,8 @@ namespace OpenDebugAD7
             {
                 var localLaunchOptions = (JsonLocalLaunchOptions)jsonLaunchOptions;
 
-                if (!localLaunchOptions.ExternalConsole
+                if (localLaunchOptions.ProcessId == 0 && // Only when launching the debuggee
+                    !localLaunchOptions.ExternalConsole
                     && !localLaunchOptions.AvoidWindowsConsoleRedirection)
                 {
                     exeArgsArray = TryAddWindowsDebuggeeConsoleRedirection(exeArgsArray);
@@ -305,20 +306,23 @@ namespace OpenDebugAD7
                 bool stdOutRedirected = false;
                 bool stdErrRedirected = false;
 
-                foreach (string rawArgument in arguments)
+                if (arguments != null)
                 {
-                    string argument = rawArgument.TrimStart();
-                    if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
+                    foreach (string rawArgument in arguments)
                     {
-                        stdErrRedirected = true;
-                    }
-                    if (argument.TrimStart().StartsWith("1>", StringComparison.Ordinal) || argument.TrimStart().StartsWith(">", StringComparison.Ordinal))
-                    {
-                        stdOutRedirected = true;
-                    }
-                    if (argument.TrimStart().StartsWith("0>", StringComparison.Ordinal) || argument.TrimStart().StartsWith("<", StringComparison.Ordinal))
-                    {
-                        stdInRedirected = true;
+                        string argument = rawArgument.TrimStart();
+                        if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
+                        {
+                            stdErrRedirected = true;
+                        }
+                        if (argument.TrimStart().StartsWith("1>", StringComparison.Ordinal) || argument.TrimStart().StartsWith(">", StringComparison.Ordinal))
+                        {
+                            stdOutRedirected = true;
+                        }
+                        if (argument.TrimStart().StartsWith("0>", StringComparison.Ordinal) || argument.TrimStart().StartsWith("<", StringComparison.Ordinal))
+                        {
+                            stdInRedirected = true;
+                        }
                     }
                 }
 
