@@ -980,10 +980,11 @@ namespace MICore
                         continue;
                     }
                 }
+                Debug.Assert(v < 255, "Value too large");
                 bytes[cChars++] = (byte)v;
                 i += 4;
             }
-            if (error)
+            if (error || cChars == 0)
             {
                 i = s;
                 return false;
