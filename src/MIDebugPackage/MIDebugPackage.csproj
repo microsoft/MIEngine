@@ -356,4 +356,5 @@
   <Import Project="..\..\build\DropFiles.targets" />
   <!-- Extra empty msbuild targets to make it happy -->
   <Target Name="SetDevPathEnvironment" />
+  <Target Name="GenerateResourceAndCtoFileResources" />
 </Project>

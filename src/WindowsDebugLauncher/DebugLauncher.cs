@@ -71,16 +71,18 @@ namespace WindowsDebugLauncher
 
         private LaunchParameters _parameters;
 
-        private bool isRunning = true;
+        private bool _isRunning = true;
 
-        StreamWriter _debuggerCommandStream;
-        StreamReader _debuggerOutputStream;
-        StreamReader _debuggerErrorStream;
+        private StreamWriter _debuggerCommandStream;
+        private StreamReader _debuggerOutputStream;
+        private StreamReader _debuggerErrorStream;
 
-        StreamReader _npCommandStream;
-        StreamWriter _npErrorStream;
-        StreamWriter _npOutputStream;
-        StreamWriter _npPidStream;
+        private StreamReader _npCommandStream;
+        private StreamWriter _npErrorStream;
+        private StreamWriter _npOutputStream;
+        private StreamWriter _npPidStream;
+
+        private Process _dbgProcess;
 
         CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -96,56 +98,64 @@ namespace WindowsDebugLauncher
             NamedPipeClientStream errorStream = new NamedPipeClientStream(_parameters.PipeServer, _parameters.StdErrPipeName, PipeDirection.Out, PipeOptions.None, TokenImpersonationLevel.Impersonation);
             NamedPipeClientStream pidStream = new NamedPipeClientStream(_parameters.PipeServer, _parameters.PidPipeName, PipeDirection.Out, PipeOptions.None, TokenImpersonationLevel.Impersonation);
 
-            // Connect as soon as possible
-            inputStream.Connect();
-            outputStream.Connect();
-            errorStream.Connect();
-            pidStream.Connect();
-
-            Encoding encNoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-            _npCommandStream = new StreamReader(inputStream, encNoBom, false, BUFFER_SIZE);
-            _npOutputStream = new StreamWriter(outputStream, encNoBom, BUFFER_SIZE) { AutoFlush = true };
-            _npErrorStream = new StreamWriter(errorStream, encNoBom, BUFFER_SIZE) { AutoFlush = true };
-            _npPidStream = new StreamWriter(pidStream, encNoBom, 5000) { AutoFlush = true };
-
-            ProcessStartInfo info = new ProcessStartInfo();
-
-            if (Path.IsPathRooted(_parameters.DbgExe))
+            try
             {
-                info.WorkingDirectory = Path.GetDirectoryName(_parameters.DbgExe);
+                // Connect as soon as possible
+                inputStream.Connect();
+                outputStream.Connect();
+                errorStream.Connect();
+                pidStream.Connect();
+
+                Encoding encNoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                _npCommandStream = new StreamReader(inputStream, encNoBom, false, BUFFER_SIZE);
+                _npOutputStream = new StreamWriter(outputStream, encNoBom, BUFFER_SIZE) { AutoFlush = true };
+                _npErrorStream = new StreamWriter(errorStream, encNoBom, BUFFER_SIZE) { AutoFlush = true };
+                _npPidStream = new StreamWriter(pidStream, encNoBom, 5000) { AutoFlush = true };
+                
+                ProcessStartInfo info = new ProcessStartInfo();
+
+                if (Path.IsPathRooted(_parameters.DbgExe))
+                {
+                    info.WorkingDirectory = Path.GetDirectoryName(_parameters.DbgExe);
+                }
+
+                info.FileName = _parameters.DbgExe;
+                info.Arguments = _parameters.ParametersAsString();
+                info.UseShellExecute = false;
+                info.RedirectStandardInput = true;
+                info.RedirectStandardOutput = true;
+                info.RedirectStandardError = true;
+
+                _dbgProcess = new Process();
+                _dbgProcess.StartInfo = info;
+                _dbgProcess.EnableRaisingEvents = true;
+                _dbgProcess.Exited += OnProcessExited;
+
+                _dbgProcess.Start();
+                _debuggerCommandStream = new StreamWriter(_dbgProcess.StandardInput.BaseStream, encNoBom) { AutoFlush = true };
+                _debuggerOutputStream = _dbgProcess.StandardOutput;
+                _debuggerErrorStream = _dbgProcess.StandardError;
+
+                Thread readThread = new Thread(() => ReadWriteLoop(_npCommandStream, _debuggerCommandStream, _cancellationTokenSource.Token));
+                readThread.Name = "MIEngine.DbgInputThread";
+                readThread.Start();
+
+                Thread outputThread = new Thread(() => ReadWriteLoop(_debuggerOutputStream, _npOutputStream, _cancellationTokenSource.Token));
+                outputThread.Name = "MIEngine.DbgOutputThread";
+                outputThread.Start();
+
+                Thread errThread = new Thread(() => ReadWriteLoop(_debuggerErrorStream, _npErrorStream, _cancellationTokenSource.Token));
+                errThread.Name = "MIEngine.DbgErrorThread";
+                errThread.Start();
+
+                _npPidStream.WriteLine(Process.GetCurrentProcess().Id.ToString(CultureInfo.CurrentCulture));
+                _npPidStream.WriteLine(_dbgProcess.Id.ToString(CultureInfo.CurrentCulture));
             }
-
-            info.FileName = _parameters.DbgExe;
-            info.Arguments = _parameters.ParametersAsString();
-            info.UseShellExecute = false;
-            info.RedirectStandardInput = true;
-            info.RedirectStandardOutput = true;
-            info.RedirectStandardError = true;
-
-            Process proc = new Process();
-            proc.StartInfo = info;
-            proc.EnableRaisingEvents = true;
-            proc.Exited += OnProcessExited;
-
-            proc.Start();
-            _debuggerCommandStream = new StreamWriter(proc.StandardInput.BaseStream, encNoBom) { AutoFlush = true };
-            _debuggerOutputStream = proc.StandardOutput;
-            _debuggerErrorStream = proc.StandardError;
-
-            Thread readThread = new Thread(() => ReadWriteLoop(_npCommandStream, _debuggerCommandStream, _cancellationTokenSource.Token));
-            readThread.Name = "MIEngine.DbgInputThread";
-            readThread.Start();
-
-            Thread outputThread = new Thread(() => ReadWriteLoop(_debuggerOutputStream, _npOutputStream, _cancellationTokenSource.Token));
-            outputThread.Name = "MIEngine.DbgOutputThread";
-            outputThread.Start();
-
-            Thread errThread = new Thread(() => ReadWriteLoop(_debuggerErrorStream, _npErrorStream, _cancellationTokenSource.Token));
-            errThread.Name = "MIEngine.DbgErrorThread";
-            errThread.Start();
-
-            _npPidStream.WriteLine(Process.GetCurrentProcess().Id.ToString(CultureInfo.CurrentCulture));
-            _npPidStream.WriteLine(proc.Id.ToString(CultureInfo.CurrentCulture));
+            catch (Exception e)
+            {
+                Debug.Fail($"Exception caught in StartPipeConnection. Message: {e.Message}");
+                ReportExceptionAndShutdown(e);
+            }
         }
 
         private void OnProcessExited(object c, EventArgs e)
@@ -155,15 +165,20 @@ namespace WindowsDebugLauncher
 
         private void Shutdown()
         {
-            isRunning = false;
-            _cancellationTokenSource.Cancel();
+            if (_isRunning)
+            {
+                _isRunning = false;
+                _cancellationTokenSource.Cancel();
+                _dbgProcess?.Close();
+                _dbgProcess = null;
+            }
         }
 
         private void ReadWriteLoop(StreamReader reader, StreamWriter writer, CancellationToken token)
         {
             try
             {
-                while (isRunning)
+                while (_isRunning)
                 {
                     string line = ReadLine(reader, token);
                     {
@@ -178,7 +193,20 @@ namespace WindowsDebugLauncher
             }
             catch (Exception e)
             {
-                Debug.Fail($"Exception caught. Message: {e.Message} ");
+                Debug.Fail($"Exception caught in ReadWriteLoop. Message: {e.Message}");
+                ReportExceptionAndShutdown(e);
+            }
+        }
+
+        private void ReportExceptionAndShutdown(Exception e)
+        {
+            try
+            {
+                _npErrorStream.WriteLine(FormattableString.Invariant($"Exception while debugging. {e.Message}. Shutting down."));
+            }
+            catch (Exception) { } // Eat any exceptions
+            finally
+            {
                 Shutdown();
             }
         }
@@ -205,14 +233,13 @@ namespace WindowsDebugLauncher
                 return null;
             }
         }
-
         #region IDisposable Support
 
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
-                if (isRunning)
+                if (_isRunning)
                 {
                     Shutdown();
                 }
