@@ -55,7 +55,7 @@ if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to reassemble %1.& set PIAERROR=1&
 goto eof
 
 :help
-echo Syntax: MakePortableLegacyPIAs.cmd ^<destination-dir^>
+echo Syntax: MakePortableLegacyPIAs.cmd ^<ILDAsm-location^> ^<destination-dir^>
 echo.
 echo This script will process the legacy PIA files (Microsoft.VisualStudio.Debugger.InteropA.dll, etc) and create portable versions of them.
 echo.
