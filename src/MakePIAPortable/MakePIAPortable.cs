@@ -77,6 +77,7 @@ namespace MakePIAPortable
 
         private static int TransformIL(string inputFilePath, string outputFile)
         {
+            bool isInterface = false;
             Regex mscorlibType = new Regex(@"\[mscorlib\][A-Za-z][A-Za-z\.]+");
             Regex paramCustomAttributeRegex = new Regex(@"^ *.param \[[0-9]+\]$");
             HashSet<string> emittedUnknownTypes = new HashSet<string>();
@@ -90,9 +91,18 @@ namespace MakePIAPortable
                     if (inputLine == null)
                         break;
 
-                    if (inputLine.Contains(" internalcall"))
+
+                    if (isInterface)
                     {
-                        inputLine = inputLine.Replace(" internalcall", "");
+                        if (inputLine.Contains(" internalcall"))
+                        {
+                            inputLine = inputLine.Replace(" internalcall", "");
+                        }
+
+                        if (inputLine.Contains(" runtime"))
+                        {
+                            inputLine = inputLine.Replace(" runtime", "");
+                        }
                     }
 
                     if (inputLine == ".assembly extern mscorlib")
@@ -207,11 +217,15 @@ namespace MakePIAPortable
                         continue;
                     }
                     // Remove 'import' from the interfaces
-                    else if (inputLine.StartsWith(".class ", StringComparison.Ordinal) && inputLine.Contains(" import "))
+                    else if (inputLine.StartsWith(".class ", StringComparison.Ordinal))
                     {
-                        inputLine = inputLine.Replace(" import ", " ");
-                    }
+                        isInterface = inputLine.Contains(" interface");
 
+                        if (inputLine.Contains(" import "))
+                        {
+                            inputLine = inputLine.Replace(" import ", " ");
+                        }
+                    }
                     output.WriteLine(inputLine);
                 }
             }
