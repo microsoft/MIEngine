@@ -85,7 +85,7 @@
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
   </ItemGroup>
-  <Target Name="CopyToVSCodeFolder" AfterTargets="SignFiles">
+  <Target Name="CopyToVSCodeFolder" AfterTargets="DropFiles">
     <ItemGroup>
       <VSCodeFolderInteropFile Include="$(DropDir)\Microsoft.VisualStudio.Debugger.InteropA.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
     </ItemGroup>
