@@ -99,9 +99,9 @@ namespace MakePIAPortable
                             inputLine = inputLine.Replace(" internalcall", "");
                         }
 
-                        if (inputLine.Contains(" runtime"))
+                        if (inputLine.Contains(" runtime "))
                         {
-                            inputLine = inputLine.Replace(" runtime", "");
+                            inputLine = inputLine.Replace(" runtime ", " ");
                         }
                     }
 
