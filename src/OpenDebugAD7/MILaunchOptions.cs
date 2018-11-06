@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -268,6 +269,7 @@ namespace OpenDebugAD7
 
             // Check to see if we need to redirect app stdin/out/err in Windows case for IntegratedTerminalSupport.
             if (Utilities.IsWindows()
+                && HostRunInTerminal.IsRunInTerminalAvailable()
                 && jsonLaunchOptions is JsonLocalLaunchOptions
                 && String.IsNullOrWhiteSpace(jsonLaunchOptions.CoreDumpPath))
             {
