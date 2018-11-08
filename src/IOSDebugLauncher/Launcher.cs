@@ -3,23 +3,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using MICore;
-using System.Runtime.InteropServices;
-using System.Net;
-using System.Globalization;
-using System.Net.Http;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Diagnostics;
-using System.Threading;
-using System.Runtime.ExceptionServices;
-using Newtonsoft.Json;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Net.Security;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
+using MICore;
 using Microsoft.DebugEngineHost;
+using Newtonsoft.Json;
 
 namespace IOSDebugLauncher
 {

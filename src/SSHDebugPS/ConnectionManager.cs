@@ -1,23 +1,48 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.SSHDebugPS.VS;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Globalization;
 using System.Linq;
 using liblinux;
 using liblinux.Persistence;
-using Microsoft.DebugEngineHost;
-using Task = System.Threading.Tasks.Task;
+using Microsoft.SSHDebugPS.Docker;
+using Microsoft.SSHDebugPS.SSH;
+using Microsoft.SSHDebugPS.VS;
 using Microsoft.VisualStudio.Linux.ConnectionManager;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.SSHDebugPS
 {
     internal class ConnectionManager
     {
-        internal static Connection GetInstance(string name, ConnectionReason reason)
+        public static Connection GetDockerConnection(string name)
+        {
+            Connection remoteConnection = null;
+            DockerTransportSettings settings = null;
+            // Assume format is <server>/<container> where if <server> is specified, it is for SSH
+            string[] connectionStrings = name.Split('/');
+            if (connectionStrings.Length == 1)
+            {
+                // local connection
+                settings = new DockerExecShellSettings(connectionStrings[0], isUnix: false);
+            }
+            else if (connectionStrings.Length == 2)
+            {
+                string remoteConnectionString = connectionStrings[0];
+                settings = new DockerExecShellSettings(connectionStrings[1], isUnix: true); // assume all remote is Unix for now.
+                remoteConnection = GetSSHConnection(remoteConnectionString);
+            }
+            else
+            {
+                throw new ArgumentException("Argument format is incorrect");
+            }
+
+            return new DockerConnection(settings, remoteConnection, name);
+        }
+
+        public static Connection GetSSHConnection(string name)
         {
             UnixSystem remoteSystem = null;
             ConnectionInfoStore store = new ConnectionInfoStore();
@@ -25,7 +50,7 @@ namespace Microsoft.SSHDebugPS
 
             StoredConnectionInfo storedConnectionInfo = store.Connections.FirstOrDefault(connection =>
                 {
-                    return name.Equals(GetFormattedConnectionName((ConnectionInfo)connection), StringComparison.OrdinalIgnoreCase);
+                    return name.Equals(SSHPortSupplier.GetFormattedSSHConnectionName((ConnectionInfo)connection), StringComparison.OrdinalIgnoreCase);
                 });
 
             if (storedConnectionInfo != null)
@@ -101,16 +126,11 @@ namespace Microsoft.SSHDebugPS
                 // NOTE: This will be null if connect is canceled
                 if (remoteSystem != null)
                 {
-                    return new Connection(remoteSystem);
+                    return new SSHConnection(remoteSystem);
                 }
             }
 
             return null;
-        }
-
-        internal static string GetFormattedConnectionName(ConnectionInfo connectionInfo)
-        {
-            return connectionInfo.UserName + "@" + connectionInfo.HostNameOrAddress;
         }
     }
 }

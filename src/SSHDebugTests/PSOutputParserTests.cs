@@ -14,9 +14,9 @@ namespace SSHDebugTests
         [TestMethod]
         public void PSOutputParser_Ubuntu14()
         {
+            const string username = "greggm";
             // example output from ps on a real Ubuntu 14 machine (with many processes removed):
             const string input =
-                "CurrentUserName: greggm\n" +
                 "    A B        C\n" +
                 "    1 root     /sbin/init\n" +
                 "    2 root     [kthreadd]\n" +
@@ -25,7 +25,7 @@ namespace SSHDebugTests
                 " 2580 root     /sbin/dhclient -d -sf /usr/lib/NetworkManager/nm-dhcp-client.action -pf /run/sendsigs.omit.d/network-manager.dhclient-eth0.pid -lf /var/lib/NetworkManager/dhclient-d08a482b-ff90-4007-9b13-6500eb94b673-eth0.lease -cf /var/lib/NetworkManager/dhclient-eth0.conf eth0\n" +
                 " 2913 greggm   ps -axww -o pid=A,ruser=B,args=C\n";
 
-            List<PSOutputParser.Process> r = PSOutputParser.Parse(input);
+            List<Process> r = PSOutputParser.Parse(input, username);
             Assert.AreEqual(5, r.Count);
 
             uint[] pids = { 1, 2, 720, 2389, 2580 };
@@ -44,13 +44,13 @@ namespace SSHDebugTests
         [TestMethod]
         public void PSOutputParser_SmallCol()
         {
+            const string username = "greggm";
             // made up output for what could happen if the fields were all just 1 character in size
             const string input =
-                "CurrentUserName: greggm\n" +
                 "A B C\n" +
                 "9 r /sbin/init";
 
-            List<PSOutputParser.Process> r = PSOutputParser.Parse(input);
+            List<Process> r = PSOutputParser.Parse(input, username);
             Assert.AreEqual(1, r.Count);
             Assert.AreEqual<uint>(9, r[0].Id);
             Assert.AreEqual("r", r[0].UserName);
@@ -61,14 +61,14 @@ namespace SSHDebugTests
         public void PSOutputParser_NoUserName()
         {
             // Made up ps output from a system where $USER wasn't a thing
+            const string username = "";
             const string input =
-                "CurrentUserName: \n" +
                 "    A B        C\n" +
                 "    1 root     /sbin/init\n" +
                 "  720          dbus-daemon --system --fork\n" +
                 " 2389 greggm   -bash\n";
 
-            List<PSOutputParser.Process> r = PSOutputParser.Parse(input);
+            List<Process> r = PSOutputParser.Parse(input, username);
             Assert.AreEqual(3, r.Count);
 
             uint[] pids = { 1, 720, 2389 };

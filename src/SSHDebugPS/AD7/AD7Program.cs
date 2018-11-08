@@ -93,7 +93,7 @@ namespace Microsoft.SSHDebugPS
         int IDebugProgram2.GetEngineInfo(out string engineName, out Guid guidEngine)
         {
             // TODO: Do we need a real engine name?
-            engineName = "<SSH-Engine>";
+            engineName = "<PS-Engine>";
             guidEngine = _engineId;
             return HR.S_OK;
         }

@@ -1,19 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+using System.Globalization;
+using System.Threading;
+using liblinux;
 using liblinux.Shell;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
-using System.Text;
-using System.Collections.Generic;
-using System.Threading;
-using System.Diagnostics;
-using liblinux;
-using System.Globalization;
 
-namespace Microsoft.SSHDebugPS
+namespace Microsoft.SSHDebugPS.SSH
 {
-    internal class AD7UnixAsyncCommand : IDebugUnixShellAsyncCommand
+    internal class SSHUnixAsyncCommand : IDebugUnixShellAsyncCommand
     {
         private readonly object _lock = new object();
         private readonly IDebugUnixShellCommandCallback _callback;
@@ -21,7 +17,7 @@ namespace Microsoft.SSHDebugPS
         private IRemoteSystem _remoteSystem;
         private NonHostedCommand _command;
 
-        public AD7UnixAsyncCommand(IRemoteSystem remoteSystem, IDebugUnixShellCommandCallback callback)
+        public SSHUnixAsyncCommand(IRemoteSystem remoteSystem, IDebugUnixShellCommandCallback callback)
         {
             _remoteSystem = remoteSystem;
             _callback = callback;

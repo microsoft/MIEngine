@@ -363,7 +363,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    Debug.Fail("Unknown syncronious event");
+                    Debug.Fail("Unknown synchronous event");
                 }
             }
             catch (Exception e)
