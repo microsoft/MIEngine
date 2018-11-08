@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS
         /// </summary>
         private bool HasRealCommandLine { get { return _commandLine[0] != '['; } }
 
-        public AD7Process(AD7Port port, PSOutputParser.Process psProcess)
+        public AD7Process(AD7Port port, Process psProcess)
         {
             _port = port;
             _processId = psProcess.Id;

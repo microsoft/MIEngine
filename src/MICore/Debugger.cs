@@ -712,7 +712,7 @@ namespace MICore
                 {
                     if (_debuggeePids.Count > 0)
                     {
-                        debuggeePid = _debuggeePids.First().Value;
+                        debuggeePid = _transport.DebuggerPid; // _debuggeePids.First().Value;
                         useSignal = true;
                     }
                 }

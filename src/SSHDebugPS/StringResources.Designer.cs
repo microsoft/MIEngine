@@ -79,6 +79,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Docker Transport allows connecting Visual Studio to Docker containers locally or through SSH..
+        /// </summary>
+        internal static string Docker_PSDescription {
+            get {
+                return ResourceManager.GetString("Docker_PSDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified directory {0} could not be created or accessed..
         /// </summary>
         internal static string Error_InvalidDirectory {
@@ -117,9 +126,9 @@ namespace Microsoft.SSHDebugPS {
         /// <summary>
         ///   Looks up a localized string similar to SSH (Secure Shell) Transport allows connecting Visual Studio to computers running an SSH server with a bash-like shell (ex: Linux, macOS, etc)..
         /// </summary>
-        internal static string PSDescription {
+        internal static string SSH_PSDescription {
             get {
-                return ResourceManager.GetString("PSDescription", resourceCulture);
+                return ResourceManager.GetString("SSH_PSDescription", resourceCulture);
             }
         }
         

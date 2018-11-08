@@ -8,12 +8,17 @@
     <!--Visual Studio will prompt to upgrade the project unless $(MinimumVisualStudioVersion)==$(VisualStudioVersion), to make
     VS happy, we will conditionally set MinimumVisualStudioVersion based on what version is opening the project -->
     <MinimumVisualStudioVersion Condition="'$(VisualStudioVersion)' == '15.0'">15.0</MinimumVisualStudioVersion>
-    <MinimumVisualStudioVersion Condition="'$(VisualStudioVersion)' != '15.0'">14.0</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion Condition="'$(VisualStudioVersion)' != '15.0'">16.0</MinimumVisualStudioVersion>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <TargetFrameworkProfile />
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>14.0</OldToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -268,7 +273,6 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
-
   </ItemGroup>
   <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
     <DropUnsignedFile Include="Install.cmd" />
@@ -348,7 +352,7 @@
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
-    <!--
+  <!--
   Target to drop the built files into a directory.
   For the official build, we need to drop files to the build share
   For normal builds, we drop files to <enlistment-root>\bin\debug\drop for easy sharing

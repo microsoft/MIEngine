@@ -123,6 +123,9 @@
   <data name="AuthenticationFailureHeader" xml:space="preserve">
     <value>Authentication Failure</value>
   </data>
+  <data name="Docker_PSDescription" xml:space="preserve">
+    <value>Docker Transport allows connecting Visual Studio to Docker containers locally or through SSH.</value>
+  </data>
   <data name="Error_InvalidDirectory" xml:space="preserve">
     <value>The specified directory {0} could not be created or accessed.</value>
     <comment>{0} directory name.</comment>
@@ -138,7 +141,7 @@
     <value>Enter credentials to connect to {0}</value>
     <comment>{0} is the network address being connected to</comment>
   </data>
-  <data name="PSDescription" xml:space="preserve">
+  <data name="SSH_PSDescription" xml:space="preserve">
     <value>SSH (Secure Shell) Transport allows connecting Visual Studio to computers running an SSH server with a bash-like shell (ex: Linux, macOS, etc).</value>
   </data>
   <data name="UserName_PlaceHolder" xml:space="preserve">
