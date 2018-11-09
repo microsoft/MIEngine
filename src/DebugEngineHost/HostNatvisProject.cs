@@ -2,21 +2,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.Indexing;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
-using Microsoft.VisualStudio.ComponentModelHost;
-using System.ComponentModel.Composition;
-using System.Linq;
-using Microsoft.VisualStudio.Threading;
-using System.IO;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -85,40 +85,30 @@ namespace Microsoft.DebugEngineHost
             /// Gets the WorkspaceService from Microsoft.VisualStudio.Workspace
             /// </summary>
             /// <remarks>This package won't be automatically loaded by MEF, so we need to manually acquire exported MEF Parts.</remarks>
-            private static Lazy<IVsFolderWorkspaceService> WorkspaceService
+            private static IVsFolderWorkspaceService GetWorkspaceService()
             {
-                get
+                IComponentModel componentModel = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel).GUID) as IComponentModel;
+                var workspaceServices = componentModel.DefaultExportProvider.GetExports<IVsFolderWorkspaceService>();
+
+                if (workspaceServices != null && workspaceServices.Count() > 0)
                 {
-                    Lazy<IVsFolderWorkspaceService> workspaceService = null;
-
-                    IComponentModel componentModel = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel).GUID) as IComponentModel;
-                    IEnumerable<Lazy<IVsFolderWorkspaceService>> workspaceServices = componentModel.DefaultExportProvider.GetExports<IVsFolderWorkspaceService>();
-
-                    if (workspaceServices != null && workspaceServices.Count() == 1)
-                    {
-                        workspaceService = new Lazy<IVsFolderWorkspaceService>(() =>
-                        {
-                            return workspaceServices.First().Value;
-                        });
-                    }
-                    return workspaceService;
+                    return workspaceServices.First().Value;
                 }
+                return null;
             }
 
-            private static int GetOpenFolderSourceLocations(string bstrFileName, out bool isIndexCompete, out Array pSourcesArray)
+            private static int GetOpenFolderSourceLocations(string bstrFileName, out bool isIndexComplete, out IEnumerable<string> pSourcesArray)
             {
-                // Initialize to empty Array.
-                pSourcesArray = Array.CreateInstance(typeof(string), 0);
-                isIndexCompete = false;
-                var workspaceService = WorkspaceService;
+                isIndexComplete = false;
+                var workspaceService = GetWorkspaceService();
 
                 if (workspaceService != null)
                 {
-                    IWorkspace currentWorkspace = workspaceService.Value.CurrentWorkspace;
+                    IWorkspace currentWorkspace = workspaceService.CurrentWorkspace;
                     IIndexWorkspaceService indexWorkspaceService = currentWorkspace?.GetService<IIndexWorkspaceService>(throwIfNotFound: false);
                     if (indexWorkspaceService != null)
                     {
-                        isIndexCompete = indexWorkspaceService.State == IndexWorkspaceState.Completed;
+                        isIndexComplete = indexWorkspaceService.State == IndexWorkspaceState.Completed;
 
                         var findFilesService = indexWorkspaceService as IFindFilesService;
                         if (findFilesService != null)
@@ -135,13 +125,13 @@ namespace Microsoft.DebugEngineHost
 
                             if (progress.strings.Any())
                             {
-                                pSourcesArray = progress.strings.ToArray();
+                                pSourcesArray = progress.strings;
                                 return VSConstants.S_OK;
                             }
                         }
                     }
                 }
-
+                pSourcesArray = new List<string>();
                 return VSConstants.S_FALSE;
             }
 
@@ -174,7 +164,7 @@ namespace Microsoft.DebugEngineHost
                 if (isOpenFolderActive)
                 {
                     bool isIndexComplete;
-                    Array filenames;
+                    IEnumerable<string> filenames;
                     GetOpenFolderSourceLocations(".natvis", out isIndexComplete, out filenames);
                     foreach (var f in filenames)
                     {
