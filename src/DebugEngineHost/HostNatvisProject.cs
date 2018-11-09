@@ -9,6 +9,14 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.VisualStudio.Workspace;
+using Microsoft.VisualStudio.Workspace.Indexing;
+using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
+using Microsoft.VisualStudio.ComponentModelHost;
+using System.ComponentModel.Composition;
+using System.Linq;
+using Microsoft.VisualStudio.Threading;
+using System.IO;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -73,12 +81,106 @@ namespace Microsoft.DebugEngineHost
                 //  file as well as all virtual projects including nested (a.k.a. sub) projects
             };
 
+            /// <summary>
+            /// Gets the WorkspaceService from Microsoft.VisualStudio.Workspace
+            /// </summary>
+            /// <remarks>This package won't be automatically loaded by MEF, so we need to manually acquire exported MEF Parts.</remarks>
+            private static Lazy<IVsFolderWorkspaceService> WorkspaceService
+            {
+                get
+                {
+                    Lazy<IVsFolderWorkspaceService> workspaceService = null;
+
+                    IComponentModel componentModel = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel).GUID) as IComponentModel;
+                    IEnumerable<Lazy<IVsFolderWorkspaceService>> workspaceServices = componentModel.DefaultExportProvider.GetExports<IVsFolderWorkspaceService>();
+
+                    if (workspaceServices != null && workspaceServices.Count() == 1)
+                    {
+                        workspaceService = new Lazy<IVsFolderWorkspaceService>(() =>
+                        {
+                            return workspaceServices.First().Value;
+                        });
+                    }
+                    return workspaceService;
+                }
+            }
+
+            private static int GetOpenFolderSourceLocations(string bstrFileName, out bool isIndexCompete, out Array pSourcesArray)
+            {
+                // Initialize to empty Array.
+                pSourcesArray = Array.CreateInstance(typeof(string), 0);
+                isIndexCompete = false;
+                var workspaceService = WorkspaceService;
+
+                if (workspaceService != null)
+                {
+                    IWorkspace currentWorkspace = workspaceService.Value.CurrentWorkspace;
+                    IIndexWorkspaceService indexWorkspaceService = currentWorkspace?.GetService<IIndexWorkspaceService>(throwIfNotFound: false);
+                    if (indexWorkspaceService != null)
+                    {
+                        isIndexCompete = indexWorkspaceService.State == IndexWorkspaceState.Completed;
+
+                        var findFilesService = indexWorkspaceService as IFindFilesService;
+                        if (findFilesService != null)
+                        {
+                            FindFileServiceProgress progress = new FindFileServiceProgress();
+                            string toSearch = Path.GetFileName(bstrFileName);
+                            using (var cancellationTokenSource = new CancellationTokenSource())
+                            {
+                                ThreadHelper.JoinableTaskFactory.Run(async () =>
+                                {
+                                    await findFilesService.FindFilesAsync(toSearch, progress, cancellationTokenSource.Token);
+                                });
+                            }
+
+                            if (progress.strings.Any())
+                            {
+                                pSourcesArray = progress.strings.ToArray();
+                                return VSConstants.S_OK;
+                            }
+                        }
+                    }
+                }
+
+                return VSConstants.S_FALSE;
+            }
+
+            /// <summary>
+            /// Custom IProgress class used for FindFileService.FindFilesAsync needed
+            /// to force synchronous clalbacks. 
+            /// </summary>
+            private class FindFileServiceProgress : IProgress<string>
+            {
+                public List<string> strings { get; } = new List<string>();
+
+                public void Report(string value)
+                {
+                    this.strings.Add(value);
+                }
+            }
+
             public static void FindNatvisInSolutionImpl(List<string> paths)
             {
                 var solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
                 if (solution == null)
                 {
                     return; // failed to find a solution
+                }
+
+                object openFolderMode;
+                solution.GetProperty((int)__VSPROPID7.VSPROPID_IsInOpenFolderMode, out openFolderMode);
+                bool isOpenFolderActive = (bool)openFolderMode;
+
+                if (isOpenFolderActive)
+                {
+                    bool isIndexComplete;
+                    Array filenames;
+                    GetOpenFolderSourceLocations(".natvis", out isIndexComplete, out filenames);
+                    foreach (var f in filenames)
+                    {
+                        paths.Add((string)f);
+                    }
+                    return;
                 }
 
                 IEnumHierarchies enumProjects;
