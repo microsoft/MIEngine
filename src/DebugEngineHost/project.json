@@ -4,6 +4,7 @@
     "Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime": "15.0.0",
     "Microsoft.VisualStudio.Threading": "15.8.0",
     "Microsoft.VisualStudio.Workspace": "15.0.0",
+    "Microsoft.VisualStudio.Workspace.VSIntegration": "15.0.0",
   },
   "frameworks": {
     "net462": {
