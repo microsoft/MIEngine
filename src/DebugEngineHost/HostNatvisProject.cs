@@ -166,10 +166,7 @@ namespace Microsoft.DebugEngineHost
                     bool isIndexComplete;
                     IEnumerable<string> filenames;
                     GetOpenFolderSourceLocations(".natvis", out isIndexComplete, out filenames);
-                    foreach (var f in filenames)
-                    {
-                        paths.Add((string)f);
-                    }
+                    paths.AddRange(filenames);
                     return;
                 }
 
