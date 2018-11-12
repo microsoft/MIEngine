@@ -37,7 +37,9 @@ namespace Microsoft.DebugEngineHost
             List<string> paths = new List<string>();
             try
             {
-                ThreadHelper.Generic.Invoke(() => Internal.FindNatvisInSolutionImpl(paths));
+                ThreadHelper.JoinableTaskFactory.Run(async () =>
+                    await Internal.FindNatvisInSolutionImplAsync(paths)
+                );
             }
             catch (Exception)
             {
@@ -90,17 +92,17 @@ namespace Microsoft.DebugEngineHost
                 IComponentModel componentModel = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel).GUID) as IComponentModel;
                 var workspaceServices = componentModel.DefaultExportProvider.GetExports<IVsFolderWorkspaceService>();
 
-                if (workspaceServices != null && workspaceServices.Count() > 0)
+                if (workspaceServices != null && workspaceServices.Any())
                 {
                     return workspaceServices.First().Value;
                 }
                 return null;
             }
 
-            private static int GetOpenFolderSourceLocations(string bstrFileName, out bool isIndexComplete, out IEnumerable<string> pSourcesArray)
+            private async static Task<IEnumerable<string>> GetOpenFolderSourceLocationsAsync(string bstrFileName)
             {
-                isIndexComplete = false;
                 var workspaceService = GetWorkspaceService();
+                IEnumerable<string> sourcesArray = new List<string>();
 
                 if (workspaceService != null)
                 {
@@ -108,31 +110,25 @@ namespace Microsoft.DebugEngineHost
                     IIndexWorkspaceService indexWorkspaceService = currentWorkspace?.GetService<IIndexWorkspaceService>(throwIfNotFound: false);
                     if (indexWorkspaceService != null)
                     {
-                        isIndexComplete = indexWorkspaceService.State == IndexWorkspaceState.Completed;
+                        if (indexWorkspaceService.State != IndexWorkspaceState.Completed)
+                        {
+                            HostOutputWindow.WriteLaunchError(Resource.IndexIncomplete);
+                        }
 
                         var findFilesService = indexWorkspaceService as IFindFilesService;
                         if (findFilesService != null)
                         {
                             FindFileServiceProgress progress = new FindFileServiceProgress();
                             string toSearch = Path.GetFileName(bstrFileName);
-                            using (var cancellationTokenSource = new CancellationTokenSource())
-                            {
-                                ThreadHelper.JoinableTaskFactory.Run(async () =>
-                                {
-                                    await findFilesService.FindFilesAsync(toSearch, progress, cancellationTokenSource.Token);
-                                });
-                            }
-
+                            await findFilesService.FindFilesAsync(toSearch, progress);
                             if (progress.strings.Any())
                             {
-                                pSourcesArray = progress.strings;
-                                return VSConstants.S_OK;
+                                sourcesArray = progress.strings;
                             }
                         }
                     }
                 }
-                pSourcesArray = new List<string>();
-                return VSConstants.S_FALSE;
+                return sourcesArray;
             }
 
             /// <summary>
@@ -149,7 +145,7 @@ namespace Microsoft.DebugEngineHost
                 }
             }
 
-            public static void FindNatvisInSolutionImpl(List<string> paths)
+            public async static System.Threading.Tasks.Task FindNatvisInSolutionImplAsync(List<string> paths)
             {
                 var solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
                 if (solution == null)
@@ -163,9 +159,8 @@ namespace Microsoft.DebugEngineHost
 
                 if (isOpenFolderActive)
                 {
-                    bool isIndexComplete;
                     IEnumerable<string> filenames;
-                    GetOpenFolderSourceLocations(".natvis", out isIndexComplete, out filenames);
+                    filenames = await GetOpenFolderSourceLocationsAsync(".natvis");
                     paths.AddRange(filenames);
                     return;
                 }
