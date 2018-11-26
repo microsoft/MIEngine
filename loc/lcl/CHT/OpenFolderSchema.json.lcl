@@ -28,7 +28,7 @@
           <Str Cat="Text">
             <Val><![CDATA[If true, failures from the command should be ignored. ]A;Defaults to false.]]></Val>
             <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[若為 ture，應略過命令產生的失敗。]A;預設為 false。]]></Val>
+              <Val><![CDATA[若為 true，應略過命令產生的失敗。]A;預設為 false。]]></Val>
             </Tgt>
             <Prev Cat="Text">
               <Val><![CDATA[If true, failures from the command should be ignored. Defaults to false.]]></Val>
