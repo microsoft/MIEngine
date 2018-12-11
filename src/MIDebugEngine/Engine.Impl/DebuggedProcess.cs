@@ -193,6 +193,7 @@ namespace Microsoft.MIDebugEngine
                 // Also since we use gdb-set new-console on in windows for external console, we don't need to RunInTerminal
                 if (HostRunInTerminal.IsRunInTerminalAvailable()
                     && string.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress)
+                    && string.IsNullOrWhiteSpace(localLaunchOptions.DebugServer)
                     && IsCoreDump == false
                     && (PlatformUtilities.IsWindows() ? !localLaunchOptions.UseExternalConsole : true)
                     && !PlatformUtilities.IsOSX())
