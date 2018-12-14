@@ -2,13 +2,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
+using Microsoft.VisualStudio.Workspace;
+using Microsoft.VisualStudio.Workspace.Indexing;
+using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -29,7 +37,9 @@ namespace Microsoft.DebugEngineHost
             List<string> paths = new List<string>();
             try
             {
-                ThreadHelper.Generic.Invoke(() => Internal.FindNatvisInSolutionImpl(paths));
+                ThreadHelper.JoinableTaskFactory.Run(async () =>
+                    await Internal.FindNatvisInSolutionImplAsync(paths)
+                );
             }
             catch (Exception)
             {
@@ -73,12 +83,86 @@ namespace Microsoft.DebugEngineHost
                 //  file as well as all virtual projects including nested (a.k.a. sub) projects
             };
 
-            public static void FindNatvisInSolutionImpl(List<string> paths)
+            /// <summary>
+            /// Gets the WorkspaceService from Microsoft.VisualStudio.Workspace
+            /// </summary>
+            /// <remarks>This package won't be automatically loaded by MEF, so we need to manually acquire exported MEF Parts.</remarks>
+            private static IVsFolderWorkspaceService GetWorkspaceService()
+            {
+                IComponentModel componentModel = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel).GUID) as IComponentModel;
+                var workspaceServices = componentModel.DefaultExportProvider.GetExports<IVsFolderWorkspaceService>();
+
+                if (workspaceServices != null && workspaceServices.Any())
+                {
+                    return workspaceServices.First().Value;
+                }
+                return null;
+            }
+
+            private async static Task<IEnumerable<string>> GetOpenFolderSourceLocationsAsync(string bstrFileName)
+            {
+                var workspaceService = GetWorkspaceService();
+                IEnumerable<string> sourcesArray = new List<string>();
+
+                if (workspaceService != null)
+                {
+                    IWorkspace currentWorkspace = workspaceService.CurrentWorkspace;
+                    IIndexWorkspaceService indexWorkspaceService = currentWorkspace?.GetService<IIndexWorkspaceService>(throwIfNotFound: false);
+                    if (indexWorkspaceService != null)
+                    {
+                        if (indexWorkspaceService.State != IndexWorkspaceState.Completed)
+                        {
+                            HostOutputWindow.WriteLaunchError(Resource.IndexIncomplete);
+                        }
+
+                        var findFilesService = indexWorkspaceService as IFindFilesService;
+                        if (findFilesService != null)
+                        {
+                            FindFileServiceProgress progress = new FindFileServiceProgress();
+                            string toSearch = Path.GetFileName(bstrFileName);
+                            await findFilesService.FindFilesAsync(toSearch, progress);
+                            if (progress.strings.Any())
+                            {
+                                sourcesArray = progress.strings;
+                            }
+                        }
+                    }
+                }
+                return sourcesArray;
+            }
+
+            /// <summary>
+            /// Custom IProgress class used for FindFileService.FindFilesAsync needed
+            /// to force synchronous clalbacks. 
+            /// </summary>
+            private class FindFileServiceProgress : IProgress<string>
+            {
+                public List<string> strings { get; } = new List<string>();
+
+                public void Report(string value)
+                {
+                    this.strings.Add(value);
+                }
+            }
+
+            public async static System.Threading.Tasks.Task FindNatvisInSolutionImplAsync(List<string> paths)
             {
                 var solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
                 if (solution == null)
                 {
                     return; // failed to find a solution
+                }
+
+                object openFolderMode;
+                solution.GetProperty((int)__VSPROPID7.VSPROPID_IsInOpenFolderMode, out openFolderMode);
+                bool isOpenFolderActive = (bool)openFolderMode;
+
+                if (isOpenFolderActive)
+                {
+                    IEnumerable<string> filenames;
+                    filenames = await GetOpenFolderSourceLocationsAsync(".natvis");
+                    paths.AddRange(filenames);
+                    return;
                 }
 
                 IEnumHierarchies enumProjects;

@@ -567,9 +567,10 @@ namespace OpenDebugAD7
 
                     Protocol.SendClientRequest(
                         request,
-                        (args, response) =>
+                        (args, responseBody) =>
                         {
-                            success(response.ProcessId);
+                            // responseBody can be null
+                            success(responseBody?.ProcessId);
                         },
                         (args, exception) =>
                         {

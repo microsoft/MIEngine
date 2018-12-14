@@ -299,8 +299,8 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'false' OR '$(Lab)' == 'false'">
-    <!-- Include file for local VS development builds and all non-VS builds -->
+  <ItemGroup Condition="'$(IsCoreCLR)' == 'true' AND '$(Lab)' == 'false'">
+    <!-- Include file for local VS development builds. For Non-VS Builds, it will be dropped by MakePIAPortable project -->
     <DropUnsignedFile Include="$(OutDir)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
   </ItemGroup>
   <ItemGroup>
