@@ -15,9 +15,11 @@ namespace Microsoft.SSHDebugPS.SSH
         private liblinux.UnixSystem _remoteSystem;
         private liblinux.Services.GdbServer _gdbserver = null;
 
+        protected override int DefaultTimeout => 25000;
+
         public SSHConnection(liblinux.UnixSystem remoteSystem)
         {
-            _remoteSystem = remoteSystem;
+            _remoteSystem = remoteSystem ?? throw new ArgumentNullException(nameof(remoteSystem));
         }
 
         public override string Name

@@ -23,23 +23,35 @@ namespace Microsoft.SSHDebugPS
             DockerTransportSettings settings = null;
             // Assume format is <server>/<container> where if <server> is specified, it is for SSH
             string[] connectionStrings = name.Split('/');
+
+            string displayName;
+            string containerName;
             if (connectionStrings.Length == 1)
             {
                 // local connection
-                settings = new DockerExecShellSettings(connectionStrings[0], isUnix: false);
+                containerName = connectionStrings[0];
+                settings = new DockerExecShellSettings(containerName, isUnix: false);
+                displayName = name;
             }
             else if (connectionStrings.Length == 2)
             {
                 string remoteConnectionString = connectionStrings[0];
-                settings = new DockerExecShellSettings(connectionStrings[1], isUnix: true); // assume all remote is Unix for now.
+                containerName = connectionStrings[1];
                 remoteConnection = GetSSHConnection(remoteConnectionString);
+
+                // If SSH connection dialog was cancelled, we should cancel this connection.
+                if (remoteConnection == null)
+                    return null;
+                
+                settings = new DockerExecShellSettings(containerName, isUnix: true); // assume all remote is Unix for now.
+                displayName = remoteConnection.Name + '/' + containerName;
             }
             else
             {
                 throw new ArgumentException("Argument format is incorrect");
             }
 
-            return new DockerConnection(settings, remoteConnection, name);
+            return new DockerConnection(settings, remoteConnection, name, containerName);
         }
 
         public static Connection GetSSHConnection(string name)

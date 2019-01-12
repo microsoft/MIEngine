@@ -64,15 +64,16 @@ namespace Microsoft.SSHDebugPS
             _commandCompleteEvent.Reset();
 
             ShellCommandCallback commandCallback = new ShellCommandCallback(_commandCompleteEvent);
-            _currentCommand = new AD7UnixAsyncShellCommand(_shell, commandCallback, false);
-            _currentCommand.Start(commandText);
+            AD7UnixAsyncShellCommand command = new AD7UnixAsyncShellCommand(_shell, commandCallback, false);
 
             try
             {
+                _currentCommand = command;
+                _currentCommand.Start(commandText);
                 if (!_commandCompleteEvent.WaitOne(timeout))
                 {
-                    commandOutput = "";
-                    return -1;
+                    commandOutput = "Command Timeout";
+                    return 55;
                 }
 
                 commandOutput = commandCallback.CommandOutput.Trim('\n', '\r'); // trim ending newlines

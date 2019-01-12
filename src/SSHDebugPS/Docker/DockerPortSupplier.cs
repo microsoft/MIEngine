@@ -60,6 +60,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
         public override int CanPersistPorts()
         {
+            // Return false here so that they can be persisted but not by us.
             return HR.S_FALSE;
         }
     }
