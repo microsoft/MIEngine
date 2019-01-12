@@ -21,6 +21,8 @@ namespace Microsoft.SSHDebugPS
 
     internal abstract class Connection : IConnection, IDebugUnixShellPort, IDebugUnixShellPort2
     {
+        protected virtual int DefaultTimeout { get; set; }
+        
         #region IDebugUnixShellPort 
         public abstract void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode);
 
@@ -53,15 +55,13 @@ namespace Microsoft.SSHDebugPS
 
         public bool DoesCommandExist(string command)
         {
-            const int Timeout = 10000;
-            int exitCode = ExecuteCommand("which " + command, Timeout, out string commandOutput);
+            int exitCode = ExecuteCommand("which " + command, DefaultTimeout, out string commandOutput);
 
             if (exitCode != 0 || string.IsNullOrWhiteSpace(commandOutput))
                 return false;
 
             return true;
         }
-
     }
 
     public class Process

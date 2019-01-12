@@ -11,10 +11,10 @@ namespace Microsoft.SSHDebugPS.Docker
         protected string ContainerName { get; private set; }
         protected bool IsUnix { get; private set; }
 
-        public DockerTransportSettings(string containerName, bool isUnix)
+        public DockerTransportSettings(string containerName, bool hostIsUnix)
         {
             ContainerName = containerName;
-            IsUnix = isUnix;
+            IsUnix = hostIsUnix;
         }
 
         private static string WindowsExe => "docker.exe";
@@ -42,8 +42,8 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string _exeArgsFormat = "exec -i {0} {1}";
         private string _command;
 
-        public DockerExecSettings(string containerName, string command, bool isUnix)
-        : base(containerName, isUnix)
+        public DockerExecSettings(string containerName, string command, bool hostIsUnix)
+        : base(containerName, hostIsUnix)
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(command), "Exec command cannot be null");
             _command = command;
@@ -66,8 +66,15 @@ namespace Microsoft.SSHDebugPS.Docker
         private string _sourcePath;
         private string _destinationPath;
 
-        public DockerCopySettings(string sourcePath, string destinationPath, string containerName, bool isUnix)
-            : base(containerName, isUnix)
+        /// <summary>
+        /// Settings to copy from host to the docker container
+        /// </summary>
+        /// <param name="sourcePath">Local path on host</param>
+        /// <param name="destinationPath">Remote path within the docker container</param>
+        /// <param name="containerName">Name of container</param>
+        /// <param name="hostIsUnix">Host is Unix</param>
+        public DockerCopySettings(string sourcePath, string destinationPath, string containerName, bool hostIsUnix)
+            : base(containerName, hostIsUnix)
         {
             _sourcePath = sourcePath;
             _destinationPath = destinationPath;

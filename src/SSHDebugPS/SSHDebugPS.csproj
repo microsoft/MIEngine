@@ -122,6 +122,7 @@
     <Compile Include="SSH\SSHConnection.cs" />
     <Compile Include="SSH\SSHPort.cs" />
     <Compile Include="SSH\SSHPortSupplier.cs" />
+    <Compile Include="SSH\SSHRemoteShell.cs" />
     <Compile Include="SSH\SSHUnixAsyncCommand.cs" />
     <Compile Include="StringResources.Designer.cs">
       <AutoGen>True</AutoGen>

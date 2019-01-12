@@ -19,7 +19,6 @@ namespace Microsoft.SSHDebugPS
         private readonly LinkedList<IRawShell> _shellList = new LinkedList<IRawShell>();
         private bool _isClosed;
         private string _name;
-        private int _timeout;
 
         public override string Name => _name;
 
@@ -34,7 +33,7 @@ namespace Microsoft.SSHDebugPS
         /// <param name="outerConnection">[Optional] the SSH connection (or maybe something else in future) used to connect to the target.</param>
         /// <param name="name">The full name of this connection</param>
         /// <param name="container">The name of the container. For local, this is the same as 'name'.</param>
-        public PipeConnection(IPipeTransportSettings pipeTransportSettings, Connection outerConnection, string name, int timeout = 5000)
+        public PipeConnection(IPipeTransportSettings pipeTransportSettings, Connection outerConnection, string name, int? timeout)
         {
             Debug.Assert(pipeTransportSettings != null);
             Debug.Assert(!string.IsNullOrEmpty(name));
@@ -42,9 +41,17 @@ namespace Microsoft.SSHDebugPS
 
             _name = name;
             _settings = pipeTransportSettings;
-            _outerConnection = outerConnection;
-            _shellExecutionManager = new ShellExecutionManager(CreateShellForSettings(_settings, _outerConnection));
-            _timeout = timeout;
+            if (outerConnection != null)
+            {
+                _outerConnection = outerConnection;
+                DefaultTimeout = 15000;
+            }
+            else
+            {
+                DefaultTimeout = timeout.HasValue ? timeout.Value : 5000;
+            }
+
+            _shellExecutionManager = new ShellExecutionManager(CreateShellFromSettings(_settings, _outerConnection));
         }
 
         public override void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
@@ -77,7 +84,7 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        protected IRawShell CreateShellForSettings(IPipeTransportSettings settings, Connection outerConnection, bool isCommandShell = false)
+        protected IRawShell CreateShellFromSettings(IPipeTransportSettings settings, Connection outerConnection, bool isCommandShell = false)
         {
             IRawShell rawShell;
             if (_outerConnection == null)
@@ -138,7 +145,7 @@ namespace Microsoft.SSHDebugPS
             string command = "mkdir -p \"" + path + "\"";
 
             // Create the directory
-            if (ExecuteCommand(command, _timeout, out commandOutput) != 0)
+            if (ExecuteCommand(command, DefaultTimeout, out commandOutput) != 0)
             {
                 throw new CommandFailedException(command);
             }
@@ -152,9 +159,9 @@ namespace Microsoft.SSHDebugPS
             string output;
 
             string pwd;
-            if (ExecuteCommand("pwd", _timeout, out pwd) == 0
-                && ExecuteCommand($"cd \"{path}\"; pwd", _timeout, out fullpath) == 0
-                && ExecuteCommand($"cd \"{pwd}\"", _timeout, out output) == 0)
+            if (ExecuteCommand("pwd", DefaultTimeout, out pwd) == 0
+                && ExecuteCommand($"cd \"{path}\"; pwd", DefaultTimeout, out fullpath) == 0
+                && ExecuteCommand($"cd \"{pwd}\"", DefaultTimeout, out output) == 0)
             {
                 return fullpath;
             }
@@ -166,7 +173,7 @@ namespace Microsoft.SSHDebugPS
         {
             string command = "echo $HOME";
             string commandOutput;
-            if (ExecuteCommand(command, _timeout, out commandOutput) != 0)
+            if (ExecuteCommand(command, DefaultTimeout, out commandOutput) != 0)
             {
                 throw new CommandFailedException(command);
             }
@@ -187,7 +194,7 @@ namespace Microsoft.SSHDebugPS
                 return false;
             }
             string commandOutput;
-            if (ExecuteCommand(command, _timeout, out commandOutput) != 0)
+            if (ExecuteCommand(command, DefaultTimeout, out commandOutput) != 0)
             {
                 throw new CommandFailedException(command);
             }
@@ -206,7 +213,7 @@ namespace Microsoft.SSHDebugPS
             }
 
             string commandOutput;
-            int exitCode = ExecuteCommand(command, 5000, out commandOutput);
+            int exitCode = ExecuteCommand(command, DefaultTimeout, out commandOutput);
             if (exitCode != 0)
             {
                 Debug.Fail(string.Format(CultureInfo.InvariantCulture, "Command {0} failed with exit code: {1}", command, exitCode));
@@ -228,10 +235,10 @@ namespace Microsoft.SSHDebugPS
             }
 
             string commandOutput;
-            int exitCode = ExecuteCommand(PSOutputParser.CommandText, 5000, out commandOutput);
+            int exitCode = ExecuteCommand(PSOutputParser.CommandText, DefaultTimeout, out commandOutput);
             if (exitCode != 0)
             {
-                exitCode = ExecuteCommand(PSOutputParser.AltCommandText, 5000, out commandOutput);
+                exitCode = ExecuteCommand(PSOutputParser.AltCommandText, DefaultTimeout, out commandOutput);
                 if (exitCode != 0)
                 {
                     throw new CommandFailedException("Unable to get process list");
