@@ -231,7 +231,7 @@ namespace MICore
         {
             try
             {
-                reader?.BaseStream.WriteByte(0);
+                reader?.BaseStream?.WriteByte(0);
             }
             catch
             {
