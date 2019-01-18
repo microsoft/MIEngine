@@ -583,7 +583,7 @@ namespace Microsoft.MIDebugEngine
                 bool isArray = IsArrayType();
                 if (isArray)
                 {
-                    CountChildren = results.FindUint("numchild");
+                    CountChildren = results.TryFindUint("numchild").GetValueOrDefault(0);
                     Children = new VariableInformation[CountChildren];
                     foreach (var c in children)
                     {
@@ -603,7 +603,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         // One Variable is created for each pair returned with the first element (p) being the name of the child
                         // and the second element (p+1) becoming the value.
-                        string name = children[p].FindString("value");
+                        string name = children[p].TryFindString("value");
                         var variable = new VariableInformation(children[p + 1], this, '[' + name + ']');
                         listChildren.Add(variable);
                     }

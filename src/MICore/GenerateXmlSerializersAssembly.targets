@@ -86,6 +86,8 @@
       <CompilerPath>$(CscToolPath)$(CscToolExe)</CompilerPath>
       <CompilerPath Condition="'$(CompilerPath)' == '' and Exists('$(MSBuildBinPath)\csc.exe')">$(MSBuildBinPath)\csc.exe</CompilerPath>
       <CompilerPath Condition="'$(CompilerPath)' == '' and Exists('$(MSBuildBinPath)\roslyn\csc.exe')">$(MSBuildBinPath)\roslyn\csc.exe</CompilerPath>
+      <!-- for Dev 16 -->
+      <CompilerPath Condition="'$(CompilerPath)' == '' and Exists('$(RoslynTargetsPath)\csc.exe')">$(RoslynTargetsPath)\csc.exe</CompilerPath>
 
       <RefPath Condition="'$(IsMonoRuntime)' == 'false'">$(MSBuildFrameworkToolsPath)</RefPath>
       <RefPath Condition="'$(IsMonoRuntime)' == 'true'">$(SDK40ToolsPath)</RefPath>
