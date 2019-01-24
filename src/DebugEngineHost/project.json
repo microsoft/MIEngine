@@ -3,8 +3,9 @@
     "Microsoft.VisualStudio.ComponentModelHost": "15.0.0",
     "Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime": "15.0.0",
     "Microsoft.VisualStudio.Threading": "15.8.0",
-    "Microsoft.VisualStudio.Workspace": "15.0.0",
-    "Microsoft.VisualStudio.Workspace.VSIntegration": "15.0.0",
+    "Microsoft.VisualStudio.Workspace": "15.0.392",
+    "Microsoft.VisualStudio.Workspace.VSIntegration": "15.0.392",
+    "Microsoft.Build":  "15.1.548",
   },
   "frameworks": {
     "net462": {
