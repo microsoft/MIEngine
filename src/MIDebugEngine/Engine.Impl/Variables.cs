@@ -603,7 +603,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         if (children[p].TryFindUint("numchild").GetValueOrDefault(0) > 0)
                         {
-                            var variable = new VariableInformation("[" + (p == 0 ? 0 : (p / 2)).ToString() + "]", this);
+                            var variable = new VariableInformation("[" + (p / 2).ToString() + "]", this);
                             variable.CountChildren = 2;
                             var first = new VariableInformation(children[p], variable, "first");
                             var second = new VariableInformation(children[p + 1], this, "second");
