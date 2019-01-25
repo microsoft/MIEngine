@@ -601,7 +601,7 @@ namespace Microsoft.MIDebugEngine
                     List<VariableInformation> listChildren = new List<VariableInformation>();
                     for (int p = 0; (p + 1) < children.Length; p += 2)
                     {
-                        if (children[p].TryFindUint("numchild").GetValueOrDefault(0) > 0)
+                        if (children[p].TryFindUint("numchild") > 0)
                         {
                             var variable = new VariableInformation("[" + (p / 2).ToString() + "]", this);
                             variable.CountChildren = 2;
