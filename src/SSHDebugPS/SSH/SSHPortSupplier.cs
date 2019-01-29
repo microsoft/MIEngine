@@ -95,6 +95,12 @@ namespace Microsoft.SSHDebugPS.SSH
             return (ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager)) as IVsConnectionManager) != null;
         }
 
+        public override int CanPersistPorts()
+        {
+            return HR.S_OK;
+        }
+
+
         public override unsafe int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum)
         {
             IDebugPort2[] ports = new IDebugPort2[portNames.dwCount];
