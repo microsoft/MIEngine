@@ -4,6 +4,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using liblinux;
 using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
@@ -35,6 +36,8 @@ namespace Microsoft.SSHDebugPS
                 containerName = connectionStrings[0];
                 settings = new DockerExecShellSettings(containerName, hostIsUnix: false);
                 displayName = name;
+
+                // Verify container exists on local machine
             }
             else if (connectionStrings.Length == 2)
             {
@@ -46,7 +49,23 @@ namespace Microsoft.SSHDebugPS
                 // If SSH connection dialog was cancelled, we should cancel this connection.
                 if (remoteConnection == null)
                     return null;
-                
+
+                // Verify container exists on remote machine.
+                string output;
+                int exitCode;
+                remoteConnection.ExecuteSyncCommand("verify docker exists", "docker ps -f {containerName} --filter {{.Names}}", out output, Timeout.Infinite, out exitCode);
+
+                if (exitCode != 0)
+                {
+                    // Missing docker.exe
+                    throw new InvalidOperationException();
+                }
+                else if(string.IsNullOrWhiteSpace(output))
+                {
+                    // container doesn't exist
+                    throw new InvalidOperationException();
+                }                           
+
                 settings = new DockerExecShellSettings(containerName, hostIsUnix: true); // assume all remote is Unix for now.
                 displayName = remoteConnection.Name + '/' + containerName;
             }
@@ -57,6 +76,12 @@ namespace Microsoft.SSHDebugPS
             }
 
             return new DockerConnection(settings, remoteConnection, displayName, containerName);
+        }
+
+        private static bool CanEstablishConnection()
+        {
+             
+            return false;
         }
 
         public static Connection GetSSHConnection(string name)

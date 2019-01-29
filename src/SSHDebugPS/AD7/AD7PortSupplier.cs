@@ -16,18 +16,10 @@ namespace Microsoft.SSHDebugPS
         { }
 
         public abstract int AddPort(IDebugPortRequest2 request, out IDebugPort2 port);
-        public abstract int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum);
 
         public int CanAddPort()
         {
             return HR.S_OK;
-        }
-
-        public abstract int EnumPorts(out IEnumDebugPorts2 ppEnum);
-
-        public int GetPort(ref Guid guidPort, out IDebugPort2 ppPort)
-        {
-            throw new NotImplementedException();
         }
 
         public virtual int GetPortSupplierId(out Guid guidPortSupplier)
@@ -44,18 +36,33 @@ namespace Microsoft.SSHDebugPS
 
         public virtual int CanPersistPorts()
         {
-            return HR.S_OK;
-        }
-
-        public int RemovePort(IDebugPort2 pPort)
-        {
-            throw new NotImplementedException();
+            return HR.S_FALSE;
         }
 
         int IDebugPortSupplierDescription2.GetDescription(enum_PORT_SUPPLIER_DESCRIPTION_FLAGS[] flags, out string text)
         {
             text = Description;
             return HR.S_OK;
+        }
+
+        public virtual int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual int EnumPorts(out IEnumDebugPorts2 ppEnum)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetPort(ref Guid guidPort, out IDebugPort2 ppPort)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int RemovePort(IDebugPort2 pPort)
+        {
+            throw new NotImplementedException();
         }
     }
 }

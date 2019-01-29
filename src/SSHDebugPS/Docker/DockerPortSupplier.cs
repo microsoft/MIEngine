@@ -26,36 +26,19 @@ namespace Microsoft.SSHDebugPS.Docker
             string name;
             HR.Check(request.GetPortName(out name));
 
-            AD7Port newPort = new DockerPort(this, name, isInAddPort: true);
-
-            if (newPort.IsConnected)
+            if (!string.IsNullOrWhiteSpace(name))
             {
-                port = newPort;
-                return HR.S_OK;
+                AD7Port newPort = new DockerPort(this, name, isInAddPort: true);
+
+                if (newPort.IsConnected)
+                {
+                    port = newPort;
+                    return HR.S_OK;
+                }
             }
 
             port = null;
             return HR.E_REMOTE_CONNECT_USER_CANCELED;
-        }
-
-        public override unsafe int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum)
-        {
-            IDebugPort2[] ports = new IDebugPort2[portNames.dwCount];
-            for (int c = 0; c < portNames.dwCount; c++)
-            {
-                char* bstrPortName = ((char**)portNames.Members)[c];
-                string name = new string(bstrPortName);
-
-                ports[c] = new DockerPort(this, name, isInAddPort: false);
-            }
-
-            portEnum = new AD7PortEnum(ports);
-            return HR.S_OK;
-        }
-
-        public override int EnumPorts(out IEnumDebugPorts2 ppEnum)
-        {
-            throw new NotImplementedException();
         }
 
         public override int CanPersistPorts()
