@@ -230,7 +230,7 @@ namespace Microsoft.MIDebugEngine
             Name = name ?? results.FindString("exp");
             if (results.Contains("dynamic"))
             {
-                CountChildren = 1;
+                CountChildren = results.TryFindUint("has_more").GetValueOrDefault(1);
                 IsPreformatted = true;
             }
             else
@@ -600,13 +600,28 @@ namespace Microsoft.MIDebugEngine
                     //      children of this value can be assumed to alternate between keys and values.'
                     //
                     List<VariableInformation> listChildren = new List<VariableInformation>();
-                    for (int p = 0; p + 1 < children.Length; p += 2)
+                    for (int p = 0; (p + 1) < children.Length; p += 2)
                     {
-                        // One Variable is created for each pair returned with the first element (p) being the name of the child
-                        // and the second element (p+1) becoming the value.
-                        string name = children[p].FindString("value");
-                        var variable = new VariableInformation(children[p + 1], this, '[' + name + ']');
-                        listChildren.Add(variable);
+                        if (children[p].TryFindUint("numchild") > 0)
+                        {
+                            var variable = new VariableInformation("[" + (p / 2).ToString() + "]", this);
+                            variable.CountChildren = 2;
+                            var first = new VariableInformation(children[p], variable, "first");
+                            var second = new VariableInformation(children[p + 1], this, "second");
+
+                            variable.Children = new VariableInformation[] { first, second };
+                            variable.TypeName = FormattableString.Invariant($"std::pair<{first.TypeName}, {second.TypeName}>");
+
+                            listChildren.Add(variable);
+                        }
+                        else
+                        {
+                            // One Variable is created for each pair returned with the first element (p) being the name of the child
+                            // and the second element (p+1) becoming the value.
+                            string name = children[p].TryFindString("value");
+                            var variable = new VariableInformation(children[p + 1], this, '[' + name + ']');
+                            listChildren.Add(variable);
+                        }
                     }
                     Children = listChildren.ToArray();
                     CountChildren = (uint)Children.Length;
