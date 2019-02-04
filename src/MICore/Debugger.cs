@@ -568,6 +568,7 @@ namespace MICore
             Async,
             Stop
         }
+
         protected BreakRequest _requestingRealAsyncBreak = BreakRequest.None;
         public Task CmdBreak(BreakRequest request)
         {

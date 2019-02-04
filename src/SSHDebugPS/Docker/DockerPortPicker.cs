@@ -19,21 +19,17 @@ namespace Microsoft.SSHDebugPS.Docker
         private VisualStudio.OLE.Interop.IServiceProvider _serviceProvider = null;
         int IDebugPortPicker.DisplayPortPicker(IntPtr hwndParentDialog, out string pbstrPortId)
         {
-            pbstrPortId = null;
-            var window = new DockerContainerPickerWindow();
+            // If this is null, then the PortPicker handler shows an error. Set to empty by default
+            pbstrPortId = "";
+            var window = new ContainerPicker();
 
             // Register parent
             WindowInteropHelper helper = new WindowInteropHelper(window);
             helper.Owner = hwndParentDialog;
          
-            if (window.ShowModal() != true)
+            if (window.ShowModal() == true)
             {
-                return VSConstants.E_FAIL;
-            }
-
-            if (window.DialogResult.HasValue)
-            {
-                pbstrPortId = "";
+                pbstrPortId = "duck";
             }
 
             return VSConstants.S_OK;

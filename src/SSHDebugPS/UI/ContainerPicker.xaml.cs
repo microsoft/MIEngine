@@ -18,27 +18,18 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.VisualStudio.PlatformUI;
 
-namespace Microsoft.SSHDebugPS.Docker
+namespace Microsoft.SSHDebugPS
 {
     /// <summary>
     /// Interaction logic for DockerContainerPickerWindow.xaml
     /// </summary>
-    public partial class DockerContainerPickerWindow : DialogWindow
+    public partial class ContainerPicker : DialogWindow
     {
-        public DockerContainerPickerWindow()
+        public ContainerPicker()
         {
             InitializeComponent();
+            this.DataContext = new ContainerPickerViewModel();
         }
 
-        private void OkButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.DialogResult = true;
-            this.Close();
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
     }
 }

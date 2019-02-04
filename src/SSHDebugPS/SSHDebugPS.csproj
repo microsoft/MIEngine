@@ -106,15 +106,17 @@
     <Compile Include="AD7\AD7Program.cs" />
     <Compile Include="AD7\AD7UnixAsyncCommand.cs" />
     <Compile Include="Docker\DockerConnection.cs" />
-    <Compile Include="Docker\UI\DockerContainerInstance.cs" />
-    <Compile Include="Docker\UI\DockerContainerPicker.xaml.cs">
-      <DependentUpon>DockerContainerPicker.xaml</DependentUpon>
+    <Compile Include="UI\ContainerPickerViewModel.cs" />
+    <Compile Include="UI\Converters\BoolToVisibilityConverter.cs" />
+    <Compile Include="UI\ContainerInstance.cs" />
+    <Compile Include="UI\ContainerPicker.xaml.cs">
+      <DependentUpon>ContainerPicker.xaml</DependentUpon>
     </Compile>
     <Compile Include="Docker\DockerPort.cs" />
-    <Compile Include="Docker\UI\DockerPortPicker.cs" />
+    <Compile Include="Docker\DockerPortPicker.cs" />
     <Compile Include="Docker\DockerPortSupplier.cs" />
     <Compile Include="Docker\DockerTransportSettings.cs" />
-    <Compile Include="Docker\UI\UIResources.Designer.cs">
+    <Compile Include="UI\UIResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>UIResources.resx</DependentUpon>
@@ -153,10 +155,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Docker\UI\UIResources.resx">
+    <EmbeddedResource Include="UI\UIResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>UIResources.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>Microsoft.SSHDebugPS.Docker</CustomToolNamespace>
+      <CustomToolNamespace>Microsoft.SSHDebugPS</CustomToolNamespace>
     </EmbeddedResource>
     <EmbeddedResource Include="StringResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -182,7 +184,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Docker\UI\DockerContainerPicker.xaml">
+    <Page Include="UI\ContainerPicker.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
