@@ -239,11 +239,10 @@ namespace Microsoft.MIDebugEngine
             Send(eventObject, AD7AsyncBreakCompleteEvent.IID, ad7Thread);
         }
 
-        public void OnLoadComplete(DebuggedThread thread)
+        public void OnLoadComplete()
         {
-            AD7Thread ad7Thread = (AD7Thread)thread?.Client;
             AD7LoadCompleteEvent eventObject = new AD7LoadCompleteEvent();
-            Send(eventObject, AD7LoadCompleteEvent.IID, ad7Thread);
+            Send(eventObject, AD7LoadCompleteEvent.IID, null);
         }
 
         public void OnProgramDestroy(uint exitCode)
