@@ -335,6 +335,7 @@ namespace Microsoft.MIDebugEngine
 
                     try
                     {
+                        _engineCallback.OnLoadComplete(null);
                         // At this point breakpoints and exception settings have been sent down, so we can resume the target
                         _pollThread.RunOperation(() =>
                         {

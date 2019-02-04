@@ -352,7 +352,7 @@ namespace Microsoft.MIDebugEngine
     }
 
     // This interface is sent by the debug engine (DE) to the session debug manager (SDM) when a program is loaded, but before any code is executed.
-    internal sealed class AD7LoadCompleteEvent : AD7StoppingEvent, IDebugLoadCompleteEvent2
+    internal sealed class AD7LoadCompleteEvent : AD7AsynchronousEvent, IDebugLoadCompleteEvent2
     {
         public const string IID = "B1844850-1349-45D4-9F12-495212F5EB0B";
 

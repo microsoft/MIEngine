@@ -29,7 +29,7 @@ namespace Microsoft.MIDebugEngine
         {
             uint attributes;
             Guid riidEvent = new Guid(iidEvent);
-
+            _engine.Logger.WriteLine("Send Event {0}", eventObject.GetType().Name);
             EngineUtils.RequireOk(eventObject.GetAttributes(out attributes));
             EngineUtils.RequireOk(_eventCallback.Event(_engine, null, program, thread, eventObject, ref riidEvent, attributes));
         }
@@ -241,7 +241,7 @@ namespace Microsoft.MIDebugEngine
 
         public void OnLoadComplete(DebuggedThread thread)
         {
-            AD7Thread ad7Thread = (AD7Thread)thread.Client;
+            AD7Thread ad7Thread = (AD7Thread)thread?.Client;
             AD7LoadCompleteEvent eventObject = new AD7LoadCompleteEvent();
             Send(eventObject, AD7LoadCompleteEvent.IID, ad7Thread);
         }
