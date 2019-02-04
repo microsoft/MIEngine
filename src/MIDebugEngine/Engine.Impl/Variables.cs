@@ -230,7 +230,7 @@ namespace Microsoft.MIDebugEngine
             Name = name ?? results.FindString("exp");
             if (results.Contains("dynamic"))
             {
-                CountChildren = 1;
+                CountChildren = results.TryFindUint("has_more").GetValueOrDefault(1);
                 IsPreformatted = true;
             }
             else
@@ -428,106 +428,107 @@ namespace Microsoft.MIDebugEngine
             await _engine.UpdateRadixAsync(_engine.CurrentRadix());    // ensure the radix value is up-to-date
 
             string execCommandString = "-exec ";
-            if (_strippedName.StartsWith(execCommandString))
-            {
-                // special case for executing raw mi commands. 
-                string consoleCommand = _strippedName.Substring(execCommandString.Length);
-                string consoleResults = null;
 
-                try
+            try
+            {
+                if (_strippedName.StartsWith(execCommandString))
                 {
+                    // special case for executing raw mi commands. 
+                    string consoleCommand = _strippedName.Substring(execCommandString.Length);
+                    string consoleResults = null;
+
                     consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures: true);
                     Value = String.Empty;
                     this.TypeName = null;
-                }
-                catch (Exception e)
-                {
-                    if (e.InnerException != null)
-                        e = e.InnerException;
 
-                    UnexpectedMIResultException miException = e as UnexpectedMIResultException;
-                    string message;
-                    if (miException != null && miException.MIError != null)
-                        message = miException.MIError;
-                    else
-                        message = e.Message;
-
-                    SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
-                }
-
-                if (!String.IsNullOrEmpty(consoleResults))
-                {
-                    _debuggedProcess.WriteOutput(consoleResults);
-                }
-            }
-            else
-            {
-                int threadId = Client.GetDebuggedThread().Id;
-                uint frameLevel = _ctx.Level;
-                Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, dwFlags, ResultClass.None);
-
-                if (results.ResultClass == ResultClass.done)
-                {
-                    _internalName = results.FindString("name");
-                    TypeName = results.TryFindString("type");
-                    if (results.Contains("dynamic"))
+                    if (!String.IsNullOrEmpty(consoleResults))
                     {
-                        IsPreformatted = true;
+                        _debuggedProcess.WriteOutput(consoleResults);
                     }
-                    if (results.Contains("dynamic") && results.Contains("has_more"))
-                    {
-                        CountChildren = results.FindUint("has_more");
-                    }
-                    else
-                    {
-                        CountChildren = results.FindUint("numchild");
-                    }
-                    if (results.Contains("displayhint"))
-                    {
-                        DisplayHint = results.FindString("displayhint");
-                    }
-                    if (results.Contains("attributes"))
-                    {
-                        if (results.FindString("attributes") == "noneditable")
-                        {
-                            _isReadonly = true;
-                        }
-                        _attribsFetched = true;
-                    }
-                    Value = results.TryFindString("value");
-                    if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
-                    {
-                        if (_format != null)
-                        {
-                            await Format();
-                        }
-                        else
-                        {
-                            results = await _engine.DebuggedProcess.MICommandFactory.VarEvaluateExpression(_internalName, ResultClass.None);
-
-                            if (results.ResultClass == ResultClass.done)
-                            {
-                                Value = results.FindString("value");
-                            }
-                            else if (results.ResultClass == ResultClass.error)
-                            {
-                                SetAsError(results.FindString("msg"));
-                            }
-                            else
-                            {
-                                Debug.Fail("Weird msg from -var-evaluate-expression");
-                            }
-                        }
-                    }
-                }
-                else if (results.ResultClass == ResultClass.error)
-                {
-                    SetAsError(results.FindString("msg"));
                 }
                 else
                 {
-                    Debug.Fail("Weird msg from -var-create");
+                    int threadId = Client.GetDebuggedThread().Id;
+                    uint frameLevel = _ctx.Level;
+                    Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, dwFlags, ResultClass.None);
+
+                    if (results.ResultClass == ResultClass.done)
+                    {
+                        _internalName = results.FindString("name");
+                        TypeName = results.TryFindString("type");
+                        if (results.Contains("dynamic"))
+                        {
+                            IsPreformatted = true;
+                        }
+                        if (results.Contains("dynamic") && results.Contains("has_more"))
+                        {
+                            CountChildren = results.FindUint("has_more");
+                        }
+                        else
+                        {
+                            CountChildren = results.FindUint("numchild");
+                        }
+                        if (results.Contains("displayhint"))
+                        {
+                            DisplayHint = results.FindString("displayhint");
+                        }
+                        if (results.Contains("attributes"))
+                        {
+                            if (results.FindString("attributes") == "noneditable")
+                            {
+                                _isReadonly = true;
+                            }
+                            _attribsFetched = true;
+                        }
+                        Value = results.TryFindString("value");
+                        if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
+                        {
+                            if (_format != null)
+                            {
+                                await Format();
+                            }
+                            else
+                            {
+                                results = await _engine.DebuggedProcess.MICommandFactory.VarEvaluateExpression(_internalName, ResultClass.None);
+
+                                if (results.ResultClass == ResultClass.done)
+                                {
+                                    Value = results.FindString("value");
+                                }
+                                else if (results.ResultClass == ResultClass.error)
+                                {
+                                    SetAsError(results.FindString("msg"));
+                                }
+                                else
+                                {
+                                    Debug.Fail("Weird msg from -var-evaluate-expression");
+                                }
+                            }
+                        }
+                    }
+                    else if (results.ResultClass == ResultClass.error)
+                    {
+                        SetAsError(results.FindString("msg"));
+                    }
+                    else
+                    {
+                        Debug.Fail("Weird msg from -var-create");
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                if (e.InnerException != null)
+                    e = e.InnerException;
+
+                UnexpectedMIResultException miException = e as UnexpectedMIResultException;
+                string message;
+                if (miException != null && miException.MIError != null)
+                    message = miException.MIError;
+                else
+                    message = e.Message;
+
+                SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
             }
         }
 
@@ -599,13 +600,28 @@ namespace Microsoft.MIDebugEngine
                     //      children of this value can be assumed to alternate between keys and values.'
                     //
                     List<VariableInformation> listChildren = new List<VariableInformation>();
-                    for (int p = 0; p + 1 < children.Length; p += 2)
+                    for (int p = 0; (p + 1) < children.Length; p += 2)
                     {
-                        // One Variable is created for each pair returned with the first element (p) being the name of the child
-                        // and the second element (p+1) becoming the value.
-                        string name = children[p].FindString("value");
-                        var variable = new VariableInformation(children[p + 1], this, '[' + name + ']');
-                        listChildren.Add(variable);
+                        if (children[p].TryFindUint("numchild") > 0)
+                        {
+                            var variable = new VariableInformation("[" + (p / 2).ToString() + "]", this);
+                            variable.CountChildren = 2;
+                            var first = new VariableInformation(children[p], variable, "first");
+                            var second = new VariableInformation(children[p + 1], this, "second");
+
+                            variable.Children = new VariableInformation[] { first, second };
+                            variable.TypeName = FormattableString.Invariant($"std::pair<{first.TypeName}, {second.TypeName}>");
+
+                            listChildren.Add(variable);
+                        }
+                        else
+                        {
+                            // One Variable is created for each pair returned with the first element (p) being the name of the child
+                            // and the second element (p+1) becoming the value.
+                            string name = children[p].TryFindString("value");
+                            var variable = new VariableInformation(children[p + 1], this, '[' + name + ']');
+                            listChildren.Add(variable);
+                        }
                     }
                     Children = listChildren.ToArray();
                     CountChildren = (uint)Children.Length;
