@@ -29,7 +29,10 @@ namespace Microsoft.MIDebugEngine
         {
             uint attributes;
             Guid riidEvent = new Guid(iidEvent);
-            _engine.Logger.WriteLine("Send Event {0}", eventObject.GetType().Name);
+            if (!(eventObject is AD7OutputDebugStringEvent))
+            {
+                _engine.Logger.WriteLine("Send Event {0}", eventObject.GetType().Name);
+            }
             EngineUtils.RequireOk(eventObject.GetAttributes(out attributes));
             EngineUtils.RequireOk(_eventCallback.Event(_engine, null, program, thread, eventObject, ref riidEvent, attributes));
         }
