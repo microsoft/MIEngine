@@ -31,8 +31,8 @@ namespace Microsoft.SSHDebugPS.Docker
 
     internal class DockerExecShellSettings : DockerExecSettings
     {
-        public DockerExecShellSettings(string containerName, bool isUnix)
-            : base(containerName, "/bin/sh", isUnix)
+        public DockerExecShellSettings(string containerName, bool hostIsUnix)
+            : base(containerName, "/bin/sh", hostIsUnix)
         { }
 
     }

@@ -9,19 +9,9 @@ namespace Microsoft.SSHDebugPS.Docker
              : base(portSupplier, name, isInAddPort)
         { }
 
-        protected override Connection GetConnection()
+        protected override Connection GetConnectionInternal()
         {
-            if (_connection == null)
-            {
-                _connection = ConnectionManager.GetDockerConnection(_name);
-
-                if (_connection != null)
-                {
-                    _name = _connection.Name;
-                }
-            }
-
-            return _connection;
+            return ConnectionManager.GetDockerConnection(Name);
         }
     }
 }

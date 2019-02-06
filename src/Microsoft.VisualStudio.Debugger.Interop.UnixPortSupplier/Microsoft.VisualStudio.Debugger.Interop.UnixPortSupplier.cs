@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
     }
 
     /// <summary>
-    /// 
+    /// Interface to add directory copying support
     /// </summary>
     [ComImport()]
     [ComVisible(true)]

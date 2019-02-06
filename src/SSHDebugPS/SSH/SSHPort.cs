@@ -10,20 +10,9 @@ namespace Microsoft.SSHDebugPS.SSH
         public SSHPort(AD7PortSupplier portSupplier, string name, bool isInAddPort)
             : base(portSupplier, name, isInAddPort) { }
 
-        protected override Connection GetConnection()
+        protected override Connection GetConnectionInternal()
         {
-            if (_connection == null)
-            {
-                _connection = ConnectionManager.GetSSHConnection(_name);
-
-                if (_connection != null)
-                {
-                    // User might change connection details via credentials dialog in ConnectionManager.GetInstance, get updated name
-                    _name = _connection.Name;
-                }
-            }
-
-            return _connection;
+            return ConnectionManager.GetSSHConnection(Name);
         }
 
         public string GdbServerAttachProcess(int id, string preAttachCommand)

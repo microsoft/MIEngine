@@ -16,16 +16,17 @@ namespace Microsoft.SSHDebugPS
     {
         private readonly object _lock = new object();
         private readonly AD7PortSupplier _portSupplier;
-        protected string _name;
         private readonly Lazy<Guid> _id = new Lazy<Guid>(() => Guid.NewGuid(), LazyThreadSafetyMode.ExecutionAndPublication);
-        protected Connection _connection;
+        private Connection _connection;
         private readonly Dictionary<uint, IDebugPortEvents2> _eventCallbacks = new Dictionary<uint, IDebugPortEvents2>();
         private uint _lastCallbackCookie;
+
+        protected string Name { get; private set; }
 
         public AD7Port(AD7PortSupplier portSupplier, string name, bool isInAddPort)
         {
             _portSupplier = portSupplier;
-            _name = name;
+            Name = name;
 
             if (isInAddPort)
             {
@@ -33,7 +34,21 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        protected abstract Connection GetConnection();
+        protected Connection GetConnection()
+        {
+            if (_connection == null)
+            {
+                _connection = GetConnectionInternal();
+                if (_connection != null)
+                {
+                    Name = _connection.Name;
+                }
+            }
+
+            return _connection;
+        }
+
+        protected abstract Connection GetConnectionInternal();
 
         public void EnsureConnected()
         {
@@ -78,7 +93,7 @@ namespace Microsoft.SSHDebugPS
 
         public int GetPortName(out string name)
         {
-            name = _name;
+            name = Name;
             return HR.S_OK;
         }
 
