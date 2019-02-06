@@ -40,6 +40,15 @@ namespace MICore
                 proc.StartInfo.SetEnvironmentVariable("PATH", path);
             }
 
+            // Allow to execute custom commands before launching debugger.
+            // For ex., instructing GDB not to break for certain signals
+            if (options.DebuggerMIMode == MIMode.Gdb)
+            {
+                var gdbInitFile = Path.Combine(options.WorkingDirectory, ".gdbinit");
+                if (File.Exists(gdbInitFile))
+                    proc.StartInfo.Arguments += " -x \"" + gdbInitFile + "\"";
+            }
+
             // Only pass the environment to launch clrdbg. For other modes, there are commands that set the environment variables
             // directly for the debuggee.
             if (options.DebuggerMIMode == MIMode.Clrdbg)
