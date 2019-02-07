@@ -15,8 +15,6 @@ namespace Microsoft.SSHDebugPS.SSH
         private liblinux.UnixSystem _remoteSystem;
         private liblinux.Services.GdbServer _gdbserver = null;
 
-        protected override int DefaultTimeout => 25000;
-
         public SSHConnection(liblinux.UnixSystem remoteSystem)
         {
             _remoteSystem = remoteSystem ?? throw new ArgumentNullException(nameof(remoteSystem));
@@ -48,7 +46,7 @@ namespace Microsoft.SSHDebugPS.SSH
                 username = usernameCommand.Output;
             }
 
-            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.CommandText);
+            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine);
             if (command.ExitCode != 0)
             {
                 throw new CommandFailedException(StringResources.Error_PSFailed);
@@ -103,11 +101,6 @@ namespace Microsoft.SSHDebugPS.SSH
             }
 
             _remoteSystem.FileSystem.UploadFile(sourcePath, destinationPath);
-        }
-
-        public override void CopyDirectory(string sourcePath, string destinationPath)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>

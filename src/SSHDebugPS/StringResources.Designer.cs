@@ -19,7 +19,7 @@ namespace Microsoft.SSHDebugPS {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class StringResources {
@@ -79,11 +79,65 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;Command &apos;{0}&apos; failed with code &apos;{1}&apos;. {2}&quot;.
+        /// </summary>
+        internal static string CommandFailedMessageFormat {
+            get {
+                return ResourceManager.GetString("CommandFailedMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Microsoft-SSHPortSupplier-FileCopy-.
+        /// </summary>
+        internal static string CopyFile_TempFilePrefix {
+            get {
+                return ResourceManager.GetString("CopyFile_TempFilePrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Docker Transport allows connecting Visual Studio to Docker containers locally or through SSH..
         /// </summary>
         internal static string Docker_PSDescription {
             get {
                 return ResourceManager.GetString("Docker_PSDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to docker exec {0} \&quot;{1}\&quot;.
+        /// </summary>
+        internal static string DockerExecCommandFormat {
+            get {
+                return ResourceManager.GetString("DockerExecCommandFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source file &apos;{0}&apos; not found..
+        /// </summary>
+        internal static string Error_CopyFile_SourceNotFound {
+            get {
+                return ResourceManager.GetString("Error_CopyFile_SourceNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to copy files..
+        /// </summary>
+        internal static string Error_CopyFileFailed {
+            get {
+                return ResourceManager.GetString("Error_CopyFileFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse exit code..
+        /// </summary>
+        internal static string Error_ExitCodeNotParseable {
+            get {
+                return ResourceManager.GetString("Error_ExitCodeNotParseable", resourceCulture);
             }
         }
         
@@ -102,6 +156,15 @@ namespace Microsoft.SSHDebugPS {
         internal static string Error_PSFailed {
             get {
                 return ResourceManager.GetString("Error_PSFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot process command. Connection is not open..
+        /// </summary>
+        internal static string Error_ShellNotRunning {
+            get {
+                return ResourceManager.GetString("Error_ShellNotRunning", resourceCulture);
             }
         }
         
@@ -165,6 +228,24 @@ namespace Microsoft.SSHDebugPS {
         internal static string WaitingOp_ExecutingPS {
             get {
                 return ResourceManager.GetString("WaitingOp_ExecutingPS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Obtaining user&apos;s home directory path from remote system....
+        /// </summary>
+        internal static string WaitingOp_HomeDirectory {
+            get {
+                return ResourceManager.GetString("WaitingOp_HomeDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating directory on remote system....
+        /// </summary>
+        internal static string WaitingOp_MakeDirectory {
+            get {
+                return ResourceManager.GetString("WaitingOp_MakeDirectory", resourceCulture);
             }
         }
     }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS
@@ -16,7 +17,7 @@ namespace Microsoft.SSHDebugPS
         private readonly Connection _outerConnection;
 
         private readonly ShellExecutionManager _shellExecutionManager;
-        private readonly LinkedList<IRawShell> _shellList = new LinkedList<IRawShell>();
+        private readonly List<ICommandRunner> _shellList = new List<ICommandRunner>();
         private bool _isClosed;
         private string _name;
 
@@ -32,31 +33,15 @@ namespace Microsoft.SSHDebugPS
         /// <param name="pipeTransportSettings">Settings</param>
         /// <param name="outerConnection">[Optional] the SSH connection (or maybe something else in future) used to connect to the target.</param>
         /// <param name="name">The full name of this connection</param>
-        /// <param name="container">The name of the container. For local, this is the same as 'name'.</param>
-        public PipeConnection(IPipeTransportSettings pipeTransportSettings, Connection outerConnection, string name, int? timeout)
+        public PipeConnection(IPipeTransportSettings pipeTransportSettings, Connection outerConnection, string name)
         {
             Debug.Assert(pipeTransportSettings != null);
-            Debug.Assert(!string.IsNullOrEmpty(name));
-            //Debug.Assert(!string.IsNullOrEmpty(container));
+            Debug.Assert(!string.IsNullOrWhiteSpace(name));
 
             _name = name;
             _settings = pipeTransportSettings;
-            if (outerConnection != null)
-            {
-                _outerConnection = outerConnection;
-                DefaultTimeout = 15000;
-            }
-            else
-            {
-                DefaultTimeout = timeout.HasValue ? timeout.Value : 5000;
-            }
-
+            _outerConnection = outerConnection;
             _shellExecutionManager = new ShellExecutionManager(CreateShellFromSettings(_settings, _outerConnection));
-        }
-
-        public override void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
-        {
-            throw new NotImplementedException();
         }
 
         public override int ExecuteCommand(string commandText, int timeout, out string commandOutput)
@@ -66,7 +51,7 @@ namespace Microsoft.SSHDebugPS
                 throw new ObjectDisposedException(nameof(PipeConnection));
             }
 
-            return _shellExecutionManager.ExecuteCommand(commandText, timeout, out commandOutput);
+            return _shellExecutionManager.ExecuteCommand(commandText, timeout, out commandOutput); ;
         }
 
         public override void Close()
@@ -75,7 +60,7 @@ namespace Microsoft.SSHDebugPS
 
             lock (_lock)
             {
-                foreach (IRawShell rawShell in _shellList)
+                foreach (ICommandRunner rawShell in _shellList)
                 {
                     rawShell.Dispose();
                 }
@@ -84,25 +69,24 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        protected IRawShell CreateShellFromSettings(IPipeTransportSettings settings, Connection outerConnection, bool isCommandShell = false)
+        protected ICommandRunner CreateShellFromSettings(IPipeTransportSettings settings, Connection outerConnection, bool isCommandShell = false)
         {
-            IRawShell rawShell;
+            ICommandRunner rawShell;
             if (_outerConnection == null)
             {
                 if (isCommandShell)
-                    rawShell = new CommandShell(settings.ExeCommand, settings.ExeCommandArgs);
+                    rawShell = new LocalRawCommandRunner(settings.ExeCommand, settings.ExeCommandArgs);
                 else
-                    rawShell = new RawLocalShell(settings.ExeCommand, settings.ExeCommandArgs);
+                    rawShell = new LocalBufferedCommandRunner(settings.ExeCommand, settings.ExeCommandArgs);
             }
             else
             {
-                rawShell = new RawRemoteShell(settings.ExeCommand, settings.ExeCommandArgs, outerConnection);
+                rawShell = new RemoteCommandRunner(settings.ExeCommand, settings.ExeCommandArgs, outerConnection);
             }
 
-            LinkedListNode<IRawShell> node;
             lock (_lock)
             {
-                node = _shellList.AddLast(rawShell);
+                _shellList.Add(rawShell);
             }
 
             rawShell.Closed += (sender, eventArgs) =>
@@ -115,40 +99,24 @@ namespace Microsoft.SSHDebugPS
                     if (_isClosed)
                         return;
 
-                    if (node != null)
-                    {
-                        _shellList.Remove(node);
-                        node = null;
-                    }
+                    _shellList.Remove(rawShell);
                 }
             };
 
             return rawShell;
         }
 
-        public override void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
-        {
-            throw new NotImplementedException();
-        }
-
         public override string MakeDirectory(string path)
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(path), nameof(path));
-
-            if (!DoesCommandExist("mkdir"))
+            if (string.IsNullOrWhiteSpace(path))
             {
-                throw new CommandFailedException("mkdir");
+                return string.Empty;
             }
 
             string commandOutput;
-            // -p ignores if the directory is already there
-            string command = "mkdir -p \"" + path + "\"";
-
-            // Create the directory
-            if (ExecuteCommand(command, DefaultTimeout, out commandOutput) != 0)
-            {
-                throw new CommandFailedException(command);
-            }
+            string command = "mkdir -p \"" + path + "\""; // -p ignores if the directory is already there
+            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput);
 
             return GetFullPath(path);
         }
@@ -156,27 +124,21 @@ namespace Microsoft.SSHDebugPS
         private string GetFullPath(string path)
         {
             string fullpath;
-            string output;
+            string output; // throw away variable
 
             string pwd;
-            if (ExecuteCommand("pwd", DefaultTimeout, out pwd) == 0
-                && ExecuteCommand($"cd \"{path}\"; pwd", DefaultTimeout, out fullpath) == 0
-                && ExecuteCommand($"cd \"{pwd}\"", DefaultTimeout, out output) == 0)
-            {
-                return fullpath;
-            }
+            ExecuteCommand("pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out pwd);
+            ExecuteCommand($"cd \"{path}\"; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath);
+            ExecuteCommand($"cd \"{pwd}\"", Timeout.Infinite, throwOnFailure: false, commandOutput: out output); //This might fail in some instances, so ignore a failure and ignore output
 
-            throw new CommandFailedException("Unable to get FullPath");
+            return fullpath;
         }
 
         public override string GetUserHomeDirectory()
         {
             string command = "echo $HOME";
             string commandOutput;
-            if (ExecuteCommand(command, DefaultTimeout, out commandOutput) != 0)
-            {
-                throw new CommandFailedException(command);
-            }
+            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput);
 
             return commandOutput.TrimEnd('\n', '\r');
         }
@@ -189,16 +151,11 @@ namespace Microsoft.SSHDebugPS
         public override bool IsLinux()
         {
             string command = "uname";
-            if (!DoesCommandExist(command))
+            string commandOutput;
+            if(!ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput))
             {
                 return false;
             }
-            string commandOutput;
-            if (ExecuteCommand(command, DefaultTimeout, out commandOutput) != 0)
-            {
-                throw new CommandFailedException(command);
-            }
-
             return commandOutput.StartsWith("Linux", StringComparison.OrdinalIgnoreCase);
         }
 
@@ -206,22 +163,15 @@ namespace Microsoft.SSHDebugPS
         {
             username = string.Empty;
             string command = "id -u -n";
-            if (!DoesCommandExist("id"))
-            {
-                Debug.Fail("Unable to locate command: 'id'");
-                return false;
-            }
-
             string commandOutput;
-            int exitCode = ExecuteCommand(command, DefaultTimeout, out commandOutput);
-            if (exitCode != 0)
+            if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput))
             {
-                Debug.Fail(string.Format(CultureInfo.InvariantCulture, "Command {0} failed with exit code: {1}", command, exitCode));
-                return false;
+
+                username = commandOutput;
+                return true;
             }
 
-            username = commandOutput;
-            return true;
+            return false;
         }
 
         public override List<Process> ListProcesses()
@@ -229,23 +179,34 @@ namespace Microsoft.SSHDebugPS
             string username;
             TryGetUsername(out username);
 
-            if (!DoesCommandExist("ps"))
-            {
-                throw new CommandFailedException(StringResources.Error_PSFailed);
-            }
-
             string commandOutput;
-            int exitCode = ExecuteCommand(PSOutputParser.CommandText, DefaultTimeout, out commandOutput);
-            if (exitCode != 0)
+
+            if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput))
             {
-                exitCode = ExecuteCommand(PSOutputParser.AltCommandText, DefaultTimeout, out commandOutput);
-                if (exitCode != 0)
+                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput))
                 {
-                    throw new CommandFailedException("Unable to get process list");
+                    throw new CommandFailedException(StringResources.Error_PSFailed);
                 }
             }
 
             return PSOutputParser.Parse(commandOutput, username);
+        }
+
+        /// <summary>
+        /// Checks command exit code and if it is non-zero, it will throw a CommandFailedException with an error message if 'throwOnFailure' is true.
+        /// </summary>
+        /// <returns>true if command succeeded.</returns>
+        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput)
+        {
+            commandOutput = string.Empty;
+            int exitCode = ExecuteCommand(command, timeout, out commandOutput);
+            if (throwOnFailure && exitCode != 0)
+            {
+                string error = String.Format(CultureInfo.InvariantCulture, StringResources.CommandFailedMessageFormat, command, exitCode, commandOutput);
+                throw new CommandFailedException(error);
+            }
+            else
+                return exitCode == 0;
         }
     }
 }

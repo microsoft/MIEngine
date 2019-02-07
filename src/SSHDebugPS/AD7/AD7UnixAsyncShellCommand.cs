@@ -20,7 +20,7 @@ namespace Microsoft.SSHDebugPS
         private string _startCommand;
         private LineBuffer _lineBuffer = new LineBuffer();
 
-        public AD7UnixAsyncShellCommand(IRawShell shell, IDebugUnixShellCommandCallback callback, bool closeShellOnComplete)
+        public AD7UnixAsyncShellCommand(ICommandRunner shell, IDebugUnixShellCommandCallback callback, bool closeShellOnComplete)
             : base(shell, callback, closeShellOnComplete)
         {
             Guid id = Guid.NewGuid();

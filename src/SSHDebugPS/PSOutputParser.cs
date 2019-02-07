@@ -56,17 +56,17 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        // Use padding to expand column width. 10 for pid and 32 for userid
-        private const string PSCommandLineFormat = "ps{0}-o pid=ppppppppppp -o ruser=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr -o args";
+        // Use padding to expand column width. 10 for pid and 32 for userid as that is the max size for each
+        // Tested this format with different distributions of Linux and container distributions. This command (and the alternative without the flags) seems 
+        // to be the one that works the best between standard *nix and BusyBox implementations of ps.
+        private const string PSCommandLineFormat = "ps{0}-o pid=pppppppppp -o ruser=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr -o args";
         private string _currentUserName;
         private ColumnDef _pidCol;
         private ColumnDef _ruserCol;
         private ColumnDef _argsCol;
 
-        private static string PSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " -axww ");
-        private static string AltPSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " ");
-        public static string CommandText = PSCommandLine;
-        public static string AltCommandText = AltPSCommandLine;
+        public static string PSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " -axww ");
+        public static string AltPSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " ");
 
         public static List<Process> Parse(string output, string username)
         {
@@ -103,7 +103,7 @@ namespace Microsoft.SSHDebugPS
                     if (process.CommandLine.EndsWith(PSCommandLine, StringComparison.Ordinal))
                         continue; // ignore the 'ps' process that we spawned
 
-                    if (process.CommandLine.EndsWith(AltCommandText, StringComparison.Ordinal))
+                    if (process.CommandLine.EndsWith(AltPSCommandLine, StringComparison.Ordinal))
                         continue;
 
                     processList.Add(process);
@@ -122,40 +122,31 @@ namespace Microsoft.SSHDebugPS
         {
             int index = 0;
             int strLen = headerLine.Length;
-            if (!SkipWhitespace(headerLine, ref index))
-                return false;
 
             // pid column is right justified so the pid column stops at the last letter index
-            while (index < strLen && !char.IsWhiteSpace(headerLine[index]))
-            {
-                index++;
-            }
-            if (index >= strLen)
+            if (!SkipNonWhitespace(headerLine, ref index))
                 return false;
+            _pidCol = new ColumnDef(0, index);
 
             if (!SkipWhitespace(headerLine, ref index))
                 return false;
 
-            _pidCol = new ColumnDef(0, index - 1);
-                       
             int colStart = index;
-            while (index < strLen && !char.IsWhiteSpace(headerLine[index]))
-            {
-                index++;
-            }
+            if (!SkipNonWhitespace(headerLine, ref index))
+                return false;
+
+            _ruserCol = new ColumnDef(colStart, index);
+
             if (!SkipWhitespace(headerLine, ref index))
                 return false;
-            
-            _ruserCol = new ColumnDef(colStart, index - 1);
 
             // The rest of the line is the args column
             _argsCol = new ColumnDef(index, int.MaxValue);
+            
+            // comsume the rest of the header
+            SkipNonWhitespace(headerLine, ref index);
 
             // make sure the line is now empty, aside from whitespace
-            while (index < strLen && !char.IsWhiteSpace(headerLine[index]))
-            {
-                index++;
-            }
             if (SkipWhitespace(headerLine, ref index))
                 return false;
 
@@ -196,6 +187,23 @@ namespace Microsoft.SSHDebugPS
                     return false;
 
                 if (!char.IsWhiteSpace(line[index]))
+                    return true;
+
+                index++;
+            }
+        }
+
+        /// <summary>
+        /// Opposite of SkipWhitespace. It will skip over non-whitespace characters until the next whitespace or the end.
+        /// </summary>
+        private static bool SkipNonWhitespace(string line, ref int index)
+        {
+            while (true)
+            {
+                if (index >= line.Length)
+                    return false;
+
+                if (char.IsWhiteSpace(line[index]))
                     return true;
 
                 index++;

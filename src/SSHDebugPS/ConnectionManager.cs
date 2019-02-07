@@ -19,6 +19,9 @@ namespace Microsoft.SSHDebugPS
     {
         public static Connection GetDockerConnection(string name)
         {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
             Connection remoteConnection = null;
             DockerTransportSettings settings = null;
             // Assume format is <server>/<container> where if <server> is specified, it is for SSH
@@ -30,11 +33,12 @@ namespace Microsoft.SSHDebugPS
             {
                 // local connection
                 containerName = connectionStrings[0];
-                settings = new DockerExecShellSettings(containerName, isUnix: false);
+                settings = new DockerExecShellSettings(containerName, hostIsUnix: false);
                 displayName = name;
             }
             else if (connectionStrings.Length == 2)
             {
+                // SSH connection
                 string remoteConnectionString = connectionStrings[0];
                 containerName = connectionStrings[1];
                 remoteConnection = GetSSHConnection(remoteConnectionString);
@@ -43,15 +47,16 @@ namespace Microsoft.SSHDebugPS
                 if (remoteConnection == null)
                     return null;
                 
-                settings = new DockerExecShellSettings(containerName, isUnix: true); // assume all remote is Unix for now.
+                settings = new DockerExecShellSettings(containerName, hostIsUnix: true); // assume all remote is Unix for now.
                 displayName = remoteConnection.Name + '/' + containerName;
             }
             else
             {
-                throw new ArgumentException("Argument format is incorrect");
+                // This will be replaced by the docker container selection dialog 
+                return null;
             }
 
-            return new DockerConnection(settings, remoteConnection, name, containerName);
+            return new DockerConnection(settings, remoteConnection, displayName, containerName);
         }
 
         public static Connection GetSSHConnection(string name)
