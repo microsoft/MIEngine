@@ -14,9 +14,9 @@ namespace Microsoft.SSHDebugPS
         private bool _closeShellOnComplete;
 
         protected IDebugUnixShellCommandCallback Callback { get; }
-        protected IRawShell Shell { get; private set; }
+        protected ICommandRunner Shell { get; private set; }
 
-        public AD7UnixAsyncCommand(IRawShell shell, IDebugUnixShellCommandCallback callback, bool closeShellOnComplete)
+        public AD7UnixAsyncCommand(ICommandRunner shell, IDebugUnixShellCommandCallback callback, bool closeShellOnComplete)
         {
             Shell = shell;
             Callback = callback;
