@@ -105,11 +105,6 @@ namespace Microsoft.SSHDebugPS.SSH
             _remoteSystem.FileSystem.UploadFile(sourcePath, destinationPath);
         }
 
-        public override void CopyDirectory(string sourcePath, string destinationPath)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Creates directory provided the path. Does not fail if the directory already exists.
         /// </summary>

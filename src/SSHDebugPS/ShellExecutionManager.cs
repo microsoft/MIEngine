@@ -73,7 +73,7 @@ namespace Microsoft.SSHDebugPS
                 if (!_commandCompleteEvent.WaitOne(timeout))
                 {
                     commandOutput = "Command Timeout";
-                    return 55;
+                    return 1460; // ERROR_TIMEOUT
                 }
 
                 commandOutput = commandCallback.CommandOutput.Trim('\n', '\r'); // trim ending newlines

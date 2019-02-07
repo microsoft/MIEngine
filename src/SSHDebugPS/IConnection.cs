@@ -19,7 +19,7 @@ namespace Microsoft.SSHDebugPS
         List<Process> ListProcesses();
     }
 
-    internal abstract class Connection : IConnection, IDebugUnixShellPort, IDebugUnixShellPort2
+    internal abstract class Connection : IConnection, IDebugUnixShellPort
     {
         protected virtual int DefaultTimeout { get; set; }
         
@@ -37,10 +37,6 @@ namespace Microsoft.SSHDebugPS
         public abstract bool IsOSX();
 
         public abstract bool IsLinux();
-        #endregion
-
-        #region IDebugUnixShellPort2
-        public abstract void CopyDirectory(string sourcePath, string destinationPath);
         #endregion
 
         #region IConnection

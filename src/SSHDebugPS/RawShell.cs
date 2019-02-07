@@ -146,17 +146,12 @@ namespace Microsoft.SSHDebugPS
         {
             try
             {
-                while (true)
+                while (!token.IsCancellationRequested)
                 {
                     char[] buffer = new char[BUFMAX];
                     Task<int> task = reader.ReadAsync(buffer, 0, buffer.Length);
                     task.Wait(token);
-                    //if (task.Result == 0)
-                    //{
-                    //    Closed?.Invoke(this, 0);
-                    //    Close();
-                    //    return;
-                    //}
+
                     if (task.Result > 0)
                         action(new string(buffer, 0, task.Result));
                 }

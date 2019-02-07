@@ -63,10 +63,8 @@ namespace Microsoft.SSHDebugPS
         private ColumnDef _ruserCol;
         private ColumnDef _argsCol;
 
-        private static string PSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " -axww ");
-        private static string AltPSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " ");
-        public static string CommandText = PSCommandLine;
-        public static string AltCommandText = AltPSCommandLine;
+        public static string PSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " -axww ");
+        public static string AltPSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " ");
 
         public static List<Process> Parse(string output, string username)
         {
@@ -103,7 +101,7 @@ namespace Microsoft.SSHDebugPS
                     if (process.CommandLine.EndsWith(PSCommandLine, StringComparison.Ordinal))
                         continue; // ignore the 'ps' process that we spawned
 
-                    if (process.CommandLine.EndsWith(AltCommandText, StringComparison.Ordinal))
+                    if (process.CommandLine.EndsWith(AltPSCommandLine, StringComparison.Ordinal))
                         continue;
 
                     processList.Add(process);
@@ -126,10 +124,7 @@ namespace Microsoft.SSHDebugPS
                 return false;
 
             // pid column is right justified so the pid column stops at the last letter index
-            while (index < strLen && !char.IsWhiteSpace(headerLine[index]))
-            {
-                index++;
-            }
+            ConsumeNonWhitespace(headerLine, ref index);
             if (index >= strLen)
                 return false;
 
@@ -137,25 +132,19 @@ namespace Microsoft.SSHDebugPS
                 return false;
 
             _pidCol = new ColumnDef(0, index - 1);
-                       
+
             int colStart = index;
-            while (index < strLen && !char.IsWhiteSpace(headerLine[index]))
-            {
-                index++;
-            }
+            ConsumeNonWhitespace(headerLine, ref index);
             if (!SkipWhitespace(headerLine, ref index))
                 return false;
-            
+
             _ruserCol = new ColumnDef(colStart, index - 1);
 
             // The rest of the line is the args column
             _argsCol = new ColumnDef(index, int.MaxValue);
 
             // make sure the line is now empty, aside from whitespace
-            while (index < strLen && !char.IsWhiteSpace(headerLine[index]))
-            {
-                index++;
-            }
+            ConsumeNonWhitespace(headerLine, ref index);
             if (SkipWhitespace(headerLine, ref index))
                 return false;
 
@@ -198,6 +187,15 @@ namespace Microsoft.SSHDebugPS
                 if (!char.IsWhiteSpace(line[index]))
                     return true;
 
+                index++;
+            }
+        }
+
+        private void ConsumeNonWhitespace(string line, ref int index)
+        {
+            int length = line.Length;
+            while (index < length && SkipWhitespace(line, ref index))
+            {
                 index++;
             }
         }

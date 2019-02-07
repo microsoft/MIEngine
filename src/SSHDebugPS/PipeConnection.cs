@@ -16,7 +16,7 @@ namespace Microsoft.SSHDebugPS
         private readonly Connection _outerConnection;
 
         private readonly ShellExecutionManager _shellExecutionManager;
-        private readonly LinkedList<IRawShell> _shellList = new LinkedList<IRawShell>();
+        private readonly List<IRawShell> _shellList = new List<IRawShell>();
         private bool _isClosed;
         private string _name;
 
@@ -32,12 +32,11 @@ namespace Microsoft.SSHDebugPS
         /// <param name="pipeTransportSettings">Settings</param>
         /// <param name="outerConnection">[Optional] the SSH connection (or maybe something else in future) used to connect to the target.</param>
         /// <param name="name">The full name of this connection</param>
-        /// <param name="container">The name of the container. For local, this is the same as 'name'.</param>
+        /// <param name="timeout">Optional timeout value in milliseconds). If not specified, a default of  </param>
         public PipeConnection(IPipeTransportSettings pipeTransportSettings, Connection outerConnection, string name, int? timeout)
         {
             Debug.Assert(pipeTransportSettings != null);
-            Debug.Assert(!string.IsNullOrEmpty(name));
-            //Debug.Assert(!string.IsNullOrEmpty(container));
+            Debug.Assert(!string.IsNullOrWhiteSpace(name));
 
             _name = name;
             _settings = pipeTransportSettings;
@@ -48,15 +47,10 @@ namespace Microsoft.SSHDebugPS
             }
             else
             {
-                DefaultTimeout = timeout.HasValue ? timeout.Value : 5000;
+                DefaultTimeout = timeout ?? 5000;
             }
 
             _shellExecutionManager = new ShellExecutionManager(CreateShellFromSettings(_settings, _outerConnection));
-        }
-
-        public override void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
-        {
-            throw new NotImplementedException();
         }
 
         public override int ExecuteCommand(string commandText, int timeout, out string commandOutput)
@@ -99,10 +93,9 @@ namespace Microsoft.SSHDebugPS
                 rawShell = new RawRemoteShell(settings.ExeCommand, settings.ExeCommandArgs, outerConnection);
             }
 
-            LinkedListNode<IRawShell> node;
             lock (_lock)
             {
-                node = _shellList.AddLast(rawShell);
+                _shellList.Add(rawShell);
             }
 
             rawShell.Closed += (sender, eventArgs) =>
@@ -115,20 +108,11 @@ namespace Microsoft.SSHDebugPS
                     if (_isClosed)
                         return;
 
-                    if (node != null)
-                    {
-                        _shellList.Remove(node);
-                        node = null;
-                    }
+                    _shellList.Remove(rawShell);
                 }
             };
 
             return rawShell;
-        }
-
-        public override void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
-        {
-            throw new NotImplementedException();
         }
 
         public override string MakeDirectory(string path)
@@ -156,13 +140,13 @@ namespace Microsoft.SSHDebugPS
         private string GetFullPath(string path)
         {
             string fullpath;
-            string output;
+            string output; // throw away variable
 
             string pwd;
             if (ExecuteCommand("pwd", DefaultTimeout, out pwd) == 0
-                && ExecuteCommand($"cd \"{path}\"; pwd", DefaultTimeout, out fullpath) == 0
-                && ExecuteCommand($"cd \"{pwd}\"", DefaultTimeout, out output) == 0)
+                && ExecuteCommand($"cd \"{path}\"; pwd", DefaultTimeout, out fullpath) == 0)
             {
+                ExecuteCommand($"cd \"{pwd}\"", DefaultTimeout, out output); //This might fail in some instances, so ignore the output
                 return fullpath;
             }
 

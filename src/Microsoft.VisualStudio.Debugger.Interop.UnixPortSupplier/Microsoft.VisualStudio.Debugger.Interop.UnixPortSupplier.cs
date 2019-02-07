@@ -70,23 +70,6 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
     }
 
     /// <summary>
-    /// 
-    /// </summary>
-    [ComImport()]
-    [ComVisible(true)]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("798245A7-1F29-4F38-BE91-1E867868EC78")]
-    public interface IDebugUnixShellPort2
-    {
-        /// <summary>
-        /// Copies a directory from the local machine to the remote machine.
-        /// </summary>
-        /// <param name="sourceDirectory"></param>
-        /// <param name="destinationDirectory"></param>
-        void CopyDirectory(string sourceDirectory, string destinationDirectory);
-    }
-
-    /// <summary>
     /// Interface implemented by a port that supports explicit cleanup
     /// </summary>
     [ComImport()]
