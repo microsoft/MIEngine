@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS
@@ -20,9 +21,7 @@ namespace Microsoft.SSHDebugPS
     }
 
     internal abstract class Connection : IConnection, IDebugUnixShellPort
-    {
-        protected virtual int DefaultTimeout { get; set; }
-        
+    {        
         #region IDebugUnixShellPort 
         public abstract void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode);
 
@@ -48,16 +47,6 @@ namespace Microsoft.SSHDebugPS
 
         public abstract int ExecuteCommand(string commandText, int timeout, out string commandOutput);
         #endregion
-
-        public bool DoesCommandExist(string command)
-        {
-            int exitCode = ExecuteCommand("which " + command, DefaultTimeout, out string commandOutput);
-
-            if (exitCode != 0 || string.IsNullOrWhiteSpace(commandOutput))
-                return false;
-
-            return true;
-        }
     }
 
     public class Process

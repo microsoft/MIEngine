@@ -45,12 +45,12 @@ namespace Microsoft.SSHDebugPS
 
     internal class ShellExecutionManager : IDisposable
     {
-        private readonly IRawShell _shell;
+        private readonly ICommandRunner _shell;
         private AD7UnixAsyncShellCommand _currentCommand;
         private readonly ManualResetEvent _commandCompleteEvent = new ManualResetEvent(false);
 
 
-        public ShellExecutionManager(IRawShell shell)
+        public ShellExecutionManager(ICommandRunner shell)
         {
             _shell = shell;
         }

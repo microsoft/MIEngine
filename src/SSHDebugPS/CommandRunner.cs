@@ -14,23 +14,22 @@ using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS
 {
-    public interface IRawShell : IDisposable
+    public interface ICommandRunner : IDisposable
     {
         event EventHandler<string> OutputReceived;
         event EventHandler<int> Closed;
         event EventHandler ErrorOccured;
 
-        void WriteCommandStart(string startCommand);
         void Write(string text);
         void WriteLine(string text);
     }
 
-    internal class RawLocalShell : IRawShell
+    internal class LocalCommandRunner : ICommandRunner
     {
         private System.Diagnostics.Process _localProcess;
         private StreamWriter _stdoutWriter;
 
-        public RawLocalShell(string command, string arguments)
+        public LocalCommandRunner(string command, string arguments)
         {
             ProcessStartInfo processStartInfo = new ProcessStartInfo(command, arguments);
             processStartInfo.RedirectStandardError = true;
@@ -74,11 +73,6 @@ namespace Microsoft.SSHDebugPS
             _stdoutWriter.Flush();
         }
 
-        public void WriteCommandStart(string startCommand)
-        {
-            WriteLine(startCommand);
-        }
-
         public void WriteLine(string text)
         {
             _stdoutWriter.WriteLine(text);
@@ -104,7 +98,7 @@ namespace Microsoft.SSHDebugPS
     /// <summary>
     /// Launches a raw command that doesn't have shell-like input/output
     /// </summary>
-    internal class CommandShell : IRawShell
+    internal class CommandShell : ICommandRunner
     {
         private System.Diagnostics.Process _localProcess;
         private StreamWriter _stdoutWriter;
@@ -131,7 +125,7 @@ namespace Microsoft.SSHDebugPS
             _processError = _localProcess.StandardError;
 
             Thread outputThread = new Thread(() => ReadLoop(_processReader, _cancellationSource.Token, (msg) => { OutputReceived?.Invoke(this, msg); }));
-            Thread errorThread = new Thread(() => ReadLoop(_processError, _cancellationSource.Token, (msg) => { ErrorOccured?.Invoke(this, null); }));
+            Thread errorThread = new Thread(() => ReadLoop(_processError, _cancellationSource.Token, (msg) => { ErrorOccured?.Invoke(this, new ErrorEventArgs(new Exception(msg))); }));
 
             outputThread.Start();
             errorThread.Start();
@@ -196,11 +190,6 @@ namespace Microsoft.SSHDebugPS
             _stdoutWriter.Flush();
         }
 
-        public void WriteCommandStart(string startCommand)
-        {
-            WriteLine(startCommand);
-        }
-
         public void WriteLine(string text)
         {
             _stdoutWriter.WriteLine(text);
@@ -216,12 +205,12 @@ namespace Microsoft.SSHDebugPS
     /// <summary>
     ///  Shell that uses a remote Connection to send commands and receive input/output
     /// </summary>
-    internal class RawRemoteShell : IRawShell, IDebugUnixShellCommandCallback
+    internal class RemoteCommandRunner : ICommandRunner, IDebugUnixShellCommandCallback
     {
         private IDebugUnixShellAsyncCommand _asyncCommand;
         private bool _isRunning;
 
-        public RawRemoteShell(string command, string arguments, Connection remoteConnection)
+        public RemoteCommandRunner(string command, string arguments, Connection remoteConnection)
         {
             string commandText = string.Concat(command, " ", arguments);
             remoteConnection.BeginExecuteAsyncCommand(commandText, runInShell: false, callback: this, asyncCommand: out _asyncCommand);
@@ -246,16 +235,6 @@ namespace Microsoft.SSHDebugPS
             if (_isRunning)
             {
                 _asyncCommand.Write(text);
-            }
-            else
-                throw new InvalidOperationException("Is not running");
-        }
-
-        public void WriteCommandStart(string startCommand)
-        {
-            if (_isRunning)
-            {
-                _asyncCommand.WriteLine(startCommand);
             }
             else
                 throw new InvalidOperationException("Is not running");

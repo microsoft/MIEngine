@@ -11,7 +11,7 @@ namespace Microsoft.SSHDebugPS.SSH
     /// <summary>
     /// Wrapper for liblinux's StreamingShell
     /// </summary>
-    internal class SSHRemoteShell : IRawShell
+    internal class SSHRemoteShell : ICommandRunner
     {
         private StreamingShell _shell;
 
