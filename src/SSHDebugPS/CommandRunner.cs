@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS
 {
-    public interface ICommandRunner : IDisposable
+    internal interface ICommandRunner : IDisposable
     {
         event EventHandler<string> OutputReceived;
         event EventHandler<int> Closed;
@@ -24,7 +24,7 @@ namespace Microsoft.SSHDebugPS
         void WriteLine(string text);
     }
 
-    public class ErrorOccuredEventArgs : EventArgs
+    internal class ErrorOccuredEventArgs : EventArgs
     {
         public ErrorOccuredEventArgs(Exception e)
         {
@@ -99,7 +99,7 @@ namespace Microsoft.SSHDebugPS
 
         private void OnProcessOutput(object sender, DataReceivedEventArgs e)
         {
-            OutputReceived?.Invoke(this, e?.Data + '\n');
+            OutputReceived?.Invoke(this, e.Data + '\n');
         }
 
         private void OnProcessExited(object sender, EventArgs e)

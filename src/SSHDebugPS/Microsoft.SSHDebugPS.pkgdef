@@ -4,7 +4,7 @@
 
 [$RootKey$\AD7Metrics\PortSupplier\{A2BBC114-47E4-473F-A49C-69EE89711243}]
 "CLSID"="{18F976B7-D66D-4C36-9CAE-A9217E0E3DF4}"
-"Name"="Docker"
+"Name"="Docker (Linux Container)"
 
 [$RootKey$\CLSID\{1326FB0D-EA51-4F90-BEDF-5948588B0FE1}]
 "Assembly"="Microsoft.SSHDebugPS"
