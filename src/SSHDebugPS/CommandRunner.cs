@@ -18,18 +18,31 @@ namespace Microsoft.SSHDebugPS
     {
         event EventHandler<string> OutputReceived;
         event EventHandler<int> Closed;
-        event EventHandler ErrorOccured;
+        event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
 
         void Write(string text);
         void WriteLine(string text);
     }
 
-    internal class LocalCommandRunner : ICommandRunner
+    public class ErrorOccuredEventArgs : EventArgs
+    {
+        public ErrorOccuredEventArgs(Exception e)
+        {
+            Exception = e;
+        }
+
+        public Exception Exception { get; }
+    }
+
+    /// <summary>
+    /// Launches a local command that sends output when a newline is received.
+    /// </summary>
+    internal class LocalBufferedCommandRunner : ICommandRunner
     {
         private System.Diagnostics.Process _localProcess;
         private StreamWriter _stdoutWriter;
 
-        public LocalCommandRunner(string command, string arguments)
+        public LocalBufferedCommandRunner(string command, string arguments)
         {
             ProcessStartInfo processStartInfo = new ProcessStartInfo(command, arguments);
             processStartInfo.RedirectStandardError = true;
@@ -51,7 +64,7 @@ namespace Microsoft.SSHDebugPS
 
         public event EventHandler<string> OutputReceived;
         public event EventHandler<int> Closed;
-        public event EventHandler ErrorOccured;
+        public event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
 
         public void Dispose()
         {
@@ -81,7 +94,7 @@ namespace Microsoft.SSHDebugPS
 
         private void OnErrorOutput(object sender, DataReceivedEventArgs e)
         {
-            ErrorOccured?.Invoke(sender, e);
+            ErrorOccured?.Invoke(sender, new ErrorOccuredEventArgs(new Exception(e.Data)));
         }
 
         private void OnProcessOutput(object sender, DataReceivedEventArgs e)
@@ -96,9 +109,9 @@ namespace Microsoft.SSHDebugPS
     }
 
     /// <summary>
-    /// Launches a raw command that doesn't have shell-like input/output
+    /// Launches a local command that sends raw output.
     /// </summary>
-    internal class CommandShell : ICommandRunner
+    internal class LocalRawCommandRunner : ICommandRunner
     {
         private System.Diagnostics.Process _localProcess;
         private StreamWriter _stdoutWriter;
@@ -107,7 +120,7 @@ namespace Microsoft.SSHDebugPS
         private CancellationTokenSource _cancellationSource = new CancellationTokenSource();
         private bool _isClosed = false;
 
-        public CommandShell(string command, string arguments)
+        public LocalRawCommandRunner(string command, string arguments)
         {
             ProcessStartInfo processStartInfo = new ProcessStartInfo(command, arguments);
             processStartInfo.RedirectStandardError = true;
@@ -125,7 +138,7 @@ namespace Microsoft.SSHDebugPS
             _processError = _localProcess.StandardError;
 
             Thread outputThread = new Thread(() => ReadLoop(_processReader, _cancellationSource.Token, (msg) => { OutputReceived?.Invoke(this, msg); }));
-            Thread errorThread = new Thread(() => ReadLoop(_processError, _cancellationSource.Token, (msg) => { ErrorOccured?.Invoke(this, new ErrorEventArgs(new Exception(msg))); }));
+            Thread errorThread = new Thread(() => ReadLoop(_processError, _cancellationSource.Token, (msg) => { ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(new Exception(msg))); }));
 
             outputThread.Start();
             errorThread.Start();
@@ -133,7 +146,7 @@ namespace Microsoft.SSHDebugPS
 
         public event EventHandler<string> OutputReceived;
         public event EventHandler<int> Closed;
-        public event EventHandler ErrorOccured;
+        public event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
 
         private static int BUFMAX = 4096;
         private void ReadLoop(StreamReader reader, CancellationToken token, Action<string> action)
@@ -219,7 +232,7 @@ namespace Microsoft.SSHDebugPS
 
         public event EventHandler<string> OutputReceived;
         public event EventHandler<int> Closed;
-        public event EventHandler ErrorOccured;
+        public event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
 
         public void Dispose()
         {
@@ -232,22 +245,14 @@ namespace Microsoft.SSHDebugPS
 
         public void Write(string text)
         {
-            if (_isRunning)
-            {
-                _asyncCommand.Write(text);
-            }
-            else
-                throw new InvalidOperationException("Is not running");
+            EnsureRunning();
+            _asyncCommand.Write(text);
         }
 
         public void WriteLine(string text)
         {
-            if (_isRunning)
-            {
-                _asyncCommand.WriteLine(text);
-            }
-            else
-                throw new InvalidOperationException("Is not running");
+            EnsureRunning();
+            _asyncCommand.WriteLine(text);
         }
 
         void IDebugUnixShellCommandCallback.OnOutputLine(string line)
@@ -261,9 +266,16 @@ namespace Microsoft.SSHDebugPS
             int code;
             if (!Int32.TryParse(exitCode, out code))
             {
+                ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(new Exception(StringResources.Error_ExitCodeNotParseable)));
                 code = -1;
             }
             Closed?.Invoke(this, code);
+        }
+
+        private void EnsureRunning()
+        {
+            if (!_isRunning)
+                throw new InvalidOperationException(StringResources.Error_ShellNotRunning);
         }
     }
 }

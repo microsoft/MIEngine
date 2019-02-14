@@ -75,11 +75,11 @@ namespace Microsoft.SSHDebugPS
             }
 
             VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: () =>
-              {
-                  List<Process> processList = connection.ListProcesses();
-                  IDebugProcess2[] processes = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
-                  result = new AD7ProcessEnum(processes);
-              });
+            {
+                List<Process> processList = connection.ListProcesses();
+                IDebugProcess2[] processes = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
+                result = new AD7ProcessEnum(processes);
+            });
 
             processEnum = result;
             return HR.S_OK;

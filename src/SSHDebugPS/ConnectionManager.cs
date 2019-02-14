@@ -56,7 +56,7 @@ namespace Microsoft.SSHDebugPS
                 return null;
             }
 
-            return new DockerConnection(settings, remoteConnection, name, containerName);
+            return new DockerConnection(settings, remoteConnection, displayName, containerName);
         }
 
         public static Connection GetSSHConnection(string name)

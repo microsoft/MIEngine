@@ -21,7 +21,7 @@ namespace Microsoft.SSHDebugPS
     }
 
     internal abstract class Connection : IConnection, IDebugUnixShellPort
-    {        
+    {
         #region IDebugUnixShellPort 
         public abstract void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode);
 

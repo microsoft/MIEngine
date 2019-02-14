@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
         public string ExeCommand => IsUnix ? UnixExe : WindowsExe;
 
-        public string ExeNotFoundErrorMessage => string.Format(CultureInfo.InvariantCulture, "{0} not found.", IsUnix ? UnixExe : WindowsExe);
+        public string ExeNotFoundErrorMessage => string.Format(CultureInfo.InvariantCulture, "{0} not found.", ExeCommand);
         #endregion
     }
 

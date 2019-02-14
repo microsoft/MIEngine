@@ -133,6 +133,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to parse exit code..
+        /// </summary>
+        internal static string Error_ExitCodeNotParseable {
+            get {
+                return ResourceManager.GetString("Error_ExitCodeNotParseable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified directory {0} could not be created or accessed..
         /// </summary>
         internal static string Error_InvalidDirectory {
@@ -147,6 +156,15 @@ namespace Microsoft.SSHDebugPS {
         internal static string Error_PSFailed {
             get {
                 return ResourceManager.GetString("Error_PSFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot process command. Connection is not open..
+        /// </summary>
+        internal static string Error_ShellNotRunning {
+            get {
+                return ResourceManager.GetString("Error_ShellNotRunning", resourceCulture);
             }
         }
         
@@ -210,6 +228,24 @@ namespace Microsoft.SSHDebugPS {
         internal static string WaitingOp_ExecutingPS {
             get {
                 return ResourceManager.GetString("WaitingOp_ExecutingPS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Obtaining user&apos;s home directory path from remote system....
+        /// </summary>
+        internal static string WaitingOp_HomeDirectory {
+            get {
+                return ResourceManager.GetString("WaitingOp_HomeDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating directory on remote system....
+        /// </summary>
+        internal static string WaitingOp_MakeDirectory {
+            get {
+                return ResourceManager.GetString("WaitingOp_MakeDirectory", resourceCulture);
             }
         }
     }

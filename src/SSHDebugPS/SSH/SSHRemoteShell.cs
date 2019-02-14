@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
         public event EventHandler<string> OutputReceived;
         public event EventHandler<int> Closed;
-        public event EventHandler ErrorOccured;
+        public event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
 
         private void OnOutputReceived(object sender, OutputReceivedEventArgs e)
         {
@@ -41,9 +42,9 @@ namespace Microsoft.SSHDebugPS.SSH
             Closed?.Invoke(sender, 0);
         }
 
-        private void OnError(object sender, ErrorOccuredEventArgs e)
+        private void OnError(object sender, liblinux.ErrorOccuredEventArgs e)
         {
-            ErrorOccured?.Invoke(sender, e);
+            ErrorOccured?.Invoke(sender, new ErrorOccuredEventArgs(e.Exception));
         }
 
         public void Dispose()

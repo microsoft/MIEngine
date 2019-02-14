@@ -148,12 +148,18 @@
     <value>Source file '{0}' not found.</value>
     <comment>{0} = source file name</comment>
   </data>
+  <data name="Error_ExitCodeNotParseable" xml:space="preserve">
+    <value>Unable to parse exit code.</value>
+  </data>
   <data name="Error_InvalidDirectory" xml:space="preserve">
     <value>The specified directory {0} could not be created or accessed.</value>
     <comment>{0} directory name.</comment>
   </data>
   <data name="Error_PSFailed" xml:space="preserve">
     <value>Unable to obtain process listing. 'ps' command failed.</value>
+  </data>
+  <data name="Error_ShellNotRunning" xml:space="preserve">
+    <value>Cannot process command. Connection is not open.</value>
   </data>
   <data name="Error_SourceFileNotFound" xml:space="preserve">
     <value>Source file '{0}' not found</value>
@@ -179,5 +185,11 @@
   </data>
   <data name="WaitingOp_ExecutingPS" xml:space="preserve">
     <value>Running ps on the remote system...</value>
+  </data>
+  <data name="WaitingOp_HomeDirectory" xml:space="preserve">
+    <value>Obtaining user's home directory path from remote system...</value>
+  </data>
+  <data name="WaitingOp_MakeDirectory" xml:space="preserve">
+    <value>Creating directory on remote system...</value>
   </data>
 </root>

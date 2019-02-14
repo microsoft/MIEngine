@@ -51,7 +51,7 @@ namespace Microsoft.SSHDebugPS
                 throw new ObjectDisposedException(nameof(PipeConnection));
             }
 
-            return _shellExecutionManager.ExecuteCommand(commandText, timeout, out commandOutput);
+            return _shellExecutionManager.ExecuteCommand(commandText, timeout, out commandOutput); ;
         }
 
         public override void Close()
@@ -75,9 +75,9 @@ namespace Microsoft.SSHDebugPS
             if (_outerConnection == null)
             {
                 if (isCommandShell)
-                    rawShell = new CommandShell(settings.ExeCommand, settings.ExeCommandArgs);
+                    rawShell = new LocalRawCommandRunner(settings.ExeCommand, settings.ExeCommandArgs);
                 else
-                    rawShell = new LocalCommandRunner(settings.ExeCommand, settings.ExeCommandArgs);
+                    rawShell = new LocalBufferedCommandRunner(settings.ExeCommand, settings.ExeCommandArgs);
             }
             else
             {
@@ -109,7 +109,7 @@ namespace Microsoft.SSHDebugPS
         public override string MakeDirectory(string path)
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(path), nameof(path));
-            if(string.IsNullOrWhiteSpace(path))
+            if (string.IsNullOrWhiteSpace(path))
             {
                 return string.Empty;
             }
@@ -127,14 +127,11 @@ namespace Microsoft.SSHDebugPS
             string output; // throw away variable
 
             string pwd;
-            if (ExecuteCommand("pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out pwd)
-                && ExecuteCommand($"cd \"{path}\"; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath))
-            {
-                ExecuteCommand($"cd \"{pwd}\"", Timeout.Infinite, throwOnFailure: false, commandOutput: out output); //This might fail in some instances, so ignore the output
-                return fullpath;
-            }
-            Debug.Fail("How did we get here?");
-            throw new CommandFailedException("Failed to get FullPath.");
+            ExecuteCommand("pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out pwd);
+            ExecuteCommand($"cd \"{path}\"; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath);
+            ExecuteCommand($"cd \"{pwd}\"", Timeout.Infinite, throwOnFailure: false, commandOutput: out output); //This might fail in some instances, so ignore a failure and ignore output
+
+            return fullpath;
         }
 
         public override string GetUserHomeDirectory()
@@ -155,8 +152,10 @@ namespace Microsoft.SSHDebugPS
         {
             string command = "uname";
             string commandOutput;
-            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput);
-
+            if(!ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput))
+            {
+                return false;
+            }
             return commandOutput.StartsWith("Linux", StringComparison.OrdinalIgnoreCase);
         }
 
@@ -165,10 +164,14 @@ namespace Microsoft.SSHDebugPS
             username = string.Empty;
             string command = "id -u -n";
             string commandOutput;
-            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput);
+            if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput))
+            {
 
-            username = commandOutput;
-            return true;
+                username = commandOutput;
+                return true;
+            }
+
+            return false;
         }
 
         public override List<Process> ListProcesses()
@@ -177,11 +180,10 @@ namespace Microsoft.SSHDebugPS
             TryGetUsername(out username);
 
             string commandOutput;
-            int exitCode = ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, out commandOutput);
-            if (exitCode != 0)
+
+            if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput))
             {
-                exitCode = ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, out commandOutput);
-                if (exitCode != 0)
+                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput))
                 {
                     throw new CommandFailedException(StringResources.Error_PSFailed);
                 }
