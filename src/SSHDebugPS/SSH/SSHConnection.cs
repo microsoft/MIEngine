@@ -17,7 +17,10 @@ namespace Microsoft.SSHDebugPS.SSH
 
         public SSHConnection(liblinux.UnixSystem remoteSystem)
         {
-            _remoteSystem = remoteSystem ?? throw new ArgumentNullException(nameof(remoteSystem));
+            if (remoteSystem == null)
+                throw new ArgumentNullException(nameof(remoteSystem));
+
+            _remoteSystem = remoteSystem;
         }
 
         public override string Name
