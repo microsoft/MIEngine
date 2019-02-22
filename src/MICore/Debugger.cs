@@ -1166,6 +1166,7 @@ namespace MICore
 
         public void ProcessStdOutLine(string line)
         {
+            string originalLine = line;
             if (line.Length == 0)
             {
                 return;
@@ -1248,7 +1249,8 @@ namespace MICore
                         OnNotificationOutput(noprefix);
                         break;
                     default:
-                        OnDebuggeeOutput(line + '\n');
+                        // Token is not prepended, use original line.
+                        OnDebuggeeOutput(originalLine + '\n');
                         break;
                 }
             }
