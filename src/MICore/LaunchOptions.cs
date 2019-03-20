@@ -1872,7 +1872,7 @@ namespace MICore
                 }
             }
 
-            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(source.Environment) ?? new List<EnvironmentEntry>());
+            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(source.Environment));
         }
 
         public void InitializeLaunchOptions(Json.LaunchOptions.LaunchOptions launch)
@@ -1895,7 +1895,7 @@ namespace MICore
                 this.LaunchCompleteCommand = launch.LaunchCompleteCommand.Value;
             }
 
-            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(launch.Environment) ?? new List<EnvironmentEntry>());
+            this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(launch.Environment));
         }
 
         public void InitializeAttachOptions(Json.LaunchOptions.AttachOptions attach)
