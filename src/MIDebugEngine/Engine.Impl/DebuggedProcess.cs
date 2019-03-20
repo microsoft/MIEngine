@@ -853,13 +853,14 @@ namespace Microsoft.MIDebugEngine
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                         }
 
-                        // Environment variables are set for the debuggee only with the modes that support that
-                        if (this.MICommandFactory.Mode != MIMode.Clrdbg)
+                    }
+
+                    // Environment variables are set for the debuggee only with the modes that support that
+                    if (this.MICommandFactory.Mode != MIMode.Clrdbg)
+                    {
+                        foreach (EnvironmentEntry envEntry in _launchOptions.Environment)
                         {
-                            foreach (EnvironmentEntry envEntry in localLaunchOptions.Environment)
-                            {
-                                commands.Add(new LaunchCommand(MICommandFactory.GetSetEnvironmentVariableCommand(envEntry.Name, envEntry.Value)));
-                            }
+                            commands.Add(new LaunchCommand(MICommandFactory.GetSetEnvironmentVariableCommand(envEntry.Name, envEntry.Value)));
                         }
                     }
                 }
