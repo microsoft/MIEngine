@@ -318,7 +318,7 @@ namespace MICoreUnitTests
         /// </summary>
         public void VerifyCoreApisPresent()
         {
-            LaunchOptions launchOptions = new LocalLaunchOptions("/usr/bin/gdb", "10.10.10.10:2345", new List<EnvironmentEntry>());
+            LaunchOptions launchOptions = new LocalLaunchOptions("/usr/bin/gdb", "10.10.10.10:2345");
             launchOptions.ExePath = @"c:\users\me\myapp.out";
             launchOptions.AdditionalSOLibSearchPath = @"c:\temp;e:\foo\bar";
             launchOptions.TargetArchitecture = TargetArchitecture.ARM;
@@ -327,6 +327,7 @@ namespace MICoreUnitTests
             launchOptions.WaitDynamicLibLoad = false;
             launchOptions.VisualizerFile = @"c:\myproject\file.natvis";
             launchOptions.SourceMap = new ReadOnlyCollection<SourceMapEntry>(new List<SourceMapEntry>());
+            launchOptions.Environment = new ReadOnlyCollection<EnvironmentEntry>(new List<EnvironmentEntry>());
             Microsoft.DebugEngineHost.HostConfigurationStore configStore = null;
             IDeviceAppLauncherEventCallback eventCallback = null;
             IPlatformAppLauncher iLauncher = null;
