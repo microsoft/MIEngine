@@ -315,16 +315,16 @@ namespace Microsoft.MIDebugEngine
             ulong? pc = frame.TryFindAddr("addr");
 
             // don't report source line info for modules marked as IgnoreSource
-            DebuggedModule module = null;
+            bool ignoreSource = false;
             if (pc != null)
             {
-                module = _debugger.FindModule(pc.Value);
-                if (module != null && !module.IgnoreSource)
+                var module = _debugger.FindModule(pc.Value);
+                if (module != null && module.IgnoreSource)
                 {
-                    module = null;
+                    ignoreSource = true;
                 }
             }
-            MITextPosition textPosition = module == null ? MITextPosition.TryParse(this._debugger, frame) : null;
+            MITextPosition textPosition = !ignoreSource ? MITextPosition.TryParse(this._debugger, frame) : null;
 
             string func = frame.TryFindString("func");
             uint level = frame.FindUint("level");
