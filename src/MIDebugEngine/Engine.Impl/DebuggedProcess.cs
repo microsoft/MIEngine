@@ -153,16 +153,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         id = file;
                     }
-                    var module = FindModule(id);
-                    if (module == null)
-                    {
-                        module = new DebuggedModule(id, file, loadAddr, size, symsLoaded, symPath, _loadOrder++);
-                        lock (_moduleList)
-                        {
-                            _moduleList.Add(module);
-                        }
-                        _callback.OnModuleLoad(module);
-                    }
+                    AddModule(id, file, loadAddr, size, symsLoaded, symPath);
                 }
             };
 
@@ -853,13 +844,14 @@ namespace Microsoft.MIDebugEngine
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                         }
 
-                        // Environment variables are set for the debuggee only with the modes that support that
-                        if (this.MICommandFactory.Mode != MIMode.Clrdbg)
+                    }
+
+                    // Environment variables are set for the debuggee only with the modes that support that
+                    if (this.MICommandFactory.Mode != MIMode.Clrdbg)
+                    {
+                        foreach (EnvironmentEntry envEntry in _launchOptions.Environment)
                         {
-                            foreach (EnvironmentEntry envEntry in localLaunchOptions.Environment)
-                            {
-                                commands.Add(new LaunchCommand(MICommandFactory.GetSetEnvironmentVariableCommand(envEntry.Name, envEntry.Value)));
-                            }
+                            commands.Add(new LaunchCommand(MICommandFactory.GetSetEnvironmentVariableCommand(envEntry.Name, envEntry.Value)));
                         }
                     }
                 }
@@ -1560,24 +1552,36 @@ namespace Microsoft.MIDebugEngine
                     }
                     line = line.Trim();
                     line = line.TrimEnd(new char[] { '"', '\n' });
-                    var module = FindModule(line);
-                    if (module == null)
-                    {
-                        module = new DebuggedModule(line, line, startAddr, endAddr - startAddr, symbolsLoaded, line, _loadOrder++);
-                        lock (_moduleList)
-                        {
-                            _moduleList.Add(module);
-                        }
-
-                        _callback.OnModuleLoad(module);
-                    }
-                    else if (!module.SymbolsLoaded && symbolsLoaded)
-                    {
-                        module.SymbolsLoaded = true;
-                        _callback.OnSymbolsLoaded(module);
-                    }
+                    AddModule(line, line, startAddr, endAddr - startAddr, symbolsLoaded, line);
                 }
             }
+        }
+
+        private DebuggedModule AddModule(string id, string name, ulong baseAddr, ulong size, bool symbolsLoaded, string symPath)
+        {
+            var module = FindModule(id);
+            if (module == null)
+            {
+                module = new DebuggedModule(id, name, baseAddr, size, symbolsLoaded, symPath, _loadOrder++);
+                lock (_moduleList)
+                {
+                    // Temporary kludge to work around VS asking user for source when __sanitizer::Die breakpoint is hit.
+                    // Will be removed when asan implementation switches to using the unhandled exception dialog.
+                    if (id.Contains("libasan.so"))
+                    {
+                        module.IgnoreSource = true;
+                    }
+                    _moduleList.Add(module);
+                }
+
+                _callback.OnModuleLoad(module);
+            }
+            else if (!module.SymbolsLoaded && symbolsLoaded)
+            {
+                module.SymbolsLoaded = true;
+                _callback.OnSymbolsLoaded(module);
+            }
+            return module;
         }
 
         // this is called on any thread, so we need to dispatch the command via
@@ -1812,6 +1816,14 @@ namespace Microsoft.MIDebugEngine
             lock (_moduleList)
             {
                 return _moduleList.Find((m) => m.Id == id);
+            }
+        }
+
+        public DebuggedModule FindModule(ulong addr)
+        {
+            lock (_moduleList)
+            {
+                return _moduleList.Find((m) => m.AddressInModule(addr));
             }
         }
 
