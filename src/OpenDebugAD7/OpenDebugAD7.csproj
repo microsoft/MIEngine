@@ -22,7 +22,7 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
     <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>

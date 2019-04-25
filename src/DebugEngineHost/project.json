@@ -8,7 +8,7 @@
     "Microsoft.Build":  "15.1.548",
   },
   "frameworks": {
-    "net462": {
+    "net472": {
       "imports": [ "net462", "portable-net45+net46+dnxcore50" ]
     }
   },
