@@ -1,20 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.Win32.SafeHandles;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Threading;
+
+using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
+
 
 namespace Microsoft.SSHDebugPS.VS
 {
@@ -30,30 +23,14 @@ namespace Microsoft.SSHDebugPS.VS
         /// <exception cref="OperationCanceledException">Wait was canceled and 'throwOnCancel' is true</exception>
         public static bool Wait(string actionName, bool throwOnCancel, Action action)
         {
-            Task t = Task.Run(action);
+            bool success = false;
 
-            DebugEngineHost.HostWaitLoop waiterImpl = null;
-
-            try
-            {
-                waiterImpl = new DebugEngineHost.HostWaitLoop(actionName);
-            }
-            catch (FileNotFoundException)
-            {
-                // Visual Studio is not installed on this box
-            }
-
-            if (waiterImpl != null)
-            {
-                using (ManualResetEvent completeEvent = new ManualResetEvent(false))
+            ThreadHelper.JoinableTaskFactory.Run(
+                actionName,
+                async (progress, canellationToken) =>
                 {
-                    CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-                    t.ContinueWith((System.Threading.Tasks.Task unused) => completeEvent.Set(), TaskContinuationOptions.ExecuteSynchronously);
-
-                    try
-                    {
-                        waiterImpl.Wait(completeEvent, cancellationTokenSource);
+                    try {
+                        await Task.Run(action, canellationToken);
                     }
                     catch (OperationCanceledException) // VS Wait dialog implementation always throws on cancel
                     {
@@ -61,28 +38,20 @@ namespace Microsoft.SSHDebugPS.VS
                         {
                             throw;
                         }
-
-                        return false;
                     }
 
-                    if (cancellationTokenSource.IsCancellationRequested)
+                    if (canellationToken.IsCancellationRequested)
                     {
                         if (throwOnCancel)
                         {
                             throw new OperationCanceledException();
                         }
-
-                        return false;
                     }
-
-                    if (t.IsFaulted)
-                    {
-                        throw t.Exception.InnerException;
-                    }
+                    success = true;
                 }
-            }
+            );
 
-            return true;
+            return success;
         }
     }
 }
