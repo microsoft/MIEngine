@@ -342,7 +342,8 @@ namespace MICore
             {
             }
             else if (mode == "connected")
-            {
+            {           
+                IsTargetRemoteOrExtendedRemote = true;
                 if (this.ProcessState == ProcessState.NotConnected)
                     this.ProcessState = ProcessState.Running;
 
@@ -578,6 +579,8 @@ namespace MICore
             return CmdBreakInternal();
         }
 
+        private bool IsTargetRemoteOrExtendedRemote { get; set; }
+
         internal bool IsLocalGdb()
         {
             return (this.MICommandFactory.Mode == MIMode.Gdb &&
@@ -614,7 +617,7 @@ namespace MICore
                     // the normal path of sending an internal async break so we can exit doesn't work.
                     // Therefore, we will call TerminateProcess on the debuggee with the exit code of 0
                     // to terminate debugging. 
-                    if (this.IsLocalGdb() &&
+                    if (this.IsLocalGdb() && !IsTargetRemoteOrExtendedRemote &&
                         (this.IsCygwin || this.IsMinGW) &&
                         _debuggeePids.Count > 0)
                     {
@@ -655,6 +658,7 @@ namespace MICore
         /// <returns>True if any pids were terminated successfully</returns>
         private bool TerminateAllPids()
         {
+            Debug.Assert(IsTargetRemoteOrExtendedRemote == false, "should not terminate PIDs if target is remote");
             var terminated = false;
             foreach (var pid in _debuggeePids)
             {
@@ -704,7 +708,7 @@ namespace MICore
 
             // Note that interrupt doesn't work on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
-            if (IsLocalGdb())
+            if (IsLocalGdb() && !IsTargetRemoteOrExtendedRemote)
             {
                 bool useSignal = false;
                 int debuggeePid = 0;
@@ -892,6 +896,7 @@ namespace MICore
 
         private Task<Results> CmdBreakUnix(int debugeePid, ResultClass expectedResultClass)
         {
+            Debug.Assert(IsTargetRemoteOrExtendedRemote == false, "Don't use SIGINT to break if target is remote");
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
@@ -1209,6 +1214,14 @@ namespace MICore
                             Results results = _miResults.ParseCommandOutput(noprefix);
                             Logger.WriteLine(id + ": elapsed time " + (int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds);
                             waitingOperation.OnComplete(results, this.MICommandFactory);
+                            if (noprefix.StartsWith("connected", StringComparison.Ordinal))
+                            {
+                                // You can have a local gdb, but a remote program, running wherever, locally or exernal devices via
+                                // USB/serial/tty/tcp ports through a gdb-server. We get this response from gdb when user requests a
+                                // `-target-select [remote | extended-remote] ...` command via launch commands or manually.
+                                // Pids can be fake and/or may not be on this computer
+                                IsTargetRemoteOrExtendedRemote = true;
+                            }
                             return;
                         }
                     }
