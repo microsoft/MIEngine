@@ -81,7 +81,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.MIDebugPackage</RootNamespace>
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Because the MIEngine ships in Visual Studio, it is recommended NOT to install the .vsix
@@ -120,7 +120,7 @@
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop">
       <Private>False</Private>
     </Reference>
-    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.15.0.$(Microsoft_VisualStudio_Shell_15_0_Version)\lib\net45\Microsoft.VisualStudio.Shell.15.0.dll">
+    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.15.0.$(Microsoft_VisualStudio_Shell_15_0_Version)\lib\Microsoft.VisualStudio.Shell.15.0.dll">
       <Private>False</Private>
     </Reference>
     <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Threading.$(Microsoft_VisualStudio_Threading_Version)\lib\net45\Microsoft.VisualStudio.Threading.dll">
@@ -130,7 +130,7 @@
       <Private>False</Private>
     </Reference>
     <!--NOTE: this reference is here to enable CreatePkgDef.exe to succeed when compiling in VS in a version != the shell targetting version -->
-    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Utilities.$(Microsoft_VisualStudio_Utilities)\lib\net46\Microsoft.VisualStudio.Utilities.dll">
+    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Utilities.$(Microsoft_VisualStudio_Utilities_Version)\lib\net45\Microsoft.VisualStudio.Utilities.dll">
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

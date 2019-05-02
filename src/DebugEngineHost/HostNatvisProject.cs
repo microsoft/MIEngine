@@ -52,7 +52,7 @@ namespace Microsoft.DebugEngineHost
             string path = null;
             try
             {
-                ThreadHelper.Generic.Invoke(() => { path = Internal.FindSolutionRootImpl(); });
+                ThreadHelper.JoinableTaskFactory.Run(async () => { path = Internal.FindSolutionRootImpl(); });
             }
             catch (Exception)
             {

@@ -19,7 +19,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
     <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -68,7 +68,7 @@
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
     </Reference>
-    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.15.0.$(Microsoft_VisualStudio_Shell_15_0_Version)\lib\net45\Microsoft.VisualStudio.Shell.15.0.dll">
+    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.15.0.$(Microsoft_VisualStudio_Shell_15_0_Version)\lib\Microsoft.VisualStudio.Shell.15.0.dll">
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

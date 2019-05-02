@@ -36,9 +36,9 @@
         "Newtonsoft.Json": "6.0.8"
     },
   "frameworks": {
-    "net472": {
+    "net462": {
       "imports": [
-          "net472", "portable-net45+net46+dnxcore50"
+          "net462", "portable-net45+net46+dnxcore50"
       ]
     }
   },

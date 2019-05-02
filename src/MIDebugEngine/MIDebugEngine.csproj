@@ -16,7 +16,7 @@
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
     <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
     <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>

@@ -22,7 +22,7 @@
     <DropSubDir>vscode</DropSubDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsCoreClr)' == 'false'">
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
