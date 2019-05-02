@@ -4,7 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Threading;
-
 using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
@@ -27,10 +26,10 @@ namespace Microsoft.SSHDebugPS.VS
 
             ThreadHelper.JoinableTaskFactory.Run(
                 actionName,
-                async (progress, canellationToken) =>
+                async (progress, cancellationTokenSource) =>
                 {
                     try {
-                        await Task.Run(action, canellationToken);
+                        await Task.Run(action, cancellationTokenSource);
                     }
                     catch (OperationCanceledException) // VS Wait dialog implementation always throws on cancel
                     {
@@ -40,7 +39,7 @@ namespace Microsoft.SSHDebugPS.VS
                         }
                     }
 
-                    if (canellationToken.IsCancellationRequested)
+                    if (cancellationTokenSource.IsCancellationRequested)
                     {
                         if (throwOnCancel)
                         {
