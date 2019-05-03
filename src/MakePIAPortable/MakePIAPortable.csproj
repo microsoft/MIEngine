@@ -58,7 +58,7 @@
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.15.0.15.8.28010/lib/net20/Microsoft.VisualStudio.Debugger.Interop.15.0.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <UsingTask TaskName="FindILDAsm" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+  <UsingTask TaskName="FindILDAsm" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <ILDAsmFileLocation ParameterType="System.String" Output="true" />
     </ParameterGroup>
@@ -66,7 +66,7 @@
       <Using Namespace="Microsoft.Build.Utilities" />
       <Code Type="Fragment" Language="cs">
         <![CDATA[
-          ILDAsmFileLocation = Microsoft.Build.Utilities.ToolLocationHelper.GetPathToDotNetFrameworkSdkFile("ildasm.exe" , TargetDotNetFrameworkVersion.VersionLatest);
+          ILDAsmFileLocation = Microsoft.Build.Utilities.ToolLocationHelper.GetPathToDotNetFrameworkSdkFile("ildasm.exe" , TargetDotNetFrameworkVersion.Latest);
         ]]>
       </Code>
     </Task>
@@ -76,6 +76,7 @@
       <Output PropertyName="ILDAsmFileLocation" TaskParameter="ILDAsmFileLocation" />
     </FindILDAsm>
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
+    <Error Condition="'$(ILDAsmFileLocation)' == ''" Text="Unable to locate ILDasm.exe" />
     <Exec Command='$(OutputPath)MakePortableLegacyPIAS.cmd &quot;$(ILDAsmFileLocation)&quot; &quot;$(PIAOutput)&quot;' />
   </Target>
   <ItemGroup>
