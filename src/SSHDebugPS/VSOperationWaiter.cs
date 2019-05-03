@@ -22,35 +22,17 @@ namespace Microsoft.SSHDebugPS.VS
         /// <exception cref="OperationCanceledException">Wait was canceled and 'throwOnCancel' is true</exception>
         public static bool Wait(string actionName, bool throwOnCancel, Action action)
         {
-            bool success = false;
-
+            // TODO: Implement cancellationToken once remoteSystem.Connect(connectionInfo) handles it.
+            // Currently, the TWD will show up without a cancelation button but it will end in 30 seconds.
             ThreadHelper.JoinableTaskFactory.Run(
                 actionName,
-                async (progress, cancellationTokenSource) =>
+                async (progress) =>
                 {
-                    try {
-                        await Task.Run(action, cancellationTokenSource);
-                    }
-                    catch (OperationCanceledException) // VS Wait dialog implementation always throws on cancel
-                    {
-                        if (throwOnCancel)
-                        {
-                            throw;
-                        }
-                    }
-
-                    if (cancellationTokenSource.IsCancellationRequested)
-                    {
-                        if (throwOnCancel)
-                        {
-                            throw new OperationCanceledException();
-                        }
-                    }
-                    success = true;
+                    await Task.Run(action);
                 }
             );
 
-            return success;
+            return true;
         }
     }
 }
