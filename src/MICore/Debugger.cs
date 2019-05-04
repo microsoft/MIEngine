@@ -342,8 +342,7 @@ namespace MICore
             {
             }
             else if (mode == "connected")
-            {           
-                IsTargetRemoteOrExtendedRemote = true;
+            {
                 if (this.ProcessState == ProcessState.NotConnected)
                     this.ProcessState = ProcessState.Running;
 
@@ -579,22 +578,22 @@ namespace MICore
             return CmdBreakInternal();
         }
 
-        private bool IsTargetRemoteOrExtendedRemote { get; set; } = false;
+        internal bool IsLocalLaunchUsingServer()
+        {
+            return (_launchOptions is LocalLaunchOptions &&
+                (!String.IsNullOrEmpty(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress) ||
+                 !String.IsNullOrEmpty(((LocalLaunchOptions)_launchOptions).DebugServer)));
+        }
 
         internal bool IsLocalGdbTarget()
         {
-            return (this.MICommandFactory.Mode == MIMode.Gdb && !IsTargetRemoteOrExtendedRemote &&
-               this._launchOptions is LocalLaunchOptions &&
-               String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress));
-
+            return (MICommandFactory.Mode == MIMode.Gdb && !IsLocalLaunchUsingServer());
         }
 
         private bool IsRemoteGdbTarget()
         {
-            return this.MICommandFactory.Mode == MIMode.Gdb &&
-               (IsTargetRemoteOrExtendedRemote || this._launchOptions is PipeLaunchOptions || this._launchOptions is UnixShellPortLaunchOptions ||
-               (this._launchOptions is LocalLaunchOptions
-                    && !String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)));
+            return MICommandFactory.Mode == MIMode.Gdb &&
+               (_launchOptions is PipeLaunchOptions || _launchOptions is UnixShellPortLaunchOptions || IsLocalLaunchUsingServer());
         }
 
         protected bool IsCoreDump
@@ -658,7 +657,6 @@ namespace MICore
         /// <returns>True if any pids were terminated successfully</returns>
         private bool TerminateAllPids()
         {
-            Debug.Assert(IsTargetRemoteOrExtendedRemote == false, "should not terminate PIDs if target is remote");
             var terminated = false;
             foreach (var pid in _debuggeePids)
             {
@@ -896,7 +894,6 @@ namespace MICore
 
         private Task<Results> CmdBreakUnix(int debugeePid, ResultClass expectedResultClass)
         {
-            Debug.Assert(IsTargetRemoteOrExtendedRemote == false, "Don't use SIGINT to break if target is remote");
             // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
@@ -1214,14 +1211,6 @@ namespace MICore
                             Results results = _miResults.ParseCommandOutput(noprefix);
                             Logger.WriteLine(id + ": elapsed time " + (int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds);
                             waitingOperation.OnComplete(results, this.MICommandFactory);
-                            if (noprefix.StartsWith("connected", StringComparison.Ordinal))
-                            {
-                                // You can have a local gdb/lldb, but a remote program, running wherever, locally or exernal devices via
-                                // USB/serial/tty/tcp ports through a gdb-server. We get this response from gdb when user requests a
-                                // `-target-select [remote | extended-remote] ...` command via launch commands or manually. Pids can be
-                                // fake and/or may not be on this computer. Also -exec-interrupt works better with a coperating gdbserver
-                                IsTargetRemoteOrExtendedRemote = true;
-                            }
                             return;
                         }
                     }
