@@ -243,7 +243,7 @@ namespace MICore
                         // When using signals to stop the process, do not kick off another break attempt. The debug break injection and
                         // signal based models are reliable so no retries are needed. Cygwin can't currently async-break reliably, so
                         // use retries there.
-                        if (!IsLocalGdb() && !this.IsCygwin)
+                        if (!IsLocalGdbTarget() && !this.IsCygwin)
                         {
                             _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
                         }
@@ -579,20 +579,20 @@ namespace MICore
             return CmdBreakInternal();
         }
 
-        private bool IsTargetRemoteOrExtendedRemote { get; set; }
+        private bool IsTargetRemoteOrExtendedRemote { get; set; } = false;
 
-        internal bool IsLocalGdb()
+        internal bool IsLocalGdbTarget()
         {
-            return (this.MICommandFactory.Mode == MIMode.Gdb &&
+            return (this.MICommandFactory.Mode == MIMode.Gdb && !IsTargetRemoteOrExtendedRemote &&
                this._launchOptions is LocalLaunchOptions &&
                String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress));
 
         }
 
-        private bool IsRemoteGdb()
+        private bool IsRemoteGdbTarget()
         {
             return this.MICommandFactory.Mode == MIMode.Gdb &&
-               (this._launchOptions is PipeLaunchOptions || this._launchOptions is UnixShellPortLaunchOptions ||
+               (IsTargetRemoteOrExtendedRemote || this._launchOptions is PipeLaunchOptions || this._launchOptions is UnixShellPortLaunchOptions ||
                (this._launchOptions is LocalLaunchOptions
                     && !String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)));
         }
@@ -617,7 +617,7 @@ namespace MICore
                     // the normal path of sending an internal async break so we can exit doesn't work.
                     // Therefore, we will call TerminateProcess on the debuggee with the exit code of 0
                     // to terminate debugging. 
-                    if (this.IsLocalGdb() && !IsTargetRemoteOrExtendedRemote &&
+                    if (this.IsLocalGdbTarget() &&
                         (this.IsCygwin || this.IsMinGW) &&
                         _debuggeePids.Count > 0)
                     {
@@ -708,7 +708,7 @@ namespace MICore
 
             // Note that interrupt doesn't work on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
-            if (IsLocalGdb() && !IsTargetRemoteOrExtendedRemote)
+            if (IsLocalGdbTarget())
             {
                 bool useSignal = false;
                 int debuggeePid = 0;
@@ -733,7 +733,7 @@ namespace MICore
                     }
                 }
             }
-            else if (IsRemoteGdb() && _transport is PipeTransport)
+            else if (IsRemoteGdbTarget() && _transport is PipeTransport)
             {
                 int pid = PidByInferior("i1");
                 if (pid != 0 && ((PipeTransport)_transport).Interrupt(pid))
@@ -741,7 +741,7 @@ namespace MICore
                     return Task.FromResult<Results>(new Results(ResultClass.done));
                 }
             }
-            else if (IsRemoteGdb() && _transport is UnixShellPortTransport)
+            else if (IsRemoteGdbTarget() && _transport is UnixShellPortTransport)
             {
                 int pid = PidByInferior("i1");
                 if (pid != 0 && ((UnixShellPortTransport)_transport).Interrupt(pid))
@@ -1216,10 +1216,10 @@ namespace MICore
                             waitingOperation.OnComplete(results, this.MICommandFactory);
                             if (noprefix.StartsWith("connected", StringComparison.Ordinal))
                             {
-                                // You can have a local gdb, but a remote program, running wherever, locally or exernal devices via
+                                // You can have a local gdb/lldb, but a remote program, running wherever, locally or exernal devices via
                                 // USB/serial/tty/tcp ports through a gdb-server. We get this response from gdb when user requests a
-                                // `-target-select [remote | extended-remote] ...` command via launch commands or manually.
-                                // Pids can be fake and/or may not be on this computer
+                                // `-target-select [remote | extended-remote] ...` command via launch commands or manually. Pids can be
+                                // fake and/or may not be on this computer. Also -exec-interrupt works better with a coperating gdbserver
                                 IsTargetRemoteOrExtendedRemote = true;
                             }
                             return;
