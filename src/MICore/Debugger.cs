@@ -581,8 +581,8 @@ namespace MICore
         protected bool IsLocalLaunchUsingServer()
         {
             return (_launchOptions is LocalLaunchOptions &&
-                (!String.IsNullOrEmpty(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress) ||
-                 !String.IsNullOrEmpty(((LocalLaunchOptions)_launchOptions).DebugServer)));
+                (!String.IsNullOrWhiteSpace(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress) ||
+                 !String.IsNullOrWhiteSpace(((LocalLaunchOptions)_launchOptions).DebugServer)));
         }
 
         internal bool IsLocalGdbTarget()
