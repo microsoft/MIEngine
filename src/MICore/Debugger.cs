@@ -719,7 +719,7 @@ namespace MICore
                     }
                 }
 
-                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX() || true)
+                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
                 {
                     // for local linux debugging, send a signal to one of the debuggee processes rather than
                     // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
