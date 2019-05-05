@@ -578,7 +578,7 @@ namespace MICore
             return CmdBreakInternal();
         }
 
-        internal bool IsLocalLaunchUsingServer()
+        protected bool IsLocalLaunchUsingServer()
         {
             return (_launchOptions is LocalLaunchOptions &&
                 (!String.IsNullOrEmpty(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress) ||
@@ -719,7 +719,7 @@ namespace MICore
                     }
                 }
 
-                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX())
+                if (PlatformUtilities.IsLinux() || PlatformUtilities.IsOSX() || true)
                 {
                     // for local linux debugging, send a signal to one of the debuggee processes rather than
                     // using -exec-interrupt. -exec-interrupt does not work with attach and, in some instances, launch. 
