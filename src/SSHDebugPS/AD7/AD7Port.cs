@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
@@ -20,8 +18,8 @@ namespace Microsoft.SSHDebugPS
         private readonly AD7PortSupplier _portSupplier;
         private readonly Lazy<Guid> _id = new Lazy<Guid>(() => Guid.NewGuid(), LazyThreadSafetyMode.ExecutionAndPublication);
         private Connection _connection;
-        private readonly Dictionary<int, IDebugPortEvents2> _eventCallbacks = new Dictionary<int, IDebugPortEvents2>();
-        private int _lastCallbackCookie;
+        private readonly Dictionary<uint, IDebugPortEvents2> _eventCallbacks = new Dictionary<uint, IDebugPortEvents2>();
+        private uint _lastCallbackCookie;
 
         protected string Name { get; private set; }
 
@@ -160,7 +158,7 @@ namespace Microsoft.SSHDebugPS
             connectionPointContainer = this;
         }
 
-        void IConnectionPoint.Advise(object sinkInterface, out int cookie)
+        void IConnectionPoint.Advise(object sinkInterface, out uint cookie)
         {
             IDebugPortEvents2 eventCallback = sinkInterface as IDebugPortEvents2;
             if (eventCallback == null)
@@ -180,7 +178,7 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        void IConnectionPoint.Unadvise(int cookie)
+        void IConnectionPoint.Unadvise(uint cookie)
         {
             lock (_lock)
             {
