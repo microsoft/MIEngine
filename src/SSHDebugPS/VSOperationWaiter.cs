@@ -29,7 +29,7 @@ namespace Microsoft.SSHDebugPS.VS
                     actionName,
                     async (progress, cancellationToken) =>
                     {
-                        Task.Run(action).Wait(cancellationToken);
+                        await Task.Run(action).WithCancellation(cancellationToken);
                     }
                 );
             }
