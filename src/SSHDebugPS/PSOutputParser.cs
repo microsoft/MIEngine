@@ -5,30 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.SSHDebugPS
 {
-    // TODO: Make this internal and use IntenalsVisibleTo to allow for unit test
+    // TODO: Make this internal and use InternalsVisibleTo to allow for unit test
     public class PSOutputParser
     {
-        public class Process
-        {
-            public uint Id { get; private set; }
-            public string CommandLine { get; private set; }
-            public string UserName { get; private set; }
-            public bool IsSameUser { get; private set; }
-
-            public Process(uint id, string userName, string commandLine, bool isSameUser)
-            {
-                this.Id = id;
-                this.UserName = userName;
-                this.CommandLine = commandLine;
-                this.IsSameUser = isSameUser;
-            }
-        }
         private struct ColumnDef
         {
             /// <summary>
@@ -74,36 +56,36 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        private const string UserNamePrefix = "CurrentUserName: ";
-        private const string PSCommandLine = "ps -axww -o pid=A,ruser=B,args=C";
-        public const string CommandText = "echo " + UserNamePrefix + "$USER; " + PSCommandLine;
+        // Use padding to expand column width. 10 for pid and 32 for userid as that is the max size for each
+        // Tested this format with different distributions of Linux and container distributions. This command (and the alternative without the flags) seems 
+        // to be the one that works the best between standard *nix and BusyBox implementations of ps.
+        private const string PSCommandLineFormat = "ps{0}-o pid=pppppppppp -o ruser=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr -o args";
         private string _currentUserName;
         private ColumnDef _pidCol;
         private ColumnDef _ruserCol;
         private ColumnDef _argsCol;
 
-        public static List<Process> Parse(string output)
+        public static string PSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " -axww ");
+        public static string AltPSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " ");
+
+        public static List<Process> Parse(string output, string username)
         {
-            var @this = new PSOutputParser();
-            return @this.ParseInternal(output);
+            return new PSOutputParser().ParseInternal(output, username);
         }
 
         private PSOutputParser()
         {
         }
 
-        private List<Process> ParseInternal(string output)
+        private List<Process> ParseInternal(string output, string username)
         {
+            _currentUserName = username;
             List<Process> processList = new List<Process>();
 
             using (var reader = new StringReader(output))
             {
-                if (!ProcessUserName(reader.ReadLine()))
-                {
-                    throw new CommandFailedException(StringResources.Error_PSFailed);
-                }
-
-                if (!ProcessHeaderLine(reader.ReadLine()))
+                string headerLine = reader.ReadLine();
+                if (!ProcessHeaderLine(headerLine))
                 {
                     throw new CommandFailedException(StringResources.Error_PSFailed);
                 }
@@ -121,6 +103,9 @@ namespace Microsoft.SSHDebugPS
                     if (process.CommandLine.EndsWith(PSCommandLine, StringComparison.Ordinal))
                         continue; // ignore the 'ps' process that we spawned
 
+                    if (process.CommandLine.EndsWith(AltPSCommandLine, StringComparison.Ordinal))
+                        continue;
+
                     processList.Add(process);
                 }
 
@@ -133,48 +118,35 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        private bool ProcessUserName(/*OPTIONAL*/ string userNameLine)
-        {
-            if (userNameLine == null)
-                return false;
-
-            if (!userNameLine.StartsWith(UserNamePrefix, StringComparison.Ordinal))
-                return false;
-
-            _currentUserName = userNameLine.Substring(UserNamePrefix.Length).Trim();
-            return true;
-        }
-
         private bool ProcessHeaderLine(/*OPTIONAL*/ string headerLine)
         {
             int index = 0;
-            if (!SkipWhitespace(headerLine, ref index))
-                return false;
-            // pid column is right justified so the pid column stops at the 'A' index
-            if (headerLine[index] != 'A')
-                return false;
+            int strLen = headerLine.Length;
 
+            // pid column is right justified so the pid column stops at the last letter index
+            if (!SkipNonWhitespace(headerLine, ref index))
+                return false;
             _pidCol = new ColumnDef(0, index);
 
-            index++;
             if (!SkipWhitespace(headerLine, ref index))
-                return false;
-            if (headerLine[index] != 'B')
-                return false;
-            // ruser and args columns are left justified
-            int colStart = index++;
-            if (!SkipWhitespace(headerLine, ref index))
-                return false;
-            if (headerLine[index] != 'C')
                 return false;
 
-            _ruserCol = new ColumnDef(colStart, index - 1);
+            int colStart = index;
+            if (!SkipNonWhitespace(headerLine, ref index))
+                return false;
+
+            _ruserCol = new ColumnDef(colStart, index);
+
+            if (!SkipWhitespace(headerLine, ref index))
+                return false;
 
             // The rest of the line is the args column
             _argsCol = new ColumnDef(index, int.MaxValue);
+            
+            // comsume the rest of the header
+            SkipNonWhitespace(headerLine, ref index);
 
             // make sure the line is now empty, aside from whitespace
-            index++;
             if (SkipWhitespace(headerLine, ref index))
                 return false;
 
@@ -215,6 +187,23 @@ namespace Microsoft.SSHDebugPS
                     return false;
 
                 if (!char.IsWhiteSpace(line[index]))
+                    return true;
+
+                index++;
+            }
+        }
+
+        /// <summary>
+        /// Opposite of SkipWhitespace. It will skip over non-whitespace characters until the next whitespace or the end.
+        /// </summary>
+        private static bool SkipNonWhitespace(string line, ref int index)
+        {
+            while (true)
+            {
+                if (index >= line.Length)
+                    return false;
+
+                if (char.IsWhiteSpace(line[index]))
                     return true;
 
                 index++;

@@ -24,10 +24,9 @@
 "InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
 "CodeBase"="$PackageFolder$\Microsoft.MIDebugEngine.dll"
 
-; Registration to use gdb with the SSH port supplier
+; Registration to use gdb with the port suppliers
 [$RootKey$\AD7Metrics\Engine\{91744D97-430F-42C1-9779-A5813EBD6AB2}]
-@="MI Debug Engine - gdb+SSH"
-"PortSupplier"="{3FDDF14E-E758-4695-BE0C-7509920432C9}"
+@="MI Debug Engine - gdb"
 "Attach"=dword:00000001
 ; "AddressBP"=dword:00000001
 "AlwaysLoadLocal"=dword:00000001
@@ -45,6 +44,12 @@
 ; "SuspendThread"=dword:00000001
 "CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
 "GlobalVisualizersDirectory"="$PackageFolder$"
+
+[$RootKey$\AD7Metrics\Engine\{91744D97-430F-42C1-9779-A5813EBD6AB2}\PortSupplier]
+; SSH Port Supplier
+"0"="{3FDDF14E-E758-4695-BE0C-7509920432C9}"
+; Docker Port Supplier -- Currently not supported for gdb
+;"1"="{A2BBC114-47E4-473F-A49C-69EE89711243}"
 
 [$RootKey$\OpenFolder\Settings\VSWorkspaceSettings\{EA6637C6-17DF-45B5-A183-0951C54243BC}]
 @="$PackageFolder$\OpenFolderSchema.json"

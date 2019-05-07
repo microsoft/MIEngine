@@ -1,23 +1,65 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.SSHDebugPS.VS;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Globalization;
 using System.Linq;
 using liblinux;
 using liblinux.Persistence;
-using Microsoft.DebugEngineHost;
-using Task = System.Threading.Tasks.Task;
+using Microsoft.SSHDebugPS.Docker;
+using Microsoft.SSHDebugPS.SSH;
+using Microsoft.SSHDebugPS.VS;
 using Microsoft.VisualStudio.Linux.ConnectionManager;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.SSHDebugPS
 {
     internal class ConnectionManager
     {
-        internal static Connection GetInstance(string name, ConnectionReason reason)
+        public static Connection GetDockerConnection(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            Connection remoteConnection = null;
+            DockerTransportSettings settings = null;
+            // Assume format is <server>/<container> where if <server> is specified, it is for SSH
+            string[] connectionStrings = name.Split('/');
+
+            string displayName;
+            string containerName;
+            if (connectionStrings.Length == 1)
+            {
+                // local connection
+                containerName = connectionStrings[0];
+                settings = new DockerExecShellSettings(containerName, hostIsUnix: false);
+                displayName = name;
+            }
+            else if (connectionStrings.Length == 2)
+            {
+                // SSH connection
+                string remoteConnectionString = connectionStrings[0];
+                containerName = connectionStrings[1];
+                remoteConnection = GetSSHConnection(remoteConnectionString);
+
+                // If SSH connection dialog was cancelled, we should cancel this connection.
+                if (remoteConnection == null)
+                    return null;
+                
+                settings = new DockerExecShellSettings(containerName, hostIsUnix: true); // assume all remote is Unix for now.
+                displayName = remoteConnection.Name + '/' + containerName;
+            }
+            else
+            {
+                // This will be replaced by the docker container selection dialog 
+                return null;
+            }
+
+            return new DockerConnection(settings, remoteConnection, displayName, containerName);
+        }
+
+        public static Connection GetSSHConnection(string name)
         {
             UnixSystem remoteSystem = null;
             ConnectionInfoStore store = new ConnectionInfoStore();
@@ -25,7 +67,7 @@ namespace Microsoft.SSHDebugPS
 
             StoredConnectionInfo storedConnectionInfo = store.Connections.FirstOrDefault(connection =>
                 {
-                    return name.Equals(GetFormattedConnectionName((ConnectionInfo)connection), StringComparison.OrdinalIgnoreCase);
+                    return name.Equals(SSHPortSupplier.GetFormattedSSHConnectionName((ConnectionInfo)connection), StringComparison.OrdinalIgnoreCase);
                 });
 
             if (storedConnectionInfo != null)
@@ -101,16 +143,11 @@ namespace Microsoft.SSHDebugPS
                 // NOTE: This will be null if connect is canceled
                 if (remoteSystem != null)
                 {
-                    return new Connection(remoteSystem);
+                    return new SSHConnection(remoteSystem);
                 }
             }
 
             return null;
-        }
-
-        internal static string GetFormattedConnectionName(ConnectionInfo connectionInfo)
-        {
-            return connectionInfo.UserName + "@" + connectionInfo.HostNameOrAddress;
         }
     }
 }

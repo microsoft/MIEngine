@@ -1,16 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MICore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.DebugEngineHost;
-using MICore.Xml.LaunchOptions;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using MICore;
+using MICore.Xml.LaunchOptions;
+using Microsoft.DebugEngineHost;
+using Microsoft.SSHDebugPS.SSH;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -56,7 +53,7 @@ namespace Microsoft.SSHDebugPS
 
             string targetMachineName = LaunchOptions.RequireAttribute(_launchOptions.TargetMachine, "TargetMachine");
 
-            var port = new AD7Port(new AD7PortSupplier(), targetMachineName, isInAddPort: false);
+            var port = new SSHPort(new SSHPortSupplier(), targetMachineName, isInAddPort: false);
 
             // NOTE: this may put up a dialog and/or throw an AD7ConnectCanceledException
             port.EnsureConnected();
