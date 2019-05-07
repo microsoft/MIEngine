@@ -593,7 +593,8 @@ namespace MICore
         private bool IsRemoteGdbTarget()
         {
             return MICommandFactory.Mode == MIMode.Gdb &&
-               (_launchOptions is PipeLaunchOptions || _launchOptions is UnixShellPortLaunchOptions || IsLocalLaunchUsingServer());
+               (_launchOptions is PipeLaunchOptions || _launchOptions is UnixShellPortLaunchOptions ||
+                IsLocalLaunchUsingServer());
         }
 
         protected bool IsCoreDump
