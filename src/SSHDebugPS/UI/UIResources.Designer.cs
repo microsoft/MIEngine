@@ -61,6 +61,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Found {0} containers.
+        /// </summary>
+        public static string ContainersFoundStatusText {
+            get {
+                return ResourceManager.GetString("ContainersFoundStatusText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Docker Connection Manager.
         /// </summary>
         public static string DialogTitle {
@@ -88,11 +97,29 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string NoPortsText {
+            get {
+                return ResourceManager.GetString("NoPortsText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remote Connection.
         /// </summary>
         public static string RemoteConnectionStringLabel {
             get {
                 return ResourceManager.GetString("RemoteConnectionStringLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching....
+        /// </summary>
+        public static string SearchingStatusText {
+            get {
+                return ResourceManager.GetString("SearchingStatusText", resourceCulture);
             }
         }
     }

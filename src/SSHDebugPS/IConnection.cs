@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS
 {
-    internal interface IConnection
+    public interface IConnection
     {
         string Name { get; }
 

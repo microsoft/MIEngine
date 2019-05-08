@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -18,7 +19,7 @@ namespace Microsoft.SSHDebugPS
 {
     internal class ConnectionManager
     {
-        public static Connection GetDockerConnection(string name)
+        public static DockerConnection GetDockerConnection(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return null;
@@ -60,11 +61,11 @@ namespace Microsoft.SSHDebugPS
                     // Missing docker.exe
                     throw new InvalidOperationException();
                 }
-                else if(string.IsNullOrWhiteSpace(output))
+                else if (string.IsNullOrWhiteSpace(output))
                 {
                     // container doesn't exist
                     throw new InvalidOperationException();
-                }                           
+                }
 
                 settings = new DockerExecShellSettings(containerName, hostIsUnix: true); // assume all remote is Unix for now.
                 displayName = remoteConnection.Name + '/' + containerName;
@@ -78,15 +79,8 @@ namespace Microsoft.SSHDebugPS
             return new DockerConnection(settings, remoteConnection, displayName, containerName);
         }
 
-        private static bool CanEstablishConnection()
+        public static SSHConnection GetSSHConnection(string name)
         {
-             
-            return false;
-        }
-
-        public static Connection GetSSHConnection(string name)
-        {
-            UnixSystem remoteSystem = null;
             ConnectionInfoStore store = new ConnectionInfoStore();
             ConnectionInfo connectionInfo = null;
 
@@ -101,25 +95,33 @@ namespace Microsoft.SSHDebugPS
             if (connectionInfo == null)
             {
                 IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
-
-                string userName;
-                string hostName;
-
-                int atSignIndex = name.IndexOf('@');
-                if (atSignIndex > 0)
+                IConnectionManagerResult result;
+                if (string.IsNullOrWhiteSpace(name))
                 {
-                    userName = name.Substring(0, atSignIndex);
-                    hostName = name.Substring(atSignIndex + 1);
+                    result = connectionManager.ShowDialog();
                 }
                 else
                 {
-                    userName = string.Format(CultureInfo.CurrentCulture, StringResources.UserName_PlaceHolder);
-                    hostName = name;
+                    string userName;
+                    string hostName;
+
+                    int atSignIndex = name.IndexOf('@');
+                    if (atSignIndex > 0)
+                    {
+                        userName = name.Substring(0, atSignIndex);
+                        hostName = name.Substring(atSignIndex + 1);
+                    }
+                    else
+                    {
+                        userName = string.Format(CultureInfo.CurrentCulture, StringResources.UserName_PlaceHolder);
+                        hostName = name;
+                    }
+
+
+                    PasswordConnectionInfo newConnectionInfo = new PasswordConnectionInfo(hostName, userName, new System.Security.SecureString());
+
+                    result = connectionManager.ShowDialog(newConnectionInfo);
                 }
-
-                PasswordConnectionInfo newConnectionInfo = new PasswordConnectionInfo(hostName, userName, new System.Security.SecureString());
-
-                IConnectionManagerResult result = connectionManager.ShowDialog(newConnectionInfo);
 
                 if ((result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
                 {
@@ -129,9 +131,15 @@ namespace Microsoft.SSHDebugPS
                 }
             }
 
+            return CreateSSHConnectionFromConnectionInfo(connectionInfo);
+        }
+
+        public static SSHConnection CreateSSHConnectionFromConnectionInfo(ConnectionInfo connectionInfo)
+        {
             if (connectionInfo != null)
             {
-                remoteSystem = new UnixSystem();
+                UnixSystem remoteSystem = new UnixSystem();
+                string name = SSHPortSupplier.GetFormattedSSHConnectionName(connectionInfo);
 
                 while (true)
                 {
@@ -173,6 +181,13 @@ namespace Microsoft.SSHDebugPS
             }
 
             return null;
+        }
+
+        public static IEnumerable<ConnectionInfo> GetAvailableSSHConnectionInfos()
+        {
+            ConnectionInfoStore store = new ConnectionInfoStore();
+
+            return store.Connections.ToList().Select(item => (ConnectionInfo)item);
         }
     }
 }

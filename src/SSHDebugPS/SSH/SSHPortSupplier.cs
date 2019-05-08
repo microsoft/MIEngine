@@ -85,7 +85,7 @@ namespace Microsoft.SSHDebugPS.SSH
         /// Checks if LibLinux is available by getting IVsConnectionManager service.
         /// </summary>
         /// <returns>True if LibLinux is available, false otherwise.</returns>
-        private bool IsLibLinuxAvailable()
+        internal static bool IsLibLinuxAvailable()
         {
             IVsShell shell = Package.GetGlobalService(typeof(SVsShell)) as IVsShell;
 

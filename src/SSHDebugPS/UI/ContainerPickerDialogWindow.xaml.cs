@@ -18,14 +18,14 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.VisualStudio.PlatformUI;
 
-namespace Microsoft.SSHDebugPS
+namespace Microsoft.SSHDebugPS.UI
 {
     /// <summary>
     /// Interaction logic for DockerContainerPickerWindow.xaml
     /// </summary>
-    public partial class ContainerPicker : DialogWindow
+    public partial class ContainerPickerDialogWindow : DialogWindow
     {
-        public ContainerPicker()
+        public ContainerPickerDialogWindow()
         {
             InitializeComponent();
             this.Model = new ContainerPickerViewModel();
@@ -123,22 +123,6 @@ namespace Microsoft.SSHDebugPS
         {
             this.Close();
         }
-
-        private void AddConnection_Click(object sender, RoutedEventArgs e)
-        {
-            // TODO: Allow way to find new connections and verify  
-            Random random = new Random();
-            string addition = random.Next(1000).ToString();
-
-            Model.SupportedConnections.Add(new MockConnectionViewModel("test" + addition));
-            Model.SelectedConnection = Model.SupportedConnections.Last();
-
-            // With new connection, 
-            Model.GenerateContainersFromConnection();
-
-            e.Handled = true;
-        }
-
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {

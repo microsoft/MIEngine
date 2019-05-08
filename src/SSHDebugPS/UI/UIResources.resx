@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ContainersFoundStatusText" xml:space="preserve">
+    <value>Found {0} containers</value>
+  </data>
   <data name="DialogTitle" xml:space="preserve">
     <value>Docker Connection Manager</value>
   </data>
@@ -126,7 +129,13 @@
   <data name="LocalMachine" xml:space="preserve">
     <value>Local Machine</value>
   </data>
+  <data name="NoPortsText" xml:space="preserve">
+    <value>None</value>
+  </data>
   <data name="RemoteConnectionStringLabel" xml:space="preserve">
     <value>Remote Connection</value>
+  </data>
+  <data name="SearchingStatusText" xml:space="preserve">
+    <value>Searching...</value>
   </data>
 </root>

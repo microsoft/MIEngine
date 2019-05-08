@@ -36,4 +36,4 @@
 "publicKeyToken"=""
 "culture"="neutral"
 "version"="14.0.0.0"
-"codeBase"="$PackageFolder%\Microsoft.SSHDebugPS.dll"
+"codeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"

@@ -88,6 +88,9 @@
     <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.Framework.$(Microsoft_VisualStudio_Shell_Framework_Version)\lib\net45\Microsoft.VisualStudio.Shell.Framework.dll">
       <Private>False</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Utilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.VisualStudio.Utilities.15.0.26606\lib\net45\Microsoft.VisualStudio.Utilities.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -112,11 +115,12 @@
     <Compile Include="AD7\AD7Program.cs" />
     <Compile Include="AD7\AD7UnixAsyncCommand.cs" />
     <Compile Include="Docker\DockerConnection.cs" />
+    <Compile Include="UI\Commands\AddConnectionCommand.cs" />
     <Compile Include="UI\ViewModels\ContainerPickerViewModel.cs" />
     <Compile Include="UI\Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="UI\ContainerInstance.cs" />
-    <Compile Include="UI\ContainerPicker.xaml.cs">
-      <DependentUpon>ContainerPicker.xaml</DependentUpon>
+    <Compile Include="UI\ContainerPickerDialogWindow.xaml.cs">
+      <DependentUpon>ContainerPickerDialogWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Docker\DockerPort.cs" />
     <Compile Include="Docker\DockerPortPicker.cs" />
@@ -166,6 +170,7 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>UIResources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Microsoft.SSHDebugPS</CustomToolNamespace>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="StringResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -191,12 +196,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="UI\ContainerPicker.xaml">
+    <Page Include="UI\ContainerPickerDialogWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

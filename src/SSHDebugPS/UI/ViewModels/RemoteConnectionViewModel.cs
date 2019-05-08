@@ -1,4 +1,6 @@
-﻿using System;
+﻿using liblinux;
+using Microsoft.SSHDebugPS.SSH;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,23 +13,60 @@ namespace Microsoft.SSHDebugPS
         string DisplayName { get; }
     }
 
-    internal class LocalConnectionViewModel : IConnectionViewModel
+    public class LocalConnectionViewModel : IConnectionViewModel
     {
         public LocalConnectionViewModel() { }
 
-        string IConnectionViewModel.DisplayName => UIResources.LocalMachine;
+        public string DisplayName => UIResources.LocalMachine;
     }
 
-    internal class RemoteConnectionViewModel : IConnectionViewModel
+    internal class SSHConnectionViewModel : IConnectionViewModel
     {
-        private IConnection connection { get; }
+        private ConnectionInfo connectionInfo { get; }
 
-        public RemoteConnectionViewModel(IConnection connection)
+        internal SSHConnectionViewModel(SSHConnection connection)
         {
-            this.connection = connection;
+            this.sshConnection = connection;
         }
 
-        string IConnectionViewModel.DisplayName => connection.Name;
+        internal SSHConnectionViewModel(ConnectionInfo connectionInfo)
+        {
+            this.connectionInfo = connectionInfo;
+        }
+
+        private SSHConnection sshConnection;
+        protected IConnection GetConnection()
+        {
+            if (this.sshConnection == null)
+            {
+                if (this.connectionInfo != null)
+                {
+                    this.sshConnection = ConnectionManager.CreateSSHConnectionFromConnectionInfo(connectionInfo);
+                }
+            }
+            return this.sshConnection;
+        }
+
+        public string DisplayName
+        {
+            get
+            {
+                return sshConnection?.Name ?? SSHPortSupplier.GetFormattedSSHConnectionName(connectionInfo);
+            }
+        }
+    }
+
+    // TODO: Remove--simply for testing purposes
+    internal class MockConnectionViewModel : IConnectionViewModel
+    {
+        private string name { get; }
+
+        public MockConnectionViewModel(string name)
+        {
+            this.name = name;
+        }
+
+        public string DisplayName => name;
 
     }
 }

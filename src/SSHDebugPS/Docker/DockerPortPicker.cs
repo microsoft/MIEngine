@@ -5,6 +5,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using Microsoft.SSHDebugPS.UI;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -21,15 +22,16 @@ namespace Microsoft.SSHDebugPS.Docker
         {
             // If this is null, then the PortPicker handler shows an error. Set to empty by default
             pbstrPortId = "";
-            var window = new ContainerPicker();
+            ContainerPickerDialogWindow dialog = new ContainerPickerDialogWindow();
 
             // Register parent
-            WindowInteropHelper helper = new WindowInteropHelper(window);
+            WindowInteropHelper helper = new WindowInteropHelper(dialog);
             helper.Owner = hwndParentDialog;
          
-            if (window.ShowModal() == true)
+            bool? dialogResult = dialog.ShowModal();
+            if (dialogResult.HasValue && dialogResult.Value)
             {
-                pbstrPortId = "duck";
+                pbstrPortId = dialog.SelectedQualifier;
             }
 
             return VSConstants.S_OK;
