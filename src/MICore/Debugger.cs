@@ -580,14 +580,15 @@ namespace MICore
 
         protected bool IsLocalLaunchUsingServer()
         {
-            return (_launchOptions is LocalLaunchOptions &&
-                (!String.IsNullOrWhiteSpace(((LocalLaunchOptions)_launchOptions).MIDebuggerServerAddress) ||
-                 !String.IsNullOrWhiteSpace(((LocalLaunchOptions)_launchOptions).DebugServer)));
+            return (_launchOptions is LocalLaunchOptions localLaunchOptions &&
+                (!String.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress) ||
+                 !String.IsNullOrWhiteSpace(localLaunchOptions.DebugServer)));
         }
 
         internal bool IsLocalGdbTarget()
         {
-            return (MICommandFactory.Mode == MIMode.Gdb && !IsLocalLaunchUsingServer());
+            return (MICommandFactory.Mode == MIMode.Gdb &&
+                _launchOptions is LocalLaunchOptions && !IsLocalLaunchUsingServer());
         }
 
         private bool IsRemoteGdbTarget()
