@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Globalization;
 using System.Threading;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
@@ -84,7 +85,7 @@ namespace Microsoft.SSHDebugPS
 
         protected void OnClosed(object sender, int exitCode)
         {
-            Callback.OnExit(exitCode.ToString());
+            Callback.OnExit(exitCode.ToString(CultureInfo.InvariantCulture));
             Close();
         }
 
