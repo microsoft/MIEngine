@@ -123,7 +123,7 @@ namespace Microsoft.SSHDebugPS
             int index = 0;
             int strLen = headerLine.Length;
 
-            // pid column is right justified so the pid column stops at the last letter index
+            // pid column is a fixed length column
             if (!SkipNonWhitespace(headerLine, ref index))
                 return false;
             _pidCol = new ColumnDef(0, index);

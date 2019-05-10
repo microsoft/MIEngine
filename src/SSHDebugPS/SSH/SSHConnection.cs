@@ -46,7 +46,7 @@ namespace Microsoft.SSHDebugPS.SSH
             var usernameCommand = _remoteSystem.Shell.ExecuteCommand("id -u -n");
             if (usernameCommand.ExitCode == 0)
             {
-                username = usernameCommand.Output;
+                username = usernameCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'id' command ends with a newline
             }
 
             var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine);
