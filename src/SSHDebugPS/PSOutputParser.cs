@@ -147,7 +147,7 @@ namespace Microsoft.SSHDebugPS
             SkipNonWhitespace(headerLine, ref index);
 
             // make sure the line is now empty, aside from whitespace
-            if (SkipWhitespace(headerLine, ref index) && index < strLen)
+            if (SkipWhitespace(headerLine, ref index))
                 return false;
 
             return true;
