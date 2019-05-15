@@ -2,7 +2,7 @@
   
   <ItemGroup>
     <FilesToSign Include="@(DropSignedFile)">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>Microsoft400</Authenticode>
       <StrongName>StrongName</StrongName>
     </FilesToSign>
   </ItemGroup>
