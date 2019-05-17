@@ -69,4 +69,5 @@ namespace Microsoft.SSHDebugPS
         public string DisplayName => name;
 
     }
+
 }

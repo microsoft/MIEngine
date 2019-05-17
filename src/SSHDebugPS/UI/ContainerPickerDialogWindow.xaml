@@ -207,7 +207,8 @@
                 Margin="5,0,0,0"
                 Grid.Row="1"
                 Grid.Column="1"
-                Command="{Binding AddSSHConnectionCommand}">
+                Command="{Binding AddSSHConnectionCommand}"
+                IsEnabled="{Binding CanAddConnection}">
             <vsimaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}"
                                   Width="16"
                                   Height="16">

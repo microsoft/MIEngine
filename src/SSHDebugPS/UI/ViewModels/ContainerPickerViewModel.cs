@@ -7,11 +7,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace Microsoft.SSHDebugPS.UI
@@ -24,10 +19,11 @@ namespace Microsoft.SSHDebugPS.UI
             this.SelectedConnection = SupportedConnections.First(item => item is LocalConnectionViewModel) ?? SupportedConnections.First();
 
             this.DockerContainers = new ObservableCollection<DockerContainerInstance>();
-            this.CanAddConnection = new Lazy<bool>(() => IsLibLinuxAvailable());
+            this.sshAvailable = new Lazy<bool>(() => IsLibLinuxAvailable());
 
             //Commands
-            this.AddSSHConnectionCommand = new BaseCommand(this.AddSSHConnection, () => { return this.CanAddConnection.Value; });
+            this.AddSSHConnectionCommand = new BaseCommand(this.AddSSHConnection, () => { return this.CanAddConnection; });
+
 
             // Start Docker Instance generation on the selected connection
             GenerateContainersFromConnection();
@@ -76,10 +72,10 @@ namespace Microsoft.SSHDebugPS.UI
 
         protected void AddSSHConnection()
         {
-            if (CanAddConnection.Value)
+            if (this.CanAddConnection)
             {
                 SSHConnection connection = ConnectionManager.GetSSHConnection(string.Empty) as SSHConnection;
-                if(connection != null)
+                if (connection != null)
                 {
                     SSHConnectionViewModel sshConnection = new SSHConnectionViewModel(connection);
                     SupportedConnections.Add(sshConnection);
@@ -92,7 +88,14 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        protected Lazy<bool> CanAddConnection;
+        private Lazy<bool> sshAvailable;
+        internal bool CanAddConnection
+        {
+            get
+            {
+                return sshAvailable?.Value ?? false;
+            }
+        }
 
         private bool IsLibLinuxAvailable()
         {
