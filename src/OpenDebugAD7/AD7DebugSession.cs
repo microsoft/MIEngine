@@ -1440,9 +1440,13 @@ namespace OpenDebugAD7
             });
         }
 
+        /// <summary>
+        /// Currently unsupported. This message can be received when we return a source file that doesn't exist (such as a library within gdb).
+        /// See github issue: microsoft/vscode-cpptools#3662
+        /// </summary>
         protected override void HandleSourceRequestAsync(IRequestResponder<SourceArguments, SourceResponse> responder)
         {
-            base.HandleSourceRequestAsync(responder);
+            responder.SetError(new ProtocolException("'SourceRequest' not supported."));
         }
 
         protected override void HandleThreadsRequestAsync(IRequestResponder<ThreadsArguments, ThreadsResponse> responder)
