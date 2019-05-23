@@ -39,7 +39,7 @@ namespace Microsoft.MIDebugPackage
     [Guid(GuidList.guidMIDebugPackagePkgString)]
 #if LAB
     // Adding this dll location to VS probe path. Custom launcher types are referenced by Linux/Azure Sphere workloads. 
-    [ProvideBindingRedirection]
+    [ProvideBindingPath]
 #endif
     public sealed class MIDebugPackagePackage : Package, IOleCommandTarget
     {

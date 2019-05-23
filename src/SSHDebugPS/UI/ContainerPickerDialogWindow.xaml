@@ -39,13 +39,27 @@
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
             <Setter Property="VerticalScrollBarVisibility" Value="Visible" />
         </Style>
+        <Style x:Key="StatusLabelStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="Background" Value="{DynamicResource SystemColors.WindowBrush}" />
+             <Style.Triggers>
+                <DataTrigger Binding="{Binding StatusIsError, Mode=TwoWay}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static ui:InfoBarColors.InfoBarBackgroundBrushKey}}" />
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:InfoBarColors.InfoBarBackgroundTextBrushKey}}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="SelectedLabelStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style x:Key="SelectedTextBlockStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-        <Style x:Key="ItemHeaderStyle" TargetType="{x:Type TextBlock}">
+        <Style x:Key="ItemLabelStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style x:Key="HeaderItemStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="FontWeight" Value="Normal"/>
             <Style.Triggers>
@@ -93,15 +107,13 @@
                 </Trigger>
             </Style.Triggers>
 
-            <Setter Property="AutomationProperties.Name" Value="{Binding MachineNameAndAddress, Mode=OneWay}"/>
-            <Setter Property="AutomationProperties.HelpText" Value="{Binding HelpText, Mode=OneWay}"/>
+            <Setter Property="AutomationProperties.Name" Value="{Binding Name, Mode=OneWay}"/>
             <Setter Property="DockPanel.Dock" Value="Top"/>
             <Setter Property="BorderBrush" Value="LightSteelBlue"></Setter>
             <Setter Property="BorderThickness" Value="0"></Setter>
             <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"></Setter>
             <Setter Property="FocusVisualStyle" Value="{StaticResource ListBoxItemFocusVisualStyle}"></Setter>
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
         </Style>
         <DataTemplate x:Key="instanceLayout" DataType="DockerContainerInstance">
             <Grid Margin="7,7,7,12">
@@ -119,52 +131,52 @@
                 </Grid.ColumnDefinitions>
 
                 <AdornerDecorator Grid.Row="0" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock x:Uid="uidName" Text="Name: " Style="{StaticResource ItemHeaderStyle}"/>
-                        <TextBlock Text="{Binding Name}" x:Uid="uidContainerName"  Style="{StaticResource ItemHeaderStyle}" Tag="0" ToolTip="{Binding Name}"/>
-                    </StackPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidName" Text="Name: " Style="{StaticResource ItemLabelStyle}"/>
+                        <TextBlock Text="{Binding Name}" x:Uid="uidContainerName"  Style="{StaticResource HeaderItemStyle}" Tag="0" ToolTip="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="1" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Visibility="{Binding AddressIsVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock x:Uid="uidContainerId" Text="Container ID: " Style="{StaticResource ItemHeaderStyle}"/>
-                        <TextBlock Text="{Binding ContainerId}"  Style="{StaticResource ItemHeaderStyle}" Tag="1" ToolTip="{Binding ContainerId}"/>
-                    </StackPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidContainerId" Text="Id: " Style="{StaticResource ItemLabelStyle}"/>
+                        <TextBlock Text="{Binding ShortId}" Style="{StaticResource HeaderItemStyle}" Tag="1" ToolTip="{Binding Id}"  TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="2" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock x:Uid="uidImage" Text="Image: " Style="{StaticResource SelectedLabelStyle}" />
+                    <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidImage" Text="Image: " Style="{StaticResource ItemLabelStyle}" />
                         <TextBlock Text="{Binding Image}" Style="{StaticResource SelectedTextBlockStyle}" Tag="2" ToolTip="{Binding Image}"/>
-                    </StackPanel>
+                    </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="3" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock x:Uid="uidCommand" Text="Command: " Style="{StaticResource SelectedLabelStyle}" />
+                    <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidCommand" Text="Command: " Style="{StaticResource ItemLabelStyle}" />
                         <TextBlock Text="{Binding Command}" Style="{StaticResource SelectedTextBlockStyle}" Tag="3" ToolTip="{Binding Command}"/>
-                    </StackPanel>
+                    </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="4" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock x:Uid="uidStatus" Text="Status: " Style="{StaticResource SelectedLabelStyle}" />
+                    <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidStatus" Text="Status: " Style="{StaticResource ItemLabelStyle}" />
                         <TextBlock Text="{Binding Status}" Style="{StaticResource SelectedTextBlockStyle}" Tag="4" ToolTip="{Binding Status}"/>
-                    </StackPanel>
+                    </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="5" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock x:Uid="uidCreated" Text="Created: " Style="{StaticResource SelectedLabelStyle}" />
+                    <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidCreated" Text="Created: " Style="{StaticResource ItemLabelStyle}" />
                         <TextBlock Text="{Binding Created}" Style="{StaticResource SelectedTextBlockStyle}" Tag="5" ToolTip="{Binding Created}"/>
-                    </StackPanel>
+                    </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="6" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" CanHorizontallyScroll="True">
-                        <TextBlock x:Uid="uidPorts" Text="Ports: " Style="{StaticResource SelectedLabelStyle}" />
-                        <TextBlock Text="{Binding FormattedListOfPorts}" Style="{StaticResource SelectedTextBlockStyle}" Tag="6" ToolTip="{Binding FormattedListOfPorts}"/>
-                    </StackPanel>
+                    <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidPorts" Text="Ports: " Style="{StaticResource ItemLabelStyle}" VerticalAlignment="Top" />
+                        <TextBlock Text="{Binding FormattedListOfPorts}" Style="{StaticResource SelectedTextBlockStyle}" Tag="6" ToolTip="{Binding FormattedListOfPorts}" />
+                    </DockPanel>
                 </AdornerDecorator>
             </Grid>
         </DataTemplate>
@@ -191,7 +203,7 @@
                x:Name="ConnectionTypeLabel"
                Target="{Binding ElementName=ConnectionTypeComboBox}"
                Margin="-2 -2 0 -2">_Connection Type:</Label>
-        
+
         <ComboBox x:Uid="uidConnectionTypeComboBox"
                   x:Name="ConnectionTypeComboBox"
                   AutomationProperties.LabeledBy="{Binding ElementName=ConnectionTypeLabel}"
@@ -200,7 +212,7 @@
                   ItemsSource="{Binding SupportedConnections}"
                   SelectedItem="{Binding SelectedConnection}"
                   DisplayMemberPath="DisplayName"
-                  IsEnabled="{Binding AllowRefresh}"/>
+                  IsEnabled="{Binding IsRefreshEnabled}"/>
         <Button x:Uid="uidAddConnection"
                 x:Name="AddConnection"
                 AutomationProperties.Name="Add New Connection"
@@ -218,47 +230,54 @@
             </vsimaging:CrispImage>
         </Button>
 
-        <!-- Refresh button and count-->
-        <StackPanel Orientation="Horizontal" Grid.Row="2" VerticalAlignment="Center" Margin="0,10,0,10">
-            <TextBlock x:Uid="uidStatusLabel" Text="{ Binding StatusText, Mode=OneWay}" />
+        <!-- Status Text and Refresh Button -->
 
-            <Button x:Uid="uidRefreshButton"
-                AutomationProperties.Name="Refresh"
-                Margin="10,0,0,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                Height="20"
-                Width="20"
-                Click="Refresh_Click"
-                IsEnabled="{Binding AllowRefresh}">
-                <vsimaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Refresh}"
+        <TextBlock x:Uid="uidStatusLabel"
+                    Style="{StaticResource StatusLabelStyle}"
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Margin="0,10,0,10"
+                    Padding="10,0,10,0"
+                    Text="{ Binding StatusText, Mode=OneWay}"
+                    TextWrapping="Wrap"/>
+
+        <Button x:Uid="uidRefreshButton"
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    AutomationProperties.Name="Refresh"
+                    Margin="0,10,0,10"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Height="20"
+                    Width="20"
+                    Click="Refresh_Click"
+                    IsEnabled="{Binding IsRefreshEnabled}">
+            <vsimaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Refresh}"
                                   Width="16"
                                   Height="16">
-                    <Image.ToolTip>
-                        <TextBlock Text="Refresh" />
-                    </Image.ToolTip>
-                </vsimaging:CrispImage>
-            </Button>
-        </StackPanel>
+                <Image.ToolTip>
+                    <TextBlock Text="Refresh" />
+                </Image.ToolTip>
+            </vsimaging:CrispImage>
+        </Button>
 
-
-        <!-- Docker Instance display-->
+        <!-- Container Instance display-->
         <ScrollViewer AutomationProperties.Name="ConnectionScrollViewer"
                       Style="{StaticResource ScrollViewerStyle}"
                       Grid.Row="4"
                       Grid.ColumnSpan="2">
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <ListBox x:Name="ContainerListBox"
                          AutomationProperties.AutomationId="aidContainerListBox"
-                         ItemsSource="{Binding Path=DockerContainers, Mode=OneWay }"
-                         SelectedValue="{Binding SelectedDockerInstance}"
+                         ItemsSource="{Binding Path=ContainerInstances, Mode=OneWay }"
+                         SelectedValue="{Binding SelectedContainerInstance}"
                          ItemContainerStyle="{StaticResource ListBoxContainerStyle}"
                          GotKeyboardFocus="ContainerListBox_GotKeyboardFocus"
-                         Style="{StaticResource ListBoxStyle}" />
+                         Style="{StaticResource ListBoxStyle}"/>
             </Grid>
         </ScrollViewer>
 

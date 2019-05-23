@@ -61,6 +61,24 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed. {1}.
+        /// </summary>
+        public static string CommandExecutionErrorFormat {
+            get {
+                return ResourceManager.GetString("CommandExecutionErrorFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed with exit code {1}. {2}.
+        /// </summary>
+        public static string CommandExecutionErrorWithExitCodeFormat {
+            get {
+                return ResourceManager.GetString("CommandExecutionErrorWithExitCodeFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Found {0} containers.
         /// </summary>
         public static string ContainersFoundStatusText {
@@ -75,6 +93,15 @@ namespace Microsoft.SSHDebugPS {
         public static string DialogTitle {
             get {
                 return ResourceManager.GetString("DialogTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        public static string ErrorStatusTextFormat {
+            get {
+                return ResourceManager.GetString("ErrorStatusTextFormat", resourceCulture);
             }
         }
         
@@ -120,6 +147,24 @@ namespace Microsoft.SSHDebugPS {
         public static string SearchingStatusText {
             get {
                 return ResourceManager.GetString("SearchingStatusText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connecting via SSH....
+        /// </summary>
+        public static string SSHConnectingStatusText {
+            get {
+                return ResourceManager.GetString("SSHConnectingStatusText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SSH Connection failed. Press Refresh to try again..
+        /// </summary>
+        public static string SSHConnectionFailedStatusText {
+            get {
+                return ResourceManager.GetString("SSHConnectionFailedStatusText", resourceCulture);
             }
         }
     }

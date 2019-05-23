@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using liblinux;
@@ -25,12 +26,24 @@ namespace Microsoft.SSHDebugPS.SSH
 
         internal void Start(string commandText)
         {
-            _command = _remoteSystem.Shell.ExecuteCommandAsynchronously(commandText, Timeout.Infinite);
-            _command.Finished += (sender, e) => _callback.OnExit(((NonHostedCommand)sender).ExitCode.ToString(CultureInfo.InvariantCulture));
-            _command.OutputReceived += (sender, e) => _callback.OnOutputLine(e.Output);
+            if (!_remoteSystem.IsConnected)
+            {
+                _remoteSystem.Connect(_remoteSystem.ConnectionInfo);
+            }
 
-            _command.RedirectErrorOutputToOutput = true;
-            _command.BeginOutputRead();
+            if (_remoteSystem.IsConnected)
+            {
+                _command = _remoteSystem.Shell.ExecuteCommandAsynchronously(commandText, Timeout.Infinite);
+                _command.Finished += (sender, e) => _callback.OnExit(((NonHostedCommand)sender).ExitCode.ToString(CultureInfo.InvariantCulture));
+                _command.OutputReceived += (sender, e) => _callback.OnOutputLine(e.Output);
+
+                _command.RedirectErrorOutputToOutput = true;
+                _command.BeginOutputRead();
+            }
+            else
+            {
+                Debug.Fail("Remote System not connected.");
+            }
         }
 
         void IDebugUnixShellAsyncCommand.Write(string text)

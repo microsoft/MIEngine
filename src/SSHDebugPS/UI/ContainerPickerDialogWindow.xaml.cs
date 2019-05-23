@@ -1,21 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.SSHDebugPS.UI
@@ -30,8 +19,6 @@ namespace Microsoft.SSHDebugPS.UI
             InitializeComponent();
             this.Model = new ContainerPickerViewModel();
             this.DataContext = Model;
-
-            this.AllowRefresh = true;
         }
 
         #region Properties
@@ -43,11 +30,11 @@ namespace Microsoft.SSHDebugPS.UI
         }
 
         // Ultimately what we give back
-        public string SelectedQualifier
+        public string SelectedContainerConnectionString
         {
-            get 
+            get
             {
-                return _selectedQualifier;
+                return _selectedContainerConnectionString;
             }
         }
 
@@ -60,25 +47,13 @@ namespace Microsoft.SSHDebugPS.UI
             set
             {
                 _model = value;
-                OnPropertyChanged("Model");
-            }
-        }
-
-        public bool AllowRefresh
-        {
-            get
-            {
-                return _allowRefresh;
-            }
-            set
-            {
-                _allowRefresh = value;
-                OnPropertyChanged("AllowRefresh");
+                OnPropertyChanged(nameof(Model));
             }
         }
         #endregion
 
         #region Event Handlers
+
         private void ListBox_GotKeyboardFocus(object sender, RoutedEventArgs e)
         {
             ListBoxItem item = e.OriginalSource as ListBoxItem;
@@ -91,11 +66,8 @@ namespace Microsoft.SSHDebugPS.UI
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            if (Model.SelectedDockerInstance != null)
-            {
-                this.DialogResult = Model.SelectedDockerInstance.GetResult(out _selectedQualifier);
-                this.Close();
-            }
+            this.DialogResult = ComputeContainerConnectionString();
+            this.Close();
 
             e.Handled = true;
         }
@@ -109,14 +81,33 @@ namespace Microsoft.SSHDebugPS.UI
             }
             else if (e.Key == System.Windows.Input.Key.Enter)
             {
-                if (Model.SelectedDockerInstance != null)
+                this.DialogResult = ComputeContainerConnectionString();
+                if (this.DialogResult.GetValueOrDefault(false))
                 {
-                    this.DialogResult = Model.SelectedDockerInstance.GetResult(out _selectedQualifier);
-                    this.Close();
-
                     e.Handled = true;
                 }
             }
+        }
+
+        private bool ComputeContainerConnectionString()
+        {
+            if (Model.SelectedContainerInstance != null)
+            {
+                string connectionString;
+                if (Model.SelectedConnection.Connection == null)
+                {
+                    Model.SelectedContainerInstance.GetResult(out connectionString);
+                }
+                else
+                {
+                    Model.SelectedContainerInstance.GetResult(out string containerId);
+                    connectionString = string.Concat(Model.SelectedConnection.Connection.Name, '/', containerId);
+                }
+
+                _selectedContainerConnectionString = connectionString;
+                return true;
+            }
+            return false;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -126,12 +117,9 @@ namespace Microsoft.SSHDebugPS.UI
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
-            AllowRefresh = false;
-
-            Model.GenerateContainersFromConnection();
+            Model.RefreshContainersList();
 
             e.Handled = true;
-            AllowRefresh = true;
         }
 
         private void ContainerListBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -148,7 +136,7 @@ namespace Microsoft.SSHDebugPS.UI
         #region Private Variables
         private ContainerPickerViewModel _model;
         private bool _allowRefresh;
-        private string _selectedQualifier;
+        private string _selectedContainerConnectionString;
         #endregion
     }
 }

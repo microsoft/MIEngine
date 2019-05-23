@@ -3,8 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using liblinux;
 using liblinux.Persistence;
@@ -14,6 +17,8 @@ using Microsoft.SSHDebugPS.VS;
 using Microsoft.VisualStudio.Linux.ConnectionManager;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -31,14 +36,14 @@ namespace Microsoft.SSHDebugPS
 
             string displayName;
             string containerName;
+
             if (connectionStrings.Length == 1)
             {
                 // local connection
                 containerName = connectionStrings[0];
                 settings = new DockerExecShellSettings(containerName, hostIsUnix: false);
                 displayName = name;
-
-                // Verify container exists on local machine
+                // TODO: Verify container exists on local machine
             }
             else if (connectionStrings.Length == 2)
             {
@@ -52,20 +57,9 @@ namespace Microsoft.SSHDebugPS
                     return null;
 
                 // Verify container exists on remote machine.
-                string output;
-                int exitCode;
-                remoteConnection.ExecuteSyncCommand("verify docker exists", "docker ps -f {containerName} --filter {{.Names}}", out output, Timeout.Infinite, out exitCode);
-
-                if (exitCode != 0)
-                {
-                    // Missing docker.exe
-                    throw new InvalidOperationException();
-                }
-                else if (string.IsNullOrWhiteSpace(output))
-                {
-                    // container doesn't exist
-                    throw new InvalidOperationException();
-                }
+                //string output;
+                //int exitCode;
+                //remoteConnection.ExecuteSyncCommand("verify docker exists", $"docker ps -f {containerName} --filter {{.Names}}", out output, , out exitCode);
 
                 settings = new DockerExecShellSettings(containerName, hostIsUnix: true); // assume all remote is Unix for now.
                 displayName = remoteConnection.Name + '/' + containerName;
@@ -117,9 +111,7 @@ namespace Microsoft.SSHDebugPS
                         hostName = name;
                     }
 
-
                     PasswordConnectionInfo newConnectionInfo = new PasswordConnectionInfo(hostName, userName, new System.Security.SecureString());
-
                     result = connectionManager.ShowDialog(newConnectionInfo);
                 }
 
@@ -188,6 +180,134 @@ namespace Microsoft.SSHDebugPS
             ConnectionInfoStore store = new ConnectionInfoStore();
 
             return store.Connections.ToList().Select(item => (ConnectionInfo)item);
+        }
+
+        private const string dockerCommand = "docker";
+        // --no-trunc avoids parameter truncation
+        private const string dockerPSArgs = "ps --no-trunc --format \"{{json .}}\"";
+        public static IEnumerable<IContainerInstance> GetLocalDockerContainers()
+        {
+            List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
+            LocalSingleCommandRunner commandRunner = new LocalSingleCommandRunner(dockerCommand, dockerPSArgs);
+            StringBuilder errorSB = new StringBuilder();
+            int exitCode = 0;
+
+            try
+            {
+                ManualResetEvent resetEvent = new ManualResetEvent(false);
+                commandRunner.ErrorOccured += ((sender, args) =>
+                {
+                    resetEvent.Set();
+                });
+
+                commandRunner.Closed += ((sender, args) =>
+                {
+                    exitCode = args;
+                    resetEvent.Set();
+                });
+
+                commandRunner.OutputReceived += ((sender, args) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(args))
+                    {
+                        if (args.Trim()[0] != '{')
+                        {
+                            // output isn't json, command Error
+                            string errorMessage = string.Format(CultureInfo.CurrentCulture, UIResources.CommandExecutionErrorFormat, dockerCommand, args);
+                            throw new CommandFailedException(errorMessage);
+                        }
+
+                        var containerInstance = DockerContainerInstance.Create(args);
+                        if (containerInstance != null)
+                            containers.Add(containerInstance);
+                    }
+                });
+
+                commandRunner.Run();
+                resetEvent.WaitOne();
+
+                // might need to throw an exception here too??
+                if (exitCode != 0)
+                {
+                    Debug.Fail($"Exit Code: {exitCode}");
+                    return null;
+                }
+
+                return containers;
+            }
+            catch (Win32Exception ex)
+            {
+                // docker doesn't exist 
+                string errorMessage = string.Format(CultureInfo.CurrentCulture, UIResources.CommandExecutionErrorFormat, dockerCommand, ex.Message);
+                throw new CommandFailedException(errorMessage, ex);
+            }
+        }
+
+        public static IEnumerable<IContainerInstance> GetRemoteDockerContainers(IConnection connection)
+        {
+            SSHConnection sshConnection = connection as SSHConnection;
+            List<string> outputLines = new List<string>();
+            StringBuilder errorSB = new StringBuilder();
+            if (sshConnection == null)
+            {
+                return null;
+            }
+
+            List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
+            RemoteCommandRunner commandRunner = new RemoteCommandRunner(dockerCommand, dockerPSArgs, sshConnection);
+
+            ManualResetEvent resetEvent = new ManualResetEvent(false);
+            int exitCode = 0;
+            commandRunner.ErrorOccured += ((sender, args) =>
+            {
+                resetEvent.Set();
+            });
+
+            commandRunner.Closed += ((sender, args) =>
+            {
+                exitCode = args;
+                resetEvent.Set();
+            });
+
+            commandRunner.OutputReceived += ((sender, args) =>
+            {
+                if (!string.IsNullOrWhiteSpace(args))
+                {
+                    // If it isn't json, assume its an error message
+                    if (args.Trim()[0] != '{')
+                    {
+                        errorSB.Append(args);
+                    }
+
+                    // Unix line endings are '\n' so split on that for json items.
+                    foreach (var item in args.Split('\n').ToList())
+                    {
+                        if (!string.IsNullOrWhiteSpace(item))
+                            outputLines.Add(item);
+                    }
+                }
+            });
+
+            resetEvent.WaitOne();
+
+            if (exitCode != 0)
+            {
+                // if the exit code is not zero, then the output we received possibly is the error message
+                string exceptionMessage = string.Format(CultureInfo.CurrentCulture,
+                    UIResources.CommandExecutionErrorWithExitCodeFormat,
+                    dockerCommand,
+                    exitCode,
+                    errorSB.ToString());
+
+                throw new CommandFailedException(exceptionMessage);
+            }
+
+            foreach (var item in outputLines)
+            {
+                containers.Add(DockerContainerInstance.Create(item));
+            }
+
+            return containers;
         }
     }
 }

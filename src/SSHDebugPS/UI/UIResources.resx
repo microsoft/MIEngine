@@ -119,6 +119,7 @@
   </resheader>
   <data name="ContainersFoundStatusText" xml:space="preserve">
     <value>Found {0} containers</value>
+    <comment>{0} = number of containers found greater than 0</comment>
   </data>
   <data name="DialogTitle" xml:space="preserve">
     <value>Docker Connection Manager</value>
@@ -137,5 +138,23 @@
   </data>
   <data name="SearchingStatusText" xml:space="preserve">
     <value>Searching...</value>
+  </data>
+  <data name="SSHConnectingStatusText" xml:space="preserve">
+    <value>Connecting via SSH...</value>
+  </data>
+  <data name="SSHConnectionFailedStatusText" xml:space="preserve">
+    <value>SSH Connection failed. Press Refresh to try again.</value>
+  </data>
+  <data name="CommandExecutionErrorFormat" xml:space="preserve">
+    <value>Executing command '{0}' failed. {1}</value>
+    <comment>{0} = command, {1} = error message</comment>
+  </data>
+  <data name="CommandExecutionErrorWithExitCodeFormat" xml:space="preserve">
+    <value>Executing command '{0}' failed with exit code {1}. {2}</value>
+    <comment>{0} = command, {1} = exit code, {2} = error message</comment>
+  </data>
+  <data name="ErrorStatusTextFormat" xml:space="preserve">
+    <value>Error: {0}</value>
+    <comment>{0} = message</comment>
   </data>
 </root>

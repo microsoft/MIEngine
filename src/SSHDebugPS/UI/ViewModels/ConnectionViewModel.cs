@@ -1,23 +1,29 @@
-﻿using liblinux;
-using Microsoft.SSHDebugPS.SSH;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.SSHDebugPS
+using liblinux;
+using Microsoft.SSHDebugPS.SSH;
+
+namespace Microsoft.SSHDebugPS.UI
 {
     public interface IConnectionViewModel
     {
         string DisplayName { get; }
+
+        IConnection Connection { get; }
     }
 
     public class LocalConnectionViewModel : IConnectionViewModel
     {
         public LocalConnectionViewModel() { }
 
+        #region IConnectionViewModel
+
         public string DisplayName => UIResources.LocalMachine;
+
+        public IConnection Connection { get => null; }
+
+        #endregion
     }
 
     internal class SSHConnectionViewModel : IConnectionViewModel
@@ -47,6 +53,8 @@ namespace Microsoft.SSHDebugPS
             return this.sshConnection;
         }
 
+        #region IConnectionViewModel
+
         public string DisplayName
         {
             get
@@ -54,20 +62,9 @@ namespace Microsoft.SSHDebugPS
                 return sshConnection?.Name ?? SSHPortSupplier.GetFormattedSSHConnectionName(connectionInfo);
             }
         }
+
+        public IConnection Connection { get => GetConnection(); }
+
+        #endregion
     }
-
-    // TODO: Remove--simply for testing purposes
-    internal class MockConnectionViewModel : IConnectionViewModel
-    {
-        private string name { get; }
-
-        public MockConnectionViewModel(string name)
-        {
-            this.name = name;
-        }
-
-        public string DisplayName => name;
-
-    }
-
 }

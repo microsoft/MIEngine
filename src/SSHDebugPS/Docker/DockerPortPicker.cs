@@ -29,12 +29,13 @@ namespace Microsoft.SSHDebugPS.Docker
             helper.Owner = hwndParentDialog;
          
             bool? dialogResult = dialog.ShowModal();
-            if (dialogResult.HasValue && dialogResult.Value)
+            if (dialogResult.GetValueOrDefault(false))
             {
-                pbstrPortId = dialog.SelectedQualifier;
+                pbstrPortId = dialog.SelectedContainerConnectionString;
+                return VSConstants.S_OK;
             }
 
-            return VSConstants.S_OK;
+            return VSConstants.S_FALSE;
         }
 
         int IDebugPortPicker.SetSite(VisualStudio.OLE.Interop.IServiceProvider pSP)

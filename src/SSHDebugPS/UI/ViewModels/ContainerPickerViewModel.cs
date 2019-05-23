@@ -1,13 +1,17 @@
-﻿using Microsoft.SSHDebugPS.Docker;
-using Microsoft.SSHDebugPS.SSH;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
+using Microsoft.SSHDebugPS.Docker;
+using Microsoft.SSHDebugPS.SSH;
 
 namespace Microsoft.SSHDebugPS.UI
 {
@@ -16,63 +20,78 @@ namespace Microsoft.SSHDebugPS.UI
         public ContainerPickerViewModel()
         {
             InitializeConnections();
-            this.SelectedConnection = SupportedConnections.First(item => item is LocalConnectionViewModel) ?? SupportedConnections.First();
+            ContainerInstances = new ObservableCollection<IContainerInstance>();
+            _sshAvailable = new Lazy<bool>(() => IsLibLinuxAvailable());
+            AddSSHConnectionCommand = new BaseCommand(AddSSHConnection, () => { return CanAddConnection; });
+            PropertyChanged += ContainerPickerViewModel_PropertyChanged;
 
-            this.DockerContainers = new ObservableCollection<DockerContainerInstance>();
-            this.sshAvailable = new Lazy<bool>(() => IsLibLinuxAvailable());
-
-            //Commands
-            this.AddSSHConnectionCommand = new BaseCommand(this.AddSSHConnection, () => { return this.CanAddConnection; });
-
-
-            // Start Docker Instance generation on the selected connection
-            GenerateContainersFromConnection();
-        }
-
-        private void SupportedConnections_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            this.OnPropertyChanged("SupportedConnections");
+            SelectedConnection = SupportedConnections.First(item => item is LocalConnectionViewModel) ?? SupportedConnections.First();
         }
 
         private void InitializeConnections()
         {
-            if (this.SupportedConnections != null)
-            {
-                this.SupportedConnections.CollectionChanged -= SupportedConnections_CollectionChanged;
-                this.SupportedConnections = null;
-            }
-
             List<IConnectionViewModel> connections = new List<IConnectionViewModel>();
             connections.Add(new LocalConnectionViewModel());
             connections.AddRange(ConnectionManager.GetAvailableSSHConnectionInfos().Select(item => new SSHConnectionViewModel(item)));
 
-            this.SupportedConnections = new ObservableCollection<IConnectionViewModel>(connections);
-            this.SupportedConnections.CollectionChanged += SupportedConnections_CollectionChanged;
-            this.OnPropertyChanged(nameof(SupportedConnections));
+            SupportedConnections = new ObservableCollection<IConnectionViewModel>(connections);
+            OnPropertyChanged(nameof(SupportedConnections));
         }
 
-        public void GenerateContainersFromConnection()
+        internal void RefreshContainersList()
         {
-            StatusText = UIResources.SearchingStatusText; // Change text to reflect finding?
-            this.DockerContainers.Clear();
-            foreach (DockerContainerInstance instance in DockerContainerInstance.GetMockInstances()) // TODO: Replace Get Mock Instances with way to generate
-            {
-                this.DockerContainers.Add(instance);
-            }
+            IsRefreshEnabled = false;
 
-            if (this.DockerContainers.Count() > 0)
+            try
             {
-                StatusText = String.Format(UIResources.ContainersFoundStatusText, this.DockerContainers.Count());
+                StatusText = UIResources.SearchingStatusText; // Change text to reflect finding?
+                ContainerInstances?.Clear();
+
+                IEnumerable<IContainerInstance> containers;
+
+                if (SelectedConnection is LocalConnectionViewModel)
+                {
+                    containers = ConnectionManager.GetLocalDockerContainers();
+                }
+                else
+                {
+                    StatusText = UIResources.SSHConnectingStatusText;
+                    var connection = SelectedConnection.Connection;
+                    if (connection == null)
+                    {
+                        StatusText = UIResources.SSHConnectionFailedStatusText;
+                        return;
+                    }
+                    containers = ConnectionManager.GetRemoteDockerContainers(connection);
+                }
+
+                ContainerInstances = new ObservableCollection<IContainerInstance>(containers);
+                OnPropertyChanged(nameof(ContainerInstances));
+
+                if (ContainerInstances.Count() > 0)
+                {
+                    StatusText = String.Format(UIResources.ContainersFoundStatusText, ContainerInstances.Count());
+                }
+                else
+                {
+                    StatusText = String.Empty;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                StatusText = String.Empty;
+                StatusText = String.Format(CultureInfo.CurrentCulture, UIResources.ErrorStatusTextFormat, ex.Message);
+                StatusIsError = true;
+                return;
+            }
+            finally
+            {
+                IsRefreshEnabled = true;
             }
         }
 
-        protected void AddSSHConnection()
+        public void AddSSHConnection()
         {
-            if (this.CanAddConnection)
+            if (CanAddConnection)
             {
                 SSHConnection connection = ConnectionManager.GetSSHConnection(string.Empty) as SSHConnection;
                 if (connection != null)
@@ -88,12 +107,12 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        private Lazy<bool> sshAvailable;
-        internal bool CanAddConnection
+        private Lazy<bool> _sshAvailable;
+        public bool CanAddConnection
         {
             get
             {
-                return sshAvailable?.Value ?? false;
+                return _sshAvailable?.Value ?? false;
             }
         }
 
@@ -115,7 +134,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         #endregion
 
-        #region EventHandlers and Properties
+        #region Event, EventHandlers and Properties
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -124,6 +143,15 @@ namespace Microsoft.SSHDebugPS.UI
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
+        private void ContainerPickerViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName.Equals(nameof(SelectedConnection)))
+            {
+                RefreshContainersList();
+            }
+        }
+
+        private string _statusText;
         public string StatusText
         {
             get
@@ -133,26 +161,63 @@ namespace Microsoft.SSHDebugPS.UI
             set
             {
                 _statusText = value;
-                OnPropertyChanged("StatusText");
+                StatusIsError = false; // reset the StatusText to not be an error.
+                OnPropertyChanged(nameof(StatusText));
+            }
+        }
+
+        private bool _statusIsError;
+        public bool StatusIsError
+        {
+            get
+            {
+                return _statusIsError;
+            }
+            set
+            {
+                if (_statusIsError != value)
+                {
+                    _statusIsError = value;
+                    OnPropertyChanged(nameof(StatusIsError));
+                }
             }
         }
 
         public ObservableCollection<IConnectionViewModel> SupportedConnections { get; private set; }
-        public ObservableCollection<DockerContainerInstance> DockerContainers { get; }
+        public ObservableCollection<IContainerInstance> ContainerInstances { get; private set; }
 
-        public DockerContainerInstance SelectedDockerInstance
+        private bool _isRefreshEnabled = true;
+        public bool IsRefreshEnabled
         {
-            get
-            {
-                return _selectedDockerInstance;
-            }
+            get => _isRefreshEnabled;
             set
             {
-                _selectedDockerInstance = value;
-                OnPropertyChanged("SelectedInstance");
+                if (_isRefreshEnabled != value)
+                {
+                    _isRefreshEnabled = value;
+                    OnPropertyChanged(nameof(IsRefreshEnabled));
+                }
             }
         }
 
+        private IContainerInstance _selectedContainerInstance;
+        public IContainerInstance SelectedContainerInstance
+        {
+            get
+            {
+                return _selectedContainerInstance;
+            }
+            set
+            {
+                if (!(_selectedContainerInstance != null && _selectedContainerInstance.Name.Equals(value.Name, StringComparison.Ordinal)))
+                {
+                    _selectedContainerInstance = value;
+                    OnPropertyChanged(nameof(SelectedContainerInstance));
+                }
+            }
+        }
+
+        private IConnectionViewModel _selectedConnection;
         public IConnectionViewModel SelectedConnection
         {
             get
@@ -161,14 +226,13 @@ namespace Microsoft.SSHDebugPS.UI
             }
             set
             {
-                _selectedConnection = value;
-                OnPropertyChanged("SelectedConnection");
+                if (!(_selectedConnection != null && _selectedConnection.DisplayName.Equals(value.DisplayName, StringComparison.Ordinal)))
+                {
+                    _selectedConnection = value;
+                    OnPropertyChanged(nameof(SelectedConnection));
+                }
             }
         }
-
-        private DockerContainerInstance _selectedDockerInstance;
-        private IConnectionViewModel _selectedConnection;
-        private string _statusText;
         #endregion
     }
 }
