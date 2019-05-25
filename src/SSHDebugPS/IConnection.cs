@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS
 {
+    // Needs to be public to support the ContainerPicker UI
     public interface IConnection
     {
         string Name { get; }

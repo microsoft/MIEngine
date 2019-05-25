@@ -32,7 +32,7 @@ namespace Microsoft.SSHDebugPS.UI
         {
             List<IConnectionViewModel> connections = new List<IConnectionViewModel>();
             connections.Add(new LocalConnectionViewModel());
-            connections.AddRange(ConnectionManager.GetAvailableSSHConnectionInfos().Select(item => new SSHConnectionViewModel(item)));
+            connections.AddRange(SSHHelper.GetAvailableSSHConnectionInfos().Select(item => new SSHConnectionViewModel(item)));
 
             SupportedConnections = new ObservableCollection<IConnectionViewModel>(connections);
             OnPropertyChanged(nameof(SupportedConnections));
@@ -44,14 +44,14 @@ namespace Microsoft.SSHDebugPS.UI
 
             try
             {
-                StatusText = UIResources.SearchingStatusText; // Change text to reflect finding?
+                StatusText = UIResources.SearchingStatusText;
                 ContainerInstances?.Clear();
 
                 IEnumerable<IContainerInstance> containers;
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
-                    containers = ConnectionManager.GetLocalDockerContainers();
+                    containers = DockerHelper.GetLocalDockerContainers();
                 }
                 else
                 {
@@ -62,7 +62,7 @@ namespace Microsoft.SSHDebugPS.UI
                         StatusText = UIResources.SSHConnectionFailedStatusText;
                         return;
                     }
-                    containers = ConnectionManager.GetRemoteDockerContainers(connection);
+                    containers = DockerHelper.GetRemoteDockerContainers(connection);
                 }
 
                 ContainerInstances = new ObservableCollection<IContainerInstance>(containers);
@@ -112,7 +112,7 @@ namespace Microsoft.SSHDebugPS.UI
         {
             get
             {
-                return _sshAvailable?.Value ?? false;
+                return _sshAvailable.Value;
             }
         }
 

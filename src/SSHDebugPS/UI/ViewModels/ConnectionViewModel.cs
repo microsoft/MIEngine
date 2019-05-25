@@ -13,7 +13,7 @@ namespace Microsoft.SSHDebugPS.UI
         IConnection Connection { get; }
     }
 
-    public class LocalConnectionViewModel : IConnectionViewModel
+    internal class LocalConnectionViewModel : IConnectionViewModel
     {
         public LocalConnectionViewModel() { }
 
@@ -47,7 +47,7 @@ namespace Microsoft.SSHDebugPS.UI
             {
                 if (this.connectionInfo != null)
                 {
-                    this.sshConnection = ConnectionManager.CreateSSHConnectionFromConnectionInfo(connectionInfo);
+                    this.sshConnection = SSHHelper.CreateSSHConnectionFromConnectionInfo(connectionInfo);
                 }
             }
             return this.sshConnection;
