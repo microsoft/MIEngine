@@ -33,6 +33,7 @@
 
 [$RootKey$\RuntimeConfiguration\dependentAssembly\codeBase\{7E3052B2-FB42-4E38-B22C-1FD281BD4413}]
 "name"="Microsoft.SSHDebugPS"
+; With local development workflow and release workflow, there are two publicKeyTokens but no way to specify both.
 "publicKeyToken"=""
 "culture"="neutral"
 "version"="14.0.0.0"

@@ -169,6 +169,9 @@
     <value>Enter credentials to connect to {0}</value>
     <comment>{0} is the network address being connected to</comment>
   </data>
+  <data name="HostName_PlaceHolder" xml:space="preserve">
+    <value>&lt;hostname&gt;</value>
+  </data>
   <data name="SSH_PSDescription" xml:space="preserve">
     <value>SSH (Secure Shell) Transport allows connecting Visual Studio to computers running an SSH server with a bash-like shell (ex: Linux, macOS, etc).</value>
   </data>
