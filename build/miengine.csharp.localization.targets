@@ -3,6 +3,7 @@
     <!-- Localize the output assembly if requested -->
   <ItemGroup Condition=" '$(LocalizeOutputAssembly)'=='true' ">
     <FilesToLocalize Include="$(TargetPath)">
+      <SettingsFile>$(LSBuildRoot)\MCP_excludeBaml.lss</SettingsFile>
       <TranslationFile>$(MIEngineRoot)loc\lcl\{Lang}\$(TargetFileName).lcl</TranslationFile>
       <LciCommentFile>$(MIEngineRoot)loc\lci\$(TargetFileName).lci</LciCommentFile>
     </FilesToLocalize>
