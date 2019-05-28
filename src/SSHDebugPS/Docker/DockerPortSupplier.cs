@@ -41,10 +41,19 @@ namespace Microsoft.SSHDebugPS.Docker
             return HR.E_REMOTE_CONNECT_USER_CANCELED;
         }
 
-        public override int CanPersistPorts()
+        public override unsafe int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum)
         {
-            // Return false here so that they can be persisted but not by us.
-            return HR.S_FALSE;
+            IDebugPort2[] ports = new IDebugPort2[portNames.dwCount];
+            for (int c = 0; c < portNames.dwCount; c++)
+            {
+                char* bstrPortName = ((char**)portNames.Members)[c];
+                string name = new string(bstrPortName);
+
+                ports[c] = new DockerPort(this, name, isInAddPort: false);
+            }
+
+            portEnum = new AD7PortEnum(ports);
+            return HR.S_OK;
         }
     }
 

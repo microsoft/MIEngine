@@ -135,7 +135,6 @@ namespace Microsoft.SSHDebugPS.UI
 
         #region Private Variables
         private ContainerPickerViewModel _model;
-        private bool _allowRefresh;
         private string _selectedContainerConnectionString;
         #endregion
     }

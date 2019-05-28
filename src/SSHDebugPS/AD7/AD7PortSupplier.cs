@@ -34,20 +34,10 @@ namespace Microsoft.SSHDebugPS
             return HR.S_OK;
         }
 
-        public virtual int CanPersistPorts()
-        {
-            return HR.S_FALSE;
-        }
-
         int IDebugPortSupplierDescription2.GetDescription(enum_PORT_SUPPLIER_DESCRIPTION_FLAGS[] flags, out string text)
         {
             text = Description;
             return HR.S_OK;
-        }
-
-        public virtual int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum)
-        {
-            throw new NotImplementedException();
         }
 
         public virtual int EnumPorts(out IEnumDebugPorts2 ppEnum)
@@ -64,5 +54,20 @@ namespace Microsoft.SSHDebugPS
         {
             throw new NotImplementedException();
         }
+
+        #region IDebugPortSupplier3 
+        public virtual int CanPersistPorts()
+        {
+            return HR.S_FALSE;
+        }
+
+        /// <summary>
+        /// If CanPersistPorts() returns false, the SDM will cache the ports and EnumPersistedPorts() needs to be implemented
+        /// </summary>
+        /// <param name="portNames"></param>
+        /// <param name="portEnum"></param>
+        /// <returns></returns>
+        public abstract int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum);
+        #endregion
     }
 }

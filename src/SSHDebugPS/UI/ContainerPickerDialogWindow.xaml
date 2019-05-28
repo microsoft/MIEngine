@@ -20,20 +20,11 @@
                  FontSize="{DynamicResource VsFont.EnvironmentFontSize}"
                  Title="{x:Static local:UIResources.DialogTitle}"
                  WindowStartupLocation="CenterOwner"
-                 KeyDown="DialogWindow_KeyDown"
-                 DataContext="{Binding RelativeSource={x:Static RelativeSource.Self},Path=Model}">
+                 KeyDown="DialogWindow_KeyDown">
     <ui:DialogWindow.Resources>
         <!-- Converters-->
         <docker:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <!--Styles-->
-        <Style x:Key="DialogWindowStyle" TargetType="{x:Type Window}">
-            <Setter Property="FontFamily"
-                    Value="{DynamicResource VsFont.EnvironmentFontFamily}" />
-            <Setter Property="FontSize"
-                    Value="{DynamicResource VsFont.EnvironmentFontSize}" />
-            <Setter Property="BorderBrush"
-                    Value="Transparent" />
-        </Style>
         <Style x:Key="ScrollViewerStyle" TargetType="{x:Type ScrollViewer}">
             <Setter Property="Background" Value="{DynamicResource SystemColors.WindowBrush}" />
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
@@ -262,7 +253,7 @@
         </Button>
 
         <!-- Container Instance display-->
-        <ScrollViewer AutomationProperties.Name="ConnectionScrollViewer"
+        <ScrollViewer AutomationProperties.Name="Container"
                       Style="{StaticResource ScrollViewerStyle}"
                       Grid.Row="4"
                       Grid.ColumnSpan="2">
