@@ -745,7 +745,7 @@ namespace Microsoft.MIDebugEngine
 
                     // check for remote
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
-                    if (!string.IsNullOrEmpty(destination))
+                    if (!string.IsNullOrWhiteSpace(destination))
                     {
                         commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                     }
@@ -839,7 +839,7 @@ namespace Microsoft.MIDebugEngine
                     if (null != localLaunchOptions)
                     {
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
-                        if (!string.IsNullOrEmpty(destination))
+                        if (!string.IsNullOrWhiteSpace(destination))
                         {
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                         }
@@ -1133,8 +1133,7 @@ namespace Microsoft.MIDebugEngine
 
                 // MinGW sends a stopped event on attach. gdb<->gdbserver also sends a stopped event when first attached.
                 // If this is a gdb<->gdbserver connection, ignore this as the entryPoint
-                if (this._launchOptions is LocalLaunchOptions &&
-                    !String.IsNullOrWhiteSpace(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress))
+                if (IsLocalLaunchUsingServer())
                 {
                     // If the stopped event occurs on gdbserver, ignore it unless it contains a filename.
                     TupleValue frame = results.Results.TryFind<TupleValue>("frame");

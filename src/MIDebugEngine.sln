@@ -1,9 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26510.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28315.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platform Launchers", "Platform Launchers", "{B864C337-1AA8-42B3-BF01-90901F55DE70}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Android", "Android", "{2865BFC4-770D-4219-945A-75670F98A6A6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CF02407C-BF37-4D51-83F4-845A7F36C101}"
+	ProjectSection(SolutionItems) = preProject
+		IDECodeAnalysis.ruleset = IDECodeAnalysis.ruleset
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MIDebugPackage", "MIDebugPackage\MIDebugPackage.csproj", "{4F38F986-5C93-44CB-A387-AEF3737E6D22}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -35,13 +42,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IOSDebugLauncher", "IOSDebugLauncher\IOSDebugLauncher.csproj", "{D2A11674-F677-4B11-9989-2F6099A6F0A2}"
 	ProjectSection(ProjectDependencies) = postProject
 		{95C0421F-D4C1-46E8-9177-6DAA4D71D0F2} = {95C0421F-D4C1-46E8-9177-6DAA4D71D0F2}
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Android", "Android", "{2865BFC4-770D-4219-945A-75670F98A6A6}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CF02407C-BF37-4D51-83F4-845A7F36C101}"
-	ProjectSection(SolutionItems) = preProject
-		IDECodeAnalysis.ruleset = IDECodeAnalysis.ruleset
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugEngineHost.Stub", "DebugEngineHost.Stub\DebugEngineHost.Stub.csproj", "{EA876A2D-AB0F-4204-97DD-DFB3B5568978}"
@@ -299,11 +299,11 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{2865BFC4-770D-4219-945A-75670F98A6A6} = {B864C337-1AA8-42B3-BF01-90901F55DE70}
 		{E0844BFF-2D67-4CB0-8E2A-E9CD888F2EB0} = {2865BFC4-770D-4219-945A-75670F98A6A6}
 		{78728205-DB3E-4B7B-A7D2-5CBE38E9C607} = {2865BFC4-770D-4219-945A-75670F98A6A6}
 		{207FD4CC-116B-466D-8893-F9565248A085} = {2865BFC4-770D-4219-945A-75670F98A6A6}
 		{D2A11674-F677-4B11-9989-2F6099A6F0A2} = {B864C337-1AA8-42B3-BF01-90901F55DE70}
-		{2865BFC4-770D-4219-945A-75670F98A6A6} = {B864C337-1AA8-42B3-BF01-90901F55DE70}
 		{AE7F97CA-DFD2-41BC-B581-98C91C83065C} = {B864C337-1AA8-42B3-BF01-90901F55DE70}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

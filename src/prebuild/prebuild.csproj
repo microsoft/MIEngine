@@ -46,6 +46,7 @@
     <ItemGroup Condition="'$(IsMonoRuntime)'=='false'">
       <DesktopProjects Include="../IOSDebugLauncher/IOSDebugLauncher.csproj" />
       <DesktopProjects Include="../MIDebugPackage/MIDebugPackage.csproj" />
+      <DesktopProjects Include="../SSHDebugPS/SSHDebugPS.csproj" />
     </ItemGroup>
     <MsBuild Projects="@(DesktopProjects)" Targets="RestoreDesktopPackages" />
   </Target>

@@ -1,59 +1,58 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
-using Microsoft.VisualStudio.OLE.Interop;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
+using Microsoft.VisualStudio.OLE.Interop;
 
 namespace Microsoft.SSHDebugPS
 {
-    internal class AD7Port : IDebugPort2, IDebugUnixShellPort, IDebugPortCleanup, IDebugGdbServerAttach, IConnectionPointContainer, IConnectionPoint
+    internal abstract class AD7Port : IDebugPort2, IDebugUnixShellPort, IDebugPortCleanup, IConnectionPointContainer, IConnectionPoint
     {
         private readonly object _lock = new object();
         private readonly AD7PortSupplier _portSupplier;
-        private string _name;
         private readonly Lazy<Guid> _id = new Lazy<Guid>(() => Guid.NewGuid(), LazyThreadSafetyMode.ExecutionAndPublication);
         private Connection _connection;
         private readonly Dictionary<uint, IDebugPortEvents2> _eventCallbacks = new Dictionary<uint, IDebugPortEvents2>();
         private uint _lastCallbackCookie;
 
+        protected string Name { get; private set; }
+
         public AD7Port(AD7PortSupplier portSupplier, string name, bool isInAddPort)
         {
             _portSupplier = portSupplier;
-            _name = name;
+            Name = name;
 
             if (isInAddPort)
             {
-                GetConnection(ConnectionReason.AddPort);
+                GetConnection();
             }
         }
 
-        private Connection GetConnection(ConnectionReason reason)
+        protected Connection GetConnection()
         {
             if (_connection == null)
             {
-                _connection = ConnectionManager.GetInstance(_name, reason);
-
+                _connection = GetConnectionInternal();
                 if (_connection != null)
                 {
-                    // User might change connection details via credentials dialog in ConnectionManager.GetInstance, get updated name
-                    _name = ConnectionManager.GetFormattedConnectionName(_connection.ConnectionInfo);
+                    Name = _connection.Name;
                 }
             }
 
             return _connection;
         }
 
+        protected abstract Connection GetConnectionInternal();
+
         public void EnsureConnected()
         {
-            GetConnection(ConnectionReason.Deferred);
+            GetConnection();
         }
 
         public bool IsConnected
@@ -67,7 +66,7 @@ namespace Microsoft.SSHDebugPS
         public int EnumProcesses(out IEnumDebugProcesses2 processEnum)
         {
             IEnumDebugProcesses2 result = null;
-            var connection = GetConnection(ConnectionReason.Deferred);
+            var connection = GetConnection();
 
             if (connection == null)
             {
@@ -76,11 +75,11 @@ namespace Microsoft.SSHDebugPS
             }
 
             VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: () =>
-              {
-                  List<PSOutputParser.Process> processList = connection.ListProcesses();
-                  IDebugProcess2[] processes = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
-                  result = new AD7ProcessEnum(processes);
-              });
+            {
+                List<Process> processList = connection.ListProcesses();
+                IDebugProcess2[] processes = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
+                result = new AD7ProcessEnum(processes);
+            });
 
             processEnum = result;
             return HR.S_OK;
@@ -94,7 +93,7 @@ namespace Microsoft.SSHDebugPS
 
         public int GetPortName(out string name)
         {
-            name = _name;
+            name = Name;
             return HR.S_OK;
         }
 
@@ -122,7 +121,7 @@ namespace Microsoft.SSHDebugPS
             string waitPrompt = string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_ExecutingCommand, commandDescription);
             VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: () =>
             {
-                code = GetConnection(ConnectionReason.Deferred).ExecuteCommand(commandText, timeout, out output);
+                code = GetConnection().ExecuteCommand(commandText, timeout, out output);
             });
 
             exitCode = code;
@@ -131,7 +130,7 @@ namespace Microsoft.SSHDebugPS
 
         void IDebugUnixShellPort.BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
-            GetConnection(ConnectionReason.Deferred).BeginExecuteAsyncCommand(commandText, runInShell, callback, out asyncCommand);
+            GetConnection().BeginExecuteAsyncCommand(commandText, runInShell, callback, out asyncCommand);
         }
 
         void IConnectionPointContainer.EnumConnectionPoints(out IEnumConnectionPoints ppEnum)
@@ -194,39 +193,34 @@ namespace Microsoft.SSHDebugPS
 
         public void CopyFile(string sourcePath, string destinationPath)
         {
-            GetConnection(ConnectionReason.Deferred).CopyFile(sourcePath, destinationPath);
+            GetConnection().CopyFile(sourcePath, destinationPath);
         }
 
         public string MakeDirectory(string path)
         {
-            return GetConnection(ConnectionReason.Deferred).MakeDirectory(path);
+            return GetConnection().MakeDirectory(path);
         }
 
         public string GetUserHomeDirectory()
         {
-            return GetConnection(ConnectionReason.Deferred).GetUserHomeDirectory();
-        }
-
-        public string GdbServerAttachProcess(int id, string preAttachCommand)
-        {
-            return GetConnection(ConnectionReason.Deferred).AttachToProcess(id, preAttachCommand);
+            return GetConnection().GetUserHomeDirectory();
         }
 
         public bool IsOSX()
         {
-            return GetConnection(ConnectionReason.Deferred).IsOSX();
+            return GetConnection().IsOSX();
         }
 
         public bool IsLinux()
         {
-            return GetConnection(ConnectionReason.Deferred).IsLinux();
+            return GetConnection().IsLinux();
         }
 
         public void Clean()
         {
             try
             {
-                _connection?.Clean();
+                _connection?.Close();
             }
             // Dev15 632648: Liblinux sometimes throws exceptions on shutdown - we are shutting down anyways, so ignore to not crash
             catch (Exception) { }

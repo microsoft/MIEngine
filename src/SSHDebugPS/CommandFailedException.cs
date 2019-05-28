@@ -13,5 +13,12 @@ namespace Microsoft.SSHDebugPS
             // We don't currently have a good way to return a meaningful error
             this.HResult = HR.E_FAIL;
         }
+
+        public CommandFailedException(string message, Exception ex) : base(message, ex)
+        {
+            // We don't currently have a good way to return a meaningful error
+            this.HResult = HR.E_FAIL;
+        }
+
     }
 }
