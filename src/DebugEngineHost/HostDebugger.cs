@@ -24,7 +24,11 @@ namespace Microsoft.DebugEngineHost
         {
             try
             {
-                ThreadHelper.Generic.BeginInvoke(() => Internal.LaunchDebugTarget(filePath, options, engineId));
+                ThreadHelper.JoinableTaskFactory.Run(async () => 
+                { 
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    Internal.LaunchDebugTarget(filePath, options, engineId);
+                });
             }
             catch (Exception)
             {

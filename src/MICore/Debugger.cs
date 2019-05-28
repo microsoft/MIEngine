@@ -243,7 +243,7 @@ namespace MICore
                         // When using signals to stop the process, do not kick off another break attempt. The debug break injection and
                         // signal based models are reliable so no retries are needed. Cygwin can't currently async-break reliably, so
                         // use retries there.
-                        if (!IsLocalGdb() && !this.IsCygwin)
+                        if (!IsLocalGdbTarget() && !this.IsCygwin)
                         {
                             _breakTimer = new Timer(RetryBreak, null, BREAK_DELTA, BREAK_DELTA);
                         }
@@ -568,6 +568,7 @@ namespace MICore
             Async,
             Stop
         }
+
         protected BreakRequest _requestingRealAsyncBreak = BreakRequest.None;
         public Task CmdBreak(BreakRequest request)
         {
@@ -578,20 +579,24 @@ namespace MICore
             return CmdBreakInternal();
         }
 
-        internal bool IsLocalGdb()
+        protected bool IsLocalLaunchUsingServer()
         {
-            return (this.MICommandFactory.Mode == MIMode.Gdb &&
-               this._launchOptions is LocalLaunchOptions &&
-               String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress));
-
+            return (_launchOptions is LocalLaunchOptions localLaunchOptions &&
+                (!String.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress) ||
+                 !String.IsNullOrWhiteSpace(localLaunchOptions.DebugServer)));
         }
 
-        private bool IsRemoteGdb()
+        internal bool IsLocalGdbTarget()
         {
-            return this.MICommandFactory.Mode == MIMode.Gdb &&
-               (this._launchOptions is PipeLaunchOptions || this._launchOptions is UnixShellPortLaunchOptions ||
-               (this._launchOptions is LocalLaunchOptions
-                    && !String.IsNullOrEmpty(((LocalLaunchOptions)this._launchOptions).MIDebuggerServerAddress)));
+            return (MICommandFactory.Mode == MIMode.Gdb &&
+                _launchOptions is LocalLaunchOptions && !IsLocalLaunchUsingServer());
+        }
+
+        private bool IsRemoteGdbTarget()
+        {
+            return MICommandFactory.Mode == MIMode.Gdb &&
+               (_launchOptions is PipeLaunchOptions || _launchOptions is UnixShellPortLaunchOptions ||
+                IsLocalLaunchUsingServer());
         }
 
         protected bool IsCoreDump
@@ -614,7 +619,7 @@ namespace MICore
                     // the normal path of sending an internal async break so we can exit doesn't work.
                     // Therefore, we will call TerminateProcess on the debuggee with the exit code of 0
                     // to terminate debugging. 
-                    if (this.IsLocalGdb() &&
+                    if (this.IsLocalGdbTarget() &&
                         (this.IsCygwin || this.IsMinGW) &&
                         _debuggeePids.Count > 0)
                     {
@@ -704,7 +709,7 @@ namespace MICore
 
             // Note that interrupt doesn't work on OS X with gdb:
             // https://sourceware.org/bugzilla/show_bug.cgi?id=20035
-            if (IsLocalGdb())
+            if (IsLocalGdbTarget())
             {
                 bool useSignal = false;
                 int debuggeePid = 0;
@@ -729,7 +734,7 @@ namespace MICore
                     }
                 }
             }
-            else if (IsRemoteGdb() && _transport is PipeTransport)
+            else if (IsRemoteGdbTarget() && _transport is PipeTransport)
             {
                 int pid = PidByInferior("i1");
                 if (pid != 0 && ((PipeTransport)_transport).Interrupt(pid))
@@ -737,7 +742,7 @@ namespace MICore
                     return Task.FromResult<Results>(new Results(ResultClass.done));
                 }
             }
-            else if (IsRemoteGdb() && _transport is UnixShellPortTransport)
+            else if (IsRemoteGdbTarget() && _transport is UnixShellPortTransport)
             {
                 int pid = PidByInferior("i1");
                 if (pid != 0 && ((UnixShellPortTransport)_transport).Interrupt(pid))
