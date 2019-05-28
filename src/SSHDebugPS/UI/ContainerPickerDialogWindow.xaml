@@ -41,7 +41,7 @@
         </Style>
         <Style x:Key="StatusLabelStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="Background" Value="{DynamicResource SystemColors.WindowBrush}" />
-             <Style.Triggers>
+            <Style.Triggers>
                 <DataTrigger Binding="{Binding StatusIsError, Mode=TwoWay}" Value="True">
                     <Setter Property="Background" Value="{DynamicResource {x:Static ui:InfoBarColors.InfoBarBackgroundBrushKey}}" />
                     <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:InfoBarColors.InfoBarBackgroundTextBrushKey}}" />
@@ -93,7 +93,7 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <TextBlock x:Uid="uidNoContainersFoundTextBlock" HorizontalAlignment="Center">No Containers Found</TextBlock>
+                                <TextBlock x:Uid="uidNoContainersFoundTextBlock" HorizontalAlignment="Center" Text="{x:Static local:UIResources.NoContainersFound}" />
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
@@ -132,49 +132,49 @@
 
                 <AdornerDecorator Grid.Row="0" VerticalAlignment="Center">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidName" Text="Name: " Style="{StaticResource ItemLabelStyle}"/>
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidName" Text="{x:Static local:UIResources.NameLabelText}" Style="{StaticResource ItemLabelStyle}"/>
                         <TextBlock Text="{Binding Name}" x:Uid="uidContainerName"  Style="{StaticResource HeaderItemStyle}" Tag="0" ToolTip="{Binding Name}" TextTrimming="CharacterEllipsis"/>
                     </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="1" VerticalAlignment="Center">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidContainerId" Text="Id: " Style="{StaticResource ItemLabelStyle}"/>
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidContainerId" Text="{x:Static local:UIResources.IdLabelText}" Style="{StaticResource ItemLabelStyle}"/>
                         <TextBlock Text="{Binding ShortId}" Style="{StaticResource HeaderItemStyle}" Tag="1" ToolTip="{Binding Id}"  TextTrimming="CharacterEllipsis"/>
                     </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="2" VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidImage" Text="Image: " Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidImage" Text="{x:Static local:UIResources.ImageLabelText}" Style="{StaticResource ItemLabelStyle}" />
                         <TextBlock Text="{Binding Image}" Style="{StaticResource SelectedTextBlockStyle}" Tag="2" ToolTip="{Binding Image}"/>
                     </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="3" VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidCommand" Text="Command: " Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidCommand" Text="{x:Static local:UIResources.CommandLabelText}" Style="{StaticResource ItemLabelStyle}" />
                         <TextBlock Text="{Binding Command}" Style="{StaticResource SelectedTextBlockStyle}" Tag="3" ToolTip="{Binding Command}"/>
                     </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="4" VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidStatus" Text="Status: " Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidStatus" Text="{x:Static local:UIResources.StatusLabelText}" Style="{StaticResource ItemLabelStyle}" />
                         <TextBlock Text="{Binding Status}" Style="{StaticResource SelectedTextBlockStyle}" Tag="4" ToolTip="{Binding Status}"/>
                     </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="5" VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidCreated" Text="Created: " Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidCreated" Text="{x:Static local:UIResources.CreatedLabelText}" Style="{StaticResource ItemLabelStyle}" />
                         <TextBlock Text="{Binding Created}" Style="{StaticResource SelectedTextBlockStyle}" Tag="5" ToolTip="{Binding Created}"/>
                     </DockPanel>
                 </AdornerDecorator>
 
                 <AdornerDecorator Grid.Row="6" VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidPorts" Text="Ports: " Style="{StaticResource ItemLabelStyle}" VerticalAlignment="Top" />
+                        <TextBlock DockPanel.Dock="Left" x:Uid="uidPorts" Text="{x:Static local:UIResources.PortsLabelText}" Style="{StaticResource ItemLabelStyle}" VerticalAlignment="Top" />
                         <TextBlock Text="{Binding FormattedListOfPorts}" Style="{StaticResource SelectedTextBlockStyle}" Tag="6" ToolTip="{Binding FormattedListOfPorts}" />
                     </DockPanel>
                 </AdornerDecorator>
@@ -225,7 +225,7 @@
                                   Width="16"
                                   Height="16">
                 <Image.ToolTip>
-                    <TextBlock Text="Add New Connection" />
+                    <TextBlock Text="{x:Static local:UIResources.AddNewSSHConnectionToolTip}" />
                 </Image.ToolTip>
             </vsimaging:CrispImage>
         </Button>

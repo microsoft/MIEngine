@@ -122,7 +122,7 @@
     <comment>{0} = number of containers found greater than 0</comment>
   </data>
   <data name="DialogTitle" xml:space="preserve">
-    <value>Docker Connection Manager</value>
+    <value>Select Docker Container</value>
   </data>
   <data name="IsLocalConnectionLabel" xml:space="preserve">
     <value>Local Connection</value>
@@ -156,5 +156,32 @@
   <data name="ErrorStatusTextFormat" xml:space="preserve">
     <value>Error: {0}</value>
     <comment>{0} = message</comment>
+  </data>
+  <data name="AddNewSSHConnectionToolTip" xml:space="preserve">
+    <value>Add New SSH Connection</value>
+  </data>
+  <data name="CommandLabelText" xml:space="preserve">
+    <value>Command: </value>
+  </data>
+  <data name="CreatedLabelText" xml:space="preserve">
+    <value>Created: </value>
+  </data>
+  <data name="IdLabelText" xml:space="preserve">
+    <value>Id: </value>
+  </data>
+  <data name="ImageLabelText" xml:space="preserve">
+    <value>Image: </value>
+  </data>
+  <data name="NameLabelText" xml:space="preserve">
+    <value>Name: </value>
+  </data>
+  <data name="NoContainersFound" xml:space="preserve">
+    <value>No Containers Found.</value>
+  </data>
+  <data name="PortsLabelText" xml:space="preserve">
+    <value>Ports: </value>
+  </data>
+  <data name="StatusLabelText" xml:space="preserve">
+    <value>Status: </value>
   </data>
 </root>

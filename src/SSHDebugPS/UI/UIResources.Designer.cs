@@ -61,6 +61,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add New SSH Connection.
+        /// </summary>
+        public static string AddNewSSHConnectionToolTip {
+            get {
+                return ResourceManager.GetString("AddNewSSHConnectionToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed. {1}.
         /// </summary>
         public static string CommandExecutionErrorFormat {
@@ -79,6 +88,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Command: .
+        /// </summary>
+        public static string CommandLabelText {
+            get {
+                return ResourceManager.GetString("CommandLabelText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Found {0} containers.
         /// </summary>
         public static string ContainersFoundStatusText {
@@ -88,7 +106,16 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Docker Connection Manager.
+        ///   Looks up a localized string similar to Created: .
+        /// </summary>
+        public static string CreatedLabelText {
+            get {
+                return ResourceManager.GetString("CreatedLabelText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Docker Container.
         /// </summary>
         public static string DialogTitle {
             get {
@@ -102,6 +129,24 @@ namespace Microsoft.SSHDebugPS {
         public static string ErrorStatusTextFormat {
             get {
                 return ResourceManager.GetString("ErrorStatusTextFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Id: .
+        /// </summary>
+        public static string IdLabelText {
+            get {
+                return ResourceManager.GetString("IdLabelText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Image: .
+        /// </summary>
+        public static string ImageLabelText {
+            get {
+                return ResourceManager.GetString("ImageLabelText", resourceCulture);
             }
         }
         
@@ -124,11 +169,38 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name: .
+        /// </summary>
+        public static string NameLabelText {
+            get {
+                return ResourceManager.GetString("NameLabelText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Containers Found..
+        /// </summary>
+        public static string NoContainersFound {
+            get {
+                return ResourceManager.GetString("NoContainersFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string NoPortsText {
             get {
                 return ResourceManager.GetString("NoPortsText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ports: .
+        /// </summary>
+        public static string PortsLabelText {
+            get {
+                return ResourceManager.GetString("PortsLabelText", resourceCulture);
             }
         }
         
@@ -165,6 +237,15 @@ namespace Microsoft.SSHDebugPS {
         public static string SSHConnectionFailedStatusText {
             get {
                 return ResourceManager.GetString("SSHConnectionFailedStatusText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status: .
+        /// </summary>
+        public static string StatusLabelText {
+            get {
+                return ResourceManager.GetString("StatusLabelText", resourceCulture);
             }
         }
     }
