@@ -139,7 +139,7 @@
 {1} = Command to run in the container</comment>
   </data>
   <data name="Docker_PSDescription" xml:space="preserve">
-    <value>Docker Transport allows connecting Visual Studio to Docker containers locally or through SSH.</value>
+    <value>The Docker (Linux Container) connection type allows Visual Studio to connect to Docker containers running locally or remotely (using SSH).</value>
   </data>
   <data name="Error_CopyFileFailed" xml:space="preserve">
     <value>Failed to copy files.</value>

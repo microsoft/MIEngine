@@ -97,7 +97,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Docker Transport allows connecting Visual Studio to Docker containers locally or through SSH..
+        ///   Looks up a localized string similar to The Docker (Linux Container) connection type allows Visual Studio to connect to Docker containers running locally or remotely (using SSH)..
         /// </summary>
         internal static string Docker_PSDescription {
             get {
