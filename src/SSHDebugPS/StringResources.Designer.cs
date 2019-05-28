@@ -187,6 +187,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;hostname&gt;.
+        /// </summary>
+        internal static string HostName_PlaceHolder {
+            get {
+                return ResourceManager.GetString("HostName_PlaceHolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SSH (Secure Shell) Transport allows connecting Visual Studio to computers running an SSH server with a bash-like shell (ex: Linux, macOS, etc)..
         /// </summary>
         internal static string SSH_PSDescription {

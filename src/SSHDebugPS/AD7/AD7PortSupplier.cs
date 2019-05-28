@@ -16,18 +16,10 @@ namespace Microsoft.SSHDebugPS
         { }
 
         public abstract int AddPort(IDebugPortRequest2 request, out IDebugPort2 port);
-        public abstract int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum);
 
         public int CanAddPort()
         {
             return HR.S_OK;
-        }
-
-        public abstract int EnumPorts(out IEnumDebugPorts2 ppEnum);
-
-        public int GetPort(ref Guid guidPort, out IDebugPort2 ppPort)
-        {
-            throw new NotImplementedException();
         }
 
         public virtual int GetPortSupplierId(out Guid guidPortSupplier)
@@ -42,9 +34,20 @@ namespace Microsoft.SSHDebugPS
             return HR.S_OK;
         }
 
-        public virtual int CanPersistPorts()
+        int IDebugPortSupplierDescription2.GetDescription(enum_PORT_SUPPLIER_DESCRIPTION_FLAGS[] flags, out string text)
         {
+            text = Description;
             return HR.S_OK;
+        }
+
+        public virtual int EnumPorts(out IEnumDebugPorts2 ppEnum)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetPort(ref Guid guidPort, out IDebugPort2 ppPort)
+        {
+            throw new NotImplementedException();
         }
 
         public int RemovePort(IDebugPort2 pPort)
@@ -52,10 +55,19 @@ namespace Microsoft.SSHDebugPS
             throw new NotImplementedException();
         }
 
-        int IDebugPortSupplierDescription2.GetDescription(enum_PORT_SUPPLIER_DESCRIPTION_FLAGS[] flags, out string text)
+        #region IDebugPortSupplier3 
+        public virtual int CanPersistPorts()
         {
-            text = Description;
-            return HR.S_OK;
+            return HR.S_FALSE;
         }
+
+        /// <summary>
+        /// If CanPersistPorts() returns false, the SDM will cache the ports and EnumPersistedPorts() needs to be implemented
+        /// </summary>
+        /// <param name="portNames"></param>
+        /// <param name="portEnum"></param>
+        /// <returns></returns>
+        public abstract int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum);
+        #endregion
     }
 }

@@ -2,15 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using liblinux;
-using liblinux.Shell;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -35,16 +36,164 @@ namespace Microsoft.SSHDebugPS
     }
 
     /// <summary>
+    /// Run a single command on Windows. This reads output as ReadLine. Run needs to be called to run the command.
+    /// </summary>
+    internal class LocalSingleCommandRunner : ICommandRunner
+    {
+        private System.Diagnostics.Process _localProcess;
+        private StreamWriter _stdoutWriter;
+        private StreamReader _processReader;
+        private CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+        private bool _isClosed = false;
+        private ProcessStartInfo processStartInfo;
+        private bool _hasExited = false;
+        private object _lock = new object();
+        private System.Threading.Tasks.Task _outputReadTask = null;
+
+        public LocalSingleCommandRunner(string command, string arguments)
+        {
+            processStartInfo = new ProcessStartInfo(command, arguments);
+            processStartInfo.RedirectStandardError = true;
+            processStartInfo.RedirectStandardInput = true;
+            processStartInfo.RedirectStandardOutput = true;
+            processStartInfo.UseShellExecute = false;
+            processStartInfo.CreateNoWindow = true;
+        }
+
+        public void Run()
+        {
+            _localProcess = new System.Diagnostics.Process();
+            _localProcess.StartInfo = processStartInfo;
+            _localProcess.Exited += OnProcessExited;
+            _localProcess.EnableRaisingEvents = true;
+            _localProcess.Start();
+
+            _stdoutWriter = new StreamWriter(_localProcess.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 4096, leaveOpen: false);
+            _processReader = new StreamReader(_localProcess.StandardOutput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX, false);
+            _outputReadTask = System.Threading.Tasks.Task.Run(() => ReadLoop(_processReader, _cancellationSource.Token, (line) => { OutputReceived?.Invoke(this, line); }));
+
+            _localProcess.ErrorDataReceived += OnErrorOutput;
+            _localProcess.Exited += OnProcessExited;
+            _localProcess.BeginErrorReadLine();
+        }
+
+        private static int BUFMAX = 4096;
+        private void ReadLoop(StreamReader reader, CancellationToken token, Action<string> action)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    char[] buffer = new char[BUFMAX];
+                    Task<string> task = reader.ReadLineAsync();
+                    task.Wait(token);
+
+                    if (task.Result == null)
+                    {
+                        lock (_lock)
+                        {
+                            if (!_hasExited && _localProcess.HasExited)
+                            {
+                                _hasExited = true;
+                                Closed?.Invoke(this, _localProcess.ExitCode);
+                            }
+                        }
+                        return; // end of stream
+                    }
+
+                    action(task.Result);
+                }
+            }
+            catch (Exception e)
+            {
+                ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(e));
+                Dispose();
+            }
+        }
+
+        private void OnErrorOutput(object sender, DataReceivedEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(e.Data))
+            {
+                ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(new Exception(e.Data)));
+            }
+        }
+
+        private void OnProcessOutput(object sender, DataReceivedEventArgs e)
+        {
+            lock (_lock)
+            {
+                OutputReceived?.Invoke(this, e.Data);
+                if (_hasExited && _localProcess.StandardOutput.EndOfStream)
+                {
+                    Closed?.Invoke(this, _localProcess.ExitCode);
+                }
+            }
+        }
+
+        public event EventHandler<string> OutputReceived;
+        public event EventHandler<int> Closed;
+        public event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
+
+        public void Dispose()
+        {
+            if (!_isClosed)
+            {
+                _isClosed = true;
+                _cancellationSource.Cancel();
+                if (_localProcess != null)
+                    _localProcess.Exited -= OnProcessExited;
+                _localProcess?.Close();
+
+                _stdoutWriter?.Close();
+                _localProcess = null;
+                _stdoutWriter = null;
+            }
+        }
+
+        public void Write(string text)
+        {
+            if (_isClosed)
+                return;
+            _stdoutWriter.Write(text);
+            _stdoutWriter.Flush();
+        }
+
+        public void WriteLine(string text)
+        {
+            if (_isClosed)
+                return;
+            _stdoutWriter.WriteLine(text);
+            _stdoutWriter.Flush();
+        }
+
+        private void OnProcessExited(object sender, EventArgs e)
+        {
+            lock (_lock)
+            {
+                if (!_hasExited && _outputReadTask.IsCompleted)
+                {
+                    _hasExited = true;
+                    Closed?.Invoke(this, _localProcess.ExitCode);
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Launches a local command that sends output when a newline is received.
     /// </summary>
     internal class LocalBufferedCommandRunner : ICommandRunner
     {
         private System.Diagnostics.Process _localProcess;
         private StreamWriter _stdoutWriter;
+        private ProcessStartInfo processStartInfo;
+
+        private bool _isClosed = false;
 
         public LocalBufferedCommandRunner(string command, string arguments)
         {
-            ProcessStartInfo processStartInfo = new ProcessStartInfo(command, arguments);
+            processStartInfo = new ProcessStartInfo(command, arguments);
             processStartInfo.RedirectStandardError = true;
             processStartInfo.RedirectStandardInput = true;
             processStartInfo.RedirectStandardOutput = true;
@@ -52,7 +201,7 @@ namespace Microsoft.SSHDebugPS
             processStartInfo.CreateNoWindow = true;
 
             _localProcess = System.Diagnostics.Process.Start(processStartInfo);
-            _stdoutWriter = new StreamWriter(_localProcess.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 4096, leaveOpen: true);
+            _stdoutWriter = new StreamWriter(_localProcess.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 4096, leaveOpen: false);
             _localProcess.OutputDataReceived += OnProcessOutput;
             _localProcess.ErrorDataReceived += OnErrorOutput;
             _localProcess.Exited += OnProcessExited;
@@ -68,26 +217,35 @@ namespace Microsoft.SSHDebugPS
 
         public void Dispose()
         {
-            if (_localProcess != null)
+            if (!_isClosed)
             {
-                _localProcess.Close();
-            }
+                _isClosed = true;
+                if (_localProcess != null)
+                {
+                    _localProcess.Close();
+                    _localProcess = null;
+                }
 
-            if (_stdoutWriter != null)
-            {
-                _stdoutWriter.Close();
-                _stdoutWriter = null;
+                if (_stdoutWriter != null)
+                {
+                    _stdoutWriter.Close();
+                    _stdoutWriter = null;
+                }
             }
         }
 
         public void Write(string text)
         {
+            if (_isClosed)
+                return;
             _stdoutWriter.Write(text);
             _stdoutWriter.Flush();
         }
 
         public void WriteLine(string text)
         {
+            if (_isClosed)
+                return;
             _stdoutWriter.WriteLine(text);
             _stdoutWriter.Flush();
         }
@@ -105,11 +263,12 @@ namespace Microsoft.SSHDebugPS
         private void OnProcessExited(object sender, EventArgs e)
         {
             Closed?.Invoke(this, _localProcess.ExitCode);
+            Dispose();
         }
     }
 
     /// <summary>
-    /// Launches a local command that sends raw output.
+    /// Launches a local command where the output is read in a buffer.
     /// </summary>
     internal class LocalRawCommandRunner : ICommandRunner
     {
@@ -118,30 +277,28 @@ namespace Microsoft.SSHDebugPS
         private StreamReader _processReader;
         private StreamReader _processError;
         private CancellationTokenSource _cancellationSource = new CancellationTokenSource();
-        private bool _isClosed = false;
+        private bool _isDisposed = false;
+        private ProcessStartInfo _processStartInfo;
 
         public LocalRawCommandRunner(string command, string arguments)
         {
-            ProcessStartInfo processStartInfo = new ProcessStartInfo(command, arguments);
-            processStartInfo.RedirectStandardError = true;
-            processStartInfo.RedirectStandardInput = true;
-            processStartInfo.RedirectStandardOutput = true;
-            processStartInfo.UseShellExecute = false;
-            processStartInfo.CreateNoWindow = true;
+            _processStartInfo = new ProcessStartInfo(command, arguments);
+            _processStartInfo.RedirectStandardError = true;
+            _processStartInfo.RedirectStandardInput = true;
+            _processStartInfo.RedirectStandardOutput = true;
+            _processStartInfo.UseShellExecute = false;
+            _processStartInfo.CreateNoWindow = true;
 
-            _localProcess = System.Diagnostics.Process.Start(processStartInfo);
+            _localProcess = System.Diagnostics.Process.Start(_processStartInfo);
             _localProcess.Exited += OnProcessExited;
             _localProcess.EnableRaisingEvents = true;
 
-            _stdoutWriter = new StreamWriter(_localProcess.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 4096, leaveOpen: true);
+            _stdoutWriter = new StreamWriter(_localProcess.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 4096, leaveOpen: false);
             _processReader = _localProcess.StandardOutput;
             _processError = _localProcess.StandardError;
 
-            Thread outputThread = new Thread(() => ReadLoop(_processReader, _cancellationSource.Token, (msg) => { OutputReceived?.Invoke(this, msg); }));
-            Thread errorThread = new Thread(() => ReadLoop(_processError, _cancellationSource.Token, (msg) => { ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(new Exception(msg))); }));
-
-            outputThread.Start();
-            errorThread.Start();
+            System.Threading.Tasks.Task.Run(() => ReadLoop(_processReader, _cancellationSource.Token, (msg) => { OutputReceived?.Invoke(this, msg); }));
+            System.Threading.Tasks.Task.Run(() => ReadLoop(_processError, _cancellationSource.Token, (msg) => { ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(new Exception(msg))); }));
         }
 
         public event EventHandler<string> OutputReceived;
@@ -163,24 +320,18 @@ namespace Microsoft.SSHDebugPS
                         action(new string(buffer, 0, task.Result));
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ErrorOccured?.Invoke(this, null);
-                Close();
-                // close correctly?
+                ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(ex));
+                Dispose();
             }
-        }
-
-        private void Close()
-        {
-            Dispose();
         }
 
         public void Dispose()
         {
-            if (!_isClosed)
+            if (!_isDisposed)
             {
-                _isClosed = true;
+                _isDisposed = true;
                 _cancellationSource.Cancel();
                 if (_localProcess != null)
                     _localProcess.Exited -= OnProcessExited;
@@ -199,19 +350,24 @@ namespace Microsoft.SSHDebugPS
 
         public void Write(string text)
         {
-            _stdoutWriter.Write(text);
-            _stdoutWriter.Flush();
+            if (_isDisposed)
+                return;
+            _stdoutWriter?.Write(text);
+            _stdoutWriter?.Flush();
         }
 
         public void WriteLine(string text)
         {
-            _stdoutWriter.WriteLine(text);
-            _stdoutWriter.Flush();
+            if (_isDisposed)
+                return;
+            _stdoutWriter?.WriteLine(text);
+            _stdoutWriter?.Flush();
         }
 
         private void OnProcessExited(object sender, EventArgs e)
         {
             Closed?.Invoke(this, _localProcess.ExitCode);
+            Dispose();
         }
     }
 

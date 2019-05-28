@@ -69,7 +69,7 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        protected ICommandRunner CreateShellFromSettings(IPipeTransportSettings settings, Connection outerConnection, bool isCommandShell = false)
+        internal ICommandRunner CreateShellFromSettings(IPipeTransportSettings settings, Connection outerConnection, bool isCommandShell = false)
         {
             ICommandRunner rawShell;
             if (_outerConnection == null)
@@ -152,7 +152,7 @@ namespace Microsoft.SSHDebugPS
         {
             string command = "uname";
             string commandOutput;
-            if(!ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput))
+            if (!ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput))
             {
                 return false;
             }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -45,14 +46,14 @@ namespace Microsoft.SSHDebugPS
 
     internal class ShellExecutionManager : IDisposable
     {
-        private readonly ICommandRunner _shell;
+        private readonly ICommandRunner _commandRunner;
         private AD7UnixAsyncShellCommand _currentCommand;
         private readonly ManualResetEvent _commandCompleteEvent = new ManualResetEvent(false);
 
 
-        public ShellExecutionManager(ICommandRunner shell)
+        public ShellExecutionManager(ICommandRunner runner)
         {
-            _shell = shell;
+            _commandRunner = runner;
         }
 
         public int ExecuteCommand(string commandText, int timeout, out string commandOutput)
@@ -64,7 +65,7 @@ namespace Microsoft.SSHDebugPS
             _commandCompleteEvent.Reset();
 
             ShellCommandCallback commandCallback = new ShellCommandCallback(_commandCompleteEvent);
-            AD7UnixAsyncShellCommand command = new AD7UnixAsyncShellCommand(_shell, commandCallback, false);
+            AD7UnixAsyncShellCommand command = new AD7UnixAsyncShellCommand(_commandRunner, commandCallback, false);
 
             try
             {
@@ -79,6 +80,12 @@ namespace Microsoft.SSHDebugPS
                 commandOutput = commandCallback.CommandOutput.Trim('\n', '\r'); // trim ending newlines
                 return commandCallback.ExitCode;
             }
+            catch (ObjectDisposedException)
+            {
+                Debug.Fail("Why are we operating on a disposed object?");
+                commandOutput = "ObjectDisposedException";
+                return 1999;
+            }
             finally
             {
                 _currentCommand.Close();
@@ -88,7 +95,7 @@ namespace Microsoft.SSHDebugPS
 
         void IDisposable.Dispose()
         {
-            _shell.Dispose();
+            _commandRunner.Dispose();
         }
     }
 }

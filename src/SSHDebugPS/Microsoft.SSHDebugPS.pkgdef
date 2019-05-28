@@ -2,10 +2,10 @@
 "CLSID"="{1326FB0D-EA51-4F90-BEDF-5948588B0FE1}"
 "Name"="SSH"
 
-; Comment out Docker PS registration until feature is ready to ship
-;[$RootKey$\AD7Metrics\PortSupplier\{A2BBC114-47E4-473F-A49C-69EE89711243}]
-;"CLSID"="{18F976B7-D66D-4C36-9CAE-A9217E0E3DF4}"
-;"Name"="Docker (Linux Container)"
+[$RootKey$\AD7Metrics\PortSupplier\{A2BBC114-47E4-473F-A49C-69EE89711243}]
+"CLSID"="{18F976B7-D66D-4C36-9CAE-A9217E0E3DF4}"
+"PortPickerCLSID"="{91BDF293-E6A0-49C4-B033-6F36CFC4FF98}"
+"Name"="Docker (Linux Container)"
 
 [$RootKey$\CLSID\{1326FB0D-EA51-4F90-BEDF-5948588B0FE1}]
 "Assembly"="Microsoft.SSHDebugPS"
@@ -24,3 +24,17 @@
 "Class"="Microsoft.SSHDebugPS.Docker.DockerPortSupplier"
 "InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
 "CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
+
+[$RootKey$\CLSID\{91BDF293-E6A0-49C4-B033-6F36CFC4FF98}]
+"Assembly"="Microsoft.SSHDebugPS"
+"Class"="Microsoft.SSHDebugPS.Docker.DockerPortPicker"
+"InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
+"CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
+
+[$RootKey$\RuntimeConfiguration\dependentAssembly\codeBase\{7E3052B2-FB42-4E38-B22C-1FD281BD4413}]
+"name"="Microsoft.SSHDebugPS"
+; With local development workflow and release workflow, there are two publicKeyTokens but no way to specify both.
+"publicKeyToken"=""
+"culture"="neutral"
+"version"="14.0.0.0"
+"codeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"

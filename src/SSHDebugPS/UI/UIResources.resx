@@ -117,82 +117,71 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AuthenticationFailureDescription" xml:space="preserve">
-    <value>Connecting to the remote system failed due to authentication failure. Enter your updated connection info and try connecting again.</value>
+  <data name="ContainersFoundStatusText" xml:space="preserve">
+    <value>Found {0} containers</value>
+    <comment>{0} = number of containers found greater than 0</comment>
   </data>
-  <data name="AuthenticationFailureHeader" xml:space="preserve">
-    <value>Authentication Failure</value>
+  <data name="DialogTitle" xml:space="preserve">
+    <value>Select Docker Container</value>
   </data>
-  <data name="CommandFailedMessageFormat" xml:space="preserve">
-    <value>"Command '{0}' failed with code '{1}'. {2}"</value>
-    <comment>{0} = command that was run
-{1} = exit code
-{2} = optional output</comment>
+  <data name="IsLocalConnectionLabel" xml:space="preserve">
+    <value>Local Connection</value>
   </data>
-  <data name="CopyFile_TempFilePrefix" xml:space="preserve">
-    <value>Microsoft-SSHPortSupplier-FileCopy-</value>
-    <comment>Do Not localize</comment>
+  <data name="LocalMachine" xml:space="preserve">
+    <value>Local Machine</value>
   </data>
-  <data name="DockerExecCommandFormat" xml:space="preserve">
-    <value>docker exec {0} \"{1}\"</value>
-    <comment>{0} = ContainerName
-{1} = Command to run in the container</comment>
+  <data name="NoPortsText" xml:space="preserve">
+    <value>None</value>
   </data>
-  <data name="Docker_PSDescription" xml:space="preserve">
-    <value>Docker Transport allows connecting Visual Studio to Docker containers locally or through SSH.</value>
+  <data name="RemoteConnectionStringLabel" xml:space="preserve">
+    <value>Remote Connection</value>
   </data>
-  <data name="Error_CopyFileFailed" xml:space="preserve">
-    <value>Failed to copy files.</value>
+  <data name="SearchingStatusText" xml:space="preserve">
+    <value>Searching...</value>
   </data>
-  <data name="Error_CopyFile_SourceNotFound" xml:space="preserve">
-    <value>Source file '{0}' not found.</value>
-    <comment>{0} = source file name</comment>
+  <data name="SSHConnectingStatusText" xml:space="preserve">
+    <value>Connecting via SSH...</value>
   </data>
-  <data name="Error_ExitCodeNotParseable" xml:space="preserve">
-    <value>Unable to parse exit code.</value>
+  <data name="SSHConnectionFailedStatusText" xml:space="preserve">
+    <value>SSH Connection failed. Press Refresh to try again.</value>
   </data>
-  <data name="Error_InvalidDirectory" xml:space="preserve">
-    <value>The specified directory {0} could not be created or accessed.</value>
-    <comment>{0} directory name.</comment>
+  <data name="CommandExecutionErrorFormat" xml:space="preserve">
+    <value>Executing command '{0}' failed. {1}</value>
+    <comment>{0} = command, {1} = error message</comment>
   </data>
-  <data name="Error_PSFailed" xml:space="preserve">
-    <value>Unable to obtain process listing. 'ps' command failed.</value>
+  <data name="CommandExecutionErrorWithExitCodeFormat" xml:space="preserve">
+    <value>Executing command '{0}' failed with exit code {1}. {2}</value>
+    <comment>{0} = command, {1} = exit code, {2} = error message</comment>
   </data>
-  <data name="Error_ShellNotRunning" xml:space="preserve">
-    <value>Cannot process command. Connection is not open.</value>
+  <data name="ErrorStatusTextFormat" xml:space="preserve">
+    <value>Error: {0}</value>
+    <comment>{0} = message</comment>
   </data>
-  <data name="Error_SourceFileNotFound" xml:space="preserve">
-    <value>Source file '{0}' not found</value>
-    <comment>{0} file</comment>
+  <data name="AddNewSSHConnectionToolTip" xml:space="preserve">
+    <value>Add New SSH Connection</value>
   </data>
-  <data name="HeaderTextFormat" xml:space="preserve">
-    <value>Enter credentials to connect to {0}</value>
-    <comment>{0} is the network address being connected to</comment>
+  <data name="CommandLabelText" xml:space="preserve">
+    <value>Command: </value>
   </data>
-  <data name="HostName_PlaceHolder" xml:space="preserve">
-    <value>&lt;hostname&gt;</value>
+  <data name="CreatedLabelText" xml:space="preserve">
+    <value>Created: </value>
   </data>
-  <data name="SSH_PSDescription" xml:space="preserve">
-    <value>SSH (Secure Shell) Transport allows connecting Visual Studio to computers running an SSH server with a bash-like shell (ex: Linux, macOS, etc).</value>
+  <data name="IdLabelText" xml:space="preserve">
+    <value>Id: </value>
   </data>
-  <data name="UserName_PlaceHolder" xml:space="preserve">
-    <value>&lt;username&gt;</value>
+  <data name="ImageLabelText" xml:space="preserve">
+    <value>Image: </value>
   </data>
-  <data name="WaitingOp_Connecting" xml:space="preserve">
-    <value>Connecting to {0}...</value>
-    <comment>{0} is the network address being connected to</comment>
+  <data name="NameLabelText" xml:space="preserve">
+    <value>Name: </value>
   </data>
-  <data name="WaitingOp_ExecutingCommand" xml:space="preserve">
-    <value>Running command '{0}' on the remote system...</value>
-    <comment>{0} is the command description.</comment>
+  <data name="NoContainersFound" xml:space="preserve">
+    <value>No Containers Found.</value>
   </data>
-  <data name="WaitingOp_ExecutingPS" xml:space="preserve">
-    <value>Running ps on the remote system...</value>
+  <data name="PortsLabelText" xml:space="preserve">
+    <value>Ports: </value>
   </data>
-  <data name="WaitingOp_HomeDirectory" xml:space="preserve">
-    <value>Obtaining user's home directory path from remote system...</value>
-  </data>
-  <data name="WaitingOp_MakeDirectory" xml:space="preserve">
-    <value>Creating directory on remote system...</value>
+  <data name="StatusLabelText" xml:space="preserve">
+    <value>Status: </value>
   </data>
 </root>

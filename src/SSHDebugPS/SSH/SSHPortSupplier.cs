@@ -85,7 +85,7 @@ namespace Microsoft.SSHDebugPS.SSH
         /// Checks if LibLinux is available by getting IVsConnectionManager service.
         /// </summary>
         /// <returns>True if LibLinux is available, false otherwise.</returns>
-        private bool IsLibLinuxAvailable()
+        internal static bool IsLibLinuxAvailable()
         {
             IVsShell shell = Package.GetGlobalService(typeof(SVsShell)) as IVsShell;
 
@@ -95,19 +95,15 @@ namespace Microsoft.SSHDebugPS.SSH
             return (ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager)) as IVsConnectionManager) != null;
         }
 
-        public override unsafe int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum)
+        public override int CanPersistPorts()
         {
-            IDebugPort2[] ports = new IDebugPort2[portNames.dwCount];
-            for (int c = 0; c < portNames.dwCount; c++)
-            {
-                char* bstrPortName = ((char**)portNames.Members)[c];
-                string name = new string(bstrPortName);
-
-                ports[c] = new SSHPort(this, name, isInAddPort: false);
-            }
-
-            portEnum = new AD7PortEnum(ports);
             return HR.S_OK;
+        }
+
+        // Because CanPersistPorts() returns true, this is not called.
+        public override int EnumPersistedPorts(BSTR_ARRAY portNames, out IEnumDebugPorts2 portEnum)
+        {
+            throw new NotImplementedException();
         }
 
         internal static string GetFormattedSSHConnectionName(ConnectionInfo connectionInfo)

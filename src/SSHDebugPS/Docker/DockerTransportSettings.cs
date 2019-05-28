@@ -3,17 +3,16 @@
 
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
     internal abstract class DockerTransportSettings : IPipeTransportSettings
     {
-        protected string ContainerName { get; private set; }
         protected bool IsUnix { get; private set; }
 
-        public DockerTransportSettings(string containerName, bool hostIsUnix)
+        public DockerTransportSettings(bool hostIsUnix)
         {
-            ContainerName = containerName;
             IsUnix = hostIsUnix;
         }
 
@@ -29,6 +28,17 @@ namespace Microsoft.SSHDebugPS.Docker
         #endregion
     }
 
+    internal abstract class DockerTransportSettingsWithContainer : DockerTransportSettings
+    {
+        protected string ContainerName { get; private set; }
+
+        public DockerTransportSettingsWithContainer(string containerName, bool hostIsUnix)
+            : base(hostIsUnix)
+        {
+            ContainerName = containerName;
+        }
+    }
+
     internal class DockerExecShellSettings : DockerExecSettings
     {
         public DockerExecShellSettings(string containerName, bool hostIsUnix)
@@ -37,7 +47,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
     }
 
-    internal class DockerExecSettings : DockerTransportSettings
+    internal class DockerExecSettings : DockerTransportSettingsWithContainer
     {
         private const string _exeArgsFormat = "exec -i {0} {1}";
         private string _command;
@@ -58,7 +68,7 @@ namespace Microsoft.SSHDebugPS.Docker
         }
     }
 
-    internal class DockerCopySettings : DockerTransportSettings
+    internal class DockerCopySettings : DockerTransportSettingsWithContainer
     {
         // {0} = container, {1} = source, {2} = destination
         private string _copyFormatToContainer = "cp {1} {0}:{2}";
