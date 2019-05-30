@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using MICore;
+using Microsoft.MIDebugEngine.Natvis;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -226,11 +227,15 @@ namespace Microsoft.MIDebugEngine
 
         #region IDebugCodeContext2 Members
 
-        // Gets the document context for this code-context
+        // Gets the document context for this code-context. If no document context is available, return S_FALSE.
         public int GetDocumentContext(out IDebugDocumentContext2 ppSrcCxt)
         {
+            int hr = Constants.S_OK;
+            if (_documentContext == null)
+                hr = Constants.S_FALSE;
+
             ppSrcCxt = _documentContext;
-            return Constants.S_OK;
+            return hr;
         }
 
         // Gets the language information for this code context.
