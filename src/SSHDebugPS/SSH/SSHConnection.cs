@@ -172,7 +172,8 @@ namespace Microsoft.SSHDebugPS.SSH
 
             if (_remoteSystem != null)
             {
-                _remoteSystem.Dispose();
+                if (_remoteSystem.IsConnected)
+                    _remoteSystem.Disconnect();
                 _remoteSystem = null;
             }
         }
