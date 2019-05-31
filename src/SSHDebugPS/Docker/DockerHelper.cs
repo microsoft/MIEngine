@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -62,7 +63,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 // might need to throw an exception here too??
                 if (exitCode != 0)
                 {
-                    Debug.Fail($"Exit Code: {exitCode}");
+                    Debug.Fail(FormattableString.Invariant($"Exit Code: {exitCode}"));
                     return null;
                 }
 
