@@ -569,6 +569,7 @@ namespace Microsoft.MIDebugEngine
             // but this seems like one place where we might want to to, so I am allowing it
             return Task.Run((Func<Task>)InternalFetchChildren);
         }
+
         private async Task InternalFetchChildren()
         {
             this.VerifyNotDisposed();
