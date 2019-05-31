@@ -70,7 +70,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (ContainerInstances.Count() > 0)
                 {
-                    StatusText = String.Format(UIResources.ContainersFoundStatusText, ContainerInstances.Count());
+                    StatusText = String.Format(CultureInfo.CurrentCulture, UIResources.ContainersFoundStatusText, ContainerInstances.Count());
                 }
                 else
                 {
