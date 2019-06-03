@@ -1315,9 +1315,31 @@ namespace OpenDebugAD7
                                 DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
                                 childEnum.Next(count, childProperties, out count);
 
-                                for (uint c = 0; c < count; c++)
+                                if (count > 1)
                                 {
-                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags));
+                                    // Ensure that items with duplicate names such as multiple anonymous unions will display in VS Code
+                                    Dictionary<string, Variable> variablesDictionary = new Dictionary<string, Variable>();
+                                    for (uint c = 0; c < count; c++)
+                                    {
+                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags);
+                                        int uniqueCounter = 2;
+                                        string variableName = variable.Name;
+                                        string variableNameFormat = "{0} #{1}";
+                                        while (variablesDictionary.ContainsKey(variableName))
+                                        {
+                                            variableName = String.Format(CultureInfo.InvariantCulture, variableNameFormat, variable.Name, uniqueCounter++);
+                                        }
+
+                                        variable.Name = variableName;
+                                        variablesDictionary[variableName] = variable;
+                                    }
+
+                                    response.Variables.AddRange(variablesDictionary.Values);
+                                }
+                                else
+                                {
+                                    // Shortcut when no duplicate can exist
+                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags));
                                 }
                             }
                         }
