@@ -13,7 +13,7 @@
                  MinWidth="450"
                  MinHeight="500"
                  Width="450"
-                 Height="535"
+                 Height="600"
                  ShowInTaskbar="False"
                  Name="ContainerPickerDialog"
                  FontFamily="{DynamicResource VsFont.EnvironmentFontFamily}"
@@ -116,6 +116,7 @@
                     <RowDefinition Height="Auto"></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"></ColumnDefinition>
@@ -181,6 +182,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -272,8 +274,35 @@
             </Grid>
         </ScrollViewer>
 
+        <!-- Advanced Settings -->
+        <Expander x:Name="advancedSettingsExpander"
+                  x:Uid="uidadvancedSettingsExpander" 
+                  HorizontalAlignment="Stretch" 
+                  Header="_Advanced Settings" 
+                  ExpandDirection="Down"
+                  Grid.Row="5"
+                  Grid.ColumnSpan="2"
+                  Grid.Column="0"
+                  Margin="0,10,0,10"
+                  VerticalAlignment="Center">
+            <DockPanel VerticalAlignment="Center">
+                <Label x:Uid="uidDaemonLabel"
+                   x:Name="DaemonLabel"
+                   Target="{Binding ElementName=daemonTextBlock}"
+                   Margin="19 0 0 0">_Placeholder:</Label>
+
+                <TextBox x:Uid="uidDaemonTextBlock"
+                           x:Name="daemonTextBlock"
+                           Margin="5"
+                           Padding="10,0,10,0"
+                            DockPanel.Dock="Right"
+                         />
+            </DockPanel>
+
+        </Expander>
+
         <!-- OK / Cancel buttons -->
-        <StackPanel Grid.Row="5"
+        <StackPanel Grid.Row="6"
                     Grid.ColumnSpan="2"
                     Margin="4"
                     Orientation="Horizontal"
