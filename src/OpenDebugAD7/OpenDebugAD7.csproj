@@ -103,7 +103,6 @@
     <Compile Include="OpenDebug\Program.cs" />
     <Compile Include="OpenDebug\Utilities.cs" />
     <Compile Include="OpenDebug\PathUtilities.cs" />
-    <Compile Include="OpenDebug\Terminal.cs" />
     <Compile Include="Telemetry\TelemetryHelper.cs" />
     <Compile Include="TextPositionTuple.cs" />
     <Compile Include="ThreadFrameEnumInfo.cs" />

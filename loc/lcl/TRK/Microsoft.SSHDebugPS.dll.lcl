@@ -60,10 +60,13 @@
       </Item>
       <Item ItemId=";Docker_PSDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Docker Transport allows connecting Visual Studio to Docker containers locally or through SSH.]]></Val>
+          <Val><![CDATA[The Docker (Linux Container) connection type allows Visual Studio to connect to Docker containers running locally or remotely (using SSH).]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Docker Transport, Visual Studio'yu Docker kapsayıcılarına yerel olarak veya SSH aracılığıyla bağlamayı sağlar.]]></Val>
+            <Val><![CDATA[Docker (Linux Kapsayıcısı) bağlantı türü, Visual Studio'nun yerel olarak veya uzaktan çalışan Docker kapsayıcılarına bağlanmasını (SSH kullanarak) sağlar.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Docker Transport allows connecting Visual Studio to Docker containers locally or through SSH.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -139,6 +142,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";HostName_PlaceHolder" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[<hostname>]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[<ana bilgisayar adı>]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";SSH_PSDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[SSH (Secure Shell) Transport allows connecting Visual Studio to computers running an SSH server with a bash-like shell (ex: Linux, macOS, etc).]]></Val>
@@ -202,6 +214,210 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+    </Item>
+  </Item>
+  <Item ItemId=";Microsoft.SSHDebugPS.UI.UIResources.resources" ItemType="0" PsrId="211" Leaf="false">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" Path=" \ ;Managed Resources \ 0 \ 0" />
+    <Item ItemId=";Strings" ItemType="0" PsrId="211" Leaf="false">
+      <Disp Icon="Str" Disp="true" LocTbl="false" />
+      <Item ItemId=";AddNewSSHConnectionToolTip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Add New SSH Connection]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yeni SSH Bağlantısı ekleyin]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandExecutionErrorFormat" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Executing command '{0}' failed. {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' komutu yürütülemedi. {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandExecutionErrorWithExitCodeFormat" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Executing command '{0}' failed with exit code {1}. {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' komutunu yürütme, {1} çıkış koduyla başarısız oldu. {2}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CommandLabelText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Command: ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Komut: ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ContainersFoundStatusText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Found {0} containers]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} kapsayıcı bulundu]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CreatedLabelText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Created: ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Oluşturuldu: ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DialogTitle" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Select Docker Container]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Docker Kapsayıcısı seç]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ErrorStatusTextFormat" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Hata: {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";IdLabelText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Id: ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Kimlik: ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ImageLabelText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Image: ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Görüntü: ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";IsLocalConnectionLabel" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Local Connection]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yerel Bağlantı]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LocalMachine" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Local Machine]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yerel Makine]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";NameLabelText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Name: ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ad: ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";NoContainersFound" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[No Containers Found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Hiçbir Kapsayıcı bulunamadı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";NoPortsText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[None]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yok]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PortsLabelText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Ports: ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bağlantı Noktaları: ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteConnectionStringLabel" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Remote Connection]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Uzak Bağlantı]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";SSHConnectingStatusText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Connecting via SSH...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[SSH aracılığıyla bağlanıyor...]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";SSHConnectionFailedStatusText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[SSH Connection failed. Press Refresh to try again.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[SSH Bağlantısı başarısız oldu. Yeniden denemek için Yenile düğmesine basın.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";SearchingStatusText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Searching...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Aranıyor...]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";StatusLabelText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Status: ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Durum: ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+    </Item>
+  </Item>
+  <Item ItemId=";Microsoft.SSHDebugPS.g.resources" ItemType="0" PsrId="211" Leaf="false">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" Path=" \ ;Managed Resources \ 0 \ 0" />
+    <Item ItemId=";ui/containerpickerdialogwindow.baml" ItemType="0" PsrId="211" Leaf="true">
+      <Bin BinId="3">
+        <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAMAAAALAAEAAAD/////AQAAAAAAAAAGAQAAACN1aS9jb250YWluZXJwaWNrZXJkaWFsb2d3aW5kb3cuYmFtbAsAAQAAAP////8BAAAAAAAAAAQBAAAAH1N5c3RlbS5Vbml0eVNlcmlhbGl6YXRpb25Ib2xkZXIDAAAABERhdGEJVW5pdHlUeXBlDEFzc2VtYmx5TmFtZQEAAQgGAgAAAB9TeXN0ZW0uSU8uVW5tYW5hZ2VkTWVtb3J5U3RyZWFtBAAAAAYDAAAAS21zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQsAAQAAAP////8BAAAAAAAAAA8BAAAAZCAAAAIMAAAATQBTAEIAQQBNAEwAAABgAAAAYAAAAGAAAQD/////ABxpAABlTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5TaGVsbC4xNS4wLCBWZXJzaW9uPTE1LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EbgQFaY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlBsYXRmb3JtVUk7YXNzZW1ibHk9TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5TaGVsbC4xNS4wIU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uUGxhdGZvcm1VSQAAHGYBAGJNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcsIFZlcnNpb249MTUuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYRt3VGNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZx5NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcBABxrAgBnTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnZUNhdGFsb2csIFZlcnNpb249MTUuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYRt8WWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2VDYXRhbG9nHk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZwIAHFwDAFhNaWNyb3NvZnQuU1NIRGVidWdQUywgVmVyc2lvbj0xNC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhGzsiY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuU1NIRGVidWdQUxRNaWNyb3NvZnQuU1NIRGVidWdQUwMAG0kpY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuU1NIRGVidWdQUy5Eb2NrZXIbTWljcm9zb2Z0LlNTSERlYnVnUFMuRG9ja2VyAwAdOQAAAwAzTWljcm9zb2Z0LlNTSERlYnVnUFMuVUkuQ29udGFpbmVyUGlja2VyRGlhbG9nV2luZG93AwAAABxSBABOV2luZG93c0Jhc2UsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj0zMWJmMzg1NmFkMzY0ZTM1HFwFAFhQcmVzZW50YXRpb25GcmFtZXdvcmssIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj0zMWJmMzg1NmFkMzY0ZTM1HFcGAFNQcmVzZW50YXRpb25Db3JlLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49MzFiZjM4NTZhZDM2NGUzNRREADlodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dpbmZ4LzIwMDYveGFtbC9wcmVzZW50YXRpb24DAAQABQAGABxSBwBOU3lzdGVtLlhhbWwsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5FDoBeCxodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dpbmZ4LzIwMDYveGFtbAQABAAFAAYABwAUaQJ1aVpjbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uUGxhdGZvcm1VSTthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlNoZWxsLjE1LjAEAAQABQAGAAcAFGoJdnNpbWFnaW5nVGNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZwQABAAFAAYABwAUbQdjYXRhbG9nWWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2VDYXRhbG9nBAAEAAUABgAHABQ0BWxvY2FsImNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlNTSERlYnVnUFMEAAQABQAGAAcAFDwGZG9ja2VyKWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlNTSERlYnVnUFMuRG9ja2VyBAAEAAUABgAHAC0BAAAAJBvK/xVDb250YWluZXJQaWNrZXJEaWFsb2eZ/SQJy/8DNDUwpP4kCcz/AzUwMKT+JAnH/wM0NTCk/iQJ0f8DNTM1pP4fFAAAHf0ADVNob3dJblRhc2tiYXIGBgAALgAAICAAABxWc0ZvbnQuRW52aXJvbm1lbnRGb250RmFtaWx5I+X/vQAAACAeAQAaVnNGb250LkVudmlyb25tZW50Rm9udFNpemUj5P+9AAEAHSYBAAMAIE1pY3Jvc29mdC5TU0hEZWJ1Z1BTLlVJUmVzb3VyY2VzHxIBAAEAAAtEaWFsb2dUaXRsZR8MAgAd/QAFVGl0bGUjAgBaAgEAHxwDAB39ABVXaW5kb3dTdGFydHVwTG9jYXRpb24kEQMAC0NlbnRlck93bmVyPf8fEAQAHv8ACVJlc291cmNlcw0EAB07AgADEDVNaWNyb3NvZnQuU1NIRGVidWdQUy5Eb2NrZXIuQm9vbFRvVmlzaWJpbGl0eUNvbnZlcnRlciAdAgAZQm9vbFRvVmlzaWJpbGl0eUNvbnZlcnRlciAVAwARU2Nyb2xsVmlld2VyU3R5bGUfEQUAlP0AClRhcmdldFR5cGUfDwYA1P0ACFByb3BlcnR5IBwEABhTeXN0ZW1Db2xvcnMuV2luZG93QnJ1c2gfDAcA1P0ABVZhbHVlIBQFABBTdGF0dXNMYWJlbFN0eWxlHw8IAJT9AAhUcmlnZ2Vycx8OCQCG/wAHQmluZGluZx8LCgDs/wAETW9kZR8MCwCG/wAFVmFsdWUdNQMAAAAvTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5QbGF0Zm9ybVVJLkluZm9CYXJDb2xvcnMfIAwAAwAAGUluZm9CYXJCYWNrZ3JvdW5kQnJ1c2hLZXkfJA0AAwAAHUluZm9CYXJCYWNrZ3JvdW5kVGV4dEJydXNoS2V5IBYGABJTZWxlY3RlZExhYmVsU3R5bGUgGgcAFlNlbGVjdGVkVGV4dEJsb2NrU3R5bGUgEggADkl0ZW1MYWJlbFN0eWxlIBMJAA9IZWFkZXJJdGVtU3R5bGUgHwoAG0xpc3RCb3hJdGVtRm9jdXNWaXN1YWxTdHlsZSAQCwAMTGlzdEJveFN0eWxlIBIMAA5pbnN0YW5jZUxheW91dB8SDgBL/gALSXNJdGVtc0hvc3QfCw8A/P0ABFNlbGYfFRAA7P8ADlJlbGF0aXZlU291cmNlHwsRAOz/AARQYXRoHxgSAAEAABFOb0NvbnRhaW5lcnNGb3VuZCAZDQAVTGlzdEJveENvbnRhaW5lclN0eWxlHw8TAFD9AAhQcm9wZXJ0eR8MFABQ/QAFVmFsdWUdNAQABgAuU3lzdGVtLldpbmRvd3MuQXV0b21hdGlvbi5BdXRvbWF0aW9uUHJvcGVydGllcx8PFQCI/wAIRGF0YVR5cGUfFRYAAv8ADlJvd0RlZmluaXRpb25zHxgXAAL/ABFDb2x1bW5EZWZpbml0aW9ucx8UGAABAAANTmFtZUxhYmVsVGV4dB8KGQAe/wADVGFnHw4aAB7/AAdUb29sVGlwHxIbAAEAAAtJZExhYmVsVGV4dB8QHADs/wAJQ29udmVydGVyHxUdAAEAAA5JbWFnZUxhYmVsVGV4dB8XHgABAAAQQ29tbWFuZExhYmVsVGV4dB8WHwABAAAPU3RhdHVzTGFiZWxUZXh0HxcgAAEAABBDcmVhdGVkTGFiZWxUZXh0HxUhAAEAAA5Qb3J0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]]></Val>
+      </Bin>
+      <Disp Edtr="External" LocTbl="false" />
     </Item>
   </Item>
   <Item ItemId=";Version" ItemType="0" PsrId="211" Leaf="false">
