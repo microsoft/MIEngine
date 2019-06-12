@@ -17,14 +17,24 @@ namespace Microsoft.SSHDebugPS.UI
 {
     public class ContainerPickerViewModel : INotifyPropertyChanged
     {
+        private Lazy<bool> _sshAvailable;
+
         public ContainerPickerViewModel()
         {
             InitializeConnections();
             ContainerInstances = new ObservableCollection<IContainerInstance>();
-            _sshAvailable = new Lazy<bool>(() => IsLibLinuxAvailable());
-            AddSSHConnectionCommand = new BaseCommand(AddSSHConnection, () => { return CanAddConnection; });
-            PropertyChanged += ContainerPickerViewModel_PropertyChanged;
 
+            _sshAvailable = new Lazy<bool>(() => IsLibLinuxAvailable());
+            AddSSHConnectionCommand = new ContainerUICommand(
+                AddSSHConnection,
+                (parameter /*unused parameter*/) =>
+                    {
+                        return _sshAvailable.Value;
+                    },
+                UIResources.AddNewSSHConnectionLabel,
+                UIResources.AddNewSSHConnectionToolTip);
+
+            PropertyChanged += ContainerPickerViewModel_PropertyChanged;
             SelectedConnection = SupportedConnections.First(item => item is LocalConnectionViewModel) ?? SupportedConnections.First();
         }
 
@@ -89,30 +99,21 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        public void AddSSHConnection()
+        private static void AddSSHConnection(object parameter)
         {
-            if (CanAddConnection)
+            if (parameter is ContainerPickerViewModel vm && vm.AddSSHConnectionCommand.CanExecute(parameter))
             {
                 SSHConnection connection = ConnectionManager.GetSSHConnection(string.Empty) as SSHConnection;
                 if (connection != null)
                 {
                     SSHConnectionViewModel sshConnection = new SSHConnectionViewModel(connection);
-                    SupportedConnections.Add(sshConnection);
-                    SelectedConnection = sshConnection;
+                    vm.SupportedConnections.Add(sshConnection);
+                    vm.SelectedConnection = sshConnection;
                 }
             }
             else
             {
-                Debug.Fail("AddSSHConnection cannot be called.");
-            }
-        }
-
-        private Lazy<bool> _sshAvailable;
-        public bool CanAddConnection
-        {
-            get
-            {
-                return _sshAvailable.Value;
+                Debug.Fail("Unable to call AddSSHConnection");
             }
         }
 
@@ -130,7 +131,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         #region Commands
 
-        public ICommand AddSSHConnectionCommand { get; }
+        public IContainerUICommand AddSSHConnectionCommand { get; }
 
         #endregion
 
@@ -226,7 +227,7 @@ namespace Microsoft.SSHDebugPS.UI
             }
             set
             {
-                if (!(_selectedConnection != null && _selectedConnection.DisplayName.Equals(value.DisplayName, StringComparison.Ordinal)))
+                if ((_selectedConnection != value))
                 {
                     _selectedConnection = value;
                     OnPropertyChanged(nameof(SelectedConnection));

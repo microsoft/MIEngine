@@ -23,9 +23,13 @@ namespace Microsoft.SSHDebugPS.SSH
             _shell.Closed += OnClosedOrDisconnected;
             _shell.Disconnected += OnClosedOrDisconnected;
             _shell.ErrorOccured += OnError;
+        }
 
+        public void Start()
+        {
             _shell.BeginOutputRead();
         }
+
 
         public event EventHandler<string> OutputReceived;
         public event EventHandler<int> Closed;

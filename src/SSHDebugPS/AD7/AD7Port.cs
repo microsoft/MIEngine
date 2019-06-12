@@ -65,6 +65,7 @@ namespace Microsoft.SSHDebugPS
 
         public int EnumProcesses(out IEnumDebugProcesses2 processEnum)
         {
+            int hr = HR.S_OK;
             IEnumDebugProcesses2 result = null;
             var connection = GetConnection();
 
@@ -74,7 +75,7 @@ namespace Microsoft.SSHDebugPS
                 return HR.E_REMOTE_CONNECT_USER_CANCELED;
             }
 
-            VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: () =>
+            VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: (cancellationToken) =>
             {
                 List<Process> processList = connection.ListProcesses();
                 IDebugProcess2[] processes = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
@@ -82,7 +83,7 @@ namespace Microsoft.SSHDebugPS
             });
 
             processEnum = result;
-            return HR.S_OK;
+            return hr;
         }
 
         public int GetPortId(out Guid guidPort)
@@ -119,7 +120,7 @@ namespace Microsoft.SSHDebugPS
             string output = null;
 
             string waitPrompt = string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_ExecutingCommand, commandDescription);
-            VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: () =>
+            VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: (cancellationToken) =>
             {
                 code = GetConnection().ExecuteCommand(commandText, timeout, out output);
             });

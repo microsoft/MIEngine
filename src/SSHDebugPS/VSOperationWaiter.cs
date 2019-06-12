@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
-
+using System.Threading;
 
 namespace Microsoft.SSHDebugPS.VS
 {
@@ -20,7 +20,7 @@ namespace Microsoft.SSHDebugPS.VS
         /// <param name="throwOnCancel">If specified, an OperationCanceledException is thrown if the operation is canceled</param>
         /// <returns>True if the operation succeed and wasn't canceled</returns>
         /// <exception cref="OperationCanceledException">Wait was canceled and 'throwOnCancel' is true</exception>
-        public static bool Wait(string actionName, bool throwOnCancel, Action action)
+        public static bool Wait(string actionName, bool throwOnCancel, Action<CancellationToken> action)
         {
             try
             {
@@ -29,13 +29,16 @@ namespace Microsoft.SSHDebugPS.VS
                     actionName,
                     async (progress, cancellationToken) =>
                     {
-                        await Task.Run(action).WithCancellation(cancellationToken);
+                        await Task.Run(() => action(cancellationToken), cancellationToken);
                     }
                 );
             }
             catch (OperationCanceledException)
             {
-                return false;
+                if (throwOnCancel)
+                    throw;
+                else
+                    return false;
             }
 
             return true;
