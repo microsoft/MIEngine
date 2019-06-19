@@ -294,8 +294,8 @@ namespace Microsoft.SSHDebugPS
             _localProcess.EnableRaisingEvents = true;
 
             _stdoutWriter = new StreamWriter(_localProcess.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 4096, leaveOpen: false);
-            _processReader = _localProcess.StandardOutput;
-            _processError = _localProcess.StandardError;
+            _processReader = new StreamReader(_localProcess.StandardOutput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), detectEncodingFromByteOrderMarks: false);
+            _processError = new StreamReader(_localProcess.StandardError.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false), detectEncodingFromByteOrderMarks: false);
 
             System.Threading.Tasks.Task.Run(() => ReadLoop(_processReader, _cancellationSource.Token, (msg) => { OutputReceived?.Invoke(this, msg); }));
             System.Threading.Tasks.Task.Run(() => ReadLoop(_processError, _cancellationSource.Token, (msg) => { ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(new Exception(msg))); }));
