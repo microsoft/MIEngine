@@ -116,7 +116,7 @@ namespace Microsoft.SSHDebugPS.Docker
             {
                 string dockerCommand = "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs);
                 string waitMessage = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
-                VS.VSOperationWaiter.Wait(waitMessage, throwOnCancel: true, (cancellationToken) =>
+                VS.VSOperationWaiter.Wait(waitMessage, true, (cancellationToken) =>
                 {
                     exit = OuterConnection.ExecuteCommand(dockerCommand, timeout, out output);
                 });

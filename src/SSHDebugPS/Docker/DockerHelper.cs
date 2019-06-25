@@ -67,7 +67,7 @@ namespace Microsoft.SSHDebugPS.Docker
                     }
                 });
 
-                VS.VSOperationWaiter.Wait(UIResources.QueryingForContainersMessage, throwOnCancel: false, (cancellationToken) =>
+                VS.VSOperationWaiter.Wait(UIResources.QueryingForContainersMessage, false, (cancellationToken) =>
                 {
                     while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested)
                     { }
