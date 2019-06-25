@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -119,7 +120,7 @@ namespace Microsoft.SSHDebugPS
             int code = -1;
             string output = null;
 
-            string waitPrompt = string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_ExecutingCommand, commandDescription);
+            string waitPrompt = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
             VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: (cancellationToken) =>
             {
                 code = GetConnection().ExecuteCommand(commandText, timeout, out output);

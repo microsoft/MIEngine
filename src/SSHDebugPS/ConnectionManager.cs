@@ -124,7 +124,7 @@ namespace Microsoft.SSHDebugPS
                     }
                     else
                     {
-                        userName = string.Format(CultureInfo.CurrentCulture, StringResources.UserName_PlaceHolder);
+                        userName = StringResources.UserName_PlaceHolder;
                         hostName = name;
                     }
                     result = connectionManager.ShowDialog(new PasswordConnectionInfo(hostName, userName, new System.Security.SecureString()));

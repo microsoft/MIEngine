@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using liblinux;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS.SSH
@@ -100,7 +101,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
             if (!File.Exists(sourcePath))
             {
-                throw new FileNotFoundException(string.Format(CultureInfo.CurrentCulture, StringResources.Error_SourceFileNotFound, sourcePath));
+                throw new FileNotFoundException(StringResources.Error_SourceFileNotFound.FormatCurrentCultureWithArgs(sourcePath));
             }
 
             _remoteSystem.FileSystem.UploadFile(sourcePath, destinationPath);
@@ -137,7 +138,7 @@ namespace Microsoft.SSHDebugPS.SSH
             else
             {
                 // This may happen if the user does not have permissions or if it is a file, etc.
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, StringResources.Error_InvalidDirectory, path), nameof(path));
+                throw new ArgumentException(StringResources.Error_InvalidDirectory.FormatCurrentCultureWithArgs(path), nameof(path));
             }
         }
 

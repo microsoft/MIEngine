@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using Microsoft.SSHDebugPS.Utilities;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -65,8 +66,8 @@ namespace Microsoft.SSHDebugPS
         private ColumnDef _ruserCol;
         private ColumnDef _argsCol;
 
-        public static string PSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " -axww ");
-        public static string AltPSCommandLine = String.Format(CultureInfo.InvariantCulture, PSCommandLineFormat, " ");
+        public static string PSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" -axww ");
+        public static string AltPSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" ");
 
         public static List<Process> Parse(string output, string username)
         {

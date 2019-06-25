@@ -12,6 +12,7 @@ using System.Linq;
 using System.Windows.Input;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
+using Microsoft.SSHDebugPS.Utilities;
 
 namespace Microsoft.SSHDebugPS.UI
 {
@@ -80,7 +81,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (ContainerInstances.Count() > 0)
                 {
-                    StatusText = String.Format(CultureInfo.CurrentCulture, UIResources.ContainersFoundStatusText, ContainerInstances.Count());
+                    StatusText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
                 }
                 else
                 {
@@ -89,7 +90,7 @@ namespace Microsoft.SSHDebugPS.UI
             }
             catch (Exception ex)
             {
-                StatusText = String.Format(CultureInfo.CurrentCulture, UIResources.ErrorStatusTextFormat, ex.Message);
+                StatusText = UIResources.ErrorStatusTextFormat.FormatCurrentCultureWithArgs(ex.Message);
                 StatusIsError = true;
                 return;
             }

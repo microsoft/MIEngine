@@ -152,11 +152,10 @@ namespace Microsoft.SSHDebugPS.Docker
             if (exitCode != 0)
             {
                 // if the exit code is not zero, then the output we received possibly is the error message
-                string exceptionMessage = string.Format(CultureInfo.CurrentCulture,
-                    UIResources.CommandExecutionErrorWithExitCodeFormat,
-                    "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
-                    exitCode,
-                    errorSB.ToString());
+                string exceptionMessage = UIResources.CommandExecutionErrorWithExitCodeFormat.FormatCurrentCultureWithArgs(
+                        "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
+                        exitCode,
+                        errorSB.ToString());
 
                 throw new CommandFailedException(exceptionMessage);
             }

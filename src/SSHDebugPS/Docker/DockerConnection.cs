@@ -57,7 +57,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             if (!Directory.Exists(sourcePath) && !File.Exists(sourcePath))
             {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, StringResources.Error_CopyFile_SourceNotFound, sourcePath), nameof(sourcePath));
+                throw new ArgumentException(StringResources.Error_CopyFile_SourceNotFound.FormatCurrentCultureWithArgs(sourcePath), nameof(sourcePath));
             }
 
             if (OuterConnection != null)

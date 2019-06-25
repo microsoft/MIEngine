@@ -171,7 +171,7 @@ namespace Microsoft.SSHDebugPS
             exitCode = ExecuteCommand(command, timeout, out commandOutput);
             if (throwOnFailure && exitCode != 0)
             {
-                string error = String.Format(CultureInfo.InvariantCulture, StringResources.CommandFailedMessageFormat, command, exitCode, commandOutput);
+                string error = StringResources.CommandFailedMessageFormat.FormatCurrentCultureWithArgs(command, exitCode, commandOutput);
                 throw new CommandFailedException(error);
             }
             else
