@@ -77,7 +77,7 @@ namespace Microsoft.SSHDebugPS
 
             string pwd;
             ExecuteCommand("pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out pwd);
-            ExecuteCommand($"cd \"{path}\"; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath);
+            ExecuteCommand($"cd '{path}'; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath);
             ExecuteCommand($"cd '{pwd}'", Timeout.Infinite, throwOnFailure: false, commandOutput: out output); //This might fail in some instances, so ignore a failure and ignore output
 
             return fullpath;
@@ -134,7 +134,7 @@ namespace Microsoft.SSHDebugPS
             if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput))
             {
                 commandOutput = string.Empty;
-                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out exitCode))
+                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
                 {
                     string message;
                     if (exitCode == 127)
@@ -145,11 +145,6 @@ namespace Microsoft.SSHDebugPS
                     else
                     {
                         message = StringResources.Error_PSErrorFormat.FormatCurrentCultureWithArgs(exitCode, commandOutput);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(commandOutput))
-                    {
-                        message = "{0} Output: {1}".FormatInvariantWithArgs(message, commandOutput);
                     }
 
                     VSMessageBoxHelper.ShowErrorMessage(StringResources.Error_CommandFailed, message);

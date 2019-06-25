@@ -218,7 +218,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\miengine.csharp.localization.targets" />
