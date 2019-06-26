@@ -57,9 +57,9 @@ namespace Microsoft.SSHDebugPS.Docker
             _outerConnection = outerConnection;
         }
 
-        private ICommandRunner GetExecCommandRunner(string command, bool runInShell = true)
+        private ICommandRunner GetExecCommandRunner(string command, bool runInShell, bool makeInteractive)
         {
-            var execSettings = new DockerExecSettings(_baseSettings, command, runInShell);
+            var execSettings = new DockerExecSettings(_baseSettings, command, runInShell, makeInteractive);
 
             if (_outerConnection == null)
             {
@@ -69,7 +69,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 return new RemoteCommandRunner(execSettings.Command, execSettings.CommandArgs, _outerConnection);
         }
 
-        public int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage)
+        public int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage, bool runInShell = true, bool makeInteractive = true)
         {
             commandOutput = string.Empty;
             errorMessage = string.Empty;
@@ -79,7 +79,7 @@ namespace Microsoft.SSHDebugPS.Docker
             }
             _commandCompleteEvent.Reset();
 
-            using (ICommandRunner commandRunner = GetExecCommandRunner(commandText))
+            using (ICommandRunner commandRunner = GetExecCommandRunner(commandText, runInShell, makeInteractive))
             {
                 //LocalCommandRunner commandRunner = runner as LocalCommandRunner;
                 ShellCommandCallback commandCallback = new ShellCommandCallback(_commandCompleteEvent);

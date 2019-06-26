@@ -68,21 +68,21 @@ namespace Microsoft.SSHDebugPS
 
                 settings = new DockerContainerTransportSettings(hostName, containerName, remoteConnection != null);
                 string displayName = remoteConnection != null ? remoteConnection.Name + '/' + dockerString : dockerString;
-                var dockerConnection = new DockerConnection(settings, remoteConnection, displayName, containerName);
 
-                // Test container is available/reachable
                 string output;
                 string error;
-                if (dockerConnection.ExecuteCommand("/bin/sh", Timeout.Infinite, out output, out error) != 0)
+                // Test container is available/reachable
+                DockerExecutionManager manager = new DockerExecutionManager(settings, remoteConnection);
+                if (manager.ExecuteCommand("/bin/sh", Timeout.Infinite, out output, out error, runInShell: false, makeInteractive: false) != 0)
                 {
                     VSMessageBoxHelper.ShowErrorMessage(
-                        StringResources.Error_ContainerUnavailableTitle,
-                        StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(containerName, error)
-                        );
+                       StringResources.Error_ContainerUnavailableTitle,
+                       StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(containerName, error)
+                       );
                     return null;
                 }
 
-                return dockerConnection;
+                return new DockerConnection(settings, remoteConnection, displayName, containerName);
             }
 
             return null;

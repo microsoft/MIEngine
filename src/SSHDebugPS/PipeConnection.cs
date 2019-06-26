@@ -134,7 +134,7 @@ namespace Microsoft.SSHDebugPS
             if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput))
             {
                 commandOutput = string.Empty;
-                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
+                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out exitCode))
                 {
                     string message;
                     if (exitCode == 127)
