@@ -194,14 +194,21 @@ namespace Microsoft.SSHDebugPS
 
         protected void VerifyProcessExitedAndNotify()
         {
+            bool shouldClose = false;
             lock (_lock)
             {
                 if (!_hasExited && _process.HasExited)
                 {
                     _hasExited = true;
-                    Closed?.Invoke(this, _process.ExitCode);
+                    shouldClose = true;
                 }
             }
+
+            if (shouldClose)
+            {
+                Closed?.Invoke(this, _process.ExitCode);
+            }
+
         }
 
         protected void EnsureRunning()

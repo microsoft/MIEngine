@@ -205,7 +205,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to Unable to obtain process listing. &apos;ps&apos; command failed..
         /// </summary>
         internal static string Error_PSFailed {
             get {
