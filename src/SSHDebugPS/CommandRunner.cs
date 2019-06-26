@@ -76,22 +76,19 @@ namespace Microsoft.SSHDebugPS
 
         public LocalCommandRunner(string command, string commandArgs)
         {
-            CreateProcessStartInfo(command, commandArgs);
+            _processStartInfo = new ProcessStartInfo(command, commandArgs);
+
+            _processStartInfo.RedirectStandardError = true;
+            _processStartInfo.RedirectStandardInput = true;
+            _processStartInfo.RedirectStandardOutput = true;
+
+            _processStartInfo.UseShellExecute = false;
+            _processStartInfo.CreateNoWindow = true;
         }
 
         public void Start()
         {
-            if (_process != null)
-            {
-                if (!_process.HasExited)
-                {
-                    Debug.Fail("Process is already running.");
-
-                    throw new InvalidOperationException("Process already running");
-                }
-                CleanUpProcess();
-            }
-
+            ThrowIfDisposed();
             if (_processStartInfo == null)
             {
                 throw new InvalidOperationException("Unable to create process. Process start info does not exist");
@@ -106,37 +103,36 @@ namespace Microsoft.SSHDebugPS
                 _process.EnableRaisingEvents = true;
 
                 _process.Start();
+
+                _stdInWriter = new StreamWriter(_process.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), BUFMAX);
+                _stdOutReader = new StreamReader(_process.StandardOutput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX);
+                _stdErrReader = new StreamReader(_process.StandardError.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX);
+
+                _outputReadLoopTask = System.Threading.Tasks.Task.Run(() => ReadLoop(_stdOutReader, _cancellationSource.Token, true, OnOutputReceived));
+                _errorReadLoopTask = System.Threading.Tasks.Task.Run(() => ReadLoop(_stdErrReader, _cancellationSource.Token, false, OnErrorReceived));
             }
-
-            _stdInWriter = new StreamWriter(_process.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), BUFMAX);
-            _stdOutReader = new StreamReader(_process.StandardOutput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX);
-            _stdErrReader = new StreamReader(_process.StandardError.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX);
-
-            _outputReadLoopTask = System.Threading.Tasks.Task.Run(() => ReadLoop(_stdOutReader, _cancellationSource.Token, true, OnOutputReceived));
-            _errorReadLoopTask = System.Threading.Tasks.Task.Run(() => ReadLoop(_stdErrReader, _cancellationSource.Token, false, OnErrorReceived));
         }
 
         public void Write(string text)
         {
+            ThrowIfDisposed();
             lock (_lock)
             {
-                if (IsRunning())
-                {
-                    _stdInWriter.Write(text);
-                    _stdInWriter.Flush();
-                }
+                EnsureRunning();
+                _stdInWriter.Write(text);
+                _stdInWriter.Flush();
+
             }
         }
 
         public void WriteLine(string text)
         {
+            ThrowIfDisposed();
             lock (_lock)
             {
-                if (IsRunning())
-                {
-                    _stdInWriter.WriteLine(text);
-                    _stdInWriter.Flush();
-                }
+                EnsureRunning();
+                _stdInWriter.WriteLine(text);
+                _stdInWriter.Flush();
             }
         }
 
@@ -168,36 +164,6 @@ namespace Microsoft.SSHDebugPS
             OutputReceived?.Invoke(this, line);
         }
 
-        protected virtual void CreateProcessStartInfo(string command, string commandArgs)
-        {
-            if (_process != null)
-            {
-                if (!_process.HasExited)
-                {
-                    Debug.Fail("CreateProcessStartInfo called when there is already a process running.");
-                }
-                else
-                {
-                    CleanUpProcess();
-                }
-            }
-
-            if (_processStartInfo != null)
-            {
-                Debug.Fail("ProcessStartInfo is already set.");
-                _processStartInfo = null;
-            }
-
-            _processStartInfo = new ProcessStartInfo(command, commandArgs);
-
-            _processStartInfo.RedirectStandardError = true;
-            _processStartInfo.RedirectStandardInput = true;
-            _processStartInfo.RedirectStandardOutput = true;
-
-            _processStartInfo.UseShellExecute = false;
-            _processStartInfo.CreateNoWindow = true;
-        }
-
         protected virtual void ReadLoop(StreamReader reader, CancellationToken token, bool checkForExitedProcess, Action<string> action)
         {
             try
@@ -211,14 +177,7 @@ namespace Microsoft.SSHDebugPS
                     {
                         if (checkForExitedProcess)
                         {
-                            lock (_lock)
-                            {
-                                if (!_hasExited && _process.HasExited)
-                                {
-                                    _hasExited = true;
-                                    Closed?.Invoke(this, _process.ExitCode);
-                                }
-                            }
+                            VerifyProcessExitedAndNotify();
                         }
                         return; // end of stream
                     }
@@ -233,9 +192,24 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        protected bool IsRunning()
+        protected void VerifyProcessExitedAndNotify()
         {
-            return _process != null && !_process.HasExited;
+            lock (_lock)
+            {
+                if (!_hasExited && _process.HasExited)
+                {
+                    _hasExited = true;
+                    Closed?.Invoke(this, _process.ExitCode);
+                }
+            }
+        }
+
+        protected void EnsureRunning()
+        {
+            if (_process == null || _process.HasExited)
+            {
+                throw new InvalidOperationException(StringResources.Error_ShellNotRunning);
+            }
         }
 
         protected void CleanUpProcess()
@@ -274,18 +248,18 @@ namespace Microsoft.SSHDebugPS
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
                     CleanUpProcess();
                 }
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 
@@ -293,6 +267,14 @@ namespace Microsoft.SSHDebugPS
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
+        }
+
+        protected void ThrowIfDisposed()
+        {
+            if (_disposedValue)
+            {
+                throw new ObjectDisposedException("LocalCommandRunner");
+            }
         }
         #endregion
     }
@@ -306,7 +288,7 @@ namespace Microsoft.SSHDebugPS
 
         public RawLocalCommandRunner(IPipeTransportSettings settings) : base(settings) { }
 
-        protected override void ReadLoop(StreamReader reader, CancellationToken token, bool something, Action<string> action)
+        protected override void ReadLoop(StreamReader reader, CancellationToken token, bool checkForExitedProcess, Action<string> action)
         {
             try
             {
@@ -317,7 +299,17 @@ namespace Microsoft.SSHDebugPS
                     task.Wait(token);
 
                     if (task.Result > 0)
+                    {
                         action(new string(buffer, 0, task.Result));
+                    }
+                    else
+                    {
+                        if (checkForExitedProcess)
+                        {
+                            VerifyProcessExitedAndNotify();
+                        }
+                        return;
+                    }
                 }
             }
             catch (Exception ex)

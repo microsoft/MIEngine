@@ -124,6 +124,24 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The connection string provided is not formatted properly..
+        /// </summary>
+        internal static string Error_ContainerConnectionStringInvalidMessage {
+            get {
+                return ResourceManager.GetString("Error_ContainerConnectionStringInvalidMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection String Format Invalid.
+        /// </summary>
+        internal static string Error_ContainerConnectionStringInvalidTitle {
+            get {
+                return ResourceManager.GetString("Error_ContainerConnectionStringInvalidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempting to run &apos;/bin/sh&apos; on container &apos;{0}&apos; failed with output: &apos;{1}&apos;.
         /// </summary>
         internal static string Error_ContainerUnavailableMessage {

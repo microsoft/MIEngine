@@ -81,7 +81,6 @@ namespace Microsoft.SSHDebugPS.Docker
 
             using (ICommandRunner commandRunner = GetExecCommandRunner(commandText, runInShell, makeInteractive))
             {
-                //LocalCommandRunner commandRunner = runner as LocalCommandRunner;
                 ShellCommandCallback commandCallback = new ShellCommandCallback(_commandCompleteEvent);
                 DockerAsyncCommand command = new DockerAsyncCommand(commandRunner, commandCallback);
 

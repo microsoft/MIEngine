@@ -24,7 +24,6 @@ namespace Microsoft.SSHDebugPS.VS
         {
             try
             {
-                //TODO: Once 'action' is cancelable, provide token to the action instead.
                 ThreadHelper.JoinableTaskFactory.Run(
                     actionName,
                     async (progress, cancellationToken) =>

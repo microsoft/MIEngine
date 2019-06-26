@@ -147,7 +147,7 @@ namespace Microsoft.SSHDebugPS
                         message = StringResources.Error_PSErrorFormat.FormatCurrentCultureWithArgs(exitCode, commandOutput);
                     }
 
-                    VSMessageBoxHelper.ShowErrorMessage(StringResources.Error_CommandFailed, message);
+                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_CommandFailed, message);
 
                     return new List<Process>(0);
                 }

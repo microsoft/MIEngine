@@ -49,7 +49,8 @@ namespace Microsoft.SSHDebugPS
             }
             else
             {
-                // TODO: This will be replaced by the docker container selection dialog 
+                // TODO: This will be replaced by the docker container selection dialog
+                VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
                 return null;
             }
 
@@ -75,7 +76,7 @@ namespace Microsoft.SSHDebugPS
                 DockerExecutionManager manager = new DockerExecutionManager(settings, remoteConnection);
                 if (manager.ExecuteCommand("/bin/sh", Timeout.Infinite, out output, out error, runInShell: false, makeInteractive: false) != 0)
                 {
-                    VSMessageBoxHelper.ShowErrorMessage(
+                    VSMessageBoxHelper.PostErrorMessage(
                        StringResources.Error_ContainerUnavailableTitle,
                        StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(containerName, error)
                        );

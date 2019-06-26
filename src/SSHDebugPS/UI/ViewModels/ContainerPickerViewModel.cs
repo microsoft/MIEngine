@@ -228,7 +228,7 @@ namespace Microsoft.SSHDebugPS.UI
             }
             set
             {
-                if ((_selectedConnection != value))
+                if (_selectedConnection != value)
                 {
                     _selectedConnection = value;
                     OnPropertyChanged(nameof(SelectedConnection));

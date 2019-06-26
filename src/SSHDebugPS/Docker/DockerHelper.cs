@@ -54,8 +54,6 @@ namespace Microsoft.SSHDebugPS.Docker
                         if (args.Trim()[0] != '{')
                         {
                             // output isn't json, command Error
-                            //string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs("{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs), args);
-                            //throw new CommandFailedException(errorMessage);
                             errorSB.AppendLine(args);
                         }
                         else
