@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Windows.Documents;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.PlatformUI;
@@ -65,25 +66,39 @@ namespace Microsoft.SSHDebugPS.Docker
                     }
                 });
 
+                commandRunner.Start();
+
+                bool cancellationRequested = false;
                 VS.VSOperationWaiter.Wait(UIResources.QueryingForContainersMessage, false, (cancellationToken) =>
                 {
                     while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested)
                     { }
+                    cancellationRequested = cancellationToken.IsCancellationRequested;
                 });
 
-                // might need to throw an exception here too??
-                if (exitCode.GetValueOrDefault(-1) != 0)
+                if (!cancellationRequested)
                 {
-                    Debug.Fail("Exit Code: {0}".FormatInvariantWithArgs(exitCode));
-                    return null;
+                    // might need to throw an exception here too??
+                    if (exitCode.GetValueOrDefault(-1) != 0)
+                    {
+                        // if the exit code is not zero, then the output we received possibly is the error message
+                        string exceptionMessage = UIResources.CommandExecutionErrorWithExitCodeFormat.FormatCurrentCultureWithArgs(
+                                "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
+                                exitCode,
+                                errorSB.ToString());
+
+                        throw new CommandFailedException(exceptionMessage);
+                    }
+
+                    if (errorSB.Length > 0)
+                    {
+                        throw new CommandFailedException(errorSB.ToString());
+                    }
+
+                    return containers;
                 }
 
-                if (errorSB.Length > 0)
-                {
-                    throw new CommandFailedException(errorSB.ToString());
-                }
-
-                return containers;
+                return new List<DockerContainerInstance>();
             }
             catch (Win32Exception ex)
             {
@@ -145,22 +160,31 @@ namespace Microsoft.SSHDebugPS.Docker
 
             commandRunner.Start();
 
-            resetEvent.WaitOne();
-
-            if (exitCode != 0)
+            bool cancellationRequested = false;
+            VS.VSOperationWaiter.Wait(UIResources.QueryingForContainersMessage, false, (cancellationToken) =>
             {
-                // if the exit code is not zero, then the output we received possibly is the error message
-                string exceptionMessage = UIResources.CommandExecutionErrorWithExitCodeFormat.FormatCurrentCultureWithArgs(
-                        "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
-                        exitCode,
-                        errorSB.ToString());
+                while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested)
+                { }
+                cancellationRequested = cancellationToken.IsCancellationRequested;
+            });
 
-                throw new CommandFailedException(exceptionMessage);
-            }
-
-            foreach (var item in outputLines)
+            if (!cancellationRequested)
             {
-                containers.Add(DockerContainerInstance.Create(item));
+                if (exitCode != 0)
+                {
+                    // if the exit code is not zero, then the output we received possibly is the error message
+                    string exceptionMessage = UIResources.CommandExecutionErrorWithExitCodeFormat.FormatCurrentCultureWithArgs(
+                            "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
+                            exitCode,
+                            errorSB.ToString());
+
+                    throw new CommandFailedException(exceptionMessage);
+                }
+
+                foreach (var item in outputLines)
+                {
+                    containers.Add(DockerContainerInstance.Create(item));
+                }
             }
 
             return containers;
