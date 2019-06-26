@@ -76,9 +76,10 @@ namespace Microsoft.SSHDebugPS
                 DockerExecutionManager manager = new DockerExecutionManager(settings, remoteConnection);
                 if (manager.ExecuteCommand("/bin/sh", Timeout.Infinite, out output, out error, runInShell: false, makeInteractive: false) != 0)
                 {
+                    // Error message might be in output.
                     VSMessageBoxHelper.PostErrorMessage(
                        StringResources.Error_ContainerUnavailableTitle,
-                       StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(containerName, error)
+                       StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(containerName, string.IsNullOrWhiteSpace(error) ? output : error)
                        );
                     return null;
                 }
