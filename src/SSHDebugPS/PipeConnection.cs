@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.SSHDebugPS.Utilities;
 using System.Windows.Documents;
+using System.Text;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -142,7 +143,12 @@ namespace Microsoft.SSHDebugPS
                 // try using the /proc file system
                 if (!ProcFSListProcess(username, out procErrorMessage, out processes))
                 {
-                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ProcessListFailedTitle, StringResources.Error_ProcessListFailedFormat.FormatCurrentCultureWithArgs(psErrorMessage, procErrorMessage));
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append(psErrorMessage);
+                    sb.AppendLine(string.Empty);
+                    sb.AppendLine(procErrorMessage);
+
+                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ProcessListFailedTitle, sb.ToString());
 
                     return new List<Process>(0);
                 }

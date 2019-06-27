@@ -142,7 +142,8 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempting to run &apos;/bin/sh&apos; on container &apos;{0}&apos; failed with output: &apos;{1}&apos;.
+        ///   Looks up a localized string similar to Attempting to run &apos;/bin/sh&apos; on container &apos;{0}&apos; failed with output:
+        ///&apos;{1}&apos;.
         /// </summary>
         internal static string Error_ContainerUnavailableMessage {
             get {
@@ -205,18 +206,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}
-        ///
-        ///{1}.
-        /// </summary>
-        internal static string Error_ProcessListFailedFormat {
-            get {
-                return ResourceManager.GetString("Error_ProcessListFailedFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to obtain process list.
+        ///   Looks up a localized string similar to Failed to list processes.
         /// </summary>
         internal static string Error_ProcessListFailedTitle {
             get {
@@ -225,7 +215,9 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Parsing &apos;/proc&apos; file system for processes failed. Output: &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Parsing &apos;/proc&apos; for process list failed. 
+        ///Error:
+        ///&apos;{0}&apos;.
         /// </summary>
         internal static string Error_ProcFSError {
             get {
@@ -234,7 +226,9 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;ps&apos; command failed with exit code &apos;{0}&apos;. Output: {1}.
+        ///   Looks up a localized string similar to &apos;ps&apos; command failed with exit code &apos;{0}&apos;. 
+        ///Error:
+        ///&apos;{1}&apos;.
         /// </summary>
         internal static string Error_PSErrorFormat {
             get {

@@ -151,7 +151,8 @@
     <value>Connection String Format Invalid</value>
   </data>
   <data name="Error_ContainerUnavailableMessage" xml:space="preserve">
-    <value>Attempting to run '/bin/sh' on container '{0}' failed with output: '{1}'</value>
+    <value>Attempting to run '/bin/sh' on container '{0}' failed with output:
+'{1}'</value>
     <comment>{0} = name of the virtualized container
 {1} = error message received</comment>
   </data>
@@ -175,21 +176,19 @@
   <data name="Error_OperationTimedOut" xml:space="preserve">
     <value>Operation timed out.</value>
   </data>
-  <data name="Error_ProcessListFailedFormat" xml:space="preserve">
-    <value>{0}
-
-{1}</value>
-    <comment>{0} = 'ps' error message, {1} = procfs error message</comment>
-  </data>
   <data name="Error_ProcessListFailedTitle" xml:space="preserve">
-    <value>Unable to obtain process list</value>
+    <value>Failed to list processes</value>
   </data>
   <data name="Error_ProcFSError" xml:space="preserve">
-    <value>Parsing '/proc' file system for processes failed. Output: '{0}'</value>
+    <value>Parsing '/proc' for process list failed. 
+Error:
+'{0}'</value>
     <comment>{0} = Output from command</comment>
   </data>
   <data name="Error_PSErrorFormat" xml:space="preserve">
-    <value>'ps' command failed with exit code '{0}'. Output: {1}</value>
+    <value>'ps' command failed with exit code '{0}'. 
+Error:
+'{1}'</value>
     <comment>{0} = exit code
 {1} = additional output</comment>
   </data>

@@ -7,14 +7,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
+using Microsoft.SqlServer.Server;
 
 namespace Microsoft.SSHDebugPS
 {
     public class ProcFSOutputParser
     {
-        public static string EscapedCommandText => CommandText.Replace("$", "\\$");
+        // for process user, can also use 'stat -c %U /proc/<pid>/exe'
         public static string CommandText => @"echo shell-process:$$; for filename in /proc/[0-9]*; do echo $filename,cmdline:$(tr '\0' ' ' < $filename/cmdline 2>/dev/null),ls:$(ls -lh $filename/exe 2>/dev/null); done";
-
+        public static string EscapedCommandText => CommandText.Replace("$", "\\$");
         private const string ShellProcessPrefix = "shell-process:";
         private readonly Regex _linePattern = new Regex(@"^/proc/([0-9]+),cmdline:(.*),ls:(.*)$", RegexOptions.None);
 
