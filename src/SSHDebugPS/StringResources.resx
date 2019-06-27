@@ -172,6 +172,9 @@
     <value>The specified directory {0} could not be created or accessed.</value>
     <comment>{0} directory name.</comment>
   </data>
+  <data name="Error_OperationTimedOut" xml:space="preserve">
+    <value>Operation timed out.</value>
+  </data>
   <data name="Error_ProcessListFailedFormat" xml:space="preserve">
     <value>{0}
 

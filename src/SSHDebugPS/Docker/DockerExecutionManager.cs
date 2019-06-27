@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Threading;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS.Docker
@@ -89,8 +90,8 @@ namespace Microsoft.SSHDebugPS.Docker
                     _currentCommand = command;
                     if (!_commandCompleteEvent.WaitOne(timeout))
                     {
-                        commandOutput = "Command Timeout";
-                        return 1460; // ERROR_TIMEOUT
+                        errorMessage = StringResources.Error_OperationTimedOut;
+                        return ExitCodes.OPERATION_TIMEDOUT; // ERROR_TIMEOUT
                     }
 
                     commandOutput = commandCallback.CommandOutput.Trim('\n', '\r'); // trim ending newlines
@@ -101,7 +102,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 {
                     Debug.Fail("Why are we operating on a disposed object?");
                     errorMessage = ode.ToString();
-                    return 1999;
+                    return ExitCodes.OBJECTDISPOSED;
                 }
                 catch (Exception e)
                 {

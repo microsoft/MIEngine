@@ -196,6 +196,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Operation timed out..
+        /// </summary>
+        internal static string Error_OperationTimedOut {
+            get {
+                return ResourceManager.GetString("Error_OperationTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}
         ///
         ///{1}.

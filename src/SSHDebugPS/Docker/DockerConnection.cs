@@ -107,23 +107,22 @@ namespace Microsoft.SSHDebugPS.Docker
 
             var settings = new DockerExecSettings(TransportSettings, commandText, runInShell: false, makeInteractive: false);
             var runner = GetCommandRunner(settings, true);
-            if (OuterConnection != null)
+
+            string dockerCommand = "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs);
+            string waitMessage = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
+            string errorMessage;
+            VS.VSOperationWaiter.Wait(waitMessage, true, (cancellationToken) =>
             {
-                string dockerCommand = "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs);
-                string waitMessage = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
-                string errorMessage;
-                VS.VSOperationWaiter.Wait(waitMessage, true, (cancellationToken) =>
+                if (OuterConnection != null)
                 {
                     exit = OuterConnection.ExecuteCommand(dockerCommand, timeout, out output, out errorMessage);
-                });
-            }
-            else
-            {
-                string errorMessage;
-                
-                //local exec command
-                exit = ExecuteCommand(commandText, timeout, out output, out errorMessage);
-            }
+                }
+                else
+                {
+                    //local exec command
+                    exit = ExecuteCommand(commandText, timeout, out output, out errorMessage);
+                }
+            });
 
             exitCode = exit;
             commandOutput = output;

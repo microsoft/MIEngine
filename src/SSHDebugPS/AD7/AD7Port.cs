@@ -66,7 +66,6 @@ namespace Microsoft.SSHDebugPS
 
         public int EnumProcesses(out IEnumDebugProcesses2 processEnum)
         {
-            int hr = HR.S_OK;
             IEnumDebugProcesses2 result = null;
             var connection = GetConnection();
 
@@ -85,7 +84,7 @@ namespace Microsoft.SSHDebugPS
             });
 
             processEnum = result;
-            return hr;
+            return HR.S_OK;
         }
 
         public int GetPortId(out Guid guidPort)

@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
         private void OnClose(object sender, int e)
         {
-            _callback.OnExit(e.ToString());
+            _callback.OnExit(e.ToString(CultureInfo.InvariantCulture));
         }
 
         private void OnErrorOccured(object sender, ErrorOccuredEventArgs args)
