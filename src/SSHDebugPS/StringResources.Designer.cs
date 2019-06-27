@@ -133,7 +133,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connection String Format Invalid.
+        ///   Looks up a localized string similar to Connection string format invalid..
         /// </summary>
         internal static string Error_ContainerConnectionStringInvalidTitle {
             get {
@@ -152,7 +152,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Container unavailable.
+        ///   Looks up a localized string similar to Container unavailable..
         /// </summary>
         internal static string Error_ContainerUnavailableTitle {
             get {
@@ -206,7 +206,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to list processes.
+        ///   Looks up a localized string similar to Failed to list processes..
         /// </summary>
         internal static string Error_ProcessListFailedTitle {
             get {
