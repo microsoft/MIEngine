@@ -72,8 +72,9 @@ namespace Microsoft.SSHDebugPS
 
             if (connection == null)
             {
-                processEnum = null;
-                return HR.E_REMOTE_CONNECT_USER_CANCELED;
+                // Don't return a failure to prevent vsdebug.dll from showing an error message
+                processEnum = new AD7ProcessEnum(Array.Empty<IDebugProcess2>());
+                return HR.S_OK;
             }
 
             VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: (cancellationToken) =>
