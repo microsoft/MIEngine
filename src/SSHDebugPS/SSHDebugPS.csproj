@@ -122,6 +122,7 @@
     <Compile Include="AD7\AD7Process.cs" />
     <Compile Include="AD7\AD7Program.cs" />
     <Compile Include="AD7\AD7UnixAsyncCommand.cs" />
+    <Compile Include="ProcFSOutputParser.cs" />
     <Compile Include="Docker\DockerAsyncCommand.cs" />
     <Compile Include="Docker\DockerHelper.cs" />
     <Compile Include="Docker\DockerConnection.cs" />

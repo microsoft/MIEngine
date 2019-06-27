@@ -120,11 +120,12 @@ namespace Microsoft.SSHDebugPS
         {
             int code = -1;
             string output = null;
+            string errorMessage;
 
             string waitPrompt = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
             VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: (cancellationToken) =>
             {
-                code = GetConnection().ExecuteCommand(commandText, timeout, out output);
+                code = GetConnection().ExecuteCommand(commandText, timeout, out output, out errorMessage);
             });
 
             exitCode = code;

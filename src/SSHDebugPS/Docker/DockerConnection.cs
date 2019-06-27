@@ -27,13 +27,7 @@ namespace Microsoft.SSHDebugPS.Docker
             _dockerExecutionManager = new DockerExecutionManager(settings, outerConnection);
         }
 
-        public override int ExecuteCommand(string commandText, int timeout, out string commandOutput)
-        {
-            string errorMessage;
-            return ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
-        }
-
-        public int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage)
+        public override int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage)
         {
             return _dockerExecutionManager.ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
         }
@@ -84,9 +78,10 @@ namespace Microsoft.SSHDebugPS.Docker
                     if (OuterConnection != null && !string.IsNullOrEmpty(tmpFile))
                     {
                         string output;
+                        string errorMessage;
                         // Don't error on failing to remove the temporary file.
-                        int exit = OuterConnection.ExecuteCommand("rm " + tmpFile, 5000, out output);
-                        Debug.Assert(exit == 0, FormattableString.Invariant($"Removing file exited with {exit} and message {output}"));
+                        int exit = OuterConnection.ExecuteCommand("rm " + tmpFile, 5000, out output, out errorMessage);
+                        Debug.Assert(exit == 0, FormattableString.Invariant($"Removing file exited with {exit} and message {output}. {errorMessage}"));
                     }
                 }
                 catch (Exception ex) // don't error on cleanup
@@ -116,15 +111,18 @@ namespace Microsoft.SSHDebugPS.Docker
             {
                 string dockerCommand = "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs);
                 string waitMessage = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
+                string errorMessage;
                 VS.VSOperationWaiter.Wait(waitMessage, true, (cancellationToken) =>
                 {
-                    exit = OuterConnection.ExecuteCommand(dockerCommand, timeout, out output);
+                    exit = OuterConnection.ExecuteCommand(dockerCommand, timeout, out output, out errorMessage);
                 });
             }
             else
             {
+                string errorMessage;
+                
                 //local exec command
-                exit = ExecuteCommand(commandText, timeout, out output);
+                exit = ExecuteCommand(commandText, timeout, out output, out errorMessage);
             }
 
             exitCode = exit;
