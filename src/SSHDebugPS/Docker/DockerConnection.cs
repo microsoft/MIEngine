@@ -3,13 +3,10 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Threading;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
-using Microsoft.VisualStudio.Threading;
-using ThreadingTasks = System.Threading.Tasks;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
