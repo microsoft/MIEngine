@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.SSHDebugPS.Utilities;
 using System.Windows.Documents;
+using System.Text;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -63,9 +64,10 @@ namespace Microsoft.SSHDebugPS
                 return string.Empty;
             }
 
+            string errorMessage;
             string commandOutput;
             string command = "mkdir -p '{0}'".FormatInvariantWithArgs(path); // -p ignores if the directory is already there
-            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput);
+            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput, errorMessage: out errorMessage);
 
             return GetFullPath(path);
         }
@@ -76,9 +78,10 @@ namespace Microsoft.SSHDebugPS
             string output; // throw away variable
 
             string pwd;
-            ExecuteCommand("pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out pwd);
-            ExecuteCommand($"cd '{path}'; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath);
-            ExecuteCommand($"cd '{pwd}'", Timeout.Infinite, throwOnFailure: false, commandOutput: out output); //This might fail in some instances, so ignore a failure and ignore output
+            string errorMessage;
+            ExecuteCommand("pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out pwd, errorMessage: out errorMessage);
+            ExecuteCommand($"cd '{path}'; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath, errorMessage: out errorMessage);
+            ExecuteCommand($"cd '{pwd}'", Timeout.Infinite, throwOnFailure: false, commandOutput: out output, errorMessage: out errorMessage); //This might fail in some instances, so ignore a failure and ignore output
 
             return fullpath;
         }
@@ -87,7 +90,8 @@ namespace Microsoft.SSHDebugPS
         {
             string command = "echo $HOME";
             string commandOutput;
-            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput);
+            string errorMessage;
+            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput, errorMessage: out errorMessage);
 
             return commandOutput.TrimEnd('\n', '\r');
         }
@@ -101,7 +105,8 @@ namespace Microsoft.SSHDebugPS
         {
             string command = "uname";
             string commandOutput;
-            if (!ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput))
+            string errorMessage;
+            if (!ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
             {
                 return false;
             }
@@ -113,7 +118,8 @@ namespace Microsoft.SSHDebugPS
             username = string.Empty;
             string command = "id -u -n";
             string commandOutput;
-            if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput))
+            string errorMessage;
+            if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
             {
 
                 username = commandOutput;
@@ -128,55 +134,106 @@ namespace Microsoft.SSHDebugPS
             string username;
             TryGetUsername(out username);
 
-            string commandOutput;
-            int exitCode;
-
-            if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput))
+            List<Process> processes;
+            string psErrorMessage;
+            // Try using 'ps' first
+            if (!PSListProcess(username, out psErrorMessage, out processes))
             {
-                commandOutput = string.Empty;
-                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out exitCode))
+                string procErrorMessage;
+                // try using the /proc file system
+                if (!ProcFSListProcess(username, out procErrorMessage, out processes))
                 {
-                    string message;
-                    if (exitCode == 127)
-                    {
-                        //command doesn't Exist
-                        message = StringResources.Error_PSMissing;
-                    }
-                    else
-                    {
-                        message = StringResources.Error_PSErrorFormat.FormatCurrentCultureWithArgs(exitCode, commandOutput);
-                    }
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append(psErrorMessage);
+                    sb.AppendLine(string.Empty);
+                    sb.AppendLine(procErrorMessage);
 
-                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_CommandFailed, message);
+                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ProcessListFailedTitle, sb.ToString());
 
                     return new List<Process>(0);
                 }
             }
 
-            return PSOutputParser.Parse(commandOutput, username);
+            return processes;
+        }
+
+        /// <summary>
+        /// Query 'ps' command for a list of processes
+        /// </summary>
+        private bool PSListProcess(string username, out string errorMessage, out List<Process> processes)
+        {
+            errorMessage = string.Empty;
+            string commandOutput;
+            int exitCode;
+            if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput, out errorMessage))
+            {
+                // Clear output and errorMessage
+                commandOutput = string.Empty;
+                errorMessage = string.Empty;
+                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
+                {
+                    if (exitCode == 127)
+                    {
+                        //command doesn't Exist
+                        errorMessage = StringResources.Error_PSMissing;
+                    }
+                    else
+                    {
+                        errorMessage = StringResources.Error_PSErrorFormat.FormatCurrentCultureWithArgs(exitCode, errorMessage);
+                    }
+
+                    processes = null;
+                    return false;
+                }
+            }
+
+            processes = PSOutputParser.Parse(commandOutput, username);
+            return true;
+        }
+
+        /// <summary>
+        /// Query /proc for a list of processes
+        /// </summary>
+        private bool ProcFSListProcess(string username, out string errorMessage, out List<Process> processes)
+        {
+            errorMessage = string.Empty;
+            processes = null;
+
+            int exitCode;
+            string commandOutput;
+            // If used accross SSH, assume host is running Linux and escape the command (specifically the '$')
+            if (!ExecuteCommand(this.OuterConnection == null ? ProcFSOutputParser.CommandText : ProcFSOutputParser.EscapedCommandText, Timeout.Infinite, true, out commandOutput, out errorMessage, out exitCode))
+            {
+                errorMessage = StringResources.Error_ProcFSError.FormatCurrentCultureWithArgs(errorMessage);
+                return false;
+            }
+
+            processes = ProcFSOutputParser.Parse(commandOutput, username);
+            return true;
         }
 
         /// <summary>
         /// Checks command exit code and if it is non-zero, it will throw a CommandFailedException with an error message if 'throwOnFailure' is true.
         /// </summary>
         /// <returns>true if command succeeded.</returns>
-        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput, out int exitCode)
+        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput, out string errorMessage, out int exitCode)
         {
             commandOutput = string.Empty;
-            exitCode = ExecuteCommand(command, timeout, out commandOutput);
+
+            exitCode = ExecuteCommand(command, timeout, out commandOutput, out errorMessage);
             if (throwOnFailure && exitCode != 0)
             {
-                string error = StringResources.CommandFailedMessageFormat.FormatCurrentCultureWithArgs(command, exitCode, commandOutput);
+                string error = StringResources.CommandFailedMessageFormat.FormatCurrentCultureWithArgs(command, exitCode, errorMessage);
                 throw new CommandFailedException(error);
             }
             else
                 return exitCode == 0;
         }
 
-        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput)
+        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput, out string errorMessage)
         {
             int exitCode;
-            return ExecuteCommand(command, timeout, throwOnFailure, out commandOutput, out exitCode);
+            return ExecuteCommand(command, timeout, throwOnFailure, out commandOutput, out errorMessage, out exitCode);
         }
     }
 }

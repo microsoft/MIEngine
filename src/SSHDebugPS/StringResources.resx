@@ -148,15 +148,16 @@
     <value>The connection string provided is not formatted properly.</value>
   </data>
   <data name="Error_ContainerConnectionStringInvalidTitle" xml:space="preserve">
-    <value>Connection String Format Invalid</value>
+    <value>Connection string format invalid.</value>
   </data>
   <data name="Error_ContainerUnavailableMessage" xml:space="preserve">
-    <value>Attempting to run '/bin/sh' on container '{0}' failed with output: '{1}'</value>
+    <value>Attempting to run '/bin/sh' on container '{0}' failed with output:
+'{1}'</value>
     <comment>{0} = name of the virtualized container
 {1} = error message received</comment>
   </data>
   <data name="Error_ContainerUnavailableTitle" xml:space="preserve">
-    <value>Container unavailable</value>
+    <value>Container unavailable.</value>
   </data>
   <data name="Error_CopyFileFailed" xml:space="preserve">
     <value>Failed to copy files.</value>
@@ -172,16 +173,30 @@
     <value>The specified directory {0} could not be created or accessed.</value>
     <comment>{0} directory name.</comment>
   </data>
+  <data name="Error_OperationTimedOut" xml:space="preserve">
+    <value>Operation timed out.</value>
+  </data>
+  <data name="Error_ProcessListFailedTitle" xml:space="preserve">
+    <value>Failed to list processes.</value>
+  </data>
+  <data name="Error_ProcFSError" xml:space="preserve">
+    <value>Parsing '/proc' for process list failed. 
+Error:
+'{0}'</value>
+    <comment>{0} = Output from command</comment>
+  </data>
   <data name="Error_PSErrorFormat" xml:space="preserve">
-    <value>Unable to obtain process listing: 'ps' command failed with exit code '{0}'. Output: {1}</value>
+    <value>'ps' command failed with exit code '{0}'. 
+Error:
+'{1}'</value>
     <comment>{0} = exit code
 {1} = additional output</comment>
   </data>
   <data name="Error_PSFailed" xml:space="preserve">
-    <value>Unable to obtain process listing. 'ps' command failed.</value>
+    <value>Unable to obtain process list.</value>
   </data>
   <data name="Error_PSMissing" xml:space="preserve">
-    <value>Unable to obtain process listing: 'ps' command missing. Verify that the command exists and try again.</value>
+    <value>'ps' command missing.</value>
   </data>
   <data name="Error_ShellNotRunning" xml:space="preserve">
     <value>Cannot process command. Connection is not open.</value>
@@ -196,6 +211,10 @@
   </data>
   <data name="HostName_PlaceHolder" xml:space="preserve">
     <value>&lt;hostname&gt;</value>
+  </data>
+  <data name="ProcessName_Unknown" xml:space="preserve">
+    <value>&lt;unknown&gt;</value>
+    <comment>Placeholder for unable to determine process name</comment>
   </data>
   <data name="SSH_PSDescription" xml:space="preserve">
     <value>SSH (Secure Shell) Transport allows connecting Visual Studio to computers running an SSH server with a bash-like shell (ex: Linux, macOS, etc).</value>

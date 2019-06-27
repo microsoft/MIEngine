@@ -72,9 +72,9 @@ namespace Microsoft.SSHDebugPS
 
                 string output;
                 string error;
-                // Test container is available/reachable
+                // Test container is available/reachable. 5 seconds should be enough to verify
                 DockerExecutionManager manager = new DockerExecutionManager(settings, remoteConnection);
-                if (manager.ExecuteCommand("/bin/sh", Timeout.Infinite, out output, out error, runInShell: false, makeInteractive: false) != 0)
+                if (manager.ExecuteCommand("/bin/sh", 5000, out output, out error, runInShell: false, makeInteractive: false) != 0)
                 {
                     // Error message might be in output.
                     VSMessageBoxHelper.PostErrorMessage(

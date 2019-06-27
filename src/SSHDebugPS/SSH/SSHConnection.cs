@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using liblinux;
+using liblinux.Shell;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
@@ -77,13 +78,15 @@ namespace Microsoft.SSHDebugPS.SSH
 
         public override void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
         {
-            exitCode = ExecuteCommand(commandText, timeout, out commandOutput);
+            string errorMessage;
+            exitCode = ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
         }
 
-        public override int ExecuteCommand(string commandText, int timeout, out string commandOutput)
+        public override int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage)
         {
-            var command = _remoteSystem.Shell.ExecuteCommand(commandText, timeout);
+            INonHostedCommand command = _remoteSystem.Shell.ExecuteCommand(commandText, timeout);
             commandOutput = command.Output;
+            errorMessage = command.ErrorOutput;
             return command.ExitCode;
         }
 
