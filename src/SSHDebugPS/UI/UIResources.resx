@@ -158,7 +158,7 @@
     <comment>{0} = message</comment>
   </data>
   <data name="AddNewSSHConnectionToolTip" xml:space="preserve">
-    <value>Add New SSH Connection</value>
+    <value>Add a new SSH connection to a remote machine.</value>
   </data>
   <data name="CommandLabelText" xml:space="preserve">
     <value>Command: </value>
@@ -183,5 +183,11 @@
   </data>
   <data name="StatusLabelText" xml:space="preserve">
     <value>Status: </value>
+  </data>
+  <data name="AddNewSSHConnectionLabel" xml:space="preserve">
+    <value>Add SSH Connection</value>
+  </data>
+  <data name="QueryingForContainersMessage" xml:space="preserve">
+    <value>Querying for containers...</value>
   </data>
 </root>

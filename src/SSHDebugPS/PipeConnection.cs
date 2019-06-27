@@ -7,6 +7,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.SSHDebugPS.Utilities;
+using System.Windows.Documents;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -14,10 +18,8 @@ namespace Microsoft.SSHDebugPS
     {
         private readonly object _lock = new object();
         private readonly IPipeTransportSettings _settings;
-        private readonly Connection _outerConnection;
 
-        private readonly ShellExecutionManager _shellExecutionManager;
-        private readonly List<ICommandRunner> _shellList = new List<ICommandRunner>();
+        private Connection _outerConnection;
         private bool _isClosed;
         private string _name;
 
@@ -41,69 +43,16 @@ namespace Microsoft.SSHDebugPS
             _name = name;
             _settings = pipeTransportSettings;
             _outerConnection = outerConnection;
-            _shellExecutionManager = new ShellExecutionManager(CreateShellFromSettings(_settings, _outerConnection));
-        }
-
-        public override int ExecuteCommand(string commandText, int timeout, out string commandOutput)
-        {
-            if (_isClosed)
-            {
-                throw new ObjectDisposedException(nameof(PipeConnection));
-            }
-
-            return _shellExecutionManager.ExecuteCommand(commandText, timeout, out commandOutput); ;
         }
 
         public override void Close()
         {
             _isClosed = true;
-
-            lock (_lock)
+            if (_outerConnection != null)
             {
-                foreach (ICommandRunner rawShell in _shellList)
-                {
-                    rawShell.Dispose();
-                }
-
-                _shellList.Clear();
+                _outerConnection.Close();
+                _outerConnection = null;
             }
-        }
-
-        internal ICommandRunner CreateShellFromSettings(IPipeTransportSettings settings, Connection outerConnection, bool isCommandShell = false)
-        {
-            ICommandRunner rawShell;
-            if (_outerConnection == null)
-            {
-                if (isCommandShell)
-                    rawShell = new LocalRawCommandRunner(settings.ExeCommand, settings.ExeCommandArgs);
-                else
-                    rawShell = new LocalBufferedCommandRunner(settings.ExeCommand, settings.ExeCommandArgs);
-            }
-            else
-            {
-                rawShell = new RemoteCommandRunner(settings.ExeCommand, settings.ExeCommandArgs, outerConnection);
-            }
-
-            lock (_lock)
-            {
-                _shellList.Add(rawShell);
-            }
-
-            rawShell.Closed += (sender, eventArgs) =>
-            {
-                if (_isClosed)
-                    return;
-
-                lock (_lock)
-                {
-                    if (_isClosed)
-                        return;
-
-                    _shellList.Remove(rawShell);
-                }
-            };
-
-            return rawShell;
         }
 
         public override string MakeDirectory(string path)
@@ -115,7 +64,7 @@ namespace Microsoft.SSHDebugPS
             }
 
             string commandOutput;
-            string command = "mkdir -p \"" + path + "\""; // -p ignores if the directory is already there
+            string command = "mkdir -p '{0}'".FormatInvariantWithArgs(path); // -p ignores if the directory is already there
             ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput);
 
             return GetFullPath(path);
@@ -128,8 +77,8 @@ namespace Microsoft.SSHDebugPS
 
             string pwd;
             ExecuteCommand("pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out pwd);
-            ExecuteCommand($"cd \"{path}\"; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath);
-            ExecuteCommand($"cd \"{pwd}\"", Timeout.Infinite, throwOnFailure: false, commandOutput: out output); //This might fail in some instances, so ignore a failure and ignore output
+            ExecuteCommand($"cd '{path}'; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath);
+            ExecuteCommand($"cd '{pwd}'", Timeout.Infinite, throwOnFailure: false, commandOutput: out output); //This might fail in some instances, so ignore a failure and ignore output
 
             return fullpath;
         }
@@ -180,12 +129,27 @@ namespace Microsoft.SSHDebugPS
             TryGetUsername(out username);
 
             string commandOutput;
+            int exitCode;
 
             if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput))
             {
-                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput))
+                commandOutput = string.Empty;
+                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out exitCode))
                 {
-                    throw new CommandFailedException(StringResources.Error_PSFailed);
+                    string message;
+                    if (exitCode == 127)
+                    {
+                        //command doesn't Exist
+                        message = StringResources.Error_PSMissing;
+                    }
+                    else
+                    {
+                        message = StringResources.Error_PSErrorFormat.FormatCurrentCultureWithArgs(exitCode, commandOutput);
+                    }
+
+                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_CommandFailed, message);
+
+                    return new List<Process>(0);
                 }
             }
 
@@ -196,17 +160,23 @@ namespace Microsoft.SSHDebugPS
         /// Checks command exit code and if it is non-zero, it will throw a CommandFailedException with an error message if 'throwOnFailure' is true.
         /// </summary>
         /// <returns>true if command succeeded.</returns>
-        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput)
+        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput, out int exitCode)
         {
             commandOutput = string.Empty;
-            int exitCode = ExecuteCommand(command, timeout, out commandOutput);
+            exitCode = ExecuteCommand(command, timeout, out commandOutput);
             if (throwOnFailure && exitCode != 0)
             {
-                string error = String.Format(CultureInfo.InvariantCulture, StringResources.CommandFailedMessageFormat, command, exitCode, commandOutput);
+                string error = StringResources.CommandFailedMessageFormat.FormatCurrentCultureWithArgs(command, exitCode, commandOutput);
                 throw new CommandFailedException(error);
             }
             else
                 return exitCode == 0;
+        }
+
+        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput)
+        {
+            int exitCode;
+            return ExecuteCommand(command, timeout, throwOnFailure, out commandOutput, out exitCode);
         }
     }
 }

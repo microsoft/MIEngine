@@ -141,6 +141,23 @@
   <data name="Docker_PSDescription" xml:space="preserve">
     <value>The Docker (Linux Container) connection type allows Visual Studio to connect to Docker containers running locally or remotely (using SSH).</value>
   </data>
+  <data name="Error_CommandFailed" xml:space="preserve">
+    <value>Command failed to execute</value>
+  </data>
+  <data name="Error_ContainerConnectionStringInvalidMessage" xml:space="preserve">
+    <value>The connection string provided is not formatted properly.</value>
+  </data>
+  <data name="Error_ContainerConnectionStringInvalidTitle" xml:space="preserve">
+    <value>Connection String Format Invalid</value>
+  </data>
+  <data name="Error_ContainerUnavailableMessage" xml:space="preserve">
+    <value>Attempting to run '/bin/sh' on container '{0}' failed with output: '{1}'</value>
+    <comment>{0} = name of the virtualized container
+{1} = error message received</comment>
+  </data>
+  <data name="Error_ContainerUnavailableTitle" xml:space="preserve">
+    <value>Container unavailable</value>
+  </data>
   <data name="Error_CopyFileFailed" xml:space="preserve">
     <value>Failed to copy files.</value>
   </data>
@@ -155,8 +172,16 @@
     <value>The specified directory {0} could not be created or accessed.</value>
     <comment>{0} directory name.</comment>
   </data>
+  <data name="Error_PSErrorFormat" xml:space="preserve">
+    <value>Unable to obtain process listing: 'ps' command failed with exit code '{0}'. Output: {1}</value>
+    <comment>{0} = exit code
+{1} = additional output</comment>
+  </data>
   <data name="Error_PSFailed" xml:space="preserve">
     <value>Unable to obtain process listing. 'ps' command failed.</value>
+  </data>
+  <data name="Error_PSMissing" xml:space="preserve">
+    <value>Unable to obtain process listing: 'ps' command missing. Verify that the command exists and try again.</value>
   </data>
   <data name="Error_ShellNotRunning" xml:space="preserve">
     <value>Cannot process command. Connection is not open.</value>
