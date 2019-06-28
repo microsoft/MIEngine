@@ -3,10 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using liblinux;
 using liblinux.Persistence;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.SSHDebugPS.VS;
 using Microsoft.VisualStudio.Linux.ConnectionManager;
 using Microsoft.VisualStudio.Shell;
@@ -27,10 +27,11 @@ namespace Microsoft.SSHDebugPS.SSH
                 {
                     try
                     {
-                        VSOperationWaiter.Wait(string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_Connecting, name), throwOnCancel: false, action: () =>
-                        {
-                            remoteSystem.Connect(connectionInfo);
-                        });
+                        VSOperationWaiter.Wait(
+                            StringResources.WaitingOp_Connecting.FormatCurrentCultureWithArgs(name), 
+                            throwOnCancel: false, 
+                            action: (cancellationToken) =>
+                                remoteSystem.Connect(connectionInfo));
                         break;
                     }
                     catch (RemoteAuthenticationException)

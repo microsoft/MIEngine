@@ -61,7 +61,16 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add New SSH Connection.
+        ///   Looks up a localized string similar to Add SSH Connection.
+        /// </summary>
+        public static string AddNewSSHConnectionLabel {
+            get {
+                return ResourceManager.GetString("AddNewSSHConnectionLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add a new SSH connection to a remote machine..
         /// </summary>
         public static string AddNewSSHConnectionToolTip {
             get {
@@ -201,6 +210,15 @@ namespace Microsoft.SSHDebugPS {
         public static string PortsLabelText {
             get {
                 return ResourceManager.GetString("PortsLabelText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Querying for containers....
+        /// </summary>
+        public static string QueryingForContainersMessage {
+            get {
+                return ResourceManager.GetString("QueryingForContainersMessage", resourceCulture);
             }
         }
         

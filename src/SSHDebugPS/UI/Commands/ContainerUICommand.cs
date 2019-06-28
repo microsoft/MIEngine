@@ -7,18 +7,26 @@ using System.Windows.Input;
 
 namespace Microsoft.SSHDebugPS.UI
 {
-    internal class BaseCommand : ICommand
+    public interface IContainerUICommand : ICommand
     {
-        private Func<bool> canExecuteFunc;
-        private Action executeFunc;
+        string Label { get; }
+        string ToolTip { get; }
+    }
 
-        internal BaseCommand(Action execFunc)
+    internal class ContainerUICommand : IContainerUICommand
+    {
+        private Func<object, bool> canExecuteFunc;
+        private Action<object> executeFunc;
+
+        internal ContainerUICommand(Action<object> execFunc, string label, string tooltip)
         {
             executeFunc = execFunc;
+            Label = label;
+            ToolTip = tooltip;
         }
 
-        internal BaseCommand(Action execFunc, Func<bool> canExecFunc)
-            : this(execFunc)
+        internal ContainerUICommand(Action<object> execFunc, Func<object, bool> canExecFunc, string label, string tooltip)
+            : this(execFunc, label, tooltip)
         {
             canExecuteFunc = canExecFunc;
         }
@@ -29,7 +37,7 @@ namespace Microsoft.SSHDebugPS.UI
         {
             if (canExecuteFunc != null)
             {
-                return canExecuteFunc();
+                return canExecuteFunc(parameter);
             }
 
             return true;
@@ -39,12 +47,15 @@ namespace Microsoft.SSHDebugPS.UI
         {
             if (executeFunc != null)
             {
-                executeFunc();
+                executeFunc(parameter);
             }
             else
             {
                 Debug.Fail("Why is the executeFunc null?");
             }
         }
+
+        public string Label { get; }
+        public string ToolTip { get; }
     }
 }

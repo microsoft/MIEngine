@@ -211,12 +211,13 @@
                 Grid.Row="1"
                 Grid.Column="1"
                 Command="{Binding AddSSHConnectionCommand}"
-                IsEnabled="{Binding CanAddConnection}">
+                CommandParameter="{Binding}"
+                IsEnabled="{Binding AddSSHConnectionCommand.CanExecute}">
             <vsimaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Add}"
                                   Width="16"
                                   Height="16">
                 <Image.ToolTip>
-                    <TextBlock Text="{x:Static local:UIResources.AddNewSSHConnectionToolTip}" />
+                    <TextBlock Text="{Binding Path=AddSSHConnectionCommand.ToolTip, Mode=OneWay}" />
                 </Image.ToolTip>
             </vsimaging:CrispImage>
         </Button>

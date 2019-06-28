@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using liblinux;
+using liblinux.Shell;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS.SSH
@@ -76,13 +78,15 @@ namespace Microsoft.SSHDebugPS.SSH
 
         public override void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
         {
-            exitCode = ExecuteCommand(commandText, timeout, out commandOutput);
+            string errorMessage;
+            exitCode = ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
         }
 
-        public override int ExecuteCommand(string commandText, int timeout, out string commandOutput)
+        public override int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage)
         {
-            var command = _remoteSystem.Shell.ExecuteCommand(commandText, timeout);
+            INonHostedCommand command = _remoteSystem.Shell.ExecuteCommand(commandText, timeout);
             commandOutput = command.Output;
+            errorMessage = command.ErrorOutput;
             return command.ExitCode;
         }
 
@@ -100,7 +104,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
             if (!File.Exists(sourcePath))
             {
-                throw new FileNotFoundException(string.Format(CultureInfo.CurrentCulture, StringResources.Error_SourceFileNotFound, sourcePath));
+                throw new FileNotFoundException(StringResources.Error_SourceFileNotFound.FormatCurrentCultureWithArgs(sourcePath));
             }
 
             _remoteSystem.FileSystem.UploadFile(sourcePath, destinationPath);
@@ -137,7 +141,7 @@ namespace Microsoft.SSHDebugPS.SSH
             else
             {
                 // This may happen if the user does not have permissions or if it is a file, etc.
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, StringResources.Error_InvalidDirectory, path), nameof(path));
+                throw new ArgumentException(StringResources.Error_InvalidDirectory.FormatCurrentCultureWithArgs(path), nameof(path));
             }
         }
 

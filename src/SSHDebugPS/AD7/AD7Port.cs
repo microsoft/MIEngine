@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -70,11 +71,12 @@ namespace Microsoft.SSHDebugPS
 
             if (connection == null)
             {
-                processEnum = null;
-                return HR.E_REMOTE_CONNECT_USER_CANCELED;
+                // Don't return a failure to prevent vsdebug.dll from showing an error message
+                processEnum = new AD7ProcessEnum(Array.Empty<IDebugProcess2>());
+                return HR.S_OK;
             }
 
-            VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: () =>
+            VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: (cancellationToken) =>
             {
                 List<Process> processList = connection.ListProcesses();
                 IDebugProcess2[] processes = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
@@ -117,11 +119,12 @@ namespace Microsoft.SSHDebugPS
         {
             int code = -1;
             string output = null;
+            string errorMessage;
 
-            string waitPrompt = string.Format(CultureInfo.CurrentCulture, StringResources.WaitingOp_ExecutingCommand, commandDescription);
-            VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: () =>
+            string waitPrompt = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
+            VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: (cancellationToken) =>
             {
-                code = GetConnection().ExecuteCommand(commandText, timeout, out output);
+                code = GetConnection().ExecuteCommand(commandText, timeout, out output, out errorMessage);
             });
 
             exitCode = code;

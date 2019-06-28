@@ -3,10 +3,12 @@
 
 namespace Microsoft.SSHDebugPS
 {
+    /// <summary>
+    ///  This interface returns the tranport's executalbe command and the base set of arguments to use.
+    /// </summary>
     public interface IPipeTransportSettings
     {
-        string ExeCommandArgs { get; }
-        string ExeCommand { get; }
-        string ExeNotFoundErrorMessage { get; }
+        string CommandArgs { get; }
+        string Command { get; }
     }
 }
