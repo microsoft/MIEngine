@@ -58,7 +58,7 @@ namespace Microsoft.SSHDebugPS
             {
                 if (dockerString.Contains("::"))
                 {
-                    int pos = dockerString.IndexOf("::");
+                    int pos = dockerString.IndexOf("::", StringComparison.Ordinal);
                     hostName = dockerString.Substring(0, pos);
                     containerName = dockerString.Substring(pos + 2);
                 }

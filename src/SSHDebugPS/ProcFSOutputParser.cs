@@ -62,7 +62,7 @@ namespace Microsoft.SSHDebugPS
             if (string.IsNullOrWhiteSpace(line))
                 return;
 
-            if (line.StartsWith(ShellProcessPrefix))
+            if (line.StartsWith(ShellProcessPrefix, StringComparison.Ordinal))
             {
                 if (line.Length > ShellProcessPrefix.Length)
                 {
