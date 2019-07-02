@@ -115,6 +115,52 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Command failed to execute.
+        /// </summary>
+        internal static string Error_CommandFailed {
+            get {
+                return ResourceManager.GetString("Error_CommandFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The connection string provided is not formatted properly..
+        /// </summary>
+        internal static string Error_ContainerConnectionStringInvalidMessage {
+            get {
+                return ResourceManager.GetString("Error_ContainerConnectionStringInvalidMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connection string format invalid..
+        /// </summary>
+        internal static string Error_ContainerConnectionStringInvalidTitle {
+            get {
+                return ResourceManager.GetString("Error_ContainerConnectionStringInvalidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempting to run &apos;/bin/sh&apos; on container &apos;{0}&apos; failed with output:
+        ///&apos;{1}&apos;.
+        /// </summary>
+        internal static string Error_ContainerUnavailableMessage {
+            get {
+                return ResourceManager.GetString("Error_ContainerUnavailableMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Container unavailable..
+        /// </summary>
+        internal static string Error_ContainerUnavailableTitle {
+            get {
+                return ResourceManager.GetString("Error_ContainerUnavailableTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Source file &apos;{0}&apos; not found..
         /// </summary>
         internal static string Error_CopyFile_SourceNotFound {
@@ -151,11 +197,60 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to obtain process listing. &apos;ps&apos; command failed..
+        ///   Looks up a localized string similar to Operation timed out..
+        /// </summary>
+        internal static string Error_OperationTimedOut {
+            get {
+                return ResourceManager.GetString("Error_OperationTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to list processes..
+        /// </summary>
+        internal static string Error_ProcessListFailedTitle {
+            get {
+                return ResourceManager.GetString("Error_ProcessListFailedTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parsing &apos;/proc&apos; for process list failed. 
+        ///Error:
+        ///&apos;{0}&apos;.
+        /// </summary>
+        internal static string Error_ProcFSError {
+            get {
+                return ResourceManager.GetString("Error_ProcFSError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;ps&apos; command failed with exit code &apos;{0}&apos;. 
+        ///Error:
+        ///&apos;{1}&apos;.
+        /// </summary>
+        internal static string Error_PSErrorFormat {
+            get {
+                return ResourceManager.GetString("Error_PSErrorFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to obtain process list..
         /// </summary>
         internal static string Error_PSFailed {
             get {
                 return ResourceManager.GetString("Error_PSFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;ps&apos; command missing..
+        /// </summary>
+        internal static string Error_PSMissing {
+            get {
+                return ResourceManager.GetString("Error_PSMissing", resourceCulture);
             }
         }
         
@@ -192,6 +287,15 @@ namespace Microsoft.SSHDebugPS {
         internal static string HostName_PlaceHolder {
             get {
                 return ResourceManager.GetString("HostName_PlaceHolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;unknown&gt;.
+        /// </summary>
+        internal static string ProcessName_Unknown {
+            get {
+                return ResourceManager.GetString("ProcessName_Unknown", resourceCulture);
             }
         }
         

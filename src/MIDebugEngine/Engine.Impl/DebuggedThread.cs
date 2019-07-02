@@ -499,7 +499,8 @@ namespace Microsoft.MIDebugEngine
                     }
                     foreach (var newt in newThreads)
                     {
-                        if (!newt.ChildThread)
+                        // If we are child process debugging, check and see if its a child thread
+                        if (!(_debugger.IsChildProcessDebugging && newt.ChildThread))
                         {
                             _callback.OnThreadStart(newt);
                         }
@@ -509,7 +510,8 @@ namespace Microsoft.MIDebugEngine
                 {
                     foreach (var dead in deadThreads)
                     {
-                        if (!dead.ChildThread)
+                        // If we are child process debugging, check and see if its a child thread
+                        if (!(_debugger.IsChildProcessDebugging && dead.ChildThread))
                         {
                             // Send the destroy event outside the lock
                             _callback.OnThreadExit(dead, 0);

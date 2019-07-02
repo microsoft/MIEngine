@@ -25,6 +25,8 @@ namespace Microsoft.SSHDebugPS
             CommandRunner.OutputReceived += OnOutputReceived;
             CommandRunner.Closed += OnClosed;
             CommandRunner.ErrorOccured += OnError;
+
+            CommandRunner.Start();
         }
 
         void IDebugUnixShellAsyncCommand.Write(string text)
@@ -77,9 +79,9 @@ namespace Microsoft.SSHDebugPS
             Callback.OnOutputLine(e);
         }
 
-        protected void OnError(object sender, EventArgs e)
+        protected void OnError(object sender, ErrorOccuredEventArgs e)
         {
-            Callback.OnExit(null);
+            Callback.OnOutputLine(e.ErrorMessage);
             Close();
         }
 
