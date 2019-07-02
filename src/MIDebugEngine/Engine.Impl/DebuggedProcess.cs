@@ -2249,6 +2249,8 @@ namespace Microsoft.MIDebugEngine
             return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
         }
 
+        public bool IsChildProcessDebugging => _childProcessHandler != null;
+
         public bool MapCurrentSrcToCompileTimeSrc(string currentSrc, out string compilerSrc)
         {
             if (_launchOptions.SourceMap != null)
