@@ -82,6 +82,9 @@
       <Item ItemId=";Error_ContainerConnectionStringInvalidMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The connection string provided is not formatted properly.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[提供的连接字符串格式不正确。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -97,6 +100,9 @@
       <Item ItemId=";Error_ContainerUnavailableMessage" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Attempting to run '/bin/sh' on container '{0}' failed with output:]D;]A;'{1}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[尝试在容器“{0}”上运行 "/bin/sh" 失败，输出为:]D;]A;“{1}”]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -157,14 +163,17 @@
       <Item ItemId=";Error_PSErrorFormat" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['ps' command failed with exit code '{0}'. ]D;]A;Error:]D;]A;'{1}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA["ps" 命令失败，退出代码为“{0}”。]D;]A;错误:]D;]A;“{1}”]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Error_PSFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to obtain process list.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[无法获取进程列表。"ps" 命令失败。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[无法获取进程列表。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Unable to obtain process listing. 'ps' command failed.]]></Val>
@@ -184,12 +193,18 @@
       <Item ItemId=";Error_ProcFSError" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Parsing '/proc' for process list failed. ]D;]A;Error:]D;]A;'{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[未能分析进程列表的 "/proc"。]D;]A;错误:]D;]A;“{0}”]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Error_ProcessListFailedTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to list processes.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[未能列出进程。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -310,6 +325,9 @@
       <Item ItemId=";AddNewSSHConnectionLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Add SSH Connection]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[添加 SSH 连接]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -463,6 +481,9 @@
       <Item ItemId=";QueryingForContainersMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Querying for containers...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[正在查询容器...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
