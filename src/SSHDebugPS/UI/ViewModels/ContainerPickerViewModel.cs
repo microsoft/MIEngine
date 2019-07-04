@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
+using System.Windows.Media.Media3D;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
@@ -55,6 +56,9 @@ namespace Microsoft.SSHDebugPS.UI
 
             try
             {
+                IContainerInstance selectedContainer = SelectedContainerInstance;
+                SelectedContainerInstance = null;
+                
                 StatusText = UIResources.SearchingStatusText;
                 ContainerInstances?.Clear();
 
@@ -62,7 +66,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
-                    containers = DockerHelper.GetLocalDockerContainers();
+                    containers = DockerHelper.GetLocalDockerContainers(Hostname);
                 }
                 else
                 {
@@ -73,7 +77,7 @@ namespace Microsoft.SSHDebugPS.UI
                         StatusText = UIResources.SSHConnectionFailedStatusText;
                         return;
                     }
-                    containers = DockerHelper.GetRemoteDockerContainers(connection);
+                    containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname);
                 }
 
                 ContainerInstances = new ObservableCollection<IContainerInstance>(containers);
@@ -82,6 +86,17 @@ namespace Microsoft.SSHDebugPS.UI
                 if (ContainerInstances.Count() > 0)
                 {
                     StatusText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+                    if (selectedContainer != null)
+                    {
+                        var found = ContainerInstances.FirstOrDefault(c => selectedContainer.Equals(c));
+                        if (found != null)
+                        {
+                            SelectedContainerInstance = found;
+                            return;
+                        }
+                    }
+                    SelectedContainerInstance = ContainerInstances[0];
+
                 }
                 else
                 {
@@ -147,9 +162,27 @@ namespace Microsoft.SSHDebugPS.UI
 
         private void ContainerPickerViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName.Equals(nameof(SelectedConnection)))
+            if (string.Equals(e.PropertyName, nameof(SelectedConnection), StringComparison.Ordinal))
             {
                 RefreshContainersList();
+            }
+        }
+
+        private string _hostname;
+        public string Hostname
+        {
+            get
+            {
+                return _hostname;
+            }
+
+            set
+            {
+                if (!string.Equals(_hostname, value, StringComparison.Ordinal))
+                {
+                    _hostname = value;
+                    OnPropertyChanged(nameof(Hostname));
+                }
             }
         }
 
@@ -211,7 +244,9 @@ namespace Microsoft.SSHDebugPS.UI
             }
             set
             {
-                if (!(_selectedContainerInstance != null && _selectedContainerInstance.Name.Equals(value.Name, StringComparison.Ordinal)))
+                // checking cases that they are not equal
+                if (((_selectedContainerInstance != null) && (value == null || !string.Equals(_selectedContainerInstance.Name, value.Name, StringComparison.Ordinal)))
+                    || (_selectedContainerInstance == null && value != null))
                 {
                     _selectedContainerInstance = value;
                     OnPropertyChanged(nameof(SelectedContainerInstance));
