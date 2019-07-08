@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Interop;
 using EnvDTE;
@@ -38,6 +39,7 @@ namespace Microsoft.SSHDebugPS
             if (connectionStrings.Length > 2 || connectionStrings.Length < 1)
             {
                 string connectionString;
+                // If the user cancels the window, we want to fall back to the error message below
                 if (ShowContainerPickerWindow(IntPtr.Zero, out connectionString))
                 {
                     return GetDockerConnection(connectionString);
@@ -159,6 +161,7 @@ namespace Microsoft.SSHDebugPS
         /// <returns></returns>
         public static bool ShowContainerPickerWindow(IntPtr hwnd, out string connectionString)
         {
+            ThreadHelper.ThrowIfNotOnUIThread("Microsoft.SSHDebugPS.ShowContainerPickerWindow");
             ContainerPickerDialogWindow dialog = new ContainerPickerDialogWindow();
 
             if (hwnd == IntPtr.Zero) // get the VS main window hwnd
@@ -170,7 +173,9 @@ namespace Microsoft.SSHDebugPS
                     hwnd = new IntPtr(dte?.MainWindow?.HWnd ?? 0);
                 }
                 catch // No DTE?
-                { }
+                {
+                    Debug.Fail("No DTE?");
+                }
             }
 
             if (hwnd != IntPtr.Zero)

@@ -66,7 +66,7 @@ namespace Microsoft.SSHDebugPS.Docker
         {
             if (obj is IContainerInstance instance)
             {
-                this.Equals(instance);
+                return this.Equals(instance);
             }
             return false;
         }

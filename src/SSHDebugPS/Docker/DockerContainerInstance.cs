@@ -117,8 +117,8 @@ namespace Microsoft.SSHDebugPS.Docker
 
         protected override int GetHashCodeInternal()
         {
-            // Id should be unique between Docker containers. 
-            return Id.GetHashCode();
+            // Since IDs can be partial, we don't have a good way to get a good hash code.
+            return string.IsNullOrWhiteSpace(Id) ? 0 : Id.Substring(0,1).ToLowerInvariant().GetHashCode();
         }
     }
 }

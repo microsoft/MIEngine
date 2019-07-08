@@ -349,16 +349,17 @@
                        Grid.Row="0"
                        Grid.Column="0"
                        x:Name="Hostname"
-                       Target="{Binding ElementName=hostnameTextBlock}"
+                       Target="{Binding ElementName=hostnameTextBox}"
                        Margin="19,5,0,5"
                        Content="{x:Static local:UIResources.HostnameLabel}"
                        ToolTip="{x:Static local:UIResources.HostnameTip}" />
 
-                <TextBox x:Uid="uidHostnameTextBlock"
+                <TextBox x:Uid="uidHostnameTextBox"
                          Grid.Row="0"
                          Grid.Column="1"
-                         x:Name="hostnameTextBlock"
-                         Text="{Binding Path=Hostname, Mode=TwoWay}"
+                         x:Name="hostnameTextBox"
+                         Text="{Binding Path=Hostname, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                         PreviewKeyDown="HostnameTextbox_PreviewKeyDown"
                          Margin="0,5,0,5"
                          Padding="2" />
                 </Grid>

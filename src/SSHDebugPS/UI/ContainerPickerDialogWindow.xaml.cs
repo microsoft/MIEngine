@@ -90,7 +90,7 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        private void HostnameTextbox_KeyDown(object sender, KeyEventArgs e)
+        private void HostnameTextbox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
