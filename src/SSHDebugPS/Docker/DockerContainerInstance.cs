@@ -107,9 +107,9 @@ namespace Microsoft.SSHDebugPS.Docker
             if (instance is DockerContainerInstance other)
             {
                 // the id can be a partial on a container
-                return String.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase) ? true :
-                    Id.StartsWith(other.Id, StringComparison.OrdinalIgnoreCase) ? true :
-                    other.Id.StartsWith(Id, StringComparison.OrdinalIgnoreCase) ? true : false;
+                return String.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase) ||
+                    Id.StartsWith(other.Id, StringComparison.OrdinalIgnoreCase) ||
+                    other.Id.StartsWith(Id, StringComparison.OrdinalIgnoreCase);
             }
 
             return false;

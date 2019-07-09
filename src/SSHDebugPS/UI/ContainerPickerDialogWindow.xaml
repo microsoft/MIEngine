@@ -280,9 +280,9 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /> <!--0:Connectionlabel-->
             <RowDefinition Height="Auto" /> <!--1:Connection combo box/add new connection-->
-            <RowDefinition Height="Auto" /> <!--4:Advanced Settings-->
-            <RowDefinition Height="Auto" /> <!--2:status/refresh button-->
-            <RowDefinition Height="*" />    <!--3:ContainerList-->
+            <RowDefinition Height="Auto" /> <!--2:Advanced Settings-->
+            <RowDefinition Height="Auto" /> <!--3:status/refresh button-->
+            <RowDefinition Height="*" />    <!--4:ContainerList-->
             <RowDefinition Height="Auto" /> <!--5:OK/Cancel-->
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
