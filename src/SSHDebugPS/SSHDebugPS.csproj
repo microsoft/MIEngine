@@ -136,6 +136,8 @@
     <Compile Include="Docker\DockerHelper.cs" />
     <Compile Include="Docker\DockerConnection.cs" />
     <Compile Include="Docker\TransportSettings\DockerContainerTransportSettings.cs" />
+    <Compile Include="UI\Converters\TextToVisibilityConverter.cs" />
+    <Compile Include="UI\ViewModels\ContainerViewModel.cs" />
     <Compile Include="Utilities\ExitCodes.cs" />
     <Compile Include="Utilities\StringExtensionMethods.cs" />
     <Compile Include="SSH\SSHHelper.cs" />

@@ -61,7 +61,16 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add SSH Connection.
+        ///   Looks up a localized string similar to Add....
+        /// </summary>
+        public static string AddNewSSHConnectionButtonLabel {
+            get {
+                return ResourceManager.GetString("AddNewSSHConnectionButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add New SSH Connection.
         /// </summary>
         public static string AddNewSSHConnectionLabel {
             get {
@@ -97,6 +106,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collapsed.
+        /// </summary>
+        public static string Collapsed {
+            get {
+                return ResourceManager.GetString("Collapsed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed. {1}.
         /// </summary>
         public static string CommandExecutionErrorFormat {
@@ -124,7 +142,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to _Connection Type:.
+        ///   Looks up a localized string similar to _Connection type:.
         /// </summary>
         public static string ConnectionLabel {
             get {
@@ -169,7 +187,16 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to _Hostname:.
+        ///   Looks up a localized string similar to Expanded.
+        /// </summary>
+        public static string Expanded {
+            get {
+                return ResourceManager.GetString("Expanded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Hostname (Optional):.
         /// </summary>
         public static string HostnameLabel {
             get {
@@ -259,6 +286,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optional.
+        /// </summary>
+        public static string OptionalHintText {
+            get {
+                return ResourceManager.GetString("OptionalHintText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ports: .
         /// </summary>
         public static string PortsLabelText {
@@ -273,6 +309,24 @@ namespace Microsoft.SSHDebugPS {
         public static string QueryingForContainersMessage {
             get {
                 return ResourceManager.GetString("QueryingForContainersMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh.
+        /// </summary>
+        public static string RefreshHyperlink {
+            get {
+                return ResourceManager.GetString("RefreshHyperlink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh container list..
+        /// </summary>
+        public static string RefreshToolTip {
+            get {
+                return ResourceManager.GetString("RefreshToolTip", resourceCulture);
             }
         }
         

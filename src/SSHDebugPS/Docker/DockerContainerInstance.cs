@@ -2,12 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -40,7 +35,6 @@ namespace Microsoft.SSHDebugPS.Docker
 
         [JsonProperty("ID")]
         public override string Id { get; set; }
-        public string ShortId { get => Id.Substring(0, 10); }
 
         [JsonProperty("Names")]
         public override string Name { get; set; }
@@ -61,46 +55,6 @@ namespace Microsoft.SSHDebugPS.Docker
         public string Created { get; private set; }
 
         #endregion
-
-        public override bool GetResult(out string selectedQualifier)
-        {
-            selectedQualifier = Name;
-            return true;
-        }
-
-        public override event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string name)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        public string FormattedListOfPorts
-        {
-            get
-            {
-                return string.IsNullOrWhiteSpace(Ports) ?
-                    UIResources.NoPortsText :
-                    Ports.Replace(", ", "\r\n");
-            }
-        }
-
-        private bool _isSelected;
-        public bool IsSelected
-        {
-            get
-            {
-                return _isSelected;
-            }
-            set
-            {
-                if (_isSelected != value)
-                {
-                    _isSelected = value;
-                    OnPropertyChanged(nameof(IsSelected));
-                }
-            }
-        }
 
         protected override bool EqualsInternal(ContainerInstance instance)
         {

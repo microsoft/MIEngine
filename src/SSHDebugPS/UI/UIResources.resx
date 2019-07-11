@@ -184,8 +184,8 @@
   <data name="StatusLabelText" xml:space="preserve">
     <value>Status: </value>
   </data>
-  <data name="AddNewSSHConnectionLabel" xml:space="preserve">
-    <value>Add SSH Connection</value>
+  <data name="AddNewSSHConnectionButtonLabel" xml:space="preserve">
+    <value>Add...</value>
   </data>
   <data name="QueryingForContainersMessage" xml:space="preserve">
     <value>Querying for containers...</value>
@@ -197,10 +197,10 @@
     <value>Cancel</value>
   </data>
   <data name="ConnectionLabel" xml:space="preserve">
-    <value>_Connection Type:</value>
+    <value>_Connection type:</value>
   </data>
   <data name="HostnameLabel" xml:space="preserve">
-    <value>_Hostname:</value>
+    <value>_Hostname (Optional):</value>
     <comment>Hostname for Docker daemon configuration</comment>
   </data>
   <data name="HostnameTip" xml:space="preserve">
@@ -208,5 +208,23 @@
   </data>
   <data name="OKLabel" xml:space="preserve">
     <value>_OK</value>
+  </data>
+  <data name="RefreshHyperlink" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="RefreshToolTip" xml:space="preserve">
+    <value>Refresh container list.</value>
+  </data>
+  <data name="AddNewSSHConnectionLabel" xml:space="preserve">
+    <value>Add New SSH Connection</value>
+  </data>
+  <data name="OptionalHintText" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="Collapsed" xml:space="preserve">
+    <value>Collapsed</value>
+  </data>
+  <data name="Expanded" xml:space="preserve">
+    <value>Expanded</value>
   </data>
 </root>

@@ -15,11 +15,10 @@ using System.Threading.Tasks;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
-    public interface IContainerInstance : IEquatable<IContainerInstance>, INotifyPropertyChanged
+    public interface IContainerInstance : IEquatable<IContainerInstance>
     {
         string Id { get; }
         string Name { get; }
-        bool GetResult(out string selectedQualifier);
     }
 
     public abstract class ContainerInstance : IContainerInstance
@@ -27,19 +26,11 @@ namespace Microsoft.SSHDebugPS.Docker
         public abstract string Id { get; set; }
         public abstract string Name { get; set; }
 
-        public abstract bool GetResult(out string selectedQualifier);
-
-        #region INotifyPropertyChanged
-
-        public abstract event PropertyChangedEventHandler PropertyChanged;
-
-        #endregion
-
         #region IEquatable
 
         public static bool operator ==(ContainerInstance left, ContainerInstance right)
         {
-            if (ReferenceEquals(null, left) || ReferenceEquals(null, right))
+            if (left is null || right is null)
             {
                 return ReferenceEquals(left, right);
             }
