@@ -13,7 +13,7 @@
                  MinWidth="450"
                  MinHeight="500"
                  Width="450"
-                 Height="535"
+                 Height="600"
                  ShowInTaskbar="False"
                  Name="ContainerPickerDialog"
                  FontFamily="{DynamicResource VsFont.EnvironmentFontFamily}"
@@ -25,148 +25,250 @@
         <!-- Converters-->
         <docker:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <!--Styles-->
-        <Style x:Key="ScrollViewerStyle" TargetType="{x:Type ScrollViewer}">
-            <Setter Property="Background" Value="{DynamicResource SystemColors.WindowBrush}" />
-            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-            <Setter Property="VerticalScrollBarVisibility" Value="Visible" />
+        <Style x:Key="ScrollViewerStyle"
+               TargetType="{x:Type ScrollViewer}">
+            <Setter Property="Background"
+                    Value="{DynamicResource SystemColors.WindowBrush}" />
+            <Setter Property="HorizontalScrollBarVisibility"
+                    Value="Disabled" />
+            <Setter Property="VerticalScrollBarVisibility"
+                    Value="Visible" />
         </Style>
-        <Style x:Key="StatusLabelStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="Background" Value="{DynamicResource SystemColors.WindowBrush}" />
+        <Style x:Key="StatusLabelStyle"
+               TargetType="{x:Type TextBlock}">
+            <Setter Property="Background"
+                    Value="{DynamicResource SystemColors.WindowBrush}" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding StatusIsError, Mode=TwoWay}" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource {x:Static ui:InfoBarColors.InfoBarBackgroundBrushKey}}" />
-                    <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:InfoBarColors.InfoBarBackgroundTextBrushKey}}" />
+                <DataTrigger Binding="{Binding StatusIsError, Mode=TwoWay}"
+                             Value="True">
+                    <Setter Property="Background"
+                            Value="{DynamicResource {x:Static ui:InfoBarColors.InfoBarBackgroundBrushKey}}" />
+                    <Setter Property="Foreground"
+                            Value="{DynamicResource {x:Static ui:InfoBarColors.InfoBarBackgroundTextBrushKey}}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="SelectedLabelStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="VerticalAlignment" Value="Center" />
+        <Style x:Key="SelectedLabelStyle"
+               TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
         </Style>
-        <Style x:Key="SelectedTextBlockStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="VerticalAlignment" Value="Center" />
+        <Style x:Key="SelectedTextBlockStyle"
+               TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
         </Style>
-        <Style x:Key="ItemLabelStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="FontWeight" Value="Bold" />
+        <Style x:Key="ItemLabelStyle"
+               TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+            <Setter Property="FontWeight"
+                    Value="Normal" />
+            <Setter Property="FontWeight"
+                    Value="Bold" />
         </Style>
-        <Style x:Key="HeaderItemStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontWeight" Value="Normal"/>
+        <Style x:Key="HeaderItemStyle"
+               TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment"
+                    Value="Center" />
+            <Setter Property="FontWeight"
+                    Value="Normal" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsSelected, Mode=TwoWay}" Value="True">
-                    <Setter Property="FontWeight" Value="Bold" />
+                <DataTrigger Binding="{Binding IsSelected, Mode=TwoWay}"
+                             Value="True">
+                    <Setter Property="FontWeight"
+                            Value="Bold" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
         <!-- ListBoxItem Styles-->
-        <Style x:Key="ListBoxItemFocusVisualStyle" TargetType="{x:Type Control}">
-            <Setter Property="BorderBrush" Value="Transparent" />
+        <Style x:Key="ListBoxItemFocusVisualStyle"
+               TargetType="{x:Type Control}">
+            <Setter Property="BorderBrush"
+                    Value="Transparent" />
         </Style>
-        <Style x:Key="ListBoxStyle" TargetType="{x:Type ListBox}">
-            <EventSetter Event="GotKeyboardFocus" Handler="ListBox_GotKeyboardFocus" />
-            <Setter Property="ItemTemplate" Value="{DynamicResource instanceLayout}"></Setter>
-            <Setter Property="IsSynchronizedWithCurrentItem" Value="True"></Setter>
-            <Setter Property="BorderThickness" Value="0"></Setter>
-            <Setter Property="Padding" Value="0"></Setter>
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"></Setter>
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden"></Setter>
-            <Setter Property="Focusable" Value="False"/>
+        <Style x:Key="ListBoxStyle"
+               TargetType="{x:Type ListBox}">
+            <EventSetter Event="GotKeyboardFocus"
+                         Handler="ListBox_GotKeyboardFocus" />
+            <Setter Property="ItemTemplate"
+                    Value="{DynamicResource instanceLayout}" />
+            <Setter Property="IsSynchronizedWithCurrentItem"
+                    Value="True" />
+            <Setter Property="BorderThickness"
+                    Value="0" />
+            <Setter Property="Padding"
+                    Value="0" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility"
+                    Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility"
+                    Value="Hidden" />
+            <Setter Property="Focusable"
+                    Value="False" />
             <Setter Property="ItemsPanel">
                 <Setter.Value>
                     <ItemsPanelTemplate>
-                        <DockPanel IsItemsHost="True" LastChildFill="False" />
+                        <DockPanel IsItemsHost="True"
+                                   LastChildFill="False" />
                     </ItemsPanelTemplate>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=Items.Count, Mode=OneWay}" Value="0">
+                <DataTrigger Binding="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=Items.Count, Mode=OneWay}"
+                             Value="0">
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <TextBlock x:Uid="uidNoContainersFoundTextBlock" HorizontalAlignment="Center" Text="{x:Static local:UIResources.NoContainersFound}" />
+                                <TextBlock x:Uid="uidNoContainersFoundTextBlock"
+                                           HorizontalAlignment="Center"
+                                           Text="{x:Static local:UIResources.NoContainersFound}" />
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="ListBoxContainerStyle" TargetType="{x:Type ListBoxItem}">
+        <Style x:Key="ListBoxContainerStyle"
+               TargetType="{x:Type ListBoxItem}">
             <Style.Triggers>
-                <Trigger Property="IsSelected" Value="true">
-                    <Setter Property="BorderThickness" Value="1"/>
+                <Trigger Property="IsSelected"
+                         Value="true">
+                    <Setter Property="BorderThickness"
+                            Value="1" />
                 </Trigger>
             </Style.Triggers>
 
-            <Setter Property="AutomationProperties.Name" Value="{Binding Name, Mode=OneWay}"/>
-            <Setter Property="DockPanel.Dock" Value="Top"/>
-            <Setter Property="BorderBrush" Value="LightSteelBlue"></Setter>
-            <Setter Property="BorderThickness" Value="0"></Setter>
-            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"></Setter>
-            <Setter Property="FocusVisualStyle" Value="{StaticResource ListBoxItemFocusVisualStyle}"></Setter>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="AutomationProperties.Name"
+                    Value="{Binding Name, Mode=OneWay}" />
+            <Setter Property="DockPanel.Dock"
+                    Value="Top" />
+            <Setter Property="BorderBrush"
+                    Value="LightSteelBlue" />
+            <Setter Property="BorderThickness"
+                    Value="0" />
+            <Setter Property="IsSelected"
+                    Value="{Binding IsSelected, Mode=TwoWay}" />
+            <Setter Property="FocusVisualStyle"
+                    Value="{StaticResource ListBoxItemFocusVisualStyle}" />
+            <Setter Property="HorizontalContentAlignment"
+                    Value="Stretch" />
         </Style>
-        <DataTemplate x:Key="instanceLayout" DataType="DockerContainerInstance">
+        <DataTemplate x:Key="instanceLayout"
+                      DataType="DockerContainerInstance">
             <Grid Margin="7,7,7,12">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <AdornerDecorator Grid.Row="0" VerticalAlignment="Center">
+                <AdornerDecorator Grid.Row="0"
+                                  VerticalAlignment="Center">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidName" Text="{x:Static local:UIResources.NameLabelText}" Style="{StaticResource ItemLabelStyle}"/>
-                        <TextBlock Text="{Binding Name}" x:Uid="uidContainerName"  Style="{StaticResource HeaderItemStyle}" Tag="0" ToolTip="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock DockPanel.Dock="Left"
+                                   x:Uid="uidName"
+                                   Text="{x:Static local:UIResources.NameLabelText}"
+                                   Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock Text="{Binding Name}"
+                                   x:Uid="uidContainerName"
+                                   Style="{StaticResource HeaderItemStyle}"
+                                   Tag="0"
+                                   ToolTip="{Binding Name}"
+                                   TextTrimming="CharacterEllipsis" />
                     </DockPanel>
                 </AdornerDecorator>
 
-                <AdornerDecorator Grid.Row="1" VerticalAlignment="Center">
+                <AdornerDecorator Grid.Row="1"
+                                  VerticalAlignment="Center">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidContainerId" Text="{x:Static local:UIResources.IdLabelText}" Style="{StaticResource ItemLabelStyle}"/>
-                        <TextBlock Text="{Binding ShortId}" Style="{StaticResource HeaderItemStyle}" Tag="1" ToolTip="{Binding Id}"  TextTrimming="CharacterEllipsis"/>
+                        <TextBlock DockPanel.Dock="Left"
+                                   x:Uid="uidContainerId"
+                                   Text="{x:Static local:UIResources.IdLabelText}"
+                                   Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock Text="{Binding ShortId}"
+                                   Style="{StaticResource HeaderItemStyle}"
+                                   Tag="1"
+                                   ToolTip="{Binding Id}"
+                                   TextTrimming="CharacterEllipsis" />
                     </DockPanel>
                 </AdornerDecorator>
 
-                <AdornerDecorator Grid.Row="2" VerticalAlignment="Center">
+                <AdornerDecorator Grid.Row="2"
+                                  VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidImage" Text="{x:Static local:UIResources.ImageLabelText}" Style="{StaticResource ItemLabelStyle}" />
-                        <TextBlock Text="{Binding Image}" Style="{StaticResource SelectedTextBlockStyle}" Tag="2" ToolTip="{Binding Image}"/>
+                        <TextBlock DockPanel.Dock="Left"
+                                   x:Uid="uidImage"
+                                   Text="{x:Static local:UIResources.ImageLabelText}"
+                                   Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock Text="{Binding Image}"
+                                   Style="{StaticResource SelectedTextBlockStyle}"
+                                   Tag="2"
+                                   ToolTip="{Binding Image}" />
                     </DockPanel>
                 </AdornerDecorator>
 
-                <AdornerDecorator Grid.Row="3" VerticalAlignment="Center">
+                <AdornerDecorator Grid.Row="3"
+                                  VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidCommand" Text="{x:Static local:UIResources.CommandLabelText}" Style="{StaticResource ItemLabelStyle}" />
-                        <TextBlock Text="{Binding Command}" Style="{StaticResource SelectedTextBlockStyle}" Tag="3" ToolTip="{Binding Command}"/>
+                        <TextBlock DockPanel.Dock="Left"
+                                   x:Uid="uidCommand"
+                                   Text="{x:Static local:UIResources.CommandLabelText}"
+                                   Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock Text="{Binding Command}"
+                                   Style="{StaticResource SelectedTextBlockStyle}"
+                                   Tag="3"
+                                   ToolTip="{Binding Command}" />
                     </DockPanel>
                 </AdornerDecorator>
 
-                <AdornerDecorator Grid.Row="4" VerticalAlignment="Center">
+                <AdornerDecorator Grid.Row="4"
+                                  VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidStatus" Text="{x:Static local:UIResources.StatusLabelText}" Style="{StaticResource ItemLabelStyle}" />
-                        <TextBlock Text="{Binding Status}" Style="{StaticResource SelectedTextBlockStyle}" Tag="4" ToolTip="{Binding Status}"/>
+                        <TextBlock DockPanel.Dock="Left"
+                                   x:Uid="uidStatus"
+                                   Text="{x:Static local:UIResources.StatusLabelText}"
+                                   Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock Text="{Binding Status}"
+                                   Style="{StaticResource SelectedTextBlockStyle}"
+                                   Tag="4"
+                                   ToolTip="{Binding Status}" />
                     </DockPanel>
                 </AdornerDecorator>
 
-                <AdornerDecorator Grid.Row="5" VerticalAlignment="Center">
+                <AdornerDecorator Grid.Row="5"
+                                  VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidCreated" Text="{x:Static local:UIResources.CreatedLabelText}" Style="{StaticResource ItemLabelStyle}" />
-                        <TextBlock Text="{Binding Created}" Style="{StaticResource SelectedTextBlockStyle}" Tag="5" ToolTip="{Binding Created}"/>
+                        <TextBlock DockPanel.Dock="Left"
+                                   x:Uid="uidCreated"
+                                   Text="{x:Static local:UIResources.CreatedLabelText}"
+                                   Style="{StaticResource ItemLabelStyle}" />
+                        <TextBlock Text="{Binding Created}"
+                                   Style="{StaticResource SelectedTextBlockStyle}"
+                                   Tag="5"
+                                   ToolTip="{Binding Created}" />
                     </DockPanel>
                 </AdornerDecorator>
 
-                <AdornerDecorator Grid.Row="6" VerticalAlignment="Center">
+                <AdornerDecorator Grid.Row="6"
+                                  VerticalAlignment="Center">
                     <DockPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <TextBlock DockPanel.Dock="Left" x:Uid="uidPorts" Text="{x:Static local:UIResources.PortsLabelText}" Style="{StaticResource ItemLabelStyle}" VerticalAlignment="Top" />
-                        <TextBlock Text="{Binding FormattedListOfPorts}" Style="{StaticResource SelectedTextBlockStyle}" Tag="6" ToolTip="{Binding FormattedListOfPorts}" />
+                        <TextBlock DockPanel.Dock="Left"
+                                   x:Uid="uidPorts"
+                                   Text="{x:Static local:UIResources.PortsLabelText}"
+                                   Style="{StaticResource ItemLabelStyle}"
+                                   VerticalAlignment="Top" />
+                        <TextBlock Text="{Binding FormattedListOfPorts}"
+                                   Style="{StaticResource SelectedTextBlockStyle}"
+                                   Tag="6"
+                                   ToolTip="{Binding FormattedListOfPorts}" />
                     </DockPanel>
                 </AdornerDecorator>
             </Grid>
@@ -176,16 +278,16 @@
     <!-- Main layout grid -->
     <Grid Margin="12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" /> <!--0:Connectionlabel-->
+            <RowDefinition Height="Auto" /> <!--1:Connection combo box/add new connection-->
+            <RowDefinition Height="Auto" /> <!--2:Advanced Settings-->
+            <RowDefinition Height="Auto" /> <!--3:status/refresh button-->
+            <RowDefinition Height="*" />    <!--4:ContainerList-->
+            <RowDefinition Height="Auto" /> <!--5:OK/Cancel-->
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <!--Connection Type Picker-->
@@ -193,7 +295,8 @@
                x:Uid="uidConnectionTypeLabel"
                x:Name="ConnectionTypeLabel"
                Target="{Binding ElementName=ConnectionTypeComboBox}"
-               Margin="-2 -2 0 -2">_Connection Type:</Label>
+               Margin="-2,-2,0,5"
+               Content="{x:Static local:UIResources.ConnectionLabel}" />
 
         <ComboBox x:Uid="uidConnectionTypeComboBox"
                   x:Name="ConnectionTypeComboBox"
@@ -203,7 +306,8 @@
                   ItemsSource="{Binding SupportedConnections}"
                   SelectedItem="{Binding SelectedConnection}"
                   DisplayMemberPath="DisplayName"
-                  IsEnabled="{Binding IsRefreshEnabled}"/>
+                  IsEnabled="{Binding IsRefreshEnabled}" />
+
         <Button x:Uid="uidAddConnection"
                 x:Name="AddConnection"
                 AutomationProperties.Name="Add New Connection"
@@ -222,28 +326,65 @@
             </vsimaging:CrispImage>
         </Button>
 
+        <!-- Advanced Settings -->
+        <Expander x:Name="advancedSettingsExpander"
+                  x:Uid="uidadvancedSettingsExpander"
+                  HorizontalAlignment="Stretch"
+                  Header="{x:Static local:UIResources.AdvancedSettingsHeader}"
+                  Grid.Row="2"
+                  Grid.ColumnSpan="2"
+                  Margin="0,10,0,0"
+                  VerticalAlignment="Top"
+                  ExpandDirection="Down">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                
+                <Label x:Uid="uidHostnameLabel"
+                       Grid.Row="0"
+                       Grid.Column="0"
+                       x:Name="Hostname"
+                       Target="{Binding ElementName=hostnameTextBox}"
+                       Margin="19,5,0,5"
+                       Content="{x:Static local:UIResources.HostnameLabel}"
+                       ToolTip="{x:Static local:UIResources.HostnameTip}" />
+
+                <TextBox x:Uid="uidHostnameTextBox"
+                         Grid.Row="0"
+                         Grid.Column="1"
+                         x:Name="hostnameTextBox"
+                         Text="{Binding Path=Hostname, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                         PreviewKeyDown="HostnameTextbox_PreviewKeyDown"
+                         Margin="0,5,0,5"
+                         Padding="2" />
+                </Grid>
+        </Expander>
+
         <!-- Status Text and Refresh Button -->
-
         <TextBlock x:Uid="uidStatusLabel"
-                    Style="{StaticResource StatusLabelStyle}"
-                    Grid.Row="2"
-                    Grid.Column="0"
-                    Margin="0,10,0,10"
-                    Padding="10,0,10,0"
-                    Text="{ Binding StatusText, Mode=OneWay}"
-                    TextWrapping="Wrap"/>
-
+                   Style="{StaticResource StatusLabelStyle}"
+                   Grid.Row="3"
+                   Grid.Column="0"
+                   Margin="0,5,0,5"
+                   Padding="10,0,10,0"
+                   Text="{Binding StatusText, Mode=OneWay}"
+                   TextWrapping="Wrap" />
         <Button x:Uid="uidRefreshButton"
-                    Grid.Row="2"
-                    Grid.Column="1"
-                    AutomationProperties.Name="Refresh"
-                    Margin="0,10,0,10"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Height="20"
-                    Width="20"
-                    Click="Refresh_Click"
-                    IsEnabled="{Binding IsRefreshEnabled}">
+                Grid.Row="3"
+                Grid.Column="1"
+                AutomationProperties.Name="Refresh"
+                Margin="0,5,0,5"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Height="20"
+                Width="20"
+                Click="Refresh_Click"
+                IsEnabled="{Binding IsRefreshEnabled}">
             <vsimaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Refresh}"
                                   Width="16"
                                   Height="16">
@@ -258,6 +399,7 @@
                       Style="{StaticResource ScrollViewerStyle}"
                       Grid.Row="4"
                       Grid.ColumnSpan="2">
+
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -269,7 +411,7 @@
                          SelectedValue="{Binding SelectedContainerInstance}"
                          ItemContainerStyle="{StaticResource ListBoxContainerStyle}"
                          GotKeyboardFocus="ContainerListBox_GotKeyboardFocus"
-                         Style="{StaticResource ListBoxStyle}"/>
+                         Style="{StaticResource ListBoxStyle}" />
             </Grid>
         </ScrollViewer>
 
@@ -280,22 +422,24 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
 
-            <Button x:Uid="uidOkayButton" x:Name="OkayButton"
+            <Button x:Uid="uidOkayButton"
+                    x:Name="OkayButton"
                     Margin="4"
                     Height="23"
                     MinWidth="75"
                     IsDefault="True"
                     Click="OkButton_Click"
                     CommandParameter="{Binding ElementName=ContainerPickerDialog}"
-                    Content="OK" />
+                    Content="{x:Static local:UIResources.OKLabel}" />
 
-            <Button x:Uid="uidCancelButton" x:Name="CancelButton"
+            <Button x:Uid="uidCancelButton"
+                    x:Name="CancelButton"
                     Height="23"
                     MinWidth="75"
                     IsCancel="True"
                     Click="CancelButton_Click"
                     CommandParameter="{Binding ElementName=ContainerPickerDialog}"
-                    Content="Cancel" />
+                    Content="{x:Static local:UIResources.CancelLabel}" />
         </StackPanel>
     </Grid>
 </ui:DialogWindow>

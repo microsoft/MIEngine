@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.SSHDebugPS.UI
@@ -74,12 +75,12 @@ namespace Microsoft.SSHDebugPS.UI
 
         private void DialogWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Escape)
+            if (e.Key == Key.Escape)
             {
                 this.Close();
                 e.Handled = true;
             }
-            else if (e.Key == System.Windows.Input.Key.Enter)
+            else if (e.Key == Key.Enter)
             {
                 this.DialogResult = ComputeContainerConnectionString();
                 if (this.DialogResult.GetValueOrDefault(false))
@@ -89,24 +90,38 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
+        private void HostnameTextbox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                Model.RefreshContainersList();
+                e.Handled = true;
+            }
+        }
+
         private bool ComputeContainerConnectionString()
         {
             if (Model.SelectedContainerInstance != null)
             {
-                string connectionString;
+                string remoteConnectionString = string.Empty;
+                string containerId;
                 if (Model.SelectedConnection.Connection == null)
                 {
-                    Model.SelectedContainerInstance.GetResult(out connectionString);
+
+                    Model.SelectedContainerInstance.GetResult(out containerId);
                 }
                 else
                 {
-                    Model.SelectedContainerInstance.GetResult(out string containerId);
-                    connectionString = string.Concat(Model.SelectedConnection.Connection.Name, '/', containerId);
+                    Model.SelectedContainerInstance.GetResult(out containerId);
+                    remoteConnectionString = Model.SelectedConnection.Connection.Name;
                 }
 
-                _selectedContainerConnectionString = connectionString;
+                string dockerString = string.IsNullOrWhiteSpace(Model.Hostname) ? containerId : "{0}::{1}".FormatInvariantWithArgs(Model.Hostname, containerId);
+
+                _selectedContainerConnectionString = string.IsNullOrWhiteSpace(remoteConnectionString) ? dockerString : "{0}/{1}".FormatInvariantWithArgs(remoteConnectionString, dockerString);
                 return true;
             }
+
             return false;
         }
 

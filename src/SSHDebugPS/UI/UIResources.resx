@@ -190,4 +190,23 @@
   <data name="QueryingForContainersMessage" xml:space="preserve">
     <value>Querying for containers...</value>
   </data>
+  <data name="AdvancedSettingsHeader" xml:space="preserve">
+    <value>_Advanced Settings</value>
+  </data>
+  <data name="CancelLabel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConnectionLabel" xml:space="preserve">
+    <value>_Connection Type:</value>
+  </data>
+  <data name="HostnameLabel" xml:space="preserve">
+    <value>_Hostname:</value>
+    <comment>Hostname for Docker daemon configuration</comment>
+  </data>
+  <data name="HostnameTip" xml:space="preserve">
+    <value>Specify a hostname if connecting to a different Docker daemon. </value>
+  </data>
+  <data name="OKLabel" xml:space="preserve">
+    <value>_OK</value>
+  </data>
 </root>

@@ -2,19 +2,19 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.ComponentModel;
-using System.Globalization;
+using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
+using System.Windows.Interop;
+using EnvDTE;
 using liblinux;
 using liblinux.Persistence;
-using Microsoft.Internal.VisualStudio.Shell.TestContracts;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
+using Microsoft.SSHDebugPS.UI;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Linux.ConnectionManager;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -35,6 +35,17 @@ namespace Microsoft.SSHDebugPS
             // Assume format is <server>/<hostname>::<container> where if <server> is specified, it is for SSH
             string[] connectionStrings = name.Split('/');
 
+            // Format is wrong, ask the user to select from the dialog
+            if (connectionStrings.Length > 2 || connectionStrings.Length < 1)
+            {
+                string connectionString;
+                // If the user cancels the window, we want to fall back to the error message below
+                if (ShowContainerPickerWindow(IntPtr.Zero, out connectionString))
+                {
+                    return GetDockerConnection(connectionString);
+                }
+            }
+
             if (connectionStrings.Length == 2)
             {
                 // SSH connection
@@ -49,7 +60,6 @@ namespace Microsoft.SSHDebugPS
             }
             else
             {
-                // TODO: This will be replaced by the docker container selection dialog
                 VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
                 return null;
             }
@@ -141,6 +151,48 @@ namespace Microsoft.SSHDebugPS
             }
 
             return SSHHelper.CreateSSHConnectionFromConnectionInfo(connectionInfo);
+        }
+
+        /// <summary>
+        /// Open the ContainerPickerDialog
+        /// </summary>
+        /// <param name="hwnd">Parent hwnd or IntPtr.Zero</param>
+        /// <param name="connectionString">[out] connection string obtained by the dialog</param>
+        /// <returns></returns>
+        public static bool ShowContainerPickerWindow(IntPtr hwnd, out string connectionString)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread("Microsoft.SSHDebugPS.ShowContainerPickerWindow");
+            ContainerPickerDialogWindow dialog = new ContainerPickerDialogWindow();
+
+            if (hwnd == IntPtr.Zero) // get the VS main window hwnd
+            {
+                try
+                {
+                    // parent to the global VS window
+                    DTE dte = (DTE)Package.GetGlobalService(typeof(SDTE));
+                    hwnd = new IntPtr(dte?.MainWindow?.HWnd ?? 0);
+                }
+                catch // No DTE?
+                {
+                    Debug.Fail("No DTE?");
+                }
+            }
+
+            if (hwnd != IntPtr.Zero)
+            {
+                WindowInteropHelper helper = new WindowInteropHelper(dialog);
+                helper.Owner = hwnd;
+            }
+
+            bool? dialogResult = dialog.ShowModal();
+            if (dialogResult.GetValueOrDefault(false))
+            {
+                connectionString = dialog.SelectedContainerConnectionString;
+                return true;
+            }
+
+            connectionString = string.Empty;
+            return false;
         }
     }
 }
