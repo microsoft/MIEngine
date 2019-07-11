@@ -245,7 +245,7 @@ namespace Microsoft.SSHDebugPS.UI
             set
             {
                 // checking cases that they are not equal
-                if (!_selectedContainerInstance.Equals(value))
+                if (!object.Equals(_selectedContainerInstance, value))
                 {
                     _selectedContainerInstance = value;
                     OnPropertyChanged(nameof(SelectedContainerInstance));
@@ -262,8 +262,8 @@ namespace Microsoft.SSHDebugPS.UI
             }
             set
             {
-                if (((_selectedContainerInstance != null) && (value == null || _selectedContainerInstance.Equals(value)))
-                    || (_selectedContainerInstance == null && value != null))
+                if ((_selectedConnection != null && _selectedConnection != value) 
+                    || (_selectedConnection == null && value != null))
                 {
                     _selectedConnection = value;
                     OnPropertyChanged(nameof(SelectedConnection));
