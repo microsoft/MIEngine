@@ -42,7 +42,7 @@ namespace MICore
 
             // Allow to execute custom commands before launching debugger.
             // For ex., instructing GDB not to break for certain signals
-            if (options.DebuggerMIMode == MIMode.Gdb)
+            if (options.DebuggerMIMode == MIMode.Gdb && !string.IsNullOrWhiteSpace(options.WorkingDirectory))
             {
                 var gdbInitFile = Path.Combine(options.WorkingDirectory, ".gdbinit");
                 if (File.Exists(gdbInitFile))
