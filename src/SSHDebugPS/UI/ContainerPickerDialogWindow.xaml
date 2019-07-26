@@ -234,8 +234,10 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Button Grid.Row="0"
+                <Button x:Name="ContainerDetailsExpander" 
+                        Grid.Row="0"
                         Grid.Column="0"
+                        AutomationProperties.Name="ContainerDetailsExpander"
                         Command="{Binding ExpandCommand}"
                         Background="Transparent"
                         BorderThickness="0">
@@ -455,6 +457,7 @@
                  Padding="2"
                  x:Uid="uidHostnameTextBox"
                  x:Name="hostnameTextBox"
+                 AutomationProperties.Name="DockerHostnameOptional"
                  PreviewKeyDown="HostnameTextbox_PreviewKeyDown"
                  Text="{Binding Path=Hostname, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                  ToolTip="{x:Static local:UIResources.HostnameTip}">
