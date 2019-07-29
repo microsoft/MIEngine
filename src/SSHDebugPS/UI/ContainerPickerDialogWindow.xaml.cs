@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -42,9 +43,10 @@ namespace Microsoft.SSHDebugPS.UI
                     listItemFocused = true;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Ignore if focus was failed to be set
+                Debug.Fail(ex.ToString());
             }
             if (!listItemFocused)
             {
@@ -62,7 +64,8 @@ namespace Microsoft.SSHDebugPS.UI
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        // Ultimately what we give back
+        // The formatted string for the ConnectionType dialog
+        private string _selectedContainerConnectionString;
         public string SelectedContainerConnectionString
         {
             get
@@ -207,7 +210,6 @@ namespace Microsoft.SSHDebugPS.UI
 
         #region Private Variables
         private ContainerPickerViewModel _model;
-        private string _selectedContainerConnectionString;
         #endregion
     }
 }

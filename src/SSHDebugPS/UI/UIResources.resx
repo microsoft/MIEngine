@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ContainersFoundStatusText" xml:space="preserve">
-    <value>Found {0} containers</value>
+    <value>Found {0} containers.</value>
     <comment>{0} = number of containers found greater than 0</comment>
   </data>
   <data name="DialogTitle" xml:space="preserve">
@@ -213,7 +213,7 @@
     <value>Refresh</value>
   </data>
   <data name="RefreshToolTip" xml:space="preserve">
-    <value>Refresh container list.</value>
+    <value>Refresh Container List</value>
   </data>
   <data name="AddNewSSHConnectionLabel" xml:space="preserve">
     <value>Add New SSH Connection</value>
@@ -226,5 +226,8 @@
   </data>
   <data name="Expanded" xml:space="preserve">
     <value>Expanded</value>
+  </data>
+  <data name="ExpanderToolTip" xml:space="preserve">
+    <value>Show Container Details</value>
   </data>
 </root>

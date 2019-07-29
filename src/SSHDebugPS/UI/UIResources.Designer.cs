@@ -151,7 +151,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Found {0} containers.
+        ///   Looks up a localized string similar to Found {0} containers..
         /// </summary>
         public static string ContainersFoundStatusText {
             get {
@@ -192,6 +192,15 @@ namespace Microsoft.SSHDebugPS {
         public static string Expanded {
             get {
                 return ResourceManager.GetString("Expanded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Container Details.
+        /// </summary>
+        public static string ExpanderToolTip {
+            get {
+                return ResourceManager.GetString("ExpanderToolTip", resourceCulture);
             }
         }
         
@@ -322,7 +331,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Refresh container list..
+        ///   Looks up a localized string similar to Refresh Container List.
         /// </summary>
         public static string RefreshToolTip {
             get {

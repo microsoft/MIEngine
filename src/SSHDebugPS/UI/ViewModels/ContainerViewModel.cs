@@ -143,7 +143,7 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        public override WindowsInput.ICommand ExpandCommand => new ContainerUICommand(Expand, "ExpandDetails", "ExpandToolTip");
+        public override WindowsInput.ICommand ExpandCommand => new ContainerUICommand(Expand, string.Empty, UIResources.ExpanderToolTip);
 
         private void Expand(object parameter)
         {
@@ -151,7 +151,7 @@ namespace Microsoft.SSHDebugPS.UI
         }
 
         // Gets the first 12 characters and appends an ellipsis
-        public string ShortId { get => Id.Substring(0, 12); }
+        public string ShortId { get => Id.Length > 12 ? Id.Substring(0, 12) : Id; }
         public string Image => Instance.Image;
         public string Command => Instance.Command;
         public string Status => Instance.Status;

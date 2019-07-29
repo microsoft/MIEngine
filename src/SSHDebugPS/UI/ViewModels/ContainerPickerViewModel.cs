@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
@@ -60,8 +61,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 // Clear everything
                 ContainerInstances?.Clear();
-                StatusText = string.Empty;
-                StatusIsError = false;
+                UpdateStatusMessage(string.Empty, false);
 
                 IEnumerable<DockerContainerInstance> containers;
 
@@ -75,8 +75,7 @@ namespace Microsoft.SSHDebugPS.UI
                     var connection = SelectedConnection.Connection;
                     if (connection == null)
                     {
-                        StatusText = UIResources.SSHConnectionFailedStatusText;
-                        StatusIsError = true;
+                        UpdateStatusMessage(UIResources.SSHConnectionFailedStatusText, isError: true);
                         return;
                     }
                     containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname);
@@ -87,7 +86,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (ContainerInstances.Count() > 0)
                 {
-                    
+
                     if (selectedContainer != null)
                     {
                         var found = ContainerInstances.FirstOrDefault(c => selectedContainer.Equals(c));
@@ -102,8 +101,7 @@ namespace Microsoft.SSHDebugPS.UI
             }
             catch (Exception ex)
             {
-                StatusText = UIResources.ErrorStatusTextFormat.FormatCurrentCultureWithArgs(ex.Message);
-                StatusIsError = true;
+                UpdateStatusMessage(UIResources.ErrorStatusTextFormat.FormatCurrentCultureWithArgs(ex.Message), isError: true);
                 return;
             }
             finally
@@ -198,33 +196,49 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        private string _statusText;
-        public string StatusText
+        public void UpdateStatusMessage(string statusMessage, bool isError)
         {
-            get => _statusText;
-            set
+            // If the message is updated to empty, we want to clear the StatusIsError value.
+            if (string.IsNullOrEmpty(statusMessage))
             {
-                if (!string.Equals(_statusText, value, StringComparison.CurrentCulture))
+                if (!string.IsNullOrEmpty(_statusMessage))
                 {
-                    StatusIsError = false; // reset the StatusText to not be an error.
-                    _statusText = value;
-                    OnPropertyChanged(nameof(StatusText));
+                    _statusMessage = statusMessage;
+                    OnPropertyChanged(nameof(StatusMessage));
                 }
+
+                if (_statusIsError != false)
+                {
+                    _statusIsError = false;
+                    OnPropertyChanged(nameof(StatusIsError));
+                }
+                return;
             }
+
+            if (!string.Equals(_statusMessage, statusMessage, StringComparison.CurrentCulture))
+            {
+                _statusMessage = statusMessage;
+                OnPropertyChanged(nameof(StatusMessage));
+
+                if (_statusIsError != isError)
+                {
+                    _statusIsError = isError;
+                    OnPropertyChanged(nameof(StatusIsError));
+                }
+                return;
+            }
+        }
+
+        private string _statusMessage;
+        public string StatusMessage
+        {
+            get => _statusMessage;
         }
 
         private bool _statusIsError;
         public bool StatusIsError
         {
-            get => _statusIsError && StatusText.Length > 0;
-            set
-            {
-                if (_statusIsError != value)
-                {
-                    _statusIsError = value;
-                    OnPropertyChanged(nameof(StatusIsError));
-                }
-            }
+            get => _statusIsError;
         }
 
         public ObservableCollection<IConnectionViewModel> SupportedConnections { get; private set; }

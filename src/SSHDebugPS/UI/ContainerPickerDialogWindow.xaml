@@ -239,6 +239,7 @@
                         Grid.Column="0"
                         AutomationProperties.Name="ContainerDetailsExpander"
                         Command="{Binding ExpandCommand}"
+                        ToolTip="{Binding ExpandCommand.ToolTip}"
                         Background="Transparent"
                         BorderThickness="0">
                     <DockPanel>
@@ -380,7 +381,6 @@
     <!-- Main layout grid -->
     <Grid Margin="12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <!--0:Connection label-->
             <RowDefinition Height="Auto" />
             <!--1:Connection combo box/add new connection-->
@@ -390,12 +390,13 @@
             <!--3:Hostname textbox -->
             <RowDefinition Height="Auto" />
             <!--4:Container status/refresh button-->
-            <RowDefinition Height="*" />
-            <!--5:ContainerList-->
             <RowDefinition Height="Auto" />
+            <!--5:ContainerList-->
+            <RowDefinition Height="*" />
             <!--6:Warning Icon and Status Text -->
             <RowDefinition Height="Auto" />
             <!--7: OK/Cancel -->
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -461,17 +462,6 @@
                  PreviewKeyDown="HostnameTextbox_PreviewKeyDown"
                  Text="{Binding Path=Hostname, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                  ToolTip="{x:Static local:UIResources.HostnameTip}">
-            <TextBox.Style>
-                <Style TargetType="TextBox">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding ElementName=hostnameTextBox, Path=Text.IsEmpty}"
-                                     Value="True">
-                            <Setter Property="Text"
-                                    Value="{x:Static local:UIResources.OptionalHintText}" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBox.Style>
         </TextBox>
 
         <!-- Container Count Text and Refresh Button -->
@@ -523,10 +513,10 @@
                                   Visibility="{Binding StatusIsError, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"
                                   Moniker="{x:Static catalog:KnownMonikers.StatusWarning}" />
             <TextBlock DockPanel.Dock="Right"
-                       x:Name="StatusText"
+                       x:Name="StatusMessage"
                        TextWrapping="WrapWithOverflow"
                        Margin="6,12,9,6"
-                       Text="{Binding StatusText}" />
+                       Text="{Binding StatusMessage}" />
         </DockPanel>
 
         <!-- OK / Cancel buttons -->
