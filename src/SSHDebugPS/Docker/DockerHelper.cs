@@ -16,12 +16,11 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerPSCommand = "ps";
         // --no-trunc avoids parameter truncation
         private const string dockerPSArgs = "--no-trunc --format \"{{json .}}\"";
-        public static IEnumerable<IContainerInstance> GetLocalDockerContainers()
+        public static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname)
         {
             List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
 
-            // TODO: hook up hostname field
-            var settings = new DockerCommandSettings(string.Empty, false);
+            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
             LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
@@ -103,7 +102,7 @@ namespace Microsoft.SSHDebugPS.Docker
             }
         }
 
-        internal static IEnumerable<IContainerInstance> GetRemoteDockerContainers(IConnection connection)
+        internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname)
         {
             SSHConnection sshConnection = connection as SSHConnection;
             List<string> outputLines = new List<string>();
@@ -115,8 +114,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
 
-            //TODO: Hook up hostname
-            var settings = new DockerCommandSettings(string.Empty, true);
+            DockerCommandSettings settings = new DockerCommandSettings(hostname, true);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
             RemoteCommandRunner commandRunner = new RemoteCommandRunner(settings, sshConnection);

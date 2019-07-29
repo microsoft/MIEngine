@@ -9,123 +9,71 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
-    public interface IContainerInstance
+    public interface IContainerInstance : IEquatable<IContainerInstance>
     {
         string Id { get; }
         string Name { get; }
-        bool GetResult(out string selectedQualifier);
     }
 
-    public abstract class ContainerInstance<T> : IContainerInstance, IEquatable<T>
-        where T : IContainerInstance
+    public abstract class ContainerInstance : IContainerInstance
     {
         public abstract string Id { get; set; }
         public abstract string Name { get; set; }
 
-        public abstract bool Equals(T other);
-        public abstract bool GetResult(out string selectedQualifier);
-    }
+        #region IEquatable
 
-    public class DockerContainerInstance : ContainerInstance<DockerContainerInstance>
-    {
-        /// <summary>
-        /// Create a DockerContainerInstance from the results of docker ps in JSON format
-        /// </summary>
-        public static DockerContainerInstance Create(string json)
+        public static bool operator ==(ContainerInstance left, ContainerInstance right)
         {
-            try
+            if (left is null || right is null)
             {
-                JObject obj = JObject.Parse(json);
-                var instance = obj.ToObject<DockerContainerInstance>();
-                if (instance != null)
-                    return instance;
+                return ReferenceEquals(left, right);
             }
-            catch (Exception e)
-            {
-                Debug.Fail(e.ToString());
-            }
-            return null;
+
+            return left.Equals(right);
         }
 
-        public DockerContainerInstance() { }
+        public static bool operator !=(ContainerInstance left, ContainerInstance right)
+        {
+            return !(left == right);
+        }
 
-        #region JsonProperties
+        public bool Equals(IContainerInstance instance)
+        {
+            if (!ReferenceEquals(null, instance) && instance is ContainerInstance container)
+            {
+                return this.EqualsInternal(container);
+            }
 
-        [JsonProperty("ID")]
-        public override string Id { get; set; }
-        public string ShortId { get => Id.Substring(0, 10); }
+            return false;
+        }
 
-        [JsonProperty("Names")]
-        public override string Name { get; set; }
+        public override bool Equals(object obj)
+        {
+            if (obj is IContainerInstance instance)
+            {
+                return this.Equals(instance);
+            }
+            return false;
+        }
 
-        [JsonProperty("Image")]
-        public string Image { get; private set; }
-
-        [JsonProperty("Ports")]
-        public string Ports { get; set; }
-
-        [JsonProperty("Command")]
-        public string Command { get; private set; }
-
-        [JsonProperty("Status")]
-        public string Status { get; private set; }
-
-        [JsonProperty("CreatedAt")]
-        public string Created { get; private set; }
+        public override int GetHashCode()
+        {
+            return GetHashCodeInternal();
+        }
 
         #endregion
 
-        public override bool Equals(DockerContainerInstance other)
-        {
-            // the id can be a partial on a container
-            return String.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase) ? true :
-                Id.StartsWith(other.Id, StringComparison.OrdinalIgnoreCase) ? true :
-                other.Id.StartsWith(Id, StringComparison.OrdinalIgnoreCase) ? true : false;
-        }
+        #region Helper Methods
 
-        public override bool GetResult(out string selectedQualifier)
-        {
-            selectedQualifier = Name;
-            return true;
-        }
+        protected abstract bool EqualsInternal(ContainerInstance instance);
+        protected abstract int GetHashCodeInternal();
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string name)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        public string FormattedListOfPorts
-        {
-            get
-            {
-                return string.IsNullOrWhiteSpace(Ports) ? 
-                    UIResources.NoPortsText : 
-                    Ports.Replace(", ", "\r\n");
-            }
-        }
-
-        private bool _isSelected;
-        public bool IsSelected
-        {
-            get
-            {
-                return _isSelected;
-            }
-            set
-            {
-                if (_isSelected != value)
-                {
-                    _isSelected = value;
-                    OnPropertyChanged(nameof(IsSelected));
-                }
-            }
-        }
+        #endregion
     }
 }
