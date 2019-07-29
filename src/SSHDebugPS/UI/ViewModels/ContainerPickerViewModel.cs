@@ -6,11 +6,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Windows.Input;
-using System.Windows.Media.Media3D;
+using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
@@ -24,7 +22,7 @@ namespace Microsoft.SSHDebugPS.UI
         public ContainerPickerViewModel()
         {
             InitializeConnections();
-            ContainerInstances = new ObservableCollection<IContainerInstance>();
+            ContainerInstances = new ObservableCollection<IContainerViewModel>();
 
             _sshAvailable = new Lazy<bool>(() => IsLibLinuxAvailable());
             AddSSHConnectionCommand = new ContainerUICommand(
@@ -56,13 +54,16 @@ namespace Microsoft.SSHDebugPS.UI
 
             try
             {
-                IContainerInstance selectedContainer = SelectedContainerInstance;
+                IContainerViewModel selectedContainer = SelectedContainerInstance;
                 SelectedContainerInstance = null;
-                
-                StatusText = UIResources.SearchingStatusText;
-                ContainerInstances?.Clear();
 
-                IEnumerable<IContainerInstance> containers;
+                ContainersFoundText = UIResources.SearchingStatusText;
+
+                // Clear everything
+                ContainerInstances?.Clear();
+                UpdateStatusMessage(string.Empty, false);
+
+                IEnumerable<DockerContainerInstance> containers;
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
@@ -70,22 +71,22 @@ namespace Microsoft.SSHDebugPS.UI
                 }
                 else
                 {
-                    StatusText = UIResources.SSHConnectingStatusText;
+                    ContainersFoundText = UIResources.SSHConnectingStatusText;
                     var connection = SelectedConnection.Connection;
                     if (connection == null)
                     {
-                        StatusText = UIResources.SSHConnectionFailedStatusText;
+                        UpdateStatusMessage(UIResources.SSHConnectionFailedStatusText, isError: true);
                         return;
                     }
                     containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname);
                 }
 
-                ContainerInstances = new ObservableCollection<IContainerInstance>(containers);
+                ContainerInstances = new ObservableCollection<IContainerViewModel>(containers.Select(item => new DockerContainerViewModel(item)).ToList());
                 OnPropertyChanged(nameof(ContainerInstances));
 
                 if (ContainerInstances.Count() > 0)
                 {
-                    StatusText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+
                     if (selectedContainer != null)
                     {
                         var found = ContainerInstances.FirstOrDefault(c => selectedContainer.Equals(c));
@@ -96,21 +97,23 @@ namespace Microsoft.SSHDebugPS.UI
                         }
                     }
                     SelectedContainerInstance = ContainerInstances[0];
-
-                }
-                else
-                {
-                    StatusText = String.Empty;
                 }
             }
             catch (Exception ex)
             {
-                StatusText = UIResources.ErrorStatusTextFormat.FormatCurrentCultureWithArgs(ex.Message);
-                StatusIsError = true;
+                UpdateStatusMessage(UIResources.ErrorStatusTextFormat.FormatCurrentCultureWithArgs(ex.Message), isError: true);
                 return;
             }
             finally
             {
+                if (ContainerInstances.Count() > 0)
+                {
+                    ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+                }
+                else
+                {
+                    ContainersFoundText = UIResources.NoContainersFound;
+                }
                 IsRefreshEnabled = true;
             }
         }
@@ -171,11 +174,7 @@ namespace Microsoft.SSHDebugPS.UI
         private string _hostname;
         public string Hostname
         {
-            get
-            {
-                return _hostname;
-            }
-
+            get => _hostname;
             set
             {
                 if (!string.Equals(_hostname, value, StringComparison.Ordinal))
@@ -186,40 +185,64 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        private string _statusText;
-        public string StatusText
+        private string _containersFoundText;
+        public string ContainersFoundText
         {
-            get
-            {
-                return _statusText;
-            }
+            get => _containersFoundText;
             set
             {
-                _statusText = value;
-                StatusIsError = false; // reset the StatusText to not be an error.
-                OnPropertyChanged(nameof(StatusText));
+                _containersFoundText = value;
+                OnPropertyChanged(nameof(ContainersFoundText));
             }
+        }
+
+        public void UpdateStatusMessage(string statusMessage, bool isError)
+        {
+            // If the message is updated to empty, we want to clear the StatusIsError value.
+            if (string.IsNullOrEmpty(statusMessage))
+            {
+                if (!string.IsNullOrEmpty(_statusMessage))
+                {
+                    _statusMessage = statusMessage;
+                    OnPropertyChanged(nameof(StatusMessage));
+                }
+
+                if (_statusIsError != false)
+                {
+                    _statusIsError = false;
+                    OnPropertyChanged(nameof(StatusIsError));
+                }
+                return;
+            }
+
+            if (!string.Equals(_statusMessage, statusMessage, StringComparison.CurrentCulture))
+            {
+                _statusMessage = statusMessage;
+                OnPropertyChanged(nameof(StatusMessage));
+
+                if (_statusIsError != isError)
+                {
+                    _statusIsError = isError;
+                    OnPropertyChanged(nameof(StatusIsError));
+                }
+                return;
+            }
+        }
+
+        private string _statusMessage;
+        public string StatusMessage
+        {
+            get => _statusMessage;
         }
 
         private bool _statusIsError;
         public bool StatusIsError
         {
-            get
-            {
-                return _statusIsError;
-            }
-            set
-            {
-                if (_statusIsError != value)
-                {
-                    _statusIsError = value;
-                    OnPropertyChanged(nameof(StatusIsError));
-                }
-            }
+            get => _statusIsError;
         }
 
         public ObservableCollection<IConnectionViewModel> SupportedConnections { get; private set; }
-        public ObservableCollection<IContainerInstance> ContainerInstances { get; private set; }
+        public ObservableCollection<IContainerViewModel> ContainerInstances { get; private set; }
 
         private bool _isRefreshEnabled = true;
         public bool IsRefreshEnabled
@@ -235,13 +258,10 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        private IContainerInstance _selectedContainerInstance;
-        public IContainerInstance SelectedContainerInstance
+        private IContainerViewModel _selectedContainerInstance;
+        public IContainerViewModel SelectedContainerInstance
         {
-            get
-            {
-                return _selectedContainerInstance;
-            }
+            get => _selectedContainerInstance;
             set
             {
                 // checking cases that they are not equal
@@ -256,13 +276,10 @@ namespace Microsoft.SSHDebugPS.UI
         private IConnectionViewModel _selectedConnection;
         public IConnectionViewModel SelectedConnection
         {
-            get
-            {
-                return _selectedConnection;
-            }
+            get => _selectedConnection;
             set
             {
-                if ((_selectedConnection != null && _selectedConnection != value) 
+                if ((_selectedConnection != null && _selectedConnection != value)
                     || (_selectedConnection == null && value != null))
                 {
                     _selectedConnection = value;

@@ -1,10 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using Microsoft.SSHDebugPS.Docker;
+using Microsoft.SSHDebugPS.UI;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.PlatformUI;
 
@@ -20,6 +25,35 @@ namespace Microsoft.SSHDebugPS.UI
             InitializeComponent();
             this.Model = new ContainerPickerViewModel();
             this.DataContext = Model;
+            this.Loaded += OnWindowLoaded;
+        }
+
+        private void OnWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            bool listItemFocused = false;
+            try
+            {
+                if (ContainerListBox != null && ContainerListBox.HasItems)
+                {
+                    if (ContainerListBox.SelectedItem == null)
+                    {
+                        ContainerListBox.SelectedIndex = 0;
+                    }
+                    ((ListBoxItem)ContainerListBox.ItemContainerGenerator.ContainerFromItem(ContainerListBox.SelectedItem)).Focus();
+                    listItemFocused = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Ignore if focus was failed to be set
+                Debug.Fail(ex.ToString());
+            }
+            if (!listItemFocused)
+            {
+                //Focus the combo box
+                ConnectionTypeComboBox.Focus();
+            }
+            e.Handled = true;
         }
 
         #region Properties
@@ -30,7 +64,8 @@ namespace Microsoft.SSHDebugPS.UI
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        // Ultimately what we give back
+        // The formatted string for the ConnectionType dialog
+        private string _selectedContainerConnectionString;
         public string SelectedContainerConnectionString
         {
             get
@@ -146,11 +181,35 @@ namespace Microsoft.SSHDebugPS.UI
                 item.IsSelected = true;
             }
         }
+
+        private void ContainerListBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (sender is ListBox list)
+            {
+                if (list.SelectedItem is IContainerViewModel viewModel)
+                {
+                    switch (e.Key)
+                    {
+                        case Key.Right:
+                            viewModel.IsExpanded = true;
+                            e.Handled = true;
+                            break;
+                        case Key.Left:
+                            viewModel.IsExpanded = false;
+                            e.Handled = true;
+                            break;
+                        case Key.Space:
+                            viewModel.IsExpanded = !viewModel.IsExpanded;
+                            e.Handled = true;
+                            break;
+                    }
+                }
+            }
+        }
         #endregion
 
         #region Private Variables
         private ContainerPickerViewModel _model;
-        private string _selectedContainerConnectionString;
         #endregion
     }
 }
