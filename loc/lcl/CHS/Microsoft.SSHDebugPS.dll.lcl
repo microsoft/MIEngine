@@ -412,7 +412,7 @@
       <Item ItemId=";ConnectionLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Connection type:]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[连接类型(_C):]]></Val>
           </Tgt>
           <Prev Cat="Text">
@@ -424,8 +424,8 @@
       <Item ItemId=";ContainersFoundStatusText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Found {0} containers.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[找到 {0} 个容器]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[找到 {0} 个容器。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Found {0} containers]]></Val>
@@ -472,14 +472,17 @@
       <Item ItemId=";ExpanderToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show Container Details]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[显示容器详细信息]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";HostnameLabel" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Hostname (Optional):]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[主机名(_H):]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Hostname (可选)(_H):]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[_Hostname:]]></Val>
@@ -607,6 +610,9 @@
       <Item ItemId=";RefreshToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Refresh Container List]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[刷新容器列表]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
