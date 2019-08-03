@@ -412,8 +412,8 @@
       <Item ItemId=";ConnectionLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Connection type:]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[_Bağlantı Türü:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Bağlantı türü:]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[_Connection Type:]]></Val>
@@ -424,8 +424,8 @@
       <Item ItemId=";ContainersFoundStatusText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Found {0} containers.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[{0} kapsayıcı bulundu]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} kapsayıcı bulundu.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Found {0} containers]]></Val>
@@ -472,14 +472,17 @@
       <Item ItemId=";ExpanderToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show Container Details]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Kapsayıcı Ayrıntılarını Görüntüleyin]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";HostnameLabel" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Hostname (Optional):]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[_Konak adı:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Konak adı (İsteğe bağlı):]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[_Hostname:]]></Val>
@@ -607,6 +610,9 @@
       <Item ItemId=";RefreshToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Refresh Container List]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Kapsayıcı Listesini Yenileyin]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

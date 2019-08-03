@@ -412,7 +412,7 @@
       <Item ItemId=";ConnectionLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Connection type:]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[接続の種類(_C):]]></Val>
           </Tgt>
           <Prev Cat="Text">
@@ -424,8 +424,8 @@
       <Item ItemId=";ContainersFoundStatusText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Found {0} containers.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[{0} 個のコンテナーが見つかりました]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} 個のコンテナーが見つかりました。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Found {0} containers]]></Val>
@@ -472,14 +472,17 @@
       <Item ItemId=";ExpanderToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show Container Details]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[コンテナーの詳細を表示します]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";HostnameLabel" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Hostname (Optional):]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[ホスト名(_H):]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ホスト名 (省略可能)(_H):]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[_Hostname:]]></Val>
@@ -607,6 +610,9 @@
       <Item ItemId=";RefreshToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Refresh Container List]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[コンテナー一覧を更新します]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
