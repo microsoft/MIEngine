@@ -136,7 +136,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                 ScopedNames = new Dictionary<string, string>();
                 for (int i = 0; i < name.Args.Count; ++i)
                 {
-                    ScopedNames["$T" + (i + 1)] = name.Args[i].FullyQualifiedName;
+                    ScopedNames["$T" + (i + 1).ToString(CultureInfo.InvariantCulture)] = name.Args[i].FullyQualifiedName;
                 }
             }
         }
@@ -786,7 +786,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         IVariableInformation value = getValue(nodes.Peek().Content);
                         if (value != null)
                         {
-                            content.Add(new SimpleWrapper("[" + i + "]", _process.Engine, value));
+                            content.Add(new SimpleWrapper("[" + i.ToString(CultureInfo.InvariantCulture) + "]", _process.Engine, value));
                             i++;
                         }
                         break;
@@ -819,7 +819,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     IVariableInformation value = getValue(node);
                     if (value != null)
                     {
-                        content.Add(new SimpleWrapper("[" + i + "]", _process.Engine, value));
+                        content.Add(new SimpleWrapper("[" + i.ToString(CultureInfo.InvariantCulture) + "]", _process.Engine, value));
                         i++;
                     }
                 }
@@ -897,7 +897,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         for (int j = 0; j < name.Qualifiers[i].Args.Count; ++j)
                         {
-                            scopedNames["$T" + t] = name.Qualifiers[i].Args[j].FullyQualifiedName;
+                            scopedNames["$T" + t.ToString(CultureInfo.InvariantCulture)] = name.Qualifiers[i].Args[j].FullyQualifiedName;
                             t++;
                         }
                     }
