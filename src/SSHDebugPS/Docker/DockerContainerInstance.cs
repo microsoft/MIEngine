@@ -56,14 +56,16 @@ namespace Microsoft.SSHDebugPS.Docker
 
         #endregion
 
+        // Docker container names: only [a-zA-Z0-9][a-zA-Z0-9_.-] are allowed. It is also case sensitive
         protected override bool EqualsInternal(ContainerInstance instance)
         {
             if (instance is DockerContainerInstance other)
             {
                 // the id can be a partial on a container
-                return String.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase) ||
-                    Id.StartsWith(other.Id, StringComparison.OrdinalIgnoreCase) ||
-                    other.Id.StartsWith(Id, StringComparison.OrdinalIgnoreCase);
+                return String.Equals(Id, other.Id, StringComparison.Ordinal) ||
+                    Id.StartsWith(other.Id, StringComparison.Ordinal
+                    ) ||
+                    other.Id.StartsWith(Id, StringComparison.Ordinal);
             }
 
             return false;
@@ -72,7 +74,7 @@ namespace Microsoft.SSHDebugPS.Docker
         protected override int GetHashCodeInternal()
         {
             // Since IDs can be partial, we don't have a good way to get a good hash code.
-            return string.IsNullOrWhiteSpace(Id) ? 0 : Id.Substring(0,1).ToLowerInvariant().GetHashCode();
+            return string.IsNullOrWhiteSpace(Id) ? 0 : Id.Substring(0,1).GetHashCode();
         }
     }
 }
