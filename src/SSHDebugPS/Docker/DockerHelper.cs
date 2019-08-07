@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -122,8 +122,8 @@ namespace Microsoft.SSHDebugPS.Docker
             if (containers != null)
             {
                 // Check if the user entered the containerName or possibly part of the Id. 
-                if (containers.Any(container => string.Equals(container.Name, containerName, System.StringComparison.Ordinal) ? true
-                        : containers.Any(item => item.Id.StartsWith(containerName, System.StringComparison.Ordinal))))
+                if (containers.Any(container => string.Equals(container.Name, containerName, StringComparison.Ordinal) ? true
+                        : containers.Any(item => item.Id.StartsWith(containerName, StringComparison.Ordinal))))
                 {
                     return true;
                 }
