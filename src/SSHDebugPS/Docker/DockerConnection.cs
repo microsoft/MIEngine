@@ -96,6 +96,17 @@ namespace Microsoft.SSHDebugPS.Docker
             }
         }
 
+        // Base implementation was evaluating '$HOME' on the host machine and not the client machine, causing the home directory to be wrong.
+        public override string GetUserHomeDirectory()
+        {
+            string command = "eval echo '~'";
+            string commandOutput;
+            string errorMessage;
+            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput, errorMessage: out errorMessage);
+
+            return commandOutput;
+        }
+
         // Execute a command and wait for a response. No more interaction
         public override void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
         {
