@@ -135,8 +135,6 @@ namespace Microsoft.SSHDebugPS.Docker
             return false;
         }
 
-
-
         internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname)
         {
             SSHConnection sshConnection = connection as SSHConnection;
