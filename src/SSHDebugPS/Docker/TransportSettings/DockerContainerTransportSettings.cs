@@ -32,7 +32,7 @@ namespace Microsoft.SSHDebugPS.Docker
         private string _commandToExecute;
         // 0 = container, 1 = command to execute
         private const string _subCommandArgsFormat = "{0} {1}";
-        private const string _subCommandArgsFormatWithShell = "{0} /bin/sh -c \"{1}\"";
+        private const string _subCommandArgsFormatWithShell = "{0} /bin/sh -c '{1}'"; // Single quote the argument so variable resolution does not happen until it is in the container.
         private const string _interactiveFlag = "-i ";
 
         private bool _makeInteractive;
