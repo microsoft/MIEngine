@@ -482,7 +482,7 @@
         <Str Cat="Text">
           <Val><![CDATA[_Hostname (Optional):]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[_Hostname (可选)(_H):]]></Val>
+            <Val><![CDATA[Hostname (可选)(_H):]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[_Hostname:]]></Val>
