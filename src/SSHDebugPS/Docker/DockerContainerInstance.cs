@@ -63,8 +63,7 @@ namespace Microsoft.SSHDebugPS.Docker
             {
                 // the id can be a partial on a container
                 return String.Equals(Id, other.Id, StringComparison.Ordinal) ||
-                    Id.StartsWith(other.Id, StringComparison.Ordinal
-                    ) ||
+                    Id.StartsWith(other.Id, StringComparison.Ordinal) ||
                     other.Id.StartsWith(Id, StringComparison.Ordinal);
             }
 
