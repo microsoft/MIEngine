@@ -80,21 +80,10 @@ namespace Microsoft.SSHDebugPS
                 settings = new DockerContainerTransportSettings(hostName, containerName, remoteConnection != null);
                 string displayName = remoteConnection != null ? remoteConnection.Name + '/' + dockerString : dockerString;
 
-                string output;
-                string error;
-                // Test container is available/reachable. 5 seconds should be enough to verify
-                DockerExecutionManager manager = new DockerExecutionManager(settings, remoteConnection);
-                if (manager.ExecuteCommand("/bin/sh", 5000, out output, out error, runInShell: false, makeInteractive: false) != 0)
+                if (DockerHelper.IsContainerRunning(hostName, containerName, remoteConnection))
                 {
-                    // Error message might be in output.
-                    VSMessageBoxHelper.PostErrorMessage(
-                       StringResources.Error_ContainerUnavailableTitle,
-                       StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(containerName, string.IsNullOrWhiteSpace(error) ? output : error)
-                       );
-                    return null;
+                    return new DockerConnection(settings, remoteConnection, displayName, containerName);
                 }
-
-                return new DockerConnection(settings, remoteConnection, displayName, containerName);
             }
 
             return null;
