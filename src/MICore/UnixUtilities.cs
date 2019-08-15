@@ -76,7 +76,7 @@ namespace MICore
                 // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
                 if (localOptions.ProcessId.HasValue && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
                 {
-                    prompt = String.Format(CultureInfo.CurrentCulture, "read -n 1 -p \\\"{0}\\\" yn; if [[ ! $yn =~ ^[Yy]$ ]] ; then exit 0; fi; ", MICoreResources.Warn_AttachAsRootProcess);
+                    prompt = String.Format(CultureInfo.CurrentCulture, "read -n 1 -p \"{0}\" yn; if [[ ! $yn =~ ^[Yy]$ ]] ; then exit 0; fi; ", MICoreResources.Warn_AttachAsRootProcess);
 
                     // Prefer pkexec for a nice graphical prompt, but fall back to sudo if it's not available
                     if (File.Exists(UnixUtilities.PKExecPath))
