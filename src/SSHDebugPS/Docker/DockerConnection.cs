@@ -12,15 +12,85 @@ namespace Microsoft.SSHDebugPS.Docker
 {
     internal class DockerConnection : PipeConnection
     {
+        #region Statics
+
+        internal const string SshPrefix = "ssh=";
+        internal const string DockerHostPrefix = "host=";
+        internal const char Separator = ';';
+
+        internal static string CreateConnectionString(string containerName, string remoteConnectionName, string hostName)
+        {
+            string connectionString = containerName;
+            if (!string.IsNullOrWhiteSpace(remoteConnectionName))
+            {
+                connectionString += Separator + SshPrefix + remoteConnectionName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(hostName))
+            {
+                connectionString += Separator + DockerHostPrefix + hostName;
+            }
+
+            return connectionString;
+        }
+
+        internal static bool TryConvertConnectionStringToSettings(string connectionString, out DockerContainerTransportSettings settings, out Connection remoteConnection)
+        {
+            remoteConnection = null;
+            settings = null;
+
+            string containerName = string.Empty;
+            string hostName = string.Empty;
+            bool invalidString = false;
+
+
+            // Assume format is <containername>;ssh=<sshconnection>;host=<dockerhostvalue> or some mixture
+            string[] connectionStrings = connectionString.Split(Separator);
+
+            if (connectionStrings.Length <= 3 && connectionStrings.Length > 0)
+            {
+                foreach (var segment in connectionStrings)
+                {
+                    if (segment.StartsWith(SshPrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        remoteConnection = ConnectionManager.GetSSHConnection(segment.Substring(SshPrefix.Length));
+                    }
+                    else if (segment.StartsWith(DockerHostPrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        hostName = segment.Substring(DockerHostPrefix.Length);
+                    }
+                    else if (segment.Contains("="))
+                    {
+                        invalidString = true;
+                    }
+                    else
+                    {
+                        Debug.Assert(string.IsNullOrWhiteSpace(containerName), "containerName should be empty");
+                        containerName = segment;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(containerName) && !invalidString)
+            {
+                settings = new DockerContainerTransportSettings(hostName, containerName, remoteConnection != null);
+                return true;
+            }
+
+            return false;
+        }
+
+#endregion
+
         private string _containerName;
         private readonly DockerExecutionManager _dockerExecutionManager;
 
         internal new DockerContainerTransportSettings TransportSettings => (DockerContainerTransportSettings)base.TransportSettings;
 
-        public DockerConnection(DockerContainerTransportSettings settings, Connection outerConnection, string name, string containerName)
+        public DockerConnection(DockerContainerTransportSettings settings, Connection outerConnection, string name)
             : base(settings, outerConnection, name)
         {
-            _containerName = containerName;
+            _containerName = settings.ContainerName;
             _dockerExecutionManager = new DockerExecutionManager(settings, outerConnection);
         }
 

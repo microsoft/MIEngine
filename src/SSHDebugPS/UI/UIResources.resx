@@ -150,7 +150,7 @@
     <comment>{0} = command, {1} = error message</comment>
   </data>
   <data name="CommandExecutionErrorWithExitCodeFormat" xml:space="preserve">
-    <value>Executing command '{0}' failed with exit code {1}. {2}</value>
+    <value>Executing command '{0}' failed with exit code '{1}'. '{2}'</value>
     <comment>{0} = command, {1} = exit code, {2} = error message</comment>
   </data>
   <data name="ErrorStatusTextFormat" xml:space="preserve">
@@ -194,17 +194,17 @@
     <value>_Advanced Settings</value>
   </data>
   <data name="CancelLabel" xml:space="preserve">
-    <value>Cancel</value>
+    <value>C_ancel</value>
   </data>
   <data name="ConnectionLabel" xml:space="preserve">
-    <value>_Connection type:</value>
+    <value>Docker _CLI host:</value>
   </data>
   <data name="HostnameLabel" xml:space="preserve">
-    <value>_Hostname (Optional):</value>
+    <value>Docker _host (Optional):</value>
     <comment>Hostname for Docker daemon configuration</comment>
   </data>
   <data name="HostnameTip" xml:space="preserve">
-    <value>Specify a hostname if connecting to a different Docker daemon. </value>
+    <value>Specify a hostname for connecting to a different Docker host. </value>
   </data>
   <data name="OKLabel" xml:space="preserve">
     <value>_OK</value>
@@ -229,5 +229,8 @@
   </data>
   <data name="ExpanderToolTip" xml:space="preserve">
     <value>Show Container Details</value>
+  </data>
+  <data name="ConnectionToolTip" xml:space="preserve">
+    <value>Location from which to run the Docker CLI. To manage remote connections, in the menu go to Tools -&gt; Options and find Cross Platform -&gt; Connection Manager.</value>
   </data>
 </root>

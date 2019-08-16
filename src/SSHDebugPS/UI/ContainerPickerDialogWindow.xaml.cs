@@ -151,9 +151,7 @@ namespace Microsoft.SSHDebugPS.UI
                     remoteConnectionString = Model.SelectedConnection.Connection.Name;
                 }
 
-                string dockerString = string.IsNullOrWhiteSpace(Model.Hostname) ? containerId : "{0}::{1}".FormatInvariantWithArgs(Model.Hostname, containerId);
-
-                _selectedContainerConnectionString = string.IsNullOrWhiteSpace(remoteConnectionString) ? dockerString : "{0}/{1}".FormatInvariantWithArgs(remoteConnectionString, dockerString);
+                _selectedContainerConnectionString = DockerConnection.CreateConnectionString(containerId, remoteConnectionString, Model.Hostname);
                 return true;
             }
 

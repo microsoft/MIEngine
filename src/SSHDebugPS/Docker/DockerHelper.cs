@@ -34,6 +34,10 @@ namespace Microsoft.SSHDebugPS.Docker
                 ManualResetEvent resetEvent = new ManualResetEvent(false);
                 commandRunner.ErrorOccured += ((sender, args) =>
                 {
+                    if (!string.IsNullOrWhiteSpace(args.ErrorMessage))
+                    {
+                        errorSB.AppendLine(args.ErrorMessage);
+                    }
                     resetEvent.Set();
                 });
 
@@ -50,7 +54,7 @@ namespace Microsoft.SSHDebugPS.Docker
                         if (args.Trim()[0] != '{')
                         {
                             // output isn't json, command Error
-                            errorSB.AppendLine(args);
+                            errorSB.Append(args);
                         }
                         else
                         {
@@ -129,9 +133,6 @@ namespace Microsoft.SSHDebugPS.Docker
                 }
             }
 
-            VSMessageBoxHelper.PostErrorMessage(
-                StringResources.Error_ContainerUnavailableTitle,
-                StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(containerName));
             return false;
         }
 

@@ -20,73 +20,44 @@ namespace Microsoft.SSHDebugPS
 {
     internal class ConnectionManager
     {
+
         public static DockerConnection GetDockerConnection(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
+           if (string.IsNullOrWhiteSpace(name))
                 return null;
 
-            Connection remoteConnection = null;
-            DockerContainerTransportSettings settings = null;
+            DockerContainerTransportSettings settings;
+            Connection remoteConnection;
 
-            string containerName;
-            string dockerString;
-            string hostName = string.Empty;
-
-            // Assume format is <server>/<hostname>::<container> where if <server> is specified, it is for SSH
-            string[] connectionStrings = name.Split('/');
-
-            // Format is wrong, ask the user to select from the dialog
-            if (connectionStrings.Length > 2 || connectionStrings.Length < 1)
+            if (!DockerConnection.TryConvertConnectionStringToSettings(name, out settings, out remoteConnection) || settings == null)
             {
                 string connectionString;
-                // If the user cancels the window, we want to fall back to the error message below
-                if (ShowContainerPickerWindow(IntPtr.Zero, out connectionString))
+
+                bool success = ShowContainerPickerWindow(IntPtr.Zero, out connectionString);
+                if (success)
                 {
-                    return GetDockerConnection(connectionString);
+                    success = DockerConnection.TryConvertConnectionStringToSettings(connectionString, out settings, out remoteConnection);
+                }
+
+                if (!success || settings == null)
+                {
+                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
+                    return null;
                 }
             }
 
-            if (connectionStrings.Length == 2)
+            string displayName = DockerConnection.CreateConnectionString(settings.ContainerName, remoteConnection?.Name, settings.HostName);
+            if (DockerHelper.IsContainerRunning(settings.HostName, settings.ContainerName, remoteConnection))
             {
-                // SSH connection
-                string remoteConnectionString = connectionStrings[0];
-                dockerString = connectionStrings[1];
-                remoteConnection = GetSSHConnection(remoteConnectionString);
-            }
-            else if (connectionStrings.Length == 1)
-            {
-                // local connection
-                dockerString = connectionStrings[0];
+                return new DockerConnection(settings, remoteConnection, displayName);
             }
             else
             {
-                VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
+                VSMessageBoxHelper.PostErrorMessage(
+                   StringResources.Error_ContainerUnavailableTitle,
+                   StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(settings.ContainerName));
                 return null;
             }
-
-            if (!string.IsNullOrWhiteSpace(dockerString))
-            {
-                if (dockerString.Contains("::"))
-                {
-                    int pos = dockerString.IndexOf("::", StringComparison.Ordinal);
-                    hostName = dockerString.Substring(0, pos);
-                    containerName = dockerString.Substring(pos + 2);
-                }
-                else
-                {
-                    containerName = dockerString;
-                }
-
-                settings = new DockerContainerTransportSettings(hostName, containerName, remoteConnection != null);
-                string displayName = remoteConnection != null ? remoteConnection.Name + '/' + dockerString : dockerString;
-
-                if (DockerHelper.IsContainerRunning(hostName, containerName, remoteConnection))
-                {
-                    return new DockerConnection(settings, remoteConnection, displayName, containerName);
-                }
-            }
-
-            return null;
         }
 
         public static SSHConnection GetSSHConnection(string name)

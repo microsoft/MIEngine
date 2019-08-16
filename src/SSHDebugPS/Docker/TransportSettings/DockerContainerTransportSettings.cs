@@ -8,7 +8,7 @@ namespace Microsoft.SSHDebugPS.Docker
 {
     internal class DockerContainerTransportSettings : DockerTransportSettingsBase
     {
-        protected string ContainerName { get; private set; }
+        internal string ContainerName { get; private set; }
 
         public DockerContainerTransportSettings(string hostname, string containerName, bool hostIsUnix)
             : base(hostname, hostIsUnix)
@@ -32,7 +32,8 @@ namespace Microsoft.SSHDebugPS.Docker
         private string _commandToExecute;
         // 0 = container, 1 = command to execute
         private const string _subCommandArgsFormat = "{0} {1}";
-        private const string _subCommandArgsFormatWithShell = "{0} /bin/sh -c '{1}'"; // Single quote the argument so variable resolution does not happen until it is in the container.
+        private const string _subCommandArgsFormatWithShell = "{0} /bin/sh -c \"{1}\"";
+        private const string _subCommandArgsFormatWithShellLinuxHost = "{0} /bin/sh -c '{1}'"; // Single quote the argument on Linux so variable resolution does not happen until it is in the container.
         private const string _interactiveFlag = "-i ";
 
         private bool _makeInteractive;
@@ -47,7 +48,14 @@ namespace Microsoft.SSHDebugPS.Docker
         }
 
         protected override string SubCommand => "exec";
-        protected override string SubCommandArgs => (_makeInteractive ? _interactiveFlag : string.Empty) + (_runInShell ? _subCommandArgsFormatWithShell : _subCommandArgsFormat).FormatInvariantWithArgs(ContainerName, _commandToExecute);
+        protected override string SubCommandArgs
+        {
+            get
+            {
+                string subCommandFormat = this.HostIsUnix ? _subCommandArgsFormatWithShellLinuxHost : _subCommandArgsFormatWithShell; 
+                return (_makeInteractive ? _interactiveFlag : string.Empty) + (_runInShell ? subCommandFormat : _subCommandArgsFormat).FormatInvariantWithArgs(ContainerName, _commandToExecute);
+            }
+        }
     }
 
     internal class DockerCopySettings : DockerContainerTransportSettings

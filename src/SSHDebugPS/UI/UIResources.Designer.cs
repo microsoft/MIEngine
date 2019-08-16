@@ -97,7 +97,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cancel.
+        ///   Looks up a localized string similar to C_ancel.
         /// </summary>
         public static string CancelLabel {
             get {
@@ -124,7 +124,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed with exit code {1}. {2}.
+        ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed with exit code &apos;{1}&apos;. &apos;{2}&apos;.
         /// </summary>
         public static string CommandExecutionErrorWithExitCodeFormat {
             get {
@@ -142,11 +142,20 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to _Connection type:.
+        ///   Looks up a localized string similar to Docker _CLI host:.
         /// </summary>
         public static string ConnectionLabel {
             get {
                 return ResourceManager.GetString("ConnectionLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Location from which to run the Docker CLI. To manage remote connections, in the menu go to Tools -&gt; Options and find Cross Platform -&gt; Connection Manager..
+        /// </summary>
+        public static string ConnectionToolTip {
+            get {
+                return ResourceManager.GetString("ConnectionToolTip", resourceCulture);
             }
         }
         
@@ -205,7 +214,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to _Hostname (Optional):.
+        ///   Looks up a localized string similar to Docker _host (Optional):.
         /// </summary>
         public static string HostnameLabel {
             get {
@@ -214,7 +223,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specify a hostname if connecting to a different Docker daemon. .
+        ///   Looks up a localized string similar to Specify a hostname for connecting to a different Docker host. .
         /// </summary>
         public static string HostnameTip {
             get {
