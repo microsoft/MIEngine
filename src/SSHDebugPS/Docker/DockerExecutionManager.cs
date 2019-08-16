@@ -52,10 +52,10 @@ namespace Microsoft.SSHDebugPS.Docker
         private DockerAsyncCommand _currentCommand;
 
         private Connection _outerConnection = null;
-        private DockerContainerTransportSettings _baseSettings;
+        private DockerTransportSettingsBase _baseSettings;
         private readonly ManualResetEvent _commandCompleteEvent = new ManualResetEvent(false);
 
-        public DockerExecutionManager(DockerContainerTransportSettings baseSettings, Connection outerConnection)
+        public DockerExecutionManager(DockerTransportSettingsBase baseSettings, Connection outerConnection)
         {
             _baseSettings = baseSettings;
             _outerConnection = outerConnection;
@@ -63,14 +63,32 @@ namespace Microsoft.SSHDebugPS.Docker
 
         private ICommandRunner GetExecCommandRunner(string command, bool runInShell, bool makeInteractive)
         {
-            var execSettings = new DockerExecSettings(_baseSettings, command, runInShell, makeInteractive);
-
-            if (_outerConnection == null)
+            if (_baseSettings is DockerContainerTransportSettings containerTransportSettings)
             {
-                return new LocalCommandRunner(execSettings);
+                var execSettings = new DockerContainerExecSettings(containerTransportSettings, command, runInShell, makeInteractive);
+
+                if (_outerConnection == null)
+                {
+                    return new LocalCommandRunner(execSettings);
+                }
+                else
+                    return new RemoteCommandRunner(execSettings, _outerConnection);
+            }
+            else if (_baseSettings is DockerCommandSettings commandSettings)
+            {
+                var execSettings = new DockerExecSettings(commandSettings, command, string.Empty);
+                if (_outerConnection == null)
+                {
+                    return new LocalCommandRunner(execSettings);
+                }
+                else
+                    return new RemoteCommandRunner(execSettings, _outerConnection);
             }
             else
-                return new RemoteCommandRunner(execSettings.Command, execSettings.CommandArgs, _outerConnection);
+            {
+                Debug.Assert(_baseSettings is DockerCommandSettings, "baseSettings should be DockerCommandSettings");
+                throw new InvalidOperationException("Unexpected command settings");
+            }
         }
 
         public int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage, bool runInShell = true, bool makeInteractive = true)

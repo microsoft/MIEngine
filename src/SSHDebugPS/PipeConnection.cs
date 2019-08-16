@@ -26,7 +26,7 @@ namespace Microsoft.SSHDebugPS
 
         public override string Name => _name;
 
-        protected Connection OuterConnection => _outerConnection;
+        internal Connection OuterConnection => _outerConnection;
         protected IPipeTransportSettings TransportSettings => _settings;
         protected bool IsClosed => _isClosed;
 

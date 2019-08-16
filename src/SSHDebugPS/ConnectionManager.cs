@@ -22,71 +22,31 @@ namespace Microsoft.SSHDebugPS
     {
         public static DockerConnection GetDockerConnection(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                return null;
+            DockerConnection connection = null;
 
-            Connection remoteConnection = null;
-            DockerContainerTransportSettings settings = null;
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                connection = DockerConnection.Deserialize(name) as DockerConnection;
+            }
 
-            string containerName;
-            string dockerString;
-            string hostName = string.Empty;
-
-            // Assume format is <server>/<hostname>::<container> where if <server> is specified, it is for SSH
-            string[] connectionStrings = name.Split('/');
-
-            // Format is wrong, ask the user to select from the dialog
-            if (connectionStrings.Length > 2 || connectionStrings.Length < 1)
+            if (connection == null)
             {
                 string connectionString;
-                // If the user cancels the window, we want to fall back to the error message below
-                if (ShowContainerPickerWindow(IntPtr.Zero, out connectionString))
+                if (ConnectionManager.ShowContainerPickerWindow(IntPtr.Zero, out connectionString))
                 {
-                    return GetDockerConnection(connectionString);
+                    connection =  DockerConnection.Deserialize(connectionString);
+                    if (connection == null)
+                    {
+                        //show error message and return 
+                    }
+                }
+                else // User canceled
+                {
+                    return null;
                 }
             }
-
-            if (connectionStrings.Length == 2)
-            {
-                // SSH connection
-                string remoteConnectionString = connectionStrings[0];
-                dockerString = connectionStrings[1];
-                remoteConnection = GetSSHConnection(remoteConnectionString);
-            }
-            else if (connectionStrings.Length == 1)
-            {
-                // local connection
-                dockerString = connectionStrings[0];
-            }
-            else
-            {
-                VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
-                return null;
-            }
-
-            if (!string.IsNullOrWhiteSpace(dockerString))
-            {
-                if (dockerString.Contains("::"))
-                {
-                    int pos = dockerString.IndexOf("::", StringComparison.Ordinal);
-                    hostName = dockerString.Substring(0, pos);
-                    containerName = dockerString.Substring(pos + 2);
-                }
-                else
-                {
-                    containerName = dockerString;
-                }
-
-                settings = new DockerContainerTransportSettings(hostName, containerName, remoteConnection != null);
-                string displayName = remoteConnection != null ? remoteConnection.Name + '/' + dockerString : dockerString;
-
-                if (DockerHelper.IsContainerRunning(hostName, containerName, remoteConnection))
-                {
-                    return new DockerConnection(settings, remoteConnection, displayName, containerName);
-                }
-            }
-
-            return null;
+            
+            return connection;
         }
 
         public static SSHConnection GetSSHConnection(string name)

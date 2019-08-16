@@ -8,7 +8,7 @@ namespace Microsoft.SSHDebugPS.Docker
 {
     internal class DockerContainerTransportSettings : DockerTransportSettingsBase
     {
-        protected string ContainerName { get; private set; }
+        internal string ContainerName { get; private set; }
 
         public DockerContainerTransportSettings(string hostname, string containerName, bool hostIsUnix)
             : base(hostname, hostIsUnix)
@@ -26,7 +26,7 @@ namespace Microsoft.SSHDebugPS.Docker
         protected override string SubCommandArgs => throw new System.NotImplementedException();
     }
 
-    internal class DockerExecSettings : DockerContainerTransportSettings
+    internal class DockerContainerExecSettings : DockerContainerTransportSettings
     {
         private bool _runInShell;
         private string _commandToExecute;
@@ -37,7 +37,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
         private bool _makeInteractive;
 
-        public DockerExecSettings(DockerContainerTransportSettings settings, string command, bool runInShell, bool makeInteractive = true)
+        public DockerContainerExecSettings(DockerContainerTransportSettings settings, string command, bool runInShell, bool makeInteractive = true)
             : base(settings)
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(command), "Exec command cannot be null");

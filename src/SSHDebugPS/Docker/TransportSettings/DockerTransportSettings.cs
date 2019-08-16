@@ -10,9 +10,9 @@ namespace Microsoft.SSHDebugPS.Docker
         protected abstract string SubCommand { get; }
         protected abstract string SubCommandArgs { get; }
 
-        protected string HostName { get; private set; }
+        internal string HostName { get; private set; }
 
-        protected bool HostIsUnix { get; private set; }
+        internal bool HostIsUnix { get; private set; }
 
         public DockerTransportSettingsBase(string hostname, bool hostIsUnix)
         {
@@ -75,5 +75,15 @@ namespace Microsoft.SSHDebugPS.Docker
         protected override string SubCommand => _cmd;
         protected override string SubCommandArgs => _args;
     }
+
+    internal class DockerExecSettings : DockerCommandSettings
+    {
+        public DockerExecSettings(DockerCommandSettings settings, string command, string commandArgs)
+            : base(settings.HostName, settings.HostIsUnix)
+        {
+            this.SetCommand(command, commandArgs);
+        }
+    }
+
 }
 
