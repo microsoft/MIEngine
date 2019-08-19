@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
@@ -14,7 +15,9 @@ namespace Microsoft.SSHDebugPS.Docker
     {
         #region Statics
 
+        internal const string SshPrefixRegex = @"^[Ss]{2}[Hh]\s*=\s*";
         internal const string SshPrefix = "ssh=";
+        internal const string DockerHostPrefixRegex = @"^host\s*=\s*";
         internal const string DockerHostPrefix = "host=";
         internal const char Separator = ';';
 
@@ -43,21 +46,26 @@ namespace Microsoft.SSHDebugPS.Docker
             string hostName = string.Empty;
             bool invalidString = false;
 
-
             // Assume format is <containername>;ssh=<sshconnection>;host=<dockerhostvalue> or some mixture
             string[] connectionStrings = connectionString.Split(Separator);
 
             if (connectionStrings.Length <= 3 && connectionStrings.Length > 0)
             {
-                foreach (var segment in connectionStrings)
+                Regex SshRegex = new Regex(SshPrefixRegex);
+                Regex dockerHostRegex = new Regex(DockerHostPrefixRegex);
+
+                foreach (var item in connectionStrings)
                 {
-                    if (segment.StartsWith(SshPrefix, StringComparison.OrdinalIgnoreCase))
+                    string segment = item.Trim(' ');
+                    if (SshRegex.IsMatch(segment))
                     {
-                        remoteConnection = ConnectionManager.GetSSHConnection(segment.Substring(SshPrefix.Length));
+                        Match match = SshRegex.Match(segment);
+                        remoteConnection = ConnectionManager.GetSSHConnection(segment.Substring(match.Length));
                     }
-                    else if (segment.StartsWith(DockerHostPrefix, StringComparison.OrdinalIgnoreCase))
+                    else if (dockerHostRegex.IsMatch(segment))
                     {
-                        hostName = segment.Substring(DockerHostPrefix.Length);
+                        Match match = dockerHostRegex.Match(segment);
+                        hostName = segment.Substring(match.Length);
                     }
                     else if (segment.Contains("="))
                     {
