@@ -20,7 +20,6 @@ namespace Microsoft.SSHDebugPS
 {
     internal class ConnectionManager
     {
-
         public static DockerConnection GetDockerConnection(string name)
         {
            if (string.IsNullOrWhiteSpace(name))
