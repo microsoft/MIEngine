@@ -963,7 +963,7 @@ namespace OpenDebugAD7
                 }
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
-                properties.Add(DebuggerTelemetry.TelemetryMIMode, string.Empty);
+                properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
                 properties.Add(DebuggerTelemetry.TelemetryVisualizerFileUsed, visualizerFileUsed);
                 properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
 
