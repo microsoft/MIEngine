@@ -421,6 +421,7 @@
                   x:Name="ConnectionTypeComboBox"
                   Margin="0,4,0,0"
                   AutomationProperties.LabeledBy="{Binding ElementName=ConnectionTypeLabel}"
+                  ToolTip="{x:Static local:UIResources.ConnectionToolTip}"
                   ItemsSource="{Binding SupportedConnections}"
                   SelectedItem="{Binding SelectedConnection}"
                   DisplayMemberPath="DisplayName"
@@ -509,7 +510,7 @@
                                   Height="16"
                                   VerticalAlignment="Center"
                                   HorizontalAlignment="Center"
-                                  Margin="6"
+                                  Margin="4,4,0,0"
                                   Visibility="{Binding StatusIsError, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"
                                   Moniker="{x:Static catalog:KnownMonikers.StatusWarning}" />
             <TextBlock DockPanel.Dock="Right"
