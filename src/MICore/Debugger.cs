@@ -1212,7 +1212,7 @@ namespace MICore
                         if (waitingOperation != null)
                         {
                             Results results = _miResults.ParseCommandOutput(noprefix);
-                            Logger.WriteLine(id + ": elapsed time " + (int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds);
+                            Logger.WriteLine(id.ToString(CultureInfo.InvariantCulture) + ": elapsed time " + ((int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds).ToString(CultureInfo.InvariantCulture));
                             waitingOperation.OnComplete(results, this.MICommandFactory);
                             return;
                         }

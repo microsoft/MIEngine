@@ -765,7 +765,7 @@ namespace Microsoft.MIDebugEngine
                             }
                         };
 
-                        commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value, ignoreFailures: false, failureHandler: failureHandler));
+                        commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value.ToString(CultureInfo.InvariantCulture), ignoreFailures: false, failureHandler: failureHandler));
                     }
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
