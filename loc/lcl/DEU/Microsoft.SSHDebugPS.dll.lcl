@@ -99,10 +99,13 @@
       </Item>
       <Item ItemId=";Error_ContainerUnavailableMessage" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Attempting to run '/bin/sh' on container '{0}' failed with output:]D;]A;'{1}']]></Val>
+          <Val><![CDATA[Container '{0}' is not in the list of running containers.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Fehler beim Ausführen von "/bin/sh" für den Container "{0}". Ausgabe:]D;]A;"{1}"]]></Val>
+            <Val><![CDATA[Der Container "{0}" befindet sich nicht in der Liste der ausgeführten Container.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Attempting to run '/bin/sh' on container '{0}' failed with output:]D;]A;'{1}']]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
