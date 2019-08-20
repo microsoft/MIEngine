@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
@@ -12,15 +13,99 @@ namespace Microsoft.SSHDebugPS.Docker
 {
     internal class DockerConnection : PipeConnection
     {
+        #region Statics
+
+        internal const string SshPrefixRegex = @"^[Ss]{2}[Hh]\s*=\s*";
+        internal const string SshPrefix = "ssh=";
+        internal const string DockerHostPrefixRegex = @"^host\s*=\s*";
+        internal const string DockerHostPrefix = "host=";
+        internal const char Separator = ';';
+
+        internal static string CreateConnectionString(string containerName, string remoteConnectionName, string hostName)
+        {
+            string connectionString = containerName;
+            if (!string.IsNullOrWhiteSpace(remoteConnectionName))
+            {
+                connectionString += Separator + SshPrefix + remoteConnectionName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(hostName))
+            {
+                connectionString += Separator + DockerHostPrefix + hostName;
+            }
+
+            return connectionString;
+        }
+
+        internal static bool TryConvertConnectionStringToSettings(string connectionString, out DockerContainerTransportSettings settings, out Connection remoteConnection)
+        {
+            remoteConnection = null;
+            settings = null;
+
+            string containerName = string.Empty;
+            string hostName = string.Empty;
+            bool invalidString = false;
+
+            // Assume format is <containername>;ssh=<sshconnection>;host=<dockerhostvalue> or some mixture
+            string[] connectionStrings = connectionString.Split(Separator);
+
+            if (connectionStrings.Length <= 3 && connectionStrings.Length > 0)
+            {
+                Regex SshRegex = new Regex(SshPrefixRegex);
+                Regex dockerHostRegex = new Regex(DockerHostPrefixRegex);
+
+                foreach (var item in connectionStrings)
+                {
+                    string segment = item.Trim(' ');
+                    if (SshRegex.IsMatch(segment))
+                    {
+                        Match match = SshRegex.Match(segment);
+                        remoteConnection = ConnectionManager.GetSSHConnection(segment.Substring(match.Length));
+                    }
+                    else if (dockerHostRegex.IsMatch(segment))
+                    {
+                        Match match = dockerHostRegex.Match(segment);
+                        hostName = segment.Substring(match.Length);
+                    }
+                    else if (segment.Contains("="))
+                    {
+                        invalidString = true;
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrWhiteSpace(containerName))
+                        {
+                            Debug.Fail("containerName should be empty");
+                            invalidString = true;
+                        }
+                        else
+                        {
+                            containerName = segment;
+                        }
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(containerName) && !invalidString)
+            {
+                settings = new DockerContainerTransportSettings(hostName, containerName, remoteConnection != null);
+                return true;
+            }
+
+            return false;
+        }
+
+        #endregion
+
         private string _containerName;
         private readonly DockerExecutionManager _dockerExecutionManager;
 
         internal new DockerContainerTransportSettings TransportSettings => (DockerContainerTransportSettings)base.TransportSettings;
 
-        public DockerConnection(DockerContainerTransportSettings settings, Connection outerConnection, string name, string containerName)
+        public DockerConnection(DockerContainerTransportSettings settings, Connection outerConnection, string name)
             : base(settings, outerConnection, name)
         {
-            _containerName = containerName;
+            _containerName = settings.ContainerName;
             _dockerExecutionManager = new DockerExecutionManager(settings, outerConnection);
         }
 
@@ -94,6 +179,17 @@ namespace Microsoft.SSHDebugPS.Docker
             {
                 throw new CommandFailedException(StringResources.Error_CopyFileFailed);
             }
+        }
+
+        // Base implementation was evaluating '$HOME' on the host machine and not the client machine, causing the home directory to be wrong.
+        public override string GetUserHomeDirectory()
+        {
+            string command = "eval echo '~'";
+            string commandOutput;
+            string errorMessage;
+            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput, errorMessage: out errorMessage);
+
+            return commandOutput;
         }
 
         // Execute a command and wait for a response. No more interaction

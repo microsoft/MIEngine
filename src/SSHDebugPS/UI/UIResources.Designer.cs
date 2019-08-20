@@ -61,7 +61,16 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add SSH Connection.
+        ///   Looks up a localized string similar to Add....
+        /// </summary>
+        public static string AddNewSSHConnectionButtonLabel {
+            get {
+                return ResourceManager.GetString("AddNewSSHConnectionButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add New SSH Connection.
         /// </summary>
         public static string AddNewSSHConnectionLabel {
             get {
@@ -79,6 +88,33 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _Advanced Settings.
+        /// </summary>
+        public static string AdvancedSettingsHeader {
+            get {
+                return ResourceManager.GetString("AdvancedSettingsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to C_ancel.
+        /// </summary>
+        public static string CancelLabel {
+            get {
+                return ResourceManager.GetString("CancelLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collapsed.
+        /// </summary>
+        public static string Collapsed {
+            get {
+                return ResourceManager.GetString("Collapsed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed. {1}.
         /// </summary>
         public static string CommandExecutionErrorFormat {
@@ -88,7 +124,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed with exit code {1}. {2}.
+        ///   Looks up a localized string similar to Executing command &apos;{0}&apos; failed with exit code &apos;{1}&apos;. &apos;{2}&apos;.
         /// </summary>
         public static string CommandExecutionErrorWithExitCodeFormat {
             get {
@@ -106,7 +142,25 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Found {0} containers.
+        ///   Looks up a localized string similar to Docker _CLI host:.
+        /// </summary>
+        public static string ConnectionLabel {
+            get {
+                return ResourceManager.GetString("ConnectionLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Location from which to run the Docker CLI. To manage remote connections, in the menu go to Tools -&gt; Options and find Cross Platform -&gt; Connection Manager..
+        /// </summary>
+        public static string ConnectionToolTip {
+            get {
+                return ResourceManager.GetString("ConnectionToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found {0} containers..
         /// </summary>
         public static string ContainersFoundStatusText {
             get {
@@ -138,6 +192,42 @@ namespace Microsoft.SSHDebugPS {
         public static string ErrorStatusTextFormat {
             get {
                 return ResourceManager.GetString("ErrorStatusTextFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expanded.
+        /// </summary>
+        public static string Expanded {
+            get {
+                return ResourceManager.GetString("Expanded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Container Details.
+        /// </summary>
+        public static string ExpanderToolTip {
+            get {
+                return ResourceManager.GetString("ExpanderToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Docker _host (Optional):.
+        /// </summary>
+        public static string HostnameLabel {
+            get {
+                return ResourceManager.GetString("HostnameLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify a hostname for connecting to a different Docker host. .
+        /// </summary>
+        public static string HostnameTip {
+            get {
+                return ResourceManager.GetString("HostnameTip", resourceCulture);
             }
         }
         
@@ -205,6 +295,24 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _OK.
+        /// </summary>
+        public static string OKLabel {
+            get {
+                return ResourceManager.GetString("OKLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional.
+        /// </summary>
+        public static string OptionalHintText {
+            get {
+                return ResourceManager.GetString("OptionalHintText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ports: .
         /// </summary>
         public static string PortsLabelText {
@@ -219,6 +327,24 @@ namespace Microsoft.SSHDebugPS {
         public static string QueryingForContainersMessage {
             get {
                 return ResourceManager.GetString("QueryingForContainersMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh.
+        /// </summary>
+        public static string RefreshHyperlink {
+            get {
+                return ResourceManager.GetString("RefreshHyperlink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh Container List.
+        /// </summary>
+        public static string RefreshToolTip {
+            get {
+                return ResourceManager.GetString("RefreshToolTip", resourceCulture);
             }
         }
         

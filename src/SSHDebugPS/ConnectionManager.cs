@@ -2,19 +2,19 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.ComponentModel;
-using System.Globalization;
+using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
+using System.Windows.Interop;
+using EnvDTE;
 using liblinux;
 using liblinux.Persistence;
-using Microsoft.Internal.VisualStudio.Shell.TestContracts;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
+using Microsoft.SSHDebugPS.UI;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Linux.ConnectionManager;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -22,72 +22,41 @@ namespace Microsoft.SSHDebugPS
     {
         public static DockerConnection GetDockerConnection(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
+           if (string.IsNullOrWhiteSpace(name))
                 return null;
 
-            Connection remoteConnection = null;
-            DockerContainerTransportSettings settings = null;
+            DockerContainerTransportSettings settings;
+            Connection remoteConnection;
 
-            string containerName;
-            string dockerString;
-            string hostName = string.Empty;
-
-            // Assume format is <server>/<hostname>::<container> where if <server> is specified, it is for SSH
-            string[] connectionStrings = name.Split('/');
-
-            if (connectionStrings.Length == 2)
+            if (!DockerConnection.TryConvertConnectionStringToSettings(name, out settings, out remoteConnection) || settings == null)
             {
-                // SSH connection
-                string remoteConnectionString = connectionStrings[0];
-                dockerString = connectionStrings[1];
-                remoteConnection = GetSSHConnection(remoteConnectionString);
+                string connectionString;
+
+                bool success = ShowContainerPickerWindow(IntPtr.Zero, out connectionString);
+                if (success)
+                {
+                    success = DockerConnection.TryConvertConnectionStringToSettings(connectionString, out settings, out remoteConnection);
+                }
+
+                if (!success || settings == null)
+                {
+                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
+                    return null;
+                }
             }
-            else if (connectionStrings.Length == 1)
+
+            string displayName = DockerConnection.CreateConnectionString(settings.ContainerName, remoteConnection?.Name, settings.HostName);
+            if (DockerHelper.IsContainerRunning(settings.HostName, settings.ContainerName, remoteConnection))
             {
-                // local connection
-                dockerString = connectionStrings[0];
+                return new DockerConnection(settings, remoteConnection, displayName);
             }
             else
             {
-                // TODO: This will be replaced by the docker container selection dialog
-                VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
+                VSMessageBoxHelper.PostErrorMessage(
+                   StringResources.Error_ContainerUnavailableTitle,
+                   StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(settings.ContainerName));
                 return null;
             }
-
-            if (!string.IsNullOrWhiteSpace(dockerString))
-            {
-                if (dockerString.Contains("::"))
-                {
-                    int pos = dockerString.IndexOf("::", StringComparison.Ordinal);
-                    hostName = dockerString.Substring(0, pos);
-                    containerName = dockerString.Substring(pos + 2);
-                }
-                else
-                {
-                    containerName = dockerString;
-                }
-
-                settings = new DockerContainerTransportSettings(hostName, containerName, remoteConnection != null);
-                string displayName = remoteConnection != null ? remoteConnection.Name + '/' + dockerString : dockerString;
-
-                string output;
-                string error;
-                // Test container is available/reachable. 5 seconds should be enough to verify
-                DockerExecutionManager manager = new DockerExecutionManager(settings, remoteConnection);
-                if (manager.ExecuteCommand("/bin/sh", 5000, out output, out error, runInShell: false, makeInteractive: false) != 0)
-                {
-                    // Error message might be in output.
-                    VSMessageBoxHelper.PostErrorMessage(
-                       StringResources.Error_ContainerUnavailableTitle,
-                       StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(containerName, string.IsNullOrWhiteSpace(error) ? output : error)
-                       );
-                    return null;
-                }
-
-                return new DockerConnection(settings, remoteConnection, displayName, containerName);
-            }
-
-            return null;
         }
 
         public static SSHConnection GetSSHConnection(string name)
@@ -141,6 +110,48 @@ namespace Microsoft.SSHDebugPS
             }
 
             return SSHHelper.CreateSSHConnectionFromConnectionInfo(connectionInfo);
+        }
+
+        /// <summary>
+        /// Open the ContainerPickerDialog
+        /// </summary>
+        /// <param name="hwnd">Parent hwnd or IntPtr.Zero</param>
+        /// <param name="connectionString">[out] connection string obtained by the dialog</param>
+        /// <returns></returns>
+        public static bool ShowContainerPickerWindow(IntPtr hwnd, out string connectionString)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread("Microsoft.SSHDebugPS.ShowContainerPickerWindow");
+            ContainerPickerDialogWindow dialog = new ContainerPickerDialogWindow();
+
+            if (hwnd == IntPtr.Zero) // get the VS main window hwnd
+            {
+                try
+                {
+                    // parent to the global VS window
+                    DTE dte = (DTE)Package.GetGlobalService(typeof(SDTE));
+                    hwnd = new IntPtr(dte?.MainWindow?.HWnd ?? 0);
+                }
+                catch // No DTE?
+                {
+                    Debug.Fail("No DTE?");
+                }
+            }
+
+            if (hwnd != IntPtr.Zero)
+            {
+                WindowInteropHelper helper = new WindowInteropHelper(dialog);
+                helper.Owner = hwnd;
+            }
+
+            bool? dialogResult = dialog.ShowModal();
+            if (dialogResult.GetValueOrDefault(false))
+            {
+                connectionString = dialog.SelectedContainerConnectionString;
+                return true;
+            }
+
+            connectionString = string.Empty;
+            return false;
         }
     }
 }

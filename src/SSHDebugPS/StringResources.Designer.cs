@@ -142,8 +142,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempting to run &apos;/bin/sh&apos; on container &apos;{0}&apos; failed with output:
-        ///&apos;{1}&apos;.
+        ///   Looks up a localized string similar to Container &apos;{0}&apos; is not in the list of running containers..
         /// </summary>
         internal static string Error_ContainerUnavailableMessage {
             get {

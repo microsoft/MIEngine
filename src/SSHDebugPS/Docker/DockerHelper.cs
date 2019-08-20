@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -15,13 +16,12 @@ namespace Microsoft.SSHDebugPS.Docker
     {
         private const string dockerPSCommand = "ps";
         // --no-trunc avoids parameter truncation
-        private const string dockerPSArgs = "--no-trunc --format \"{{json .}}\"";
-        public static IEnumerable<IContainerInstance> GetLocalDockerContainers()
+        private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
+        public static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname)
         {
             List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
 
-            // TODO: hook up hostname field
-            var settings = new DockerCommandSettings(string.Empty, false);
+            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
             LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
@@ -34,6 +34,10 @@ namespace Microsoft.SSHDebugPS.Docker
                 ManualResetEvent resetEvent = new ManualResetEvent(false);
                 commandRunner.ErrorOccured += ((sender, args) =>
                 {
+                    if (!string.IsNullOrWhiteSpace(args.ErrorMessage))
+                    {
+                        errorSB.AppendLine(args.ErrorMessage);
+                    }
                     resetEvent.Set();
                 });
 
@@ -50,7 +54,7 @@ namespace Microsoft.SSHDebugPS.Docker
                         if (args.Trim()[0] != '{')
                         {
                             // output isn't json, command Error
-                            errorSB.AppendLine(args);
+                            errorSB.Append(args);
                         }
                         else
                         {
@@ -103,7 +107,36 @@ namespace Microsoft.SSHDebugPS.Docker
             }
         }
 
-        internal static IEnumerable<IContainerInstance> GetRemoteDockerContainers(IConnection connection)
+        /// <summary>
+        /// Checks if the specified container is in the list of containers from the target host.
+        /// </summary>
+        // Another fallback option would be to: docker inspect <containerName> --format {{.State.Status}} which should return "running"
+        internal static bool IsContainerRunning(string hostName, string containerName, Connection remoteConnection)
+        {
+            IEnumerable<DockerContainerInstance> containers;
+            if (remoteConnection != null)
+            {
+                containers = GetRemoteDockerContainers(remoteConnection, hostName);
+            }
+            else
+            {
+                containers = GetLocalDockerContainers(hostName);
+            }
+
+            if (containers != null)
+            {
+                // Check if the user entered the containerName or possibly part of the Id. 
+                if (containers.Any(container => string.Equals(container.Name, containerName, StringComparison.Ordinal) ? true
+                        : containers.Any(item => item.Id.StartsWith(containerName, StringComparison.Ordinal))))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname)
         {
             SSHConnection sshConnection = connection as SSHConnection;
             List<string> outputLines = new List<string>();
@@ -115,8 +148,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
 
-            //TODO: Hook up hostname
-            var settings = new DockerCommandSettings(string.Empty, true);
+            DockerCommandSettings settings = new DockerCommandSettings(hostname, true);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
             RemoteCommandRunner commandRunner = new RemoteCommandRunner(settings, sshConnection);

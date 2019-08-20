@@ -79,7 +79,15 @@
     <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.15.0.$(Microsoft_VisualStudio_Shell_15_0_Version)\lib\Microsoft.VisualStudio.Shell.15.0.dll">
       <Private>False</Private>
     </Reference>
+    <Reference Include="envDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>$(NuGetPackagesDirectory)\EnvDTE.8.0.2\lib\net10\EnvDTE.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>$(NuGetPackagesDirectory)\Microsoft.VisualStudio.Shell.Interop.8.0.8.0.50727\lib\Microsoft.VisualStudio.Shell.Interop.8.0.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -122,11 +130,14 @@
     <Compile Include="AD7\AD7Process.cs" />
     <Compile Include="AD7\AD7Program.cs" />
     <Compile Include="AD7\AD7UnixAsyncCommand.cs" />
+    <Compile Include="Docker\DockerContainerInstance.cs" />
     <Compile Include="ProcFSOutputParser.cs" />
     <Compile Include="Docker\DockerAsyncCommand.cs" />
     <Compile Include="Docker\DockerHelper.cs" />
     <Compile Include="Docker\DockerConnection.cs" />
     <Compile Include="Docker\TransportSettings\DockerContainerTransportSettings.cs" />
+    <Compile Include="UI\Converters\TextToVisibilityConverter.cs" />
+    <Compile Include="UI\ViewModels\ContainerViewModel.cs" />
     <Compile Include="Utilities\ExitCodes.cs" />
     <Compile Include="Utilities\StringExtensionMethods.cs" />
     <Compile Include="SSH\SSHHelper.cs" />

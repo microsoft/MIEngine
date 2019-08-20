@@ -224,7 +224,7 @@ namespace OpenDebugAD7
 
         private static string FormatCommand(JsonCommand command)
         {
-            return String.Concat("        <Command IgnoreFailures='", command.IgnoreFailures ? "true" : "false", "' Description='", command.Description, "'>", command.Text, "</Command>\n");
+            return String.Concat("        <Command IgnoreFailures='", command.IgnoreFailures ? "true" : "false", "' Description='", XmlSingleQuotedAttributeEncode(command.Description), "'>", command.Text, "</Command>\n");
         }
 
         private static void AddBaseLaunchOptionsAttributes(

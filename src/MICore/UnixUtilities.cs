@@ -60,7 +60,7 @@ namespace MICore
             // execute the debugger command in the background
             // Clear the output of executing a process in the background: [job number] pid
             // echo and wait the debugger pid to know whether we need to fake an exit by the debugger
-            return FormattableString.Invariant($"echo $$ > {pidFifo} ; cd {debuggeeDir} ; DbgTerm=`tty` ; set -o monitor ; trap 'rm {dbgStdInName} {dbgStdOutName} {pidFifo} {dbgCmdScript}' EXIT ; {debuggerCmd} {debuggerArgs} --tty=$DbgTerm < {dbgStdInName} > {dbgStdOutName} & clear; pid=$! ; echo $pid > {pidFifo} ; {waitForCompletionCommand}");
+            return FormattableString.Invariant($"echo $$ > {pidFifo} ; cd \"{debuggeeDir}\" ; DbgTerm=`tty` ; set -o monitor ; trap 'rm \"{dbgStdInName}\" \"{dbgStdOutName}\" \"{pidFifo}\" \"{dbgCmdScript}\"' EXIT ; \"{debuggerCmd}\" {debuggerArgs} --tty=$DbgTerm < \"{dbgStdInName}\" > \"{dbgStdOutName}\" & clear; pid=$! ; echo $pid > \"{pidFifo}\" ; {waitForCompletionCommand}");
         }
 
         internal static string GetDebuggerCommand(LocalLaunchOptions localOptions)
@@ -76,7 +76,7 @@ namespace MICore
                 // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
                 if (localOptions.ProcessId.HasValue && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
                 {
-                    prompt = String.Format(CultureInfo.CurrentCulture, "read -n 1 -p \\\"{0}\\\" yn; if [[ ! $yn =~ ^[Yy]$ ]] ; then exit 0; fi; ", MICoreResources.Warn_AttachAsRootProcess);
+                    prompt = String.Format(CultureInfo.CurrentCulture, "read -n 1 -p \"{0}\" yn; if [[ ! $yn =~ ^[Yy]$ ]] ; then exit 0; fi; ", MICoreResources.Warn_AttachAsRootProcess);
 
                     // Prefer pkexec for a nice graphical prompt, but fall back to sudo if it's not available
                     if (File.Exists(UnixUtilities.PKExecPath))

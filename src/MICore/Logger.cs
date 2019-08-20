@@ -51,7 +51,7 @@ namespace MICore
                 s_initTime = DateTime.Now;
 
                 LoadMIDebugLogger(configStore);
-                res.WriteLine("Initialized log at: " + s_initTime);
+                res.WriteLine("Initialized log at: " + s_initTime.ToString(CultureInfo.InvariantCulture));
             }
 
 #if DEBUG
