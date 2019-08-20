@@ -73,8 +73,15 @@ namespace Microsoft.SSHDebugPS.Docker
                     }
                     else
                     {
-                        Debug.Assert(string.IsNullOrWhiteSpace(containerName), "containerName should be empty");
-                        containerName = segment;
+                        if (!string.IsNullOrWhiteSpace(containerName))
+                        {
+                            Debug.Fail("containerName should be empty");
+                            invalidString = true;
+                        }
+                        else
+                        {
+                            containerName = segment;
+                        }
                     }
                 }
             }
@@ -88,7 +95,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return false;
         }
 
-#endregion
+        #endregion
 
         private string _containerName;
         private readonly DockerExecutionManager _dockerExecutionManager;
