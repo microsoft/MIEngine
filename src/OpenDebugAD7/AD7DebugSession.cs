@@ -527,7 +527,7 @@ namespace OpenDebugAD7
         #region DebugAdapterBase
 
         protected override void HandleInitializeRequestAsync(IRequestResponder<InitializeArguments, InitializeResponse> responder)
-        {
+        {            
             InitializeArguments arguments = responder.Arguments;
 
             m_engineConfiguration = EngineConfiguration.TryGet(arguments.AdapterID);
@@ -596,6 +596,8 @@ namespace OpenDebugAD7
 
         protected override void HandleLaunchRequestAsync(IRequestResponder<LaunchArguments> responder)
         {
+            const string telemetryEventName = DebuggerTelemetry.TelemetryLaunchEventName;
+
             int hr;
             DateTime launchStartTime = DateTime.Now;
 
@@ -603,21 +605,21 @@ namespace OpenDebugAD7
             string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program")?.Trim();
             if (string.IsNullOrEmpty(program))
             {
-                responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "launch: property 'program' is missing or empty"));
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "launch: property 'program' is missing or empty"));
                 return;
             }
 
             // If program is still in the default state, raise error
             if (program.EndsWith(">", StringComparison.Ordinal) && program.Contains('<'))
             {
-                responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "launch: launch.json must be configured. Change 'program' to the path to the executable file that you would like to debug."));
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "launch: launch.json must be configured. Change 'program' to the path to the executable file that you would like to debug."));
                 return;
             }
 
             // Should not have a pid in launch
             if (responder.Arguments.ConfigurationProperties.ContainsKey("processId"))
             {
-                responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1001, "launch: The parameter: 'processId' should not be specified on Launch. Please use request type: 'attach'"));
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "launch: The parameter: 'processId' should not be specified on Launch. Please use request type: 'attach'"));
                 return;
             }
 
@@ -633,7 +635,7 @@ namespace OpenDebugAD7
             {
                 if (!ValidateProgramPath(ref program))
                 {
-                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1002, String.Format(CultureInfo.CurrentCulture, "launch: program '{0}' does not exist", program)));
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1002, String.Format(CultureInfo.CurrentCulture, "launch: program '{0}' does not exist", program)));
                     return;
                 }
             }
@@ -641,7 +643,7 @@ namespace OpenDebugAD7
             string workingDirectory = responder.Arguments.ConfigurationProperties.GetValueAsString("cwd");
             if (string.IsNullOrEmpty(workingDirectory))
             {
-                responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1003, "launch: property 'cwd' is missing or empty"));
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1003, "launch: property 'cwd' is missing or empty"));
                 return;
             }
 
@@ -650,7 +652,7 @@ namespace OpenDebugAD7
                 workingDirectory = m_pathConverter.ConvertLaunchPathForVsCode(workingDirectory);
                 if (!Directory.Exists(workingDirectory))
                 {
-                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1004, String.Format(CultureInfo.CurrentCulture, "launch: workingDirectory '{0}' does not exist", workingDirectory)));
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1004, String.Format(CultureInfo.CurrentCulture, "launch: workingDirectory '{0}' does not exist", workingDirectory)));
                     return;
                 }
             }
@@ -723,7 +725,7 @@ namespace OpenDebugAD7
                         }
                         if (message != null)
                         {
-                            responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryLaunchEventName, 1005, message));
+                            responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1005, message));
                             return;
                         }
                     }
@@ -763,9 +765,15 @@ namespace OpenDebugAD7
                 properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
 
-                DebuggerTelemetry.ReportTimedEvent(DebuggerTelemetry.TelemetryLaunchEventName, DateTime.Now - launchStartTime, properties);
+                DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - launchStartTime, properties);
 
                 success = true;
+            }
+            catch (Exception e)
+            {
+                // Instead of failing to launch with the exception, try and wrap it better so that the information is useful for the user.
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1007, string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_ExceptionOccured, e.InnerException?.ToString() ?? e.ToString())));
+                return;
             }
             finally
             {
@@ -795,6 +803,8 @@ namespace OpenDebugAD7
 
         protected override void HandleAttachRequestAsync(IRequestResponder<AttachArguments> responder)
         {
+            const string telemetryEventName = DebuggerTelemetry.TelemetryAttachEventName;
+
             // ProcessId can be either a string or an int. We attempt to parse as int, if that does not exist we attempt to parse as a string.
             string processId = responder.Arguments.ConfigurationProperties.GetValueAsInt("processId")?.ToString(CultureInfo.InvariantCulture) ?? responder.Arguments.ConfigurationProperties.GetValueAsString("processId");
             string miDebuggerServerAddress = responder.Arguments.ConfigurationProperties.GetValueAsString("miDebuggerServerAddress");
@@ -810,7 +820,7 @@ namespace OpenDebugAD7
             {
                 if (string.IsNullOrEmpty(processId))
                 {
-                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1001, "attach: property 'processId' needs to be specified"));
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "attach: property 'processId' needs to be specified"));
                     return;
                 }
             }
@@ -820,19 +830,19 @@ namespace OpenDebugAD7
 
                 if (!string.IsNullOrEmpty(miDebuggerServerAddress) && !string.IsNullOrEmpty(processId))
                 {
-                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1002, "attach: 'processId' cannot be used with " + propertyCausingRemote));
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1002, "attach: 'processId' cannot be used with " + propertyCausingRemote));
                     return;
                 }
                 else if (isPipeTransport && (string.IsNullOrEmpty(processId) || string.IsNullOrEmpty(pipeTransport.GetValueAsString("debuggerPath"))))
                 {
-                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1001, "attach: properties 'processId' and 'debuggerPath' needs to be specified with " + propertyCausingRemote));
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "attach: properties 'processId' and 'debuggerPath' needs to be specified with " + propertyCausingRemote));
                     return;
                 }
             }
 
             int pid = 0;
 
-            ProtocolException protocolException = isLocal ? VerifyLocalProcessId(processId, DebuggerTelemetry.TelemetryAttachEventName, out pid) : VerifyProcessId(processId, DebuggerTelemetry.TelemetryAttachEventName, out pid);
+            ProtocolException protocolException = isLocal ? VerifyLocalProcessId(processId, telemetryEventName, out pid) : VerifyProcessId(processId, telemetryEventName, out pid);
 
             if (protocolException != null)
             {
@@ -859,7 +869,7 @@ namespace OpenDebugAD7
                 {
                     if (string.IsNullOrEmpty(pipeTransport.GetValueAsString("debuggerPath")))
                     {
-                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1011, "debuggerPath is required for attachTransport."));
+                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1011, "debuggerPath is required for attachTransport."));
                         return;
                     }
                     bool debugServerUsed = false;
@@ -880,7 +890,7 @@ namespace OpenDebugAD7
 
                     if (string.IsNullOrEmpty(program))
                     {
-                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1009, "attach: property 'program' is missing or empty"));
+                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1009, "attach: property 'program' is missing or empty"));
                         return;
                     }
                     else
@@ -893,13 +903,13 @@ namespace OpenDebugAD7
                 {
                     if (string.IsNullOrEmpty(program))
                     {
-                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1009, "attach: property 'program' is missing or empty"));
+                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1009, "attach: property 'program' is missing or empty"));
                         return;
                     }
 
                     if (!ValidateProgramPath(ref program))
                     {
-                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1010, String.Format(CultureInfo.CurrentCulture, "attach: program path '{0}' does not exist", program)));
+                        responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1010, String.Format(CultureInfo.CurrentCulture, "attach: program path '{0}' does not exist", program)));
                         return;
                     }
 
@@ -938,7 +948,7 @@ namespace OpenDebugAD7
                         }
                         if (message != null)
                         {
-                            responder.SetError(CreateProtocolExceptionAndLogTelemetry(DebuggerTelemetry.TelemetryAttachEventName, 1012, message));
+                            responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1012, message));
                             return;
                         }
                     }
@@ -967,14 +977,14 @@ namespace OpenDebugAD7
                 properties.Add(DebuggerTelemetry.TelemetryVisualizerFileUsed, visualizerFileUsed);
                 properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
 
-                DebuggerTelemetry.ReportTimedEvent(DebuggerTelemetry.TelemetryAttachEventName, DateTime.Now - attachStartTime, properties);
+                DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - attachStartTime, properties);
                 success = true;
 
                 responder.SetResponse(new AttachResponse());
             }
-            catch (AD7Exception e)
+            catch (Exception e)
             {
-                responder.SetError(new ProtocolException(e.Message));
+                responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1007, string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_ExceptionOccured, e.InnerException?.ToString() ?? e.ToString())));
             }
             finally
             {
