@@ -100,8 +100,8 @@
       <Item ItemId=";Error_ContainerUnavailableMessage" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Container '{0}' is not in the list of running containers.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Error al intentar ejecutar "/bin/sh" en el contenedor "{0}" con la salida:]D;]A;"{1}"]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[El contenedor "{0}" no está en la lista de contenedores en ejecución.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Attempting to run '/bin/sh' on container '{0}' failed with output:]D;]A;'{1}']]></Val>
