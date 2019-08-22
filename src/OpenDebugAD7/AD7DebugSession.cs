@@ -599,6 +599,7 @@ namespace OpenDebugAD7
             int hr;
             DateTime launchStartTime = DateTime.Now;
 
+            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("miMode");
             string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program")?.Trim();
             if (string.IsNullOrEmpty(program))
             {
@@ -760,6 +761,7 @@ namespace OpenDebugAD7
 
                 properties.Add(DebuggerTelemetry.TelemetryVisualizerFileUsed, visualizerFileUsed);
                 properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
+                properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
 
                 DebuggerTelemetry.ReportTimedEvent(DebuggerTelemetry.TelemetryLaunchEventName, DateTime.Now - launchStartTime, properties);
 
@@ -802,6 +804,7 @@ namespace OpenDebugAD7
             bool isLocal = string.IsNullOrEmpty(miDebuggerServerAddress) && !isPipeTransport;
             bool visualizerFileUsed = false;
             int sourceFileMappings = 0;
+            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("miMode");
 
             if (isLocal)
             {
@@ -960,6 +963,7 @@ namespace OpenDebugAD7
                 }
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
+                properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
                 properties.Add(DebuggerTelemetry.TelemetryVisualizerFileUsed, visualizerFileUsed);
                 properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
 
