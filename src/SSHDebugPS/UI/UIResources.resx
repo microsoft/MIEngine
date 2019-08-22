@@ -233,4 +233,10 @@
   <data name="ConnectionToolTip" xml:space="preserve">
     <value>Location from which to run the Docker CLI. To manage remote connections, in the menu go to Tools -&gt; Options and find Cross Platform -&gt; Connection Manager.</value>
   </data>
+  <data name="ExpandCommandAutomationName" xml:space="preserve">
+    <value>Show/hide container details</value>
+  </data>
+  <data name="HostnameAutomationName" xml:space="preserve">
+    <value>Optional Docker Host name</value>
+  </data>
 </root>
