@@ -254,4 +254,8 @@
   <data name="Error_VariableIsReadonly" xml:space="preserve">
     <value>'{0}' cannot be assigned to</value>
   </data>
+  <data name="Error_ExceptionOccured" xml:space="preserve">
+    <value>Exception occurred: '{0}'</value>
+    <comment>{0} is the exception string</comment>
+  </data>
 </root>

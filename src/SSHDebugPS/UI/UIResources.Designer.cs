@@ -196,6 +196,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show/hide container details.
+        /// </summary>
+        public static string ExpandCommandAutomationName {
+            get {
+                return ResourceManager.GetString("ExpandCommandAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expanded.
         /// </summary>
         public static string Expanded {
@@ -210,6 +219,15 @@ namespace Microsoft.SSHDebugPS {
         public static string ExpanderToolTip {
             get {
                 return ResourceManager.GetString("ExpanderToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional Docker Host name.
+        /// </summary>
+        public static string HostnameAutomationName {
+            get {
+                return ResourceManager.GetString("HostnameAutomationName", resourceCulture);
             }
         }
         
