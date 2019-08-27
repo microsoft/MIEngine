@@ -60,23 +60,25 @@ namespace MICore
             // execute the debugger command in the background
             // Clear the output of executing a process in the background: [job number] pid
             // echo and wait the debugger pid to know whether we need to fake an exit by the debugger
-            return FormattableString.Invariant($"echo $$ > {pidFifo} ; cd \"{debuggeeDir}\" ; DbgTerm=`tty` ; set -o monitor ; trap 'rm \"{dbgStdInName}\" \"{dbgStdOutName}\" \"{pidFifo}\" \"{dbgCmdScript}\"' EXIT ; \"{debuggerCmd}\" {debuggerArgs} --tty=$DbgTerm < \"{dbgStdInName}\" > \"{dbgStdOutName}\" & clear; pid=$! ; echo $pid > \"{pidFifo}\" ; {waitForCompletionCommand}");
+            return FormattableString.Invariant($"echo $$ > {pidFifo} ; cd \"{debuggeeDir}\" ; DbgTerm=`tty` ; set -o monitor ; trap 'rm \"{dbgStdInName}\" \"{dbgStdOutName}\" \"{pidFifo}\" \"{dbgCmdScript}\"' EXIT ; {debuggerCmd} {debuggerArgs} --tty=$DbgTerm < \"{dbgStdInName}\" > \"{dbgStdOutName}\" & clear; pid=$! ; echo $pid > \"{pidFifo}\" ; {waitForCompletionCommand}");
         }
 
         internal static string GetDebuggerCommand(LocalLaunchOptions localOptions)
         {
+            string quotedDebuggerPath = String.Format(CultureInfo.InvariantCulture, "\"{0}\"", localOptions.MIDebuggerPath);
+
             if (PlatformUtilities.IsLinux())
             {
-                string debuggerPathCorrectElevation = localOptions.MIDebuggerPath;
+                string debuggerPathCorrectElevation = quotedDebuggerPath;
                 string prompt = string.Empty;
 
                 // If running as root, make sure the new console is also root. 
                 bool isRoot = UnixNativeMethods.GetEUid() == 0;
 
                 // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
-                if (localOptions.ProcessId.HasValue && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
-                {
-                    prompt = String.Format(CultureInfo.CurrentCulture, "read -n 1 -p \"{0}\" yn; if [[ ! $yn =~ ^[Yy]$ ]] ; then exit 0; fi; ", MICoreResources.Warn_AttachAsRootProcess);
+                //if (localOptions.ProcessId.HasValue && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
+                //{
+                    prompt = String.Format(CultureInfo.CurrentCulture, "echo -n '{0}'; read yn; if [ $yn != 'y' ] && [ $yn != 'Y' ] ; then exit 1; fi; ", MICoreResources.Warn_AttachAsRootProcess);
 
                     // Prefer pkexec for a nice graphical prompt, but fall back to sudo if it's not available
                     if (File.Exists(UnixUtilities.PKExecPath))
@@ -91,13 +93,13 @@ namespace MICore
                     {
                         Debug.Fail("Root required to attach, but no means of elevating available!");
                     }
-                }
+                //}
 
                 return String.Concat(prompt, debuggerPathCorrectElevation);
             }
             else
             {
-                return localOptions.MIDebuggerPath;
+                return quotedDebuggerPath;
             }
         }
 
