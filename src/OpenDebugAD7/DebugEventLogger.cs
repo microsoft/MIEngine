@@ -43,7 +43,7 @@ namespace OpenDebugAD7
         private readonly Dictionary<LoggingCategory, bool> _isLoggingEnabled;
         private Action<DebugEvent> _sendToOutput;
 
-        private Action<DebugEvent> _traceCallback;
+        private Action<OutputEvent> _traceCallback;
 
         /// <summary>
         /// Create a new <see cref="DebugEventLogger"/> to log events to the given logging callback.
@@ -80,7 +80,7 @@ namespace OpenDebugAD7
             // If AdapterTrace or AdapterResponse is set at commandline, write trace logging to Console.Error
             if (_isLoggingEnabled[LoggingCategory.AdapterTrace] || _isLoggingEnabled[LoggingCategory.AdapterResponse])
             {
-                _traceCallback = (s => Console.Error.Write(s.ToString()));
+                _traceCallback = (s => Console.Error.WriteLine(s.Output));
             }
             else
             {

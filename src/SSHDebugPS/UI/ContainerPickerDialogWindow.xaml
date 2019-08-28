@@ -170,7 +170,6 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
-                        <!--Style="{StaticResource TextBlockStyle}"-->
                         <TextBlock x:Name="text"
                                    Foreground="{TemplateBinding Foreground}"
                                    Padding="{TemplateBinding Padding}"
@@ -237,7 +236,7 @@
                 <Button x:Name="ContainerDetailsExpander" 
                         Grid.Row="0"
                         Grid.Column="0"
-                        AutomationProperties.Name="ContainerDetailsExpander"
+                        AutomationProperties.Name="{x:Static local:UIResources.ExpandCommandAutomationName}"
                         Command="{Binding ExpandCommand}"
                         ToolTip="{Binding ExpandCommand.ToolTip}"
                         Background="Transparent"
@@ -408,8 +407,6 @@
                Grid.ColumnSpan="2"
                x:Uid="uidConnectionTypeLabel"
                x:Name="ConnectionTypeLabel"
-               Margin="0"
-               Padding="0"
                Height="16"
                VerticalAlignment="Center"
                Target="{Binding ElementName=ConnectionTypeComboBox}"
@@ -431,7 +428,7 @@
                 Grid.Column="1"
                 x:Uid="uidAddConnection"
                 x:Name="AddConnection"
-                AutomationProperties.Name="Add New Connection"
+                AutomationProperties.Name="{x:Static local:UIResources.AddNewSSHConnectionLabel}"
                 Margin="12,4,0,0"
                 MinWidth="75"
                 Height="23"
@@ -448,7 +445,6 @@
                x:Uid="uidHostnameLabel"
                x:Name="HostnameLabel"
                Margin="0,9,0,0"
-               Padding="0"
                Height="16"
                VerticalAlignment="Center"
                Target="{Binding ElementName=hostnameTextBox}"
@@ -459,7 +455,7 @@
                  Padding="2"
                  x:Uid="uidHostnameTextBox"
                  x:Name="hostnameTextBox"
-                 AutomationProperties.Name="DockerHostnameOptional"
+                 AutomationProperties.Name="{x:Static local:UIResources.HostnameAutomationName}"
                  PreviewKeyDown="HostnameTextbox_PreviewKeyDown"
                  Text="{Binding Path=Hostname, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                  ToolTip="{x:Static local:UIResources.HostnameTip}">

@@ -137,6 +137,7 @@ namespace MICore
                 using (FileStream dbgCmdStream = new FileStream(dbgCmdScript, FileMode.CreateNew))
                 using (StreamWriter dbgCmdWriter = new StreamWriter(dbgCmdStream, encNoBom) { AutoFlush = true })
                 {
+                    dbgCmdWriter.WriteLine("#!/bin/sh");
                     dbgCmdWriter.Write(launchDebuggerCommand);
                     dbgCmdWriter.Flush();
                 }
