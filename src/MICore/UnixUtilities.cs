@@ -76,7 +76,9 @@ namespace MICore
                 bool isRoot = UnixNativeMethods.GetEUid() == 0;
 
                 // If the system doesn't allow a non-root process to attach to another process, try to run GDB as root
-                if (localOptions.ProcessId.HasValue && !isRoot && UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
+                if (localOptions.ProcessId.HasValue && 
+                    !isRoot && 
+                    UnixUtilities.GetRequiresRootAttach(localOptions.DebuggerMIMode))
                 {
                     prompt = String.Format(CultureInfo.CurrentCulture, "echo -n '{0}'; read yn; if [ \"$yn\" != 'y' ] && [ \"$yn\" != 'Y' ] ; then exit 1; fi; ", MICoreResources.Warn_AttachAsRootProcess);
 
@@ -92,6 +94,7 @@ namespace MICore
                     else
                     {
                         Debug.Fail("Root required to attach, but no means of elevating available!");
+                        throw new InvalidOperationException(MICoreResources.Error_UnableToElevate);
                     }
                 }
 

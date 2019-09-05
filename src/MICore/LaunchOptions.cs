@@ -514,6 +514,7 @@ namespace MICore
             options.InitializeCommonOptions(source);
             options.InitializeServerOptions(source);
             options._useExternalConsole = source.ExternalConsole;
+            
 
             // when using local options the core dump path must check out
             if (options.IsCoreDump && !LocalLaunchOptions.CheckFilePath(options.CoreDumpPath))
