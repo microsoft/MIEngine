@@ -99,6 +99,9 @@ namespace OpenDebugAD7
 
             [JsonProperty]
             public string CoreDumpPath { get; set; }
+
+            [JsonProperty]
+            public SymbolLoadInfo SymbolLoadInfo { get; set; }
         }
 
         [JsonObject]
@@ -158,6 +161,16 @@ namespace OpenDebugAD7
 
             [JsonProperty]
             public bool AvoidWindowsConsoleRedirection { get; set; }
+        }
+
+        [JsonObject]
+        private class SymbolLoadInfo
+        {
+            [JsonProperty]
+            public bool LoadAll { get; set; }
+
+            [JsonProperty]
+            public string ExceptionList { get; set; }
         }
 
         [JsonObject]
@@ -579,6 +592,11 @@ namespace OpenDebugAD7
                         AddEnvironmentVariable(xmlLaunchOptions, pair.Key, pair.Value);
                     }
                     xmlLaunchOptions.Append("    </Environment>\n");
+                }
+
+                if (jsonLaunchOptions.SymbolLoadInfo != null)
+                {
+                    xmlLaunchOptions.Append("    <SymbolLoadInfo LoadAll='" + jsonLaunchOptions.SymbolLoadInfo.LoadAll.ToString().ToLower() + "' ExceptionList='" + XmlSingleQuotedAttributeEncode(jsonLaunchOptions.SymbolLoadInfo.ExceptionList) + "' />\n");
                 }
 
                 xmlLaunchOptions.Append("</LocalLaunchOptions>");
