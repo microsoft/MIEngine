@@ -167,7 +167,7 @@ namespace OpenDebugAD7
         private class SymbolLoadInfo
         {
             [JsonProperty]
-            public bool LoadAll { get; set; }
+            public bool? LoadAll { get; set; }
 
             [JsonProperty]
             public string ExceptionList { get; set; }
@@ -509,7 +509,16 @@ namespace OpenDebugAD7
                     string miDebuggerArgs = XmlSingleQuotedAttributeEncode(jsonLaunchOptions.MIDebuggerArgs);
                     xmlLaunchOptions.Append(String.Concat("  MIDebuggerArgs='", miDebuggerArgs, "'\n"));
                 }
-                xmlLaunchOptions.Append(String.Concat("  WaitDynamicLibLoad='false'\n"));
+
+                // If we get SymbolLoadInfo and an ExceptionList. We will need to have WaitDynamicLibLoad.
+                if (jsonLaunchOptions.SymbolLoadInfo != null && !String.IsNullOrWhiteSpace(jsonLaunchOptions.SymbolLoadInfo.ExceptionList))
+                {
+                    xmlLaunchOptions.Append(String.Concat("  WaitDynamicLibLoad='true'\n"));
+                }
+                else
+                {
+                    xmlLaunchOptions.Append(String.Concat("  WaitDynamicLibLoad='false'\n"));
+                }
 
                 if (jsonLaunchOptions.MIDebuggerServerAddress != null)
                 {
@@ -596,7 +605,18 @@ namespace OpenDebugAD7
 
                 if (jsonLaunchOptions.SymbolLoadInfo != null)
                 {
-                    xmlLaunchOptions.Append("    <SymbolLoadInfo LoadAll='" + jsonLaunchOptions.SymbolLoadInfo.LoadAll.ToString().ToLower() + "' ExceptionList='" + XmlSingleQuotedAttributeEncode(jsonLaunchOptions.SymbolLoadInfo.ExceptionList) + "' />\n");
+                    xmlLaunchOptions.Append("    <SymbolLoadInfo ");
+                    if (jsonLaunchOptions.SymbolLoadInfo.LoadAll.HasValue)
+                    {
+                        xmlLaunchOptions.Append("LoadAll = '" + (jsonLaunchOptions.SymbolLoadInfo.LoadAll.Value ? "true" : "false") + "' ");
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(jsonLaunchOptions.SymbolLoadInfo.ExceptionList))
+                    {
+                        xmlLaunchOptions.Append("ExceptionList='" + XmlSingleQuotedAttributeEncode(jsonLaunchOptions.SymbolLoadInfo.ExceptionList) + "' ");
+                    }
+
+                    xmlLaunchOptions.Append("/>\n");
                 }
 
                 xmlLaunchOptions.Append("</LocalLaunchOptions>");
