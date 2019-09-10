@@ -510,8 +510,9 @@ namespace OpenDebugAD7
                     xmlLaunchOptions.Append(String.Concat("  MIDebuggerArgs='", miDebuggerArgs, "'\n"));
                 }
 
-                // If we get SymbolLoadInfo and an ExceptionList. We will need to have WaitDynamicLibLoad.
-                if (jsonLaunchOptions.SymbolLoadInfo != null && !String.IsNullOrWhiteSpace(jsonLaunchOptions.SymbolLoadInfo.ExceptionList))
+                // If we get SymbolLoadInfo and an ExceptionList or LoadAll is set. We will need to have WaitDynamicLibLoad.
+                if (jsonLaunchOptions.SymbolLoadInfo != null && 
+                    (!String.IsNullOrWhiteSpace(jsonLaunchOptions.SymbolLoadInfo.ExceptionList) || jsonLaunchOptions.SymbolLoadInfo.LoadAll.HasValue))
                 {
                     xmlLaunchOptions.Append(String.Concat("  WaitDynamicLibLoad='true'\n"));
                 }
@@ -608,7 +609,7 @@ namespace OpenDebugAD7
                     xmlLaunchOptions.Append("    <SymbolLoadInfo ");
                     if (jsonLaunchOptions.SymbolLoadInfo.LoadAll.HasValue)
                     {
-                        xmlLaunchOptions.Append("LoadAll = '" + (jsonLaunchOptions.SymbolLoadInfo.LoadAll.Value ? "true" : "false") + "' ");
+                        xmlLaunchOptions.Append("LoadAll = '" + jsonLaunchOptions.SymbolLoadInfo.LoadAll.Value.ToString().ToLowerInvariant() + "' ");
                     }
 
                     if (!String.IsNullOrWhiteSpace(jsonLaunchOptions.SymbolLoadInfo.ExceptionList))
