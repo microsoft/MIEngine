@@ -99,6 +99,9 @@ namespace OpenDebugAD7
 
             [JsonProperty]
             public string CoreDumpPath { get; set; }
+
+            [JsonProperty]
+            public SymbolLoadInfo SymbolLoadInfo { get; set; }
         }
 
         [JsonObject]
@@ -158,6 +161,16 @@ namespace OpenDebugAD7
 
             [JsonProperty]
             public bool AvoidWindowsConsoleRedirection { get; set; }
+        }
+
+        [JsonObject]
+        private class SymbolLoadInfo
+        {
+            [JsonProperty]
+            public bool? LoadAll { get; set; }
+
+            [JsonProperty]
+            public string ExceptionList { get; set; }
         }
 
         [JsonObject]
@@ -496,7 +509,17 @@ namespace OpenDebugAD7
                     string miDebuggerArgs = XmlSingleQuotedAttributeEncode(jsonLaunchOptions.MIDebuggerArgs);
                     xmlLaunchOptions.Append(String.Concat("  MIDebuggerArgs='", miDebuggerArgs, "'\n"));
                 }
-                xmlLaunchOptions.Append(String.Concat("  WaitDynamicLibLoad='false'\n"));
+
+                // If we get SymbolLoadInfo and an ExceptionList or LoadAll is set. We will need to have WaitDynamicLibLoad.
+                if (jsonLaunchOptions.SymbolLoadInfo != null && 
+                    (!String.IsNullOrWhiteSpace(jsonLaunchOptions.SymbolLoadInfo.ExceptionList) || jsonLaunchOptions.SymbolLoadInfo.LoadAll.HasValue))
+                {
+                    xmlLaunchOptions.Append(String.Concat("  WaitDynamicLibLoad='true'\n"));
+                }
+                else
+                {
+                    xmlLaunchOptions.Append(String.Concat("  WaitDynamicLibLoad='false'\n"));
+                }
 
                 if (jsonLaunchOptions.MIDebuggerServerAddress != null)
                 {
@@ -579,6 +602,22 @@ namespace OpenDebugAD7
                         AddEnvironmentVariable(xmlLaunchOptions, pair.Key, pair.Value);
                     }
                     xmlLaunchOptions.Append("    </Environment>\n");
+                }
+
+                if (jsonLaunchOptions.SymbolLoadInfo != null)
+                {
+                    xmlLaunchOptions.Append("    <SymbolLoadInfo ");
+                    if (jsonLaunchOptions.SymbolLoadInfo.LoadAll.HasValue)
+                    {
+                        xmlLaunchOptions.Append("LoadAll = '" + jsonLaunchOptions.SymbolLoadInfo.LoadAll.Value.ToString().ToLowerInvariant() + "' ");
+                    }
+
+                    if (!String.IsNullOrWhiteSpace(jsonLaunchOptions.SymbolLoadInfo.ExceptionList))
+                    {
+                        xmlLaunchOptions.Append("ExceptionList='" + XmlSingleQuotedAttributeEncode(jsonLaunchOptions.SymbolLoadInfo.ExceptionList) + "' ");
+                    }
+
+                    xmlLaunchOptions.Append("/>\n");
                 }
 
                 xmlLaunchOptions.Append("</LocalLaunchOptions>");
