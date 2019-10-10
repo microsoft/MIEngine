@@ -3,6 +3,9 @@
 
 using System;
 using System.ComponentModel;
+using System.Windows.Automation;
+using System.Windows.Automation.Peers;
+using System.Windows.Controls;
 using liblinux.Shell;
 using Microsoft.SSHDebugPS.Docker;
 using WindowsInput = System.Windows.Input;
@@ -36,7 +39,7 @@ namespace Microsoft.SSHDebugPS.UI
         #region INotifyPropertyChanged and helper
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged(string name)
+        protected void OnPropertyChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
@@ -148,6 +151,7 @@ namespace Microsoft.SSHDebugPS.UI
         private void Expand(object parameter)
         {
             IsExpanded = !IsExpanded;
+            OnPropertyChanged(nameof(DockerViewModelAutomationName));
         }
 
         // Gets the first 12 characters and appends an ellipsis
@@ -200,12 +204,11 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        public string ExpanderAutomationName
+        public string ExpanderItemStatus
         {
             get
             {
-                return String.Concat(UIResources.ExpandCommandAutomationName, " ",
-                    UIResources.Expanded, ": ", IsExpanded.ToString());
+                return IsExpanded ? UIResources.Expanded : UIResources.Collapsed;
             }
         }
         #endregion

@@ -160,6 +160,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Container List.
+        /// </summary>
+        public static string ContainerList {
+            get {
+                return ResourceManager.GetString("ContainerList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Found {0} containers..
         /// </summary>
         public static string ContainersFoundStatusText {
