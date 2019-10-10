@@ -239,4 +239,10 @@
   <data name="HostnameAutomationName" xml:space="preserve">
     <value>Optional Docker Host name</value>
   </data>
+  <data name="ContainerList" xml:space="preserve">
+    <value>Container List</value>
+  </data>
+  <data name="ContainerStatusTextBox" xml:space="preserve">
+    <value>Container Status:</value>
+  </data>
 </root>
