@@ -176,5 +176,38 @@ namespace Microsoft.SSHDebugPS.UI
         {
             return Instance.GetHashCode();
         }
+
+        #region AutomationProperty Helpers
+        // Override for ScreenReader
+        public string DockerViewModelAutomationName
+        {
+            get
+            {
+                string text = String.Join(" ",
+                    UIResources.NameLabelText, Name,
+                    UIResources.IdLabelText, ShortId);
+
+                if (IsExpanded)
+                {
+                    text = String.Join(" ", text,
+                    UIResources.ImageLabelText, Image,
+                    UIResources.CommandLabelText, Command,
+                    UIResources.StatusLabelText, Status,
+                    UIResources.CreatedLabelText, Created,
+                    UIResources.PortsLabelText, !String.IsNullOrEmpty(Instance.Ports) ? FormattedListOfPorts : UIResources.NoPortsText);
+                }
+                return text;
+            }
+        }
+
+        public string ExpanderAutomationName
+        {
+            get
+            {
+                return String.Concat(UIResources.ExpandCommandAutomationName, " ",
+                    UIResources.Expanded, ": ", IsExpanded.ToString());
+            }
+        }
+        #endregion
     }
 }

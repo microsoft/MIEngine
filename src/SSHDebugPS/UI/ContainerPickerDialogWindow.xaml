@@ -25,16 +25,18 @@
     <ui:DialogWindow.Resources>
         <!-- Brush -->
         <SolidColorBrush x:Key="ListBoxBorderBrush"
-                         Color="{DynamicResource SystemColors.ActiveBorder}" />
+                         Color="{DynamicResource {x:Static ui:EnvironmentColors.SystemActiveBorderColorKey}}" />
         <!-- Converters-->
         <docker:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <docker:TextToVisibilityConverter x:Key="TextToVisibilityConverter" />
         <!--Styles-->
-        <Style x:Key="StatusLabelStyle"
-               TargetType="{x:Type TextBlock}">
-            <Setter Property="Background"
-                    Value="{DynamicResource SystemColors.WindowBrush}" />
-        </Style>
+        <Style x:Key="MainLabelStyle"
+               TargetType="{x:Type Label}">
+            <Setter Property="Padding"
+                    Value="0" />
+            <Setter Property="Margin"
+                    Value="0" />
+        </Style>               
         <Style x:Key="HeaderLabelStyle"
                TargetType="{x:Type TextBlock}">
             <Setter Property="VerticalAlignment"
@@ -59,6 +61,10 @@
                     Value="0" />
             <Setter Property="VerticalAlignment"
                     Value="Top" />
+            <Setter Property="Foreground"
+                    Value="{DynamicResource {x:Static SystemColors.GrayTextBrush}}" />
+            <!--<Setter Property="TextBlock.Foreground"
+                    Value="ForestGreen" />-->
         </Style>
         <Style x:Key="BodyTextBlockStyle"
                TargetType="{x:Type TextBlock}">
@@ -88,7 +94,7 @@
             <Setter Property="BorderThickness"
                     Value="1" />
             <Setter Property="BorderBrush"
-                    Value="{DynamicResource SystemColors.ActiveBorder}" />
+                    Value="{DynamicResource {x:Static ui:EnvironmentColors.SystemActiveBorderBrushKey}}" />
             <Setter Property="Padding"
                     Value="0" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility"
@@ -114,17 +120,17 @@
                     <Setter Property="BorderThickness"
                             Value="1" />
                     <Setter Property="BorderBrush"
-                            Value="{DynamicResource SystemColors.ActiveBorder}" />
+                            Value="{DynamicResource {x:Static ui:EnvironmentColors.SystemActiveBorderBrushKey}}" />
                     <Setter Property="Padding"
                             Value="0" />
                 </Trigger>
             </Style.Triggers>
             <Setter Property="AutomationProperties.Name"
-                    Value="{Binding Name, Mode=OneWay}" />
+                    Value="{Binding DockerViewModelAutomationName, Mode=OneWay}" />
             <Setter Property="DockPanel.Dock"
                     Value="Top" />
             <Setter Property="BorderBrush"
-                    Value="LightSteelBlue" />
+                    Value="{DynamicResource {x:Static ui:EnvironmentColors.SystemInactiveBorderBrushKey}}" />
             <Setter Property="BorderThickness"
                     Value="0" />
             <Setter Property="Padding"
@@ -136,7 +142,22 @@
             <Setter Property="HorizontalContentAlignment"
                     Value="Stretch" />
         </Style>
-
+        <!-- Overriding default focus visual key style for the hyperlink keyboard focus box. 
+             The default color is hardcoded as black and now it is bound to a system brush to support high contrast -->
+        <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle StrokeThickness="1"
+                                   Stroke="{DynamicResource {x:Static ui:EnvironmentColors.ControlLinkTextHoverBrushKey}}"
+                                   StrokeDashArray="1 2"
+                                   SnapsToDevicePixels="true"
+                                   Margin="-2"
+                                   />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <!-- ***** Hyperlink Button Styles ***** -->
         <!--
         NOTE: This style was copied from vsproject\connectedservices\package\styles\hyperlinkbutton.xaml
@@ -166,7 +187,8 @@
                     Value="Center" />
             <Setter Property="SnapsToDevicePixels"
                     Value="True" />
-
+            <Setter Property="FocusVisualStyle"
+                    Value="{StaticResource {x:Static SystemParameters.FocusVisualStyleKey}}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
@@ -217,6 +239,7 @@
                                 <Setter Property="Cursor"
                                         Value="Arrow" />
                             </Trigger>
+
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -236,7 +259,7 @@
                 <Button x:Name="ContainerDetailsExpander" 
                         Grid.Row="0"
                         Grid.Column="0"
-                        AutomationProperties.Name="{x:Static local:UIResources.ExpandCommandAutomationName}"
+                        AutomationProperties.Name="{Binding ExpanderAutomationName}"
                         Command="{Binding ExpandCommand}"
                         ToolTip="{Binding ExpandCommand.ToolTip}"
                         Background="Transparent"
@@ -267,6 +290,7 @@
                            Grid.Column="1">
                     <TextBlock DockPanel.Dock="Left"
                                x:Name="Name"
+                               AutomationProperties.Name="{Binding Name}"
                                Text="{Binding Name}"
                                ToolTip="{Binding Name}"
                                Style="{StaticResource HeaderLabelStyle}" />
@@ -409,6 +433,7 @@
                x:Name="ConnectionTypeLabel"
                Height="16"
                VerticalAlignment="Center"
+               Style="{StaticResource MainLabelStyle}"
                Target="{Binding ElementName=ConnectionTypeComboBox}"
                Content="{x:Static local:UIResources.ConnectionLabel}" />
 
@@ -427,7 +452,7 @@
         <Button Grid.Row="1"
                 Grid.Column="1"
                 x:Uid="uidAddConnection"
-                x:Name="AddConnection"
+                x:Name="AddConnection"  
                 AutomationProperties.Name="{x:Static local:UIResources.AddNewSSHConnectionLabel}"
                 Margin="12,4,0,0"
                 MinWidth="75"
@@ -447,6 +472,7 @@
                Margin="0,9,0,0"
                Height="16"
                VerticalAlignment="Center"
+               Style="{StaticResource MainLabelStyle}"
                Target="{Binding ElementName=hostnameTextBox}"
                Content="{x:Static local:UIResources.HostnameLabel}" />
         <TextBox Grid.Row="3"
@@ -467,7 +493,6 @@
                    Margin="0,9,0,0"
                    x:Uid="uidStatusLabel"
                    x:Name="ContainerCount"
-                   Style="{StaticResource StatusLabelStyle}"
                    Text="{Binding ContainersFoundText, Mode=OneWay}"
                    TextWrapping="Wrap" />
 
