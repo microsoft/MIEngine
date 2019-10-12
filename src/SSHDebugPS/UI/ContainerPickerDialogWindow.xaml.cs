@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.UI;
 using Microsoft.SSHDebugPS.Utilities;
@@ -33,15 +34,15 @@ namespace Microsoft.SSHDebugPS.UI
             bool listItemFocused = false;
             try
             {
-                if (ContainerListBox != null && ContainerListBox.HasItems)
-                {
-                    if (ContainerListBox.SelectedItem == null)
-                    {
-                        ContainerListBox.SelectedIndex = 0;
-                    }
-                    ((ListBoxItem)ContainerListBox.ItemContainerGenerator.ContainerFromItem(ContainerListBox.SelectedItem)).Focus();
-                    listItemFocused = true;
-                }
+                //if (ContainerListBox != null && ContainerListBox.HasItems)
+                //{
+                //    if (ContainerListBox.SelectedItem == null)
+                //    {
+                //        ContainerListBox.SelectedIndex = 0;
+                //    }
+                //    ((ListBoxItem)ContainerListBox.ItemContainerGenerator.ContainerFromItem(ContainerListBox.SelectedItem)).Focus();
+                //    listItemFocused = true;
+                //}
             }
             catch (Exception ex)
             {
@@ -209,5 +210,25 @@ namespace Microsoft.SSHDebugPS.UI
         #region Private Variables
         private ContainerPickerViewModel _model;
         #endregion
+
+        private void ContainerTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue == null)
+            {
+                Model.SelectedContainerInstance = null;
+            }
+            else if (e.NewValue is ContainerProperty)
+            {
+                Model.SelectedContainerInstance = ((ContainerProperty)e.NewValue).ViewModel;
+            }
+            else if (e.NewValue is DockerContainerViewModel)
+            {
+                Model.SelectedContainerInstance = ((DockerContainerViewModel)e.NewValue);
+            }
+            else
+            {
+                Debug.Fail("Unexpected TreeView item selected");
+            }
+        }
     }
 }

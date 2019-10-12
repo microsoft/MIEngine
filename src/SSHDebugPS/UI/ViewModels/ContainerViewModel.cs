@@ -2,12 +2,19 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows.Automation;
 using System.Windows.Automation.Peers;
 using System.Windows.Controls;
+using System.Windows.Input;
 using liblinux.Shell;
 using Microsoft.SSHDebugPS.Docker;
+using Microsoft.SSHDebugPS.Utilities;
+using Microsoft.VisualStudio.Shell;
 using WindowsInput = System.Windows.Input;
 
 namespace Microsoft.SSHDebugPS.UI
@@ -31,6 +38,7 @@ namespace Microsoft.SSHDebugPS.UI
         public ContainerViewModel(T instance)
         {
             Instance = instance;
+            RefreshContainerProperties();
         }
 
         public abstract bool GetResult(out string selectedQualifier);
@@ -44,6 +52,26 @@ namespace Microsoft.SSHDebugPS.UI
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
         #endregion
+
+        protected IDictionary<string, string> containerProperties = new Dictionary<string, string>();
+        protected abstract void RefreshContainerPropertiesInternal();
+
+        private void RefreshContainerProperties()
+        {
+            RefreshContainerPropertiesInternal();
+            OnPropertyChanged(nameof(ContainerProperties));
+        }
+        
+        public ObservableCollection<ContainerProperty> ContainerProperties 
+        { 
+            get 
+            {
+                return new ObservableCollection<ContainerProperty>(
+                    containerProperties.Keys.Select(
+                        item => 
+                        new ContainerProperty(this, item, containerProperties[item])).ToList()); 
+            }
+        } 
 
         #region IEquatable
         public static bool operator ==(ContainerViewModel<T> left, ContainerViewModel<T> right)
@@ -154,6 +182,16 @@ namespace Microsoft.SSHDebugPS.UI
             OnPropertyChanged(nameof(DockerViewModelAutomationName));
         }
 
+        protected override void RefreshContainerPropertiesInternal()
+        {
+            containerProperties.Clear();
+            containerProperties.Add(UIResources.ImageLabelText, Image);
+            containerProperties.Add(UIResources.CommandLabelText, Command);
+            containerProperties.Add(UIResources.StatusLabelText, Status);
+            containerProperties.Add(UIResources.CreatedLabelText, Created);
+            containerProperties.Add(UIResources.PortsLabelText, FormattedListOfPorts);
+        }
+
         // Gets the first 12 characters and appends an ellipsis
         public string ShortId { get => Id.Length > 12 ? Id.Substring(0, 12) : Id; }
         public string Image => Instance.Image;
@@ -212,5 +250,25 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
         #endregion
+    }
+
+    public class ContainerProperty
+    {
+        public ContainerProperty(IContainerViewModel viewModel, string key, string value)
+        {
+            ViewModel = viewModel;
+            Key = key;
+            Value = value;
+        }
+
+        public ContainerProperty(KeyValuePair<string, string> property)
+        {
+            Key = property.Key;
+            Value = property.Value;
+        }
+
+        public string Key { get; }
+        public string Value { get; }
+        public IContainerViewModel ViewModel { get; }
     }
 }
