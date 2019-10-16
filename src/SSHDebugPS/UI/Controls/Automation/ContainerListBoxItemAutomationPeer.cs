@@ -7,16 +7,21 @@ using System.Windows.Automation.Provider;
 
 namespace Microsoft.SSHDebugPS.UI
 {
-    public class ContainerListBoxItemAutomationPeer<T> : ListBoxItemAutomationPeer, IExpandCollapseProvider where T : IContainerViewModel
+    /// <summary>
+    /// This automationpeer class is here to support the custom expand/collapse action on the listbox item
+    /// </summary>
+    /// <typeparam name="T">Must be IContainerViewModel</typeparam>
+    public class ContainerListBoxItemAutomationPeer<T> : 
+        ListBoxItemAutomationPeer, 
+        IExpandCollapseProvider 
+        where T : IContainerViewModel
     {
         public ContainerListBoxItemAutomationPeer(object item, ContainerListBoxAutomationPeer ownerAutomationPeer)
             : base(item, ownerAutomationPeer)
-        {
-
-        }
+        { }
 
         /// <summary>
-        /// Item from the constructor is the viewmodel
+        /// Item is from the constructor and is the IContainerViewModel, not the listboxitem
         /// </summary>
         protected T ViewModel
         {
@@ -50,6 +55,7 @@ namespace Microsoft.SSHDebugPS.UI
             ViewModel.IsExpanded = false;
         }
         #endregion
+        
         public override object GetPattern(PatternInterface patternInterface)
         {
             if (patternInterface == PatternInterface.ExpandCollapse)
@@ -80,7 +86,6 @@ namespace Microsoft.SSHDebugPS.UI
         {
             return true;
         }
-
         #endregion
     }
 }

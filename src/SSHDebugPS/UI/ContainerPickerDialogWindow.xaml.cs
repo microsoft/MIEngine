@@ -195,11 +195,11 @@ namespace Microsoft.SSHDebugPS.UI
                             e.Handled = true;
                             break;
                         case Key.Left:
-                            viewModel.IsExpanded = false; ;
+                            viewModel.IsExpanded = false;
                             e.Handled = true;
                             break;
                         case Key.Space:
-                            viewModel.IsExpanded = !viewModel.IsExpanded; 
+                            viewModel.IsExpanded = !viewModel.IsExpanded;
                             e.Handled = true;
                             break;
                     }
