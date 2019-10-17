@@ -36,12 +36,7 @@ namespace Microsoft.SSHDebugPS.UI
         {
             get
             {
-                if (ViewModel.IsExpanded)
-                {
-                    return ExpandCollapseState.Expanded;
-                }
-                else
-                    return ExpandCollapseState.Collapsed;
+                return ViewModel.IsExpanded ? ExpandCollapseState.Expanded : ExpandCollapseState.Collapsed;
             }
         }
 
@@ -69,7 +64,7 @@ namespace Microsoft.SSHDebugPS.UI
         #region Core overrides
         protected override AutomationControlType GetAutomationControlTypeCore()
         {
-            return AutomationControlType.Button;
+            return AutomationControlType.ListItem;
         }
 
         protected override string GetLocalizedControlTypeCore()
