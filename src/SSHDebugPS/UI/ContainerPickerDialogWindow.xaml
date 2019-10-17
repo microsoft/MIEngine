@@ -2,14 +2,15 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 -->
-<ui:DialogWindow x:Class="Microsoft.SSHDebugPS.UI.ContainerPickerDialogWindow"
+<platformui:DialogWindow x:Class="Microsoft.SSHDebugPS.UI.ContainerPickerDialogWindow"
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                 xmlns:ui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
+                 xmlns:platformui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
                  xmlns:vsui="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
                  xmlns:vsimaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
                  xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
                  xmlns:local="clr-namespace:Microsoft.SSHDebugPS"
+                 xmlns:ui="clr-namespace:Microsoft.SSHDebugPS.UI"
                  xmlns:docker="clr-namespace:Microsoft.SSHDebugPS.Docker"
                  MinWidth="450"
                  MinHeight="500"
@@ -22,18 +23,29 @@
                  Title="{x:Static local:UIResources.DialogTitle}"
                  WindowStartupLocation="CenterOwner"
                  KeyDown="DialogWindow_KeyDown">
-    <ui:DialogWindow.Resources>
-        <!-- Brush -->
-        <SolidColorBrush x:Key="ListBoxBorderBrush"
-                         Color="{DynamicResource SystemColors.ActiveBorder}" />
+    <platformui:DialogWindow.Resources>
         <!-- Converters-->
         <docker:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <docker:TextToVisibilityConverter x:Key="TextToVisibilityConverter" />
         <!--Styles-->
-        <Style x:Key="StatusLabelStyle"
-               TargetType="{x:Type TextBlock}">
-            <Setter Property="Background"
-                    Value="{DynamicResource SystemColors.WindowBrush}" />
+        <Style x:Key="GlyphPathStyle"
+               TargetType="{x:Type Path}">
+            <Setter Property="Stroke"
+                            Value="{DynamicResource {x:Static platformui:TreeViewColors.GlyphBrushKey}}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding  RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}, Path=IsSelected}"
+                             Value="True">
+                    <Setter Property="Stroke"
+                            Value="{DynamicResource {x:Static platformui:TreeViewColors.GlyphMouseOverBrushKey}}" />
+                 </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="MainLabelStyle"
+               TargetType="{x:Type Label}">
+            <Setter Property="Padding"
+                    Value="0" />
+            <Setter Property="Margin"
+                    Value="0" />
         </Style>
         <Style x:Key="HeaderLabelStyle"
                TargetType="{x:Type TextBlock}">
@@ -52,7 +64,7 @@
                     Value="6,4,0,4" />
         </Style>
         <Style x:Key="BodyLabelStyle"
-               TargetType="{x:Type Label}">
+               TargetType="{x:Type TextBlock}">
             <Setter Property="Margin"
                     Value="6,4,0,0" />
             <Setter Property="Padding"
@@ -71,6 +83,11 @@
             <Setter Property="Margin"
                     Value="6,4,12,0" />
         </Style>
+        <Style x:Key="ComboBoxItemStyle"
+               TargetType="{x:Type ComboBoxItem}">
+            <Setter Property="AutomationProperties.Name"
+                    Value="{Binding DisplayName}" />
+        </Style>
         <!-- ListBoxItem Styles-->
         <Style x:Key="ListBoxItemFocusVisualStyle"
                TargetType="{x:Type Control}">
@@ -88,7 +105,7 @@
             <Setter Property="BorderThickness"
                     Value="1" />
             <Setter Property="BorderBrush"
-                    Value="{DynamicResource SystemColors.ActiveBorder}" />
+                    Value="{DynamicResource {x:Static platformui:EnvironmentColors.SystemActiveBorderBrushKey}}" />
             <Setter Property="Padding"
                     Value="0" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility"
@@ -114,17 +131,17 @@
                     <Setter Property="BorderThickness"
                             Value="1" />
                     <Setter Property="BorderBrush"
-                            Value="{DynamicResource SystemColors.ActiveBorder}" />
+                            Value="{DynamicResource {x:Static platformui:EnvironmentColors.SystemActiveBorderBrushKey}}" />
                     <Setter Property="Padding"
                             Value="0" />
                 </Trigger>
             </Style.Triggers>
             <Setter Property="AutomationProperties.Name"
-                    Value="{Binding Name, Mode=OneWay}" />
+                    Value="{Binding DockerViewModelAutomationName, Mode=OneWay}" />
             <Setter Property="DockPanel.Dock"
                     Value="Top" />
             <Setter Property="BorderBrush"
-                    Value="LightSteelBlue" />
+                    Value="{DynamicResource {x:Static platformui:EnvironmentColors.SystemInactiveBorderBrushKey}}" />
             <Setter Property="BorderThickness"
                     Value="0" />
             <Setter Property="Padding"
@@ -136,7 +153,22 @@
             <Setter Property="HorizontalContentAlignment"
                     Value="Stretch" />
         </Style>
-
+        <!-- Overriding default focus visual key style for the hyperlink keyboard focus box. 
+             The default color is hardcoded as black and now it is bound to a system brush to support high contrast -->
+        <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle StrokeThickness="1"
+                                   Stroke="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextHoverBrushKey}}"
+                                   StrokeDashArray="1 2"
+                                   SnapsToDevicePixels="true"
+                                   Margin="-2"
+                                   />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <!-- ***** Hyperlink Button Styles ***** -->
         <!--
         NOTE: This style was copied from vsproject\connectedservices\package\styles\hyperlinkbutton.xaml
@@ -155,7 +187,7 @@
             <Setter Property="Background"
                     Value="Transparent" />
             <Setter Property="Foreground"
-                    Value="{DynamicResource {x:Static ui:EnvironmentColors.ControlLinkTextBrushKey}}" />
+                    Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextBrushKey}}" />
             <Setter Property="Margin"
                     Value="0" />
             <Setter Property="Padding"
@@ -166,7 +198,8 @@
                     Value="Center" />
             <Setter Property="SnapsToDevicePixels"
                     Value="True" />
-
+            <Setter Property="FocusVisualStyle"
+                    Value="{StaticResource {x:Static SystemParameters.FocusVisualStyleKey}}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
@@ -184,12 +217,12 @@
                             <Trigger Property="IsFocused"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{DynamicResource {x:Static ui:EnvironmentColors.ControlLinkTextHoverBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextHoverBrushKey}}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{DynamicResource {x:Static ui:EnvironmentColors.ControlLinkTextHoverBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextHoverBrushKey}}" />
                                 <Setter TargetName="accessText"
                                         Property="TextDecorations"
                                         Value="Underline" />
@@ -199,13 +232,13 @@
                             <Trigger Property="IsPressed"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{DynamicResource {x:Static ui:EnvironmentColors.ControlLinkTextPressedBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextPressedBrushKey}}" />
                             </Trigger>
                             <!-- None of our links should be disabled, but keep the style just in case -->
                             <Trigger Property="IsEnabled"
                                      Value="False">
                                 <Setter Property="Foreground"
-                                        Value="{DynamicResource {x:Static ui:EnvironmentColors.PanelHyperlinkDisabledBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.PanelHyperlinkDisabledBrushKey}}" />
                                 <!--
                                 When more than one active trigger set the same property,
                                 the last trigger wins.  Thus, we also set the decoration
@@ -217,6 +250,7 @@
                                 <Setter Property="Cursor"
                                         Value="Arrow" />
                             </Trigger>
+
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -237,27 +271,30 @@
                         Grid.Row="0"
                         Grid.Column="0"
                         AutomationProperties.Name="{x:Static local:UIResources.ExpandCommandAutomationName}"
+                        AutomationProperties.ItemStatus="{Binding ExpanderItemStatus}"
                         Command="{Binding ExpandCommand}"
+                        CommandParameter="{Binding RelativeSource={RelativeSource self}}"
                         ToolTip="{Binding ExpandCommand.ToolTip}"
                         Background="Transparent"
-                        BorderThickness="0">
+                        BorderThickness="0"
+                        IsTabStop="False">
                     <DockPanel>
                         <Path x:Name="rightArrow"
                               AutomationProperties.HelpText="{x:Static local:UIResources.Collapsed}"
+                              Style="{StaticResource GlyphPathStyle}"
                               Data="M 0.5,0.5 L 4.5,4.5 L 0.5,8.5 Z"
                               HorizontalAlignment="Center"
                               SnapsToDevicePixels="false"
-                              Stroke="{DynamicResource {x:Static ui:TreeViewColors.GlyphBrushKey}}"
                               StrokeThickness="2"
                               VerticalAlignment="Center"
                               Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=flip, Mode=OneWay}" />
                         <Path x:Name="downArrow"
                               AutomationProperties.HelpText="{x:Static local:UIResources.Expanded}"
+                              Style="{StaticResource GlyphPathStyle}"
                               Data="M 5.5,2.5 L 0.5,7.5 L 5.5,7.5 Z"
                               HorizontalAlignment="Center"
                               SnapsToDevicePixels="false"
-                              Stroke="{DynamicResource {x:Static ui:TreeViewColors.GlyphBrushKey}}"
-                              Fill="{DynamicResource {x:Static ui:TreeViewColors.GlyphBrushKey}}"
+                              Fill="{DynamicResource {x:Static platformui:TreeViewColors.GlyphBrushKey}}"
                               StrokeThickness="2"
                               VerticalAlignment="Center"
                               Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
@@ -267,6 +304,7 @@
                            Grid.Column="1">
                     <TextBlock DockPanel.Dock="Left"
                                x:Name="Name"
+                               AutomationProperties.Name="{Binding Name}"
                                Text="{Binding Name}"
                                ToolTip="{Binding Name}"
                                Style="{StaticResource HeaderLabelStyle}" />
@@ -275,7 +313,6 @@
                                Text="{Binding ShortId, StringFormat=' ({0}...)'}"
                                ToolTip="{Binding Id}"
                                Style="{StaticResource HeaderTextBlockStyle}" />
-
                 </DockPanel>
 
                 <Grid Grid.Row="1"
@@ -294,18 +331,23 @@
                                           Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-
+                    <Grid.Resources>
+                        <Style TargetType="{x:Type Label}">
+                            <Setter Property="Foreground"
+                                Value="{DynamicResource {x:Static platformui:EnvironmentColors.SystemCaptionTextBrushKey}}" />
+                        </Style>
+                    </Grid.Resources>
                     <!-- Image -->
                     <!-- No Top margin on first row -->
-                    <Label Grid.Row="0"
+                    <TextBlock Grid.Row="0"
                            Grid.Column="0"
                            x:Uid="uidImage"
-                           Target="{Binding ElementName=image}"
-                           Content="{x:Static local:UIResources.ImageLabelText}"
+                           Text="{x:Static local:UIResources.ImageLabelText}"
                            Margin="6,0,0,0"
                            Style="{StaticResource BodyLabelStyle}" />
                     <TextBlock Grid.Row="0"
                                Grid.Column="1"
+                               Tag="1"
                                x:Name="image"
                                Text="{Binding Image}"
                                ToolTip="{Binding Image}"
@@ -313,43 +355,43 @@
                                Style="{StaticResource BodyTextBlockStyle}" />
 
                     <!-- Command -->
-                    <Label Grid.Row="1"
+                    <TextBlock Grid.Row="1"
                            Grid.Column="0"
                            x:Uid="uidCommand"
-                           Target="{Binding ElementName=command}"
-                           Content="{x:Static local:UIResources.CommandLabelText}"
+                           Text="{x:Static local:UIResources.CommandLabelText}"
                            Style="{StaticResource BodyLabelStyle}" />
                     <TextBlock Grid.Row="1"
                                Grid.Column="1"
+                               Tag="2"
                                x:Name="command"
                                Text="{Binding Command}"
                                Style="{StaticResource BodyTextBlockStyle}"
                                ToolTip="{Binding Command}" />
 
                     <!-- Status -->
-                    <Label Grid.Row="2"
+                    <TextBlock Grid.Row="2"
                            Grid.Column="0"
                            x:Uid="uidStatus"
-                           Target="{Binding ElementName=status}"
-                           Content="{x:Static local:UIResources.StatusLabelText}"
+                           Text="{x:Static local:UIResources.StatusLabelText}"
                            Style="{StaticResource BodyLabelStyle}" />
                     <TextBlock Grid.Row="2"
                                Grid.Column="1"
+                               Tag="3"
                                x:Name="status"
                                Text="{Binding Status}"
                                Style="{StaticResource BodyTextBlockStyle}"
                                ToolTip="{Binding Status}" />
 
                     <!-- Created -->
-                    <Label Grid.Row="3"
+                    <TextBlock Grid.Row="3"
                            Grid.Column="0"
                            x:Uid="uidCreated"
-                           Target="{Binding ElementName=created}"
-                           Content="{x:Static local:UIResources.CreatedLabelText}"
+                           Text="{x:Static local:UIResources.CreatedLabelText}"
                            Style="{StaticResource BodyLabelStyle}" />
                     <TextBlock Grid.Row="3"
                                Grid.Column="1"
                                Grid.ColumnSpan="2"
+                               Tag="4"
                                x:Name="created"
                                Text="{Binding Created}"
                                Style="{StaticResource BodyTextBlockStyle}"
@@ -357,16 +399,16 @@
 
                     <!-- Ports -->
                     <!-- Modified Margin on bottom -->
-                    <Label Grid.Row="4"
+                    <TextBlock Grid.Row="4"
                            Grid.Column="0"
                            x:Uid="uidPorts"
-                           Target="{Binding ElementName=ports}"
-                           Content="{x:Static local:UIResources.PortsLabelText}"
+                           Text="{x:Static local:UIResources.PortsLabelText}"
                            Margin="6,4,0,4"
                            Style="{StaticResource BodyLabelStyle}" />
                     <TextBlock Grid.Row="4"
                                Grid.Column="1"
                                Grid.ColumnSpan="2"
+                               Tag="5"
                                x:Name="ports"
                                Text="{Binding FormattedListOfPorts}"
                                Style="{StaticResource BodyTextBlockStyle}"
@@ -375,14 +417,14 @@
                 </Grid>
             </Grid>
         </DataTemplate>
-    </ui:DialogWindow.Resources>
+    </platformui:DialogWindow.Resources>
 
     <!-- Main layout grid -->
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <!--0:Connection label-->
             <RowDefinition Height="Auto" />
-            <!--1:Connection combo box/add new connection-->
+            <!--1:Connection combo box, Add new connection-->
             <RowDefinition Height="Auto" />
             <!--2:Hostname label-->
             <RowDefinition Height="Auto" />
@@ -394,7 +436,7 @@
             <RowDefinition Height="*" />
             <!--6:Warning Icon and Status Text -->
             <RowDefinition Height="Auto" />
-            <!--7: OK/Cancel -->
+            <!--7:OK/Cancel -->
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -407,11 +449,11 @@
                Grid.ColumnSpan="2"
                x:Uid="uidConnectionTypeLabel"
                x:Name="ConnectionTypeLabel"
-               Height="16"
+               MinHeight="16"
                VerticalAlignment="Center"
+               Style="{StaticResource MainLabelStyle}"
                Target="{Binding ElementName=ConnectionTypeComboBox}"
                Content="{x:Static local:UIResources.ConnectionLabel}" />
-
         <ComboBox Grid.Row="1"
                   Grid.Column="0"
                   x:Uid="uidConnectionTypeComboBox"
@@ -422,16 +464,16 @@
                   ItemsSource="{Binding SupportedConnections}"
                   SelectedItem="{Binding SelectedConnection}"
                   DisplayMemberPath="DisplayName"
-                  IsEnabled="{Binding IsRefreshEnabled}" />
-
+                  IsEnabled="{Binding IsRefreshEnabled}"
+                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}" />
         <Button Grid.Row="1"
                 Grid.Column="1"
                 x:Uid="uidAddConnection"
-                x:Name="AddConnection"
+                x:Name="AddConnection"  
                 AutomationProperties.Name="{x:Static local:UIResources.AddNewSSHConnectionLabel}"
                 Margin="12,4,0,0"
                 MinWidth="75"
-                Height="23"
+                MinHeight="23"
                 Command="{Binding AddSSHConnectionCommand}"
                 CommandParameter="{Binding}"
                 IsEnabled="{Binding AddSSHConnectionCommand.CanExecute}"
@@ -445,8 +487,9 @@
                x:Uid="uidHostnameLabel"
                x:Name="HostnameLabel"
                Margin="0,9,0,0"
-               Height="16"
+               MinHeight="16"
                VerticalAlignment="Center"
+               Style="{StaticResource MainLabelStyle}"
                Target="{Binding ElementName=hostnameTextBox}"
                Content="{x:Static local:UIResources.HostnameLabel}" />
         <TextBox Grid.Row="3"
@@ -462,12 +505,11 @@
         </TextBox>
 
         <!-- Container Count Text and Refresh Button -->
-        <TextBlock Grid.Row="4"
+        <platformui:LiveTextBlock Grid.Row="4"
                    Grid.Column="0"
                    Margin="0,9,0,0"
                    x:Uid="uidStatusLabel"
                    x:Name="ContainerCount"
-                   Style="{StaticResource StatusLabelStyle}"
                    Text="{Binding ContainersFoundText, Mode=OneWay}"
                    TextWrapping="Wrap" />
 
@@ -483,11 +525,12 @@
                 IsEnabled="{Binding IsRefreshEnabled}" />
 
         <!-- Container Instance display-->
-        <ListBox Grid.Row="5"
+        <ui:ContainerListBox Grid.Row="5"
                  Grid.ColumnSpan="2"
                  Margin="0,4,0,0"
                  Padding="4"
                  x:Name="ContainerListBox"
+                 AutomationProperties.Name="{x:Static local:UIResources.ContainerList}"
                  AutomationProperties.AutomationId="aidContainerListBox"
                  ItemsSource="{Binding Path=ContainerInstances, Mode=OneWay }"
                  SelectedValue="{Binding SelectedContainerInstance}"
@@ -499,7 +542,7 @@
         <!-- Status text -->
         <DockPanel Grid.Row="6"
                    Grid.ColumnSpan="2"
-                   Visibility="{Binding StatusText, Converter={StaticResource TextToVisibilityConverter}, Mode=Oneway}">
+                   Visibility="{Binding StatusMessage, Converter={StaticResource TextToVisibilityConverter}, Mode=Oneway}">
             <vsimaging:CrispImage DockPanel.Dock="Left"
                                   x:Name="WarningIcon"
                                   Width="16"
@@ -509,7 +552,7 @@
                                   Margin="4,4,0,0"
                                   Visibility="{Binding StatusIsError, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"
                                   Moniker="{x:Static catalog:KnownMonikers.StatusWarning}" />
-            <TextBlock DockPanel.Dock="Right"
+            <platformui:LiveTextBlock DockPanel.Dock="Right"
                        x:Name="StatusMessage"
                        TextWrapping="WrapWithOverflow"
                        Margin="6,12,9,6"
@@ -526,7 +569,7 @@
                      Columns="2">
             <Button x:Uid="uidOkayButton"
                     x:Name="OkayButton"
-                    Height="23"
+                    MinHeight="23"
                     MinWidth="75"
                     IsDefault="True"
                     Click="OkButton_Click"
@@ -535,7 +578,7 @@
             <Button x:Uid="uidCancelButton"
                     x:Name="CancelButton"
                     Margin="6,0,0,0"
-                    Height="23"
+                    MinHeight="23"
                     MinWidth="75"
                     IsCancel="True"
                     Click="CancelButton_Click"
@@ -544,4 +587,4 @@
         </UniformGrid>
 
     </Grid>
-</ui:DialogWindow>
+</platformui:DialogWindow>

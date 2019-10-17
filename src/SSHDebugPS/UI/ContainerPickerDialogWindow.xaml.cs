@@ -5,6 +5,8 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Automation;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -184,7 +186,7 @@ namespace Microsoft.SSHDebugPS.UI
         {
             if (sender is ListBox list)
             {
-                if (list.SelectedItem is IContainerViewModel viewModel)
+                if (list.SelectedItem is DockerContainerViewModel viewModel)
                 {
                     switch (e.Key)
                     {
