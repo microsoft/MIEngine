@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Threading;
 using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
@@ -52,16 +53,27 @@ namespace Microsoft.SSHDebugPS.UI
         {
             IsRefreshEnabled = false;
 
+            // Clear everything before retreiving the container list
+            ContainerInstances?.Clear();
+            UpdateStatusMessage(string.Empty, false);
+
+            // Set the status
+            ContainersFoundText = UIResources.QueryingForContainersMessage;
+
+            // Tell the dispatcher to run the Refresh task with a lower priority than Render.
+            // This is so that the UI does any necessary updating before the refresh task has completed. 
+            // Render = 7
+            // Loaded = 6  - Operations are processed when layout and render has finished but just before items at input priority are serviced. 
+            // https://docs.microsoft.com/en-us/dotnet/api/system.windows.threading.dispatcherpriority
+            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Input, (Action)(() => { RefreshContainersListInternal(); }));
+        }
+
+        private void RefreshContainersListInternal()
+        {
             try
             {
                 IContainerViewModel selectedContainer = SelectedContainerInstance;
                 SelectedContainerInstance = null;
-
-                ContainersFoundText = UIResources.SearchingStatusText;
-
-                // Clear everything
-                ContainerInstances?.Clear();
-                UpdateStatusMessage(string.Empty, false);
 
                 IEnumerable<DockerContainerInstance> containers;
 

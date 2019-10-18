@@ -168,7 +168,6 @@ namespace Microsoft.SSHDebugPS.UI
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
             Model.RefreshContainersList();
-
             e.Handled = true;
         }
 
