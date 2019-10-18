@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS.UI
         public ContainerPickerDialogWindow()
         {
             InitializeComponent();
-            this.Model = new ContainerPickerViewModel();
+            this.Model = new ContainerPickerViewModel(Dispatcher);
             this.DataContext = Model;
             this.Loaded += OnWindowLoaded;
         }
@@ -168,7 +168,6 @@ namespace Microsoft.SSHDebugPS.UI
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
             Model.RefreshContainersList();
-
             e.Handled = true;
         }
 
