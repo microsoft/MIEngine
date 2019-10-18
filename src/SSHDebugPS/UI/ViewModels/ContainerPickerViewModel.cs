@@ -19,11 +19,9 @@ namespace Microsoft.SSHDebugPS.UI
     public class ContainerPickerViewModel : INotifyPropertyChanged
     {
         private Lazy<bool> _sshAvailable;
-        private Dispatcher _dispatcher;
 
-        public ContainerPickerViewModel(Dispatcher dispatcher)
+        public ContainerPickerViewModel()
         {
-            _dispatcher = dispatcher;
             InitializeConnections();
             ContainerInstances = new ObservableCollection<IContainerViewModel>();
 
@@ -67,7 +65,7 @@ namespace Microsoft.SSHDebugPS.UI
             // Render = 7
             // Loaded = 6  - Operations are processed when layout and render has finished but just before items at input priority are serviced. 
             // https://docs.microsoft.com/en-us/dotnet/api/system.windows.threading.dispatcherpriority
-            _dispatcher.BeginInvoke(DispatcherPriority.Input, (Action)(() => { RefreshContainersListInternal(); }));
+            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Input, (Action)(() => { RefreshContainersListInternal(); }));
         }
 
         private void RefreshContainersListInternal()

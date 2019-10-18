@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS.UI
         public ContainerPickerDialogWindow()
         {
             InitializeComponent();
-            this.Model = new ContainerPickerViewModel(Dispatcher);
+            this.Model = new ContainerPickerViewModel();
             this.DataContext = Model;
             this.Loaded += OnWindowLoaded;
         }
