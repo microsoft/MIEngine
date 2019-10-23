@@ -121,6 +121,8 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -136,6 +138,8 @@
     <Compile Include="Docker\DockerHelper.cs" />
     <Compile Include="Docker\DockerConnection.cs" />
     <Compile Include="Docker\TransportSettings\DockerContainerTransportSettings.cs" />
+    <Compile Include="UI\Controls\Automation\ContainerListBoxAutomationPeer.cs" />
+    <Compile Include="UI\Controls\Automation\ContainerListBoxItemAutomationPeer.cs" />
     <Compile Include="UI\Converters\TextToVisibilityConverter.cs" />
     <Compile Include="UI\ViewModels\ContainerViewModel.cs" />
     <Compile Include="Utilities\ExitCodes.cs" />
@@ -145,6 +149,7 @@
     <Compile Include="UI\ViewModels\ContainerPickerViewModel.cs" />
     <Compile Include="UI\Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="UI\ContainerInstance.cs" />
+    <Compile Include="UI\Controls\ContainerListBox.cs" />
     <Compile Include="UI\ContainerPickerDialogWindow.xaml.cs">
       <DependentUpon>ContainerPickerDialogWindow.xaml</DependentUpon>
     </Compile>

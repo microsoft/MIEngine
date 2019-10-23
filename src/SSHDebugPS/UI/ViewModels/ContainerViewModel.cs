@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using liblinux.Shell;
 using Microsoft.SSHDebugPS.Docker;
 using WindowsInput = System.Windows.Input;
 
@@ -18,6 +17,7 @@ namespace Microsoft.SSHDebugPS.UI
         bool GetResult(out string selectedQualifier);
         bool IsExpanded { get; set; }
         bool IsSelected { get; set; }
+        string ContainerAutomationName { get; }
     }
 
     public abstract class ContainerViewModel<T> : IContainerViewModel
@@ -36,7 +36,7 @@ namespace Microsoft.SSHDebugPS.UI
         #region INotifyPropertyChanged and helper
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged(string name)
+        protected void OnPropertyChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
@@ -87,6 +87,8 @@ namespace Microsoft.SSHDebugPS.UI
 
         protected abstract bool EqualsInternal(IContainerViewModel instance);
         protected abstract int GetHashCodeInternal();
+
+        public abstract string ContainerAutomationName { get; }
 
         #endregion
 
@@ -143,11 +145,11 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        public override WindowsInput.ICommand ExpandCommand => new ContainerUICommand(Expand, string.Empty, UIResources.ExpanderToolTip);
+        public override WindowsInput.ICommand ExpandCommand => new ContainerUICommand(ExpandOrCollapse, string.Empty, UIResources.ExpanderToolTip);
 
-        private void Expand(object parameter)
+        public void ExpandOrCollapse(object parameter)
         {
-            IsExpanded = !IsExpanded;
+            IsExpanded = !IsExpanded;            
         }
 
         // Gets the first 12 characters and appends an ellipsis
@@ -176,5 +178,41 @@ namespace Microsoft.SSHDebugPS.UI
         {
             return Instance.GetHashCode();
         }
+
+        #region AutomationProperty Helpers
+        // Override for ScreenReader
+        public override string ContainerAutomationName
+        {
+            get
+            {
+                // Comma and spacing is for screenreader pauses. This is not really displayed.
+                // "Name: <containername>,
+                //  Id: <containerId>"
+                string text = String.Join(",\r\n",
+                    String.Join(" ", UIResources.NameLabelText, Name),
+                    String.Join(" ", UIResources.IdLabelText, ShortId));
+
+                if (IsExpanded)
+                {
+                    // Append other information if expanded
+                    text = String.Join(",\r\n", text,
+                    String.Join(" ", UIResources.ImageLabelText, Image),
+                    String.Join(" ", UIResources.CommandLabelText, Command),
+                    String.Join(" ", UIResources.StatusLabelText, Status),
+                    String.Join(" ", UIResources.CreatedLabelText, Created),
+                    String.Join(" ", UIResources.PortsLabelText, !String.IsNullOrEmpty(Instance.Ports) ? FormattedListOfPorts : UIResources.NoPortsText));
+                }
+                return text;
+            }
+        }
+
+        public string ExpanderItemStatus
+        {
+            get
+            {
+                return IsExpanded ? UIResources.Expanded : UIResources.Collapsed;
+            }
+        }
+        #endregion
     }
 }
