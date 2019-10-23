@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
@@ -143,6 +144,12 @@ namespace OpenDebug
             {
                 // stdin/stdout
                 Console.Error.WriteLine("waiting for v8 protocol on stdin/stdout");
+                if (Utilities.IsWindows())
+                {
+                    // Avoid sending the BOM on Windows if the Beta Unicode feature is enabled in Windows 10
+                    Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                    Console.InputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                }
                 Dispatch(Console.OpenStandardInput(), Console.OpenStandardOutput(), loggingCategories);
             }
             catch (Exception e)

@@ -19,6 +19,10 @@ namespace WindowsDebugLauncher
             DebugLauncher.LaunchParameters parameters = new DebugLauncher.LaunchParameters();
             parameters.PipeServer = "."; // Currently only supporting local pipe connections
 
+            // Avoid sending the BOM on Windows if the Beta Unicode feature is enabled in Windows 10
+            Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+            Console.InputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
             foreach (var a in argv)
             {
                 if (String.IsNullOrEmpty(a))
