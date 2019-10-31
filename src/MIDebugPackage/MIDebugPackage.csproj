@@ -94,6 +94,11 @@
     <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
+  <!-- This is to fix a build issue where VSSDK BuildTools are not able to be found. -->
+  <PropertyGroup Condition=" '$(VsSDKInstall)' != '' ">
+    <VsSDKIncludes Condition=" '$(VsSDKIncludes)' == '' ">$(VsSDKInstall)\VisualStudioIntegration\Common\inc</VsSDKIncludes>
+    <VsSDKToolsPath Condition=" '$(VsSDKToolsPath)' == '' ">$(VsSDKInstall)\VisualStudioIntegration\Tools\bin</VsSDKToolsPath>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop">
