@@ -116,7 +116,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^21,0 to 21,0 in (\[Unknown\]|libEvalComplexExpression.so)!Func\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^21,0 to 21,0 in (\[Unknown\]|libEvalComplexExpression.so)!(Func\(\)|0x.*)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -145,13 +145,20 @@
     <EvalFullName>Func(x,dx)+dx</EvalFullName>
     <EvalIsExpandable>False</EvalIsExpandable>
   </Command>
+  <!-- This one doesn't work for r20 of the ndk -->
+  <!-- 
+    1: (1257011) <-1173-var-create - * "(string)Func(x,dx)"
+    1: (1257020) ->1173^error,msg="-var-create: unable to create variable object"
+    -->
+  <!--
   <Command name="eval (string)Func(x,dx)">
     <EvalResult>{...}</EvalResult>
     <EvalType>std::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;</EvalType>
     <EvalName>(string)Func(x,dx)</EvalName>
     <EvalFullName>(string)Func(x,dx)</EvalFullName>
     <EvalIsExpandable>True</EvalIsExpandable>
-  </Command>
+  </Command> 
+  -->
   <Command name="eval Func((int)Func(x,dx))">
     <EvalResult>void</EvalResult>
     <EvalType>void</EvalType>

@@ -92,7 +92,7 @@ goto :NextArg
 :SetNdkRoot
 shift /1
 if "%~1" == "10" (
-	set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+	set _NdkRoot=c:\Microsoft\AndroidNDK\android-ndk-r18b
 ) else (
 	set _NdkRoot=%~1
 )
@@ -202,7 +202,6 @@ exit /b -1
     set LastTestSucceeded=false
     
     ::Build the app
-    echo Building %~1
     call msbuild /p:Platform=%_Platform%;VS_NDKRoot="%_NdkRoot%";VS_SDKRoot="%_SdkRoot%";PackageDebugSymbols=true > build.log 2>&1
     if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to build %~1. See build.log for more information.& set FAILED_TESTS="%~1" "%FAILED_TESTS%"& goto RunSingleTestDone
     

@@ -116,7 +116,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^23,0 to 23,0 in (\[Unknown\]|libEvalPrimitiveTypes.so)!Func\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^23,0 to 23,0 in (\[Unknown\]|libEvalPrimitiveTypes.so)!(Func\(\)|0x.*)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -216,7 +216,7 @@
     <EvalIsExpandable>False</EvalIsExpandable>
   </Command>
   <Command name="eval _wchar_t">
-    <EvalResult>100 L'd\000\000\000'</EvalResult>
+    <EvalResult>100 L'd'</EvalResult>
     <EvalType>wchar_t</EvalType>
     <EvalName>_wchar_t</EvalName>
     <EvalFullName>_wchar_t</EvalFullName>

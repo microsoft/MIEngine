@@ -151,7 +151,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^31,0 to 31,0 in (\[Unknown\]|liblocals.so)!SimpleClass::TestMe\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^31,0 to 31,0 in (\[Unknown\]|liblocals.so)!(SimpleClass::TestMe\(\)|0x.*)$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
       <BoundBreakpoint  IgnoreCase="True" RegEx="^58,0 to 58,0 in (\[Unknown\]|liblocals.so)!DerivedClass::DerivedClass\(int, int\)$"></BoundBreakpoint>
