@@ -23,14 +23,14 @@ namespace Microsoft.MIDebugEngine
 
         internal static string GetAddressDescription(DebuggedProcess proc, ulong ip)
         {
-            string description = null;
-            proc.WorkerThread.RunOperation(async () =>
+            Task<string> description = null;
+            proc.WorkerThread.RunOperation(() =>
             {
-                description = await EngineUtils.GetAddressDescriptionAsync(proc, ip);
+                description = EngineUtils.GetAddressDescriptionAsync(proc, ip);
             }
             );
 
-            return description;
+            return String.IsNullOrEmpty(description.Result) ? "HORSE" : description.Result;
         }
 
         internal static async Task<string> GetAddressDescriptionAsync(DebuggedProcess proc, ulong ip)
@@ -52,7 +52,8 @@ namespace Microsoft.MIDebugEngine
             if (location == null)
             {
                 string addrFormat = proc.Is64BitArch ? "x16" : "x8";
-                location = ip.ToString(addrFormat, CultureInfo.InvariantCulture);
+                // Make sure its prefaced by 0x
+                location = String.Format(CultureInfo.InvariantCulture, "0x{0}", ip.ToString(addrFormat, CultureInfo.InvariantCulture));
             }
 
             return location;
