@@ -23,14 +23,14 @@ namespace Microsoft.MIDebugEngine
 
         internal static string GetAddressDescription(DebuggedProcess proc, ulong ip)
         {
-            Task<string> description = null;
-            proc.WorkerThread.RunOperation(() =>
+            string description = null;
+            proc.WorkerThread.RunOperation(async () =>
             {
-                description = EngineUtils.GetAddressDescriptionAsync(proc, ip);
+                description = await EngineUtils.GetAddressDescriptionAsync(proc, ip);
             }
             );
 
-            return String.IsNullOrEmpty(description.Result) ? "HORSE" : description.Result;
+            return description;
         }
 
         internal static async Task<string> GetAddressDescriptionAsync(DebuggedProcess proc, ulong ip)

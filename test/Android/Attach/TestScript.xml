@@ -20,7 +20,7 @@
       <BoundBreakpoint  IgnoreCase="True" RegEx="^282,0 to 282,0 in libattach.so!(android_main\(android_app\*\)|0x.*)$" />
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
-    <Event name="IDebugModuleLoadEvent2" expected="False" />)
+    <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugModuleLoadEvent2" expected="False" />
