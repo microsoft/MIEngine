@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Windows.Interop;
 using EnvDTE;
 using liblinux;
@@ -22,7 +23,7 @@ namespace Microsoft.SSHDebugPS
     {
         public static DockerConnection GetDockerConnection(string name, bool supportSSHConnections)
         {
-           if (string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(name))
                 return null;
 
             DockerContainerTransportSettings settings;
@@ -82,23 +83,9 @@ namespace Microsoft.SSHDebugPS
                 }
                 else
                 {
-                    string userName;
-                    string hostName;
+                    ParseSSHConnectionString(name, out string userName, out string hostName, out int port);
 
-                    int atSignIndex = name.IndexOf('@');
-                    if (atSignIndex > 0)
-                    {
-                        userName = name.Substring(0, atSignIndex);
-
-                        int hostNameStartPos = atSignIndex + 1;
-                        hostName = hostNameStartPos < name.Length ? name.Substring(hostNameStartPos) : StringResources.HostName_PlaceHolder;
-                    }
-                    else
-                    {
-                        userName = StringResources.UserName_PlaceHolder;
-                        hostName = name;
-                    }
-                    result = connectionManager.ShowDialog(new PasswordConnectionInfo(hostName, userName, new System.Security.SecureString()));
+                    result = connectionManager.ShowDialog(new PasswordConnectionInfo(hostName, port, Timeout.InfiniteTimeSpan, userName, new System.Security.SecureString()));
                 }
 
                 if ((result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
@@ -152,6 +139,68 @@ namespace Microsoft.SSHDebugPS
 
             connectionString = string.Empty;
             return false;
+        }
+
+        /// <summary>
+        /// Parses the SSH connection string. Expected format is some permutation of username@hostname:portnumber.
+        /// If not defined, will provide default values.
+        /// </summary>
+        internal static void ParseSSHConnectionString(string connectionString, out string userName, out string hostName, out int port)
+        {
+            userName = StringResources.UserName_PlaceHolder;
+            hostName = StringResources.HostName_PlaceHolder;
+            port = 22; // Default SSH port is 22
+
+            int atSignIndex = connectionString.IndexOf('@');
+            if (atSignIndex >= 0)
+            {
+                // Find if a username is specified
+                if (atSignIndex > 0)
+                {
+                    userName = connectionString.Substring(0, atSignIndex);
+                }
+
+                // Find the beginning of the hostname section. 
+                // Handle where the first character is '@'
+                int hostNameStartPos = atSignIndex + 1;
+                if (hostNameStartPos < connectionString.Length)
+                {
+                    hostName = connectionString.Substring(hostNameStartPos);
+                }
+                else
+                {
+                    // Using default hostName so we don't need to look for the port
+                    return;
+                }
+            }
+            else
+            {
+                hostName = connectionString;
+            }
+
+            // Find if a port is specified. Handle possible IPV6 by grabbing the last colon
+            int lastColonIndex = hostName.LastIndexOf(':');
+            if (lastColonIndex >= 0)
+            {
+                int portStartPos = lastColonIndex + 1;
+                if (lastColonIndex > 0 && portStartPos < hostName.Length)
+                {
+                    string portString = hostName.Substring(portStartPos);
+                    int tempPort;
+                    if (Int32.TryParse(portString, out tempPort) && tempPort != port)
+                    {
+                        port = tempPort;
+                    }
+                }
+
+                // remove everything after last ':'
+                hostName = hostName.Substring(0, lastColonIndex);
+                if(string.IsNullOrWhiteSpace(hostName))
+                {
+                    // handle case that its just a colon by replacing it with the default string
+                    hostName = StringResources.HostName_PlaceHolder;
+                }
+            }
         }
     }
 }
