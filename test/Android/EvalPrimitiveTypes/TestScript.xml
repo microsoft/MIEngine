@@ -116,7 +116,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^23,0 to 23,0 in (\[Unknown\]|libEvalPrimitiveTypes.so)!(Func\(\)|0x.*)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^23,0 to 23,0 in (\[Unknown\]|libEvalPrimitiveTypes.so)!(Func\(\)|[0-9A-Fa-f]{8,16})$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />

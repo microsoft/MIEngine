@@ -37,7 +37,7 @@ if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_Pro
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to get Glass from NuGet.& exit /b -1
 
 :: Copy binary to folder "Microsoft.VisualStudio.Glass" which required by glass2.exe in runtime for Visual Studio 2017
-if defined VS140COMNTOOLS (
+if defined VSINSTALLDIR (
 xcopy /Y /D "%VSINSTALLDIR%Common7\IDE\Remote Debugger\x86\Microsoft.VisualStudio.OLE.Interop.dll" "%_GlassDir%"
 if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy the binaries from Visual Studio installation.& exit /b -1
 ) else (

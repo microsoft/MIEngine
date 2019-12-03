@@ -111,7 +111,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="True">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^24,0 to 24,0 in (\[Unknown\]|libbreakpoint.so)!(break_test_1\(\)|0x.*)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^24,0 to 24,0 in (\[Unknown\]|libbreakpoint.so)!(break_test_1\(\)|[0-9A-Fa-f]{8,16})$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -162,7 +162,7 @@ Type "apropos word" to search for commands related to "word".
   <Command name="delbps" />
   <Command name="bp main.cpp 29">
     <Event name="IDebugBreakpointBoundEvent2" expected="True">
-      <BoundBreakpoint IgnoreCase="True" RegEx="^28,0 to 28,0 in libbreakpoint.so!(break_test_1\(\)|0x.*)$" />
+      <BoundBreakpoint IgnoreCase="True" RegEx="^28,0 to 28,0 in libbreakpoint.so!(break_test_1\(\)|[0-9A-Fa-f]{8,16})$" />
     </Event>
   </Command>
   <Command name="go">
@@ -196,7 +196,7 @@ Type "apropos word" to search for commands related to "word".
   <Command name="bp main.cpp 38">
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="True">
-      <BoundBreakpoint IgnoreCase="True" RegEx="^37,0 to 37,0 in libbreakpoint.so!(loop_while_true\(\)|0x.*)$" />
+      <BoundBreakpoint IgnoreCase="True" RegEx="^37,0 to 37,0 in libbreakpoint.so!(loop_while_true\(\)|[0-9A-Fa-f]{8,16})$" />
     </Event>
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointEvent2" expected="True">
@@ -227,7 +227,7 @@ Type "apropos word" to search for commands related to "word".
   <Command name="bp main.cpp 45">
     <Duration Volatile="True">00:00:00.0121995</Duration>
     <Event name="IDebugBreakpointBoundEvent2" expected="True">
-      <BoundBreakpoint IgnoreCase="True" RegEx="^44,0 to 44,0 in libbreakpoint.so!(break_test_2\(\)|0x.*)$" />
+      <BoundBreakpoint IgnoreCase="True" RegEx="^44,0 to 44,0 in libbreakpoint.so!(break_test_2\(\)|[0-9A-Fa-f]{8,16})$" />
     </Event>
   </Command>
   <Command name="go">

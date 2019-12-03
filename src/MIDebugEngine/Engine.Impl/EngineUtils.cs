@@ -52,8 +52,7 @@ namespace Microsoft.MIDebugEngine
             if (location == null)
             {
                 string addrFormat = proc.Is64BitArch ? "x16" : "x8";
-                // Make sure its prefaced by 0x
-                location = String.Format(CultureInfo.InvariantCulture, "0x{0}", ip.ToString(addrFormat, CultureInfo.InvariantCulture));
+                location = ip.ToString(addrFormat, CultureInfo.InvariantCulture);
             }
 
             return location;
