@@ -119,10 +119,10 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^25,0 to 25,0 in (\[Unknown\]|libMultiThreadingCallStack.so)!func5\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^25,0 to 25,0 in (\[Unknown\]|libMultiThreadingCallStack.so)!(func5\(\)|[0-9A-Fa-f]{8,16})$"></BoundBreakpoint>
     </Event>
      <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^15,0 to 15,0 in (\[Unknown\]|libMultiThreadingCallStack.so)!func3\(int, int\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^15,0 to 15,0 in (\[Unknown\]|libMultiThreadingCallStack.so)!(func3\(int, int\)|[0-9A-Fa-f]{8,16})$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
