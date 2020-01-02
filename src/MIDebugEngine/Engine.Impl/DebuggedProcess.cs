@@ -572,7 +572,7 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 await this.MICommandFactory.EnableTargetAsyncOption();
-                List<LaunchCommand> commands = GetInitializeCommands();
+                List<LaunchCommand> commands = await GetInitializeCommands();
                 _childProcessHandler?.Enable();
 
                 total = commands.Count();
@@ -632,7 +632,7 @@ namespace Microsoft.MIDebugEngine
             token.ThrowIfCancellationRequested();
         }
 
-        private List<LaunchCommand> GetInitializeCommands()
+        private async Task<List<LaunchCommand>> GetInitializeCommands()
         {
             List<LaunchCommand> commands = new List<LaunchCommand>();
 
@@ -834,7 +834,7 @@ namespace Microsoft.MIDebugEngine
                         return Task.FromResult(0);
                     };
 
-                    commands.Add(new LaunchCommand(GetBreakInsertMainCommand(), ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
+                    commands.Add(new LaunchCommand(await GetBreakInsertMainCommand(), ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
 
                     if (null != localLaunchOptions)
                     {
@@ -863,13 +863,13 @@ namespace Microsoft.MIDebugEngine
         /// <summary>
         /// Gets a break-insert command for main that will allow pending bps and supports different debuggers
         /// </summary>
-        private string GetBreakInsertMainCommand()
+        private async Task<string> GetBreakInsertMainCommand()
         {
             // Allow main breakpoint to be pending.
             string breakInsertMainFormat = "-break-insert -f{0} main";
-            if (this.MICommandFactory.Mode == MIMode.Lldb)
+            if (await this.MICommandFactory.RequiresOnKeywordForBreakInsert())
             {
-                // break-insert -f requires 'on' in lldb scenario
+                // break-insert -f requires 'on' in lldb 3.5 scenario
                 return string.Format(CultureInfo.InvariantCulture, breakInsertMainFormat, " on");
             }
             return string.Format(CultureInfo.InvariantCulture, breakInsertMainFormat, string.Empty);
