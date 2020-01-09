@@ -69,6 +69,7 @@
     <Compile Include="LineBufferTests.cs" />
     <Compile Include="PSOutputParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SSHConnectionStringTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SSHDebugPS\SSHDebugPS.csproj">

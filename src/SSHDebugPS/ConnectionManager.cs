@@ -3,7 +3,9 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Interop;
 using EnvDTE;
@@ -141,6 +143,8 @@ namespace Microsoft.SSHDebugPS
             return false;
         }
 
+        // Default SSH port is 22
+        internal const int DefaultSSHPort = 22;
         /// <summary>
         /// Parses the SSH connection string. Expected format is some permutation of username@hostname:portnumber.
         /// If not defined, will provide default values.
@@ -149,57 +153,37 @@ namespace Microsoft.SSHDebugPS
         {
             userName = StringResources.UserName_PlaceHolder;
             hostName = StringResources.HostName_PlaceHolder;
-            port = 22; // Default SSH port is 22
+            port = DefaultSSHPort;
 
-            int atSignIndex = connectionString.IndexOf('@');
-            if (atSignIndex >= 0)
+            const string TempUriPrefix = "ssh://";
+
+            try
             {
-                // Find if a username is specified
-                if (atSignIndex > 0)
-                {
-                    userName = connectionString.Substring(0, atSignIndex);
-                }
+                // In order for Uri to parse, it needs to have a protocol in front.
+                Uri connectionUri = new Uri(TempUriPrefix + connectionString);
 
-                // Find the beginning of the hostname section. 
-                // Handle where the first character is '@'
-                int hostNameStartPos = atSignIndex + 1;
-                if (hostNameStartPos < connectionString.Length)
-                {
-                    hostName = connectionString.Substring(hostNameStartPos);
-                }
-                else
-                {
-                    // Using default hostName so we don't need to look for the port
-                    return;
-                }
+                if (!string.IsNullOrWhiteSpace(connectionUri.UserInfo))
+                    userName = connectionUri.UserInfo;
+
+                if (!string.IsNullOrWhiteSpace(connectionUri.Host))
+                    hostName = connectionUri.Host;
+
+                if (!connectionUri.IsDefaultPort)
+                    port = connectionUri.Port;
             }
-            else
+            catch (UriFormatException)
+            { }
+            
+            // If Uri sets anything to empty string, set it back to the placeholder
+            if (string.IsNullOrWhiteSpace(userName))
             {
-                hostName = connectionString;
+                userName = StringResources.UserName_PlaceHolder;
             }
 
-            // Find if a port is specified. Handle possible IPV6 by grabbing the last colon
-            int lastColonIndex = hostName.LastIndexOf(':');
-            if (lastColonIndex >= 0)
+            if (string.IsNullOrWhiteSpace(hostName))
             {
-                int portStartPos = lastColonIndex + 1;
-                if (lastColonIndex > 0 && portStartPos < hostName.Length)
-                {
-                    string portString = hostName.Substring(portStartPos);
-                    int tempPort;
-                    if (Int32.TryParse(portString, out tempPort) && tempPort != port)
-                    {
-                        port = tempPort;
-                    }
-                }
-
-                // remove everything after last ':'
-                hostName = hostName.Substring(0, lastColonIndex);
-                if(string.IsNullOrWhiteSpace(hostName))
-                {
-                    // handle case that its just a colon by replacing it with the default string
-                    hostName = StringResources.HostName_PlaceHolder;
-                }
+                // handle case that its just a colon by replacing it with the default string
+                hostName = StringResources.HostName_PlaceHolder;
             }
         }
     }
