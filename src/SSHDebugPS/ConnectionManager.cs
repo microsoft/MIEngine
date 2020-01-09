@@ -146,7 +146,7 @@ namespace Microsoft.SSHDebugPS
             bool? dialogResult = dialog.ShowModal();
             if (dialogResult.GetValueOrDefault(false))
             {
-                connectionString = dialog.Model.SelectedContainerConnectionString;
+                connectionString = dialog.SelectedContainerConnectionString;
                 return true;
             }
 
