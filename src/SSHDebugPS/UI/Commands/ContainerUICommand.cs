@@ -11,6 +11,7 @@ namespace Microsoft.SSHDebugPS.UI
     {
         string Label { get; }
         string ToolTip { get; }
+        void NotifyCanExecuteChanged();
     }
 
     internal class ContainerUICommand : IContainerUICommand
@@ -53,6 +54,11 @@ namespace Microsoft.SSHDebugPS.UI
             {
                 Debug.Fail("Why is the executeFunc null?");
             }
+        }
+
+        public void NotifyCanExecuteChanged()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public string Label { get; }

@@ -61,16 +61,16 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add....
+        ///   Looks up a localized string similar to Add New SSH Connection.
         /// </summary>
-        public static string AddNewSSHConnectionButtonLabel {
+        public static string AddNewSSHConnectionAutomationName {
             get {
-                return ResourceManager.GetString("AddNewSSHConnectionButtonLabel", resourceCulture);
+                return ResourceManager.GetString("AddNewSSHConnectionAutomationName", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add New SSH Connection.
+        ///   Looks up a localized string similar to Add....
         /// </summary>
         public static string AddNewSSHConnectionLabel {
             get {

@@ -15,20 +15,37 @@ namespace Microsoft.SSHDebugPS.Docker
     [ComVisible(true)]
     //{91BDF293-E6A0-49C4-B033-6F36CFC4FF98}
     [Guid("91BDF293-E6A0-49C4-B033-6F36CFC4FF98")]
-    public class DockerPortPicker : IDebugPortPicker
+    public class DockerLinuxPortPicker : DockerPortPickerBase
     {
-        private VisualStudio.OLE.Interop.IServiceProvider _serviceProvider = null;
+        internal override bool SupportSSHConnections => true;
+    }
+    
+    [ComVisible(true)]
+    //{AE75778B-70E8-4F53-B3FE-59E048D3D01B}
+    [Guid("AE75778B-70E8-4F53-B3FE-59E048D3D01B")]
+    public class DockerWindowsPortPicker : DockerPortPickerBase
+    {
+        internal override bool SupportSSHConnections => false;
+    }
+
+    [ComVisible(true)]
+    public abstract class DockerPortPickerBase : IDebugPortPicker
+    {
+        internal abstract bool SupportSSHConnections { get; }
+
         int IDebugPortPicker.DisplayPortPicker(IntPtr hwndParentDialog, out string pbstrPortId)
         {
             // If this is null, then the PortPicker handler shows an error. Set to empty by default
-            return ConnectionManager.ShowContainerPickerWindow(hwndParentDialog, out pbstrPortId) ?
+            return ConnectionManager.ShowContainerPickerWindow(hwndParentDialog, SupportSSHConnections, out pbstrPortId) ?
                 VSConstants.S_OK : VSConstants.S_FALSE;
         }
 
+        private VisualStudio.OLE.Interop.IServiceProvider _serviceProvider = null;
         int IDebugPortPicker.SetSite(VisualStudio.OLE.Interop.IServiceProvider pSP)
         {
             _serviceProvider = pSP;
             return VSConstants.S_OK;
         }
+
     }
 }

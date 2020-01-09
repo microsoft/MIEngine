@@ -27,7 +27,13 @@
 
 [$RootKey$\CLSID\{91BDF293-E6A0-49C4-B033-6F36CFC4FF98}]
 "Assembly"="Microsoft.SSHDebugPS"
-"Class"="Microsoft.SSHDebugPS.Docker.DockerPortPicker"
+"Class"="Microsoft.SSHDebugPS.Docker.DockerLinuxPortPicker"
+"InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
+"CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
+
+[$RootKey$\CLSID\{AE75778B-70E8-4F53-B3FE-59E048D3D01B}]
+"Assembly"="Microsoft.SSHDebugPS"
+"Class"="Microsoft.SSHDebugPS.Docker.DockerWindowsPortPicker"
 "InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
 "CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
 

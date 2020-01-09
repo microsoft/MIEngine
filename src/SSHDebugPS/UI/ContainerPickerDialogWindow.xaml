@@ -21,8 +21,7 @@
                  FontFamily="{DynamicResource VsFont.EnvironmentFontFamily}"
                  FontSize="{DynamicResource VsFont.EnvironmentFontSize}"
                  Title="{x:Static local:UIResources.DialogTitle}"
-                 WindowStartupLocation="CenterOwner"
-                 KeyDown="DialogWindow_KeyDown">
+                 WindowStartupLocation="CenterOwner">
     <platformui:DialogWindow.Resources>
         <!-- Converters-->
         <docker:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
@@ -38,6 +37,25 @@
                     <Setter Property="Stroke"
                             Value="{DynamicResource {x:Static platformui:TreeViewColors.GlyphMouseOverBrushKey}}" />
                  </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ConnectionTypeComboBoxStyle"
+               TargetType="{x:Type ComboBox}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SupportSSHConnections}"
+                             Value="true">
+                    <Setter Property="Grid.ColumnSpan"
+                            Value="1" />
+                    <Setter Property="IsEnabled"
+                            Value="True" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding SupportSSHConnections}"
+                             Value="false">
+                    <Setter Property="Grid.ColumnSpan"
+                            Value="2" />
+                    <Setter Property="IsEnabled"
+                            Value="False" />
+                </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="MainLabelStyle"
@@ -464,21 +482,22 @@
                   ItemsSource="{Binding SupportedConnections}"
                   SelectedItem="{Binding SelectedConnection}"
                   DisplayMemberPath="DisplayName"
-                  IsEnabled="{Binding IsRefreshEnabled}"
-                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}" />
+                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                  Style="{StaticResource ConnectionTypeComboBoxStyle}">
+        </ComboBox>
         <Button Grid.Row="1"
                 Grid.Column="1"
                 x:Uid="uidAddConnection"
                 x:Name="AddConnection"  
-                AutomationProperties.Name="{x:Static local:UIResources.AddNewSSHConnectionLabel}"
+                AutomationProperties.Name="{x:Static local:UIResources.AddNewSSHConnectionAutomationName}"
                 Margin="12,4,0,0"
                 MinWidth="75"
                 MinHeight="23"
                 Command="{Binding AddSSHConnectionCommand}"
                 CommandParameter="{Binding}"
-                IsEnabled="{Binding AddSSHConnectionCommand.CanExecute}"
-                Content="{x:Static local:UIResources.AddNewSSHConnectionButtonLabel}"
-                ToolTip="{x:Static local:UIResources.AddNewSSHConnectionToolTip}"/>
+                Content="{Binding AddSSHConnectionCommand.Label}"
+                ToolTip="{Binding AddSSHConnectionCommand.ToolTip}"
+                Visibility="{Binding SupportSSHConnections, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
 
         <!-- Hostname label and textbox -->
 
@@ -499,9 +518,11 @@
                  x:Uid="uidHostnameTextBox"
                  x:Name="hostnameTextBox"
                  AutomationProperties.Name="{x:Static local:UIResources.HostnameAutomationName}"
-                 PreviewKeyDown="HostnameTextbox_PreviewKeyDown"
-                 Text="{Binding Path=Hostname, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding Path=Hostname, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                  ToolTip="{x:Static local:UIResources.HostnameTip}">
+            <TextBox.InputBindings>
+                <KeyBinding Key="Enter" Command="{Binding RefreshCommand}" />
+            </TextBox.InputBindings>
         </TextBox>
 
         <!-- Container Count Text and Refresh Button -->
@@ -518,11 +539,10 @@
                 x:Name="RefreshContainerListButton"
                 Margin="12,9,0,0"
                 HorizontalAlignment="Right"
-                Content="{x:Static local:UIResources.RefreshHyperlink}"
-                ToolTip="{x:Static local:UIResources.RefreshToolTip}"
-                Style="{StaticResource HyperlinkButton}"
-                Click="Refresh_Click"
-                IsEnabled="{Binding IsRefreshEnabled}" />
+                Command="{Binding RefreshCommand}"
+                Content="{Binding RefreshCommand.Label}"
+                ToolTip="{Binding RefreshCommand.ToolTip}"
+                Style="{StaticResource HyperlinkButton}" />
 
         <!-- Container Instance display-->
         <ui:ContainerListBox Grid.Row="5"
@@ -572,18 +592,18 @@
                     MinHeight="23"
                     MinWidth="75"
                     IsDefault="True"
-                    Click="OkButton_Click"
+                    Command="{Binding OKCommand}"
                     CommandParameter="{Binding ElementName=ContainerPickerDialog}"
-                    Content="{x:Static local:UIResources.OKLabel}" />
+                    Content="{Binding OKCommand.Label}"/>
             <Button x:Uid="uidCancelButton"
                     x:Name="CancelButton"
                     Margin="6,0,0,0"
                     MinHeight="23"
                     MinWidth="75"
                     IsCancel="True"
-                    Click="CancelButton_Click"
+                    Command="{Binding CancelCommand}"
                     CommandParameter="{Binding ElementName=ContainerPickerDialog}"
-                    Content="{x:Static local:UIResources.CancelLabel}" />
+                    Content="{Binding CancelCommand.Label}" />
         </UniformGrid>
 
     </Grid>

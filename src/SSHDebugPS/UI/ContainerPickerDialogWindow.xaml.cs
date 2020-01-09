@@ -22,10 +22,10 @@ namespace Microsoft.SSHDebugPS.UI
     /// </summary>
     public partial class ContainerPickerDialogWindow : DialogWindow
     {
-        public ContainerPickerDialogWindow()
+        public ContainerPickerDialogWindow(bool supportSSHConnections)
         {
             InitializeComponent();
-            this.Model = new ContainerPickerViewModel();
+            this.Model = new ContainerPickerViewModel(supportSSHConnections);
             this.DataContext = Model;
             this.Loaded += OnWindowLoaded;
         }
@@ -66,16 +66,6 @@ namespace Microsoft.SSHDebugPS.UI
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        // The formatted string for the ConnectionType dialog
-        private string _selectedContainerConnectionString;
-        public string SelectedContainerConnectionString
-        {
-            get
-            {
-                return _selectedContainerConnectionString;
-            }
-        }
-
         public ContainerPickerViewModel Model
         {
             get
@@ -100,75 +90,6 @@ namespace Microsoft.SSHDebugPS.UI
             {
                 item.IsSelected = true;
             }
-        }
-
-        private void OkButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.DialogResult = ComputeContainerConnectionString();
-            this.Close();
-
-            e.Handled = true;
-        }
-
-        private void DialogWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == Key.Escape)
-            {
-                this.Close();
-                e.Handled = true;
-            }
-            else if (e.Key == Key.Enter)
-            {
-                this.DialogResult = ComputeContainerConnectionString();
-                if (this.DialogResult.GetValueOrDefault(false))
-                {
-                    e.Handled = true;
-                }
-            }
-        }
-
-        private void HostnameTextbox_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                Model.RefreshContainersList();
-                e.Handled = true;
-            }
-        }
-
-        private bool ComputeContainerConnectionString()
-        {
-            if (Model.SelectedContainerInstance != null)
-            {
-                string remoteConnectionString = string.Empty;
-                string containerId;
-                if (Model.SelectedConnection.Connection == null)
-                {
-
-                    Model.SelectedContainerInstance.GetResult(out containerId);
-                }
-                else
-                {
-                    Model.SelectedContainerInstance.GetResult(out containerId);
-                    remoteConnectionString = Model.SelectedConnection.Connection.Name;
-                }
-
-                _selectedContainerConnectionString = DockerConnection.CreateConnectionString(containerId, remoteConnectionString, Model.Hostname);
-                return true;
-            }
-
-            return false;
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
-
-        private void Refresh_Click(object sender, RoutedEventArgs e)
-        {
-            Model.RefreshContainersList();
-            e.Handled = true;
         }
 
         private void ContainerListBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
