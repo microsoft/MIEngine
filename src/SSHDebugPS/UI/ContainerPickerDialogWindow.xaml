@@ -36,19 +36,16 @@
                              Value="True">
                     <Setter Property="Stroke"
                             Value="{DynamicResource {x:Static platformui:TreeViewColors.GlyphMouseOverBrushKey}}" />
-                 </DataTrigger>
+                </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="ConnectionTypeComboBoxStyle"
                TargetType="{x:Type ComboBox}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding SupportSSHConnections}"
-                             Value="true">
-                    <Setter Property="Grid.ColumnSpan"
+            <Setter Property="Grid.ColumnSpan"
                             Value="1" />
-                    <Setter Property="IsEnabled"
+            <Setter Property="IsEnabled"
                             Value="True" />
-                </DataTrigger>
+            <Style.Triggers>
                 <DataTrigger Binding="{Binding SupportSSHConnections}"
                              Value="false">
                     <Setter Property="Grid.ColumnSpan"

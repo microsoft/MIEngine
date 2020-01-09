@@ -116,8 +116,8 @@ namespace Microsoft.SSHDebugPS
         /// Open the ContainerPickerDialog
         /// </summary>
         /// <param name="hwnd">Parent hwnd or IntPtr.Zero</param>
+        /// <param name="supportSSHConnections">SSHConnections are supported</param>
         /// <param name="connectionString">[out] connection string obtained by the dialog</param>
-        /// <returns></returns>
         public static bool ShowContainerPickerWindow(IntPtr hwnd, bool supportSSHConnections, out string connectionString)
         {
             ThreadHelper.ThrowIfNotOnUIThread("Microsoft.SSHDebugPS.ShowContainerPickerWindow");
