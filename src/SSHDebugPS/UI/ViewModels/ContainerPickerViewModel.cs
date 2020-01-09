@@ -20,12 +20,14 @@ namespace Microsoft.SSHDebugPS.UI
     {
         private Lazy<bool> _sshAvailable;
 
-        public ContainerPickerViewModel()
+        public ContainerPickerViewModel(bool supportSSHConnections)
         {
+            SupportSSHConnections = supportSSHConnections;
             InitializeConnections();
             ContainerInstances = new ObservableCollection<IContainerViewModel>();
 
-            _sshAvailable = new Lazy<bool>(() => IsLibLinuxAvailable());
+            // SSH is only available if we have Linux containers.
+            _sshAvailable = new Lazy<bool>(() => SupportSSHConnections && IsLibLinuxAvailable());
             AddSSHConnectionCommand = new ContainerUICommand(
                 AddSSHConnection,
                 (parameter /*unused parameter*/) =>
@@ -35,6 +37,43 @@ namespace Microsoft.SSHDebugPS.UI
                 UIResources.AddNewSSHConnectionLabel,
                 UIResources.AddNewSSHConnectionToolTip);
 
+            OKCommand = new ContainerUICommand(
+                (dialogObject) =>
+                {
+                    ContainerPickerDialogWindow dialog = dialogObject as ContainerPickerDialogWindow;
+                    dialog.DialogResult = ComputeContainerConnectionString();
+                    dialog.Close();
+                },
+                (parameter /*unused*/) =>
+                {
+                    return SelectedContainerInstance != null;
+                },
+                UIResources.OKLabel,
+                UIResources.OKLabel
+                );
+
+            CancelCommand = new ContainerUICommand(
+                (dialogObject) =>
+                {
+                    ContainerPickerDialogWindow dialog = dialogObject as ContainerPickerDialogWindow;
+                    dialog.Close();
+                },
+                UIResources.CancelLabel,
+                UIResources.CancelLabel
+                );
+
+            RefreshCommand = new ContainerUICommand(
+                (parameter /*unused*/) =>
+                {
+                    RefreshContainersList();
+                },
+                (parameter /*unused*/) =>
+                {
+                    return IsRefreshEnabled;
+                },
+                UIResources.RefreshHyperlink,
+                UIResources.RefreshToolTip);
+
             PropertyChanged += ContainerPickerViewModel_PropertyChanged;
             SelectedConnection = SupportedConnections.First(item => item is LocalConnectionViewModel) ?? SupportedConnections.First();
         }
@@ -43,8 +82,10 @@ namespace Microsoft.SSHDebugPS.UI
         {
             List<IConnectionViewModel> connections = new List<IConnectionViewModel>();
             connections.Add(new LocalConnectionViewModel());
-            connections.AddRange(SSHHelper.GetAvailableSSHConnectionInfos().Select(item => new SSHConnectionViewModel(item)));
-
+            if (SupportSSHConnections) // we currently only support SSH for Linux Containers
+            {
+                connections.AddRange(SSHHelper.GetAvailableSSHConnectionInfos().Select(item => new SSHConnectionViewModel(item)));
+            }
             SupportedConnections = new ObservableCollection<IConnectionViewModel>(connections);
             OnPropertyChanged(nameof(SupportedConnections));
         }
@@ -67,6 +108,33 @@ namespace Microsoft.SSHDebugPS.UI
             // https://docs.microsoft.com/en-us/dotnet/api/system.windows.threading.dispatcherpriority
             Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Input, (Action)(() => { RefreshContainersListInternal(); }));
         }
+
+        private bool ComputeContainerConnectionString()
+        {
+            if (SelectedContainerInstance != null)
+            {
+                string remoteConnectionString = string.Empty;
+                string containerId;
+                if (SelectedConnection.Connection == null)
+                {
+
+                    SelectedContainerInstance.GetResult(out containerId);
+                }
+                else
+                {
+                    SelectedContainerInstance.GetResult(out containerId);
+                    remoteConnectionString = SelectedConnection.Connection.Name;
+                }
+
+                SelectedContainerConnectionString = DockerConnection.CreateConnectionString(containerId, remoteConnectionString, Hostname);
+                return true;
+            }
+
+            return false;
+        }
+
+        // The formatted string for the ConnectionType dialog
+        public string SelectedContainerConnectionString { get; private set; }
 
         private void RefreshContainersListInternal()
         {
@@ -160,9 +228,27 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
+        // Default is to Support SSH Connections
+        private bool _supportSSHConnections = true;
+        public bool SupportSSHConnections
+        {
+            get
+            {
+                return _supportSSHConnections;
+            }
+            private set
+            {
+                _supportSSHConnections = value;
+                OnPropertyChanged(nameof(SupportSSHConnections));
+            }
+        }
+
         #region Commands
 
         public IContainerUICommand AddSSHConnectionCommand { get; }
+        public IContainerUICommand OKCommand { get; }
+        public IContainerUICommand CancelCommand { get; }
+        public IContainerUICommand RefreshCommand { get; }
 
         #endregion
 
@@ -192,6 +278,9 @@ namespace Microsoft.SSHDebugPS.UI
                 if (!string.Equals(_hostname, value, StringComparison.Ordinal))
                 {
                     _hostname = value;
+                    // If the user is updating the hostname, clear the container list and the selected container list.
+                    SelectedContainerInstance = null;
+                    ContainerInstances?.Clear();
                     OnPropertyChanged(nameof(Hostname));
                 }
             }
@@ -267,6 +356,8 @@ namespace Microsoft.SSHDebugPS.UI
                     _isRefreshEnabled = value;
                     OnPropertyChanged(nameof(IsRefreshEnabled));
                 }
+
+                RefreshCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -282,6 +373,8 @@ namespace Microsoft.SSHDebugPS.UI
                     _selectedContainerInstance = value;
                     OnPropertyChanged(nameof(SelectedContainerInstance));
                 }
+                // Update the status of the OK button
+                OKCommand.NotifyCanExecuteChanged();
             }
         }
 

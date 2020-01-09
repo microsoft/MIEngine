@@ -184,7 +184,7 @@
   <data name="StatusLabelText" xml:space="preserve">
     <value>Status: </value>
   </data>
-  <data name="AddNewSSHConnectionButtonLabel" xml:space="preserve">
+  <data name="AddNewSSHConnectionLabel" xml:space="preserve">
     <value>Add...</value>
   </data>
   <data name="QueryingForContainersMessage" xml:space="preserve">
@@ -215,7 +215,7 @@
   <data name="RefreshToolTip" xml:space="preserve">
     <value>Refresh Container List</value>
   </data>
-  <data name="AddNewSSHConnectionLabel" xml:space="preserve">
+  <data name="AddNewSSHConnectionAutomationName" xml:space="preserve">
     <value>Add New SSH Connection</value>
   </data>
   <data name="OptionalHintText" xml:space="preserve">
