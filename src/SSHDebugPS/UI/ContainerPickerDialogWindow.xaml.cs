@@ -25,8 +25,8 @@ namespace Microsoft.SSHDebugPS.UI
         public ContainerPickerDialogWindow(bool supportSSHConnections)
         {
             InitializeComponent();
-            this.Model = new ContainerPickerViewModel(supportSSHConnections);
-            this.DataContext = Model;
+            _model = new ContainerPickerViewModel(supportSSHConnections);
+            this.DataContext = _model;
             this.Loaded += OnWindowLoaded;
         }
 
@@ -66,16 +66,11 @@ namespace Microsoft.SSHDebugPS.UI
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        public ContainerPickerViewModel Model
+        public string SelectedContainerConnectionString
         {
             get
             {
-                return _model;
-            }
-            set
-            {
-                _model = value;
-                OnPropertyChanged(nameof(Model));
+                return _model.SelectedContainerConnectionString;
             }
         }
         #endregion
