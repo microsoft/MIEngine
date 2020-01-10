@@ -14,10 +14,11 @@ if not defined VisualStudioVersion (
 
 set _DeviceId=
 set _Platform=
-set _SdkRoot=%ProgramFiles(x86)%\Android\android-sdk
-set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r11c
+set _SdkRoot=c:\Microsoft\AndroidSDK\25
+set _NdkRoot=c:\Microsoft\AndroidNDK\android-ndk-r20
 if not exist "%_NdkRoot%" for /f %%v in ('dir /b /o:n %ProgramData%\Microsoft\AndroidNDK\android-ndk-r*') do set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\%%v
- set _LoopCount=
+echo INFO: Using NDK: %_NdkRoot%
+set _LoopCount=
 set _Verbose=
 set _TestsToRun=
 
@@ -36,9 +37,12 @@ if NOT exist "%_GlassDir%glass2.exe" echo Getting Glass from NuGet.& call "%_Pro
 if NOT "%ERRORLEVEL%"=="0" echo ERROR: Failed to get Glass from NuGet.& exit /b -1
 
 :: Copy binary to folder "Microsoft.VisualStudio.Glass" which required by glass2.exe in runtime for Visual Studio 2017
-if defined VS150COMNTOOLS (
+if defined VSINSTALLDIR (
 xcopy /Y /D "%VSINSTALLDIR%Common7\IDE\Remote Debugger\x86\Microsoft.VisualStudio.OLE.Interop.dll" "%_GlassDir%"
 if not "%ERRORLEVEL%"=="0" echo ERROR: Unable to copy the binaries from Visual Studio installation.& exit /b -1
+) else (
+:: Glass won't load without MS.VisualStudio.OLE.Interop.dll
+echo ERROR: Missing Visual Studio Installation. & exit /b -1
 )
 
 :: Ensure the project has been built
@@ -88,7 +92,7 @@ goto :NextArg
 :SetNdkRoot
 shift /1
 if "%~1" == "10" (
-	set _NdkRoot=%ProgramData%\Microsoft\AndroidNDK\android-ndk-r10e
+	set _NdkRoot=c:\Microsoft\AndroidNDK\android-ndk-r18b
 ) else (
 	set _NdkRoot=%~1
 )

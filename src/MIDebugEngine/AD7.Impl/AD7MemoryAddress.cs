@@ -184,12 +184,12 @@ namespace Microsoft.MIDebugEngine
                 }
                 if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION) != 0)
                 {
-                    if (_functionName == null)
+                    if (string.IsNullOrEmpty(_functionName))
                     {
                         _functionName = Engine.GetAddressDescription(_address);
                     }
 
-                    if (!(string.IsNullOrEmpty(_functionName) || _functionName[0] == '0' /*address*/))
+                    if (!(string.IsNullOrEmpty(_functionName)))
                     {
                         pinfo[0].bstrFunction = _functionName;
                         pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION;

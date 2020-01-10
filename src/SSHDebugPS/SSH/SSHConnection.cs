@@ -163,7 +163,8 @@ namespace Microsoft.SSHDebugPS.SSH
                 return false;
             }
 
-            return command.Output.Trim().Equals("Linux");
+            
+            return string.Equals(command.Output?.Trim(), "Linux", StringComparison.Ordinal);
         }
 
         public override void Close()

@@ -169,7 +169,7 @@ namespace Microsoft.SSHDebugPS.UI
         {
             if (instance is DockerContainerViewModel dockerVM)
             {
-                return this.Instance.Equals(dockerVM.Instance);
+                return ContainerInstance.Equals(this.Instance, dockerVM.Instance);
             }
             return false;
         }

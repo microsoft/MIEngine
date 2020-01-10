@@ -11,7 +11,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
         protected override Connection GetConnectionInternal()
         {
-            return ConnectionManager.GetDockerConnection(Name);
+            return ConnectionManager.GetDockerConnection(Name, supportSSHConnections: true);
         }
     }
 }

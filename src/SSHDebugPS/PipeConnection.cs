@@ -201,8 +201,7 @@ namespace Microsoft.SSHDebugPS
 
             int exitCode;
             string commandOutput;
-            // If used accross SSH, assume host is running Linux and escape the command (specifically the '$')
-            if (!ExecuteCommand(this.OuterConnection == null ? ProcFSOutputParser.CommandText : ProcFSOutputParser.EscapedCommandText, Timeout.Infinite, true, out commandOutput, out errorMessage, out exitCode))
+            if (!ExecuteCommand(ProcFSOutputParser.CommandText, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
             {
                 errorMessage = StringResources.Error_ProcFSError.FormatCurrentCultureWithArgs(errorMessage);
                 return false;
