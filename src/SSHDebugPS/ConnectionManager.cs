@@ -173,7 +173,7 @@ namespace Microsoft.SSHDebugPS
             }
             catch (UriFormatException)
             { }
-            
+
             // If Uri sets anything to empty string, set it back to the placeholder
             if (string.IsNullOrWhiteSpace(userName))
             {

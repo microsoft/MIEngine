@@ -2,12 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.SSHDebugPS;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.SSHDebugPS.Utilities;
 using System.Globalization;
+using Microsoft.SSHDebugPS;
+using Microsoft.SSHDebugPS.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SSHDebugTests
 {
