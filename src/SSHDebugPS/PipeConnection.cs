@@ -201,11 +201,7 @@ namespace Microsoft.SSHDebugPS
 
             int exitCode;
             string commandOutput;
-            // For a remote connection, the command will be passing through another instances of Linux and is passed in single quotes, so we escape any single quotes.
-            string command = this.OuterConnection == null ?
-                ProcFSOutputParser.CommandText :
-                ProcFSOutputParser.CommandText.Replace("'", "'\\''");
-            if (!ExecuteCommand(command, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
+            if (!ExecuteCommand(ProcFSOutputParser.CommandText, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
             {
                 errorMessage = StringResources.Error_ProcFSError.FormatCurrentCultureWithArgs(errorMessage);
                 return false;
