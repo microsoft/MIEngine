@@ -9,8 +9,7 @@ using Microsoft.SSHDebugPS.Utilities;
 
 namespace Microsoft.SSHDebugPS
 {
-    // TODO: Make this internal and use InternalsVisibleTo to allow for unit test
-    public class PSOutputParser
+    internal class PSOutputParser
     {
         private struct ColumnDef
         {

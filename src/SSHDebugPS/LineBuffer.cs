@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.SSHDebugPS
 {
-    // TODO: Make this internal and use IntenalsVisibleTo to allow for unit test
-    public class LineBuffer
+    internal class LineBuffer
     {
         private readonly StringBuilder _textBuffer = new StringBuilder();
 
