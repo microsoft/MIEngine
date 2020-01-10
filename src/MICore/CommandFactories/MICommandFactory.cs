@@ -679,6 +679,11 @@ namespace MICore
             return Task<bool>.FromResult(false);
         }
 
+        public async Task<string> GetVersion()
+        {
+            return await _debugger.ConsoleCmdAsync("version");
+        }
+
         #endregion
     }
 }

@@ -197,6 +197,7 @@ namespace MICore
         }
 
         private bool? _requiresOnKeywordForBreakInsert;
+        private const string OldLLDBMIVersionString = "lldb-350.99.0";
 
         // In LLDB 3.5, -break-insert -f requires a string before the actual method name.
         // We use a placeholder 'on' for this.
@@ -206,14 +207,10 @@ namespace MICore
             if (!_requiresOnKeywordForBreakInsert.HasValue)
             {
                 _requiresOnKeywordForBreakInsert = false;
-                try
-                {
-                    // Test to see if -break-insert -f main works.
-                    string breakInsertMainCommand = "-break-insert -f main";
-                    Results results = await _debugger.CmdAsync(breakInsertMainCommand, ResultClass.done);
-                    await this.BreakDelete(results.Find("bkpt").FindString("number"));
-                }
-                catch (UnexpectedMIResultException)
+
+                // Query for the version.
+                string version = await GetVersion();
+                if (!string.IsNullOrEmpty(version) && version.Trim().Equals(OldLLDBMIVersionString))
                 {
                     _requiresOnKeywordForBreakInsert = true;
                 }
