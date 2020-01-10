@@ -52,8 +52,12 @@ namespace Microsoft.SSHDebugPS.Docker
         {
             get
             {
-                string subCommandFormat = this.HostIsUnix ? _subCommandArgsFormatWithShellLinuxHost : _subCommandArgsFormatWithShell; 
-                return (_makeInteractive ? _interactiveFlag : string.Empty) + (_runInShell ? subCommandFormat : _subCommandArgsFormat).FormatInvariantWithArgs(ContainerName, _commandToExecute);
+                string subCommandFormat = this.HostIsUnix ? _subCommandArgsFormatWithShellLinuxHost : _subCommandArgsFormatWithShell;
+                // Because _subCommandArgsFormatWithShellLinuxHost single quotes the the subcommand arguments, we need to escape the command's single quotes
+                // by closing the single quotes and adding an escaped single quote and then reopening the single quote.
+                string command = this.HostIsUnix ? _commandToExecute.Replace("'", "'\\''") : _commandToExecute;
+                return (_makeInteractive ? _interactiveFlag : string.Empty) + 
+                    (_runInShell ? subCommandFormat : _subCommandArgsFormat).FormatInvariantWithArgs(ContainerName, command);
             }
         }
     }

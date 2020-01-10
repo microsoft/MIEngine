@@ -106,15 +106,6 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to docker exec {0} \&quot;{1}\&quot;.
-        /// </summary>
-        internal static string DockerExecCommandFormat {
-            get {
-                return ResourceManager.GetString("DockerExecCommandFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Command failed to execute.
         /// </summary>
         internal static string Error_CommandFailed {
