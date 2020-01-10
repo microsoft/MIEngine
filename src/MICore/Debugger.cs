@@ -1129,7 +1129,26 @@ namespace MICore
                     string miError = null;
                     if (results.ResultClass == ResultClass.error)
                     {
-                        miError = results.FindString("msg");
+                        // Fixes: https://github.com/microsoft/vscode-cpptools/issues/2492
+                        try
+                        {
+                            miError = results.FindString("msg");
+                        }
+                        catch (MIResultFormatException ex)
+                        {
+                            try
+                            {
+                                // TODO: Remove after update to mainline lldb-mi
+                                // lldb-mi has certain instances (such as the -exec-* commands) that calls the message
+                                // "message" instead of "msg"
+                                miError = results.FindString("message");
+                            }
+                            catch
+                            {
+                                // Rethrow the original exception if we can't find "message"
+                                throw ex;
+                            }
+                        }
                     }
                     else
                     {
