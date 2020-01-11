@@ -212,7 +212,7 @@ namespace MICore
 
                 // Query for the version.
                 string version = await Version();
-                if (!string.IsNullOrEmpty(version) && version.Trim().Equals(OldLLDBMIVersionString))
+                if (!string.IsNullOrEmpty(version) && version.Trim().Equals(OldLLDBMIVersionString, StringComparison.Ordinal))
                 {
                     _requiresOnKeywordForBreakInsert = true;
                 }

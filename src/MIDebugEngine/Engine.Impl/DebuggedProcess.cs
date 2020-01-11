@@ -834,7 +834,11 @@ namespace Microsoft.MIDebugEngine
                         return Task.FromResult(0);
                     };
 
-                    commands.Add(new LaunchCommand(await GetBreakInsertMainCommand(), ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
+                    // Builds '-break-insert' for 'main'.
+                    StringBuilder breakInsertCommand = await this.MICommandFactory.BuildBreakInsert(string.Empty, true);
+                    breakInsertCommand.Append("main");
+
+                    commands.Add(new LaunchCommand(breakInsertCommand.ToString(), ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
 
                     if (null != localLaunchOptions)
                     {
@@ -858,21 +862,6 @@ namespace Microsoft.MIDebugEngine
             }
 
             return commands;
-        }
-
-        /// <summary>
-        /// Gets a break-insert command for main that will allow pending bps and supports different debuggers
-        /// </summary>
-        private async Task<string> GetBreakInsertMainCommand()
-        {
-            // Allow main breakpoint to be pending.
-            string breakInsertMainFormat = "-break-insert -f{0} main";
-            if (await this.MICommandFactory.RequiresOnKeywordForBreakInsert())
-            {
-                // break-insert -f requires 'on' in lldb 3.5 scenario
-                return string.Format(CultureInfo.InvariantCulture, breakInsertMainFormat, " on");
-            }
-            return string.Format(CultureInfo.InvariantCulture, breakInsertMainFormat, string.Empty);
         }
 
         private void CheckCygwin(List<LaunchCommand> commands, LocalLaunchOptions localLaunchOptions)
