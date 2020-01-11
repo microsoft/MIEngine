@@ -278,5 +278,11 @@ namespace MICore
             string command = onlyOnce ? "tcatch " : "catch ";
             await _debugger.ConsoleCmdAsync(command + name);
         }
+
+        public override Task<string> Version()
+        {
+            // TODO: Implement using the `-gdb-version` MI Command.
+            throw new NotImplementedException();
+        }
     }
 }

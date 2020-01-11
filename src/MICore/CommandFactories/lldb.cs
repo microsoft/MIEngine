@@ -48,16 +48,18 @@ namespace MICore
 
         protected async override Task<StringBuilder> BuildBreakInsert(string condition, bool enabled)
         {
-            // LLDB's 3.5 use of the pending flag requires an optional parameter or else it fails.
-            // We will use "on" for now. 
-            string pendingFlag = "-f ";
-            if (await RequiresOnKeywordForBreakInsert())
-            {
-                pendingFlag = "-f on ";
-            }
+            const string pendingFlag = "-f ";
 
             StringBuilder cmd = new StringBuilder("-break-insert ");
             cmd.Append(pendingFlag);
+
+            // LLDB's 3.5 use of the pending flag requires an optional parameter or else it fails.
+            // We will use "on" for now. 
+            if (await RequiresOnKeywordForBreakInsert())
+            {
+                const string pendingFlagParameter = "on ";
+                cmd.Append(pendingFlagParameter);
+            }
 
             if (condition != null)
             {
@@ -209,7 +211,7 @@ namespace MICore
                 _requiresOnKeywordForBreakInsert = false;
 
                 // Query for the version.
-                string version = await GetVersion();
+                string version = await Version();
                 if (!string.IsNullOrEmpty(version) && version.Trim().Equals(OldLLDBMIVersionString))
                 {
                     _requiresOnKeywordForBreakInsert = true;
@@ -217,6 +219,11 @@ namespace MICore
             }
 
             return _requiresOnKeywordForBreakInsert.Value;
+        }
+
+        public override async Task<string> Version()
+        {
+            return await _debugger.ConsoleCmdAsync("version");
         }
     }
 }
