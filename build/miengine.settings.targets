@@ -8,7 +8,7 @@
   <Import Project="version.settings.targets" />
 
   <Choose>
-    <When Condition="'$(Lab)' == 'true'">
+    <When Condition="'$(Lab)' == 'true' and '$(TEST_LAB_BUILD)'==''">
         <PropertyGroup>
             <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
             <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>

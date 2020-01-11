@@ -46,3 +46,23 @@ jobs:
     inputs:
       solution: 'BuildAndTest.proj'
       configuration: 'Desktop.Release'
+
+- job: LabRelease
+  pool: 'Hosted VS2017'
+  variables:
+    TEST_LAB_BUILD: 'true'
+  steps:
+  - task: MSBuild@1
+    inputs:
+      solution: 'BuildAndTest.proj'
+      configuration: 'Lab.Release'
+
+- job: LabDebug
+  pool: 'Hosted VS2017'
+  variables:
+    TEST_LAB_BUILD: 'true'
+  steps:
+  - task: MSBuild@1
+    inputs:
+      solution: 'BuildAndTest.proj'
+      configuration: 'Lab.Debug'
