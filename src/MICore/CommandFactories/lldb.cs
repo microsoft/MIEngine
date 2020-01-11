@@ -46,7 +46,7 @@ namespace MICore
             }
         }
 
-        protected async override Task<StringBuilder> BuildBreakInsert(string condition, bool enabled)
+        public async override Task<StringBuilder> BuildBreakInsert(string condition, bool enabled)
         {
             const string pendingFlag = "-f ";
 
