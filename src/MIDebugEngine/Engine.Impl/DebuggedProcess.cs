@@ -835,7 +835,7 @@ namespace Microsoft.MIDebugEngine
                     };
 
                     // Builds '-break-insert' for 'main'.
-                    StringBuilder breakInsertCommand = await this.MICommandFactory.BuildBreakInsert(null, true);
+                    StringBuilder breakInsertCommand = await this.MICommandFactory.BuildBreakInsert(condition: null, enabled: true);
                     breakInsertCommand.Append("main");
 
                     commands.Add(new LaunchCommand(breakInsertCommand.ToString(), ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));

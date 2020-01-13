@@ -204,24 +204,26 @@ namespace MICore
         // In LLDB 3.5, -break-insert -f requires a string before the actual method name.
         // We use a placeholder 'on' for this.
         // Later versions do not require the 'on' keyword.
-        public override async Task<bool> RequiresOnKeywordForBreakInsert()
+        private async Task<bool> RequiresOnKeywordForBreakInsert()
         {
             if (!_requiresOnKeywordForBreakInsert.HasValue)
             {
-                _requiresOnKeywordForBreakInsert = false;
-
                 // Query for the version.
                 string version = await Version();
-                if (!string.IsNullOrEmpty(version) && version.Trim().Equals(OldLLDBMIVersionString, StringComparison.Ordinal))
+                if (!string.IsNullOrWhiteSpace(version) && version.Trim().Equals(OldLLDBMIVersionString, StringComparison.Ordinal))
                 {
                     _requiresOnKeywordForBreakInsert = true;
+                }
+                else
+                {
+                    _requiresOnKeywordForBreakInsert = false;
                 }
             }
 
             return _requiresOnKeywordForBreakInsert.Value;
         }
 
-        public override async Task<string> Version()
+        private async Task<string> Version()
         {
             return await _debugger.ConsoleCmdAsync("version");
         }

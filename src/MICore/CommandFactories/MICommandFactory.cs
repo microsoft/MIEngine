@@ -673,14 +673,6 @@ namespace MICore
         {
             return false;
         }
-
-        public virtual Task<bool> RequiresOnKeywordForBreakInsert()
-        {
-            return Task<bool>.FromResult(false);
-        }
-
-
-        public abstract Task<string> Version();
         #endregion
     }
 }

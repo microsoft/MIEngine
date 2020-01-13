@@ -255,10 +255,5 @@ namespace MICore
             // process, and getting the debuggee to inherit those.
             throw new NotImplementedException();
         }
-
-        public override Task<string> Version()
-        {
-            throw new NotImplementedException();
-        }
     }
 }
