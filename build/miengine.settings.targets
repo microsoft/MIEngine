@@ -14,8 +14,8 @@
             <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
 
             <!-- Use PublicSign when TEST_LAB_BUILD is enabled -->
-            <PublicSign Condition="'$(TEST_LAB_BUILD)'==''">true</PublicSign>
-            <DelaySign Condition="'$(TEST_LAB_BUILD)'!=''">true</DelaySign>
+            <PublicSign Condition="'$(TEST_LAB_BUILD)'!=''">true</PublicSign>
+            <DelaySign Condition="'$(TEST_LAB_BUILD)'==''">true</DelaySign>
         </PropertyGroup>
     </When>
     <Otherwise>
