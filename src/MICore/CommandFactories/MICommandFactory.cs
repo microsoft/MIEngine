@@ -418,7 +418,7 @@ namespace MICore
 
         #region Breakpoints
 
-        protected virtual StringBuilder BuildBreakInsert(string condition, bool enabled)
+        public virtual Task<StringBuilder> BuildBreakInsert(string condition, bool enabled)
         {
             StringBuilder cmd = new StringBuilder("-break-insert -f ");
             if (condition != null)
@@ -431,7 +431,7 @@ namespace MICore
             {
                 cmd.Append("-d ");
             }
-            return cmd;
+            return Task<StringBuilder>.FromResult(cmd);
         }
 
         internal bool PreparePath(string path, bool useUnixFormat, out string pathMI)
@@ -453,7 +453,7 @@ namespace MICore
 
         public virtual async Task<Results> BreakInsert(string filename, bool useUnixFormat, uint line, string condition, bool enabled, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition, enabled);
+            StringBuilder cmd = await BuildBreakInsert(condition, enabled);
 
             if (checksums != null && checksums.Count() != 0)
             {
@@ -480,7 +480,7 @@ namespace MICore
 
         public virtual async Task<Results> BreakInsert(string functionName, string condition, bool enabled, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition, enabled);
+            StringBuilder cmd = await BuildBreakInsert(condition, enabled);
             // TODO: Add support of break function type filename:function locations
             cmd.Append(functionName);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
@@ -488,7 +488,7 @@ namespace MICore
 
         public virtual async Task<Results> BreakInsert(ulong codeAddress, string condition, bool enabled, ResultClass resultClass = ResultClass.done)
         {
-            StringBuilder cmd = BuildBreakInsert(condition, enabled);
+            StringBuilder cmd = await BuildBreakInsert(condition, enabled);
             cmd.Append('*');
             cmd.Append(codeAddress);
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);
@@ -673,7 +673,6 @@ namespace MICore
         {
             return false;
         }
-
         #endregion
     }
 }

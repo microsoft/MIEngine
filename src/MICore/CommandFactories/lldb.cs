@@ -46,15 +46,20 @@ namespace MICore
             }
         }
 
-        protected override StringBuilder BuildBreakInsert(string condition, bool enabled)
+        public async override Task<StringBuilder> BuildBreakInsert(string condition, bool enabled)
         {
-            // LLDB's use of the pending flag requires an optional parameter or else it fails.
-            // We will use "on" for now. 
-            // TODO: Fix this on LLDB-MI's side
-            string pendingFlag = "-f on ";
+            const string pendingFlag = "-f ";
 
             StringBuilder cmd = new StringBuilder("-break-insert ");
             cmd.Append(pendingFlag);
+
+            // LLDB's 3.5 use of the pending flag requires an optional parameter or else it fails.
+            // We will use "on" for now. 
+            if (await RequiresOnKeywordForBreakInsert())
+            {
+                const string pendingFlagParameter = "on ";
+                cmd.Append(pendingFlagParameter);
+            }
 
             if (condition != null)
             {
@@ -191,6 +196,36 @@ namespace MICore
                 string value = results.FindString("value");
                 return await base.VarAssign(variableName, value, threadId, frameLevel);
             }
+        }
+
+        private bool? _requiresOnKeywordForBreakInsert;
+        private const string OldLLDBMIVersionString = "lldb-350.99.0";
+
+        // In LLDB 3.5, -break-insert -f requires a string before the actual method name.
+        // We use a placeholder 'on' for this.
+        // Later versions do not require the 'on' keyword.
+        private async Task<bool> RequiresOnKeywordForBreakInsert()
+        {
+            if (!_requiresOnKeywordForBreakInsert.HasValue)
+            {
+                // Query for the version.
+                string version = await Version();
+                if (!string.IsNullOrWhiteSpace(version) && version.Trim().Equals(OldLLDBMIVersionString, StringComparison.Ordinal))
+                {
+                    _requiresOnKeywordForBreakInsert = true;
+                }
+                else
+                {
+                    _requiresOnKeywordForBreakInsert = false;
+                }
+            }
+
+            return _requiresOnKeywordForBreakInsert.Value;
+        }
+
+        private async Task<string> Version()
+        {
+            return await _debugger.ConsoleCmdAsync("version");
         }
     }
 }
