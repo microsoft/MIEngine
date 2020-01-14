@@ -80,8 +80,8 @@
           Inputs="$(XsdCodeFile);$(AssemblyOriginatorKeyFile)"
           Outputs="$(IntermediateOutputPath)sgen/$(AssemblyName).XmlSerializers.dll">
     <PropertyGroup>
-      <SerializationSigningCompilerOptions>/keyfile:$(AssemblyOriginatorKeyFile)</SerializationSigningCompilerOptions>
-      <SerializationSigningCompilerOptions Condition="'$(DelaySign)'=='true' or '$(TEST_LAB_BUILD)'!=''">$(SerializationSigningCompilerOptions) /delaysign</SerializationSigningCompilerOptions>
+      <SerializationSigningCompilerOptions Condition="'$(TEST_LAB_BUILD)'==''">/keyfile:$(AssemblyOriginatorKeyFile)</SerializationSigningCompilerOptions>
+      <SerializationSigningCompilerOptions Condition="'$(DelaySign)'=='true'">$(SerializationSigningCompilerOptions) /delaysign</SerializationSigningCompilerOptions>
 
       <CompilerPath>$(CscToolPath)$(CscToolExe)</CompilerPath>
       <CompilerPath Condition="'$(CompilerPath)' == '' and Exists('$(MSBuildBinPath)\csc.exe')">$(MSBuildBinPath)\csc.exe</CompilerPath>
