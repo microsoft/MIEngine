@@ -80,6 +80,10 @@
           Inputs="$(XsdCodeFile);$(AssemblyOriginatorKeyFile)"
           Outputs="$(IntermediateOutputPath)sgen/$(AssemblyName).XmlSerializers.dll">
     <PropertyGroup>
+      <!-- 
+        If TEST_LAB_BUILD is set, we are public signing. 
+        sgen.exe does not have -publicsign and does not work if a keyfile is passed in. 
+      -->
       <SerializationSigningCompilerOptions Condition="'$(TEST_LAB_BUILD)'==''">/keyfile:$(AssemblyOriginatorKeyFile)</SerializationSigningCompilerOptions>
       <SerializationSigningCompilerOptions Condition="'$(DelaySign)'=='true'">$(SerializationSigningCompilerOptions) /delaysign</SerializationSigningCompilerOptions>
 
