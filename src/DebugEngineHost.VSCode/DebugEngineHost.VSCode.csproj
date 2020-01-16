@@ -108,8 +108,7 @@
       <DropUnsignedFile Condition="'$(IsMonoRuntime)' == 'false'" Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     </ItemGroup>
   </Target>
-  <Import Condition="'$(IsCoreClr)' == 'true'" Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <Import Condition="'$(IsCoreClr)' == 'false'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
   <Import Project="..\..\build\DropFiles.targets" />

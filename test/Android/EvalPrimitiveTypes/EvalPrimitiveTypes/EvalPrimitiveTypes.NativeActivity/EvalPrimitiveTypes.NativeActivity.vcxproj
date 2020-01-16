@@ -39,9 +39,9 @@
     <Keyword>Android</Keyword>
     <RootNamespace>EvalPrimitiveTypes</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <ApplicationType>Android</ApplicationType>
-    <ApplicationTypeRevision>2.0</ApplicationTypeRevision>
+    <ApplicationTypeRevision>3.0</ApplicationTypeRevision>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

@@ -122,7 +122,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
     <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^32,0 to 32,0 in (\[Unknown\]|libFunctionBreakPoints.so)!Func\(\)$"></BoundBreakpoint>
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^(\[Unknown source location\]|32,0 to 32,0) in (\[Unknown\]|libFunctionBreakPoints.so)!(Func\(\)|[0-9A-Fa-f]{8,16})$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -153,7 +153,7 @@
       <functionName>MyClass::Func</functionName>
       <function>MyClass::Func(MyClass * this)</function>
       <file>Source1.cpp</file>
-      <line>5</line>
+      <line>4</line>
       <col>0</col>
     </Event>
   </Command>

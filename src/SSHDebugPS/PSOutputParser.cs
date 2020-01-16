@@ -9,8 +9,7 @@ using Microsoft.SSHDebugPS.Utilities;
 
 namespace Microsoft.SSHDebugPS
 {
-    // TODO: Make this internal and use InternalsVisibleTo to allow for unit test
-    public class PSOutputParser
+    internal class PSOutputParser
     {
         private struct ColumnDef
         {
@@ -174,7 +173,7 @@ namespace Microsoft.SSHDebugPS
             else
             {
                 // If we couldn't get a user name for some reason, accept anything besides 'root'
-                isSameUser = !ruser.Equals("root", StringComparison.Ordinal);
+                isSameUser = !string.Equals(ruser, "root", StringComparison.Ordinal);
             }
 
             return new Process(pid, ruser, commandLine, isSameUser);

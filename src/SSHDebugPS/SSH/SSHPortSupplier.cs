@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using liblinux;
 using liblinux.Persistence;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Linux.ConnectionManager;
 using Microsoft.VisualStudio.Shell;
@@ -108,7 +109,16 @@ namespace Microsoft.SSHDebugPS.SSH
 
         internal static string GetFormattedSSHConnectionName(ConnectionInfo connectionInfo)
         {
-            return connectionInfo.UserName + "@" + connectionInfo.HostNameOrAddress;
+            string connectionNameFormat = "{0}@{1}";
+            string portFormat = ":{0}";
+
+            string connectionString = connectionNameFormat.FormatInvariantWithArgs(connectionInfo.UserName, connectionInfo.HostNameOrAddress);
+            if(connectionInfo.Port != 22)
+            {
+                return string.Concat(connectionString, portFormat.FormatInvariantWithArgs(connectionInfo.Port));
+            }
+
+            return connectionString;
         }
     }
 }

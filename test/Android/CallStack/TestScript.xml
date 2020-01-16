@@ -107,7 +107,7 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
-    <Event name="IDebugThreadCreateEvent2" expected="False" />
+    <Event name="IDebugThreadCreateEvent2" expected="False155" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
@@ -115,8 +115,8 @@
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugThreadCreateEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
-    <Event name="IDebugBreakpointBoundEvent2" expected="False">
-      <BoundBreakpoint  IgnoreCase="True" RegEx="^292,0 to 292,0 in (\[Unknown\]|libCallStack.so)!android_main\(android_app\*\)$"></BoundBreakpoint>
+    <Event name="IDebugBreakpointBoundEvent2" expected="True">
+      <BoundBreakpoint  IgnoreCase="True" RegEx="^292,0 to 292,0 in (\[Unknown\]|libCallStack.so)!(android_main\(android_app\*\)|[0-9A-Fa-f]{8,16})$"></BoundBreakpoint>
     </Event>
     <Event name="IDebugModuleLoadEvent2" expected="False" />
     <Event name="IDebugOutputStringEvent2" expected="False" />
@@ -330,7 +330,7 @@
       <functionName>func6</functionName>
       <function>func6(func4 f4, func5 f5)</function>
       <file>Source2.cpp</file>
-      <line>6</line>
+      <line>7</line>
       <col>0</col>
     </Event>
   </Command>
@@ -342,17 +342,6 @@
     <Frame RegEx="^[\s\S]+$" />
     <Frame RegEx="^[\s\S]+$" />
     <Frame RegEx="^[\s\S]+$" />
-  </Command>
-  <Command name="step over">
-    <Event name="IDebugProcessContinueEvent100" expected="True" />
-    <Duration Volatile="True">00:00:00.0149998</Duration>
-    <Event name="IDebugStepCompleteEvent2" expected="True">
-      <functionName>func6</functionName>
-      <function>func6(func4 f4, func5 f5)</function>
-      <file>Source2.cpp</file>
-      <line>7</line>
-      <col>0</col>
-    </Event>
   </Command>
   <Command name="step into">
     <Event name="IDebugProcessContinueEvent100" expected="True" />
@@ -402,7 +391,7 @@
       <functionName>func1</functionName>
       <function>func1()</function>
       <file>Source1.cpp</file>
-      <line>27</line>
+      <line>25</line>
       <col>0</col>
     </Event>
   </Command>
