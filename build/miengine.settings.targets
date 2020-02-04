@@ -12,7 +12,10 @@
         <PropertyGroup>
             <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
             <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
-            <DelaySign>true</DelaySign>
+
+            <!-- Use PublicSign when TEST_LAB_BUILD is enabled -->
+            <PublicSign Condition="'$(TEST_LAB_BUILD)'!=''">true</PublicSign>
+            <DelaySign Condition="'$(TEST_LAB_BUILD)'==''">true</DelaySign>
         </PropertyGroup>
     </When>
     <Otherwise>
