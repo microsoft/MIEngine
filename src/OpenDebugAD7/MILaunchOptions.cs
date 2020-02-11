@@ -453,6 +453,7 @@ namespace OpenDebugAD7
         /// <returns>Path to lldb-mi or null if it doesn't exist</returns>
         private static string GetLLDBMIPath()
         {
+            string exePath = null;
             string directory = EngineConfiguration.GetAdapterDirectory();
             DirectoryInfo dir = new DirectoryInfo(directory);
 
@@ -461,13 +462,21 @@ namespace OpenDebugAD7
 
             if (!String.IsNullOrEmpty(debugAdapterPath))
             {
-                string exePath = Path.Combine(debugAdapterPath, "lldb", "bin", "lldb-mi");
-                if (File.Exists(exePath))
+                // Path for lldb-mi 10.x and if it exists use it.
+                exePath = Path.Combine(debugAdapterPath, "lldb-mi", "bin", "lldb-mi");
+                if (!File.Exists(exePath))
                 {
-                    return exePath;
+                    // Fall back to using path for lldb-mi 3.8
+                    exePath = Path.Combine(debugAdapterPath, "lldb", "bin", "lldb-mi");
+                    if (!File.Exists(exePath))
+                    {
+                        // Neither exist
+                        return null;
+                    }
                 }
             }
-            return null;
+
+            return exePath;
         }
 
         internal static string CreateLaunchOptions(

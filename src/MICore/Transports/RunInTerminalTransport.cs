@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 using System;
 using System.Collections.Generic;
@@ -179,7 +179,7 @@ namespace MICore
             if (_waitForConnection != null)
             {
                 // Add a timeout for waiting for connection - 20 seconds
-                Task waitOrTimeout = Task.WhenAny(_waitForConnection, Task.Delay(5000));
+                Task waitOrTimeout = Task.WhenAny(_waitForConnection, Task.Delay(20000));
                 await waitOrTimeout;
                 if (waitOrTimeout.Status != TaskStatus.RanToCompletion)
                 {
