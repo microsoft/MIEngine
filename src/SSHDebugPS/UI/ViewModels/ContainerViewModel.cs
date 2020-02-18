@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using Microsoft.SSHDebugPS.Docker;
 using WindowsInput = System.Windows.Input;
 
@@ -176,7 +177,8 @@ namespace Microsoft.SSHDebugPS.UI
 
         protected override int GetHashCodeInternal()
         {
-            return Instance.GetHashCode();
+            Debug.Assert(Instance != null, "How is Instance null?");
+            return Instance?.GetHashCode() ?? 0;
         }
 
         #region AutomationProperty Helpers
