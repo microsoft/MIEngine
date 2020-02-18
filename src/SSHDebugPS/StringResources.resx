@@ -136,6 +136,9 @@
   <data name="Docker_PSDescription" xml:space="preserve">
     <value>The Docker (Linux Container) connection type allows Visual Studio to connect to Docker containers running locally or remotely (using SSH).</value>
   </data>
+  <data name="Docker_PSName" xml:space="preserve">
+    <value>Docker (Linux Container)</value>
+  </data>
   <data name="Error_CommandFailed" xml:space="preserve">
     <value>Command failed to execute</value>
   </data>
