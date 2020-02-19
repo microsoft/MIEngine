@@ -28,6 +28,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         public ContainerViewModel(T instance)
         {
+            Debug.Assert(instance != null, "Instance should not be null.");
             Instance = instance;
         }
 
@@ -93,8 +94,8 @@ namespace Microsoft.SSHDebugPS.UI
 
         #endregion
 
-        public string Name => Instance.Name;
-        public string Id => Instance.Id;
+        public string Name => Instance?.Name;
+        public string Id => Instance?.Id;
 
         private bool _isExpanded;
         public bool IsExpanded
@@ -140,7 +141,7 @@ namespace Microsoft.SSHDebugPS.UI
         {
             get
             {
-                return string.IsNullOrWhiteSpace(Instance.Ports) ?
+                return string.IsNullOrWhiteSpace(Instance?.Ports) ?
                     UIResources.NoPortsText :
                     Instance.Ports.Replace(", ", "\r\n");
             }
@@ -155,7 +156,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         // Gets the first 12 characters and appends an ellipsis
         public string ShortId { get => Id.Length > 12 ? Id.Substring(0, 12) : Id; }
-        public string Image => Instance.Image;
+        public string Image => Instance?.Image;
         public string Command => Instance.Command;
         public string Status => Instance.Status;
         public string Created => Instance.Created;
