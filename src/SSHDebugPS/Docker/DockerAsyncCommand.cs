@@ -41,12 +41,14 @@ namespace Microsoft.SSHDebugPS.Docker
 
         public void Write(string text)
         {
-            _runner.Write(text);
+            // If we have closed, but still receive text, we will drop it on the floor.
+            _runner?.Write(text);
         }
 
         public void WriteLine(string text)
         {
-            _runner.WriteLine(text);
+            // If we have closed, but still receive text, we will drop it on the floor.
+            _runner?.WriteLine(text);
         }
 
         public void Abort()
