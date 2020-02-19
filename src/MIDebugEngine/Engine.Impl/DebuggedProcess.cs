@@ -483,13 +483,13 @@ namespace Microsoft.MIDebugEngine
         private static string GetFileName(string path)
         {
             int index = path.LastIndexOfAny(new char[] { '/', '\\' });
-            if ( index >= 0 && index < path.Length-1 )
+            if (index >= 0 && index < path.Length - 1)
             {
                 return path.Substring(index + 1);
             }
             else // no path separator or no characters after the separator, return the original string
             {
-                return path;    
+                return path;
             }
         }
 
@@ -1577,7 +1577,16 @@ namespace Microsoft.MIDebugEngine
         // the Worker thread, to end up in DispatchCommand
         protected override void ScheduleStdOutProcessing(string line)
         {
-            _worker.PostOperation(() => { ProcessStdOutLine(line); });
+            _worker.PostOperation(() =>
+            {
+                // Docker connections buffer the text so we need to split it up into individual lines.
+                char[] newLineCharSeparator = new char[] { '\n' };
+                string[] parsedLines = line.Split(newLineCharSeparator, StringSplitOptions.RemoveEmptyEntries);
+                foreach( var item in parsedLines)
+                {
+                    ProcessStdOutLine(item);
+                }                
+            });
         }
 
         protected override void ScheduleResultProcessing(Action func)
