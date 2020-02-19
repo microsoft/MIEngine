@@ -307,7 +307,6 @@ Error: {1}</value>
   <data name="Error_UnknownCustomLauncher" xml:space="preserve">
     <value>Unrecognized json customLauncher element '{0}'.</value>
   </data>
-
   <data name="Error_InvalidSymbolInfo" xml:space="preserve">
     <value>Invalid SymbolInfo, cannot specify a list of solibs when "WaitDynamicLoad" is false.</value>
   </data>
@@ -327,5 +326,8 @@ Error: {1}</value>
   </data>
   <data name="Error_UnableToEstablishConnectionToLauncher" xml:space="preserve">
     <value>Unable to establish a connection to the launcher.</value>
+  </data>
+  <data name="Error_UnknownError" xml:space="preserve">
+    <value>&lt;Unknown Error&gt;</value>
   </data>
 </root>

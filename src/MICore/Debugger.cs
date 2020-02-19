@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿    // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -1134,7 +1134,7 @@ namespace MICore
                         {
                             miError = results.FindString("msg");
                         }
-                        catch (MIResultFormatException ex)
+                        catch (MIResultFormatException)
                         {
                             try
                             {
@@ -1143,10 +1143,10 @@ namespace MICore
                                 // "message" instead of "msg"
                                 miError = results.FindString("message");
                             }
-                            catch
+                            catch (MIResultFormatException)
                             {
-                                // Rethrow the original exception if we can't find "message"
-                                throw ex;
+                                // make the error a generic '<Unknown Error>' message
+                                miError = MICoreResources.Error_UnknownError;
                             }
                         }
                     }
