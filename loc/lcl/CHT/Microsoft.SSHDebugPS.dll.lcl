@@ -61,6 +61,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";Docker_PSName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Docker (Linux Container)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Docker (Linux 容器)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";Error_CommandFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Command failed to execute]]></Val>
