@@ -106,6 +106,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Docker (Linux Container).
+        /// </summary>
+        internal static string Docker_PSName {
+            get {
+                return ResourceManager.GetString("Docker_PSName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Command failed to execute.
         /// </summary>
         internal static string Error_CommandFailed {

@@ -11,11 +11,10 @@ namespace Microsoft.SSHDebugPS.Docker
     [Guid("18F976B7-D66D-4C36-9CAE-A9217E0E3DF4")]
     internal class DockerPortSupplier : AD7PortSupplier
     {
-        private const string _Name = "Docker (Linux Container)";
         private readonly Guid _Id = new Guid("A2BBC114-47E4-473F-A49C-69EE89711243");
 
         protected override Guid Id { get { return _Id; } }
-        protected override string Name { get { return _Name; } }
+        protected override string Name { get { return StringResources.Docker_PSName; } }
         protected override string Description { get { return StringResources.Docker_PSDescription; } }
 
         public DockerPortSupplier() : base()
