@@ -48,8 +48,8 @@
 [$RootKey$\AD7Metrics\Engine\{91744D97-430F-42C1-9779-A5813EBD6AB2}\PortSupplier]
 ; SSH Port Supplier
 "0"="{3FDDF14E-E758-4695-BE0C-7509920432C9}"
-; Docker Port Supplier -- Currently not supported for gdb
-;"1"="{A2BBC114-47E4-473F-A49C-69EE89711243}"
+; Docker Port Supplier
+"1"="{A2BBC114-47E4-473F-A49C-69EE89711243}"
 
 [$RootKey$\OpenFolder\Settings\VSWorkspaceSettings\{EA6637C6-17DF-45B5-A183-0951C54243BC}]
 @="$PackageFolder$\OpenFolderSchema.json"
