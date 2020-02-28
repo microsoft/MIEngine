@@ -527,7 +527,7 @@ namespace OpenDebugAD7
         #region DebugAdapterBase
 
         protected override void HandleInitializeRequestAsync(IRequestResponder<InitializeArguments, InitializeResponse> responder)
-        {            
+        {
             InitializeArguments arguments = responder.Arguments;
 
             m_engineConfiguration = EngineConfiguration.TryGet(arguments.AdapterID);
@@ -1825,10 +1825,12 @@ namespace OpenDebugAD7
             DateTime evaluationStartTime = DateTime.Now;
 
             bool isExecInConsole = false;
-            // If this is an -exec command, log telemetry
-            if (!String.IsNullOrEmpty(expression) && expression.StartsWith("-exec", StringComparison.Ordinal) && context == EvaluateArguments.ContextValue.Repl)
+            // If the expression isn't empty and its a Repl request, do additional checking
+            if (!String.IsNullOrEmpty(expression) && context == EvaluateArguments.ContextValue.Repl)
             {
-                isExecInConsole = true;
+                // If this is an -exec command (or starts with '`') treat it as a console command and log telemetry
+                if (expression.StartsWith("-exec", StringComparison.Ordinal) || expression[0] == '`')
+                    isExecInConsole = true;
             }
 
             int hr;
