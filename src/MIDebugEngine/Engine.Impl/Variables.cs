@@ -431,7 +431,7 @@ namespace Microsoft.MIDebugEngine
         {
             strippedCommand = string.Empty;
             string execCommandString = "-exec ";
-            if (command.StartsWith(execCommandString))
+            if (command.StartsWith(execCommandString, StringComparison.Ordinal))
             {
                 strippedCommand = command.Substring(execCommandString.Length);
                 return true;
