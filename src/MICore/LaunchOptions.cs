@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Env = System.Environment;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -386,7 +387,7 @@ namespace MICore
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
         }
 
-        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs): 
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs) :
             this(MIDebuggerPath, MIDebuggerServerAddress)
         {
             this.MIDebuggerArgs = MIDebuggerArgs;
@@ -449,6 +450,16 @@ namespace MICore
 
         public bool IsValidMiDebuggerPath()
         {
+            if (MIDebuggerPath[0] == '~')
+            {
+                string homePath = Env.GetEnvironmentVariable("HOME");
+                if (MIDebuggerPath.Length > 1)
+                {
+                    return File.Exists(String.Concat(homePath, MIDebuggerPath.Substring(1)));
+                }
+
+                return File.Exists(homePath);
+            }
             return File.Exists(MIDebuggerPath);
         }
 
@@ -1055,7 +1066,7 @@ namespace MICore
         /// </summary>
         public bool SymbolInfoLoadAll
         {
-            get { return _siLoadAll;  }
+            get { return _siLoadAll; }
             set
             {
                 VerifyCanModifyProperty("SymbolInfoLoadAll");
@@ -1479,7 +1490,7 @@ namespace MICore
         {
             // load supplemental options from the solution root
             string slnRoot = null;
-            
+
             // During glass testing, the Shell assembly is not available
             try
             {
@@ -1487,7 +1498,7 @@ namespace MICore
             }
             catch (FileNotFoundException)
             { }
-            
+
             if (!string.IsNullOrEmpty(slnRoot))
             {
                 string optFile = Path.Combine(slnRoot, "Microsoft.MIEngine.Options.xml");
