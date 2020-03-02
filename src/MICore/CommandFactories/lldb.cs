@@ -225,7 +225,7 @@ namespace MICore
 
         private async Task<string> Version()
         {
-            return await _debugger.ConsoleCmdAsync("version");
+            return await _debugger.ConsoleCmdAsync("version", allowWhileRunning: true);
         }
     }
 }

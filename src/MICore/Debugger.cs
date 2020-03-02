@@ -794,9 +794,9 @@ namespace MICore
             return outStr.ToString();
         }
 
-        public async Task<string> ConsoleCmdAsync(string cmd, bool ignoreFailures = false)
+        public async Task<string> ConsoleCmdAsync(string cmd, bool allowWhileRunning, bool ignoreFailures = false)
         {
-            if (this.ProcessState != ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
+            if (!allowWhileRunning && this.ProcessState != ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
             {
                 if (this.ProcessState == MICore.ProcessState.Exited)
                 {
@@ -811,7 +811,7 @@ namespace MICore
             using (ExclusiveLockToken lockToken = await _commandLock.AquireExclusive())
             {
                 // check again now that we have the lock
-                if (this.ProcessState != MICore.ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
+                if (!allowWhileRunning && this.ProcessState != MICore.ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
                 {
                     if (this.ProcessState == MICore.ProcessState.Exited)
                     {
