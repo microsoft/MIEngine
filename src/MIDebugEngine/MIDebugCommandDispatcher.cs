@@ -47,7 +47,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                return process.ConsoleCmdAsync(command, ignoreFailures);
+                return process.ConsoleCmdAsync(command, allowWhileRunning: false, ignoreFailures: ignoreFailures);
             }
         }
 

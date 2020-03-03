@@ -158,7 +158,7 @@ namespace MICore
         public override async Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
             string cmd = "info line " + file + ":" + line;
-            var result = await _debugger.ConsoleCmdAsync(cmd);
+            var result = await _debugger.ConsoleCmdAsync(cmd, allowWhileRunning: false);
             List<ulong> addresses = new List<ulong>();
             using (StringReader stringReader = new StringReader(result))
             {
@@ -276,7 +276,7 @@ namespace MICore
         public override async Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done)
         {
             string command = onlyOnce ? "tcatch " : "catch ";
-            await _debugger.ConsoleCmdAsync(command + name);
+            await _debugger.ConsoleCmdAsync(command + name, allowWhileRunning: false);
         }
     }
 }
