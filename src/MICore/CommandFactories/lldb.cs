@@ -225,6 +225,7 @@ namespace MICore
 
         private async Task<string> Version()
         {
+            // 'Version' does not require the debuggee to be stopped.
             return await _debugger.ConsoleCmdAsync("version", allowWhileRunning: true);
         }
     }

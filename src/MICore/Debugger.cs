@@ -796,9 +796,11 @@ namespace MICore
 
         public async Task<string> ConsoleCmdAsync(string cmd, bool allowWhileRunning, bool ignoreFailures = false)
         {
-            if (!allowWhileRunning && this.ProcessState != ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
+            if (!(this.ProcessState == ProcessState.Running && allowWhileRunning) &&
+                this.ProcessState != ProcessState.Stopped &&
+                this.ProcessState != ProcessState.NotConnected)
             {
-                if (this.ProcessState == MICore.ProcessState.Exited)
+                if (this.ProcessState == ProcessState.Exited)
                 {
                     throw new DebuggerDisposedException(GetTargetProcessExitedReason());
                 }
@@ -811,9 +813,11 @@ namespace MICore
             using (ExclusiveLockToken lockToken = await _commandLock.AquireExclusive())
             {
                 // check again now that we have the lock
-                if (!allowWhileRunning && this.ProcessState != MICore.ProcessState.Stopped && this.ProcessState != ProcessState.NotConnected)
+                if (!(this.ProcessState == ProcessState.Running && allowWhileRunning) &&
+                    this.ProcessState != ProcessState.Stopped &&
+                    this.ProcessState != ProcessState.NotConnected)
                 {
-                    if (this.ProcessState == MICore.ProcessState.Exited)
+                    if (this.ProcessState == ProcessState.Exited)
                     {
                         throw new DebuggerDisposedException(GetTargetProcessExitedReason());
                     }
