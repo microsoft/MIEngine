@@ -794,6 +794,13 @@ namespace MICore
             return outStr.ToString();
         }
 
+        /// <summary>
+        /// Sends 'cmd' to the debuggee as a console command.
+        /// </summary>
+        /// <param name="cmd">The command to send.</param>
+        /// <param name="allowWhileRunning">Set to 'true' if the process can be running while the command is executed.</param>
+        /// <param name="ignoreFailures">Ignore any failure that occur when executing the command.</param>
+        /// <returns></returns>
         public async Task<string> ConsoleCmdAsync(string cmd, bool allowWhileRunning, bool ignoreFailures = false)
         {
             if (!(this.ProcessState == ProcessState.Running && allowWhileRunning) &&
