@@ -1777,7 +1777,7 @@ namespace MICore
                 options.AdditionalSOLibSearchPath :
                 String.Concat(this.AdditionalSOLibSearchPath, ";", options.AdditionalSOLibSearchPath);
 
-            // This was set in OpenDebugAD7 for !CORECLR
+            // This was set in OpenDebugAD7 for XPLAT
             this.WaitDynamicLibLoad = false;
 
             this.SourceMap = SourceMapEntry.CreateCollection(options.SourceFileMap);

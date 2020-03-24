@@ -3,6 +3,7 @@
 
 using System;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace OpenDebugAD7.AD7Impl
@@ -60,7 +61,7 @@ namespace OpenDebugAD7.AD7Impl
             checksumData[0].ByteCount = 0;
             checksumData[0].pBytes = IntPtr.Zero;
 
-#if CORECLR
+#if !XPLAT
             byte[] checksumBytes = null;
             try
             {
@@ -76,14 +77,14 @@ namespace OpenDebugAD7.AD7Impl
             if (checksumBytes == null)
             {
                 // failed to calculate a checksum
-                return Constants.E_FAIL;
+                return HRConstants.E_FAIL;
             }
 
             checksumData[0].ByteCount = (uint)checksumBytes.Length;
             checksumData[0].pBytes = System.Runtime.InteropServices.Marshal.AllocCoTaskMem(checksumBytes.Length);
             System.Runtime.InteropServices.Marshal.Copy(checksumBytes, 0, checksumData[0].pBytes, checksumBytes.Length);
 
-            return Constants.S_OK;
+            return HRConstants.S_OK;
 #else
             // TODO: IncrementalHash is the only thing we can use on .net core but it is not supported by mono
             // TODO: Make this work on mono somehow when checksums are needed for more than clrdbg
@@ -97,7 +98,7 @@ namespace OpenDebugAD7.AD7Impl
 
             if (_config.RequireExactSource)
             {
-#if CORECLR
+#if !XPLAT
                 fChecksumEnabled = 1;
 #else
                 // TODO: see comment in GetChecksum

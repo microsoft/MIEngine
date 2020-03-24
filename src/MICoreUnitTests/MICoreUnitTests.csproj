@@ -3,7 +3,6 @@
   <Import Project="..\..\build\miengine.settings.targets" />
   <Import Project="$(NuGetPackagesDirectory)\xunit.runner.visualstudio.2.0.0\build\net20\xunit.runner.visualstudio.props" Condition="Exists('$(NuGetPackagesDirectory)\xunit.runner.visualstudio.2.0.0\build\net20\xunit.runner.visualstudio.props')" />
   <Import Project="$(NuGetPackagesDirectory)\xunit.core.2.0.0\build\portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS\xunit.core.props" Condition="Exists('$(NuGetPackagesDirectory)\xunit.core.2.0.0\build\portable-net45+win+wpa81+wp80+monotouch+monoandroid+Xamarin.iOS\xunit.core.props')" />
-  <Import Project="..\RequiredNetFX46FacadeAssemblies.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -96,9 +95,6 @@
     <Compile Include="MIResultsTests.cs" />
     <Compile Include="NdkVersionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="@(RequiredNetFX46FacadeAssemblies)">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AndroidDebugLauncher\AndroidDebugLauncher.csproj">
