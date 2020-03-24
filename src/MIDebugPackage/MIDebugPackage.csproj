@@ -273,7 +273,7 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
+  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
     <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
@@ -296,12 +296,12 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
     <DropUnsignedFile Include="$(OutDir)\OpenFolderSchema.json" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'false'">
+  <ItemGroup Condition="'$(IsXPlat)' == 'true'">
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'true' AND '$(Lab)' == 'false'">
+  <ItemGroup Condition="'$(IsXPlat)' == 'false' AND '$(Lab)' == 'false'">
     <!-- Include file for local VS development builds. For Non-VS Builds, it will be dropped by MakePIAPortable project -->
     <DropUnsignedFile Include="$(OutDir)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
   </ItemGroup>
@@ -317,7 +317,7 @@
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
+  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
     <ProjectReference Include="..\SSHDebugPS\SSHDebugPS.csproj">
       <Project>{15bcbef4-1c2b-412b-925b-34a049097e62}</Project>
       <Name>SSHDebugPS</Name>

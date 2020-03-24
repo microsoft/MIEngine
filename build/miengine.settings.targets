@@ -29,8 +29,8 @@
   <Choose>
     <When Condition="$(Configuration.Contains('Desktop'))">
       <PropertyGroup>
-		<!-- "Desktop.*" configs are used to build the cross-platform bits that are used in the VS Code C++ extension -->
-		<IsXPlat>true</IsXPlat>
+        <!-- "Desktop.*" configs are used to build the cross-platform bits that are used in the VS Code C++ extension -->
+        <IsXPlat>true</IsXPlat>
         <DefineConstants>$(DefineConstants);XPLAT</DefineConstants>
       </PropertyGroup>
     </When>
