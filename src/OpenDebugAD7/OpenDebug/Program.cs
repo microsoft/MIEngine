@@ -119,7 +119,7 @@ namespace OpenDebug
                 }
             }
 
-#if !CORECLR
+#if XPLAT
             if (Utilities.IsMono())
             {
                 // Mono uses the threadpool heavily for its async/await implementation.  Make sure we have an acceptable

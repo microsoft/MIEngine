@@ -70,7 +70,6 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <Import Project="..\RequiredNetFX46FacadeAssemblies.targets" />
   <Import Project="SuppressFromVsix.targets" />
   <PropertyGroup>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -189,7 +188,6 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <None Include="..\RequiredNetFX46FacadeAssemblies.targets" />
     <None Include="SuppressFromVsix.targets" />
   </ItemGroup>
   <ItemGroup>
@@ -202,10 +200,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\Package.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <VSIXSourceItem Include="@(RequiredNetFX46FacadeAssemblies)" />
-    <GlassDirCopy Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(LocalizationEnabled)'=='true'">
     <FilesToLocalize>
@@ -301,7 +295,6 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
     <DropUnsignedFile Include="$(OutDir)\OpenFolderSchema.json" />
-    <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsCoreCLR)' == 'false'">
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />

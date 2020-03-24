@@ -23,9 +23,6 @@
     <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
-    <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -82,11 +79,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <ItemGroup Condition="'$(IsCoreClr)' == 'true'">
-    <None Include="project.json" />
-    <!-- A reference to the entire .NET Framework is automatically included -->
-  </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
+  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Runtime.Serialization" />
@@ -114,8 +107,8 @@
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
-    <XsdCodeFile Condition="'$(IsCoreClr)' == 'true'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
-    <XsdCodeFile Condition="'$(IsCoreClr)' == 'false'">LaunchOptions.xsd.types.designer.desktop.cs</XsdCodeFile>
+    <XsdCodeFile Condition="'$(IsXPlat)' == 'false'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
+    <XsdCodeFile Condition="'$(IsXPlat)' == 'true'">LaunchOptions.xsd.types.designer.desktop.cs</XsdCodeFile>
   </PropertyGroup>
   <ItemGroup>
     <None Include="LaunchOptions.xsd" />
@@ -184,8 +177,7 @@
   <ItemGroup>
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
     <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" />
-    <GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json\6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll" Condition="'$(IsCoreClr)' == 'true'" />
-    <GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json.6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll" Condition="'$(IsCoreClr)' == 'false'" />
+    <GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json.6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll"/>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
