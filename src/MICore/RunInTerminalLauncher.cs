@@ -17,6 +17,11 @@ namespace MICore
 
         private Dictionary<string, string> _environment;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="envEntries">Environment Entries for launching the command in the RunInTerminal Protocol call.</param>
         public RunInTerminalLauncher(string title, ReadOnlyCollection<EnvironmentEntry> envEntries)
         {
             _title = title;

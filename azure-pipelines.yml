@@ -3,7 +3,7 @@ pr:
 - 'master'
 jobs:
 - job: Debug
-  pool: 'Hosted VS2017'
+  pool: 'Hosted Windows 2019 with VS2019'
   steps:
   - task: MSBuild@1
     inputs:
@@ -17,7 +17,7 @@ jobs:
       testRunTitle: '$(Build.DefinitionName)_$(Build.BuildNumber)_Debug'
 
 - job: Release
-  pool: 'Hosted VS2017'
+  pool: 'Hosted Windows 2019 with VS2019'
   steps:
   - task: MSBuild@1
     inputs:
@@ -31,7 +31,7 @@ jobs:
       testRunTitle: '$(Build.DefinitionName)_$(Build.BuildNumber)_Release'
 
 - job: DesktopDebug
-  pool: 'Hosted VS2017'
+  pool: 'Hosted Windows 2019 with VS2019'
   steps:
   - task: MSBuild@1
     inputs:
@@ -40,7 +40,7 @@ jobs:
 
 
 - job: DesktopRelease
-  pool: 'Hosted VS2017'
+  pool: 'Hosted Windows 2019 with VS2019'
   steps:
   - task: MSBuild@1
     inputs:
@@ -48,7 +48,7 @@ jobs:
       configuration: 'Desktop.Release'
 
 - job: LabRelease
-  pool: 'Hosted VS2017'
+  pool: 'Hosted Windows 2019 with VS2019'
   variables:
     TEST_LAB_BUILD: 'true'
   steps:
@@ -58,7 +58,7 @@ jobs:
       configuration: 'Lab.Release'
 
 - job: LabDebug
-  pool: 'Hosted VS2017'
+  pool: 'Hosted Windows 2019 with VS2019'
   variables:
     TEST_LAB_BUILD: 'true'
   steps:
