@@ -53,3 +53,25 @@
 
 [$RootKey$\OpenFolder\Settings\VSWorkspaceSettings\{EA6637C6-17DF-45B5-A183-0951C54243BC}]
 @="$PackageFolder$\OpenFolderSchema.json"
+
+; Registration for DAP version of MIEngine (hosted by OpenDebugAD7)
+[$RootKey$\AD7Metrics\Engine\{F328E937-B412-44AD-905D-90B913C3D098}]
+@="MI Debug Engine"
+"CLSID"="{DAB324E9-7B35-454C-ACA8-F6BB0D5C8673}"
+"Adapter"="$PackageFolder$\OpenDebugAD7.exe"
+; "AddressBP"=dword:00000001
+"AlwaysLoadLocal"=dword:00000001
+"AlwaysLoadProgramProviderLocal"=dword:00000001
+; "CallStackBP"=dword:00000001
+; "ConditionalBP"=dword:00000001
+; "DataBP"=dword:00000001
+; "Disassembly"=dword:00000001
+"EnginePriority"=dword:00000050
+; "Exceptions"=dword:00000001
+; "FunctionBP"=dword:00000001
+; "HitCountBP"=dword:00000000
+; "JustMyCodeStepping"=dword:00000001
+"Name"="Native (MI-based)"
+; "SetNextStatement"=dword:00000001
+; "SuspendThread"=dword:00000001
+"GlobalVisualizersDirectory"="$PackageFolder$"

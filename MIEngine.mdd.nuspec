@@ -19,5 +19,13 @@
     <file src="drop\Debug\*" target="Debug" exclude="drop\Debug\Install.cmd;drop\Debug\ReferenceAssemblies" />
     <file src="drop\Release\loc\**\*" target="Release\loc" />
     <file src="drop\Debug\loc\**\*" target="Debug\loc" />
+    <file src="drop\Release\vscode\*.json" target="Release\vscode" />
+    <file src="drop\Release\vscode\Microsoft.DebugEngineHost.*" target="Release\vscode" />
+    <file src="drop\Release\vscode\OpenDebugAD7.*" target="Release" />
+    <file src="drop\Release\vscode\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" target="Release" />
+    <file src="drop\Debug\vscode\*.json" target="Debug\vscode" />
+    <file src="drop\Debug\vscode\Microsoft.DebugEngineHost.*" target="Debug\vscode" />
+    <file src="drop\Debug\vscode\OpenDebugAD7.*" target="Debug" />
+    <file src="drop\Debug\vscode\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" target="Debug" />
   </files>
 </package>
