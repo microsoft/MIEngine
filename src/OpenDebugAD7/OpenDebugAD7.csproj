@@ -86,22 +86,32 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.10.0.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.11.0.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.12.0">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.12.0.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.15.0">
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.15.0.15.8.28010/lib/net20/Microsoft.VisualStudio.Debugger.Interop.15.0.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <!-- Same version as in packages.config -->
     <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Shared.VsCodeDebugProtocol.16.3.30820.2/lib/net45/Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(NuGetPackagesDirectory)\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -158,7 +168,14 @@
     <DropUnsignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
-    <DropUnsignedFile Condition="'$(IsXPlat)' == 'false'" Include="$(OutputPath)\cppdbg.ad7Engine.json" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\cppdbg.ad7Engine.json" />
   </ItemGroup>
   <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
   <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFilesVSCode">
