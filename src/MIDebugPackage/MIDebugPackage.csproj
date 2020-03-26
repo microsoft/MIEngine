@@ -342,6 +342,18 @@
       <Project>{78728205-db3e-4b7b-a7d2-5cbe38e9c607}</Project>
       <Name>JDbg</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OpenDebugAD7\OpenDebugAD7.csproj">
+      <Project>{d582c0b6-032f-4686-b01d-eb55694059cb}</Project>
+      <Name>OpenDebugAD7</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <VsixSubPath>vscode</VsixSubPath>
+    </ProjectReference>
+    <ProjectReference Include="..\DebugEngineHost.VSCode\DebugEngineHost.VSCode.csproj">
+      <Project>{81de2423-fb5e-4069-b3c5-4c13ce76dc0a}</Project>
+      <Name>DebugEngineHost.VSCode</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <VsixSubPath>vscode</VsixSubPath>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>

@@ -19,5 +19,7 @@
     <file src="drop\Debug\*" target="Debug" exclude="drop\Debug\Install.cmd;drop\Debug\ReferenceAssemblies" />
     <file src="drop\Release\loc\**\*" target="Release\loc" />
     <file src="drop\Debug\loc\**\*" target="Debug\loc" />
+    <file src="drop\Release\vscode\*" target="Release\vscode" />
+    <file src="drop\Debug\vscode\*" target="Debug\vscode" />
   </files>
 </package>
