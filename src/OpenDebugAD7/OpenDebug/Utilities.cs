@@ -45,7 +45,7 @@ namespace OpenDebug
             return s_runtimePlatform;
         }
 
-#if !CORECLR
+#if XPLAT
         [DllImport("libc")]
         static extern int uname(IntPtr buf);
 
@@ -77,20 +77,8 @@ namespace OpenDebug
 
         private static RuntimePlatform CalculateRuntimePlatform()
         {
-#if CORECLR
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return RuntimePlatform.Windows;
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                return RuntimePlatform.MacOSX;
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                return RuntimePlatform.Unix;
-            }
-            return RuntimePlatform.Unknown;
+#if !XPLAT
+            return RuntimePlatform.Windows;
 #else
             const PlatformID MonoOldUnix = (PlatformID)128;
 
@@ -145,7 +133,7 @@ namespace OpenDebug
         // Abstract API call to add an environment variable to a new process
         public static void SetEnvironmentVariable(this ProcessStartInfo processStartInfo, string key, string value)
         {
-#if CORECLR
+#if !XPLAT
             processStartInfo.Environment[key] = value;
 #else
             // Desktop CLR has the Environment property in 4.6+, but Mono is currently based on 4.5.
@@ -156,7 +144,7 @@ namespace OpenDebug
         // Abstract API call to add an environment variable to a new process
         public static string GetEnvironmentVariable(this ProcessStartInfo processStartInfo, string key)
         {
-#if CORECLR
+#if !XPLAT
             if (processStartInfo.Environment.ContainsKey(key))
                 return processStartInfo.Environment[key];
 #else

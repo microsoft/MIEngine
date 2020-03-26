@@ -35,7 +35,7 @@ namespace OpenDebugAD7
             return document;
         }
 
-#if CORECLR
+#if !XPLAT
 
         /// <summary>
         /// Calculates checksums of the document given the specified hash algorithm.

@@ -22,10 +22,10 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(IsCoreClr)' == 'true'">
-    <ProjectTypeGuids>$(ProjectTypeGuids);{786C830F-07A1-408B-BD7F-6EE04809D6DB};</ProjectTypeGuids>
+    <TargetFrameworkVersion Condition="'$(IsXPlat)' == 'true'">v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(IsXPlat)' == 'false'">v4.7.2</TargetFrameworkVersion>
+    <AppConfig Condition="'$(IsXPlat)' == 'true'">App.VSCode.config</AppConfig>
+    <AppConfig Condition="'$(IsXPlat)' == 'false'">App.VS.config</AppConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -46,31 +46,72 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <ItemGroup Condition="'$(IsCoreClr)' == 'true'">
-    <None Include="project.json" />
-    <!-- A reference to the entire .NET Framework is automatically included -->
-  </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU'">
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.10.0.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.11.0.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.12.0">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.Interop.12.0.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.15.0">
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.15.0.15.8.28010/lib/net20/Microsoft.VisualStudio.Debugger.Interop.15.0.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <!-- Same version as in packages.config -->
     <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Shared.VsCodeDebugProtocol.16.3.30820.2/lib/net45/Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(NuGetPackagesDirectory)\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
+      <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -121,12 +162,20 @@
       <Name>DebugEngineHost.VSCode</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreClr)' == 'false'">
-    <DropSignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe.config" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Newtonsoft.Json.dll" />
-    <DropUnsignedFile Condition="'$(IsCoreClr)' == 'false'" Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
+  <ItemGroup>
+    <DropSignedFile Include="$(OutputPath)\OpenDebugAD7.exe" />
+    <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.exe.config" />
+    <DropUnsignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
+    <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\cppdbg.ad7Engine.json" />
   </ItemGroup>
   <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
   <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFilesVSCode">
@@ -135,9 +184,13 @@
     </ItemGroup>
   </Target>
   <ItemGroup>
-    <Content Include="App.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="App.VSCode.config" />
+    <None Include="App.VS.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cppdbg.ad7Engine.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />

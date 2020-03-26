@@ -7,7 +7,7 @@
 
   <PropertyGroup>
     <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
-    <BuildDependsOn Condition="'$(IsCoreClr)' == 'false'">DetermineCompilerBinary;$(BuildDependsOn)</BuildDependsOn>
+    <BuildDependsOn Condition="'$(IsXPlat)' == 'true'">DetermineCompilerBinary;$(BuildDependsOn)</BuildDependsOn>
     <BuildDependsOn>$(BuildDependsOn);GenerateMonoSymbols</BuildDependsOn>
   </PropertyGroup>
 
@@ -43,15 +43,9 @@
       <CscToolPath>$(McsPath)/</CscToolPath>
     </PropertyGroup>
   </Target>
-  
-  <Target Name="RestoreDesktopPackages">
-      <!-- Restore from packages.config instead of project.json when building for desktop -->
-    <Exec Condition="'$(IsCoreClr)' == 'false'" 
-          Command="&quot;$(MIEngineRoot)tools/NuGet/NuGet.exe&quot; restore -PackagesDirectory &quot;$(NuGetPackagesDirectory)&quot; &quot;$(ProjectDir)packages.config&quot; -ConfigFile &quot;$(MIEngineRoot)src\.nuget\NuGet.Config&quot;" />
-  </Target>
 
   <Target Name="GenerateMonoSymbols"
-          Condition="'$(IsCoreClr)' == 'false' AND '$(IsMonoRuntime)' == 'false' AND '$(ShouldGenerateMonoSymbols)' == 'true'">
+          Condition="'$(IsXPlat)' == 'true' AND '$(IsMonoRuntime)' == 'false' AND '$(ShouldGenerateMonoSymbols)' == 'true'">
     <!-- If we're building the Desktop config on Windows, run pdb2mdb to generate Mono symbols as well -->
     <Exec Command="&quot;$(NugetPackagesDirectory)\Mono.Unofficial.pdb2mdb.4.2.3.4\tools\pdb2mdb.exe&quot; &quot;$(TargetPath)&quot;" />
   </Target>

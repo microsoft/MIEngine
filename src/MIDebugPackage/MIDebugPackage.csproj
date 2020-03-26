@@ -70,7 +70,6 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <Import Project="..\RequiredNetFX46FacadeAssemblies.targets" />
   <Import Project="SuppressFromVsix.targets" />
   <PropertyGroup>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -189,7 +188,6 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <None Include="..\RequiredNetFX46FacadeAssemblies.targets" />
     <None Include="SuppressFromVsix.targets" />
   </ItemGroup>
   <ItemGroup>
@@ -202,10 +200,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\Package.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <VSIXSourceItem Include="@(RequiredNetFX46FacadeAssemblies)" />
-    <GlassDirCopy Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(LocalizationEnabled)'=='true'">
     <FilesToLocalize>
@@ -279,7 +273,7 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
+  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
     <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
@@ -301,14 +295,13 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
     <DropUnsignedFile Include="$(OutDir)\OpenFolderSchema.json" />
-    <DropUnsignedFile Include="@(RequiredNetFX46FacadeAssemblies)" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'false'">
+  <ItemGroup Condition="'$(IsXPlat)' == 'true'">
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'true' AND '$(Lab)' == 'false'">
+  <ItemGroup Condition="'$(IsXPlat)' == 'false' AND '$(Lab)' == 'false'">
     <!-- Include file for local VS development builds. For Non-VS Builds, it will be dropped by MakePIAPortable project -->
     <DropUnsignedFile Include="$(OutDir)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
   </ItemGroup>
@@ -324,7 +317,7 @@
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(IsCoreCLR)' == 'true'">
+  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
     <ProjectReference Include="..\SSHDebugPS\SSHDebugPS.csproj">
       <Project>{15bcbef4-1c2b-412b-925b-34a049097e62}</Project>
       <Name>SSHDebugPS</Name>
@@ -348,6 +341,18 @@
     <ProjectReference Include="..\JDbg\JDbg.csproj">
       <Project>{78728205-db3e-4b7b-a7d2-5cbe38e9c607}</Project>
       <Name>JDbg</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenDebugAD7\OpenDebugAD7.csproj">
+      <Project>{d582c0b6-032f-4686-b01d-eb55694059cb}</Project>
+      <Name>OpenDebugAD7</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <VsixSubPath>vscode</VsixSubPath>
+    </ProjectReference>
+    <ProjectReference Include="..\DebugEngineHost.VSCode\DebugEngineHost.VSCode.csproj">
+      <Project>{81de2423-fb5e-4069-b3c5-4c13ce76dc0a}</Project>
+      <Name>DebugEngineHost.VSCode</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <VsixSubPath>vscode</VsixSubPath>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

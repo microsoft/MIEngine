@@ -17,12 +17,12 @@
       <!-- Mono's XSD.exe uses /outputdir instead of /out -->
       <XsdParameters Condition="'$(IsMonoRuntime)' == 'false'">$(XsdParameters) /out:"$(IntermediateOutputPath)."</XsdParameters>
       <XsdParameters Condition="'$(IsMonoRuntime)' == 'true'">$(XsdParameters) /outputdir:"$(IntermediateOutputPath)."</XsdParameters>
-      <XsdParameters Condition="'$(IsCoreClr)' == 'true'">$(XsdParameters) /fields</XsdParameters>
+      <XsdParameters Condition="'$(IsXPlat)' == 'false'">$(XsdParameters) /fields</XsdParameters>
 
       <XsdCandidateFile>$(IntermediateOutputPath)LaunchOptions.cs</XsdCandidateFile>
 
-      <XsdCodeFile Condition="'$(IsCoreClr)' == 'true'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
-      <XsdCodeFile Condition="'$(IsCoreClr)' == 'false'">LaunchOptions.xsd.types.designer.desktop.cs</XsdCodeFile>
+      <XsdCodeFile Condition="'$(IsXPlat)' == 'false'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
+      <XsdCodeFile Condition="'$(IsXPlat)' == 'true'">LaunchOptions.xsd.types.designer.desktop.cs</XsdCodeFile>
     </PropertyGroup>
     <Exec Command="&quot;$(SDK40ToolsPath)xsd.exe&quot; $(XsdParameters)" />
 
@@ -35,7 +35,7 @@
       <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(SerializableRegex), "", RegexOptions.Multiline))</CandidateFileContents>
       <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(DesignerCategoryRegex), "", RegexOptions.Multiline))</CandidateFileContents>
     </PropertyGroup>
-    <WriteLinesToFile Condition="'$(IsCoreClr)' == 'true'"
+    <WriteLinesToFile Condition="'$(IsXPlat)' == 'false'"
                       File="$(XsdCandidateFile)"
                       Lines="$(CandidateFileContents)"
                       Overwrite="true" />

@@ -137,7 +137,7 @@ namespace MICore
                 using (FileStream dbgCmdStream = new FileStream(dbgCmdScript, FileMode.CreateNew))
                 using (StreamWriter dbgCmdWriter = new StreamWriter(dbgCmdStream, encNoBom) { AutoFlush = true })
                 {
-                    dbgCmdWriter.WriteLine("#!/bin/sh");
+                    dbgCmdWriter.WriteLine("#!/usr/bin/env sh");
                     dbgCmdWriter.Write(launchDebuggerCommand);
                     dbgCmdWriter.Flush();
                 }
@@ -154,7 +154,7 @@ namespace MICore
                 }
                 else
                 {
-                    cmdArgs.Add("sh");
+                    cmdArgs.Add("/bin/sh");
                     cmdArgs.Add(dbgCmdScript);
                 }
 
@@ -162,7 +162,8 @@ namespace MICore
                 _commandStream = new StreamWriter(stdInStream, encNoBom);
             }
 
-            RunInTerminalLauncher launcher = new RunInTerminalLauncher(windowtitle, localOptions.Environment);
+            // Do not pass the launchOptions Environment entries as those are used for the debuggee only.
+            RunInTerminalLauncher launcher = new RunInTerminalLauncher(windowtitle, new List<EnvironmentEntry>(0).AsReadOnly());
 
             launcher.Launch(
                      cmdArgs,

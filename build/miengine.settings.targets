@@ -29,16 +29,14 @@
   <Choose>
     <When Condition="$(Configuration.Contains('Desktop'))">
       <PropertyGroup>
-        <IsCoreClr>false</IsCoreClr>
-        <NugetPackagesDirectory>$(NugetPackagesDirectory).Desktop</NugetPackagesDirectory>
-        <!-- Skip resolution from project.json -->
-        <ResolveNuGetPackages>false</ResolveNuGetPackages>
+        <!-- "Desktop.*" configs are used to build the cross-platform bits that are used in the VS Code C++ extension -->
+        <IsXPlat>true</IsXPlat>
+        <DefineConstants>$(DefineConstants);XPLAT</DefineConstants>
       </PropertyGroup>
     </When>
     <Otherwise>
       <PropertyGroup>
-        <DefineConstants>$(DefineConstants);CORECLR</DefineConstants>
-        <IsCoreClr>true</IsCoreClr>
+        <IsXPlat>false</IsXPlat>
         <IsMonoRuntime>false</IsMonoRuntime>
       </PropertyGroup>
     </Otherwise>

@@ -611,7 +611,7 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
-                        string resultString = await ConsoleCmdAsync(command.CommandText, command.IgnoreFailures);
+                        string resultString = await ConsoleCmdAsync(command.CommandText, allowWhileRunning: false, ignoreFailures: command.IgnoreFailures);
                         if (command.SuccessHandler != null)
                         {
                             await command.SuccessHandler(resultString);
@@ -1317,7 +1317,7 @@ namespace Microsoft.MIDebugEngine
                 // When the terminal window is closed, a SIGHUP is sent to lldb-mi and LLDB's default is to stop.
                 // We want to not stop (break) when this happens and the SIGHUP to be sent to the debuggee process.
                 // LLDB requires this command to be issued after the process has started.
-                await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", true);
+                await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", allowWhileRunning: false, ignoreFailures: true);
             }
 
             if (this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
@@ -1483,7 +1483,7 @@ namespace Microsoft.MIDebugEngine
 
         private async Task<string> LoadSymbols(string filename)
         {
-            return await ConsoleCmdAsync("sharedlibrary " + filename);
+            return await ConsoleCmdAsync("sharedlibrary " + filename, allowWhileRunning: false);
         }
 
         private async Task CheckModules()
@@ -1491,7 +1491,7 @@ namespace Microsoft.MIDebugEngine
             // NOTE: The version of GDB that comes in the Android SDK doesn't support -file-list-shared-library
             // so we need to use the console command
             //string results = await MICommandFactory.GetSharedLibrary();
-            string results = await ConsoleCmdAsync("info sharedlibrary");
+            string results = await ConsoleCmdAsync("info sharedlibrary", allowWhileRunning: false);
 
             using (StringReader stringReader = new StringReader(results))
             {
@@ -2244,7 +2244,7 @@ namespace Microsoft.MIDebugEngine
         /// <returns></returns>
         private Task<string> ResetConsole()
         {
-            return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2");
+            return ConsoleCmdAsync(@"shell echo -e \\033c 1>&2", allowWhileRunning: false);
         }
 
         public bool IsChildProcessDebugging => _childProcessHandler != null;
