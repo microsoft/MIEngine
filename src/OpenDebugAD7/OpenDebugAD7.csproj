@@ -178,7 +178,7 @@
     <DropUnsignedFile Include="$(OutputPath)\cppdbg.ad7Engine.json" />
   </ItemGroup>
   <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
-  <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFilesVSCode">
+  <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFiles">
     <ItemGroup>
       <DropUnsignedFile Condition="'$(IsMonoRuntime)' == 'false'" Include="$(OutputPath)\OpenDebugAD7.pdb" />
     </ItemGroup>
