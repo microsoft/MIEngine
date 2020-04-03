@@ -1995,10 +1995,11 @@ namespace MICore
             string thisModuleDir = Path.GetDirectoryName(thisModulePath);
             string thisModuleName = Path.GetFileNameWithoutExtension(thisModulePath);
             string serializerAssemblyPath = Path.Combine(thisModuleDir, thisModuleName + ".XmlSerializers.dll");
+            string thisModuleVersion = typeof(LaunchOptions).GetTypeInfo().Assembly.GetName().Version.ToString();
             if (!File.Exists(serializerAssemblyPath))
                 return null;
 
-            return Assembly.Load(new AssemblyName(thisModuleName + ".XmlSerializers"));
+            return Assembly.Load(new AssemblyName(thisModuleName + ".XmlSerializers, Version=" + thisModuleVersion));
         }
 
         protected void SetInitializationComplete()
