@@ -730,12 +730,20 @@ namespace MICore
                     {
                         return i == s.Extent;
                     }, listStr, out rest);
+
+            Results results = new Results(resultClass, list);
+
             if (!rest.IsEmpty)
             {
                 ParseError("trailing chars", rest);
-                return null;
+
+                if (rest.Length > 1000)
+                {
+                    rest = new Span(rest.Start, 1000);    // don't show more than 1000 chars
+                }
+                throw new MIResultFormatException(rest.Extract(_resultString), results);
             }
-            return new Results(resultClass, list);
+            return results;
         }
 
         public string ParseCString(string input)
