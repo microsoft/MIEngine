@@ -596,9 +596,6 @@ namespace MICore
 
     public class MIResults
     {
-        // The amount of characters to send to the UI upon an error.
-        private static int PARSE_ERROR_MSG_LIMIT = 1000;
-
         struct Span
         {
             static Span _emptySpan;
@@ -743,12 +740,7 @@ namespace MICore
             else
             {
                 ParseError("trailing chars", rest);
-
-                if (rest.Length > PARSE_ERROR_MSG_LIMIT)
-                {
-                    rest = new Span(rest.Start, PARSE_ERROR_MSG_LIMIT);
-                }
-                throw new MIResultFormatException(rest.Extract(_resultString), results);
+                throw new MIResultFormatException(CreateErrorMessageFromSpan(rest), results);
             }
         }
 
@@ -1209,15 +1201,24 @@ namespace MICore
 
         private void ParseError(string message, Span input)
         {
+            string result = CreateErrorMessageFromSpan(input);
+            Debug.Fail(message + ": " + result);
+
+            Logger?.WriteLine(String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, result));
+
+        }
+
+        // The amount of characters to send to the UI upon an error.
+        private static int PARSE_ERROR_MSG_LIMIT = 1000;
+
+        private string CreateErrorMessageFromSpan(Span input)
+        {
             if (input.Length > PARSE_ERROR_MSG_LIMIT)
             {
                 input = new Span(input.Start, PARSE_ERROR_MSG_LIMIT);
             }
-            string result = input.Extract(_resultString);
-            Debug.Fail(message + ": " + result);
-#if DEBUG
-            Logger?.WriteLine(String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, result));
-#endif
+
+            return input.Extract(_resultString);
         }
     }
 }
