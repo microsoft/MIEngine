@@ -596,6 +596,9 @@ namespace MICore
 
     public class MIResults
     {
+        // The amount of characters to send to the UI upon an error.
+        private static int PARSE_ERROR_MSG_LIMIT = 1000;
+
         struct Span
         {
             static Span _emptySpan;
@@ -733,17 +736,20 @@ namespace MICore
 
             Results results = new Results(resultClass, list);
 
-            if (!rest.IsEmpty)
+            if (rest.IsEmpty)
+            {
+                return results;
+            }
+            else
             {
                 ParseError("trailing chars", rest);
 
-                if (rest.Length > 1000)
+                if (rest.Length > PARSE_ERROR_MSG_LIMIT)
                 {
-                    rest = new Span(rest.Start, 1000);    // don't show more than 1000 chars
+                    rest = new Span(rest.Start, PARSE_ERROR_MSG_LIMIT);
                 }
                 throw new MIResultFormatException(rest.Extract(_resultString), results);
             }
-            return results;
         }
 
         public string ParseCString(string input)
@@ -1203,9 +1209,9 @@ namespace MICore
 
         private void ParseError(string message, Span input)
         {
-            if (input.Length > 1000)
+            if (input.Length > PARSE_ERROR_MSG_LIMIT)
             {
-                input = new Span(input.Start, 1000);    // don't show more than 1000 chars
+                input = new Span(input.Start, PARSE_ERROR_MSG_LIMIT);
             }
             string result = input.Extract(_resultString);
             Debug.Fail(message + ": " + result);
