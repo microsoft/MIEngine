@@ -730,12 +730,18 @@ namespace MICore
                     {
                         return i == s.Extent;
                     }, listStr, out rest);
-            if (!rest.IsEmpty)
+
+            Results results = new Results(resultClass, list);
+
+            if (rest.IsEmpty)
+            {
+                return results;
+            }
+            else
             {
                 ParseError("trailing chars", rest);
-                return null;
+                throw new MIResultFormatException(CreateErrorMessageFromSpan(rest), results);
             }
-            return new Results(resultClass, list);
         }
 
         public string ParseCString(string input)
@@ -1195,15 +1201,24 @@ namespace MICore
 
         private void ParseError(string message, Span input)
         {
-            if (input.Length > 1000)
-            {
-                input = new Span(input.Start, 1000);    // don't show more than 1000 chars
-            }
-            string result = input.Extract(_resultString);
+            string result = CreateErrorMessageFromSpan(input);
             Debug.Fail(message + ": " + result);
-#if DEBUG
+
             Logger?.WriteLine(String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, result));
-#endif
+
+        }
+
+        // The amount of characters to send to the UI upon an error.
+        private static int PARSE_ERROR_MSG_LIMIT = 1000;
+
+        private string CreateErrorMessageFromSpan(Span input)
+        {
+            if (input.Length > PARSE_ERROR_MSG_LIMIT)
+            {
+                input = new Span(input.Start, PARSE_ERROR_MSG_LIMIT);
+            }
+
+            return input.Extract(_resultString);
         }
     }
 }
