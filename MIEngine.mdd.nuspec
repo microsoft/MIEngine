@@ -16,8 +16,7 @@
     <file src="drop\Release\ReferenceAssemblies\Microsoft.DebugEngineHost.dll" target="ref\dotnet" />
     <file src="drop\Release\Microsoft.MICore.dll" target="ref\dotnet" />
     <file src="drop\Release\*" target="Release" exclude="drop\Release\Install.cmd;drop\Release\ReferenceAssemblies" />
-    <file src="drop\Debug\*" target="Debug" exclude="drop\Debug\Install.cmd;drop\Debug\ReferenceAssemblies" />
     <file src="drop\Release\loc\**\*" target="Release\loc" />
-    <file src="drop\Debug\loc\**\*" target="Debug\loc" />
+    <file src="drop\Release\vscode\*" target="Release\vscode" />
   </files>
 </package>

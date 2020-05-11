@@ -1091,10 +1091,12 @@ namespace Microsoft.MIDebugEngine
 
             ThreadCache.SendThreadEvents(this, null);   // make sure that new threads have been pushed to the UI
 
-            //always delete breakpoints pending deletion on break mode
-            //the flag tells us if we hit an existing breakpoint pending deletion that we need to continue
-
-            await _breakpointManager.DeleteBreakpointsPendingDeletion();
+            // If didn't hit a breakpoints then delete all pending deletions on break mode
+            // For breakpoint stops deletion will be handled below.
+            if (reason != "breakpoint-hit")
+            {
+                await _breakpointManager.DeleteBreakpointsPendingDeletion();
+            }
 
             // Delete GDB variable objects that have been marked for cleanup
             List<string> variablesToDelete = null;
@@ -1154,6 +1156,7 @@ namespace Microsoft.MIDebugEngine
                 bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
+                await _breakpointManager.DeleteBreakpointsPendingDeletion();
 
                 if (bkpt != null)
                 {

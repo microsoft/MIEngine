@@ -54,7 +54,7 @@
     <Compile Include="Program.cs" />
   </ItemGroup>
   <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
-  <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFilesVSCode">
+  <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFiles">
     <ItemGroup>
       <DropSignedFile Include="$(OutputPath)\WindowsDebugLauncher.exe" />
       <DropUnsignedFile Condition="'$(IsMonoRuntime)' == 'false'" Include="$(OutputPath)\WindowsDebugLauncher.pdb" />
