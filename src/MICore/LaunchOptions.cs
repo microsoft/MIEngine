@@ -541,6 +541,8 @@ namespace MICore
         {
             string pathVar = System.Environment.GetEnvironmentVariable("PATH");
 
+            bool checkForWindowsExe = PlatformUtilities.IsWindows() && String.IsNullOrEmpty(Path.GetExtension(command));
+
             // Check each portion of the PATH environment variable to see if it contains the requested file
             foreach (string pathPart in pathVar.Split(Path.PathSeparator))
             {
@@ -552,7 +554,7 @@ namespace MICore
                     return candidate;
                 }
 
-                if (PlatformUtilities.IsWindows() && String.IsNullOrEmpty(Path.GetExtension(command)))
+                if (checkForWindowsExe)
                 {
                     string exeCandidate = candidate + ".exe";
                     if (File.Exists(exeCandidate))
