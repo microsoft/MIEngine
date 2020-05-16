@@ -552,11 +552,13 @@ namespace MICore
                     return candidate;
                 }
 
-                string exeCandidate = candidate + ".exe";
-
-                if (PlatformUtilities.IsWindows() && File.Exists(exeCandidate))
+                if (PlatformUtilities.IsWindows() && String.IsNullOrEmpty(Path.GetExtension(command)))
                 {
-                    return exeCandidate;
+                    string exeCandidate = candidate + ".exe";
+                    if (File.Exists(exeCandidate))
+                    {
+                        return exeCandidate;
+                    }
                 }
             }
 
