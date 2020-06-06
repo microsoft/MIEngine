@@ -61,6 +61,7 @@
 "Adapter"="$PackageFolder$\vscode\OpenDebugAD7.exe"
 "Language"="C++"
 "LanguageId"="{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}"
+; "AdapterArgs"=""
 ; "AddressBP"=dword:00000001
 "AlwaysLoadLocal"=dword:00000001
 "AlwaysLoadProgramProviderLocal"=dword:00000001
