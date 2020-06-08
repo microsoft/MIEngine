@@ -204,6 +204,9 @@ namespace OpenDebugAD7
 
             [JsonProperty]
             public Dictionary<string, string> PipeEnv { get; set; }
+
+            [JsonProperty("quoteArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public bool? QuoteArgs { get; set; }
         }
 
         [JsonObject]
@@ -307,7 +310,7 @@ namespace OpenDebugAD7
             // ExeArguments
             // Build the exe's argument list as a string
             StringBuilder exeArguments = new StringBuilder();
-            exeArguments.Append(CreateArgumentList(exeArgsArray));
+            exeArguments.Append(CreateArgumentList(exeArgsArray, quoteArgs: true)); // Always quote exe arguments
             XmlSingleQuotedAttributeEncode(exeArguments);
             xmlLaunchOptions.Append(String.Concat("  ExeArguments='", exeArguments, "'\n"));
 
@@ -381,7 +384,7 @@ namespace OpenDebugAD7
             return arguments;
         }
 
-        private static string CreateArgumentList(IEnumerable<string> args)
+        private static string CreateArgumentList(IEnumerable<string> args, bool quoteArgs)
         {
             StringBuilder stringBuilder = new StringBuilder();
             if (args != null)
@@ -391,7 +394,7 @@ namespace OpenDebugAD7
                     if (stringBuilder.Length != 0)
                         stringBuilder.Append(' ');
 
-                    stringBuilder.Append(QuoteArgument(arg));
+                    stringBuilder.Append(quoteArgs ? QuoteArgument(arg) : arg);
                 }
             }
             return stringBuilder.ToString();
@@ -650,6 +653,8 @@ namespace OpenDebugAD7
                 string pipeProgram = jsonLaunchOptions.PipeTransport.PipeProgram;
                 string[] pipeArgs = jsonLaunchOptions.PipeTransport.PipeArgs;
                 string processId = jsonLaunchOptions.ProcessId;
+                bool quoteArgs = jsonLaunchOptions.PipeTransport.QuoteArgs.GetValueOrDefault(true);
+
                 Dictionary<string, string> pipeEnv = jsonLaunchOptions.PipeTransport.PipeEnv;
 
                 JsonPipeTransportOptions platformSpecificTransportOptions = null;
@@ -672,6 +677,7 @@ namespace OpenDebugAD7
                     pipeArgs = platformSpecificTransportOptions.PipeArgs ?? pipeArgs;
                     pipeCwd = platformSpecificTransportOptions.PipeCwd ?? pipeCwd;
                     pipeEnv = platformSpecificTransportOptions.PipeEnv ?? pipeEnv;
+                    quoteArgs = platformSpecificTransportOptions.QuoteArgs ?? quoteArgs;
                 }
 
                 if (string.IsNullOrWhiteSpace(pipeProgram))
@@ -683,7 +689,8 @@ namespace OpenDebugAD7
 
                 if (pipeArgs != null)
                 {
-                    string pipeCommandArgs = CreateArgumentList(pipeArgs);
+                    // This code should be kept similar to MICode.LaunchOptions.cs EnsurePipeArguments()
+                    string pipeCommandArgs = CreateArgumentList(pipeArgs, quoteArgs);
                     IEnumerable<string> allPipeArguments = pipeArgs;
                     string debuggerPath = jsonLaunchOptions.PipeTransport.DebuggerPath ?? "";
                     if (!string.IsNullOrEmpty(debuggerPath))
@@ -699,7 +706,7 @@ namespace OpenDebugAD7
                         }
                     }
 
-                    string allArguments = CreateArgumentList(allPipeArguments);
+                    string allArguments = CreateArgumentList(allPipeArguments, quoteArgs);
                     xmlLaunchOptions.Append(String.Concat("  PipeArguments='", MILaunchOptions.XmlSingleQuotedAttributeEncode(allArguments), "'\n"));
 
                     // debuggerPath has to be specified. if it isn't then the debugger is specified in PipeArg which means we can't use the same arguments for pipeCommandArgs
