@@ -310,7 +310,7 @@ namespace OpenDebugAD7
             // ExeArguments
             // Build the exe's argument list as a string
             StringBuilder exeArguments = new StringBuilder();
-            exeArguments.Append(CreateArgumentList(exeArgsArray, quoteArgs: true)); // Always quote exe arguments
+            exeArguments.Append(CreateArgumentList(exeArgsArray));
             XmlSingleQuotedAttributeEncode(exeArguments);
             xmlLaunchOptions.Append(String.Concat("  ExeArguments='", exeArguments, "'\n"));
 
@@ -384,7 +384,13 @@ namespace OpenDebugAD7
             return arguments;
         }
 
-        private static string CreateArgumentList(IEnumerable<string> args, bool quoteArgs)
+        /// <summary>
+        /// Converts a list of strings arguments to a string representation.
+        /// </summary>
+        /// <param name="args">The list of arguments to convert into a string.</param>
+        /// <param name="quoteArgs">Only used for PipeTransports. This disables quote handling if the user requests it.</param>
+        /// <returns></returns>
+        private static string CreateArgumentList(IEnumerable<string> args, bool quoteArgs = true)
         {
             StringBuilder stringBuilder = new StringBuilder();
             if (args != null)
