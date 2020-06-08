@@ -601,7 +601,7 @@ namespace OpenDebugAD7
             int hr;
             DateTime launchStartTime = DateTime.Now;
 
-            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("miMode");
+            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("MIMode");
             string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program")?.Trim();
             if (string.IsNullOrEmpty(program))
             {
@@ -814,7 +814,7 @@ namespace OpenDebugAD7
             bool isLocal = string.IsNullOrEmpty(miDebuggerServerAddress) && !isPipeTransport;
             bool visualizerFileUsed = false;
             int sourceFileMappings = 0;
-            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("miMode");
+            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("MIMode");
 
             if (isLocal)
             {
