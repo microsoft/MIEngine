@@ -388,7 +388,7 @@ namespace OpenDebugAD7
         /// Converts a list of strings arguments to a string representation.
         /// </summary>
         /// <param name="args">The list of arguments to convert into a string.</param>
-        /// <param name="quoteArgs">Only used for PipeTransports. This disables quote handling if the user requests it.</param>
+        /// <param name="quoteArgs">Only used for PipeTransports. Setting this to false disables quote handling if the user requests it.</param>
         /// <returns></returns>
         private static string CreateArgumentList(IEnumerable<string> args, bool quoteArgs = true)
         {
