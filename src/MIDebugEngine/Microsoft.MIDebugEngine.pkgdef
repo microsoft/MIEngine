@@ -59,6 +59,7 @@
 @="MI Debug Engine"
 "CLSID"="{DAB324E9-7B35-454C-ACA8-F6BB0D5C8673}"
 "Adapter"="$PackageFolder$\vscode\OpenDebugAD7.exe"
+; "AdapterArgs"=""
 "Language"="C++"
 "LanguageId"="{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}"
 ; "AddressBP"=dword:00000001
