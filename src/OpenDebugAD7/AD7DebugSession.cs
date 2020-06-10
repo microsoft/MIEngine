@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.DAP;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Utilities;
@@ -588,7 +589,8 @@ namespace OpenDebugAD7
                 SupportsSetVariable = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
-                ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList()
+                ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
+                SupportsClipboardContext = m_engineConfiguration.ClipboardContext
             };
 
             responder.SetResponse(initializeResponse);
@@ -1862,7 +1864,10 @@ namespace OpenDebugAD7
             hr = frame.GetExpressionContext(out expressionContext);
             eb.CheckHR(hr);
 
+            System.Diagnostics.Debugger.Launch();
+
             const uint InputRadix = 10;
+            DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
             IDebugExpression2 expressionObject;
             string error;
             uint errorIndex;
@@ -1887,8 +1892,20 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
+            if (context == EvaluateArguments.ContextValue.Clipboard)
+            {
+                dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
+            }
+
             IDebugProperty2 property;
-            hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
+            if (dapEvalFlags != DAPEvalFlags.NONE)
+            {
+                hr = ((IDebugExpressionDAP)expressionObject).EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
+            }
+            else
+            {
+                hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
+            }
             eb.CheckHR(hr);
             eb.CheckOutput(property);
 

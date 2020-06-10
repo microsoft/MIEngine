@@ -32,6 +32,7 @@ namespace Microsoft.DebugEngineHost.VSCode
         private readonly ExceptionSettings _exceptionSettings = new ExceptionSettings();
         private bool _conditionalBP;
         private bool _functionBP;
+        private bool _clipboardContext;
 
         // NOTE: CoreCLR doesn't support providing a code base when loading assemblies. So all debug engines
         // must be placed in the directory of OpenDebugAD7.exe
@@ -66,6 +67,12 @@ namespace Microsoft.DebugEngineHost.VSCode
             get { return _functionBP; }
             set { SetProperty(out _functionBP, value); }
         }
+
+        public bool ClipboardContext { 
+            get { return _clipboardContext; } 
+            set { SetProperty(out _clipboardContext, value); }
+        }
+
 
         /// <summary>
         /// Provides the directory of the debug adapter. This is the directory where

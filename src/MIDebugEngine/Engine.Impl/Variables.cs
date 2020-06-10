@@ -12,6 +12,7 @@ using MICore;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using Microsoft.VisualStudio.Debugger.Interop.DAP;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -33,6 +34,7 @@ namespace Microsoft.MIDebugEngine
         void AsyncEval(IDebugEventCallback2 pExprCallback);
         void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error);
         void SyncEval(enum_EVALFLAGS dwFlags = 0);
+        void SyncEval(DAPEvalFlags dwDAPFlags, enum_EVALFLAGS dwFlags = 0);
         ThreadContext ThreadContext { get; }
         VariableInformation FindChildByName(string name);
         string EvalDependentExpression(string expr);
@@ -401,9 +403,14 @@ namespace Microsoft.MIDebugEngine
 
         public void SyncEval(enum_EVALFLAGS dwFlags = 0)
         {
+            SyncEval(DAPEvalFlags.NONE, dwFlags);
+        }
+
+        public void SyncEval(DAPEvalFlags dwDAPFlags, enum_EVALFLAGS dwFlags = 0)
+        {
             Task eval = Task.Run(async () =>
             {
-                await Eval(dwFlags);
+                await Eval(dwFlags, dwDAPFlags);
             });
             eval.Wait();
         }
@@ -444,7 +451,7 @@ namespace Microsoft.MIDebugEngine
             return false;
         }
 
-        internal async Task Eval(enum_EVALFLAGS dwFlags = 0)
+        internal async Task Eval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
         {
             this.VerifyNotDisposed();
 
@@ -469,6 +476,20 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
+                    int numElements = 200;
+                    if (dwDAPFlags.HasFlag(DAPEvalFlags.CLIPBOARD_CONTEXT))
+                    {
+                        string showPrintElementsResult = await MIDebugCommandDispatcher.ExecuteCommand("show print elements", _debuggedProcess, ignoreFailures: true);
+                        // Possible values for 'numElementsStr'
+                        // "Limit on string chars or array elements to print is <number>."
+                        // "Limit on string chars or array elements to print is unlimited."
+                        string numElementsStr = Regex.Match(showPrintElementsResult, @"\d+").Value;
+                        if (int.TryParse(numElementsStr, out numElements))
+                        {
+                            await MIDebugCommandDispatcher.ExecuteCommand("set print elements 0", _debuggedProcess, ignoreFailures: true);
+                        }
+                    }
+
                     int threadId = Client.GetDebuggedThread().Id;
                     uint frameLevel = _ctx.Level;
                     Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, dwFlags, ResultClass.None);
@@ -534,6 +555,11 @@ namespace Microsoft.MIDebugEngine
                     else
                     {
                         Debug.Fail("Weird msg from -var-create");
+                    }
+
+                    if (dwDAPFlags.HasFlag(DAPEvalFlags.CLIPBOARD_CONTEXT) && numElements != 0)
+                    {
+                        await MIDebugCommandDispatcher.ExecuteCommand(string.Format(CultureInfo.InvariantCulture, "set print elements {0}", numElements), _debuggedProcess, ignoreFailures: true);
                     }
                 }
             }
