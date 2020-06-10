@@ -588,7 +588,8 @@ namespace OpenDebugAD7
                 SupportsSetVariable = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
-                ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList()
+                ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
+                SupportsClipboardContext = true
             };
 
             responder.SetResponse(initializeResponse);
@@ -1887,6 +1888,11 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
+            if (context == EvaluateArguments.ContextValue.Clipboard)
+            {
+                HostEvaluateRequestContext.SetClipboardContext(true);
+            }
+
             IDebugProperty2 property;
             hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
             eb.CheckHR(hr);
@@ -1894,6 +1900,12 @@ namespace OpenDebugAD7
 
             DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
             enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags = GetDefaultPropertyInfoFlags();
+
+            if (context == EvaluateArguments.ContextValue.Clipboard)
+            {
+                HostEvaluateRequestContext.SetClipboardContext(false);
+            }
+
 
             if (context == EvaluateArguments.ContextValue.Hover) // No side effects for data tips
             {

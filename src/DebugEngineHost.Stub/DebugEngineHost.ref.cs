@@ -585,4 +585,29 @@ public sealed class HostLogger
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Provides acceess for MIEngine to determine if it is in an EvaluateRequest with specific contexes that do not
+    /// exist in enum_PARSEFLAGS.
+    /// </summary>
+    public static class HostEvaluateRequestContext
+    {
+        /// <summary>
+        /// Returns the boolean if the current EvaluareRequest's context is a clipboard context.
+        /// </summary>
+        /// <returns>true if it is in an evaluate request with a clipboard context</returns>
+        public static bool IsClipboardContext()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Sets the current value of Clipboard Context
+        /// </summary>
+        /// <param name="clipboardContext"></param>
+        public static void SetClipboardContext(bool clipboardContext)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

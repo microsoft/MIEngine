@@ -146,6 +146,7 @@
     <Compile Include="HostConfigurationSection.cs" />
     <Compile Include="HostConfigurationStore.cs" />
     <Compile Include="HostConfigurationException.cs" />
+    <Compile Include="HostEvaluateRequestContext.cs" />
     <Compile Include="HostLogger.cs" />
     <Compile Include="HostRunInTerminal.cs" />
     <Compile Include="HostTelemetry.cs" />

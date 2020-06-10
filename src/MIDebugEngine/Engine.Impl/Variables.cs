@@ -12,6 +12,7 @@ using MICore;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -469,6 +470,20 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
+                    int numElements = 200;
+                    if (HostEvaluateRequestContext.IsClipboardContext())
+                    {
+                        string showPrintElementsResult = await MIDebugCommandDispatcher.ExecuteCommand("show print elements", _debuggedProcess, ignoreFailures: true);
+                        // Possible values for 'numElementsStr'
+                        // "Limit on string chars or array elements to print is <number>."
+                        // "Limit on string chars or array elements to print is unlimited."
+                        string numElementsStr = Regex.Match(showPrintElementsResult, @"\d+").Value;
+                        if (int.TryParse(numElementsStr, out numElements))
+                        {
+                            await MIDebugCommandDispatcher.ExecuteCommand("set print elements 0", _debuggedProcess, ignoreFailures: true);
+                        }
+                    }
+
                     int threadId = Client.GetDebuggedThread().Id;
                     uint frameLevel = _ctx.Level;
                     Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, dwFlags, ResultClass.None);
@@ -534,6 +549,11 @@ namespace Microsoft.MIDebugEngine
                     else
                     {
                         Debug.Fail("Weird msg from -var-create");
+                    }
+
+                    if (HostEvaluateRequestContext.IsClipboardContext() && numElements != 0)
+                    {
+                        await MIDebugCommandDispatcher.ExecuteCommand(string.Format("set print elements {0}", numElements), _debuggedProcess, ignoreFailures: true);
                     }
                 }
             }

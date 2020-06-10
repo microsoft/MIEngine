@@ -90,6 +90,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HostEvaluateRequestContext.cs" />
     <Compile Include="HostLogger.cs" />
     <Compile Include="HostRunInTerminal.cs" />
     <Compile Include="HostTelemetry.cs" />
