@@ -68,7 +68,8 @@ namespace Microsoft.DebugEngineHost.VSCode
             set { SetProperty(out _functionBP, value); }
         }
 
-        public bool ClipboardContext { 
+        public bool ClipboardContext
+        { 
             get { return _clipboardContext; } 
             set { SetProperty(out _clipboardContext, value); }
         }

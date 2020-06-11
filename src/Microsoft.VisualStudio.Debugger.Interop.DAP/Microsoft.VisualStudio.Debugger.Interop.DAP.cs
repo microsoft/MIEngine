@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
     /// <summary>
     /// An extended set of evaluate flags that are in Debug Adapter Protocol but not listed in AD7
     /// </summary>
+    [Flags]
     public enum DAPEvalFlags
     {
         /// <summary>

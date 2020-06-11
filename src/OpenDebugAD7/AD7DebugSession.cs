@@ -1864,8 +1864,6 @@ namespace OpenDebugAD7
             hr = frame.GetExpressionContext(out expressionContext);
             eb.CheckHR(hr);
 
-            System.Diagnostics.Debugger.Launch();
-
             const uint InputRadix = 10;
             DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
             IDebugExpression2 expressionObject;
@@ -1898,14 +1896,15 @@ namespace OpenDebugAD7
             }
 
             IDebugProperty2 property;
-            if (dapEvalFlags != DAPEvalFlags.NONE)
+            if (expressionObject is IDebugExpressionDAP expressionDapObject)
             {
-                hr = ((IDebugExpressionDAP)expressionObject).EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
+                hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
             }
             else
             {
                 hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
             }
+
             eb.CheckHR(hr);
             eb.CheckOutput(property);
 

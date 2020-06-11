@@ -54,8 +54,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         public VariableInformation FindChildByName(string name) => Parent.FindChildByName(name);
         public string EvalDependentExpression(string expr) => Parent.EvalDependentExpression(expr);
         public void AsyncEval(IDebugEventCallback2 pExprCallback) => Parent.AsyncEval(pExprCallback);
-        public void SyncEval(enum_EVALFLAGS dwFlags) => this.SyncEval(DAPEvalFlags.NONE, dwFlags);
-        public void SyncEval(DAPEvalFlags dwDAPFlags, enum_EVALFLAGS dwFlags) => Parent.SyncEval(dwDAPFlags, dwFlags);
+        public void SyncEval(enum_EVALFLAGS dwFlags, DAPEvalFlags dwDAPFlags) => Parent.SyncEval(dwFlags, dwDAPFlags);
         public virtual string FullName() => Name;
         public void EnsureChildren() => Parent.EnsureChildren();
         public void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error)

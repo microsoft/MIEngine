@@ -164,7 +164,7 @@
     <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.DAP\Microsoft.VisualStudio.Debugger.Interop.DAP.csproj">
       <Project>{23DE943C-1F84-4E23-9490-50FE1DEDE858}</Project>
       <Name>Microsoft.VisualStudio.Debugger.Interop.DAP</Name>
-	  <EmbedInteropTypes>True</EmbedInteropTypes>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

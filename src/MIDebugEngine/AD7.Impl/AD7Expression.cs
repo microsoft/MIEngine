@@ -67,25 +67,7 @@ namespace Microsoft.MIDebugEngine
         // This method evaluates the expression synchronously.
         int IDebugExpression2.EvaluateSync(enum_EVALFLAGS dwFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult)
         {
-            ppResult = null;
-            if ((dwFlags & enum_EVALFLAGS.EVAL_NOSIDEEFFECTS) != 0 && _var.IsVisualized)
-            {
-                IVariableInformation variable = _engine.DebuggedProcess.Natvis.Cache.Lookup(_var);
-                if (variable == null)
-                {
-                    ppResult = new AD7ErrorProperty(_var.Name, ResourceStrings.NoSideEffectsVisualizerMessage);
-                }
-                else
-                {
-                    _var = variable;
-                    ppResult = new AD7Property(_engine, _var);
-                }
-                return Constants.S_OK;
-            }
-
-            _var.SyncEval(dwFlags);
-            ppResult = new AD7Property(_engine, _var);
-            return Constants.S_OK;
+            return EvaluateSync(dwFlags, DAPEvalFlags.NONE, dwTimeout, pExprCallback, out ppResult);
         }
 
         #endregion
@@ -93,6 +75,13 @@ namespace Microsoft.MIDebugEngine
         #region IDebugExpressionDAP
 
         int IDebugExpressionDAP.EvaluateSync(enum_EVALFLAGS dwFlags, DAPEvalFlags dapFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult)
+        {
+            return EvaluateSync(dwFlags, dapFlags, dwTimeout, pExprCallback, out ppResult);
+        }
+
+        #endregion
+
+        private int EvaluateSync(enum_EVALFLAGS dwFlags, DAPEvalFlags dapFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult)
         {
             ppResult = null;
             if ((dwFlags & enum_EVALFLAGS.EVAL_NOSIDEEFFECTS) != 0 && _var.IsVisualized)
@@ -110,12 +99,10 @@ namespace Microsoft.MIDebugEngine
                 return Constants.S_OK;
             }
 
-            _var.SyncEval(dapFlags, dwFlags);
+            _var.SyncEval(dwFlags, dapFlags);
             ppResult = new AD7Property(_engine, _var);
             return Constants.S_OK;
         }
-
-        #endregion
 
     }
 }
