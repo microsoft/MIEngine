@@ -1594,12 +1594,11 @@ namespace OpenDebugAD7
                         {
                             // already created
                             IDebugBreakpointRequest2 breakpointRequest;
-                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0)
+                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0 && 
+                                breakpointRequest is AD7BreakPointRequest ad7BPRequest)
                             {
-                                var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-
                                 // Check to see if this breakpoint has a condition that has changed.
-                                if (ad7BPRequest.Condition != bp.Condition)
+                                if (!StringComparer.InvariantCulture.Equals(ad7BPRequest.Condition, bp.Condition))
                                 {
                                     // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
                                     var toRemove = dict[bp.Line];
@@ -1759,6 +1758,41 @@ namespace OpenDebugAD7
 
             foreach (FunctionBreakpoint b in breakpoints)
             {
+                if (m_functionBreakpoints.ContainsKey(b.Name))
+                {   // already created
+                    IDebugBreakpointRequest2 breakpointRequest;
+                    if (m_functionBreakpoints[b.Name].GetBreakpointRequest(out breakpointRequest) == 0 &&
+                                breakpointRequest is AD7BreakPointRequest ad7BPRequest)
+                    {
+                        // Check to see if this breakpoint has a condition that has changed.
+                        if (!StringComparer.InvariantCulture.Equals(ad7BPRequest.Condition, b.Condition))
+                        {
+                            // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
+                            var toRemove = m_functionBreakpoints[b.Name];
+                            toRemove.Delete();
+                            m_functionBreakpoints.Remove(b.Name);
+                        }
+                        else
+                        {
+                            if (ad7BPRequest.BindResult != null)
+                            {
+                                response.Breakpoints.Add(ad7BPRequest.BindResult);
+                            }
+                            else
+                            {
+                                response.Breakpoints.Add(new Breakpoint()
+                                {
+                                    Id = (int)ad7BPRequest.Id,
+                                    Verified = true,
+                                    Line = 0
+                                });
+
+                            }
+                            continue;
+                        }
+                    }
+                }
+
                 // bind the new function names
                 if (!m_functionBreakpoints.ContainsKey(b.Name))
                 {
@@ -1790,28 +1824,6 @@ namespace OpenDebugAD7
                             Verified = false,
                             Line = 0
                         }); // couldn't create and/or bind
-                    }
-                }
-                else
-                {   // already created
-                    IDebugBreakpointRequest2 breakpointRequest;
-                    if (m_functionBreakpoints[b.Name].GetBreakpointRequest(out breakpointRequest) == 0)
-                    {
-                        var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-                        if (ad7BPRequest.BindResult != null)
-                        {
-                            response.Breakpoints.Add(ad7BPRequest.BindResult);
-                        }
-                        else
-                        {
-                            response.Breakpoints.Add(new Breakpoint()
-                            {
-                                Id = (int)ad7BPRequest.Id,
-                                Verified = true,
-                                Line = 0
-                            });
-
-                        }
                     }
                 }
             }
