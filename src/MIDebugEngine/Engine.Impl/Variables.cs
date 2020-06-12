@@ -12,6 +12,7 @@ using MICore;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using Microsoft.VisualStudio.Debugger.Interop.DAP;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -32,7 +33,7 @@ namespace Microsoft.MIDebugEngine
         void EnsureChildren();
         void AsyncEval(IDebugEventCallback2 pExprCallback);
         void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error);
-        void SyncEval(enum_EVALFLAGS dwFlags = 0);
+        void SyncEval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0);
         ThreadContext ThreadContext { get; }
         VariableInformation FindChildByName(string name);
         string EvalDependentExpression(string expr);
@@ -399,11 +400,11 @@ namespace Microsoft.MIDebugEngine
             AsyncErrorImpl(pExprCallback != null ? new EngineCallback(_engine, pExprCallback) : _engine.Callback, this, error);
         }
 
-        public void SyncEval(enum_EVALFLAGS dwFlags = 0)
+        public void SyncEval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
         {
             Task eval = Task.Run(async () =>
             {
-                await Eval(dwFlags);
+                await Eval(dwFlags, dwDAPFlags);
             });
             eval.Wait();
         }
@@ -444,7 +445,7 @@ namespace Microsoft.MIDebugEngine
             return false;
         }
 
-        internal async Task Eval(enum_EVALFLAGS dwFlags = 0)
+        internal async Task Eval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
         {
             this.VerifyNotDisposed();
 
@@ -469,6 +470,22 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
+                    bool canRunClipboardContextCommands = this._debuggedProcess.MICommandFactory.Mode == MIMode.Gdb && dwDAPFlags.HasFlag(DAPEvalFlags.CLIPBOARD_CONTEXT);
+                    int numElements = 200;
+
+                    if (canRunClipboardContextCommands)
+                    {
+                        string showPrintElementsResult = await MIDebugCommandDispatcher.ExecuteCommand("show print elements", _debuggedProcess, ignoreFailures: true);
+                        // Possible values for 'numElementsStr'
+                        // "Limit on string chars or array elements to print is <number>."
+                        // "Limit on string chars or array elements to print is unlimited."
+                        string numElementsStr = Regex.Match(showPrintElementsResult, @"\d+").Value;
+                        if (!string.IsNullOrEmpty(numElementsStr) && int.TryParse(numElementsStr, out numElements) && numElements != 0)
+                        {
+                            await MIDebugCommandDispatcher.ExecuteCommand("set print elements 0", _debuggedProcess, ignoreFailures: true);
+                        }
+                    }
+
                     int threadId = Client.GetDebuggedThread().Id;
                     uint frameLevel = _ctx.Level;
                     Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, dwFlags, ResultClass.None);
@@ -534,6 +551,11 @@ namespace Microsoft.MIDebugEngine
                     else
                     {
                         Debug.Fail("Weird msg from -var-create");
+                    }
+
+                    if (canRunClipboardContextCommands && numElements != 0)
+                    {
+                        await MIDebugCommandDispatcher.ExecuteCommand(string.Format(CultureInfo.InvariantCulture, "set print elements {0}", numElements), _debuggedProcess, ignoreFailures: true);
                     }
                 }
             }
