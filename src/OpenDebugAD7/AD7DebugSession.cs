@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.DAP;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Utilities;
@@ -588,7 +589,8 @@ namespace OpenDebugAD7
                 SupportsSetVariable = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
-                ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList()
+                ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
+                SupportsClipboardContext = m_engineConfiguration.ClipboardContext
             };
 
             responder.SetResponse(initializeResponse);
@@ -601,7 +603,7 @@ namespace OpenDebugAD7
             int hr;
             DateTime launchStartTime = DateTime.Now;
 
-            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("miMode");
+            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("MIMode");
             string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program")?.Trim();
             if (string.IsNullOrEmpty(program))
             {
@@ -814,7 +816,7 @@ namespace OpenDebugAD7
             bool isLocal = string.IsNullOrEmpty(miDebuggerServerAddress) && !isPipeTransport;
             bool visualizerFileUsed = false;
             int sourceFileMappings = 0;
-            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("miMode");
+            string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("MIMode");
 
             if (isLocal)
             {
@@ -1590,6 +1592,44 @@ namespace OpenDebugAD7
                     var resBreakpoints = new List<Breakpoint>();
                     foreach (var bp in breakpoints)
                     {
+                        if (dict.ContainsKey(bp.Line))
+                        {
+                            // already created
+                            IDebugBreakpointRequest2 breakpointRequest;
+                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0 && 
+                                breakpointRequest is AD7BreakPointRequest ad7BPRequest)
+                            {
+                                // Check to see if this breakpoint has a condition that has changed.
+                                if (!StringComparer.Ordinal.Equals(ad7BPRequest.Condition, bp.Condition))
+                                {
+                                    // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
+                                    var toRemove = dict[bp.Line];
+                                    toRemove.Delete();
+                                    dict.Remove(bp.Line);
+                                }
+                                else
+                                {
+                                    if (ad7BPRequest.BindResult != null)
+                                    {
+                                        // use the breakpoint created from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
+                                        resBreakpoints.Add(ad7BPRequest.BindResult);
+                                    }
+                                    else
+                                    {
+                                        resBreakpoints.Add(new Breakpoint()
+                                        {
+                                            Id = (int)ad7BPRequest.Id,
+                                            Verified = true,
+                                            Line = bp.Line
+                                        });
+                                    }
+                                    continue;
+                                }
+                            }
+                        }
+
+
+                        // Create a new breakpoint
                         if (!dict.ContainsKey(bp.Line))
                         {
                             IDebugPendingBreakpoint2 pendingBp;
@@ -1623,28 +1663,6 @@ namespace OpenDebugAD7
                                     Line = bp.Line,
                                     Message = eb.GetMessageForException(e)
                                 });
-                            }
-                        }
-                        else
-                        {   // already created
-                            IDebugBreakpointRequest2 breakpointRequest;
-                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0)
-                            {
-                                var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-                                if (ad7BPRequest.BindResult != null)
-                                {
-                                    // use the breakpoint created from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
-                                    resBreakpoints.Add(ad7BPRequest.BindResult);
-                                }
-                                else
-                                {
-                                    resBreakpoints.Add(new Breakpoint()
-                                    {
-                                        Id = (int)ad7BPRequest.Id,
-                                        Verified = true,
-                                        Line = bp.Line
-                                    });
-                                }
                             }
                         }
                     }
@@ -1742,6 +1760,41 @@ namespace OpenDebugAD7
 
             foreach (FunctionBreakpoint b in breakpoints)
             {
+                if (m_functionBreakpoints.ContainsKey(b.Name))
+                {   // already created
+                    IDebugBreakpointRequest2 breakpointRequest;
+                    if (m_functionBreakpoints[b.Name].GetBreakpointRequest(out breakpointRequest) == 0 &&
+                                breakpointRequest is AD7BreakPointRequest ad7BPRequest)
+                    {
+                        // Check to see if this breakpoint has a condition that has changed.
+                        if (!StringComparer.Ordinal.Equals(ad7BPRequest.Condition, b.Condition))
+                        {
+                            // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
+                            var toRemove = m_functionBreakpoints[b.Name];
+                            toRemove.Delete();
+                            m_functionBreakpoints.Remove(b.Name);
+                        }
+                        else
+                        {
+                            if (ad7BPRequest.BindResult != null)
+                            {
+                                response.Breakpoints.Add(ad7BPRequest.BindResult);
+                            }
+                            else
+                            {
+                                response.Breakpoints.Add(new Breakpoint()
+                                {
+                                    Id = (int)ad7BPRequest.Id,
+                                    Verified = true,
+                                    Line = 0
+                                });
+
+                            }
+                            continue;
+                        }
+                    }
+                }
+
                 // bind the new function names
                 if (!m_functionBreakpoints.ContainsKey(b.Name))
                 {
@@ -1773,28 +1826,6 @@ namespace OpenDebugAD7
                             Verified = false,
                             Line = 0
                         }); // couldn't create and/or bind
-                    }
-                }
-                else
-                {   // already created
-                    IDebugBreakpointRequest2 breakpointRequest;
-                    if (m_functionBreakpoints[b.Name].GetBreakpointRequest(out breakpointRequest) == 0)
-                    {
-                        var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-                        if (ad7BPRequest.BindResult != null)
-                        {
-                            response.Breakpoints.Add(ad7BPRequest.BindResult);
-                        }
-                        else
-                        {
-                            response.Breakpoints.Add(new Breakpoint()
-                            {
-                                Id = (int)ad7BPRequest.Id,
-                                Verified = true,
-                                Line = 0
-                            });
-
-                        }
                     }
                 }
             }
@@ -1863,6 +1894,7 @@ namespace OpenDebugAD7
             eb.CheckHR(hr);
 
             const uint InputRadix = 10;
+            DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
             IDebugExpression2 expressionObject;
             string error;
             uint errorIndex;
@@ -1887,8 +1919,21 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
+            if (context == EvaluateArguments.ContextValue.Clipboard)
+            {
+                dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
+            }
+
             IDebugProperty2 property;
-            hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
+            if (expressionObject is IDebugExpressionDAP expressionDapObject)
+            {
+                hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
+            }
+            else
+            {
+                hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
+            }
+
             eb.CheckHR(hr);
             eb.CheckOutput(property);
 
