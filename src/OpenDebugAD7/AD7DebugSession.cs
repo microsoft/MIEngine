@@ -1590,6 +1590,45 @@ namespace OpenDebugAD7
                     var resBreakpoints = new List<Breakpoint>();
                     foreach (var bp in breakpoints)
                     {
+                        if (dict.ContainsKey(bp.Line))
+                        {
+                            // already created
+                            IDebugBreakpointRequest2 breakpointRequest;
+                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0)
+                            {
+                                var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
+
+                                // Check to see if this breakpoint has a condition that has changed.
+                                if (ad7BPRequest.Condition != bp.Condition)
+                                {
+                                    // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
+                                    var toRemove = dict[bp.Line];
+                                    toRemove.Delete();
+                                    dict.Remove(bp.Line);
+                                }
+                                else
+                                {
+                                    if (ad7BPRequest.BindResult != null)
+                                    {
+                                        // use the breakpoint created from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
+                                        resBreakpoints.Add(ad7BPRequest.BindResult);
+                                    }
+                                    else
+                                    {
+                                        resBreakpoints.Add(new Breakpoint()
+                                        {
+                                            Id = (int)ad7BPRequest.Id,
+                                            Verified = true,
+                                            Line = bp.Line
+                                        });
+                                    }
+                                    continue;
+                                }
+                            }
+                        }
+
+
+                        // Create a new breakpoint
                         if (!dict.ContainsKey(bp.Line))
                         {
                             IDebugPendingBreakpoint2 pendingBp;
@@ -1623,28 +1662,6 @@ namespace OpenDebugAD7
                                     Line = bp.Line,
                                     Message = eb.GetMessageForException(e)
                                 });
-                            }
-                        }
-                        else
-                        {   // already created
-                            IDebugBreakpointRequest2 breakpointRequest;
-                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0)
-                            {
-                                var ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
-                                if (ad7BPRequest.BindResult != null)
-                                {
-                                    // use the breakpoint created from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
-                                    resBreakpoints.Add(ad7BPRequest.BindResult);
-                                }
-                                else
-                                {
-                                    resBreakpoints.Add(new Breakpoint()
-                                    {
-                                        Id = (int)ad7BPRequest.Id,
-                                        Verified = true,
-                                        Line = bp.Line
-                                    });
-                                }
                             }
                         }
                     }
