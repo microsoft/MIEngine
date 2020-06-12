@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
     }
 
     /// <summary>
-    /// IDebugExpresssion for Debug Adapter Protocol
+    /// IDebugExpression for Debug Adapter Protocol
     /// </summary>
     [ComImport()]
     [ComVisible(true)]
@@ -29,14 +29,9 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
     public interface IDebugExpressionDAP
     {
         /// <summary>
-        /// Evaluate for IDebugExpressionDAP
+        /// The IDebugExpression.EvaluateSync interface which includes DAPEvalFlags. 
+        /// This method is to be used with calls from clients using the Debug Adapter Protocol.
         /// </summary>
-        /// <param name="dwFlags"></param>
-        /// <param name="dapFlags"></param>
-        /// <param name="dwTimeout"></param>
-        /// <param name="pExprCallback"></param>
-        /// <param name="ppResult"></param>
-        /// <returns></returns>
         [PreserveSig]
         int EvaluateSync([In] enum_EVALFLAGS dwFlags, [In] DAPEvalFlags dapFlags, [In] uint dwTimeout, [In][MarshalAs(UnmanagedType.Interface)] IDebugEventCallback2 pExprCallback, [Out, MarshalAs(UnmanagedType.Interface)] out IDebugProperty2 ppResult);
     }
