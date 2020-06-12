@@ -1598,7 +1598,7 @@ namespace OpenDebugAD7
                                 breakpointRequest is AD7BreakPointRequest ad7BPRequest)
                             {
                                 // Check to see if this breakpoint has a condition that has changed.
-                                if (!StringComparer.InvariantCulture.Equals(ad7BPRequest.Condition, bp.Condition))
+                                if (!StringComparer.Ordinal.Equals(ad7BPRequest.Condition, bp.Condition))
                                 {
                                     // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
                                     var toRemove = dict[bp.Line];
@@ -1765,7 +1765,7 @@ namespace OpenDebugAD7
                                 breakpointRequest is AD7BreakPointRequest ad7BPRequest)
                     {
                         // Check to see if this breakpoint has a condition that has changed.
-                        if (!StringComparer.InvariantCulture.Equals(ad7BPRequest.Condition, b.Condition))
+                        if (!StringComparer.Ordinal.Equals(ad7BPRequest.Condition, b.Condition))
                         {
                             // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
                             var toRemove = m_functionBreakpoints[b.Name];
