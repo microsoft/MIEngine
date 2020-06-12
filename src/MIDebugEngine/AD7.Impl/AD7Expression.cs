@@ -67,7 +67,7 @@ namespace Microsoft.MIDebugEngine
         // This method evaluates the expression synchronously.
         int IDebugExpression2.EvaluateSync(enum_EVALFLAGS dwFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult)
         {
-            return EvaluateSync(dwFlags, DAPEvalFlags.NONE, dwTimeout, pExprCallback, out ppResult);
+            return EvaluateSyncInternal(dwFlags, DAPEvalFlags.NONE, dwTimeout, pExprCallback, out ppResult);
         }
 
         #endregion
@@ -76,12 +76,12 @@ namespace Microsoft.MIDebugEngine
 
         int IDebugExpressionDAP.EvaluateSync(enum_EVALFLAGS dwFlags, DAPEvalFlags dapFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult)
         {
-            return EvaluateSync(dwFlags, dapFlags, dwTimeout, pExprCallback, out ppResult);
+            return EvaluateSyncInternal(dwFlags, dapFlags, dwTimeout, pExprCallback, out ppResult);
         }
 
         #endregion
 
-        private int EvaluateSync(enum_EVALFLAGS dwFlags, DAPEvalFlags dapFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult)
+        private int EvaluateSyncInternal(enum_EVALFLAGS dwFlags, DAPEvalFlags dapFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult)
         {
             ppResult = null;
             if ((dwFlags & enum_EVALFLAGS.EVAL_NOSIDEEFFECTS) != 0 && _var.IsVisualized)
