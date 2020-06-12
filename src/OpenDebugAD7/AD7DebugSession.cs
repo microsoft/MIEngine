@@ -32,6 +32,8 @@ namespace OpenDebugAD7
         // This is a general purpose lock. Don't hold it across long operations.
         private readonly object m_lock = new object();
 
+        private string m_clientId;
+
         private IDebugProcess2 m_process;
         private string m_processName;
         private IDebugEngineLaunch2 m_engineLaunch;
@@ -535,9 +537,11 @@ namespace OpenDebugAD7
 
             m_engine = (IDebugEngine2)m_engineConfiguration.LoadEngine();
 
+            m_clientId = arguments.AdapterID;
+
             TypeInfo engineType = m_engine.GetType().GetTypeInfo();
-            HostTelemetry.InitializeTelemetry(SendTelemetryEvent, engineType, m_engineConfiguration.AdapterId);
-            DebuggerTelemetry.InitializeTelemetry(Protocol.SendEvent, engineType, typeof(Host).GetTypeInfo(), m_engineConfiguration.AdapterId);
+            HostTelemetry.InitializeTelemetry(SendTelemetryEvent, engineType, m_engineConfiguration.AdapterId, m_clientId);
+            DebuggerTelemetry.InitializeTelemetry(Protocol.SendEvent, engineType, typeof(Host).GetTypeInfo(), m_engineConfiguration.AdapterId, m_clientId);
 
             HostOutputWindow.InitializeLaunchErrorCallback((error) => m_logger.WriteLine(LoggingCategory.DebuggerError, error));
 
@@ -1890,14 +1894,14 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
-            if (context == EvaluateArguments.ContextValue.Clipboard)
-            {
-                dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
-            }
-
             IDebugProperty2 property;
             if (expressionObject is IDebugExpressionDAP expressionDapObject)
             {
+                if (context == EvaluateArguments.ContextValue.Clipboard)
+                {
+                    dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
+                }
+
                 hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
             }
             else

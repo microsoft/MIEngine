@@ -41,10 +41,12 @@ namespace OpenDebugAD7
         private const string TelemetryEngineVersion = "EngineVersion";
         private const string TelemetryHostVersion = "HostVersion";
         private const string TelemetryAdapterId = "AdapterId";
+        private const string TelemetryClientId = "ClientId";
         private string _engineName;
         private string _engineVersion;
         private string _hostVersion;
         private string _adapterId;
+        private string _clientId;
 
         // Specific telemetry properties
         public const string TelemetryIsCoreDump = TelemetryLaunchEventName + ".IsCoreDump";
@@ -56,7 +58,7 @@ namespace OpenDebugAD7
         public const string TelemetryMIMode = "MIMode";
         public const string TelemetryStackFrameId = TelemetryExecuteInConsole + ".ExecuteInConsole";
 
-        private DebuggerTelemetry(Action<DebugEvent> callback, TypeInfo engineType, TypeInfo hostType, string adapterId)
+        private DebuggerTelemetry(Action<DebugEvent> callback, TypeInfo engineType, TypeInfo hostType, string adapterId, string clientId)
         {
             Debug.Assert(_engineName == null && _engineVersion == null, "InitializeTelemetry called more than once?");
 
@@ -65,15 +67,16 @@ namespace OpenDebugAD7
             _engineVersion = GetVersionAttributeValue(engineType);
             _hostVersion = GetVersionAttributeValue(hostType);
             _adapterId = adapterId;
+            _clientId = clientId;
         }
 
         #region Public Static Methods
 
-        public static void InitializeTelemetry(Action<DebugEvent> telemetryCallback, TypeInfo engineType, TypeInfo hostType, string adapterId)
+        public static void InitializeTelemetry(Action<DebugEvent> telemetryCallback, TypeInfo engineType, TypeInfo hostType, string adapterId, string clientId)
         {
             Debug.Assert(telemetryCallback != null, "InitializeTelemetry called with incorrect values.");
 
-            s_telemetryInstance = new DebuggerTelemetry(telemetryCallback, engineType, hostType, adapterId);
+            s_telemetryInstance = new DebuggerTelemetry(telemetryCallback, engineType, hostType, adapterId, clientId);
         }
 
         /// <summary>
@@ -209,6 +212,7 @@ namespace OpenDebugAD7
             properties[TelemetryEngineVersion] = _engineVersion;
             properties[TelemetryHostVersion] = _hostVersion;
             properties[TelemetryAdapterId] = _adapterId;
+            properties[TelemetryClientId] = _clientId;
 
             properties.Merge(eventProperties);
 

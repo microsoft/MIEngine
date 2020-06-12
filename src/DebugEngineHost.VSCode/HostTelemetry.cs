@@ -28,14 +28,16 @@ namespace Microsoft.DebugEngineHost
         private const string TelemetryEngineVersion = @"VS.Diagnostics.Debugger.EngineVersion";
         private const string TelemetryHostVersion = @"VS.Diagnostics.Debugger.HostVersion";
         private const string TelemetryAdapterId = @"VS.Diagnostics.Debugger.AdapterId";
+        private const string TelemetryClientId = @"VS.Diagnostics.Debugger.ClientId";
 
         private static Action<string, KeyValuePair<string, object>[]> s_telemetryCallback;
         private static string s_engineName;
         private static string s_engineVersion;
         private static string s_hostVersion;
         private static string s_adapterId;
+        private static string s_clientId;
 
-        public static void InitializeTelemetry(Action<string, KeyValuePair<string, object>[]> telemetryCallback, TypeInfo engineType, string adapterId)
+        public static void InitializeTelemetry(Action<string, KeyValuePair<string, object>[]> telemetryCallback, TypeInfo engineType, string adapterId, string clientId)
         {
             Debug.Assert(telemetryCallback != null && engineType != null, "Bogus arguments to InitializeTelemetry");
             s_telemetryCallback = telemetryCallback;
@@ -43,6 +45,7 @@ namespace Microsoft.DebugEngineHost
             s_engineVersion = GetVersionAttributeValue(engineType);
             s_hostVersion = GetVersionAttributeValue(typeof(HostTelemetry).GetTypeInfo());
             s_adapterId = adapterId;
+            s_clientId = clientId;
         }
 
         /// <summary>
@@ -98,7 +101,8 @@ namespace Microsoft.DebugEngineHost
                     new KeyValuePair<string, object>(TelemetryNonFatalErrorExceptionHResult, currentException.HResult),
                     new KeyValuePair<string, object>(TelemetryEngineVersion, s_engineVersion),
                     new KeyValuePair<string, object>(TelemetryAdapterId, s_adapterId),
-                    new KeyValuePair<string, object>(TelemetryHostVersion, s_hostVersion)
+                    new KeyValuePair<string, object>(TelemetryHostVersion, s_hostVersion),
+                    new KeyValuePair<string, object>(TelemetryClientId, s_clientId)
                     );
             }
             catch
