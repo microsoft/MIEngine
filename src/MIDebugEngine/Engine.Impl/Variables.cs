@@ -539,7 +539,7 @@ namespace Microsoft.MIDebugEngine
                                 }
                                 else
                                 {
-                                    Debug.Fail("Weird msg from -var-evaluate-expression");
+                                    Debug.Fail("Unexpected format of msg from -var-evaluate-expression");
                                 }
                             }
                         }
@@ -550,7 +550,7 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
-                        Debug.Fail("Weird msg from -var-create");
+                        Debug.Fail("Unexpected format of msg from -var-create");
                     }
 
                     if (canRunClipboardContextCommands && numElements != 0)
@@ -592,7 +592,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                Debug.Fail("Weird msg from expression formatting");
+                Debug.Fail("Unexpected format of msg from expression formatting");
             }
         }
 
