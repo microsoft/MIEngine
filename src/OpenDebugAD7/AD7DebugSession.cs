@@ -63,6 +63,8 @@ namespace OpenDebugAD7
 
         private VariableManager m_variableManager;
 
+        private TracepointManager m_tracepointManager;
+
         private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
 
         #region Constructor
@@ -83,6 +85,7 @@ namespace OpenDebugAD7
             m_breakpoints = new Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>>();
             m_functionBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
             m_variableManager = new VariableManager();
+            m_tracepointManager = new TracepointManager();
         }
 
         #endregion
@@ -590,7 +593,8 @@ namespace OpenDebugAD7
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
                 ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
-                SupportsClipboardContext = m_engineConfiguration.ClipboardContext
+                SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
+                SupportsLogPoints = true
             };
 
             responder.SetResponse(initializeResponse);
@@ -1609,6 +1613,18 @@ namespace OpenDebugAD7
                                 }
                                 else
                                 {
+                                    if (!string.IsNullOrWhiteSpace(bp.LogMessage))
+                                    {
+                                        m_tracepointManager.Replace(ad7BPRequest.Id, bp.LogMessage);
+                                    }
+                                    else
+                                    {
+                                        if (m_tracepointManager.Contains(ad7BPRequest.Id))
+                                        {
+                                            m_tracepointManager.Remove(ad7BPRequest.Id);
+                                        }
+                                    }
+
                                     if (ad7BPRequest.BindResult != null)
                                     {
                                         // use the breakpoint created from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
@@ -1641,6 +1657,12 @@ namespace OpenDebugAD7
                                 eb.CheckHR(pendingBp.Bind());
 
                                 dict[bp.Line] = pendingBp;
+
+                                if (!string.IsNullOrWhiteSpace(bp.LogMessage))
+                                {
+                                    m_tracepointManager.Add(pBPRequest.Id, bp.LogMessage);
+                                }
+
                                 resBreakpoints.Add(new Breakpoint()
                                 {
                                     Id = (int)pBPRequest.Id,
@@ -1893,12 +1915,10 @@ namespace OpenDebugAD7
             hr = frame.GetExpressionContext(out expressionContext);
             eb.CheckHR(hr);
 
-            const uint InputRadix = 10;
-            DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
             IDebugExpression2 expressionObject;
             string error;
             uint errorIndex;
-            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, InputRadix, out expressionObject, out error, out errorIndex);
+            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.EvaluationRadix, out expressionObject, out error, out errorIndex);
             if (!string.IsNullOrEmpty(error))
             {
                 // TODO: Is this how errors should be returned?
@@ -1919,14 +1939,14 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
-            if (context == EvaluateArguments.ContextValue.Clipboard)
-            {
-                dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
-            }
-
             IDebugProperty2 property;
             if (expressionObject is IDebugExpressionDAP expressionDapObject)
             {
+                DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
+                if (context == EvaluateArguments.ContextValue.Clipboard)
+                {
+                    dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
+                }
                 hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
             }
             else
@@ -2094,7 +2114,46 @@ namespace OpenDebugAD7
 
         public void HandleIDebugBreakpointEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+            bool fireStopEvent = true;
+
+            if (pEvent is IDebugBreakpointEvent2 debugBreakpointEvent) {
+                debugBreakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 pBoundBreakpoints);
+                IDebugBoundBreakpoint2[] boundBp = new IDebugBoundBreakpoint2[1];
+                uint numReturned = 0;
+                while (pBoundBreakpoints.Next(1, boundBp, ref numReturned) == HRConstants.S_OK && numReturned == 1)
+                {
+                    if (boundBp[0].GetPendingBreakpoint(out IDebugPendingBreakpoint2 ppPendingBreakpoint) == HRConstants.S_OK)
+                    {
+                        if (ppPendingBreakpoint.GetBreakpointRequest(out IDebugBreakpointRequest2 ppBPRequest) == HRConstants.S_OK)
+                        {
+                            if (ppBPRequest is AD7BreakPointRequest ad7BreakpointRequest)
+                            {
+                                if (m_tracepointManager.Contains(ad7BreakpointRequest.Id))
+                                {
+                                    fireStopEvent = false;
+
+                                    ThreadPool.QueueUserWorkItem((o) =>
+                                    {
+                                        string logMessage = m_tracepointManager.GetLogMessage(ad7BreakpointRequest.Id, pThread, Constants.EvaluationRadix);
+                                        if (!string.IsNullOrEmpty(logMessage))
+                                        {
+                                            m_logger.WriteLine(LoggingCategory.DebuggerStatus, logMessage);
+                                        }
+
+                                        BeforeContinue();
+                                        m_program.Continue(pThread);
+                                    });
+                            }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (fireStopEvent)
+            {
+                FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+            }
         }
 
         public void HandleIDebugBreakEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
