@@ -27,17 +27,7 @@ namespace OpenDebugAD7
 
         internal static Tracepoint CreateTracepoint(string logMessage)
         {
-            Tracepoint tp = null;
-
-            try
-            {
-                tp = new Tracepoint(logMessage);
-            } 
-            catch (InvalidTracepointException)
-            {
-            }
-
-            return tp;
+            return new Tracepoint(logMessage); ;
         }
 
         internal string GetLogMessage(IDebugThread2 pThread, uint radix, string processName)
@@ -94,8 +84,8 @@ namespace OpenDebugAD7
                     }
                     else
                     {
-                        value = InterpolateVariable(keyValuePair.Value, topFrame[0].m_pFrame, radix);
-                        currIndex += 2;
+                        string toInterpolate = keyValuePair.Value;
+                        value = InterpolateVariable(toInterpolate.Substring(1, toInterpolate.Length - 2), topFrame[0].m_pFrame, radix);
                     }
 
                     // Cache expression
@@ -278,7 +268,8 @@ namespace OpenDebugAD7
 
             if ((propertyInfo[0].dwAttrib & enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) == enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR)
             {
-                return errorMessage;
+                // bstrValue has useful information.
+                return string.Format(CultureInfo.InvariantCulture, "{0}: {1}", errorMessage, propertyInfo[0].bstrValue);
             }
 
             return propertyInfo[0].bstrValue;
@@ -286,6 +277,22 @@ namespace OpenDebugAD7
 
         #region Tracepoint Parsing
 
+        /// <summary>
+        /// The parse method for Tracepoints.
+        /// 
+        /// Algorithm:
+        ///     Go though each character in the string.
+        ///         1. If previous character was an escape, check to see if current is curl brace. If so, just output curl brace, else output escape and character.
+        ///         2. If it is an escape character, toggle isEscape to be true. Goto 1.
+        ///         3. If it is a '$', find the end of the token. If it is a known token, it will be added to m_indexToExpressions and skip over all the characters
+        ///             in the token. If not, it will just add $ and continue.
+        ///         4. If it is a open curl brace, try to find end match curl brace for the interpolated expression. Add to m_indexToExpressions.
+        ///             If there is no matching end brace, an exception will be thrown.
+        ///         5. If there is a double quote, find the associated end quote. Ignore any interpolation in here.
+        ///         6. Other character, just add to message to output.
+        /// </summary>
+        /// <param name="input">The logMessage to parse</param>
+        /// <returns>The new string after it has been parsed, it will check for excaped curl braces.</returns>
         private string Parse(string input)
         {
             StringBuilder replace = new StringBuilder();
@@ -332,7 +339,7 @@ namespace OpenDebugAD7
                     {
                         if (FindInterpolatedExpression(input.Substring(index), out int endIndex))
                         {
-                            string buffer = input.Substring(index + 1, endIndex - 1);
+                            string buffer = input.Substring(index, endIndex + 1);
 
                             if (!string.IsNullOrWhiteSpace(buffer))
                             {
@@ -405,6 +412,12 @@ namespace OpenDebugAD7
             }
         }
 
+        /// <summary>
+        /// Method to find the end matching quote.
+        /// </summary>
+        /// <param name="input">string to find quote. Index 0 is the open quote.</param>
+        /// <param name="endIndex">output of where the index of the end quote relative to 'input'</param>
+        /// <returns>true if a end quote was found</returns>
         private bool FindEndQuote(string input, out int endIndex)
         {
             endIndex = -1;
@@ -435,43 +448,63 @@ namespace OpenDebugAD7
             return false;
         }
 
+        /// <summary>
+        /// Method to find the interpolated expression.
+        /// E.g. Find the end curl brace. 
+        /// </summary>
+        /// <param name="input">String to find the end brace. Index 0 is '{'</param>
+        /// <param name="endIndex">Index of '}' relative to input.</param>
+        /// <returns>true if an end brace was found.</returns>
         private bool FindInterpolatedExpression(string input, out int endIndex)
         {
             endIndex = -1;
             int index = 0;
             StringBuilder buffer = new StringBuilder();
             int nested = 0;
+            bool isEscaped = false;
             while (++index < input.Length)
             {
                 char c = input[index];
-                if (c == '{')
+                if (isEscaped)
                 {
-                    nested++;
+                    buffer.Append(c);
+                    isEscaped = false;
                 }
-                else if (c == '}')
+                else
                 {
-                    if (nested > 0)
+                    if (c == '\\')
                     {
-                        nested--;
+                        isEscaped = true;
                     }
-                    else
+                    else if (c == '{')
                     {
-                        endIndex = index;
-                        return true;
+                        nested++;
                     }
-                }
-                else if (c == '"')
-                {
-                    if (FindEndQuote(input.Substring(index), out int length))
+                    else if (c == '}')
                     {
-                        length = length + 1;
+                        if (nested > 0)
+                        {
+                            nested--;
+                        }
+                        else
+                        {
+                            endIndex = index;
+                            return true;
+                        }
                     }
-                    else
+                    else if (c == '"')
                     {
-                        length = input.Length - index;
+                        if (FindEndQuote(input.Substring(index), out int length))
+                        {
+                            length = length + 1;
+                        }
+                        else
+                        {
+                            length = input.Length - index;
+                        }
+                        buffer.Append(input.Substring(index, length));
+                        index += length;
                     }
-                    buffer.Append(input.Substring(index, length));
-                    index += length;
                 }
             }
 
@@ -479,12 +512,12 @@ namespace OpenDebugAD7
         }
 
         #endregion
-
-        public class InvalidTracepointException : Exception
+    }
+    public class InvalidTracepointException : Exception
+    {
+        public InvalidTracepointException()
         {
-            public InvalidTracepointException()
-            {
-            }
         }
     }
+
 }

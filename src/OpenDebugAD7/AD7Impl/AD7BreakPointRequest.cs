@@ -19,28 +19,6 @@ namespace OpenDebugAD7.AD7Impl
 
         public string Condition { get; private set; }
 
-        private string m_logMessage;
-
-        public string LogMessage {
-            get
-            {
-                return m_logMessage;
-            }     
-            set {
-                if (value != null)
-                {
-                    Tracepoint = Tracepoint.CreateTracepoint(value);
-                }
-                else
-                {
-                    Tracepoint = null;
-                }
-                m_logMessage = value; 
-            }
-        }
-
-        public Tracepoint Tracepoint { get; private set; }
-
         public AD7DocumentPosition DocumentPosition { get; private set; }
 
         public AD7FunctionPosition FunctionPosition { get; private set; }
@@ -134,5 +112,56 @@ namespace OpenDebugAD7.AD7Impl
                 return HRConstants.E_FAIL;
             }
         }
+
+        #region Tracepoints
+
+        private string m_logMessage;
+        private Tracepoint m_Tracepoint;
+
+        public void ClearTracepoint()
+        {
+            m_logMessage = null;
+            m_Tracepoint = null;
+        }
+
+        public bool SetLogMessage(string logMessage)
+        {
+            try
+            {
+                m_Tracepoint = Tracepoint.CreateTracepoint(logMessage);
+            }
+            catch (InvalidTracepointException e)
+            {
+                return false;
+            }
+            m_logMessage = logMessage;
+            return true;
+        }
+
+        public string LogMessage
+        {
+            get
+            {
+                return m_logMessage;
+            }
+        }
+
+        public bool HasTracepoint
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(m_logMessage) && m_Tracepoint != null;
+            }
+        }
+
+        public Tracepoint Tracepoint
+        {
+            get
+            {
+                return m_Tracepoint;
+            }
+        }
+
+        #endregion
     }
 }

@@ -256,7 +256,7 @@ namespace OpenDebugAD7
                         {
                             if (ppBPRequest is AD7BreakPointRequest ad7BreakpointRequest)
                             {
-                                if (!string.IsNullOrEmpty(ad7BreakpointRequest.LogMessage))
+                                if (ad7BreakpointRequest.HasTracepoint)
                                 {
                                     tracepoints.Add(ad7BreakpointRequest.Tracepoint);
                                 }
@@ -1641,17 +1641,16 @@ namespace OpenDebugAD7
                                     toRemove.Delete();
                                     dict.Remove(bp.Line);
                                 }
+                                // Check to see if tracepoint changed
+                                else if (!StringComparer.Ordinal.Equals(ad7BPRequest.LogMessage, bp.LogMessage))
+                                {
+                                    ad7BPRequest.ClearTracepoint();
+                                    var toRemove = dict[bp.Line];
+                                    toRemove.Delete();
+                                    dict.Remove(bp.Line);
+                                }
                                 else
                                 {
-                                    if (!string.IsNullOrWhiteSpace(bp.LogMessage))
-                                    {
-                                        ad7BPRequest.LogMessage = bp.LogMessage;
-                                    }
-                                    else
-                                    {
-                                        ad7BPRequest.LogMessage = null;
-                                    }
-
                                     if (ad7BPRequest.BindResult != null)
                                     {
                                         // use the breakpoint created from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
@@ -1685,17 +1684,31 @@ namespace OpenDebugAD7
 
                                 dict[bp.Line] = pendingBp;
 
+                                bool verified = true;
                                 if (!string.IsNullOrEmpty(bp.LogMessage))
                                 {
-                                    pBPRequest.LogMessage = bp.LogMessage;
+                                    verified = pBPRequest.SetLogMessage(bp.LogMessage);
                                 }
 
-                                resBreakpoints.Add(new Breakpoint()
+                                if (verified)
                                 {
-                                    Id = (int)pBPRequest.Id,
-                                    Verified = true,
-                                    Line = bp.Line
-                                });
+                                    resBreakpoints.Add(new Breakpoint()
+                                    {
+                                        Id = (int)pBPRequest.Id,
+                                        Verified = verified,
+                                        Line = bp.Line
+                                    });
+                                }
+                                else
+                                {
+                                    resBreakpoints.Add(new Breakpoint()
+                                    {
+                                        Id = (int)pBPRequest.Id,
+                                        Verified = verified,
+                                        Line = bp.Line,
+                                        Message = "Unable to parse logMessage."
+                                    });
+                                }
                             }
                             catch (Exception e)
                             {
