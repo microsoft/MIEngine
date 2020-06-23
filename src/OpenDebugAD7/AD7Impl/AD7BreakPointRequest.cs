@@ -19,6 +19,28 @@ namespace OpenDebugAD7.AD7Impl
 
         public string Condition { get; private set; }
 
+        private string m_logMessage;
+
+        public string LogMessage {
+            get
+            {
+                return m_logMessage;
+            }     
+            set {
+                if (value != null)
+                {
+                    Tracepoint = Tracepoint.CreateTracepoint(value);
+                }
+                else
+                {
+                    Tracepoint = null;
+                }
+                m_logMessage = value; 
+            }
+        }
+
+        public Tracepoint Tracepoint { get; private set; }
+
         public AD7DocumentPosition DocumentPosition { get; private set; }
 
         public AD7FunctionPosition FunctionPosition { get; private set; }

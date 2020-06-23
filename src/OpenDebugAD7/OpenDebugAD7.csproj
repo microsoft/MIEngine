@@ -147,7 +147,7 @@
     <Compile Include="Telemetry\TelemetryHelper.cs" />
     <Compile Include="TextPositionTuple.cs" />
     <Compile Include="ThreadFrameEnumInfo.cs" />
-    <Compile Include="TracepointManager.cs" />
+    <Compile Include="Tracepoint.cs" />
     <Compile Include="VariableManager.cs" />
     <Compile Include="AD7DebugSession.cs" />
   </ItemGroup>

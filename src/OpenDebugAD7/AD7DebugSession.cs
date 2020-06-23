@@ -54,6 +54,7 @@ namespace OpenDebugAD7
         private bool m_isAttach;
         private bool m_isCoreDump;
         private bool m_isStopped = false;
+        private bool m_isStepping = false;
 
         private readonly TaskCompletionSource<object> m_configurationDoneTCS = new TaskCompletionSource<object>();
 
@@ -62,8 +63,6 @@ namespace OpenDebugAD7
         private PathConverter m_pathConverter = new PathConverter();
 
         private VariableManager m_variableManager;
-
-        private TracepointManager m_tracepointManager;
 
         private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
 
@@ -85,7 +84,6 @@ namespace OpenDebugAD7
             m_breakpoints = new Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>>();
             m_functionBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
             m_variableManager = new VariableManager();
-            m_tracepointManager = new TracepointManager();
         }
 
         #endregion
@@ -240,6 +238,37 @@ namespace OpenDebugAD7
             return null;
         }
 
+        private IList<Tracepoint> GetTracepoints(IDebugBreakpointEvent2 debugEvent)
+        {
+            IList<Tracepoint> tracepoints = new List<Tracepoint>();
+
+            if (debugEvent != null)
+            {
+                debugEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 pBoundBreakpoints);
+                IDebugBoundBreakpoint2[] boundBp = new IDebugBoundBreakpoint2[1];
+
+                uint numReturned = 0;
+                while (pBoundBreakpoints.Next(1, boundBp, ref numReturned) == HRConstants.S_OK && numReturned == 1)
+                {
+                    if (boundBp[0].GetPendingBreakpoint(out IDebugPendingBreakpoint2 ppPendingBreakpoint) == HRConstants.S_OK)
+                    {
+                        if (ppPendingBreakpoint.GetBreakpointRequest(out IDebugBreakpointRequest2 ppBPRequest) == HRConstants.S_OK)
+                        {
+                            if (ppBPRequest is AD7BreakPointRequest ad7BreakpointRequest)
+                            {
+                                if (!string.IsNullOrEmpty(ad7BreakpointRequest.LogMessage))
+                                {
+                                    tracepoints.Add(ad7BreakpointRequest.Tracepoint);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return tracepoints;
+        }
+
         #endregion
 
         #region AD7EventHandlers helper methods
@@ -248,6 +277,7 @@ namespace OpenDebugAD7
         {
             if (!m_isCoreDump)
             {
+                m_isStepping = false;
                 m_isStopped = false;
                 m_variableManager.Reset();
                 m_frameHandles.Reset();
@@ -502,7 +532,6 @@ namespace OpenDebugAD7
             // If we are already running ignore additional step requests
             if (m_isStopped)
             {
-
                 IDebugThread2 thread = null;
                 lock (m_threads)
                 {
@@ -516,6 +545,7 @@ namespace OpenDebugAD7
                 ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
                 try
                 {
+                    m_isStepping = true;
                     builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
                 }
                 catch (AD7Exception)
@@ -1615,14 +1645,11 @@ namespace OpenDebugAD7
                                 {
                                     if (!string.IsNullOrWhiteSpace(bp.LogMessage))
                                     {
-                                        m_tracepointManager.Replace(ad7BPRequest.Id, bp.LogMessage);
+                                        ad7BPRequest.LogMessage = bp.LogMessage;
                                     }
                                     else
                                     {
-                                        if (m_tracepointManager.Contains(ad7BPRequest.Id))
-                                        {
-                                            m_tracepointManager.Remove(ad7BPRequest.Id);
-                                        }
+                                        ad7BPRequest.LogMessage = null;
                                     }
 
                                     if (ad7BPRequest.BindResult != null)
@@ -1658,9 +1685,9 @@ namespace OpenDebugAD7
 
                                 dict[bp.Line] = pendingBp;
 
-                                if (!string.IsNullOrWhiteSpace(bp.LogMessage))
+                                if (!string.IsNullOrEmpty(bp.LogMessage))
                                 {
-                                    m_tracepointManager.Add(pBPRequest.Id, bp.LogMessage);
+                                    pBPRequest.LogMessage = bp.LogMessage;
                                 }
 
                                 resBreakpoints.Add(new Breakpoint()
@@ -2114,43 +2141,29 @@ namespace OpenDebugAD7
 
         public void HandleIDebugBreakpointEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            bool fireStopEvent = true;
-
-            if (pEvent is IDebugBreakpointEvent2 debugBreakpointEvent) {
-                debugBreakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 pBoundBreakpoints);
-                IDebugBoundBreakpoint2[] boundBp = new IDebugBoundBreakpoint2[1];
-                uint numReturned = 0;
-                while (pBoundBreakpoints.Next(1, boundBp, ref numReturned) == HRConstants.S_OK && numReturned == 1)
+            IList<Tracepoint> tracepoints = GetTracepoints(pEvent as IDebugBreakpointEvent2);
+            if (tracepoints.Any())
+            {
+                ThreadPool.QueueUserWorkItem((o) =>
                 {
-                    if (boundBp[0].GetPendingBreakpoint(out IDebugPendingBreakpoint2 ppPendingBreakpoint) == HRConstants.S_OK)
+                    foreach (var tp in tracepoints)
                     {
-                        if (ppPendingBreakpoint.GetBreakpointRequest(out IDebugBreakpointRequest2 ppBPRequest) == HRConstants.S_OK)
-                        {
-                            if (ppBPRequest is AD7BreakPointRequest ad7BreakpointRequest)
-                            {
-                                if (m_tracepointManager.Contains(ad7BreakpointRequest.Id))
-                                {
-                                    fireStopEvent = false;
+                        string logMessage = tp.GetLogMessage(pThread, Constants.EvaluationRadix, m_processName);
 
-                                    ThreadPool.QueueUserWorkItem((o) =>
-                                    {
-                                        string logMessage = m_tracepointManager.GetLogMessage(ad7BreakpointRequest.Id, pThread, Constants.EvaluationRadix);
-                                        if (!string.IsNullOrEmpty(logMessage))
-                                        {
-                                            m_logger.WriteLine(LoggingCategory.DebuggerStatus, logMessage);
-                                        }
-
-                                        BeforeContinue();
-                                        m_program.Continue(pThread);
-                                    });
-                            }
-                            }
-                        }
+                        m_logger.WriteLine(LoggingCategory.DebuggerStatus, logMessage);
                     }
-                }
+                });
             }
 
-            if (fireStopEvent)
+            if (!m_isStepping && tracepoints.Any())
+            {
+                ThreadPool.QueueUserWorkItem((o) =>
+                {
+                    BeforeContinue();
+                    m_program.Continue(pThread);
+                });
+            }
+            else
             {
                 FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
             }
