@@ -144,7 +144,7 @@ namespace OpenDebugAD7
                                 hr = pDocumentContext.GetStatementRange(textPosBeg, textPosEnd);
                                 if (hr >= 0)
                                 {
-                                    return string.Format("{0}({1})", fileName, textPosBeg[0].dwLine + 1);
+                                    return string.Format(CultureInfo.InvariantCulture, "{0}({1})", fileName, textPosBeg[0].dwLine + 1);
                                 }
                             }
                         }
@@ -241,7 +241,7 @@ namespace OpenDebugAD7
             hr = expressionContext.ParseText(variable, enum_PARSEFLAGS.PARSE_EXPRESSION, radix, out expressionObject, out string errStr, out uint errIdx);
             if (hr < 0)
             {
-                return string.Format("{0} at index {1}", errStr, errIdx);
+                return string.Format(CultureInfo.InvariantCulture, "{0} at index {1}", errStr, errIdx);
             }
             eb.CheckOutput(expressionObject);
 
