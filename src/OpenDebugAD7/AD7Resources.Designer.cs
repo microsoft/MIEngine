@@ -288,6 +288,15 @@ namespace OpenDebugAD7 {
                 return ResourceManager.GetString("Error_UnableToSetBreakpoint", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse &apos;logMessage&apos;..
+        /// </summary>
+        internal static string Error_UnableToSetTracepoint {
+            get {
+                return ResourceManager.GetString("Error_UnableToSetTracepoint", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; cannot be assigned to.

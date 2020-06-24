@@ -1706,8 +1706,8 @@ namespace OpenDebugAD7
                                         Id = (int)pBPRequest.Id,
                                         Verified = verified,
                                         Line = bp.Line,
-                                        Message = "Unable to parse logMessage."
-                                    });
+                                        Message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_UnableToSetTracepoint)
+                                    }); ;
                                 }
                             }
                             catch (Exception e)
@@ -1958,7 +1958,7 @@ namespace OpenDebugAD7
             IDebugExpression2 expressionObject;
             string error;
             uint errorIndex;
-            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.EvaluationRadix, out expressionObject, out error, out errorIndex);
+            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
             if (!string.IsNullOrEmpty(error))
             {
                 // TODO: Is this how errors should be returned?
@@ -2161,19 +2161,25 @@ namespace OpenDebugAD7
                 {
                     foreach (var tp in tracepoints)
                     {
-                        string logMessage = tp.GetLogMessage(pThread, Constants.EvaluationRadix, m_processName);
+                        string logMessage = tp.GetLogMessage(pThread, Constants.ParseRadix, m_processName);
 
                         m_logger.WriteLine(LoggingCategory.DebuggerStatus, logMessage);
                     }
-                });
-            }
 
-            if (!m_isStepping && tracepoints.Any())
-            {
-                ThreadPool.QueueUserWorkItem((o) =>
-                {
-                    BeforeContinue();
-                    m_program.Continue(pThread);
+                    // Need to check to see if the previous continuation of the debuggee was a step. 
+                    // If so, we need to send a stopping event to the UI to signal the step completed successfully. 
+                    if (!m_isStepping)
+                    {
+                        ThreadPool.QueueUserWorkItem((obj) =>
+                        {
+                            BeforeContinue();
+                            m_program.Continue(pThread);
+                        });
+                    }
+                    else
+                    {
+                        FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+                    }
                 });
             }
             else

@@ -28,7 +28,9 @@ namespace OpenDebugAD7
     {
         // POST_PREVIEW_TODO: no-func-eval support, radix, timeout
         public const uint EvaluationRadix = 10;
+        public const uint ParseRadix = 10;
         public const uint EvaluationTimeout = 5000;
         public const int DisconnectTimeout = 2000;
+        public const int DefaultNumCallStacksShownToken = 10;
     }
 }

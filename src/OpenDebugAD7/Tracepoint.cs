@@ -206,7 +206,7 @@ namespace OpenDebugAD7
                         int hr = pThread.EnumFrameInfo(enum_FRAMEINFO_FLAGS.FIF_FRAME | enum_FRAMEINFO_FLAGS.FIF_FLAGS, Constants.EvaluationRadix, out frameInfoEnum);
                         int count = 0;
                         StringBuilder sb = new StringBuilder();
-                        while (count < 5)
+                        while (count < Constants.DefaultNumCallStacksShownToken)
                         {
                             FRAMEINFO[] frames = new FRAMEINFO[1];
                             uint fetched = 0;
@@ -288,8 +288,7 @@ namespace OpenDebugAD7
         ///             in the token. If not, it will just add $ and continue.
         ///         4. If it is a open curl brace, try to find end match curl brace for the interpolated expression. Add to m_indexToExpressions.
         ///             If there is no matching end brace, an exception will be thrown.
-        ///         5. If there is a double quote, find the associated end quote. Ignore any interpolation in here.
-        ///         6. Other character, just add to message to output.
+        ///         5. Other character, just add to message to output.
         /// </summary>
         /// <param name="input">The logMessage to parse</param>
         /// <returns>The new string after it has been parsed, it will check for excaped curl braces.</returns>
@@ -354,19 +353,6 @@ namespace OpenDebugAD7
                         {
                             throw new InvalidTracepointException();
                         }
-                    }
-                    else if (c == '"')
-                    {
-                        if (FindEndQuote(input.Substring(index), out int length))
-                        {
-                            length = length + 1;
-                        }
-                        else
-                        {
-                            length = input.Length - index;
-                        }
-                        replace.Append(input.Substring(index, length));
-                        index += length - 1;
                     }
                     else
                     {

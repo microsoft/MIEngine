@@ -192,6 +192,9 @@
   <data name="Error_UnableToSetBreakpoint" xml:space="preserve">
     <value>Error setting breakpoint. {0}</value>
   </data>
+  <data name="Error_UnableToSetTracepoint" xml:space="preserve">
+    <value>Unable to parse 'logMessage'.</value>
+  </data>
   <data name="Msg_E_CRASHDUMP_UNSUPPORTED" xml:space="preserve">
     <value>This operation is not supported when debugging dump files.</value>
   </data>
