@@ -543,9 +543,9 @@ namespace OpenDebugAD7
 
                 BeforeContinue();
                 ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
+                m_isStepping = true;
                 try
                 {
-                    m_isStepping = true;
                     builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
                 }
                 catch (AD7Exception)
@@ -1679,19 +1679,20 @@ namespace OpenDebugAD7
 
                             try
                             {
-                                eb.CheckHR(m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp));
-                                eb.CheckHR(pendingBp.Bind());
-
-                                dict[bp.Line] = pendingBp;
-
                                 bool verified = true;
                                 if (!string.IsNullOrEmpty(bp.LogMessage))
                                 {
+                                    // Make sure tracepoint is valid.
                                     verified = pBPRequest.SetLogMessage(bp.LogMessage);
                                 }
 
                                 if (verified)
                                 {
+                                    eb.CheckHR(m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp));
+                                    eb.CheckHR(pendingBp.Bind());
+
+                                    dict[bp.Line] = pendingBp;
+
                                     resBreakpoints.Add(new Breakpoint()
                                     {
                                         Id = (int)pBPRequest.Id,
@@ -2161,9 +2162,16 @@ namespace OpenDebugAD7
                 {
                     foreach (var tp in tracepoints)
                     {
-                        string logMessage = tp.GetLogMessage(pThread, Constants.ParseRadix, m_processName);
-
-                        m_logger.WriteLine(LoggingCategory.DebuggerStatus, logMessage);
+                        int hr = tp.GetLogMessage(pThread, Constants.ParseRadix, m_processName, out string logMessage);
+                        if (hr != HRConstants.S_OK)
+                        {
+                            DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryTracepointEventName, logMessage);
+                            m_logger.WriteLine(LoggingCategory.DebuggerError, logMessage);
+                        }
+                        else
+                        {
+                            m_logger.WriteLine(LoggingCategory.DebuggerStatus, logMessage);
+                        }
                     }
 
                     // Need to check to see if the previous continuation of the debuggee was a step. 

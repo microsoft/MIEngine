@@ -129,9 +129,11 @@ namespace OpenDebugAD7.AD7Impl
             try
             {
                 m_Tracepoint = Tracepoint.CreateTracepoint(logMessage);
+                DebuggerTelemetry.ReportEvent(DebuggerTelemetry.TelemetryTracepointEventName);
             }
             catch (InvalidTracepointException e)
             {
+                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryTracepointEventName, e.Message);
                 return false;
             }
             m_logMessage = logMessage;
