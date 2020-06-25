@@ -250,18 +250,12 @@ namespace OpenDebugAD7
                 uint numReturned = 0;
                 while (pBoundBreakpoints.Next(1, boundBp, ref numReturned) == HRConstants.S_OK && numReturned == 1)
                 {
-                    if (boundBp[0].GetPendingBreakpoint(out IDebugPendingBreakpoint2 ppPendingBreakpoint) == HRConstants.S_OK)
+                    if (boundBp[0].GetPendingBreakpoint(out IDebugPendingBreakpoint2 ppPendingBreakpoint) == HRConstants.S_OK &&
+                        ppPendingBreakpoint.GetBreakpointRequest(out IDebugBreakpointRequest2 ppBPRequest) == HRConstants.S_OK &&
+                        ppBPRequest is AD7BreakPointRequest ad7BreakpointRequest &&
+                        ad7BreakpointRequest.HasTracepoint)
                     {
-                        if (ppPendingBreakpoint.GetBreakpointRequest(out IDebugBreakpointRequest2 ppBPRequest) == HRConstants.S_OK)
-                        {
-                            if (ppBPRequest is AD7BreakPointRequest ad7BreakpointRequest)
-                            {
-                                if (ad7BreakpointRequest.HasTracepoint)
-                                {
-                                    tracepoints.Add(ad7BreakpointRequest.Tracepoint);
-                                }
-                            }
-                        }
+                        tracepoints.Add(ad7BreakpointRequest.Tracepoint);
                     }
                 }
             }
@@ -1707,8 +1701,8 @@ namespace OpenDebugAD7
                                         Id = (int)pBPRequest.Id,
                                         Verified = verified,
                                         Line = bp.Line,
-                                        Message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_UnableToSetTracepoint)
-                                    }); ;
+                                        Message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_UnableToParseLogMessage)
+                                    });
                                 }
                             }
                             catch (Exception e)

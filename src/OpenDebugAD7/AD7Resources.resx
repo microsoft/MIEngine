@@ -192,7 +192,7 @@
   <data name="Error_UnableToSetBreakpoint" xml:space="preserve">
     <value>Error setting breakpoint. {0}</value>
   </data>
-  <data name="Error_UnableToSetTracepoint" xml:space="preserve">
+  <data name="Error_UnableToParseLogMessage" xml:space="preserve">
     <value>Unable to parse 'logMessage'.</value>
   </data>
   <data name="Msg_E_CRASHDUMP_UNSUPPORTED" xml:space="preserve">
@@ -260,5 +260,26 @@
   <data name="Error_ExceptionOccured" xml:space="preserve">
     <value>Exception occurred: '{0}'</value>
     <comment>{0} is the exception string</comment>
+  </data>
+  <data name="Error_InterpolateMissingFrames" xml:space="preserve">
+    <value>Unable to interpolate logMessage because frames could not be retrieved.</value>
+  </data>
+  <data name="Error_InterpolateMissingThread" xml:space="preserve">
+    <value>Unable to interpolate logMessage because current thread is missing.</value>
+  </data>
+  <data name="Error_InterpolateMissingTopFrame" xml:space="preserve">
+    <value>Unable to interpolate logMessage because there is no top frame.</value>
+  </data>
+  <data name="Error_InterpolateVariableEvaluateFailed" xml:space="preserve">
+    <value>Failed to evaluate expression.</value>
+  </data>
+  <data name="Error_InterpolateVariableMissingContext" xml:space="preserve">
+    <value>Unable to get context from frame.</value>
+  </data>
+  <data name="Error_InterpolateVariableMissingExpressionObject" xml:space="preserve">
+    <value>No expression object found.</value>
+  </data>
+  <data name="Error_InterpolateVariableMissingProperties" xml:space="preserve">
+    <value>Failed to get property information.</value>
   </data>
 </root>

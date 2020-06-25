@@ -50,7 +50,7 @@ namespace OpenDebugAD7
 
             if (pThread == null)
             {
-                message = string.Format(CultureInfo.InvariantCulture, "Unable to interpolate logMessage because current thread is missing.");
+                message = AD7Resources.Error_InterpolateMissingThread;
                 return HRConstants.E_FAIL;
             }
 
@@ -59,7 +59,7 @@ namespace OpenDebugAD7
             hr = pThread.EnumFrameInfo(enum_FRAMEINFO_FLAGS.FIF_FRAME | enum_FRAMEINFO_FLAGS.FIF_FLAGS, Constants.EvaluationRadix, out frameInfoEnum);
             if (hr < 0)
             {
-                message = "Unable to interpolate logMessage because frames could not be retrieved.";
+                message = AD7Resources.Error_InterpolateMissingFrames;
                 return hr;
             }
 
@@ -68,13 +68,14 @@ namespace OpenDebugAD7
             hr = frameInfoEnum.Next(1, topFrame, ref fetched);
             if (hr < 0 || fetched != 1 || topFrame[0].m_pFrame == null)
             {
-                message = string.Format(CultureInfo.InvariantCulture, "Unable to interpolate logMessage because there is no top frame.");
+                message = AD7Resources.Error_InterpolateMissingTopFrame;
                 return hr;
             }
 
             Dictionary<string, string> seenExpressions = new Dictionary<string, string>();
             StringBuilder sb = new StringBuilder();
             int currIndex = 0;
+            bool failureSeen = false;
 
             foreach (KeyValuePair<int, string> keyValuePair in m_indexToExpressions)
             {
@@ -96,10 +97,11 @@ namespace OpenDebugAD7
                         hr = InterpolateVariable(toInterpolate.Substring(1, toInterpolate.Length - 2), topFrame[0].m_pFrame, radix, out value);
                         if (hr < 0)
                         {
+                            failureSeen = true;
                             DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryTracepointEventName, value);
 
                             // Re-write error message
-                            value = string.Format(CultureInfo.CurrentCulture, "<Failed to interpolate: {0}>", toInterpolate);
+                            value = string.Format(CultureInfo.CurrentCulture, "<Failed to interpolate {0}: \"{1}\">", toInterpolate, value);
                         }
                     }
 
@@ -114,7 +116,7 @@ namespace OpenDebugAD7
 
             message = sb.ToString();
 
-            return hr;
+            return failureSeen ? HRConstants.E_FAIL : HRConstants.S_OK;
         }
 
         private string InterpolateToken(string token, IDebugThread2 pThread, IDebugStackFrame2 topFrame, uint radix, string processName)
@@ -224,7 +226,7 @@ namespace OpenDebugAD7
                         int hr = pThread.EnumFrameInfo(enum_FRAMEINFO_FLAGS.FIF_FRAME | enum_FRAMEINFO_FLAGS.FIF_FLAGS, Constants.EvaluationRadix, out frameInfoEnum);
                         int count = 0;
                         StringBuilder sb = new StringBuilder();
-                        while (count < Constants.DefaultNumCallStacksShownToken)
+                        while (count < Constants.DefaultTracepointCallstackDepth)
                         {
                             FRAMEINFO[] frames = new FRAMEINFO[1];
                             uint fetched = 0;
@@ -249,13 +251,12 @@ namespace OpenDebugAD7
         private int InterpolateVariable(string variable, IDebugStackFrame2 topFrame, uint radix, out string interpolatedVariableStr)
         {
             int hr = HRConstants.S_OK;
-            string errorMessage = string.Format(CultureInfo.CurrentCulture, "<Evaluation Error: {{{0}}}>", variable);
 
             IDebugExpressionContext2 expressionContext;
             hr = topFrame.GetExpressionContext(out expressionContext);
             if (hr < 0)
             {
-                interpolatedVariableStr = string.Format(CultureInfo.InvariantCulture, "Unable to get context from frame.");
+                interpolatedVariableStr = AD7Resources.Error_InterpolateVariableMissingContext;
                 return hr;
             }
 
@@ -268,7 +269,7 @@ namespace OpenDebugAD7
             }
             if (expressionObject == null)
             {
-                interpolatedVariableStr = string.Format(CultureInfo.InvariantCulture, "No expression object found.");
+                interpolatedVariableStr = AD7Resources.Error_InterpolateVariableMissingExpressionObject;
                 return HRConstants.E_FAIL;
             }
 
@@ -280,7 +281,7 @@ namespace OpenDebugAD7
             hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
             if (hr < 0 || property == null)
             {
-                interpolatedVariableStr = string.Format(CultureInfo.InvariantCulture, "Failed to evaluate expression.");
+                interpolatedVariableStr = AD7Resources.Error_InterpolateVariableEvaluateFailed;
                 return hr;
             }
 
@@ -296,14 +297,14 @@ namespace OpenDebugAD7
             hr = property.GetPropertyInfo(propertyInfoFlags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
             if (hr < 0)
             {
-                interpolatedVariableStr = string.Format(CultureInfo.InvariantCulture, "Failed to get property information.");
+                interpolatedVariableStr = AD7Resources.Error_InterpolateVariableMissingProperties;
                 return hr;
             }
 
             if ((propertyInfo[0].dwAttrib & enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) == enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR)
             {
                 // bstrValue has useful information.
-                interpolatedVariableStr = string.Format(CultureInfo.InvariantCulture, "{0}: \"{1}\"", errorMessage, propertyInfo[0].bstrValue);
+                interpolatedVariableStr = propertyInfo[0].bstrValue;
                 return HRConstants.E_FAIL;
             }
 

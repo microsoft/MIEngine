@@ -135,6 +135,69 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to interpolate logMessage because frames could not be retrieved..
+        /// </summary>
+        internal static string Error_InterpolateMissingFrames {
+            get {
+                return ResourceManager.GetString("Error_InterpolateMissingFrames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to interpolate logMessage because current thread is missing..
+        /// </summary>
+        internal static string Error_InterpolateMissingThread {
+            get {
+                return ResourceManager.GetString("Error_InterpolateMissingThread", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to interpolate logMessage because there is no top frame..
+        /// </summary>
+        internal static string Error_InterpolateMissingTopFrame {
+            get {
+                return ResourceManager.GetString("Error_InterpolateMissingTopFrame", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to evaluate expression..
+        /// </summary>
+        internal static string Error_InterpolateVariableEvaluateFailed {
+            get {
+                return ResourceManager.GetString("Error_InterpolateVariableEvaluateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get context from frame..
+        /// </summary>
+        internal static string Error_InterpolateVariableMissingContext {
+            get {
+                return ResourceManager.GetString("Error_InterpolateVariableMissingContext", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No expression object found..
+        /// </summary>
+        internal static string Error_InterpolateVariableMissingExpressionObject {
+            get {
+                return ResourceManager.GetString("Error_InterpolateVariableMissingExpressionObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get property information..
+        /// </summary>
+        internal static string Error_InterpolateVariableMissingProperties {
+            get {
+                return ResourceManager.GetString("Error_InterpolateVariableMissingProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DNX runtime process exited unexpectedly with error code {0}..
         /// </summary>
         internal static string Error_LaunchFailedNoError {
@@ -281,20 +344,20 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to parse &apos;logMessage&apos;..
+        /// </summary>
+        internal static string Error_UnableToParseLogMessage {
+            get {
+                return ResourceManager.GetString("Error_UnableToParseLogMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error setting breakpoint. {0}.
         /// </summary>
         internal static string Error_UnableToSetBreakpoint {
             get {
                 return ResourceManager.GetString("Error_UnableToSetBreakpoint", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to parse &apos;logMessage&apos;..
-        /// </summary>
-        internal static string Error_UnableToSetTracepoint {
-            get {
-                return ResourceManager.GetString("Error_UnableToSetTracepoint", resourceCulture);
             }
         }
         

@@ -140,29 +140,11 @@ namespace OpenDebugAD7.AD7Impl
             return true;
         }
 
-        public string LogMessage
-        {
-            get
-            {
-                return m_logMessage;
-            }
-        }
+        public string LogMessage => m_logMessage;
 
-        public bool HasTracepoint
-        {
-            get
-            {
-                return !string.IsNullOrEmpty(m_logMessage) && m_Tracepoint != null;
-            }
-        }
+        public bool HasTracepoint => !string.IsNullOrEmpty(m_logMessage) && m_Tracepoint != null;
 
-        public Tracepoint Tracepoint
-        {
-            get
-            {
-                return m_Tracepoint;
-            }
-        }
+        public Tracepoint Tracepoint => m_Tracepoint;
 
         #endregion
     }
