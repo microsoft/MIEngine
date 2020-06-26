@@ -190,6 +190,9 @@
   <data name="QueryingForContainersMessage" xml:space="preserve">
     <value>Querying for containers...</value>
   </data>
+  <data name="QueryingDockerCommandMessage" xml:space="preserve">
+    <value>Querying Docker command...</value>
+  </data>
   <data name="AdvancedSettingsHeader" xml:space="preserve">
     <value>_Advanced Settings</value>
   </data>

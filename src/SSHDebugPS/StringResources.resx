@@ -162,6 +162,9 @@
     <value>Source file '{0}' not found.</value>
     <comment>{0} = source file name</comment>
   </data>
+  <data name="Error_DockerTypesNotMatching" xml:space="preserve">
+    <value>Make sure your Docker Desktop container type matches the selected Connection type.</value>
+  </data>
   <data name="Error_ExitCodeNotParseable" xml:space="preserve">
     <value>Unable to parse exit code.</value>
   </data>

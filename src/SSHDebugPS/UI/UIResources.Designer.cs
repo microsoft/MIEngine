@@ -358,6 +358,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Querying Docker command....
+        /// </summary>
+        public static string QueryingDockerCommandMessage {
+            get {
+                return ResourceManager.GetString("QueryingDockerCommandMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Querying for containers....
         /// </summary>
         public static string QueryingForContainersMessage {
