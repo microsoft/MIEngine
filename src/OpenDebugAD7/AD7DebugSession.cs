@@ -54,6 +54,7 @@ namespace OpenDebugAD7
         private bool m_isAttach;
         private bool m_isCoreDump;
         private bool m_isStopped = false;
+        private bool m_isStepping = false;
 
         private readonly TaskCompletionSource<object> m_configurationDoneTCS = new TaskCompletionSource<object>();
 
@@ -237,6 +238,31 @@ namespace OpenDebugAD7
             return null;
         }
 
+        private IList<Tracepoint> GetTracepoints(IDebugBreakpointEvent2 debugEvent)
+        {
+            IList<Tracepoint> tracepoints = new List<Tracepoint>();
+
+            if (debugEvent != null)
+            {
+                debugEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 pBoundBreakpoints);
+                IDebugBoundBreakpoint2[] boundBp = new IDebugBoundBreakpoint2[1];
+
+                uint numReturned = 0;
+                while (pBoundBreakpoints.Next(1, boundBp, ref numReturned) == HRConstants.S_OK && numReturned == 1)
+                {
+                    if (boundBp[0].GetPendingBreakpoint(out IDebugPendingBreakpoint2 ppPendingBreakpoint) == HRConstants.S_OK &&
+                        ppPendingBreakpoint.GetBreakpointRequest(out IDebugBreakpointRequest2 ppBPRequest) == HRConstants.S_OK &&
+                        ppBPRequest is AD7BreakPointRequest ad7BreakpointRequest &&
+                        ad7BreakpointRequest.HasTracepoint)
+                    {
+                        tracepoints.Add(ad7BreakpointRequest.Tracepoint);
+                    }
+                }
+            }
+
+            return tracepoints;
+        }
+
         #endregion
 
         #region AD7EventHandlers helper methods
@@ -245,6 +271,7 @@ namespace OpenDebugAD7
         {
             if (!m_isCoreDump)
             {
+                m_isStepping = false;
                 m_isStopped = false;
                 m_variableManager.Reset();
                 m_frameHandles.Reset();
@@ -499,7 +526,6 @@ namespace OpenDebugAD7
             // If we are already running ignore additional step requests
             if (m_isStopped)
             {
-
                 IDebugThread2 thread = null;
                 lock (m_threads)
                 {
@@ -511,6 +537,7 @@ namespace OpenDebugAD7
 
                 BeforeContinue();
                 ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
+                m_isStepping = true;
                 try
                 {
                     builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
@@ -590,7 +617,8 @@ namespace OpenDebugAD7
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
                 ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
-                SupportsClipboardContext = m_engineConfiguration.ClipboardContext
+                SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
+                SupportsLogPoints = true
             };
 
             responder.SetResponse(initializeResponse);
@@ -1607,6 +1635,14 @@ namespace OpenDebugAD7
                                     toRemove.Delete();
                                     dict.Remove(bp.Line);
                                 }
+                                // Check to see if tracepoint changed
+                                else if (!StringComparer.Ordinal.Equals(ad7BPRequest.LogMessage, bp.LogMessage))
+                                {
+                                    ad7BPRequest.ClearTracepoint();
+                                    var toRemove = dict[bp.Line];
+                                    toRemove.Delete();
+                                    dict.Remove(bp.Line);
+                                }
                                 else
                                 {
                                     if (ad7BPRequest.BindResult != null)
@@ -1637,16 +1673,37 @@ namespace OpenDebugAD7
 
                             try
                             {
-                                eb.CheckHR(m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp));
-                                eb.CheckHR(pendingBp.Bind());
-
-                                dict[bp.Line] = pendingBp;
-                                resBreakpoints.Add(new Breakpoint()
+                                bool verified = true;
+                                if (!string.IsNullOrEmpty(bp.LogMessage))
                                 {
-                                    Id = (int)pBPRequest.Id,
-                                    Verified = true,
-                                    Line = bp.Line
-                                });
+                                    // Make sure tracepoint is valid.
+                                    verified = pBPRequest.SetLogMessage(bp.LogMessage);
+                                }
+
+                                if (verified)
+                                {
+                                    eb.CheckHR(m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp));
+                                    eb.CheckHR(pendingBp.Bind());
+
+                                    dict[bp.Line] = pendingBp;
+
+                                    resBreakpoints.Add(new Breakpoint()
+                                    {
+                                        Id = (int)pBPRequest.Id,
+                                        Verified = verified,
+                                        Line = bp.Line
+                                    });
+                                }
+                                else
+                                {
+                                    resBreakpoints.Add(new Breakpoint()
+                                    {
+                                        Id = (int)pBPRequest.Id,
+                                        Verified = verified,
+                                        Line = bp.Line,
+                                        Message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_UnableToParseLogMessage)
+                                    });
+                                }
                             }
                             catch (Exception e)
                             {
@@ -1893,12 +1950,10 @@ namespace OpenDebugAD7
             hr = frame.GetExpressionContext(out expressionContext);
             eb.CheckHR(hr);
 
-            const uint InputRadix = 10;
-            DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
             IDebugExpression2 expressionObject;
             string error;
             uint errorIndex;
-            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, InputRadix, out expressionObject, out error, out errorIndex);
+            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
             if (!string.IsNullOrEmpty(error))
             {
                 // TODO: Is this how errors should be returned?
@@ -1919,14 +1974,14 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
-            if (context == EvaluateArguments.ContextValue.Clipboard)
-            {
-                dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
-            }
-
             IDebugProperty2 property;
             if (expressionObject is IDebugExpressionDAP expressionDapObject)
             {
+                DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
+                if (context == EvaluateArguments.ContextValue.Clipboard)
+                {
+                    dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
+                }
                 hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
             }
             else
@@ -2094,7 +2149,45 @@ namespace OpenDebugAD7
 
         public void HandleIDebugBreakpointEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+            IList<Tracepoint> tracepoints = GetTracepoints(pEvent as IDebugBreakpointEvent2);
+            if (tracepoints.Any())
+            {
+                ThreadPool.QueueUserWorkItem((o) =>
+                {
+                    foreach (var tp in tracepoints)
+                    {
+                        int hr = tp.GetLogMessage(pThread, Constants.ParseRadix, m_processName, out string logMessage);
+                        if (hr != HRConstants.S_OK)
+                        {
+                            DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryTracepointEventName, logMessage);
+                            m_logger.WriteLine(LoggingCategory.DebuggerError, logMessage);
+                        }
+                        else
+                        {
+                            m_logger.WriteLine(LoggingCategory.DebuggerStatus, logMessage);
+                        }
+                    }
+
+                    // Need to check to see if the previous continuation of the debuggee was a step. 
+                    // If so, we need to send a stopping event to the UI to signal the step completed successfully. 
+                    if (!m_isStepping)
+                    {
+                        ThreadPool.QueueUserWorkItem((obj) =>
+                        {
+                            BeforeContinue();
+                            m_program.Continue(pThread);
+                        });
+                    }
+                    else
+                    {
+                        FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+                    }
+                });
+            }
+            else
+            {
+                FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+            }
         }
 
         public void HandleIDebugBreakEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)

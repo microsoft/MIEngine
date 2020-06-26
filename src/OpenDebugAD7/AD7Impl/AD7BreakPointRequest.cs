@@ -112,5 +112,40 @@ namespace OpenDebugAD7.AD7Impl
                 return HRConstants.E_FAIL;
             }
         }
+
+        #region Tracepoints
+
+        private string m_logMessage;
+        private Tracepoint m_Tracepoint;
+
+        public void ClearTracepoint()
+        {
+            m_logMessage = null;
+            m_Tracepoint = null;
+        }
+
+        public bool SetLogMessage(string logMessage)
+        {
+            try
+            {
+                m_Tracepoint = Tracepoint.CreateTracepoint(logMessage);
+                DebuggerTelemetry.ReportEvent(DebuggerTelemetry.TelemetryTracepointEventName);
+            }
+            catch (InvalidTracepointException e)
+            {
+                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryTracepointEventName, e.Message);
+                return false;
+            }
+            m_logMessage = logMessage;
+            return true;
+        }
+
+        public string LogMessage => m_logMessage;
+
+        public bool HasTracepoint => !string.IsNullOrEmpty(m_logMessage) && m_Tracepoint != null;
+
+        public Tracepoint Tracepoint => m_Tracepoint;
+
+        #endregion
     }
 }

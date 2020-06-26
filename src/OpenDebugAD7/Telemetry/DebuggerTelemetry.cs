@@ -28,6 +28,7 @@ namespace OpenDebugAD7
         public const string TelemetryAttachEventName = "Attach";
         public const string TelemetryEvaluateEventName = "Evaluate";
         public const string TelemetryPauseEventName = "Pause";
+        public const string TelemetryTracepointEventName = "Tracepoint";
 
         // Common telemetry properties
         public const string TelemetryErrorType = "ErrorType";
@@ -54,7 +55,7 @@ namespace OpenDebugAD7
         public const string TelemetryVisualizerFileUsed = "VisualizerFileUsed";
         public const string TelemetrySourceFileMappings = "SourceFileMappings";
         public const string TelemetryMIMode = "MIMode";
-        public const string TelemetryStackFrameId = TelemetryExecuteInConsole + ".ExecuteInConsole";
+        public const string TelemetryStackFrameId = TelemetryExecuteInConsole + ".StackFrameId";
 
         private DebuggerTelemetry(Action<DebugEvent> callback, TypeInfo engineType, TypeInfo hostType, string adapterId)
         {
