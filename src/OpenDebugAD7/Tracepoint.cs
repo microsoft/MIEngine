@@ -75,7 +75,6 @@ namespace OpenDebugAD7
             Dictionary<string, string> seenExpressions = new Dictionary<string, string>();
             StringBuilder sb = new StringBuilder();
             int currIndex = 0;
-            bool failureSeen = false;
 
             foreach (KeyValuePair<int, string> keyValuePair in m_indexToExpressions)
             {
@@ -94,10 +93,9 @@ namespace OpenDebugAD7
                     else
                     {
                         string toInterpolate = keyValuePair.Value;
-                        hr = InterpolateVariable(toInterpolate.Substring(1, toInterpolate.Length - 2), topFrame[0].m_pFrame, radix, out value);
-                        if (hr < 0)
+                        if (InterpolateVariable(toInterpolate.Substring(1, toInterpolate.Length - 2), topFrame[0].m_pFrame, radix, out value) < 0)
                         {
-                            failureSeen = true;
+                            hr = HRConstants.E_FAIL;
                             DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryTracepointEventName, value);
 
                             // Re-write error message
@@ -116,7 +114,7 @@ namespace OpenDebugAD7
 
             message = sb.ToString();
 
-            return failureSeen ? HRConstants.E_FAIL : HRConstants.S_OK;
+            return hr;
         }
 
         private string InterpolateToken(string token, IDebugThread2 pThread, IDebugStackFrame2 topFrame, uint radix, string processName)
