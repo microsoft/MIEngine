@@ -358,7 +358,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Querying Docker command....
+        ///   Looks up a localized string similar to Querying for Docker &apos;{0}&apos;....
         /// </summary>
         public static string QueryingDockerCommandMessage {
             get {

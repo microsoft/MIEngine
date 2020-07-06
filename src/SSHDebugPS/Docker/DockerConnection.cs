@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
@@ -245,104 +245,12 @@ namespace Microsoft.SSHDebugPS.Docker
                 return new RemoteCommandRunner(settings, OuterConnection);
         }
 
-        private const string dockerVersionCommand = "version";
-        private const string dockerVersionArgs = "--format {{.Server.Os}}";
-
-        private const string dockerInfoCommand = "info";
-        private const string dockerInfoArgs = "--format {{.Driver}}";
-
-        public override List<Process> ListProcesses()
+        protected override string ProcFSErrorMessage
         {
-            string username;
-            TryGetUsername(out username);
-
-            List<Process> processes;
-            string psErrorMessage;
-            // Try using 'ps' first
-            if (!PSListProcess(username, out psErrorMessage, out processes))
+            get
             {
-                string procErrorMessage;
-                // try using the /proc file system
-                if (!ProcFSListProcess(username, out procErrorMessage, out processes))
-                {
-                    StringBuilder sb = new StringBuilder();
-                    sb.Append(psErrorMessage);
-                    sb.AppendLine(string.Empty);
-                    sb.AppendLine(procErrorMessage);
-
-                    string dockerContainer = DockerHelper.GetDockerOutputString(username, dockerVersionCommand, dockerVersionArgs);
-
-                    DockerPortSupplier portSupplier = new DockerPortSupplier();
-                    string connectionType;
-                    portSupplier.GetPortSupplierName(out connectionType);
-
-                    if (dockerContainer.Equals("windows") && connectionType.Equals(StringResources.Docker_PSName))
-                    {
-                            sb.AppendLine(StringResources.Error_DockerTypesNotMatching);
-                    }
-
-                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ProcessListFailedTitle, sb.ToString());
-
-                    return new List<Process>(0);
-                }
+                return String.Concat(base.ProcFSErrorMessage, "\n", StringResources.Error_DockerTypesNotMatching);
             }
-
-            return processes;
-        }
-
-        /// <summary>
-        /// Query 'ps' command for a list of processes
-        /// </summary>
-        private bool PSListProcess(string username, out string errorMessage, out List<Process> processes)
-        {
-            errorMessage = string.Empty;
-            string commandOutput;
-            int exitCode;
-
-            if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput, out errorMessage))
-            {
-                // Clear output and errorMessage
-                commandOutput = string.Empty;
-                errorMessage = string.Empty;
-                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
-                {
-                    if (exitCode == 127)
-                    {
-                        //command doesn't Exist
-                        errorMessage = StringResources.Error_PSMissing;
-                    }
-                    else
-                    {
-                        errorMessage = StringResources.Error_PSErrorFormat.FormatCurrentCultureWithArgs(exitCode, errorMessage);
-                    }
-
-                    processes = null;
-                    return false;
-                }
-            }
-
-            processes = PSOutputParser.Parse(commandOutput, username);
-            return true;
-        }
-
-        /// <summary>
-        /// Query /proc for a list of processes
-        /// </summary>
-        private bool ProcFSListProcess(string username, out string errorMessage, out List<Process> processes)
-        {
-            errorMessage = string.Empty;
-            processes = null;
-
-            int exitCode;
-            string commandOutput;
-            if (!ExecuteCommand(ProcFSOutputParser.CommandText, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
-            {
-                errorMessage = StringResources.Error_ProcFSError.FormatCurrentCultureWithArgs(errorMessage);
-                return false;
-            }
-
-            processes = ProcFSOutputParser.Parse(commandOutput, username);
-            return true;
         }
     }
 }

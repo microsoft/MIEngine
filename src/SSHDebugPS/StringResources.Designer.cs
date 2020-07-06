@@ -178,7 +178,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Make sure your Docker Desktop container type matches the selected Connection type..
+        ///   Looks up a localized string similar to Make sure the selected Docker Connection target is a Linux container..
         /// </summary>
         internal static string Error_DockerTypesNotMatching {
             get {

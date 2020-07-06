@@ -163,7 +163,7 @@
     <comment>{0} = source file name</comment>
   </data>
   <data name="Error_DockerTypesNotMatching" xml:space="preserve">
-    <value>Make sure your Docker Desktop container type matches the selected Connection type.</value>
+    <value>Make sure the selected Docker Connection target is a Linux container.</value>
   </data>
   <data name="Error_ExitCodeNotParseable" xml:space="preserve">
     <value>Unable to parse exit code.</value>

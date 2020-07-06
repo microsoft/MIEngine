@@ -9,9 +9,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
-
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Threading;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
@@ -20,6 +18,10 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerPSCommand = "ps";
         // --no-trunc avoids parameter truncation
         private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
+        public const string dockerVersionCommand = "version";
+        public const string dockerVersionArgs = "--format {{.Server.Os}}";
+        public const string dockerInfoCommand = "info";
+        public const string dockerInfoArgs = "--format {{.Driver}}";
 
         public static string GetDockerOutputString(string hostname, string dockerCommand, string dockerArgs)
         {
@@ -32,13 +34,15 @@ namespace Microsoft.SSHDebugPS.Docker
                     path = GetDockerOutputStringImpl(hostname, dockerCommand, dockerArgs);
                 });
             }
-            catch (Exception)
+            catch (CommandFailedException ex)
             {
+                string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(dockerCommand, ex.Message);
+                throw new CommandFailedException(errorMessage, ex);
             }
             return path;
         }
 
-        public static string GetDockerOutputStringImpl(string hostname, string dockerCommand, string dockerArgs)
+        private static string GetDockerOutputStringImpl(string hostname, string dockerCommand, string dockerArgs)
         {
             string dockerOutputString = string.Empty;
 
@@ -79,7 +83,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 commandRunner.Start();
 
                 bool cancellationRequested = false;
-                VS.VSOperationWaiter.Wait(UIResources.QueryingDockerCommandMessage, false, (cancellationToken) =>
+                VS.VSOperationWaiter.Wait(UIResources.QueryingDockerCommandMessage.FormatCurrentCultureWithArgs(dockerCommand), false, (cancellationToken) =>
                 {
                     while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested)
                     { }
