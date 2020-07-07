@@ -210,7 +210,11 @@ namespace Microsoft.SSHDebugPS.Docker
 
                 foreach (var item in outputLines)
                 {
-                    containers.Add(DockerContainerInstance.Create(item));
+                    DockerContainerInstance instance = DockerContainerInstance.Create(item);
+                    if (instance != null)
+                    {
+                        containers.Add(instance);
+                    }
                 }
             }
 
