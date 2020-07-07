@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
-using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
@@ -18,106 +17,6 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerPSCommand = "ps";
         // --no-trunc avoids parameter truncation
         private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
-        public const string dockerVersionCommand = "version";
-        public const string dockerVersionArgs = "--format {{.Server.Os}}";
-        public const string dockerInfoCommand = "info";
-        public const string dockerInfoArgs = "--format {{.Driver}}";
-
-        public static string GetDockerOutputString(string hostname, string dockerCommand, string dockerArgs)
-        {
-            string path = null;
-            try
-            {
-                ThreadHelper.JoinableTaskFactory.Run(async () =>
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    path = GetDockerOutputStringImpl(hostname, dockerCommand, dockerArgs);
-                });
-            }
-            catch (CommandFailedException ex)
-            {
-                string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(dockerCommand, ex.Message);
-                throw new CommandFailedException(errorMessage, ex);
-            }
-            return path;
-        }
-
-        private static string GetDockerOutputStringImpl(string hostname, string dockerCommand, string dockerArgs)
-        {
-            string dockerOutputString = string.Empty;
-
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerCommand, dockerArgs); 
-
-            LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
-
-            StringBuilder errorSB = new StringBuilder();
-            int? exitCode = null;
-
-            try
-            {
-                ManualResetEvent resetEvent = new ManualResetEvent(false);
-                commandRunner.ErrorOccured += ((sender, args) =>
-                {
-                    if (!string.IsNullOrWhiteSpace(args.ErrorMessage))
-                    {
-                        errorSB.AppendLine(args.ErrorMessage);
-                    }
-                    resetEvent.Set();
-                });
-
-                commandRunner.Closed += ((sender, args) =>
-                {
-                    exitCode = args;
-                    resetEvent.Set();
-                });
-
-                commandRunner.OutputReceived += ((sender, args) =>
-                {
-                    if (!string.IsNullOrWhiteSpace(args))
-                    {
-                        dockerOutputString = args;
-                    }
-                });
-
-                commandRunner.Start();
-
-                bool cancellationRequested = false;
-                VS.VSOperationWaiter.Wait(UIResources.QueryingDockerCommandMessage.FormatCurrentCultureWithArgs(dockerCommand), false, (cancellationToken) =>
-                {
-                    while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested)
-                    { }
-                    cancellationRequested = cancellationToken.IsCancellationRequested;
-                });
-
-                if (!cancellationRequested)
-                {
-                    // might need to throw an exception here too??
-                    if (exitCode.GetValueOrDefault(-1) != 0)
-                    {
-                        // if the exit code is not zero, then the output we received possibly is the error message
-                        string exceptionMessage = UIResources.CommandExecutionErrorWithExitCodeFormat.FormatCurrentCultureWithArgs(
-                                "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
-                                exitCode,
-                                errorSB.ToString());
-
-                        throw new CommandFailedException(exceptionMessage);
-                    }
-
-                    if (errorSB.Length > 0)
-                    {
-                        throw new CommandFailedException(errorSB.ToString());
-                    }
-                }
-                return dockerOutputString;
-            }
-            catch (Win32Exception ex)
-            {
-                // docker doesn't exist 
-                string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(settings.CommandArgs, ex.Message);
-                throw new CommandFailedException(errorMessage, ex);
-            }
-        }
 
         public static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname)
         {
@@ -195,7 +94,6 @@ namespace Microsoft.SSHDebugPS.Docker
                     {
                         throw new CommandFailedException(errorSB.ToString());
                     }
-
                     return containers;
                 }
 

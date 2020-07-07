@@ -155,7 +155,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Query 'ps' command for a list of processes
         /// </summary>
-        protected bool PSListProcess(string username, out string errorMessage, out List<Process> processes)
+        private bool PSListProcess(string username, out string errorMessage, out List<Process> processes)
         {
             errorMessage = string.Empty;
             string commandOutput;
@@ -191,7 +191,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Query /proc for a list of processes
         /// </summary>
-        protected bool ProcFSListProcess(string username, out string errorMessage, out List<Process> processes)
+        private bool ProcFSListProcess(string username, out string errorMessage, out List<Process> processes)
         {
             errorMessage = string.Empty;
             processes = null;
