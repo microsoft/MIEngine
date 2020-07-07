@@ -58,8 +58,7 @@ namespace Microsoft.SSHDebugPS.Docker
                         }
                         else
                         {
-                            var containerInstance = DockerContainerInstance.Create(args);
-                            if (containerInstance != null)
+                            if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
                                 containers.Add(containerInstance);
                         }
                     }
@@ -210,10 +209,9 @@ namespace Microsoft.SSHDebugPS.Docker
 
                 foreach (var item in outputLines)
                 {
-                    DockerContainerInstance instance = DockerContainerInstance.Create(item);
-                    if (instance != null)
+                    if (DockerContainerInstance.TryCreate(item, out DockerContainerInstance containerInstance))
                     {
-                        containers.Add(instance);
+                        containers.Add(containerInstance);
                     }
                 }
             }
