@@ -17,7 +17,6 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerPSCommand = "ps";
         // --no-trunc avoids parameter truncation
         private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
-
         public static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname)
         {
             List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
