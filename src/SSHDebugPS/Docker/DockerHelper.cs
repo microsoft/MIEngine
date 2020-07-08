@@ -93,6 +93,7 @@ namespace Microsoft.SSHDebugPS.Docker
                     {
                         throw new CommandFailedException(errorSB.ToString());
                     }
+
                     return containers;
                 }
 
