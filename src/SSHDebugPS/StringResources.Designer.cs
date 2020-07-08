@@ -186,6 +186,15 @@ namespace Microsoft.SSHDebugPS {
             }
         }
         
+        ///   Looks up a localized string similar to Failed to parse json &apos;{0}&apos;.
+        ///Error: &apos;{1}&apos;.
+        /// </summary>
+        internal static string Error_DockerPSParseFailed {
+            get {
+                return ResourceManager.GetString("Error_DockerPSParseFailed", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Unable to parse exit code..
         /// </summary>

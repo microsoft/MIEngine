@@ -7,6 +7,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using EnvDTE;
+using Microsoft.DebugEngineHost;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
 
@@ -58,8 +60,7 @@ namespace Microsoft.SSHDebugPS.Docker
                         }
                         else
                         {
-                            if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
-                                containers.Add(containerInstance);
+                            AddOutputLineToContainersList(args, ref containers);
                         }
                     }
                 });
@@ -209,14 +210,24 @@ namespace Microsoft.SSHDebugPS.Docker
 
                 foreach (var item in outputLines)
                 {
-                    if (DockerContainerInstance.TryCreate(item, out DockerContainerInstance containerInstance))
-                    {
-                        containers.Add(containerInstance);
-                    }
+                    AddOutputLineToContainersList(item, ref containers);
                 }
             }
 
             return containers;
+        }
+
+        private static void AddOutputLineToContainersList(string item, ref List<DockerContainerInstance> containers)
+        {
+            if (DockerContainerInstance.TryCreate(item, out DockerContainerInstance containerInstance, out string error))
+            {
+                containers.Add(containerInstance);
+            }
+            else
+            {
+                HostTelemetry.SendEvent(Telemetry.Event_DockerPSParseFailure);
+                OutputWindow.Instance.WriteLine(StringResources.Error_DockerPSParseFailed.FormatCurrentCultureWithArgs(item, error), StringResources.Docker_PSName);
+            }
         }
     }
 }

@@ -13,9 +13,10 @@ namespace Microsoft.SSHDebugPS.Docker
         /// <summary>
         /// Create a DockerContainerInstance from the results of docker ps in JSON format
         /// </summary>
-        public static bool TryCreate(string json, out DockerContainerInstance instance)
+        public static bool TryCreate(string json, out DockerContainerInstance instance, out string error)
         {
             instance = null;
+            error = string.Empty;
             try
             {
                 JObject obj = JObject.Parse(json);
@@ -23,7 +24,8 @@ namespace Microsoft.SSHDebugPS.Docker
             }
             catch (Exception e)
             {
-                Debug.Fail(e.ToString());
+                error = e.ToString();
+                Debug.Fail(error);
             }
             return instance != null;
         }
