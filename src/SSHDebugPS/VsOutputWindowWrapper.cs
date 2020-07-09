@@ -4,28 +4,48 @@
 
 using System;
 using System.Collections.Generic;
+
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.SSHDebugPS
 {
-    class OutputWindow
+    internal static class VsOutputWindowWrapper
     {
-        private static OutputWindow _instance;
-
-        public static OutputWindow Instance
+        private static Lazy<IVsOutputWindow> outputWindowLazy = new Lazy<IVsOutputWindow>(() =>
         {
-            get
+            return ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
-                if (_instance == null)
+                IVsOutputWindow outputWindow = null;
+                try
                 {
-                    _instance = new OutputWindow();
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    outputWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
                 }
+                catch (Exception)
+                {
+                }
+                return outputWindow;
+            });
+        });
+        private static Lazy<IVsUIShell> shellLazy = new Lazy<IVsUIShell>(() =>
+        {
+            return ThreadHelper.JoinableTaskFactory.Run(async delegate
+            {
+                IVsUIShell shell = null;
+                try
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
+                }
+                catch (Exception)
+                {
+                }
+                return shell;
+            });
+        });
 
-                return _instance;
-            }
-        }
 
         private class PaneInfo
         {
@@ -39,35 +59,29 @@ namespace Microsoft.SSHDebugPS
             internal bool Shown { get; set; }
         }
 
-        private IVsOutputWindow outputWindow;
-        private IVsUIShell shell;
-
-        private Dictionary<string, PaneInfo> panes = new Dictionary<string, PaneInfo>()
+        private static Dictionary<string, PaneInfo> panes = new Dictionary<string, PaneInfo>()
         {
             // The 'Debug' pane exists by default
             { "Debug", new PaneInfo(VSConstants.GUID_OutWindowDebugPane) }
         };
 
-        private OutputWindow()
-        {
-            outputWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-            shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
-            if (outputWindow == null || shell == null)
-            {
-                throw new NullReferenceException("Could not create OutputWindow");
-            }
-        }
-
         /// <summary>
         /// Writes text directly to the VS Output window.
         /// </summary>
-        public void Write(string message, string pane = "Debug")
+        public static void Write(string message, string pane = "Debug")
         {
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
                 {
+                    // Get the Output window
+                    IVsOutputWindow outputWindow = outputWindowLazy.Value;
+                    if (outputWindow == null)
+                    {
+                        return;
+                    }
+
                     // Get the pane guid
                     PaneInfo paneInfo;
                     if (!panes.TryGetValue(pane, out paneInfo))
@@ -95,6 +109,7 @@ namespace Microsoft.SSHDebugPS
                         outputPane.Activate();
 
                         // Show the output window
+                        IVsUIShell shell = shellLazy.Value;
                         if (shell != null)
                         {
                             Guid commandSet = VSConstants.GUID_VSStandardCommandSet97;
@@ -115,7 +130,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Writes text directly to the VS Output window, appending a newline.
         /// </summary>
-        public void WriteLine(string message, string pane = "Debug")
+        public static void WriteLine(string message, string pane = "Debug")
         {
             Write(string.Concat(message, Environment.NewLine), pane);
         }
