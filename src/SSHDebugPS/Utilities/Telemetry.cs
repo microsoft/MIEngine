@@ -3,7 +3,7 @@
 
 namespace Microsoft.SSHDebugPS.Utilities
 {
-    internal class Telemetry
+    internal static class Telemetry
     {
         public const string Event_DockerPSParseFailure = @"VS/Diagnostics/Debugger/SSHDebugPS/DockerPSParseFailure";
     }

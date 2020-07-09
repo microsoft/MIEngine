@@ -138,6 +138,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         private void RefreshContainersListInternal()
         {
+            int totalContainers = 0;
             try
             {
                 IContainerViewModel selectedContainer = SelectedContainerInstance;
@@ -147,7 +148,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
-                    containers = DockerHelper.GetLocalDockerContainers(Hostname);
+                    containers = DockerHelper.GetLocalDockerContainers(Hostname, out totalContainers);
                 }
                 else
                 {
@@ -158,7 +159,7 @@ namespace Microsoft.SSHDebugPS.UI
                         UpdateStatusMessage(UIResources.SSHConnectionFailedStatusText, isError: true);
                         return;
                     }
-                    containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname);
+                    containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
                 }
 
                 ContainerInstances = new ObservableCollection<IContainerViewModel>(containers.Select(item => new DockerContainerViewModel(item)).ToList());
@@ -188,7 +189,14 @@ namespace Microsoft.SSHDebugPS.UI
             {
                 if (ContainerInstances.Count() > 0)
                 {
-                    ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+                    if (ContainerInstances.Count() < totalContainers)
+                    {
+                        ContainersFoundText = UIResources.ContainersNotAllFoundStatusText.FormatCurrentCultureWithArgs(totalContainers, totalContainers - ContainerInstances.Count());
+                    }
+                    else
+                    {
+                        ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+                    }
                 }
                 else
                 {

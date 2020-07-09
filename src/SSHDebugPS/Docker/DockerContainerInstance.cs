@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
 using Microsoft.DebugEngineHost;
 using Microsoft.SSHDebugPS.Utilities;
 using Newtonsoft.Json;
@@ -28,9 +27,9 @@ namespace Microsoft.SSHDebugPS.Docker
             }
             catch (Exception e)
             {
-                List<KeyValuePair<string, object>> eventProperties = new List<KeyValuePair<string, object>>();
-                eventProperties.Add(new KeyValuePair<string, object>(Property_ExceptionName, e.GetType().Name));
-                HostTelemetry.SendEvent(Telemetry.Event_DockerPSParseFailure, eventProperties.ToArray());
+                HostTelemetry.SendEvent(Telemetry.Event_DockerPSParseFailure, new KeyValuePair<string, object>[] {
+                    new KeyValuePair<string, object>(Property_ExceptionName, e.GetType().Name)
+                });
 
                 string error = e.ToString();
                 VsOutputWindowWrapper.WriteLine(StringResources.Error_DockerPSParseFailed.FormatCurrentCultureWithArgs(json, error), StringResources.Docker_PSName);

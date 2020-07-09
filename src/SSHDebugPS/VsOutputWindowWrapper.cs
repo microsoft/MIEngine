@@ -4,7 +4,8 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
+using System.Threading;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -25,10 +26,13 @@ namespace Microsoft.SSHDebugPS
                 }
                 catch (Exception)
                 {
+                    Debug.Fail("Could not get OutputWindow service.");
                 }
                 return outputWindow;
             });
-        });
+            // Use "PublicationOnly", because the implementation of GetService does its own locking
+        }, LazyThreadSafetyMode.PublicationOnly);
+
         private static Lazy<IVsUIShell> shellLazy = new Lazy<IVsUIShell>(() =>
         {
             return ThreadHelper.JoinableTaskFactory.Run(async delegate
@@ -41,11 +45,12 @@ namespace Microsoft.SSHDebugPS
                 }
                 catch (Exception)
                 {
+                    Debug.Fail("Could not get VSShell service.");
                 }
                 return shell;
             });
-        });
-
+            // Use "PublicationOnly", because the implementation of GetService does its own locking
+        }, LazyThreadSafetyMode.PublicationOnly);
 
         private class PaneInfo
         {
@@ -59,16 +64,18 @@ namespace Microsoft.SSHDebugPS
             internal bool Shown { get; set; }
         }
 
+        private const string DefaultOutputPane = "Debug";
+
         private static Dictionary<string, PaneInfo> panes = new Dictionary<string, PaneInfo>()
         {
             // The 'Debug' pane exists by default
-            { "Debug", new PaneInfo(VSConstants.GUID_OutWindowDebugPane) }
+            { DefaultOutputPane, new PaneInfo(VSConstants.GUID_OutWindowDebugPane) }
         };
 
         /// <summary>
         /// Writes text directly to the VS Output window.
         /// </summary>
-        public static void Write(string message, string pane = "Debug")
+        public static void Write(string message, string pane = DefaultOutputPane)
         {
             ThreadHelper.JoinableTaskFactory.Run(async delegate
             {
@@ -112,9 +119,8 @@ namespace Microsoft.SSHDebugPS
                         IVsUIShell shell = shellLazy.Value;
                         if (shell != null)
                         {
-                            Guid commandSet = VSConstants.GUID_VSStandardCommandSet97;
                             object inputVariant = null;
-                            shell.PostExecCommand(commandSet, (uint)VSConstants.VSStd97CmdID.OutputWindow, 0, ref inputVariant);
+                            shell.PostExecCommand(VSConstants.GUID_VSStandardCommandSet97, (uint)VSConstants.VSStd97CmdID.OutputWindow, 0, ref inputVariant);
                         }
                     }
 
@@ -123,6 +129,7 @@ namespace Microsoft.SSHDebugPS
                 }
                 catch (Exception)
                 {
+                    Debug.Fail("Failed to write to output pane.");
                 }
             });
         }
@@ -130,7 +137,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Writes text directly to the VS Output window, appending a newline.
         /// </summary>
-        public static void WriteLine(string message, string pane = "Debug")
+        public static void WriteLine(string message, string pane = DefaultOutputPane)
         {
             Write(string.Concat(message, Environment.NewLine), pane);
         }
