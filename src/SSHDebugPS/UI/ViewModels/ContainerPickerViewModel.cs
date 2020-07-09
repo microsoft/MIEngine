@@ -191,7 +191,8 @@ namespace Microsoft.SSHDebugPS.UI
                 {
                     if (ContainerInstances.Count() < totalContainers)
                     {
-                        ContainersFoundText = UIResources.ContainersNotAllFoundStatusText.FormatCurrentCultureWithArgs(totalContainers, totalContainers - ContainerInstances.Count());
+                        UpdateStatusMessage(UIResources.ContainersNotAllParsedStatusText.FormatCurrentCultureWithArgs(totalContainers - ContainerInstances.Count()), isError: false);
+                        ContainersFoundText = UIResources.ContainersNotAllParsedText.FormatCurrentCultureWithArgs(ContainerInstances.Count(), totalContainers);
                     }
                     else
                     {
