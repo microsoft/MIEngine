@@ -242,5 +242,13 @@ namespace Microsoft.SSHDebugPS.Docker
             else
                 return new RemoteCommandRunner(settings, OuterConnection);
         }
+
+        protected override string ProcFSErrorMessage
+        {
+            get
+            {
+                return String.Concat(base.ProcFSErrorMessage, Environment.NewLine, StringResources.Error_EnsureDockerContainerIsLinux);
+            }
+        }
     }
 }

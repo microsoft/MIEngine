@@ -178,6 +178,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ensure the selected Docker Connection target is a Linux container..
+        /// </summary>
+        internal static string Error_EnsureDockerContainerIsLinux {
+            get {
+                return ResourceManager.GetString("Error_EnsureDockerContainerIsLinux", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to parse exit code..
         /// </summary>
         internal static string Error_ExitCodeNotParseable {
