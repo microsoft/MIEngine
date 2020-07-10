@@ -247,7 +247,7 @@ namespace Microsoft.SSHDebugPS.Docker
         {
             get
             {
-                return String.Concat(base.ProcFSErrorMessage, "\r\n", StringResources.Error_DockerTypesNotMatching);
+                return String.Concat(base.ProcFSErrorMessage, Environment.NewLine, StringResources.Error_EnsureDockerContainerIsLinux);
             }
         }
     }

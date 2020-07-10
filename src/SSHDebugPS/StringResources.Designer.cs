@@ -178,11 +178,11 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Make sure the selected Docker Connection target is a Linux container..
+        ///   Looks up a localized string similar to Ensure the selected Docker Connection target is a Linux container..
         /// </summary>
-        internal static string Error_DockerTypesNotMatching {
+        internal static string Error_EnsureDockerContainerIsLinux {
             get {
-                return ResourceManager.GetString("Error_DockerTypesNotMatching", resourceCulture);
+                return ResourceManager.GetString("Error_EnsureDockerContainerIsLinux", resourceCulture);
             }
         }
         
