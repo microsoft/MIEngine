@@ -16,39 +16,32 @@ namespace Microsoft.SSHDebugPS
     {
         private static Lazy<IVsOutputWindow> outputWindowLazy = new Lazy<IVsOutputWindow>(() =>
         {
-            return ThreadHelper.JoinableTaskFactory.Run(async delegate
+            IVsOutputWindow outputWindow = null;
+            try
             {
-                IVsOutputWindow outputWindow = null;
-                try
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    outputWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-                }
-                catch (Exception)
-                {
-                    Debug.Fail("Could not get OutputWindow service.");
-                }
-                return outputWindow;
-            });
-            // Use "PublicationOnly", because the implementation of GetService does its own locking
+                ThreadHelper.ThrowIfNotOnUIThread();
+                outputWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            }
+            catch (Exception)
+            {
+                Debug.Fail("Could not get OutputWindow service.");
+            }
+            return outputWindow;
         }, LazyThreadSafetyMode.PublicationOnly);
 
         private static Lazy<IVsUIShell> shellLazy = new Lazy<IVsUIShell>(() =>
         {
-            return ThreadHelper.JoinableTaskFactory.Run(async delegate
+            IVsUIShell shell = null;
+            try
             {
-                IVsUIShell shell = null;
-                try
-                {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
-                }
-                catch (Exception)
-                {
-                    Debug.Fail("Could not get VSShell service.");
-                }
-                return shell;
-            });
+                ThreadHelper.ThrowIfNotOnUIThread();
+                shell = Package.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
+            }
+            catch (Exception)
+            {
+                Debug.Fail("Could not get VSShell service.");
+            }
+            return shell;
             // Use "PublicationOnly", because the implementation of GetService does its own locking
         }, LazyThreadSafetyMode.PublicationOnly);
 
@@ -77,7 +70,7 @@ namespace Microsoft.SSHDebugPS
         /// </summary>
         public static void Write(string message, string pane = DefaultOutputPane)
         {
-            ThreadHelper.JoinableTaskFactory.Run(async delegate
+            ThreadHelper.JoinableTaskFactory.RunAsync(async delegate
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 try
@@ -131,7 +124,7 @@ namespace Microsoft.SSHDebugPS
                 {
                     Debug.Fail("Failed to write to output pane.");
                 }
-            });
+            }).FileAndForget("vs/SSHDebugPS/VsOutputWindowWrapper/Write");
         }
 
         /// <summary>
