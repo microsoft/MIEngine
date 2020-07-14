@@ -178,6 +178,24 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to parse {0} containers. See output window for more information..
+        /// </summary>
+        public static string ContainersNotAllParsedStatusText {
+            get {
+                return ResourceManager.GetString("ContainersNotAllParsedStatusText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Displaying {0} of {1} containers found..
+        /// </summary>
+        public static string ContainersNotAllParsedText {
+            get {
+                return ResourceManager.GetString("ContainersNotAllParsedText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Container Status:.
         /// </summary>
         public static string ContainerStatusTextBox {

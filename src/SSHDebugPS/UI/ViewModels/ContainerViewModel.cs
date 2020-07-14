@@ -155,7 +155,7 @@ namespace Microsoft.SSHDebugPS.UI
         }
 
         // Gets the first 12 characters and appends an ellipsis
-        public string ShortId { get => Id.Length > 12 ? Id.Substring(0, 12) : Id; }
+        public string ShortId { get => !string.IsNullOrEmpty(Id) && Id.Length > 12 ? Id.Substring(0, 12) : Id; }
         public string Image => Instance?.Image;
         public string Command => Instance.Command;
         public string Status => Instance.Status;

@@ -165,6 +165,10 @@
   <data name="Error_EnsureDockerContainerIsLinux" xml:space="preserve">
     <value>Ensure the selected Docker Connection target is a Linux container.</value>
   </data>
+  <data name="Error_DockerPSParseFailed" xml:space="preserve">
+    <value>Failed to parse json '{0}'.\r\nError: '{1}'</value>
+    <comment>{0} is a json output item from the output 'docker ps' and {1} is the error message</comment>
+  </data>
   <data name="Error_ExitCodeNotParseable" xml:space="preserve">
     <value>Unable to parse exit code.</value>
   </data>

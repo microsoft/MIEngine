@@ -245,4 +245,12 @@
   <data name="ContainerStatusTextBox" xml:space="preserve">
     <value>Container Status:</value>
   </data>
+  <data name="ContainersNotAllParsedStatusText" xml:space="preserve">
+    <value>Failed to parse {0} containers. See output window for more information.</value>
+    <comment>{0} is the number of containers we failed to parse.</comment>
+  </data>
+  <data name="ContainersNotAllParsedText" xml:space="preserve">
+    <value>Displaying {0} of {1} containers found.</value>
+    <comment>{0} is the number of containers successfuly shown. {1} is the total.</comment>
+  </data>
 </root>

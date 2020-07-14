@@ -17,8 +17,10 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerPSCommand = "ps";
         // --no-trunc avoids parameter truncation
         private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
-        public static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname)
+        public static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
         {
+            totalContainers = 0;
+            int containerCount = 0;
             List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
@@ -58,9 +60,11 @@ namespace Microsoft.SSHDebugPS.Docker
                         }
                         else
                         {
-                            var containerInstance = DockerContainerInstance.Create(args);
-                            if (containerInstance != null)
+                            if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
+                            {
                                 containers.Add(containerInstance);
+                            }
+                            containerCount++;
                         }
                     }
                 });
@@ -94,6 +98,7 @@ namespace Microsoft.SSHDebugPS.Docker
                         throw new CommandFailedException(errorSB.ToString());
                     }
 
+                    totalContainers = containerCount;
                     return containers;
                 }
 
@@ -116,11 +121,11 @@ namespace Microsoft.SSHDebugPS.Docker
             IEnumerable<DockerContainerInstance> containers;
             if (remoteConnection != null)
             {
-                containers = GetRemoteDockerContainers(remoteConnection, hostName);
+                containers = GetRemoteDockerContainers(remoteConnection, hostName, out _);
             }
             else
             {
-                containers = GetLocalDockerContainers(hostName);
+                containers = GetLocalDockerContainers(hostName, out _);
             }
 
             if (containers != null)
@@ -136,8 +141,9 @@ namespace Microsoft.SSHDebugPS.Docker
             return false;
         }
 
-        internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname)
+        internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname, out int totalContainers)
         {
+            totalContainers = 0;
             SSHConnection sshConnection = connection as SSHConnection;
             List<string> outputLines = new List<string>();
             StringBuilder errorSB = new StringBuilder();
@@ -210,7 +216,11 @@ namespace Microsoft.SSHDebugPS.Docker
 
                 foreach (var item in outputLines)
                 {
-                    containers.Add(DockerContainerInstance.Create(item));
+                    if (DockerContainerInstance.TryCreate(item, out DockerContainerInstance containerInstance))
+                    {
+                        containers.Add(containerInstance);
+                    }
+                    totalContainers++;
                 }
             }
 
