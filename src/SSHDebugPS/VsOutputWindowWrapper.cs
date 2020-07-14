@@ -124,7 +124,7 @@ namespace Microsoft.SSHDebugPS
                 {
                     Debug.Fail("Failed to write to output pane.");
                 }
-            }).FileAndForget("vs/SSHDebugPS/VsOutputWindowWrapper/Write");
+            }).FileAndForget("VS/Diagnostics/Debugger/SSHDebugPS/VsOutputWindowWrapper/Write");
         }
 
         /// <summary>
