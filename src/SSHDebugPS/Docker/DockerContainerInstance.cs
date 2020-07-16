@@ -63,6 +63,8 @@ namespace Microsoft.SSHDebugPS.Docker
         [JsonProperty("CreatedAt")]
         public string Created { get; private set; }
 
+        public string Platform { get; set; }
+
         #endregion
 
         // Docker container names: only [a-zA-Z0-9][a-zA-Z0-9_.-] are allowed. It is also case sensitive
