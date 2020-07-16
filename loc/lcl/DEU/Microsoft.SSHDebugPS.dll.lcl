@@ -136,6 +136,21 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";Error_DockerPSParseFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to parse json '{0}'.\r\nError: '{1}']]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Error_EnsureDockerContainerIsLinux" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Ensure the selected Docker Connection target is a Linux container.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Stellen Sie sicher, dass das ausgewählte Docker-Verbindungsziel ein Linux-Container ist.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";Error_ExitCodeNotParseable" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to parse exit code.]]></Val>
@@ -466,6 +481,18 @@
           <Prev Cat="Text">
             <Val><![CDATA[Found {0} containers]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ContainersNotAllParsedStatusText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to parse {0} containers. See output window for more information.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ContainersNotAllParsedText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Displaying {0} of {1} containers found.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
