@@ -339,6 +339,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
@@ -412,18 +413,33 @@
                                Style="{StaticResource BodyTextBlockStyle}"
                                ToolTip="{Binding Created}" />
 
-                    <!-- Ports -->
-                    <!-- Modified Margin on bottom -->
+                    <!-- Platform -->
                     <TextBlock Grid.Row="4"
                            Grid.Column="0"
-                           x:Uid="uidPorts"
-                           Text="{x:Static local:UIResources.PortsLabelText}"
-                           Margin="6,4,0,4"
+                           x:Uid="uidCreated"
+                           Text="{x:Static local:UIResources.PlatformLabelText}"
                            Style="{StaticResource BodyLabelStyle}" />
                     <TextBlock Grid.Row="4"
                                Grid.Column="1"
                                Grid.ColumnSpan="2"
                                Tag="5"
+                               x:Name="platform"
+                               Text="{Binding Platform}"
+                               Style="{StaticResource BodyTextBlockStyle}"
+                               ToolTip="{Binding Platform}" />
+
+                    <!-- Ports -->
+                    <!-- Modified Margin on bottom -->
+                    <TextBlock Grid.Row="5"
+                           Grid.Column="0"
+                           x:Uid="uidPorts"
+                           Text="{x:Static local:UIResources.PortsLabelText}"
+                           Margin="6,4,0,4"
+                           Style="{StaticResource BodyLabelStyle}" />
+                    <TextBlock Grid.Row="5"
+                               Grid.Column="1"
+                               Grid.ColumnSpan="2"
+                               Tag="6"
                                x:Name="ports"
                                Text="{Binding FormattedListOfPorts}"
                                Style="{StaticResource BodyTextBlockStyle}"

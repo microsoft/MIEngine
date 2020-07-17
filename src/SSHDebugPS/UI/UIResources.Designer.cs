@@ -367,6 +367,17 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///     Looks up a localized string similar to Platform: .
+        /// </summary>
+        public static string PlatformLabelText
+        {
+            get
+            {
+                return ResourceManager.GetString("PlatformLabelText", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Ports: .
         /// </summary>
         public static string PortsLabelText {
@@ -408,6 +419,17 @@ namespace Microsoft.SSHDebugPS {
         public static string RemoteConnectionStringLabel {
             get {
                 return ResourceManager.GetString("RemoteConnectionStringLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     Looks up a localized string similar to Retrieving container platforms..
+        /// </summary>
+        public static string RetrievingContainerPlatformsMessage
+        {
+            get
+            {
+                return ResourceManager.GetString("RetrievingContainerPlatformsMessage", resourceCulture);
             }
         }
         

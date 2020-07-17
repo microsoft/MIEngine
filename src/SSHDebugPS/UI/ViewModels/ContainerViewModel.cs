@@ -160,6 +160,7 @@ namespace Microsoft.SSHDebugPS.UI
         public string Command => Instance.Command;
         public string Status => Instance.Status;
         public string Created => Instance.Created;
+        public string Platform => Instance.Platform;
 
         public override bool GetResult(out string selectedQualifier)
         {
@@ -203,6 +204,7 @@ namespace Microsoft.SSHDebugPS.UI
                     String.Join(" ", UIResources.CommandLabelText, Command),
                     String.Join(" ", UIResources.StatusLabelText, Status),
                     String.Join(" ", UIResources.CreatedLabelText, Created),
+                    String.Join(" ", UIResources.PlatformLabelText, Platform),
                     String.Join(" ", UIResources.PortsLabelText, !String.IsNullOrEmpty(Instance.Ports) ? FormattedListOfPorts : UIResources.NoPortsText));
                 }
                 return text;

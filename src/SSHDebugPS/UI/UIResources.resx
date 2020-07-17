@@ -136,6 +136,9 @@
   <data name="RemoteConnectionStringLabel" xml:space="preserve">
     <value>Remote Connection</value>
   </data>
+  <data name="RetrievingContainerPlatformsMessage" xml:space="preserve">
+	<value>Retrieving container platforms...</value>
+  </data>
   <data name="SearchingStatusText" xml:space="preserve">
     <value>Searching...</value>
   </data>
@@ -177,6 +180,9 @@
   </data>
   <data name="NoContainersFound" xml:space="preserve">
     <value>No Containers Found.</value>
+  </data>
+  <data name="PlatformLabelText" xml:space="preserve">
+	<value>Platform: </value>
   </data>
   <data name="PortsLabelText" xml:space="preserve">
     <value>Ports: </value>

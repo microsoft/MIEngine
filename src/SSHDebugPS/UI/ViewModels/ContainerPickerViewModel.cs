@@ -162,6 +162,11 @@ namespace Microsoft.SSHDebugPS.UI
                     containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
                 }
 
+                foreach(DockerContainerInstance container in containers)
+                {
+                    container.Platform = DockerHelper.GetContainerPlatform(Hostname, container.Name);
+                }
+
                 ContainerInstances = new ObservableCollection<IContainerViewModel>(containers.Select(item => new DockerContainerViewModel(item)).ToList());
                 OnPropertyChanged(nameof(ContainerInstances));
 

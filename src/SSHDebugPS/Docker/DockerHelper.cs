@@ -10,14 +10,6 @@ using System.Threading;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
 
-/*
-    Task 1151549
-        1. Add bool IsLinuxConnection (similar to bool SupportSSHConnections)
-           to DockerPortPickerBase and all relevant files
-        2. Retrieve Docker container platform using docker inspect
- */
-using System.Windows.Forms;
-
 namespace Microsoft.SSHDebugPS.Docker
 {
     public class DockerHelper
@@ -25,30 +17,12 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerPSCommand = "ps";
         // --no-trunc avoids parameter truncation
         private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
-
-        // test -- need to delete
         private const string dockerInspectCommand = "inspect";
         private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
 
-        public static string GetContainerInfo(string hostname, string containerName) // problem here
+        public static string GetContainerPlatform(string hostname, string containerName)
         {
-            string containerInfo = string.Empty;
-
-            try
-            {
-                containerInfo = GetContainerInfoImpl(hostname, containerName);
-            }
-            catch (Exception)
-            {
-
-            }
-            Console.Write(containerInfo);
-            return containerInfo;
-        }
-
-        public static string GetContainerInfoImpl(string hostname, string containerName)
-        {
-            string containerInfo = string.Empty;
+            string containerPlatform = string.Empty;
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerInspectCommand, string.Concat(dockerInspectArgs, containerName));
@@ -80,25 +54,14 @@ namespace Microsoft.SSHDebugPS.Docker
                 {
                     if (!string.IsNullOrWhiteSpace(args))
                     {
-                        /*
-                        if (args.Trim()[0] != '{')
-                        {
-                            // output isn't json, command Error
-                            errorSB.Append(args);
-                        }
-                        else
-                        {
-                            containerInfo = args;
-                        }
-                        */
-                        containerInfo = args.Trim().Replace("\"","");
+                        containerPlatform = args.Trim().Replace("\"","");
                     }
                 });
 
                 commandRunner.Start();
 
                 bool cancellationRequested = false;
-                VS.VSOperationWaiter.Wait(UIResources.QueryingForContainersMessage, false, (cancellationToken) =>
+                VS.VSOperationWaiter.Wait(UIResources.RetrievingContainerPlatformsMessage, false, (cancellationToken) =>
                 {
                     while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested)
                     { }
@@ -125,7 +88,7 @@ namespace Microsoft.SSHDebugPS.Docker
                     }
                 }
 
-                return containerInfo;
+                return containerPlatform;
             }
             catch (Win32Exception ex)
             {
@@ -180,8 +143,6 @@ namespace Microsoft.SSHDebugPS.Docker
                         {
                             if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
                             {
-                                string containerPlatform = GetContainerInfoImpl(hostname, containerInstance.Name);
-                                containerInstance.Platform = containerPlatform;
                                 containers.Add(containerInstance);
                             }
                             containerCount++;
