@@ -54,7 +54,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 {
                     if (!string.IsNullOrWhiteSpace(args))
                     {
-                        containerPlatform = args.Trim().Replace("\"","");
+                        containerPlatform = args.Trim().Replace("\"", "").Equals("windows") ? "Windows" : "Linux";
                     }
                 });
 
