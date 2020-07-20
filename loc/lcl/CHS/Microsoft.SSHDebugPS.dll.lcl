@@ -139,6 +139,9 @@
       <Item ItemId=";Error_DockerPSParseFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to parse json '{0}'.\r\nError: '{1}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[JSON“{0}”分析失败。\r\n错误:“{1}”]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -487,12 +490,18 @@
       <Item ItemId=";ContainersNotAllParsedStatusText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to parse {0} containers. See output window for more information.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} 个容器分析失败。有关详细信息，请查看输出窗口。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ContainersNotAllParsedText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Displaying {0} of {1} containers found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[正在显示找到的 {0} 个容器(共 {1} 个)。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
