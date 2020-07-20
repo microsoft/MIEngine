@@ -191,10 +191,12 @@ namespace Microsoft.SSHDebugPS.UI
             {
                 // Comma and spacing is for screenreader pauses. This is not really displayed.
                 // "Name: <containername>,
-                //  Id: <containerId>"
+                //  Id: <containerId>,
+                //  Platform: <containerPlatform>"
                 string text = String.Join(",\r\n",
                     String.Join(" ", UIResources.NameLabelText, Name),
-                    String.Join(" ", UIResources.IdLabelText, ShortId));
+                    String.Join(" ", UIResources.IdLabelText, ShortId),
+                    String.Join(" ", UIResources.PlatformLabelText,Platform));
 
                 if (IsExpanded)
                 {

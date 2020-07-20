@@ -323,10 +323,15 @@
                                Text="{Binding Name}"
                                ToolTip="{Binding Name}"
                                Style="{StaticResource HeaderLabelStyle}" />
-                    <TextBlock DockPanel.Dock="Right"
+                    <TextBlock DockPanel.Dock="Left"
                                x:Name="Id"
                                Text="{Binding ShortId, StringFormat=' ({0}...)'}"
                                ToolTip="{Binding Id}"
+                               Style="{StaticResource HeaderTextBlockStyle}" />
+                    <TextBlock DockPanel.Dock="Right"
+                               x:Name="Platform"
+                               Text="{Binding Platform, StringFormat=' ({0})'}"
+                               ToolTip="{Binding Platform}"
                                Style="{StaticResource HeaderTextBlockStyle}" />
                 </DockPanel>
 
