@@ -19,13 +19,23 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
         private const string dockerInspectCommand = "inspect";
         private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
+        private const string dockerVersionCommand = "version";
+        private const string dockerVersionArgs = "-f {{.Server.Os}}";
 
-        public static string GetContainerPlatform(string hostname, string containerName)
+        public static string GetContainerPlatform(string hostname, string containerName, bool inspect)
         {
             string containerPlatform = string.Empty;
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerInspectCommand, string.Concat(dockerInspectArgs, containerName));
+
+            if (inspect)
+            {
+                settings.SetCommand(dockerInspectCommand, string.Concat(dockerInspectArgs, containerName));
+            }
+            else
+            {
+                settings.SetCommand(dockerVersionCommand, dockerVersionArgs);
+            }
 
             LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
 
@@ -54,7 +64,8 @@ namespace Microsoft.SSHDebugPS.Docker
                 {
                     if (!string.IsNullOrWhiteSpace(args))
                     {
-                        containerPlatform = args.Trim().Replace("\"", "").Equals("windows") ? "Windows" : "Linux";
+                        string output = args.Trim().Replace("\"", "");
+                        containerPlatform = output.Equals("windows") ? "Windows" : output.Equals("linux") ? "Linux" : "Unknown";
                     }
                 });
 

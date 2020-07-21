@@ -164,7 +164,22 @@ namespace Microsoft.SSHDebugPS.UI
 
                 foreach(DockerContainerInstance container in containers)
                 {
-                    container.Platform = DockerHelper.GetContainerPlatform(Hostname, container.Name);
+                    try
+                    {
+                        container.Platform = DockerHelper.GetContainerPlatform(Hostname, container.Name, false);
+                        try
+                        {
+                            container.Platform = DockerHelper.GetContainerPlatform(Hostname, container.Name, true);
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                    catch
+                    {
+
+                    }
                 }
 
                 ContainerInstances = new ObservableCollection<IContainerViewModel>(containers.Select(item => new DockerContainerViewModel(item)).ToList());

@@ -202,11 +202,11 @@ namespace Microsoft.SSHDebugPS.UI
                 {
                     // Append other information if expanded
                     text = String.Join(",\r\n", text,
+                    String.Join(" ", UIResources.PlatformLabelText, Platform),
                     String.Join(" ", UIResources.ImageLabelText, Image),
                     String.Join(" ", UIResources.CommandLabelText, Command),
                     String.Join(" ", UIResources.StatusLabelText, Status),
                     String.Join(" ", UIResources.CreatedLabelText, Created),
-                    String.Join(" ", UIResources.PlatformLabelText, Platform),
                     String.Join(" ", UIResources.PortsLabelText, !String.IsNullOrEmpty(Instance.Ports) ? FormattedListOfPorts : UIResources.NoPortsText));
                 }
                 return text;
