@@ -13,6 +13,7 @@ using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
+using System.Globalization;
 
 namespace Microsoft.SSHDebugPS.UI
 {
@@ -162,23 +163,36 @@ namespace Microsoft.SSHDebugPS.UI
                     containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
                 }
 
-                foreach(DockerContainerInstance container in containers)
+                // test -- need to delete
+                // set container.Platform here
+                // TO-DO: container.Platform = Unknown
+
+                // if lcow = true and server os = windows, container.Platform = container platform
+                bool lcow;
+                string serverOS;
+
+                bool getLCOW = DockerHelper.LCOW(Hostname, out lcow);
+                bool getServerOS = DockerHelper.TryGetServerOS(Hostname, out serverOS);
+
+                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                serverOS = textInfo.ToTitleCase(serverOS);
+
+                if (lcow && serverOS.Contains("Windows"))
                 {
-                    try
+                    foreach (DockerContainerInstance container in containers)
                     {
-                        container.Platform = DockerHelper.GetContainerPlatform(Hostname, container.Name, false);
-                        try
-                        {
-                            container.Platform = DockerHelper.GetContainerPlatform(Hostname, container.Name, true);
-                        }
-                        catch
-                        {
-
-                        }
+                        string containerPlatform = string.Empty;
+                        DockerHelper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform);
+                        container.Platform = textInfo.ToTitleCase(containerPlatform);
                     }
-                    catch
-                    {
+                }
 
+                // else, container.Platform = server os
+                else
+                {
+                    foreach (DockerContainerInstance container in containers)
+                    {
+                        container.Platform = serverOS;
                     }
                 }
 
