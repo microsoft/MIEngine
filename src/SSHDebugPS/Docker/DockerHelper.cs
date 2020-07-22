@@ -17,18 +17,13 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerPSCommand = "ps";
         // --no-trunc avoids parameter truncation
         private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
-
         private const string dockerInfoCommand = "info";
-        private const string dockerInfoArgs = "-f {{.Driver}}"; // lcow check
+        private const string dockerInfoArgs = "-f {{.Driver}}";
         private const string dockerVersionCommand = "version";
-        private const string dockerVersionArgs = "-f {{.Server.Os}}"; // server OS
+        private const string dockerVersionArgs = "-f {{.Server.Os}}";
         private const string dockerInspectCommand = "inspect";
-        private const string dockerInspectArgs = "-f \"{{json .Platform}}\" "; // container platform
-
+        private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
         private static char[] charsToTrim = { ' ', '\"' };
-
-        // test -- need to delete
-        // make docker calls here
 
         public static bool LCOW(string hostname, out bool lcow)
         {
@@ -138,7 +133,6 @@ namespace Microsoft.SSHDebugPS.Docker
                 return false;
             }
         } 
-
 
         public static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
         {

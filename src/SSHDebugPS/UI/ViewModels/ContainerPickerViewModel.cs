@@ -137,6 +137,8 @@ namespace Microsoft.SSHDebugPS.UI
         // The formatted string for the ConnectionType dialog
         public string SelectedContainerConnectionString { get; private set; }
 
+        private const string unknown = "Unknown";
+
         private void RefreshContainersListInternal()
         {
             int totalContainers = 0;
@@ -163,36 +165,38 @@ namespace Microsoft.SSHDebugPS.UI
                     containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
                 }
 
-                // test -- need to delete
-                // set container.Platform here
-                // TO-DO: container.Platform = Unknown
-
-                // if lcow = true and server os = windows, container.Platform = container platform
-                bool lcow;
                 string serverOS;
-
-                bool getLCOW = DockerHelper.LCOW(Hostname, out lcow);
                 bool getServerOS = DockerHelper.TryGetServerOS(Hostname, out serverOS);
 
-                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-                serverOS = textInfo.ToTitleCase(serverOS);
-
-                if (lcow && serverOS.Contains("Windows"))
+                if (getServerOS)
                 {
-                    foreach (DockerContainerInstance container in containers)
+                    bool lcow;
+                    bool getLCOW = DockerHelper.LCOW(Hostname, out lcow);
+                    TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                    serverOS = textInfo.ToTitleCase(serverOS);
+
+                    if (lcow && serverOS.Contains("Windows"))
                     {
-                        string containerPlatform = string.Empty;
-                        DockerHelper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform);
-                        container.Platform = textInfo.ToTitleCase(containerPlatform);
+                        foreach (DockerContainerInstance container in containers)
+                        {
+                            string containerPlatform = string.Empty;
+                            DockerHelper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform);
+                            container.Platform = textInfo.ToTitleCase(containerPlatform);
+                        }
+                    }
+                    else
+                    {
+                        foreach (DockerContainerInstance container in containers)
+                        {
+                            container.Platform = serverOS;
+                        }
                     }
                 }
-
-                // else, container.Platform = server os
                 else
                 {
                     foreach (DockerContainerInstance container in containers)
                     {
-                        container.Platform = serverOS;
+                        container.Platform = unknown;
                     }
                 }
 
