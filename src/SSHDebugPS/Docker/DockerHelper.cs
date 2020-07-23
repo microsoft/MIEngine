@@ -2,9 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
 using Microsoft.SSHDebugPS.SSH;
@@ -24,6 +26,113 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerInspectCommand = "inspect";
         private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
         private static char[] charsToTrim = { ' ', '\"' };
+
+        // TO-DO: refactor code
+        private static bool TryRunDockerCommand(DockerCommandSettings settings, Action <string> callback)
+        {
+            string temp = string.Empty;
+
+            LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
+
+            StringBuilder errorSB = new StringBuilder();
+            int? exitCode = null;
+
+            try
+            {
+                ManualResetEvent resetEvent = new ManualResetEvent(false);
+                commandRunner.ErrorOccured += ((sender, args) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(args.ErrorMessage))
+                    {
+                        errorSB.AppendLine(args.ErrorMessage);
+                    }
+                    resetEvent.Set();
+                });
+
+                commandRunner.Closed += ((sender, args) =>
+                {
+                    exitCode = args;
+                    resetEvent.Set();
+                });
+
+                commandRunner.OutputReceived += ((sender, args) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(args))
+                    {
+                        temp = args.Trim(charsToTrim);
+                    }
+                });
+
+                commandRunner.Start();
+
+                bool cancellationRequested = false;
+                VS.VSOperationWaiter.Wait(UIResources.RetrievingContainerPlatformsMessage, false, (cancellationToken) =>
+                {
+                    while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested) { }
+                    cancellationRequested = cancellationToken.IsCancellationRequested;
+                });
+
+                if (!cancellationRequested)
+                {
+                    if (exitCode.GetValueOrDefault(-1) != 0)
+                    {
+                        string exceptionMessage = UIResources.CommandExecutionErrorWithExitCodeFormat.FormatCurrentCultureWithArgs(
+                            "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
+                            exitCode,
+                            errorSB.ToString());
+
+                        return false;
+                    }
+
+                    if (errorSB.Length > 0)
+                    {
+                        return false;
+                    }
+                }
+
+                // output = temp;
+                return true;
+            }
+            catch (Win32Exception ex)
+            {
+                string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(settings.CommandArgs, ex.Message);
+                return false;
+            }
+        }
+
+        internal static bool TryGetLocalDockerContainers(string hostname, out IEnumerable<DockerContainerInstance> containers, out int totalContainers)
+        {
+            containers = new List<DockerContainerInstance>();
+            totalContainers = 0;
+
+            int containerCount = 0;
+            List<DockerContainerInstance> delegateContainers = new List<DockerContainerInstance>();
+
+            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
+            settings.SetCommand(dockerPSCommand, dockerPSArgs);
+
+            bool result = TryRunDockerCommand(settings, delegate (string args)
+            {
+                if (!string.IsNullOrWhiteSpace(args))
+                {
+                    if (args.Trim()[0] == '{')
+                    {
+                        if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
+                        {
+                            delegateContainers.Add(containerInstance);
+                        }
+                        containerCount++;
+                    }
+                }
+            });
+            if (result)
+            {
+                totalContainers = containerCount;
+                containers = delegateContainers;
+            }
+
+            return result;
+        }
 
         public static bool LCOW(string hostname, out bool lcow)
         {
