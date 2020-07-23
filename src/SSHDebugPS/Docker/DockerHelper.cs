@@ -2,11 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
 using Microsoft.SSHDebugPS.SSH;
@@ -40,6 +38,7 @@ namespace Microsoft.SSHDebugPS.Docker
             try
             {
                 ManualResetEvent resetEvent = new ManualResetEvent(false);
+
                 commandRunner.ErrorOccured += ((sender, args) =>
                 {
                     if (!string.IsNullOrWhiteSpace(args.ErrorMessage))
@@ -100,6 +99,71 @@ namespace Microsoft.SSHDebugPS.Docker
             }
         }
 
+        // LCOW
+        internal static bool TryGetLCOW(string hostname, out bool lcow)
+        {
+            lcow = false;
+            bool delegateLCOW = false;
+
+            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
+            settings.SetCommand(dockerInfoArgs, dockerInfoCommand);
+
+            bool result = TryRunDockerCommand(settings, delegate (string args) {
+                if (args.Contains("lcow"))
+                {
+                    delegateLCOW = true;
+                }
+            });
+            if (result)
+            {
+                lcow = delegateLCOW;
+            }
+
+            return result;
+        }
+
+        // Server OS
+        internal static bool TryGetServerOS(string hostname, out string serverOS)
+        {
+            serverOS = string.Empty;
+            string delegateServerOS = string.Empty;
+
+            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
+            settings.SetCommand(dockerVersionCommand, dockerVersionArgs);
+
+            bool result = TryRunDockerCommand(settings, delegate (string args)
+            {
+                delegateServerOS = args;
+            });
+            if (result)
+            {
+                serverOS = delegateServerOS;
+            }
+
+            return result;
+        }
+
+        // Container Platform
+        internal static bool TryGetContainerPlatform(string hostname, string containerName, out string containerPlatform)
+        {
+            containerPlatform = string.Empty;
+            string delegateContainerPlatform = string.Empty;
+
+            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
+            settings.SetCommand(dockerInspectCommand, string.Concat(dockerInspectArgs, containerName));
+
+            bool result = TryRunDockerCommand(settings, delegate (string args)
+            {
+                delegateContainerPlatform = args;
+            });
+            if (result)
+            {
+                containerPlatform = delegateContainerPlatform;
+            }
+
+            return result;
+        }
+
         internal static bool TryGetLocalDockerContainers(string hostname, out IEnumerable<DockerContainerInstance> containers, out int totalContainers)
         {
             containers = new List<DockerContainerInstance>();
@@ -113,16 +177,13 @@ namespace Microsoft.SSHDebugPS.Docker
 
             bool result = TryRunDockerCommand(settings, delegate (string args)
             {
-                if (!string.IsNullOrWhiteSpace(args))
+                if (args.Trim()[0] == '{')
                 {
-                    if (args.Trim()[0] == '{')
+                    if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
                     {
-                        if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
-                        {
-                            delegateContainers.Add(containerInstance);
-                        }
-                        containerCount++;
+                        delegateContainers.Add(containerInstance);
                     }
+                    containerCount++;
                 }
             });
             if (result)
@@ -134,6 +195,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return result;
         }
 
+        /*
         public static bool LCOW(string hostname, out bool lcow)
         {
             string driverInfo = string.Empty;
@@ -337,6 +399,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 throw new CommandFailedException(errorMessage, ex);
             }
         }
+        */
 
         /// <summary>
         /// Checks if the specified container is in the list of containers from the target host.
@@ -351,7 +414,8 @@ namespace Microsoft.SSHDebugPS.Docker
             }
             else
             {
-                containers = GetLocalDockerContainers(hostName, out _);
+                // containers = GetLocalDockerContainers(hostName, out _);
+                TryGetLocalDockerContainers(hostName, out containers, out _);
             }
 
             if (containers != null)
