@@ -136,8 +136,8 @@
   <data name="RemoteConnectionStringLabel" xml:space="preserve">
     <value>Remote Connection</value>
   </data>
-  <data name="RetrievingContainerPlatformsMessage" xml:space="preserve">
-	<value>Retrieving container platforms...</value>
+  <data name="RunningDockerCommandMessage" xml:space="preserve">
+    <value>Running Docker command...</value>
   </data>
   <data name="SearchingStatusText" xml:space="preserve">
     <value>Searching...</value>
@@ -182,7 +182,7 @@
     <value>No Containers Found.</value>
   </data>
   <data name="PlatformLabelText" xml:space="preserve">
-	<value>Platform: </value>
+    <value>Platform: </value>
   </data>
   <data name="PortsLabelText" xml:space="preserve">
     <value>Ports: </value>
@@ -192,9 +192,6 @@
   </data>
   <data name="AddNewSSHConnectionLabel" xml:space="preserve">
     <value>Add...</value>
-  </data>
-  <data name="QueryingForContainersMessage" xml:space="preserve">
-    <value>Querying for containers...</value>
   </data>
   <data name="AdvancedSettingsHeader" xml:space="preserve">
     <value>_Advanced Settings</value>
@@ -258,5 +255,8 @@
   <data name="ContainersNotAllParsedText" xml:space="preserve">
     <value>Displaying {0} of {1} containers found.</value>
     <comment>{0} is the number of containers successfuly shown. {1} is the total.</comment>
+  </data>
+  <data name="QueryingForContainersMessage" xml:space="preserve">
+    <value>Querying for containers...</value>
   </data>
 </root>

@@ -151,7 +151,6 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
-                    // containers = DockerHelper.GetLocalDockerContainers(Hostname, out totalContainers);
                     DockerHelper.TryGetLocalDockerContainers(Hostname, out containers, out totalContainers);
                 }
                 else
@@ -172,7 +171,6 @@ namespace Microsoft.SSHDebugPS.UI
                 if (getServerOS)
                 {
                     bool lcow;
-                    // bool getLCOW = DockerHelper.LCOW(Hostname, out lcow);
                     bool getLCOW = DockerHelper.TryGetLCOW(Hostname, out lcow);
                     TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
                     serverOS = textInfo.ToTitleCase(serverOS);

@@ -25,11 +25,8 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
         private static char[] charsToTrim = { ' ', '\"' };
 
-        // TO-DO: refactor code
         private static bool TryRunDockerCommand(DockerCommandSettings settings, Action <string> callback)
         {
-            string temp = string.Empty;
-
             LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
 
             StringBuilder errorSB = new StringBuilder();
@@ -58,14 +55,15 @@ namespace Microsoft.SSHDebugPS.Docker
                 {
                     if (!string.IsNullOrWhiteSpace(args))
                     {
-                        temp = args.Trim(charsToTrim);
+                        args = args.Trim(charsToTrim);
+                        callback(args);
                     }
                 });
 
                 commandRunner.Start();
 
                 bool cancellationRequested = false;
-                VS.VSOperationWaiter.Wait(UIResources.RetrievingContainerPlatformsMessage, false, (cancellationToken) =>
+                VS.VSOperationWaiter.Wait(UIResources.RunningDockerCommandMessage, false, (cancellationToken) =>
                 {
                     while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested) { }
                     cancellationRequested = cancellationToken.IsCancellationRequested;
@@ -88,8 +86,11 @@ namespace Microsoft.SSHDebugPS.Docker
                         return false;
                     }
                 }
+                else
+                {
+                    return false;
+                }
 
-                // output = temp;
                 return true;
             }
             catch (Win32Exception ex)
@@ -99,14 +100,13 @@ namespace Microsoft.SSHDebugPS.Docker
             }
         }
 
-        // LCOW
         internal static bool TryGetLCOW(string hostname, out bool lcow)
         {
             lcow = false;
             bool delegateLCOW = false;
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerInfoArgs, dockerInfoCommand);
+            settings.SetCommand(dockerInfoCommand, dockerInfoArgs);
 
             bool result = TryRunDockerCommand(settings, delegate (string args) {
                 if (args.Contains("lcow"))
@@ -122,7 +122,6 @@ namespace Microsoft.SSHDebugPS.Docker
             return result;
         }
 
-        // Server OS
         internal static bool TryGetServerOS(string hostname, out string serverOS)
         {
             serverOS = string.Empty;
@@ -143,7 +142,6 @@ namespace Microsoft.SSHDebugPS.Docker
             return result;
         }
 
-        // Container Platform
         internal static bool TryGetContainerPlatform(string hostname, string containerName, out string containerPlatform)
         {
             containerPlatform = string.Empty;
@@ -195,212 +193,6 @@ namespace Microsoft.SSHDebugPS.Docker
             return result;
         }
 
-        /*
-        public static bool LCOW(string hostname, out bool lcow)
-        {
-            string driverInfo = string.Empty;
-            bool temp = false;
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerInfoCommand, dockerInfoArgs);
-            bool status = TryGetDockerCommandOutput(settings, out driverInfo);
-            if (driverInfo.Contains("lcow"))
-            {
-                temp = true;
-            }
-            lcow = temp;
-            return status;
-        }
-
-        public static bool TryGetServerOS(string hostname, out string serverOS)
-        {
-            serverOS = string.Empty;
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerVersionCommand, dockerVersionArgs);
-            bool status = TryGetDockerCommandOutput(settings, out serverOS);
-            return status;
-        }
-
-        public static bool TryGetContainerPlatform(string hostname, string containerName, out string containerPlatform)
-        {
-            containerPlatform = string.Empty;
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerInspectCommand, string.Concat(dockerInspectArgs, containerName));
-            bool status = TryGetDockerCommandOutput(settings, out containerPlatform);
-            return status;
-        }
-
-        private static bool TryGetDockerCommandOutput(DockerCommandSettings settings, out string output)
-        {
-            output = string.Empty;
-            string temp = string.Empty;
-
-            LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
-
-            StringBuilder errorSB = new StringBuilder();
-            int? exitCode = null;
-
-            try
-            {
-                ManualResetEvent resetEvent = new ManualResetEvent(false);
-                commandRunner.ErrorOccured += ((sender, args) =>
-                {
-                    if (!string.IsNullOrWhiteSpace(args.ErrorMessage))
-                    {
-                        errorSB.AppendLine(args.ErrorMessage);
-                    }
-                    resetEvent.Set();
-                });
-
-                commandRunner.Closed += ((sender, args) =>
-                {
-                    exitCode = args;
-                    resetEvent.Set();
-                });
-
-                commandRunner.OutputReceived += ((sender, args) =>
-                {
-                    if (!string.IsNullOrWhiteSpace(args))
-                    {
-                        temp = args.Trim(charsToTrim);
-                    }
-                });
-
-                commandRunner.Start();
-
-                bool cancellationRequested = false;
-                VS.VSOperationWaiter.Wait(UIResources.RetrievingContainerPlatformsMessage, false, (cancellationToken) =>
-                {
-                    while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested)
-                    {
-
-                    }
-                    cancellationRequested = cancellationToken.IsCancellationRequested;
-                });
-
-                if (!cancellationRequested)
-                {
-                    if (exitCode.GetValueOrDefault(-1) != 0)
-                    {
-                        string exceptionMessage = UIResources.CommandExecutionErrorWithExitCodeFormat.FormatCurrentCultureWithArgs(
-                            "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
-                            exitCode,
-                            errorSB.ToString());
-
-                        return false;
-                    }
-
-                    if (errorSB.Length > 0)
-                    {
-                        return false;
-                    }
-                }
-
-                output = temp;
-                return true;
-            }
-            catch (Win32Exception ex)
-            {
-                string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(settings.CommandArgs, ex.Message);
-                return false;
-            }
-        } 
-
-        public static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
-        {
-            totalContainers = 0;
-            int containerCount = 0;
-            List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
-
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerPSCommand, dockerPSArgs);
-
-            LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
-
-            StringBuilder errorSB = new StringBuilder();
-            int? exitCode = null;
-
-            try
-            {
-                ManualResetEvent resetEvent = new ManualResetEvent(false);
-                commandRunner.ErrorOccured += ((sender, args) =>
-                {
-                    if (!string.IsNullOrWhiteSpace(args.ErrorMessage))
-                    {
-                        errorSB.AppendLine(args.ErrorMessage);
-                    }
-                    resetEvent.Set();
-                });
-
-                commandRunner.Closed += ((sender, args) =>
-                {
-                    exitCode = args;
-                    resetEvent.Set();
-                });
-
-                commandRunner.OutputReceived += ((sender, args) =>
-                {
-                    if (!string.IsNullOrWhiteSpace(args))
-                    {
-                        if (args.Trim()[0] != '{')
-                        {
-                            // output isn't json, command Error
-                            errorSB.Append(args);
-                        }
-                        else
-                        {
-                            if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
-                            {
-                                containers.Add(containerInstance);
-                            }
-                            containerCount++;
-                        }
-                    }
-                });
-
-                commandRunner.Start();
-
-                bool cancellationRequested = false;
-                VS.VSOperationWaiter.Wait(UIResources.QueryingForContainersMessage, false, (cancellationToken) =>
-                {
-                    while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested)
-                    { }
-                    cancellationRequested = cancellationToken.IsCancellationRequested;
-                });
-
-                if (!cancellationRequested)
-                {
-                    // might need to throw an exception here too??
-                    if (exitCode.GetValueOrDefault(-1) != 0)
-                    {
-                        // if the exit code is not zero, then the output we received possibly is the error message
-                        string exceptionMessage = UIResources.CommandExecutionErrorWithExitCodeFormat.FormatCurrentCultureWithArgs(
-                                "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs),
-                                exitCode,
-                                errorSB.ToString());
-
-                        throw new CommandFailedException(exceptionMessage);
-                    }
-
-                    if (errorSB.Length > 0)
-                    {
-                        throw new CommandFailedException(errorSB.ToString());
-                    }
-
-                    totalContainers = containerCount;
-                    return containers;
-                }
-
-                return new List<DockerContainerInstance>();
-            }
-            catch (Win32Exception ex)
-            {
-                // docker doesn't exist 
-                string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(settings.CommandArgs, ex.Message);
-                throw new CommandFailedException(errorMessage, ex);
-            }
-        }
-        */
-
         /// <summary>
         /// Checks if the specified container is in the list of containers from the target host.
         /// </summary>
@@ -414,7 +206,6 @@ namespace Microsoft.SSHDebugPS.Docker
             }
             else
             {
-                // containers = GetLocalDockerContainers(hostName, out _);
                 TryGetLocalDockerContainers(hostName, out containers, out _);
             }
 

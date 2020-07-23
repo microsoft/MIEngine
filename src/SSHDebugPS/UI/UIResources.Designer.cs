@@ -423,13 +423,13 @@ namespace Microsoft.SSHDebugPS {
         }
 
         /// <summary>
-        ///     Looks up a localized string similar to Retrieving container platforms..
+        ///     Looks up a localized string similar to Running Docker command..
         /// </summary>
-        public static string RetrievingContainerPlatformsMessage
+        public static string RunningDockerCommandMessage
         {
             get
             {
-                return ResourceManager.GetString("RetrievingContainerPlatformsMessage", resourceCulture);
+                return ResourceManager.GetString("RunningDockerCommandMessage", resourceCulture);
             }
         }
         
