@@ -137,7 +137,7 @@ namespace Microsoft.SSHDebugPS.UI
         // The formatted string for the ConnectionType dialog
         public string SelectedContainerConnectionString { get; private set; }
 
-        private const string unknown = "Unknown";
+        private const string unknownOS = "Unknown";
 
         private void RefreshContainersListInternal()
         {
@@ -165,38 +165,52 @@ namespace Microsoft.SSHDebugPS.UI
                     containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
                 }
 
-                string serverOS;
-                bool getServerOS = DockerHelper.TryGetServerOS(Hostname, out serverOS);
-
-                if (getServerOS)
+                if (containers.Count() > 0) 
                 {
-                    bool lcow;
-                    bool getLCOW = DockerHelper.TryGetLCOW(Hostname, out lcow);
-                    TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-                    serverOS = textInfo.ToTitleCase(serverOS);
+                    string serverOS;
 
-                    if (lcow && serverOS.Contains("Windows"))
+                    if (DockerHelper.TryGetServerOS(Hostname, out serverOS))
                     {
-                        foreach (DockerContainerInstance container in containers)
+                        bool lcow;
+                        bool getLCOW = DockerHelper.TryGetLCOW(Hostname, out lcow);
+                        TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                        serverOS = textInfo.ToTitleCase(serverOS);
+
+                        /* Note: LCOW is the abbreviation for Linux Containers on Windows
+                         * 
+                         * In LCOW, both Linux and Windows containers can run simultaneously in a Docker (Windows) Engine.
+                         * Thus, the container platform must be queried directly.
+                         * Otherwise, the container platform must match that of the server engine.
+                         */
+                        if (lcow && serverOS.Contains("Windows"))
                         {
-                            string containerPlatform = string.Empty;
-                            DockerHelper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform);
-                            container.Platform = textInfo.ToTitleCase(containerPlatform);
+                            foreach (DockerContainerInstance container in containers)
+                            {
+                                string containerPlatform = string.Empty;
+                                if (DockerHelper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform))
+                                {
+                                    container.Platform = textInfo.ToTitleCase(containerPlatform);
+                                }
+                                else
+                                {
+                                    container.Platform = unknownOS;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (DockerContainerInstance container in containers)
+                            {
+                                container.Platform = serverOS;
+                            }
                         }
                     }
                     else
                     {
                         foreach (DockerContainerInstance container in containers)
                         {
-                            container.Platform = serverOS;
+                            container.Platform = unknownOS;
                         }
-                    }
-                }
-                else
-                {
-                    foreach (DockerContainerInstance container in containers)
-                    {
-                        container.Platform = unknown;
                     }
                 }
 
