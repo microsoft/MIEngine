@@ -182,25 +182,17 @@ namespace Microsoft.SSHDebugPS.Docker
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
-            try
+            RunDockerCommand(settings, delegate (string args)
             {
-                RunDockerCommand(settings, delegate (string args)
+                if (args.Trim()[0] == '{')
                 {
-                    if (args.Trim()[0] == '{')
+                    if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
                     {
-                        if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
-                        {
-                            containers.Add(containerInstance);
-                        }
-                        containerCount++;
+                        containers.Add(containerInstance);
                     }
-                });
-            }
-            catch (Win32Exception ex)
-            {
-                string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(settings.CommandArgs, ex.Message);
-                throw new CommandFailedException(errorMessage, ex);
-            }
+                    containerCount++;
+                }
+            });
 
             totalContainers = containerCount;
             return containers;
