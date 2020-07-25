@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
         private static char[] charsToTrim = { ' ', '\"' };
 
-        private static bool TryRunDockerCommand(DockerCommandSettings settings, Action <string> callback)
+        private static void RunDockerCommand(DockerCommandSettings settings, Action<string> callback)
         {
             LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
 
@@ -63,7 +63,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 commandRunner.Start();
 
                 bool cancellationRequested = false;
-                VS.VSOperationWaiter.Wait(UIResources.RunningDockerCommandMessage, false, (cancellationToken) =>
+                VS.VSOperationWaiter.Wait(UIResources.QueryingForContainersMessage, false, (cancellationToken) =>
                 {
                     while (!resetEvent.WaitOne(2000) && !cancellationToken.IsCancellationRequested) { }
                     cancellationRequested = cancellationToken.IsCancellationRequested;
@@ -78,28 +78,23 @@ namespace Microsoft.SSHDebugPS.Docker
                             exitCode,
                             errorSB.ToString());
 
-                        return false;
+                        throw new CommandFailedException(exceptionMessage);
                     }
 
                     if (errorSB.Length > 0)
                     {
-                        return false;
+                        throw new CommandFailedException(errorSB.ToString());
                     }
                 }
-                else
-                {
-                    return false;
-                }
-
-                return true;
             }
             catch (Win32Exception ex)
             {
                 string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(settings.CommandArgs, ex.Message);
-                return false;
+                throw new CommandFailedException(errorMessage, ex);
             }
         }
 
+        // LCOW is the abbreviation for Linux Containers on Windows
         internal static bool TryGetLCOW(string hostname, out bool lcow)
         {
             lcow = false;
@@ -108,18 +103,24 @@ namespace Microsoft.SSHDebugPS.Docker
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerInfoCommand, dockerInfoArgs);
 
-            bool result = TryRunDockerCommand(settings, delegate (string args) {
-                if (args.Contains("lcow"))
-                {
-                    delegateLCOW = true;
-                }
-            });
-            if (result)
+            try
             {
-                lcow = delegateLCOW;
+                RunDockerCommand(settings, delegate (string args)
+                {
+                    if (args.Contains("lcow"))
+                    {
+                        delegateLCOW = true;
+                    }
+                });
             }
-
-            return result;
+            catch (CommandFailedException _)
+            {
+                // only care whether call to obtain LCOW succeeded
+                return false;
+            }
+        
+            lcow = delegateLCOW;
+            return true;
         }
 
         internal static bool TryGetServerOS(string hostname, out string serverOS)
@@ -130,16 +131,21 @@ namespace Microsoft.SSHDebugPS.Docker
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerVersionCommand, dockerVersionArgs);
 
-            bool result = TryRunDockerCommand(settings, delegate (string args)
+            try
             {
-                delegateServerOS = args;
-            });
-            if (result)
+                RunDockerCommand(settings, delegate (string args)
+                {
+                    delegateServerOS = args;
+                });
+            }
+            catch (CommandFailedException _)
             {
-                serverOS = delegateServerOS;
+                // only care whether call to obtain server OS succeeded
+                return false;
             }
 
-            return result;
+            serverOS = delegateServerOS;
+            return true;
         }
 
         internal static bool TryGetContainerPlatform(string hostname, string containerName, out string containerPlatform)
@@ -150,47 +156,54 @@ namespace Microsoft.SSHDebugPS.Docker
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerInspectCommand, string.Concat(dockerInspectArgs, containerName));
 
-            bool result = TryRunDockerCommand(settings, delegate (string args)
+            try
             {
-                delegateContainerPlatform = args;
-            });
-            if (result)
+                RunDockerCommand(settings, delegate (string args)
+                {
+                    delegateContainerPlatform = args;
+                });
+            }
+            catch (CommandFailedException _)
             {
-                containerPlatform = delegateContainerPlatform;
+                // only care whether call to obtain container platform succeeded
+                return false;
             }
 
-            return result;
+            containerPlatform = delegateContainerPlatform;
+            return true;
         }
 
-        internal static bool TryGetLocalDockerContainers(string hostname, out IEnumerable<DockerContainerInstance> containers, out int totalContainers)
+        internal static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
         {
-            containers = new List<DockerContainerInstance>();
             totalContainers = 0;
-
             int containerCount = 0;
-            List<DockerContainerInstance> delegateContainers = new List<DockerContainerInstance>();
+            List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
-            bool result = TryRunDockerCommand(settings, delegate (string args)
+            try
             {
-                if (args.Trim()[0] == '{')
+                RunDockerCommand(settings, delegate (string args)
                 {
-                    if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
+                    if (args.Trim()[0] == '{')
                     {
-                        delegateContainers.Add(containerInstance);
+                        if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
+                        {
+                            containers.Add(containerInstance);
+                        }
+                        containerCount++;
                     }
-                    containerCount++;
-                }
-            });
-            if (result)
+                });
+            }
+            catch (Win32Exception ex)
             {
-                totalContainers = containerCount;
-                containers = delegateContainers;
+                string errorMessage = UIResources.CommandExecutionErrorFormat.FormatCurrentCultureWithArgs(settings.CommandArgs, ex.Message);
+                throw new CommandFailedException(errorMessage, ex);
             }
 
-            return result;
+            totalContainers = containerCount;
+            return containers;
         }
 
         /// <summary>
@@ -206,7 +219,7 @@ namespace Microsoft.SSHDebugPS.Docker
             }
             else
             {
-                TryGetLocalDockerContainers(hostName, out containers, out _);
+                containers = GetLocalDockerContainers(hostName, out _);
             }
 
             if (containers != null)

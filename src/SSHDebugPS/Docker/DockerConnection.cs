@@ -245,14 +245,11 @@ namespace Microsoft.SSHDebugPS.Docker
                 return new RemoteCommandRunner(settings, OuterConnection);
         }
 
-        private static readonly string IncorrectContainerType = "IncorrectContainerType";
         protected override string ProcFSErrorMessage
         {
             get
             {
-                HostTelemetry.SendEvent(Telemetry.Event_DockerConnectionTypesNotMatching, new KeyValuePair<string, object>[] {
-                    new KeyValuePair<string, object>(IncorrectContainerType, 1)
-                });
+                HostTelemetry.SendEvent(TelemetryHelper.Event_ProcFSError);
                 return String.Concat(base.ProcFSErrorMessage, Environment.NewLine, StringResources.Error_EnsureDockerContainerIsLinux);
             }
         }

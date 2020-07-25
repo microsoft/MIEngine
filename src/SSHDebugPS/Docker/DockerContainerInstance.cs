@@ -13,7 +13,6 @@ namespace Microsoft.SSHDebugPS.Docker
 {
     public class DockerContainerInstance : ContainerInstance
     {
-        private static readonly string Property_ExceptionName = "ExceptionName";
         /// <summary>
         /// Create a DockerContainerInstance from the results of docker ps in JSON format
         /// </summary>
@@ -27,8 +26,8 @@ namespace Microsoft.SSHDebugPS.Docker
             }
             catch (Exception e)
             {
-                HostTelemetry.SendEvent(Telemetry.Event_DockerPSParseFailure, new KeyValuePair<string, object>[] {
-                    new KeyValuePair<string, object>(Property_ExceptionName, e.GetType().Name)
+                HostTelemetry.SendEvent(TelemetryHelper.Event_DockerPSParseFailure, new KeyValuePair<string, object>[] {
+                    new KeyValuePair<string, object>(TelemetryHelper.Property_ExceptionName, e.GetType().Name)
                 });
 
                 string error = e.ToString();

@@ -136,9 +136,6 @@
   <data name="RemoteConnectionStringLabel" xml:space="preserve">
     <value>Remote Connection</value>
   </data>
-  <data name="RunningDockerCommandMessage" xml:space="preserve">
-    <value>Running Docker command...</value>
-  </data>
   <data name="SearchingStatusText" xml:space="preserve">
     <value>Searching...</value>
   </data>

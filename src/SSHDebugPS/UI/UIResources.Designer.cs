@@ -367,16 +367,14 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///     Looks up a localized string similar to Platform: .
+        ///   Looks up a localized string similar to Platform: .
         /// </summary>
-        public static string PlatformLabelText
-        {
-            get
-            {
+        public static string PlatformLabelText {
+            get {
                 return ResourceManager.GetString("PlatformLabelText", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Ports: .
         /// </summary>
@@ -419,17 +417,6 @@ namespace Microsoft.SSHDebugPS {
         public static string RemoteConnectionStringLabel {
             get {
                 return ResourceManager.GetString("RemoteConnectionStringLabel", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///     Looks up a localized string similar to Running Docker command..
-        /// </summary>
-        public static string RunningDockerCommandMessage
-        {
-            get
-            {
-                return ResourceManager.GetString("RunningDockerCommandMessage", resourceCulture);
             }
         }
         

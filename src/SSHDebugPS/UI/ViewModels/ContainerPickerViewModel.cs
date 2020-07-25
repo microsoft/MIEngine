@@ -151,7 +151,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
-                    DockerHelper.TryGetLocalDockerContainers(Hostname, out containers, out totalContainers);
+                    containers = DockerHelper.GetLocalDockerContainers(Hostname, out totalContainers);
                 }
                 else
                 {
