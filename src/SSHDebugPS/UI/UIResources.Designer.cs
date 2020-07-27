@@ -367,6 +367,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Platform: .
+        /// </summary>
+        public static string PlatformLabelText {
+            get {
+                return ResourceManager.GetString("PlatformLabelText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ports: .
         /// </summary>
         public static string PortsLabelText {
