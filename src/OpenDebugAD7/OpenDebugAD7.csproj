@@ -106,7 +106,7 @@
     </Reference>
     <!-- Same version as in packages.config -->
     <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol">
-      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Shared.VsCodeDebugProtocol.16.3.30820.2/lib/net45/Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll</HintPath>
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Shared.VsCodeDebugProtocol.16.6.40406.1/lib/net45/Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll</HintPath>
       <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Newtonsoft.Json">
@@ -147,6 +147,7 @@
     <Compile Include="Telemetry\TelemetryHelper.cs" />
     <Compile Include="TextPositionTuple.cs" />
     <Compile Include="ThreadFrameEnumInfo.cs" />
+    <Compile Include="Tracepoint.cs" />
     <Compile Include="VariableManager.cs" />
     <Compile Include="AD7DebugSession.cs" />
   </ItemGroup>
@@ -160,6 +161,11 @@
     <ProjectReference Include="..\DebugEngineHost.VSCode\DebugEngineHost.VSCode.csproj">
       <Project>{81de2423-fb5e-4069-b3c5-4c13ce76dc0a}</Project>
       <Name>DebugEngineHost.VSCode</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.DAP\Microsoft.VisualStudio.Debugger.Interop.DAP.csproj">
+      <Project>{23DE943C-1F84-4E23-9490-50FE1DEDE858}</Project>
+      <Name>Microsoft.VisualStudio.Debugger.Interop.DAP</Name>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

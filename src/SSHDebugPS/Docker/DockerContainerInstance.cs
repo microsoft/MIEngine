@@ -2,7 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.DebugEngineHost;
+using Microsoft.SSHDebugPS.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,20 +16,25 @@ namespace Microsoft.SSHDebugPS.Docker
         /// <summary>
         /// Create a DockerContainerInstance from the results of docker ps in JSON format
         /// </summary>
-        public static DockerContainerInstance Create(string json)
+        public static bool TryCreate(string json, out DockerContainerInstance instance)
         {
+            instance = null;
             try
             {
                 JObject obj = JObject.Parse(json);
-                var instance = obj.ToObject<DockerContainerInstance>();
-                if (instance != null)
-                    return instance;
+                instance = obj.ToObject<DockerContainerInstance>();
             }
             catch (Exception e)
             {
-                Debug.Fail(e.ToString());
+                HostTelemetry.SendEvent(TelemetryHelper.Event_DockerPSParseFailure, new KeyValuePair<string, object>[] {
+                    new KeyValuePair<string, object>(TelemetryHelper.Property_ExceptionName, e.GetType().Name)
+                });
+
+                string error = e.ToString();
+                VsOutputWindowWrapper.WriteLine(StringResources.Error_DockerPSParseFailed.FormatCurrentCultureWithArgs(json, error), StringResources.Docker_PSName);
+                Debug.Fail(error);
             }
-            return null;
+            return instance != null;
         }
 
         private DockerContainerInstance() { }
@@ -53,6 +61,8 @@ namespace Microsoft.SSHDebugPS.Docker
 
         [JsonProperty("CreatedAt")]
         public string Created { get; private set; }
+
+        public string Platform { get; set; }
 
         #endregion
 

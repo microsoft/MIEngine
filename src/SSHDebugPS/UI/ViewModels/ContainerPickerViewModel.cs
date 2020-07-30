@@ -13,6 +13,7 @@ using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
+using System.Globalization;
 
 namespace Microsoft.SSHDebugPS.UI
 {
@@ -136,8 +137,11 @@ namespace Microsoft.SSHDebugPS.UI
         // The formatted string for the ConnectionType dialog
         public string SelectedContainerConnectionString { get; private set; }
 
+        private const string unknownOS = "Unknown";
+
         private void RefreshContainersListInternal()
         {
+            int totalContainers = 0;
             try
             {
                 IContainerViewModel selectedContainer = SelectedContainerInstance;
@@ -147,7 +151,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
-                    containers = DockerHelper.GetLocalDockerContainers(Hostname);
+                    containers = DockerHelper.GetLocalDockerContainers(Hostname, out totalContainers);
                 }
                 else
                 {
@@ -158,7 +162,56 @@ namespace Microsoft.SSHDebugPS.UI
                         UpdateStatusMessage(UIResources.SSHConnectionFailedStatusText, isError: true);
                         return;
                     }
-                    containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname);
+                    containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
+                }
+
+                if (containers.Count() > 0) 
+                {
+                    string serverOS;
+
+                    if (DockerHelper.TryGetServerOS(Hostname, out serverOS))
+                    {
+                        bool lcow;
+                        bool getLCOW = DockerHelper.TryGetLCOW(Hostname, out lcow);
+                        TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                        serverOS = textInfo.ToTitleCase(serverOS);
+
+                        /* Note: LCOW is the abbreviation for Linux Containers on Windows
+                         * 
+                         * In LCOW, both Linux and Windows containers can run simultaneously in a Docker (Windows) Engine.
+                         * Thus, the container platform must be queried directly.
+                         * Otherwise, the container platform must match that of the server engine.
+                         */
+                        if (lcow && serverOS.Contains("Windows"))
+                        {
+                            foreach (DockerContainerInstance container in containers)
+                            {
+                                string containerPlatform = string.Empty;
+                                if (DockerHelper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform))
+                                {
+                                    container.Platform = textInfo.ToTitleCase(containerPlatform);
+                                }
+                                else
+                                {
+                                    container.Platform = unknownOS;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (DockerContainerInstance container in containers)
+                            {
+                                container.Platform = serverOS;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (DockerContainerInstance container in containers)
+                        {
+                            container.Platform = unknownOS;
+                        }
+                    }
                 }
 
                 ContainerInstances = new ObservableCollection<IContainerViewModel>(containers.Select(item => new DockerContainerViewModel(item)).ToList());
@@ -188,7 +241,15 @@ namespace Microsoft.SSHDebugPS.UI
             {
                 if (ContainerInstances.Count() > 0)
                 {
-                    ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+                    if (ContainerInstances.Count() < totalContainers)
+                    {
+                        UpdateStatusMessage(UIResources.ContainersNotAllParsedStatusText.FormatCurrentCultureWithArgs(totalContainers - ContainerInstances.Count()), isError: false);
+                        ContainersFoundText = UIResources.ContainersNotAllParsedText.FormatCurrentCultureWithArgs(ContainerInstances.Count(), totalContainers);
+                    }
+                    else
+                    {
+                        ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+                    }
                 }
                 else
                 {

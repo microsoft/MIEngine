@@ -155,11 +155,12 @@ namespace Microsoft.SSHDebugPS.UI
         }
 
         // Gets the first 12 characters and appends an ellipsis
-        public string ShortId { get => Id.Length > 12 ? Id.Substring(0, 12) : Id; }
+        public string ShortId { get => !string.IsNullOrEmpty(Id) && Id.Length > 12 ? Id.Substring(0, 12) : Id; }
         public string Image => Instance?.Image;
         public string Command => Instance.Command;
         public string Status => Instance.Status;
         public string Created => Instance.Created;
+        public string Platform => Instance.Platform;
 
         public override bool GetResult(out string selectedQualifier)
         {
@@ -190,15 +191,18 @@ namespace Microsoft.SSHDebugPS.UI
             {
                 // Comma and spacing is for screenreader pauses. This is not really displayed.
                 // "Name: <containername>,
-                //  Id: <containerId>"
+                //  Id: <containerId>,
+                //  Platform: <containerPlatform>"
                 string text = String.Join(",\r\n",
                     String.Join(" ", UIResources.NameLabelText, Name),
-                    String.Join(" ", UIResources.IdLabelText, ShortId));
+                    String.Join(" ", UIResources.IdLabelText, ShortId),
+                    String.Join(" ", UIResources.PlatformLabelText,Platform));
 
                 if (IsExpanded)
                 {
                     // Append other information if expanded
                     text = String.Join(",\r\n", text,
+                    String.Join(" ", UIResources.PlatformLabelText, Platform),
                     String.Join(" ", UIResources.ImageLabelText, Image),
                     String.Join(" ", UIResources.CommandLabelText, Command),
                     String.Join(" ", UIResources.StatusLabelText, Status),
