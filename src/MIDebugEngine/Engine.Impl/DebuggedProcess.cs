@@ -1631,6 +1631,16 @@ namespace Microsoft.MIDebugEngine
             return Execute(thread);
         }
 
+        public async Task Jump(string filename, int line)
+        {
+            await MICommandFactory.ExecJump(filename, line);
+        }
+
+        public async Task Jump(ulong address)
+        {
+            await MICommandFactory.ExecJump(address);
+        }
+
         public async Task Step(int threadId, enum_STEPKIND kind, enum_STEPUNIT unit)
         {
             this.VerifyNotDebuggingCoreDump();

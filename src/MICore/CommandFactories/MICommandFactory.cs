@@ -243,6 +243,12 @@ namespace MICore
         }
 
         /// <summary>
+        /// Jumps to a specified target location
+        /// </summary>
+        abstract public Task ExecJump(string filename, int line);
+        abstract public Task ExecJump(ulong address);
+
+        /// <summary>
         /// Tells GDB to spawn a target process previous setup with -file-exec-and-symbols or similar
         /// </summary>
         public virtual async Task ExecRun()
