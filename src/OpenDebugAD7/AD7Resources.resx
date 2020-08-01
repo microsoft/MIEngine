@@ -195,6 +195,9 @@
   <data name="Error_UnableToSetBreakpoint" xml:space="preserve">
     <value>Error setting breakpoint. {0}</value>
   </data>
+  <data name="Error_UnableToSetNextStatement" xml:space="preserve">
+    <value>Error setting next statement. {0}</value>
+  </data>
   <data name="Error_UnableToParseLogMessage" xml:space="preserve">
     <value>Unable to parse 'logMessage'.</value>
   </data>

@@ -398,6 +398,17 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error setting next statement. {0}.
+        /// </summary>
+        internal static string Error_UnableToSetNextStatement
+        {
+            get
+            {
+                return ResourceManager.GetString("Error_UnableToSetNextStatement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; cannot be assigned to.
         /// </summary>
         internal static string Error_VariableIsReadonly {

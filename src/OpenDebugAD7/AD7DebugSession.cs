@@ -27,7 +27,7 @@ using ProtocolMessages = Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messa
 
 namespace OpenDebugAD7
 {
-    internal class AD7DebugSession : DebugAdapterBase, IDebugPortNotify2, IDebugEventCallback2
+    internal sealed class AD7DebugSession : DebugAdapterBase, IDebugPortNotify2, IDebugEventCallback2
     {
         // This is a general purpose lock. Don't hold it across long operations.
         private readonly object m_lock = new object();
@@ -44,6 +44,8 @@ namespace OpenDebugAD7
 
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
+        private readonly List<IDebugCodeContext2> m_gotoCodeContexts = new List<IDebugCodeContext2>();
+
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
 
@@ -350,6 +352,7 @@ namespace OpenDebugAD7
             m_isStopped = false;
             m_variableManager.Reset();
             m_frameHandles.Reset();
+			m_gotoCodeContexts.Clear();
         }
 
         public void Stopped(IDebugThread2 thread)
@@ -793,6 +796,7 @@ namespace OpenDebugAD7
                 SupportsReadMemoryRequest = m_engine is IDebugMemoryBytesDAP, // TODO: Read from configuration or query engine for capabilities.
                 SupportsModulesRequest = true,
                 AdditionalModuleColumns = additionalModuleColumns,
+                SupportsGotoTargetsRequest = true,
                 SupportsDisassembleRequest = true,
                 SupportsValueFormattingOptions = true,
             };
@@ -1315,6 +1319,90 @@ namespace OpenDebugAD7
             // TODO: wait for break event
             m_program.CauseBreak();
             responder.SetResponse(new PauseResponse());
+        }
+
+        protected override void HandleGotoRequestAsync(IRequestResponder<GotoArguments> responder)
+        {
+            var response = new GotoResponse();
+            if (!m_isStopped)
+            {
+                responder.SetResponse(response);
+                return;
+            }
+
+            var builder = new ErrorBuilder(() => AD7Resources.Error_UnableToSetNextStatement);
+            try
+            {
+                var gotoTarget = m_gotoCodeContexts[responder.Arguments.TargetId];
+                IDebugThread2 thread = null;
+                lock (m_threads)
+                {
+                    if (!m_threads.TryGetValue(responder.Arguments.ThreadId, out thread))
+                        throw new AD7Exception("Unknown thread id: " + responder.Arguments.ThreadId.ToString(CultureInfo.InvariantCulture));
+                }
+                BeforeContinue();
+                builder.CheckHR(thread.SetNextStatement(null, gotoTarget));
+            }
+            catch (AD7Exception e)
+            {
+                m_isStopped = true;
+                responder.SetError(new ProtocolException(e.Message));
+            }
+
+            responder.SetResponse(response);
+        }
+
+        protected override void HandleGotoTargetsRequestAsync(IRequestResponder<GotoTargetsArguments, GotoTargetsResponse> responder)
+        {
+            var response = new GotoTargetsResponse();
+
+            var source = responder.Arguments.Source;
+            // TODO: handle this for disassembly debugging
+            if (source.Path == null)
+            {
+                responder.SetResponse(response);
+                return;
+            }
+
+            try
+            {
+                string convertedPath = m_pathConverter.ConvertClientPathToDebugger(source.Path);
+                int line = m_pathConverter.ConvertClientLineToDebugger(responder.Arguments.Line);
+                var docPos = new AD7DocumentPosition(m_sessionConfig, convertedPath, line);
+
+                var targets = new List<GotoTarget>();
+
+                IEnumDebugCodeContexts2 codeContextsEnum;
+                if (m_program.EnumCodeContexts(docPos, out codeContextsEnum) == HRConstants.S_OK)
+                {
+                    var codeContexts = new IDebugCodeContext2[1];
+                    uint nProps = 0;
+                    while (codeContextsEnum.Next(1, codeContexts, ref nProps) == HRConstants.S_OK)
+                    {
+                        var codeContext = codeContexts[0];
+                        string contextName;
+                        codeContext.GetName(out contextName);
+                        line = responder.Arguments.Line;
+                        IDebugDocumentContext2 documentContext;
+                        if (codeContext.GetDocumentContext(out documentContext) == HRConstants.S_OK)
+                        {
+                            var pos = new TEXT_POSITION[1];
+                            if (documentContext.GetStatementRange(pos, null) == HRConstants.S_OK)
+                                line = m_pathConverter.ConvertDebuggerLineToClient((int)pos[0].dwLine);
+                        }
+                        targets.Add(new GotoTarget(m_gotoCodeContexts.Create(codeContext), contextName, line));
+                    }
+                }
+
+                response.Targets = targets;
+            }
+            catch (AD7Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+                return;
+            }
+
+            responder.SetResponse(response);
         }
 
         protected override void HandleStackTraceRequestAsync(IRequestResponder<StackTraceArguments, StackTraceResponse> responder)
