@@ -2,11 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using MICore;
-using Microsoft.MIDebugEngine.Natvis;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -14,7 +11,7 @@ namespace Microsoft.MIDebugEngine
     // IDebugMemoryContext2 represents a position in the address space of the machine running the program being debugged.
     // IDebugCodeContext2 represents the starting position of a code instruction. 
     // For most run-time architectures today, a code context can be thought of as an address in a program's execution stream.
-    internal class AD7MemoryAddress : IDebugCodeContext2
+    internal sealed class AD7MemoryAddress : IDebugCodeContext2
     {
         private readonly AD7Engine _engine;
         private readonly ulong _address;
@@ -42,6 +39,9 @@ namespace Microsoft.MIDebugEngine
         // Adds a specified value to the current context's address to create a new context.
         public int Add(ulong dwCount, out IDebugMemoryContext2 newAddress)
         {
+            // NB: this is not correct for IDebugCodeContext2 according to the docs
+            // https://docs.microsoft.com/en-us/visualstudio/extensibility/debugger/reference/idebugcodecontext2#remarks
+            // But it's not used in practice (instead: IDebugDisassemblyStream2.Seek)
             newAddress = new AD7MemoryAddress(_engine, (uint)dwCount + _address, null);
             return Constants.S_OK;
         }
@@ -160,19 +160,22 @@ namespace Microsoft.MIDebugEngine
             {
                 pinfo[0].dwFields = 0;
 
-                if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS) != 0)
+                if ((dwFields & (enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS | enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSABSOLUTE)) != 0)
                 {
-                    pinfo[0].bstrAddress = EngineUtils.AsAddr(_address, _engine.DebuggedProcess.Is64BitArch);
-                    pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS;
+                    string addr = EngineUtils.AsAddr(_address, _engine.DebuggedProcess.Is64BitArch);
+                    if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS) != 0)
+                    {
+                        pinfo[0].bstrAddress = addr;
+                        pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS;
+                    }
+                    if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSABSOLUTE) != 0)
+                    {
+                        pinfo[0].bstrAddressAbsolute = addr;
+                        pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSABSOLUTE;
+                    }
                 }
-
                 // Fields not supported by the sample
                 if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSOFFSET) != 0) { }
-                if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSABSOLUTE) != 0)
-                {
-                    pinfo[0].bstrAddressAbsolute = EngineUtils.AsAddr(_address, _engine.DebuggedProcess.Is64BitArch);
-                    pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESSABSOLUTE;
-                }
                 if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_MODULEURL) != 0)
                 {
                     DebuggedModule module = _engine.DebuggedProcess.ResolveAddress(_address);
@@ -195,7 +198,10 @@ namespace Microsoft.MIDebugEngine
                         pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION;
                     }
                 }
-                if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTIONOFFSET) != 0) { }
+                if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTIONOFFSET) != 0)
+                {
+                    // TODO:
+                }
 
                 return Constants.S_OK;
             }
@@ -210,10 +216,10 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Gets the user-displayable name for this context
-        // This is not supported by the sample engine.
         public int GetName(out string pbstrName)
         {
-            throw new NotImplementedException();
+            pbstrName = _functionName ?? Engine.GetAddressDescription(_address);
+            return Constants.S_OK;
         }
 
         // Subtracts a specified value from the current context's address to create a new context.

@@ -273,27 +273,23 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Sets the next statement to the given stack frame and code context.
+        // https://docs.microsoft.com/en-us/visualstudio/extensibility/debugger/reference/idebugthread2-setnextstatement
         int IDebugThread2.SetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext)
         {
-            ulong addr = ((AD7MemoryAddress)codeContext).Address;
-            AD7StackFrame frame = ((AD7StackFrame)stackFrame);
-            if (frame.ThreadContext.Level != 0 || frame.Thread != this || !frame.ThreadContext.pc.HasValue)
+            // VS does provide a frame so at least do some sanity checks
+            AD7StackFrame frame = stackFrame as AD7StackFrame;
+            if (frame != null && (frame.ThreadContext.Level != 0 || frame.Thread != this))
+                return Constants.S_FALSE;
+
+            try
+            {
+                ulong addr = ((AD7MemoryAddress)codeContext).Address;
+                return _engine.Jump(addr);
+            }
+            catch (Exception)
             {
                 return Constants.S_FALSE;
             }
-            string toFunc = EngineUtils.GetAddressDescription(_engine.DebuggedProcess, addr);
-            string fromFunc = EngineUtils.GetAddressDescription(_engine.DebuggedProcess, frame.ThreadContext.pc.Value);
-            if (toFunc != fromFunc)
-            {
-                return Constants.S_FALSE;
-            }
-            string result = frame.EvaluateExpression("$pc=" + EngineUtils.AsAddr(addr, _engine.DebuggedProcess.Is64BitArch));
-            if (result != null)
-            {
-                _engine.DebuggedProcess.ThreadCache.MarkDirty();
-                return Constants.S_OK;
-            }
-            return Constants.S_FALSE;
         }
 
         // suspend a thread.

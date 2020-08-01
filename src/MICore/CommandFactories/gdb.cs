@@ -157,7 +157,7 @@ namespace MICore
 
         public override async Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
-            string cmd = "info line " + file + ":" + line;
+            string cmd = "info line -s " + file + " -li " + line;
             var result = await _debugger.ConsoleCmdAsync(cmd, allowWhileRunning: false);
             List<ulong> addresses = new List<ulong>();
             using (StringReader stringReader = new StringReader(result))
@@ -173,7 +173,7 @@ namespace MICore
                     {
                         ulong address;
                         string addrStr = resultLine.Substring(pos + 18);
-                        if (MICommandFactory.SpanNextAddr(addrStr, out address) != null)
+                        if (SpanNextAddr(addrStr, out address) != null)
                         {
                             addresses.Add(address);
                         }
@@ -181,6 +181,25 @@ namespace MICore
                 }
             }
             return addresses;
+        }
+
+        private async Task JumpInternal(string target)
+        {
+            // temporary breakpoint + jump
+            await _debugger.CmdAsync("-break-insert -t " + target, ResultClass.done);
+            await _debugger.CmdAsync("-exec-jump " + target, ResultClass.running);
+        }
+
+        public override Task ExecJump(string filename, int line)
+        {
+            string target = "--source " + filename + " --line " + line.ToString(CultureInfo.InvariantCulture);
+            return JumpInternal(target);
+        }
+
+        public override Task ExecJump(ulong address)
+        {
+            string target = "*" + string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address);
+            return JumpInternal(target);
         }
 
         public override Task EnableTargetAsyncOption()
