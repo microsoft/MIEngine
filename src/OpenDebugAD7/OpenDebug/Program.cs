@@ -144,7 +144,7 @@ namespace OpenDebug
             {
                 // stdin/stdout
                 Console.Error.WriteLine("waiting for v8 protocol on stdin/stdout");
-                if (Utilities.IsWindows())
+                if (Utilities.IsWindows() && Console.InputEncoding.CodePage == 65001)
                 {
                     // Avoid sending the BOM on Windows if the Beta Unicode feature is enabled in Windows 10
                     Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
