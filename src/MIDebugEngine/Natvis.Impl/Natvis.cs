@@ -433,7 +433,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             if (expr.EndsWith(",viz", StringComparison.Ordinal))
             {
                 expr = expr.Substring(0, expr.Length - 4);
-                variable = new VariableInformation(expr, frame.ThreadContext, frame.Engine, frame.Thread);
+                variable = new VariableInformation(expr, expr, frame.ThreadContext, frame.Engine, frame.Thread);
                 variable.SyncEval();
                 if (!variable.Error)
                 {
@@ -442,7 +442,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             else
             {
-                variable = new VariableInformation(expr, frame.ThreadContext, frame.Engine, frame.Thread);
+                variable = new VariableInformation(expr, expr, frame.ThreadContext, frame.Engine, frame.Thread);
             }
             return variable;
         }
