@@ -619,7 +619,8 @@ namespace OpenDebugAD7
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
                 ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
-                SupportsLogPoints = true
+                SupportsLogPoints = true,
+                SupportsReadMemoryRequest = true
             };
 
             responder.SetResponse(initializeResponse);
@@ -2016,6 +2017,19 @@ namespace OpenDebugAD7
                 return;
             }
 
+            string memoryReference = null;
+            if (property.GetMemoryContext(out IDebugMemoryContext2 memoryContext) == HRConstants.S_OK)
+            {
+                CONTEXT_INFO[] contextInfo = new CONTEXT_INFO[1];
+                if (memoryContext.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS, contextInfo) == HRConstants.S_OK)
+                {
+                    if (contextInfo[0].dwFields.HasFlag(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS))
+                    {
+                        memoryReference = contextInfo[0].bstrAddress;
+                    }
+                }
+            }
+
             Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags);
 
             if (context != EvaluateArguments.ContextValue.Hover)
@@ -2030,9 +2044,72 @@ namespace OpenDebugAD7
             {
                 Result = variable.Value,
                 Type = variable.Type,
-                VariablesReference = variable.VariablesReference
+                VariablesReference = variable.VariablesReference,
+                MemoryReference = memoryReference
             });
+        }
 
+
+        protected override void HandleReadMemoryRequestAsync(IRequestResponder<ReadMemoryArguments, ReadMemoryResponse> responder)
+        {
+            int hr;
+            ReadMemoryArguments rma = responder.Arguments;
+            ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_ReadMemory);
+            try
+            {
+                if (string.IsNullOrEmpty(rma.MemoryReference))
+                {
+                    throw new ArgumentNullException("ReadMemoryArguments.MemoryReference is null or empty.");
+                }
+
+                ulong address;
+                if (rma.MemoryReference.StartsWith("0x", StringComparison.Ordinal))
+                {
+                    address = Convert.ToUInt64(rma.MemoryReference.Substring(2), 16);
+                }
+                else
+                {
+                    address = Convert.ToUInt64(rma.MemoryReference, 10);
+                }
+
+                if (rma.Offset.HasValue && rma.Offset.Value != 0)
+                {
+                    if (rma.Offset < 0)
+                    {
+                        address += (ulong)rma.Offset.Value;
+                    }
+                    else
+                    {
+                        address -= (ulong)-rma.Offset.Value;
+                    }
+                }
+
+                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 ppMemory);
+                eb.CheckHR(hr);
+
+                byte[] data = new byte[rma.Count];
+                uint pdwUnreadable = 0;
+
+                if (rma.Count != 0)
+                {
+                    hr = m_program.GetMemoryBytes(out IDebugMemoryBytes2 debugMemoryBytes);
+                    eb.CheckHR(hr);
+
+                    hr = debugMemoryBytes.ReadAt(ppMemory, (uint)rma.Count, data, out uint pdwRead, ref pdwUnreadable);
+                    eb.CheckHR(hr);
+                }
+
+                responder.SetResponse(new ReadMemoryResponse()
+                {
+                    Address = string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address),
+                    Data = Convert.ToBase64String(data),
+                    UnreadableBytes = (int?)pdwUnreadable
+                });
+            }
+            catch (Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+            }
         }
 
         #endregion

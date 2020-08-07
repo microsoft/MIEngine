@@ -52,4 +52,20 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
         /// [PreserveSig]
         int GetPointerSize([Out] out int pResult);
     }
+
+    /// <summary>
+    /// IDebugMemoryBytesDAP for Debug Adapter Protocol
+    /// </summary>
+    [ComImport()]
+    [ComVisible(true)]
+    [Guid("CF4FADE1-3252-4680-9E70-8B44CA92DD3F")]
+    [InterfaceType(1)]
+    public interface IDebugMemoryBytesDAP
+    {
+        /// <summary>
+        /// This method will create an IDebugMemoryContext from a given address.
+        /// </summary>
+        [PreserveSig]
+        int CreateMemoryContext([In] ulong address, [Out, MarshalAs(UnmanagedType.Interface)] out IDebugMemoryContext2 ppResult);
+    }
 }
