@@ -266,11 +266,7 @@ namespace Microsoft.MIDebugEngine
             if (unixPort != null)
             {
                 MIMode miMode;
-                if (_engineGuid == EngineConstants.ClrdbgEngine)
-                {
-                    miMode = MIMode.Clrdbg;
-                }
-                else if (_engineGuid == EngineConstants.GdbEngine)
+                if (_engineGuid == EngineConstants.GdbEngine)
                 {
                     miMode = MIMode.Gdb;
                 }
@@ -285,18 +281,10 @@ namespace Microsoft.MIDebugEngine
                     throw new ArgumentOutOfRangeException(nameof(processId));
                 }
 
-                string getClrDbgUrl = GetMetric("GetClrDbgUrl") as string;
-                string remoteDebuggerInstallationDirectory = GetMetric("RemoteInstallationDirectory") as string;
-                string remoteDebuggerInstallationSubDirectory = GetMetric("RemoteInstallationSubDirectory") as string;
-                string clrDbgVersion = GetMetric("ClrDbgVersion") as string;
-
                 launchOptions = LaunchOptions.CreateForAttachRequest(unixPort,
                                                                     (int)processId,
                                                                     miMode,
-                                                                    getClrDbgUrl,
-                                                                    remoteDebuggerInstallationDirectory,
-                                                                    remoteDebuggerInstallationSubDirectory,
-                                                                    clrDbgVersion, Logger);
+                                                                    Logger);
             }
             else
             {
@@ -713,15 +701,7 @@ namespace Microsoft.MIDebugEngine
             {
                 _pollThread.RunOperation(() => _debuggedProcess.CmdTerminate());
 
-                if (_debuggedProcess.MICommandFactory.Mode != MIMode.Clrdbg)
-                {
-                    _debuggedProcess.Terminate();
-                }
-                else
-                {
-                    // Clrdbg issues a proper exit event on CmdTerminate call, don't call _debuggedProcess.Terminate() which
-                    // simply sends a fake exit event that overrides the exit code of the real one
-                }
+                _debuggedProcess.Terminate();
             }
             catch (ObjectDisposedException)
             {

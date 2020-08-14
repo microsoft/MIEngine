@@ -87,7 +87,7 @@ namespace OpenDebugAD7.AD7Impl
             return HRConstants.S_OK;
 #else
             // TODO: IncrementalHash is the only thing we can use on .net core but it is not supported by mono
-            // TODO: Make this work on mono somehow when checksums are needed for more than clrdbg
+            // TODO: Make this work on mono somehow when checksums are needed
             return HRConstants.E_NOTIMPL;
 #endif
         }

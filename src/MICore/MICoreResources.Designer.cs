@@ -557,15 +557,6 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing debugger on the remote machine..
-        /// </summary>
-        public static string Info_InstallingDebuggerOnRemote {
-            get {
-                return ResourceManager.GetString("Info_InstallingDebuggerOnRemote", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Killing pipe process.
         /// </summary>
         public static string Info_KillingPipeProcess {
@@ -625,15 +616,6 @@ namespace MICore {
         public static string Warn_ProcessExit {
             get {
                 return ResourceManager.GetString("Warn_ProcessExit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: Downloading .NET debugger to remote machine failed with error {0}..
-        /// </summary>
-        public static string Warning_DownloadingClrDbgToRemote {
-            get {
-                return ResourceManager.GetString("Warning_DownloadingClrDbgToRemote", resourceCulture);
             }
         }
     }

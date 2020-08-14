@@ -8,11 +8,6 @@ namespace OpenDebugAD7
 {
     internal static class EngineConfigurationExtensions
     {
-        public static bool IsCoreClr(this EngineConfiguration config)
-        {
-            return config != null && String.Equals(config.AdapterId, "coreclr", StringComparison.Ordinal);
-        }
-
         public static bool IsCppDbg(this EngineConfiguration config)
         {
             return config != null

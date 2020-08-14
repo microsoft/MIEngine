@@ -160,7 +160,6 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="gdb"/>
       <xs:enumeration value="lldb"/>
-      <xs:enumeration value="clrdbg"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -406,7 +405,7 @@
     <xs:sequence>
       <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
         <xs:annotation>
-          <xs:documentation>One or more GDB/LLDB/CLRDBG commands to execute in order to setup the underlying debugger. These are not required.</xs:documentation>
+          <xs:documentation>One or more GDB/LLDB commands to execute in order to setup the underlying debugger. These are not required.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="SourceMap" type="SourceMapList" minOccurs="0" maxOccurs="1">
@@ -475,7 +474,7 @@
         </xs:element>
       <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
         <xs:annotation>
-          <xs:documentation>One or more GDB/LLDB/CLRDBG commands to execute in order to setup the underlying debugger. These are not required.</xs:documentation>
+          <xs:documentation>One or more GDB/LLDB commands to execute in order to setup the underlying debugger. These are not required.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="CustomLaunchSetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
@@ -579,7 +578,7 @@
   </xs:complexType>
   <xs:complexType name="Command">
     <xs:annotation>
-      <xs:documentation>The GDB/LLDB/clrdbg command to execute</xs:documentation>
+      <xs:documentation>The GDB/LLDB command to execute</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="xs:string">

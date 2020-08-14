@@ -77,17 +77,10 @@ namespace Microsoft.MIDebugEngine
         // Gets the language associated with this document context.
         int IDebugDocumentContext2.GetLanguageInfo(ref string pbstrLanguage, ref Guid pguidLanguage)
         {
-            // CLRDBG TODO: Add 'language' to the MI
-
             string fileExtension = _textPosition.GetFileExtension();
 
-            if (fileExtension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
-            {
-                pbstrLanguage = "C#";
-                pguidLanguage = AD7Guids.guidLanguageCs;
-            }
             // NOTE: Use a case sensitive comparison, since '.C' can be used for C++ on unix
-            else if (fileExtension == ".c")
+            if (fileExtension == ".c")
             {
                 pbstrLanguage = "C";
                 pguidLanguage = AD7Guids.guidLanguageC;

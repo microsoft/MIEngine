@@ -116,7 +116,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Checksum.cs" />
-    <Compile Include="CommandFactories\clrdbg.cs" />
     <Compile Include="CommandFactories\gdb.cs" />
     <Compile Include="CommandFactories\lldb.cs" />
     <Compile Include="CommandFactories\MICommandFactory.cs" />
@@ -173,7 +172,7 @@
   <ItemGroup>
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
     <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" />
-    <GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json.6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll"/>
+    <GlassDirCopy Include="$(NuGetPackagesDirectory)\Newtonsoft.Json.6.0.8\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />

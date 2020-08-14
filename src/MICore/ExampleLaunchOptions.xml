@@ -66,8 +66,4 @@
     TargetArchitecture="x86"
     AdditionalSOLibSearchPath=""/>
 
-  <SSHLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
-    TargetMachine="169.254.2.3" TargetArchitecture="x64" MIMode="clrdbg" ExePath="dotnet" WorkingDirectory="~/clicon" ExeArguments="bin/Debug/netcoreapp1.0/clicon.dll">
-  </SSHLaunchOptions>
-
 </Examples>
