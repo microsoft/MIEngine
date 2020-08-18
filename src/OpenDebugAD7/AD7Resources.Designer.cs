@@ -434,6 +434,16 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Registers.
+        /// </summary>
+        internal static string Registers_Scope_Name
+        {
+            get {
+                return ResourceManager.GetString("Registers_Scope_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Debugger failed to signal process termination..
         /// </summary>
         internal static string MissingDebuggerTerminationEvent {

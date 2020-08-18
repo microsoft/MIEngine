@@ -14,9 +14,21 @@ namespace OpenDebugAD7
         internal enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags;
     }
 
+    internal enum VariablesScope
+    {
+        Locals,
+        Registers
+    }
+
+    internal class VariablesRef
+    {
+        internal IDebugStackFrame2 StackFrame;
+        internal VariablesScope Scope;
+    }
+
     internal class VariableManager
     {
-        // NOTE: The value being stored can be a IDebugStackFrame2 or a VariableEvaluationData
+        // NOTE: The value being stored can be a VariablesRef or a VariableEvaluationData
         private readonly HandleCollection<Object> m_variableHandles;
 
         internal VariableManager()
@@ -39,14 +51,14 @@ namespace OpenDebugAD7
             return m_variableHandles.TryGet(handle, out value);
         }
 
-        internal int Create(IDebugStackFrame2 frame)
+        internal int Create(VariablesRef vref)
         {
-            return m_variableHandles.Create(frame);
+            return m_variableHandles.Create(vref);
         }
 
         internal Variable CreateVariable(IDebugProperty2 property, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)
         {
-            DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
+            var propertyInfo = new DEBUG_PROPERTY_INFO[1];
             property.GetPropertyInfo(propertyInfoFlags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
 
             string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
@@ -57,7 +69,7 @@ namespace OpenDebugAD7
         internal Variable CreateVariable(ref DEBUG_PROPERTY_INFO propertyInfo, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags, string memoryReference)
         {
             string name = propertyInfo.bstrName;
-            string val = propertyInfo.bstrValue;
+            string val = propertyInfo.bstrValue ?? "";
             string type = null;
 
             // If we have a type string, and the value isn't just the type string in brackets, encode the shorthand for the type in the name value.
