@@ -1660,13 +1660,24 @@ namespace OpenDebugAD7
             IDebugProperty2 property = null;
             IEnumDebugPropertyInfo2 varEnum = null;
             int hr = HRConstants.E_FAIL;
-            if (container is IDebugStackFrame2)
+            if (container is VariablesRef)
             {
+                Guid filter = Guid.Empty;
+                switch (((VariablesRef)container).Scope)
+                {
+                case VariablesScope.Locals:
+                    filter = s_guidFilterAllLocalsPlusArgs;
+                    break;
+                case VariablesScope.Registers:
+                    filter = s_guidFilterRegisters;
+                    break;
+                }
+
                 uint n;
-                hr = ((IDebugStackFrame2)container).EnumProperties(
-                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
+                hr = ((VariablesRef)container).StackFrame.EnumProperties(
+                    flags,
                     Constants.EvaluationRadix,
-                    ref s_guidFilterAllLocalsPlusArgs,
+                    ref filter,
                     Constants.EvaluationTimeout,
                     out n,
                     out varEnum);
