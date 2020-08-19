@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Microsoft.MIDebugEngine
 {
-    internal class AD7DisassemblyStream : IDebugDisassemblyStream2
+    internal sealed class AD7DisassemblyStream : IDebugDisassemblyStream2
     {
         private AD7Engine _engine;
         private ulong _addr;
