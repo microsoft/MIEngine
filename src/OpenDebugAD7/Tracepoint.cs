@@ -29,7 +29,7 @@ namespace OpenDebugAD7
             return new Tracepoint(logMessage);
         }
 
-        internal int GetLogMessage(IDebugThread2 pThread, uint radix, string processName, out string logMessage)
+        internal int GetLogMessage(IDebugThread2 pThread, uint radix, string processName, int processId, out string logMessage)
         {
             int hr = HRConstants.S_OK;
             string message = LogMessage;
@@ -37,14 +37,14 @@ namespace OpenDebugAD7
             // There is strings to interpolate in the log message.
             if (m_indexToExpressions.Count != 0)
             {
-                hr = GetInterpolatedLogMessage(message, pThread, radix, processName, out message);
+                hr = GetInterpolatedLogMessage(message, pThread, radix, processName, processId, out message);
             }
 
             logMessage = message;
             return hr;
         }
 
-        private int GetInterpolatedLogMessage(string logMessage, IDebugThread2 pThread, uint radix, string processName, out string message)
+        private int GetInterpolatedLogMessage(string logMessage, IDebugThread2 pThread, uint radix, string processName, int processId, out string message)
         {
             int hr = HRConstants.S_OK;
 
@@ -88,7 +88,7 @@ namespace OpenDebugAD7
                 {
                     if (keyValuePair.Value[0] == '$')
                     {
-                        value = InterpolateToken(keyValuePair.Value, pThread, topFrame[0].m_pFrame, radix, processName);
+                        value = InterpolateToken(keyValuePair.Value, pThread, topFrame[0].m_pFrame, radix, processName, processId);
                     }
                     else
                     {
@@ -117,7 +117,7 @@ namespace OpenDebugAD7
             return hr;
         }
 
-        private string InterpolateToken(string token, IDebugThread2 pThread, IDebugStackFrame2 topFrame, uint radix, string processName)
+        private string InterpolateToken(string token, IDebugThread2 pThread, IDebugStackFrame2 topFrame, uint radix, string processName, int processId)
         {
             switch (token)
             {
@@ -211,8 +211,11 @@ namespace OpenDebugAD7
                     }
                 case "$PID":
                     {
-                        // TODO: Get PID, not AD_PROCESS_ID
-                        return string.Format(CultureInfo.InvariantCulture, "<Not Implemented: ${0}>", token);
+                        if (processId != Constants.InvalidProcessId)
+                        {
+                            return processId.ToString(CultureInfo.InvariantCulture);
+                        }
+                        return string.Format(CultureInfo.InvariantCulture, "<Unknown PID>", token);
                     }
                 case "$PNAME":
                     {
