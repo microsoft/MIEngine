@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
     }
 
     /// <summary>
-    /// 
+    /// Interface to get Program information for Debug Adapter Protocol.
     /// </summary>
     [ComImport()]
     [ComVisible(true)]
@@ -46,9 +46,9 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
     public interface IDebugProgramDAP
     {
         /// <summary>
-        /// 
+        /// Retrieves the program's pointer size in bits. (e.g. 64 or 32)
         /// </summary>
-        /// <param name="pResult">The program's pointer size.</param>
+        /// <param name="pResult">Number of bits in a pointer.</param>
         /// [PreserveSig]
         int GetPointerSize([Out] out int pResult);
     }
