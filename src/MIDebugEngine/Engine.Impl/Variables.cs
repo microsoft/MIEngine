@@ -343,23 +343,70 @@ namespace Microsoft.MIDebugEngine
 
         private string StripFormatSpecifier(string exp, out string formatSpecifier)
         {
-            formatSpecifier = null;
+            formatSpecifier = null; // will be used with -var-set-format
             int lastComma = exp.LastIndexOf(',');
-            if (lastComma > 0)
+            if (lastComma <= 0)
+                return exp;
+
+            // https://docs.microsoft.com/en-us/visualstudio/debugger/format-specifiers-in-cpp
+            string expFS = exp.Substring(lastComma + 1);
+            string trimmed = expFS.Trim();
+            switch (trimmed)
             {
-                string expFS = exp.Substring(lastComma + 1);
-                string trimmed = expFS.Trim();
-                if (trimmed == "x" || trimmed == "X" || trimmed == "h" || trimmed == "H")
-                {
+                case "x":
+                case "X":
+                case "h":
+                case "H":
+                case "xb":
+                case "Xb":
+                case "hb":
+                case "Hb":
                     formatSpecifier = "hexadecimal";
-                    return exp.Substring(0, lastComma);
-                }
-                else if (trimmed == "o")
-                {
+                    goto case "";
+                case "o":
                     formatSpecifier = "octal";
+                    goto case "";
+                case "d":
+                    formatSpecifier = "decimal";
+                    goto case "";
+                case "b":
+                case "bb":
+                    formatSpecifier = "binary";
+                    goto case "";
+                case "e":
+                case "g":
+                    //formatSpecifier = "natural";
+                    goto case "";
+                case "s":
+                case "sb":
+                case "s8":
+                case "s8b":
+                    return "(const char*)(" + exp.Substring(0, lastComma) + ")";
+                case "su":
+                case "sub":
+                    return "(const char16_t*)(" + exp.Substring(0, lastComma) + ")";
+                case "c":
+                    return "(char)(" + exp.Substring(0, lastComma) + ")";
+                // just remove and ignore these
+                case "en":
+                case "na":
+                case "nd":
+                case "nr":
+                case "!":
+                case "":
                     return exp.Substring(0, lastComma);
-                }
             }
+
+            // array with static size
+            // TODO: could return '(T(*)[n])(exp)' but requires T
+            var m = Regex.Match(trimmed, @"^\[?(\d+)\]?$");
+            if (m.Success)
+                return exp.Substring(0, lastComma);
+
+            // array with dynamic size
+            if (Regex.Match(trimmed, @"^\[([a-zA-Z_][a-zA-Z_\d]*)\]$").Success)
+                return exp.Substring(0, lastComma);
+
             return exp;
         }
 
