@@ -2075,6 +2075,7 @@ namespace OpenDebugAD7
             RegisterSyncEventHandler(typeof(IDebugBreakpointErrorEvent2), HandleIDebugBreakpointErrorEvent2);
             RegisterSyncEventHandler(typeof(IDebugOutputStringEvent2), HandleIDebugOutputStringEvent2);
             RegisterSyncEventHandler(typeof(IDebugMessageEvent2), HandleIDebugMessageEvent2);
+            RegisterSyncEventHandler(typeof(IDebugProcessInfoUpdatedEvent158), HandleIDebugProcessInfoUpdatedEvent158);
 
             // Async Handlers
             RegisterAsyncEventHandler(typeof(IDebugProgramCreateEvent2), HandleIDebugProgramCreateEvent2);
@@ -2469,6 +2470,38 @@ namespace OpenDebugAD7
 
                     m_logger.Write(category, text);
                 }
+            }
+        }
+
+        public void HandleIDebugProcessInfoUpdatedEvent158(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            IDebugProcessInfoUpdatedEvent158 debugProcessInfoUpdated = pEvent as IDebugProcessInfoUpdatedEvent158;
+
+            if (debugProcessInfoUpdated != null && 
+                debugProcessInfoUpdated.GetUpdatedProcessInfo(out string name, out uint systemProcessId) == HRConstants.S_OK)
+            {
+                // Send ProcessEvent to Client
+                ProcessEvent processEvent = new ProcessEvent();
+                processEvent.Name = name;
+                processEvent.SystemProcessId = (int)systemProcessId;
+
+                if (m_isAttach)
+                {
+                    processEvent.StartMethod = ProcessEvent.StartMethodValue.Attach;
+                }
+                else
+                {
+                    processEvent.StartMethod = ProcessEvent.StartMethodValue.Launch;
+                }
+
+                if (m_engine is IDebugProgramDAP debugProgram)
+                {
+                    if (debugProgram.GetPointerSize(out int pointerSize) == HRConstants.S_OK)
+                    {
+                        processEvent.PointerSize = pointerSize;
+                    }
+                }
+                Protocol.SendEvent(processEvent);
             }
         }
 
