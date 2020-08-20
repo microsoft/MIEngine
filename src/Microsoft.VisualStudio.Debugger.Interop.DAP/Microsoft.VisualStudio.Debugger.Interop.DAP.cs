@@ -35,4 +35,21 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
         [PreserveSig]
         int EvaluateSync([In] enum_EVALFLAGS dwFlags, [In] DAPEvalFlags dapFlags, [In] uint dwTimeout, [In][MarshalAs(UnmanagedType.Interface)] IDebugEventCallback2 pExprCallback, [Out, MarshalAs(UnmanagedType.Interface)] out IDebugProperty2 ppResult);
     }
+
+    /// <summary>
+    /// Interface to get Program information for Debug Adapter Protocol.
+    /// </summary>
+    [ComImport()]
+    [ComVisible(true)]
+    [Guid("1615C23F-2BA4-4018-A135-E8B889B01F3E")]
+    [InterfaceType(1)]
+    public interface IDebugProgramDAP
+    {
+        /// <summary>
+        /// Retrieves the program's pointer size in bits. (e.g. 64 or 32)
+        /// </summary>
+        /// <param name="pResult">Number of bits in a pointer.</param>
+        /// [PreserveSig]
+        int GetPointerSize([Out] out int pResult);
+    }
 }
