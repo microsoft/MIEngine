@@ -34,7 +34,7 @@ namespace OpenDebugAD7
 
         private IDebugProcess2 m_process;
         private string m_processName;
-        private int m_processId;
+        private int m_processId = Constants.InvalidProcessId;
         private IDebugEngineLaunch2 m_engineLaunch;
         private IDebugEngine2 m_engine;
         private EngineConfiguration m_engineConfiguration;
@@ -962,7 +962,7 @@ namespace OpenDebugAD7
                     m_isAttach = true;
                 }
 
-                if (int.TryParse(processId, out m_processId))
+                if (int.TryParse(processId, NumberStyles.None, CultureInfo.InvariantCulture, out m_processId))
                 {
                     m_processId = Constants.InvalidProcessId;
                 }
