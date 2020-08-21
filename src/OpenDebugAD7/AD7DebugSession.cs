@@ -34,6 +34,7 @@ namespace OpenDebugAD7
 
         private IDebugProcess2 m_process;
         private string m_processName;
+        private int m_processId = Constants.InvalidProcessId;
         private IDebugEngineLaunch2 m_engineLaunch;
         private IDebugEngine2 m_engine;
         private EngineConfiguration m_engineConfiguration;
@@ -720,6 +721,7 @@ namespace OpenDebugAD7
 
                 m_sessionConfig.StopAtEntrypoint = stopAtEntrypoint;
 
+                m_processId = Constants.InvalidProcessId;
                 m_processName = program;
 
                 enum_LAUNCH_FLAGS flags = enum_LAUNCH_FLAGS.LAUNCH_DEBUG;
@@ -960,6 +962,10 @@ namespace OpenDebugAD7
                     m_isAttach = true;
                 }
 
+                if (int.TryParse(processId, NumberStyles.None, CultureInfo.InvariantCulture, out m_processId))
+                {
+                    m_processId = Constants.InvalidProcessId;
+                }
                 m_processName = program ?? string.Empty;
 
                 // attach
@@ -2157,7 +2163,7 @@ namespace OpenDebugAD7
                 {
                     foreach (var tp in tracepoints)
                     {
-                        int hr = tp.GetLogMessage(pThread, Constants.ParseRadix, m_processName, out string logMessage);
+                        int hr = tp.GetLogMessage(pThread, Constants.ParseRadix, m_processName, m_processId, out string logMessage);
                         if (hr != HRConstants.S_OK)
                         {
                             DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryTracepointEventName, logMessage);
@@ -2480,10 +2486,14 @@ namespace OpenDebugAD7
             if (debugProcessInfoUpdated != null && 
                 debugProcessInfoUpdated.GetUpdatedProcessInfo(out string name, out uint systemProcessId) == HRConstants.S_OK)
             {
+                // Update Process Name and Id
+                m_processName = name;
+                m_processId = (int)systemProcessId;
+
                 // Send ProcessEvent to Client
                 ProcessEvent processEvent = new ProcessEvent();
-                processEvent.Name = name;
-                processEvent.SystemProcessId = (int)systemProcessId;
+                processEvent.Name = m_processName;
+                processEvent.SystemProcessId = m_processId;
 
                 if (m_isAttach)
                 {
