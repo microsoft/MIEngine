@@ -335,16 +335,22 @@ namespace Microsoft.MIDebugEngine
             return DecodeSourceAnnotatedDisassemblyInstructions(process, results.Find<ResultListValue>("asm_insns").FindAll<TupleValue>("src_and_asm_line"));
         }
 
+        // https://sourceware.org/gdb/current/onlinedocs/gdb/GDB_002fMI-Data-Manipulation.html#GDB_002fMI-Data-Manipulation
+        // NB: the spec is wrong, offset and func-name are optional
         private static DisasmInstruction[] DecodeDisassemblyInstructions(TupleValue[] items)
         {
-            DisasmInstruction[] instructions = new DisasmInstruction[items.Length];
+            var instructions = new DisasmInstruction[items.Length];
             for (int i = 0; i < items.Length; i++)
             {
-                DisasmInstruction inst = new DisasmInstruction();
+                var inst = new DisasmInstruction();
                 inst.Addr = items[i].FindAddr("address");
                 inst.AddressString = items[i].FindString("address");
-                inst.Symbol = items[i].TryFindString("func-name");
-                inst.Offset = items[i].Contains("offset") ? items[i].FindUint("offset") : 0;
+                int offset = items[i].Contains("offset") ? items[i].FindInt("offset") : 0;
+                if (offset > 0) // negative offset seen after throw
+                {
+                    inst.Offset = (uint)offset;
+                    inst.Symbol = items[i].TryFindString("func-name");
+                }
                 inst.Opcode = items[i].FindString("inst");
                 inst.CodeBytes = items[i].TryFindString("opcodes");
                 inst.Line = 0;
@@ -363,11 +369,15 @@ namespace Microsoft.MIDebugEngine
                 uint lineOffset = 0;
                 foreach (var asm_item in asm_items.Content)
                 {
-                    DisasmInstruction disassemblyData = new DisasmInstruction();
+                    var disassemblyData = new DisasmInstruction();
                     disassemblyData.Addr = asm_item.FindAddr("address");
                     disassemblyData.AddressString = asm_item.FindString("address");
-                    disassemblyData.Symbol = asm_item.TryFindString("func-name");
-                    disassemblyData.Offset = asm_item.Contains("offset") ? asm_item.FindUint("offset") : 0;
+                    int offset = asm_item.Contains("offset") ? asm_item.FindInt("offset") : 0;
+                    if (offset > 0) // negative offset seen after throw
+                    {
+                        disassemblyData.Offset = (uint)offset;
+                        disassemblyData.Symbol = asm_item.TryFindString("func-name");
+                    }
                     disassemblyData.Opcode = asm_item.FindString("inst");
                     disassemblyData.CodeBytes = asm_item.TryFindString("opcodes");
                     disassemblyData.Line = line;
