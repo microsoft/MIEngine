@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -539,6 +539,7 @@ namespace OpenDebugAD7
         }
 
         private CurrentLaunchState m_currentLaunchState;
+        private bool m_currentFrameHasSourceCode;
 
         private void SendMessageEvent(MessagePrefix prefix, string text)
         {
@@ -623,29 +624,32 @@ namespace OpenDebugAD7
         private void StepInternal(int threadId, enum_STEPKIND stepKind, enum_STEPUNIT stepUnit, string errorMessage)
         {
             // If we are already running ignore additional step requests
-            if (m_isStopped)
-            {
-                IDebugThread2 thread = null;
-                lock (m_threads)
-                {
-                    if (!m_threads.TryGetValue(threadId, out thread))
-                    {
-                        throw new AD7Exception(errorMessage);
-                    }
-                }
+            if (!m_isStopped)
+                return;
 
-                BeforeContinue();
-                ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
-                m_isStepping = true;
-                try
+
+            IDebugThread2 thread = null;
+            lock (m_threads)
+            {
+                if (!m_threads.TryGetValue(threadId, out thread))
                 {
-                    builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
+                    throw new AD7Exception(errorMessage);
                 }
-                catch (AD7Exception)
-                {
-                    m_isStopped = true;
-                    throw;
-                }
+            }
+
+            BeforeContinue();
+            ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
+            m_isStepping = true;
+            if (!m_currentFrameHasSourceCode)
+                stepUnit = enum_STEPUNIT.STEP_INSTRUCTION;
+            try
+            {
+                builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
+            }
+            catch (AD7Exception)
+            {
+                m_isStopped = true;
+                throw;
             }
         }
 
@@ -1422,7 +1426,7 @@ namespace OpenDebugAD7
             int startFrame = responder.Arguments.StartFrame.GetValueOrDefault(0);
             int levels = responder.Arguments.Levels.GetValueOrDefault(0);
 
-            StackTraceResponse response = new StackTraceResponse()
+            var response = new StackTraceResponse()
             {
                 TotalFrames = 0
             };
@@ -1543,7 +1547,7 @@ namespace OpenDebugAD7
                         levels = Math.Min((int)frameEnumInfo.TotalFrames - startFrame, levels);
                     }
 
-                    FRAMEINFO[] frameInfoArray = new FRAMEINFO[levels];
+                    var frameInfoArray = new FRAMEINFO[levels];
                     uint framesFetched = 0;
                     frameEnumInfo.FrameEnum.Next((uint)frameInfoArray.Length, frameInfoArray, ref framesFetched);
                     frameEnumInfo.CurrentPosition += framesFetched;
@@ -1585,7 +1589,11 @@ namespace OpenDebugAD7
                             instructionPointerReference = contextInfo[0].bstrAddress;
                         }
 
-                        response.StackFrames.Add(new ProtocolMessages.StackFrame()
+                        // remember the state for the lowermost frame
+                        if (startFrame == 0 && i == 0)
+                            m_currentFrameHasSourceCode = textPosition.Source?.Path != null;
+
+                        var newframe = new ProtocolMessages.StackFrame()
                         {
                             Id = frameReference,
                             Name = frameInfo.m_bstrFuncName,
@@ -1594,7 +1602,10 @@ namespace OpenDebugAD7
                             Column = textPosition.Column,
                             ModuleId = moduleId,
                             InstructionPointerReference = instructionPointerReference
-                        });
+                        };
+                        if (!m_currentFrameHasSourceCode)
+                            newframe.PresentationHint = ProtocolMessages.StackFrame.PresentationHintValue.Subtle;
+                        response.StackFrames.Add(newframe);
                     }
 
                     response.TotalFrames = (int)frameEnumInfo.TotalFrames;
