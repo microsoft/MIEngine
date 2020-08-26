@@ -361,7 +361,7 @@ namespace Microsoft.MIDebugEngine
                 case "Xb":
                 case "hb":
                 case "Hb":
-                    formatSpecifier = "hexadecimal";
+                    formatSpecifier = "zero-hexadecimal";
                     goto case "";
                 case "o":
                     formatSpecifier = "octal";
@@ -375,7 +375,6 @@ namespace Microsoft.MIDebugEngine
                     goto case "";
                 case "e":
                 case "g":
-                    //formatSpecifier = "natural";
                     goto case "";
                 case "s":
                 case "sb":
