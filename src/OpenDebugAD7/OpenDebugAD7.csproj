@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -84,6 +84,9 @@
       <HintPath>$(PkgNewtonsoft_Json)\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Loyc.Collections" Version="28.2.*" />
+    <PackageReference Include="Loyc.Essentials" Version="28.2.*" />
+    <PackageReference Include="Loyc.Interfaces" Version="28.2.*" />
   </ItemGroup>
   
   <ItemGroup Label="Project References">
