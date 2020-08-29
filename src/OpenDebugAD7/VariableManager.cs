@@ -49,10 +49,12 @@ namespace OpenDebugAD7
             DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
             property.GetPropertyInfo(propertyInfoFlags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
 
-            return CreateVariable(ref propertyInfo[0], propertyInfoFlags);
+            string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
+
+            return CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
         }
 
-        internal Variable CreateVariable(ref DEBUG_PROPERTY_INFO propertyInfo, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)
+        internal Variable CreateVariable(ref DEBUG_PROPERTY_INFO propertyInfo, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags, string memoryReference)
         {
             string name = propertyInfo.bstrName;
             string val = propertyInfo.bstrValue;
@@ -72,6 +74,7 @@ namespace OpenDebugAD7
                 Type = type,
                 VariablesReference = handle,
                 EvaluateName = propertyInfo.bstrFullName,
+                MemoryReference = memoryReference
             };
         }
 

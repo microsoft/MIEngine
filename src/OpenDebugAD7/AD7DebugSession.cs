@@ -1372,7 +1372,8 @@ namespace OpenDebugAD7
                                     Dictionary<string, Variable> variablesDictionary = new Dictionary<string, Variable>();
                                     for (uint c = 0; c < count; c++)
                                     {
-                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags);
+                                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
+                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
                                         int uniqueCounter = 2;
                                         string variableName = variable.Name;
                                         string variableNameFormat = "{0} #{1}";
@@ -1389,8 +1390,9 @@ namespace OpenDebugAD7
                                 }
                                 else
                                 {
+                                    string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
                                     // Shortcut when no duplicate can exist
-                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags));
+                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
                                 }
                             }
                         }
@@ -2017,20 +2019,9 @@ namespace OpenDebugAD7
                 return;
             }
 
-            string memoryReference = null;
-            if (property.GetMemoryContext(out IDebugMemoryContext2 memoryContext) == HRConstants.S_OK)
-            {
-                CONTEXT_INFO[] contextInfo = new CONTEXT_INFO[1];
-                if (memoryContext.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS, contextInfo) == HRConstants.S_OK)
-                {
-                    if (contextInfo[0].dwFields.HasFlag(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS))
-                    {
-                        memoryReference = contextInfo[0].bstrAddress;
-                    }
-                }
-            }
+            string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
 
-            Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags);
+            Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
 
             if (context != EvaluateArguments.ContextValue.Hover)
             {
