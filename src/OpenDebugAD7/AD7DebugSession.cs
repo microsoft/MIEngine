@@ -2050,7 +2050,7 @@ namespace OpenDebugAD7
             {
                 if (string.IsNullOrEmpty(rma.MemoryReference))
                 {
-                    throw new ArgumentNullException("ReadMemoryArguments.MemoryReference is null or empty.");
+                    throw new ArgumentException("ReadMemoryArguments.MemoryReference is null or empty.");
                 }
 
                 ulong address;
@@ -2075,26 +2075,27 @@ namespace OpenDebugAD7
                     }
                 }
 
-                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 ppMemory);
+                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 memoryContext);
                 eb.CheckHR(hr);
 
                 byte[] data = new byte[rma.Count];
-                uint pdwUnreadable = 0;
+                uint unreadableBytes = 0;
+                uint bytesRead = 0;
 
                 if (rma.Count != 0)
                 {
                     hr = m_program.GetMemoryBytes(out IDebugMemoryBytes2 debugMemoryBytes);
                     eb.CheckHR(hr);
 
-                    hr = debugMemoryBytes.ReadAt(ppMemory, (uint)rma.Count, data, out uint pdwRead, ref pdwUnreadable);
+                    hr = debugMemoryBytes.ReadAt(memoryContext, (uint)rma.Count, data, out bytesRead, ref unreadableBytes);
                     eb.CheckHR(hr);
                 }
 
                 responder.SetResponse(new ReadMemoryResponse()
                 {
                     Address = string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address),
-                    Data = Convert.ToBase64String(data),
-                    UnreadableBytes = (int?)pdwUnreadable
+                    Data = Convert.ToBase64String(data, 0, (int)bytesRead),
+                    UnreadableBytes = (int?)unreadableBytes
                 });
             }
             catch (Exception e)
