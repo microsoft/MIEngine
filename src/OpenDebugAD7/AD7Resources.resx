@@ -282,4 +282,7 @@
   <data name="Error_InterpolateVariableMissingProperties" xml:space="preserve">
     <value>Failed to get property information.</value>
   </data>
+  <data name="Error_Scenario_ReadMemory" xml:space="preserve">
+    <value>Unable to read memory. {0}</value>
+  </data>
 </root>

@@ -272,6 +272,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to read memory. {0}.
+        /// </summary>
+        internal static string Error_Scenario_ReadMemory {
+            get {
+                return ResourceManager.GetString("Error_Scenario_ReadMemory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to step in. {0}.
         /// </summary>
         internal static string Error_Scenario_Step_In {

@@ -619,7 +619,8 @@ namespace OpenDebugAD7
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
                 ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
-                SupportsLogPoints = true
+                SupportsLogPoints = true,
+                SupportsReadMemoryRequest = true
             };
 
             responder.SetResponse(initializeResponse);
@@ -1371,7 +1372,8 @@ namespace OpenDebugAD7
                                     Dictionary<string, Variable> variablesDictionary = new Dictionary<string, Variable>();
                                     for (uint c = 0; c < count; c++)
                                     {
-                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags);
+                                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
+                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
                                         int uniqueCounter = 2;
                                         string variableName = variable.Name;
                                         string variableNameFormat = "{0} #{1}";
@@ -1388,8 +1390,9 @@ namespace OpenDebugAD7
                                 }
                                 else
                                 {
+                                    string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
                                     // Shortcut when no duplicate can exist
-                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags));
+                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
                                 }
                             }
                         }
@@ -2016,7 +2019,9 @@ namespace OpenDebugAD7
                 return;
             }
 
-            Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags);
+            string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
+
+            Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
 
             if (context != EvaluateArguments.ContextValue.Hover)
             {
@@ -2030,9 +2035,73 @@ namespace OpenDebugAD7
             {
                 Result = variable.Value,
                 Type = variable.Type,
-                VariablesReference = variable.VariablesReference
+                VariablesReference = variable.VariablesReference,
+                MemoryReference = memoryReference
             });
+        }
 
+
+        protected override void HandleReadMemoryRequestAsync(IRequestResponder<ReadMemoryArguments, ReadMemoryResponse> responder)
+        {
+            int hr;
+            ReadMemoryArguments rma = responder.Arguments;
+            ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_ReadMemory);
+            try
+            {
+                if (string.IsNullOrEmpty(rma.MemoryReference))
+                {
+                    throw new ArgumentException("ReadMemoryArguments.MemoryReference is null or empty.");
+                }
+
+                ulong address;
+                if (rma.MemoryReference.StartsWith("0x", StringComparison.Ordinal))
+                {
+                    address = Convert.ToUInt64(rma.MemoryReference.Substring(2), 16);
+                }
+                else
+                {
+                    address = Convert.ToUInt64(rma.MemoryReference, 10);
+                }
+
+                if (rma.Offset.HasValue && rma.Offset.Value != 0)
+                {
+                    if (rma.Offset < 0)
+                    {
+                        address += (ulong)rma.Offset.Value;
+                    }
+                    else
+                    {
+                        address -= (ulong)-rma.Offset.Value;
+                    }
+                }
+
+                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 memoryContext);
+                eb.CheckHR(hr);
+
+                byte[] data = new byte[rma.Count];
+                uint unreadableBytes = 0;
+                uint bytesRead = 0;
+
+                if (rma.Count != 0)
+                {
+                    hr = m_program.GetMemoryBytes(out IDebugMemoryBytes2 debugMemoryBytes);
+                    eb.CheckHR(hr);
+
+                    hr = debugMemoryBytes.ReadAt(memoryContext, (uint)rma.Count, data, out bytesRead, ref unreadableBytes);
+                    eb.CheckHR(hr);
+                }
+
+                responder.SetResponse(new ReadMemoryResponse()
+                {
+                    Address = string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address),
+                    Data = Convert.ToBase64String(data, 0, (int)bytesRead),
+                    UnreadableBytes = (int?)unreadableBytes
+                });
+            }
+            catch (Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+            }
         }
 
         #endregion
