@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Runtime.ExceptionServices;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System.Diagnostics;
@@ -35,7 +33,7 @@ namespace Microsoft.MIDebugEngine
 
     [System.Runtime.InteropServices.ComVisible(true)]
     [System.Runtime.InteropServices.Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
-    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugEngine3, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110, IDebugProgramDAP, IDebugMemoryBytesDAP, IDisposable
+    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugEngine3, IDebugProgram3, IDebugEngineProgram2, IDebugReversibleEngineProgram160, IDebugMemoryBytes2, IDebugEngine110, IDebugProgramDAP, IDebugMemoryBytesDAP, IDisposable
     {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private EngineCallback _engineCallback;
@@ -171,6 +169,7 @@ namespace Microsoft.MIDebugEngine
             get;
             private set;
         }
+        public ExecuteDirection ExecutionDirection { get; private set; }
 
         public string GetAddressDescription(ulong ip)
         {
@@ -778,11 +777,11 @@ namespace Microsoft.MIDebugEngine
             {
                 if (_pollThread.IsPollThread())
                 {
-                    _debuggedProcess.Continue(thread?.GetDebuggedThread());
+                    _debuggedProcess.Continue(thread?.GetDebuggedThread(), ExecutionDirection);
                 }
                 else
                 {
-                    _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread()));
+                    _pollThread.RunOperation(() => _debuggedProcess.Continue(thread?.GetDebuggedThread(), ExecutionDirection));
                 }
             }
             catch (InvalidCoreDumpOperationException)
@@ -973,7 +972,7 @@ namespace Microsoft.MIDebugEngine
                     return Constants.E_FAIL;
                 }
 
-                _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit));
+                _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Step(thread.GetDebuggedThread().Id, kind, unit, ExecutionDirection));
             }
             catch (InvalidCoreDumpOperationException)
             {
@@ -1059,6 +1058,19 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
+        #endregion
+
+        #region IDebugEngineProgram2 Members
+        int IDebugReversibleEngineProgram160.CanReverse()
+        {
+            return DebuggedProcess.TargetFeatures.Contains("reverse") ? Constants.S_OK : Constants.S_FALSE;
+        }
+
+        int IDebugReversibleEngineProgram160.SetExecuteDirection(ExecuteDirection ExecuteDirection)
+        {
+            ExecutionDirection = ExecuteDirection;
+            return Constants.S_OK;
+        }
         #endregion
 
         #region IDebugMemoryBytes2 Members
