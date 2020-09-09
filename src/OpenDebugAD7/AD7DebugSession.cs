@@ -314,7 +314,7 @@ namespace OpenDebugAD7
             m_isStepping = false;
             m_isStopped = false;
             m_variableManager.Reset();
-            m_frameHandles.Reset();
+            m_frameHandles.Clear();
             m_threadFrameEnumInfos.Clear();
 			m_gotoCodeContexts.Clear();
         }

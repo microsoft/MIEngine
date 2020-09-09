@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 
-using System;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace Microsoft.DebugEngineHost.VSCode
@@ -11,73 +9,62 @@ namespace Microsoft.DebugEngineHost.VSCode
     public sealed class HandleCollection<T>
     {
         private const int START_HANDLE = 1000;
+        private List<T> _collection = new List<T>();
 
-        private int _nextHandle;
-        private Dictionary<int, T> _handleMap;
-
-        public HandleCollection()
+        public void Clear()
         {
-            _nextHandle = START_HANDLE;
-            _handleMap = new Dictionary<int, T>();
-        }
-
-        public void Reset()
-        {
-            _nextHandle = START_HANDLE;
-            _handleMap.Clear();
+            _collection.Clear();
         }
 
         public int Create(T value)
         {
-            var handle = _nextHandle++;
-            _handleMap[handle] = value;
-            return handle;
+            _collection.Add(value);
+            return _collection.Count + START_HANDLE - 1;
         }
 
         public bool TryGet(int handle, out T value)
         {
-            if (_handleMap.TryGetValue(handle, out value))
+            if (handle < 0 || handle - START_HANDLE >= _collection.Count)
             {
-                return true;
+                value = default;
+                return false;
             }
-            return false;
+
+            value = _collection[handle - START_HANDLE];
+            return true;
         }
 
         public bool TryGetFirst(out T value)
         {
             if (IsEmpty)
             {
-                value = default(T);
+                value = default;
                 return false;
             }
 
-            return TryGet(_handleMap.Keys.Min(), out value);
+            value = _collection[0];
+            return true;
         }
 
         public T this[int handle]
         {
             get
             {
-                T value;
-                if (!TryGet(handle, out value))
-                {
-                    throw new ArgumentOutOfRangeException(nameof(handle));
-                }
-
-                return value;
+                return _collection[handle - START_HANDLE];
             }
         }
 
         public bool Remove(int handle)
         {
-            return _handleMap.Remove(handle);
+            _collection.RemoveAt(handle - START_HANDLE);
+            return true;
         }
 
         public bool IsEmpty
         {
             get
             {
-                return _handleMap.Count == 0;
+                return _collection.Count == 0;
             }
         }
     }
