@@ -42,7 +42,7 @@ namespace OpenDebugAD7
 
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
-        private readonly List<IDebugCodeContext2> m_gotoCodeContexts = new List<IDebugCodeContext2>();
+        private readonly HandleCollection<IDebugCodeContext2> m_gotoCodeContexts = new HandleCollection<IDebugCodeContext2>();
 
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
         private readonly Dictionary<int, ThreadFrameEnumInfo> m_threadFrameEnumInfos = new Dictionary<int, ThreadFrameEnumInfo>();
