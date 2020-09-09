@@ -361,6 +361,7 @@ namespace Microsoft.MIDebugEngine
                 case "Xb":
                 case "hb":
                 case "Hb":
+                    // could be improved upon via post-processing with ToUpperInvariant/SubString
                     formatSpecifier = "zero-hexadecimal";
                     goto case "";
                 case "o":
