@@ -46,6 +46,8 @@ namespace MICore
         public void Dispose()
         {
             _exitMonitorTimer?.Dispose();
+
+            GC.SuppressFinalize(this);
         }
     }
 }
