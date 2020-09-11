@@ -123,7 +123,7 @@ namespace MICore
 
             if (threadId != _currentThreadId)
             {
-                string command = string.Format("-thread-select {0}", threadId);
+                string command = string.Format(CultureInfo.InvariantCulture, "-thread-select {0}", threadId);
                 await _debugger.ExclusiveCmdAsync(command, ResultClass.done, lockToken);
                 _currentThreadId = threadId;
                 _currentFrameLevel = 0;
@@ -139,7 +139,7 @@ namespace MICore
 
             if (frameLevel != _currentFrameLevel)
             {
-                string command = string.Format("-stack-select-frame {0}", frameLevel);
+                string command = string.Format(CultureInfo.InvariantCulture, "-stack-select-frame {0}", frameLevel);
                 await _debugger.ExclusiveCmdAsync(command, ResultClass.done, lockToken);
                 _currentFrameLevel = frameLevel;
             }
@@ -269,7 +269,7 @@ namespace MICore
 
         public override async Task Signal(string sig)
         {
-            string command = String.Format("-interpreter-exec console \"signal {0}\"", sig);
+            string command = String.Format(CultureInfo.InvariantCulture, "-interpreter-exec console \"signal {0}\"", sig);
             await _debugger.CmdAsync(command, ResultClass.running);
         }
 

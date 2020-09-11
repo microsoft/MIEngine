@@ -73,14 +73,14 @@ namespace MICore
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
         {
-            string threadFrameCommand = string.Format(@"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
+            string threadFrameCommand = string.Format(CultureInfo.InvariantCulture, @"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
 
             return await _debugger.CmdAsync(threadFrameCommand, expectedResultClass);
         }
 
         protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
         {
-            string threadCommand = string.Format(@"{0} --thread {1}", command, threadId);
+            string threadCommand = string.Format(CultureInfo.InvariantCulture, @"{0} --thread {1}", command, threadId);
 
             return await _debugger.CmdAsync(threadCommand, expectedResultClass);
         }
@@ -214,7 +214,7 @@ namespace MICore
 
         public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-create - * \"{0}\" --evalFlags {1}", expression, (uint)dwFlags);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-create - * \"{0}\" --evalFlags {1}", expression, (uint)dwFlags);
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
             return results;
@@ -223,7 +223,7 @@ namespace MICore
         public override async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             // Limit the number of children expanded to 1000 in case memory is uninitialized
-            string command = string.Format("-var-list-children --simple-values \"{0}\" --propertyInfoFlags {1} 0 1000", variableReference, (uint)dwFlags);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-list-children --simple-values \"{0}\" --propertyInfoFlags {1} 0 1000", variableReference, (uint)dwFlags);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;

@@ -112,7 +112,7 @@ namespace MICore
 
         public async Task<Results> StackInfoDepth(int threadId, int maxDepth = 1000, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format(@"-stack-info-depth {0}", maxDepth);
+            string command = string.Format(CultureInfo.InvariantCulture, @"-stack-info-depth {0}", maxDepth);
             Results results = await ThreadCmdAsync(command, resultClass, threadId);
 
             return results;
@@ -120,7 +120,7 @@ namespace MICore
 
         public async Task<TupleValue[]> StackListFrames(int threadId, uint lowFrameLevel, uint highFrameLevel = 1000)
         {
-            string command = string.Format(@"-stack-list-frames {0} {1}", lowFrameLevel, highFrameLevel);
+            string command = string.Format(CultureInfo.InvariantCulture, @"-stack-list-frames {0} {1}", lowFrameLevel, highFrameLevel);
             Results results = await ThreadCmdAsync(command, ResultClass.done, threadId);
 
             ListValue list = results.Find<ListValue>("stack");
@@ -157,7 +157,7 @@ namespace MICore
         /// <returns></returns>
         public async Task<ResultValue> StackListLocals(PrintValues printValues, int threadId, uint frameLevel)
         {
-            string cmd = string.Format(@"-stack-list-locals {0}", (int)printValues);
+            string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-locals {0}", (int)printValues);
 
             Results localsResults = await ThreadFrameCmdAsync(cmd, ResultClass.done, threadId, frameLevel);
             return localsResults.Find("locals");
@@ -173,7 +173,7 @@ namespace MICore
         /// <returns>This returns an array of results of frames, which contains a level and an args array. </returns>
         public virtual async Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
-            string cmd = string.Format(@"-stack-list-arguments {0} {1} {2}", (int)printValues, lowFrameLevel, hiFrameLevel);
+            string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-arguments {0} {1} {2}", (int)printValues, lowFrameLevel, hiFrameLevel);
             Results argumentsResults = await ThreadCmdAsync(cmd, ResultClass.done, threadId);
 
             return argumentsResults.Find<ListValue>("stack-args").IsEmpty()
@@ -206,7 +206,7 @@ namespace MICore
         /// <returns>Returns an array of results for variables</returns>
         public async Task<ValueListValue> StackListVariables(PrintValues printValues, int threadId, uint frameLevel)
         {
-            string cmd = string.Format(@"-stack-list-variables {0}", (int)printValues);
+            string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-variables {0}", (int)printValues);
 
             Results variablesResults = await ThreadFrameCmdAsync(cmd, ResultClass.done, threadId, frameLevel);
             return variablesResults.Find<ValueListValue>("variables");
@@ -337,7 +337,7 @@ namespace MICore
         public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             string quoteEscapedExpression = EscapeQuotes(expression);
-            string command = string.Format("-var-create - * \"{0}\"", quoteEscapedExpression);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-create - * \"{0}\"", quoteEscapedExpression);
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
             return results;
@@ -345,7 +345,7 @@ namespace MICore
 
         public async Task<Results> VarSetFormat(string variableName, string format, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format(@"-var-set-format {0} {1}", variableName, format);
+            string command = string.Format(CultureInfo.InvariantCulture, @"-var-set-format {0} {1}", variableName, format);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
@@ -354,7 +354,7 @@ namespace MICore
         public virtual async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             // Limit the number of children expanded to 1000 in case memory is uninitialized
-            string command = string.Format("-var-list-children --simple-values \"{0}\" 0 1000", variableReference);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-list-children --simple-values \"{0}\" 0 1000", variableReference);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
@@ -362,7 +362,7 @@ namespace MICore
 
         public async Task<Results> VarEvaluateExpression(string variableName, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format(@"-var-evaluate-expression {0}", variableName);
+            string command = string.Format(CultureInfo.InvariantCulture, @"-var-evaluate-expression {0}", variableName);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
@@ -370,14 +370,14 @@ namespace MICore
 
         public virtual async Task<string> VarAssign(string variableName, string expression, int threadId, uint frameLevel)
         {
-            string command = string.Format("-var-assign {0} \"{1}\"", variableName, expression);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-assign {0} \"{1}\"", variableName, expression);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
             return results.FindString("value");
         }
 
         public async Task<string> VarShowAttributes(string variableName)
         {
-            string command = string.Format("-var-show-attributes {0}", variableName);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-show-attributes {0}", variableName);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
 
             string attribute = string.Empty;
@@ -397,13 +397,13 @@ namespace MICore
 
         public async Task VarDelete(string variableName)
         {
-            string command = string.Format("-var-delete {0}", variableName);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-delete {0}", variableName);
             await _debugger.CmdAsync(command, ResultClass.None);
         }
 
         public async Task<string> VarInfoPathExpression(string variableName)
         {
-            string command = string.Format("-var-info-path-expression {0}", variableName);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-info-path-expression {0}", variableName);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
             return results.FindString("path_expr");
         }
@@ -469,7 +469,7 @@ namespace MICore
             }
             cmd.Append(filenameMI);
             cmd.Append(":");
-            cmd.Append(line.ToString());
+            cmd.Append(line.ToString(CultureInfo.InvariantCulture));
             if (quotes)
             {
                 cmd.Append("\"");
@@ -535,7 +535,7 @@ namespace MICore
             {
                 expr = string.Empty;
             }
-            string command = string.Format("-break-condition {0} {1}", bkptno, expr);
+            string command = string.Format(CultureInfo.InvariantCulture, "-break-condition {0} {1}", bkptno, expr);
             await _debugger.CmdAsync(command, ResultClass.done);
         }
 
@@ -596,7 +596,7 @@ namespace MICore
 
         public virtual async Task<Results> SetOption(string variable, string value, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-gdb-set {0} {1}", variable, value);
+            string command = string.Format(CultureInfo.InvariantCulture, "-gdb-set {0} {1}", variable, value);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;

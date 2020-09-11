@@ -2,6 +2,7 @@
 <RuleSet Name="Rules for MICore" Description="Code analysis rules for MICore.csproj." ToolsVersion="14.0">
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA1304" Action="Error" />
+    <Rule Id="CA1305" Action="Error" />
     <Rule Id="CA1306" Action="Error" />
     <Rule Id="CA2100" Action="Error" />
     <Rule Id="CA2102" Action="Error" />
@@ -49,7 +50,6 @@
     <Rule Id="CA1707" Action="None" />
 
     <!-- TODO ENABLE -->
-    <Rule Id="CA1305" Action="None" />
     <Rule Id="CA1307" Action="None" />
     <RUle Id="CA1309" Action="None" />
     <Rule Id="CA1812" Action="None" />

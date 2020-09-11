@@ -1953,7 +1953,7 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<uint> ReadProcessMemory(ulong address, uint count, byte[] bytes)
         {
-            string cmd = "-data-read-memory-bytes " + EngineUtils.AsAddr(address, Is64BitArch) + " " + count.ToString();
+            string cmd = "-data-read-memory-bytes " + EngineUtils.AsAddr(address, Is64BitArch) + " " + count.ToString(CultureInfo.InvariantCulture);
             Results results = await CmdAsync(cmd, ResultClass.None);
             if (results.ResultClass == ResultClass.error)
             {
@@ -1996,7 +1996,7 @@ namespace Microsoft.MIDebugEngine
         internal async Task<Tuple<ulong, ulong>> FindValidMemoryRange(ulong address, uint count, int offset)
         {
             var ret = new Tuple<ulong, ulong>(0, 0);    // init to an empty range
-            string cmd = String.Format(CultureInfo.InvariantCulture, "-data-read-memory-bytes -o {0} {1} {2}", offset.ToString(), EngineUtils.AsAddr(address, Is64BitArch), count.ToString());
+            string cmd = String.Format(CultureInfo.InvariantCulture, "-data-read-memory-bytes -o {0} {1} {2}", offset.ToString(CultureInfo.InvariantCulture), EngineUtils.AsAddr(address, Is64BitArch), count.ToString(CultureInfo.InvariantCulture));
             Results results = await CmdAsync(cmd, ResultClass.None);
             if (results.ResultClass == ResultClass.error)
             {
