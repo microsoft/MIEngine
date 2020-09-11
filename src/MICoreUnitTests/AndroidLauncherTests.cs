@@ -73,7 +73,7 @@ namespace MICoreUnitTests
             expectedRoots.Add(new SourceRoot("d:\\someotherdir\\src\\", true));
             expectedRoots.Add(new SourceRoot("d://otherdir//src//", true));
 
-            Assert.Equal(expectedRoots.Count(), actualRoots.Count());
+            Assert.Equal(expectedRoots.Count, actualRoots.Length);
             var comparer = new SourceRootComparer();
             expectedRoots.All(x => actualRoots.Contains(x, comparer));
         }

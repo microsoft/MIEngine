@@ -217,7 +217,7 @@ namespace Microsoft.SSHDebugPS.UI
                 ContainerInstances = new ObservableCollection<IContainerViewModel>(containers.Select(item => new DockerContainerViewModel(item)).ToList());
                 OnPropertyChanged(nameof(ContainerInstances));
 
-                if (ContainerInstances.Count() > 0)
+                if (ContainerInstances.Count > 0)
                 {
 
                     if (selectedContainer != null)
@@ -239,16 +239,16 @@ namespace Microsoft.SSHDebugPS.UI
             }
             finally
             {
-                if (ContainerInstances.Count() > 0)
+                if (ContainerInstances.Count > 0)
                 {
-                    if (ContainerInstances.Count() < totalContainers)
+                    if (ContainerInstances.Count < totalContainers)
                     {
-                        UpdateStatusMessage(UIResources.ContainersNotAllParsedStatusText.FormatCurrentCultureWithArgs(totalContainers - ContainerInstances.Count()), isError: false);
-                        ContainersFoundText = UIResources.ContainersNotAllParsedText.FormatCurrentCultureWithArgs(ContainerInstances.Count(), totalContainers);
+                        UpdateStatusMessage(UIResources.ContainersNotAllParsedStatusText.FormatCurrentCultureWithArgs(totalContainers - ContainerInstances.Count), isError: false);
+                        ContainersFoundText = UIResources.ContainersNotAllParsedText.FormatCurrentCultureWithArgs(ContainerInstances.Count, totalContainers);
                     }
                     else
                     {
-                        ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+                        ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count);
                     }
                 }
                 else

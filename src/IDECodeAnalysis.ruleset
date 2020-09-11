@@ -78,8 +78,6 @@
     <Rule Id="CA1824" Action="None" />
     <Rule Id="CA1825" Action="None" />
     <Rule Id="CA1827" Action="None" />
-    <Rule Id="CA1829" Action="None" />
-    <Rule Id="CA1830" Action="None" />
     <Rule Id="CA2000" Action="None" />
     <Rule Id="CA2007" Action="None" />
     <Rule Id="CA2008" Action="None" />

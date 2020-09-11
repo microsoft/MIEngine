@@ -575,7 +575,7 @@ namespace Microsoft.MIDebugEngine
                 List<LaunchCommand> commands = await GetInitializeCommands();
                 _childProcessHandler?.Enable();
 
-                total = commands.Count();
+                total = commands.Count;
                 var i = 0;
                 foreach (var command in commands)
                 {

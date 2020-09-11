@@ -335,7 +335,7 @@ namespace MICore
 
         public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, object> source)
         {
-            IList<SourceMapEntry> sourceMaps = new List<SourceMapEntry>(source.Keys.Count());
+            IList<SourceMapEntry> sourceMaps = new List<SourceMapEntry>(source.Keys.Count);
 
             foreach (var item in source)
             {
