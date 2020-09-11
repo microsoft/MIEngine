@@ -458,21 +458,21 @@ namespace MICore
             if (checksums != null && checksums.Count() != 0)
             {
                 cmd.Append(Checksum.GetMIString(checksums));
-                cmd.Append(" ");
+                cmd.Append(' ');
             }
 
             string filenameMI;
             bool quotes = PreparePath(filename, useUnixFormat, out filenameMI);
             if (quotes)
             {
-                cmd.Append("\"");
+                cmd.Append('\"');
             }
             cmd.Append(filenameMI);
-            cmd.Append(":");
+            cmd.Append(':');
             cmd.Append(line.ToString(CultureInfo.InvariantCulture));
             if (quotes)
             {
-                cmd.Append("\"");
+                cmd.Append('\"');
             }
 
             return await _debugger.CmdAsync(cmd.ToString(), resultClass);

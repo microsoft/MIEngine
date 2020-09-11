@@ -121,7 +121,7 @@ namespace MICore
             {
                 if (builder.Length > 0)
                 {
-                    builder.Append(" ");
+                    builder.Append(' ');
                 }
                 builder.Append(string.Format(CultureInfo.InvariantCulture, "--{0}checksum ", group.Key.ToString()));
                 builder.Append(string.Join(",", group));

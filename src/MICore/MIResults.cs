@@ -349,7 +349,7 @@ namespace MICore
         {
             StringBuilder builder = new StringBuilder();
             builder.Append(Name);
-            builder.Append("=");
+            builder.Append('=');
             builder.Append(Value.ToString());
             return builder.ToString();
         }
@@ -382,16 +382,16 @@ namespace MICore
         public override string ToString()
         {
             StringBuilder outTuple = new StringBuilder();
-            outTuple.Append("{");
+            outTuple.Append('{');
             for (int i = 0; i < Content.Count; ++i)
             {
                 if (i != 0)
                 {
-                    outTuple.Append(",");
+                    outTuple.Append(',');
                 }
                 outTuple.Append(Content[i].ToString());
             }
-            outTuple.Append("}");
+            outTuple.Append('}');
             return outTuple.ToString();
         }
         public ResultValue[] FindAll(string name)
@@ -469,16 +469,16 @@ namespace MICore
         public override string ToString()
         {
             StringBuilder outList = new StringBuilder();
-            outList.Append("[");
+            outList.Append('[');
             for (int i = 0; i < Content.Length; ++i)
             {
                 if (i != 0)
                 {
-                    outList.Append(",");
+                    outList.Append(',');
                 }
                 outList.Append(Content[i].ToString());
             }
-            outList.Append("]");
+            outList.Append(']');
             return outList.ToString();
         }
     }
@@ -532,18 +532,18 @@ namespace MICore
         public override string ToString()
         {
             StringBuilder outList = new StringBuilder();
-            outList.Append("[");
+            outList.Append('[');
             for (int i = 0; i < Content.Length; ++i)
             {
                 if (i != 0)
                 {
-                    outList.Append(",");
+                    outList.Append(',');
                 }
                 outList.Append(Content[i].Name);
-                outList.Append("=");
+                outList.Append('=');
                 outList.Append(Content[i].Value.ToString());
             }
-            outList.Append("]");
+            outList.Append(']');
             return outList.ToString();
         }
     }
