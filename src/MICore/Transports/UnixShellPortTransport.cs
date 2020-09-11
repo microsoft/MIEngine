@@ -167,7 +167,7 @@ namespace MICore
                         _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
                     }
 
-                    if (line.Equals("Info: Launching clrdbg"))
+                    if (line.Equals("Info: Launching clrdbg", StringComparison.Ordinal))
                     {
                         _debuggerLaunched = true;
                         UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);

@@ -1508,11 +1508,11 @@ namespace Microsoft.MIDebugEngine
 
                     ulong startAddr = 0;
                     ulong endAddr = 0;
-                    if (line.StartsWith("From")) // header line, ignore
+                    if (line.StartsWith("From", StringComparison.Ordinal)) // header line, ignore
                     {
                         continue;
                     }
-                    else if (line.StartsWith("0x"))  // module with load address
+                    else if (line.StartsWith("0x", StringComparison.Ordinal))  // module with load address
                     {
                         // line format: 0x<hex start addr>  0x<hex end addr>  [ Yes | No ]  <filename>
                         line = MICommandFactory.SpanNextAddr(line, out startAddr);
@@ -1528,12 +1528,12 @@ namespace Microsoft.MIDebugEngine
                     }
                     line = line.Trim();
                     bool symbolsLoaded;
-                    if (line.StartsWith("Yes"))
+                    if (line.StartsWith("Yes", StringComparison.Ordinal))
                     {
                         symbolsLoaded = true;
                         line = line.Substring(3);
                     }
-                    else if (line.StartsWith("No"))
+                    else if (line.StartsWith("No", StringComparison.Ordinal))
                     {
                         symbolsLoaded = false;
                         line = line.Substring(2);

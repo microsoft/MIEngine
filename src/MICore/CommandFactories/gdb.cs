@@ -168,7 +168,7 @@ namespace MICore
                     if (resultLine == null)
                         break;
 
-                    int pos = resultLine.IndexOf("starts at address ");
+                    int pos = resultLine.IndexOf("starts at address ", StringComparison.Ordinal);
                     if (pos > 0)
                     {
                         ulong address;

@@ -82,7 +82,7 @@ namespace MICoreUnitTests
         {
             public bool Equals(SourceRoot x, SourceRoot y)
             {
-                return x.Path.Equals(y.Path) && x.RecursiveSearchEnabled == y.RecursiveSearchEnabled;
+                return x.Path.Equals(y.Path, StringComparison.Ordinal) && x.RecursiveSearchEnabled == y.RecursiveSearchEnabled;
             }
 
             public int GetHashCode(SourceRoot obj)
