@@ -93,7 +93,8 @@ namespace MICore
             {
                 using (HttpClient httpClient = new HttpClient())
                 {
-                    using (var response = await httpClient.GetStreamAsync(getclrdbgUri))
+                    Uri uri = new Uri(getclrdbgUri);
+                    using (var response = await httpClient.GetStreamAsync(uri))
                     {
                         using (TextReader textReader = new StreamReader(response))
                         {
