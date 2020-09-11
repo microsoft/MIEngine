@@ -566,7 +566,7 @@ namespace Microsoft.MIDebugEngine
                             _attribsFetched = true;
                         }
                         Value = results.TryFindString("value");
-                        if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
+                        if ((string.IsNullOrEmpty(Value) || _format != null) && !string.IsNullOrEmpty(_internalName))
                         {
                             if (_format != null)
                             {
