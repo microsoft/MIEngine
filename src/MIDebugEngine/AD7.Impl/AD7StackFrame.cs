@@ -14,7 +14,7 @@ namespace Microsoft.MIDebugEngine
 {
     // Represents a logical stack frame on the thread stack. 
     // Also implements the IDebugExpressionContext interface, which allows expression evaluation and watch windows.
-    internal class AD7StackFrame : IDebugStackFrame2, IDebugExpressionContext2
+    internal sealed class AD7StackFrame : IDebugStackFrame2, IDebugExpressionContext2
     {
         public AD7Engine Engine { get; private set; }
         public AD7Thread Thread { get; private set; }
@@ -53,11 +53,7 @@ namespace Microsoft.MIDebugEngine
             if (_textPosition != null)
             {
                 _documentCxt = new AD7DocumentContext(_textPosition, _codeCxt, this.Engine.DebuggedProcess);
-
-                if (_codeCxt != null)
-                {
-                    _codeCxt.SetDocumentContext(_documentCxt);
-                }
+                _codeCxt?.SetDocumentContext(_documentCxt);
             }
         }
 
