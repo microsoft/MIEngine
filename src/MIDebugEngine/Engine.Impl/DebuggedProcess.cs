@@ -48,7 +48,7 @@ namespace Microsoft.MIDebugEngine
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
         private bool _needTerminalReset;
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
-        private ProcessSequence _childProcessHandler;
+        private IProcessSequence _childProcessHandler;
         private bool _deleteEntryPointBreakpoint;
         private string _entryPointBreakpoint = string.Empty;
 

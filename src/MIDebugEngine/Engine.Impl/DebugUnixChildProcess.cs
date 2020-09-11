@@ -13,7 +13,7 @@ using System.Globalization;
 
 namespace Microsoft.MIDebugEngine
 {
-    public interface ProcessSequence
+    public interface IProcessSequence
     {
         Task Enable();
         /// <summary>
@@ -26,7 +26,7 @@ namespace Microsoft.MIDebugEngine
         void ThreadCreatedEvent(Results results);
     }
 
-    internal class DebugUnixChild : ProcessSequence
+    internal class DebugUnixChild : IProcessSequence
     {
         private enum State
         {
