@@ -6,18 +6,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
 using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
-using System.Diagnostics;
-using System.Threading;
 using MICore;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
 using Microsoft.DebugEngineHost;
 using System.Reflection;
-
 using Logger = MICore.Logger;
 using Microsoft.VisualStudio.Debugger.Interop.DAP;
 
@@ -490,7 +485,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         if (EvalCondition(vp.Condition, variable, visualizer.ScopedNames))
                         {
-                            IVariableInformation ptrExpr = GetExpression('*' + vp.Value, variable, visualizer.ScopedNames);
+                            IVariableInformation ptrExpr = GetExpression("*(" + vp.Value + ")", variable, visualizer.ScopedNames);
                             string typename = ptrExpr.TypeName;
                             if (String.IsNullOrWhiteSpace(typename))
                             {
