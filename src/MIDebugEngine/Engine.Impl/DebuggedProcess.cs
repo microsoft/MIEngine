@@ -1291,7 +1291,7 @@ namespace Microsoft.MIDebugEngine
 
                 string description = results.Results.FindString("exception");
                 Guid? exceptionCategory;
-                ExceptionBreakpointState state;
+                ExceptionBreakpointStates state;
                 MICommandFactory.DecodeExceptionReceivedProperties(results.Results, out exceptionCategory, out state);
 
                 _callback.OnException(thread, exceptionName, description, 0, exceptionCategory, state);
@@ -1863,7 +1863,7 @@ namespace Microsoft.MIDebugEngine
         {
             List<VariableInformation> variables = new List<VariableInformation>();
 
-            ValueListValue localsAndParameters = await MICommandFactory.StackListVariables(PrintValues.NoValues, thread.Id, ctx.Level);
+            ValueListValue localsAndParameters = await MICommandFactory.StackListVariables(PrintValue.NoValues, thread.Id, ctx.Level);
 
             foreach (var localOrParamResult in localsAndParameters.Content)
             {
@@ -1883,7 +1883,7 @@ namespace Microsoft.MIDebugEngine
         {
             List<SimpleVariableInformation> parameters = new List<SimpleVariableInformation>();
 
-            ValueListValue localAndParameters = await MICommandFactory.StackListVariables(PrintValues.SimpleValues, thread.Id, ctx.Level);
+            ValueListValue localAndParameters = await MICommandFactory.StackListVariables(PrintValue.SimpleValues, thread.Id, ctx.Level);
 
             foreach (var results in localAndParameters.Content.Where(r => r.TryFindString("arg") == "1"))
             {
@@ -1898,7 +1898,7 @@ namespace Microsoft.MIDebugEngine
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {
             // If values are requested, request simple values, otherwise we'll use -var-create to get the type of argument it is.
-            var frames = await MICommandFactory.StackListArguments(values ? PrintValues.SimpleValues : PrintValues.NoValues, thread.Id, low, high);
+            var frames = await MICommandFactory.StackListArguments(values ? PrintValue.SimpleValues : PrintValue.NoValues, thread.Id, low, high);
             List<ArgumentList> parameters = new List<ArgumentList>();
 
             foreach (var f in frames)

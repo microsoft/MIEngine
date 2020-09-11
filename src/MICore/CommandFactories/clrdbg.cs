@@ -65,7 +65,7 @@ namespace MICore
             return results.ResultClass == ResultClass.done;
         }
 
-        public override Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
+        public override Task<TupleValue[]> StackListArguments(PrintValue printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
             // CLRDBG supports stack frame formatting, so this should not be used
             throw new NotImplementedException();
@@ -100,7 +100,7 @@ namespace MICore
             return s_exceptionCategories;
         }
 
-        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
+        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
         {
             List<string> commandTokens = new List<string>();
             commandTokens.Add("-break-exception-insert");
@@ -114,16 +114,16 @@ namespace MICore
                 throw new ArgumentOutOfRangeException("exceptionCategory");
             }
 
-            if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakThrown))
+            if (exceptionBreakpointState.HasFlag(ExceptionBreakpointStates.BreakThrown))
             {
-                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakUserHandled))
+                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointStates.BreakUserHandled))
                     commandTokens.Add("throw+user-unhandled");
                 else
                     commandTokens.Add("throw");
             }
             else
             {
-                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakUserHandled))
+                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointStates.BreakUserHandled))
                     commandTokens.Add("user-unhandled");
                 else
                     commandTokens.Add("unhandled");
@@ -164,7 +164,7 @@ namespace MICore
             return _debugger.CmdAsync(command, ResultClass.done);
         }
 
-        public override void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointState state)
+        public override void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointStates state)
         {
             string category = miExceptionResult.FindString("exception-category");
             if (category == "mda")
@@ -181,20 +181,20 @@ namespace MICore
             switch (stage)
             {
                 case "throw":
-                    state = ExceptionBreakpointState.BreakThrown;
+                    state = ExceptionBreakpointStates.BreakThrown;
                     break;
 
                 case "user-unhandled":
-                    state = ExceptionBreakpointState.BreakUserHandled;
+                    state = ExceptionBreakpointStates.BreakUserHandled;
                     break;
 
                 case "unhandled":
-                    state = ExceptionBreakpointState.None;
+                    state = ExceptionBreakpointStates.None;
                     break;
 
                 default:
                     Debug.Fail("Unknown exception-stage value");
-                    state = ExceptionBreakpointState.None;
+                    state = ExceptionBreakpointStates.None;
                     break;
             }
         }

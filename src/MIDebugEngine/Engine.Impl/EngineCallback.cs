@@ -208,7 +208,7 @@ namespace Microsoft.MIDebugEngine
         }
 
         // Exception events are sent when an exception occurs in the debuggee that the debugger was not expecting.
-        public void OnException(DebuggedThread thread, string name, string description, uint code, Guid? exceptionCategory = null, ExceptionBreakpointState state = ExceptionBreakpointState.None)
+        public void OnException(DebuggedThread thread, string name, string description, uint code, Guid? exceptionCategory = null, ExceptionBreakpointStates state = ExceptionBreakpointStates.None)
         {
             AD7ExceptionEvent eventObject = new AD7ExceptionEvent(name, description, code, exceptionCategory, state);
 

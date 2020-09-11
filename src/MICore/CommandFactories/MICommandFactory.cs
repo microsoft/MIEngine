@@ -21,7 +21,7 @@ namespace MICore
         Clrdbg
     }
 
-    public enum PrintValues
+    public enum PrintValue
     {
         NoValues = 0,
         AllValues = 1,
@@ -29,7 +29,7 @@ namespace MICore
     }
 
     [Flags]
-    public enum ExceptionBreakpointState
+    public enum ExceptionBreakpointStates
     {
         None = 0,
         BreakUserHandled = 0x1,
@@ -155,7 +155,7 @@ namespace MICore
         /// <param name="threadId"></param>
         /// <param name="frameLevel"></param>
         /// <returns></returns>
-        public async Task<ResultValue> StackListLocals(PrintValues printValues, int threadId, uint frameLevel)
+        public async Task<ResultValue> StackListLocals(PrintValue printValues, int threadId, uint frameLevel)
         {
             string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-locals {0}", (int)printValues);
 
@@ -171,7 +171,7 @@ namespace MICore
         /// <param name="lowFrameLevel"></param>
         /// <param name="hiFrameLevel"></param>
         /// <returns>This returns an array of results of frames, which contains a level and an args array. </returns>
-        public virtual async Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
+        public virtual async Task<TupleValue[]> StackListArguments(PrintValue printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
             string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-arguments {0} {1} {2}", (int)printValues, lowFrameLevel, hiFrameLevel);
             Results argumentsResults = await ThreadCmdAsync(cmd, ResultClass.done, threadId);
@@ -188,7 +188,7 @@ namespace MICore
         /// <param name="threadId"></param>
         /// <param name="frameLevel"></param>
         /// <returns>This returns an array of results for args, which have a name and a value, etc.</returns>
-        public async Task<ListValue> StackListArguments(PrintValues printValues, int threadId, uint frameLevel)
+        public async Task<ListValue> StackListArguments(PrintValue printValues, int threadId, uint frameLevel)
         {
             TupleValue[] frameResults = await StackListArguments(printValues, threadId, frameLevel, frameLevel);
 
@@ -204,7 +204,7 @@ namespace MICore
         /// <param name="threadId"></param>
         /// <param name="frameLevel"></param>
         /// <returns>Returns an array of results for variables</returns>
-        public async Task<ValueListValue> StackListVariables(PrintValues printValues, int threadId, uint frameLevel)
+        public async Task<ValueListValue> StackListVariables(PrintValue printValues, int threadId, uint frameLevel)
         {
             string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-variables {0}", (int)printValues);
 
@@ -554,7 +554,7 @@ namespace MICore
         /// exceptions in the category. Note that this clear all previous exception breakpoints set in this category.</param>
         /// <param name="exceptionBreakpointState">Indicates when the exception breakpoint should fire</param>
         /// <returns>Task containing the exception breakpoint id's for the various set exceptions</returns>
-        public virtual Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
+        public virtual Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
         {
             // NOTES:
             // GDB /MI has no support for exceptions. Though they do have it through the non-MI through a 'catch' command. Example:
@@ -581,10 +581,10 @@ namespace MICore
         /// <param name="miExceptionResult">Results object for the exception-received event</param>
         /// <param name="exceptionCategory">AD7 Exception Category to return</param>
         /// <param name="state">Exception state</param>
-        public virtual void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointState state)
+        public virtual void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointStates state)
         {
             exceptionCategory = null;
-            state = ExceptionBreakpointState.None;
+            state = ExceptionBreakpointStates.None;
         }
 
         #endregion
