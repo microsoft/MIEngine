@@ -165,7 +165,7 @@ namespace Microsoft.SSHDebugPS.UI
                     containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
                 }
 
-                if (containers.Count() > 0) 
+                if (containers.Any()) 
                 {
                     string serverOS;
 

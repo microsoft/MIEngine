@@ -455,7 +455,7 @@ namespace MICore
         {
             StringBuilder cmd = await BuildBreakInsert(condition, enabled);
 
-            if (checksums != null && checksums.Count() != 0)
+            if (checksums != null && checksums.Any())
             {
                 cmd.Append(Checksum.GetMIString(checksums));
                 cmd.Append(' ');
