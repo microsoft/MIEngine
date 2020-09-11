@@ -598,17 +598,12 @@ namespace MICore
     {
         struct Span
         {
-            static Span _emptySpan;
+            static Span _emptySpan = new Span(0, 0);
             public int Start { get; private set; }  // index first character in the substring
             public int Length { get; private set; } // length of the substring
             public int Extent { get { return Start + Length; } }
             public bool IsEmpty { get { return Length == 0; } }
             public static Span Empty { get { return _emptySpan; } }
-
-            static Span()
-            {
-                _emptySpan = new Span(0, 0);
-            }
 
             public Span(string s)
             {
