@@ -878,7 +878,7 @@ namespace MICore
         {
             if (ExclusiveLockToken.IsNullOrClosed(exclusiveLockToken))
             {
-                throw new ArgumentNullException("exclusiveLockToken");
+                throw new ArgumentNullException(nameof(exclusiveLockToken));
             }
 
             return CmdAsyncInternal(command, expectedResultClass);

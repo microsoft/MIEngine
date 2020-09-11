@@ -743,7 +743,7 @@ namespace MICore
         {
             if (input == null)
             {
-                throw new ArgumentNullException("input");
+                throw new ArgumentNullException(nameof(input));
             }
             else if (string.IsNullOrEmpty(input))
             {

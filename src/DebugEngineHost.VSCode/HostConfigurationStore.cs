@@ -18,7 +18,7 @@ namespace Microsoft.DebugEngineHost
             _config = EngineConfiguration.TryGet(adapterId);
             if (_config == null)
             {
-                throw new ArgumentOutOfRangeException("adapterId");
+                throw new ArgumentOutOfRangeException(nameof(adapterId));
             }
         }
 

@@ -380,7 +380,7 @@ namespace MICore
         public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
-                throw new ArgumentNullException("MIDebuggerPath");
+                throw new ArgumentNullException(nameof(MIDebuggerPath));
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
@@ -813,7 +813,7 @@ namespace MICore
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException("miMode");
+                        throw new ArgumentOutOfRangeException(nameof(miMode));
                 }
             }
 
@@ -895,7 +895,7 @@ namespace MICore
             get { return _miMode; }
             set
             {
-                VerifyCanModifyProperty("DebuggerMIMode");
+                VerifyCanModifyProperty(nameof(DebuggerMIMode));
                 _miMode = value;
             }
         }
@@ -913,7 +913,7 @@ namespace MICore
             {
                 if (value == null)
                     throw new ArgumentNullException("BaseOptions");
-                VerifyCanModifyProperty("BaseOptions");
+                VerifyCanModifyProperty(nameof(BaseOptions));
 
                 _baseOptions = value;
             }
@@ -932,7 +932,7 @@ namespace MICore
             {
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentOutOfRangeException("ExePath");
-                VerifyCanModifyProperty("ExePath");
+                VerifyCanModifyProperty(nameof(ExePath));
 
                 _exePath = value;
             }
@@ -947,7 +947,7 @@ namespace MICore
             get { return _exeArguments; }
             set
             {
-                VerifyCanModifyProperty("ExeArguments");
+                VerifyCanModifyProperty(nameof(ExeArguments));
                 _exeArguments = value;
             }
         }
@@ -962,7 +962,7 @@ namespace MICore
             get { return _processId; }
             protected set
             {
-                VerifyCanModifyProperty("ProcessId");
+                VerifyCanModifyProperty(nameof(ProcessId));
                 _processId = value;
             }
         }
@@ -979,7 +979,7 @@ namespace MICore
             }
             protected set
             {
-                VerifyCanModifyProperty("CoreDumpPath");
+                VerifyCanModifyProperty(nameof(CoreDumpPath));
 
                 // CoreDumpPath is allowed to be null/empty
                 _coreDumpPath = value;
@@ -999,7 +999,7 @@ namespace MICore
             get { return _workingDirectory; }
             set
             {
-                VerifyCanModifyProperty("WorkingDirectory");
+                VerifyCanModifyProperty(nameof(WorkingDirectory));
                 _workingDirectory = value;
             }
         }
@@ -1013,7 +1013,7 @@ namespace MICore
             get { return _absolutePrefixSoLibSearchPath; }
             set
             {
-                VerifyCanModifyProperty("AbsolutePrefixSOLibSearchPath");
+                VerifyCanModifyProperty(nameof(AbsolutePrefixSOLibSearchPath));
                 _absolutePrefixSoLibSearchPath = value;
             }
         }
@@ -1027,7 +1027,7 @@ namespace MICore
             get { return _additionalSOLibSearchPath; }
             set
             {
-                VerifyCanModifyProperty("AdditionalSOLibSearchPath");
+                VerifyCanModifyProperty(nameof(AdditionalSOLibSearchPath));
                 _additionalSOLibSearchPath = value;
             }
         }
@@ -1041,7 +1041,7 @@ namespace MICore
             get { return _visualizerFile; }
             set
             {
-                VerifyCanModifyProperty("VisualizerFile");
+                VerifyCanModifyProperty(nameof(VisualizerFile));
                 _visualizerFile = value;
             }
         }
@@ -1055,7 +1055,7 @@ namespace MICore
             get { return _waitDynamicLibLoad; }
             set
             {
-                VerifyCanModifyProperty("WaitDynamicLibLoad");
+                VerifyCanModifyProperty(nameof(WaitDynamicLibLoad));
                 _waitDynamicLibLoad = value;
             }
         }
@@ -1069,7 +1069,7 @@ namespace MICore
             get { return _siLoadAll;  }
             set
             {
-                VerifyCanModifyProperty("SymbolInfoLoadAll");
+                VerifyCanModifyProperty(nameof(SymbolInfoLoadAll));
                 _siLoadAll = value;
             }
         }
@@ -1084,7 +1084,7 @@ namespace MICore
             get { return _siExceptionList; }
             set
             {
-                VerifyCanModifyProperty("SymbolInfoExceptionList");
+                VerifyCanModifyProperty(nameof(SymbolInfoExceptionList));
                 _siExceptionList = value;
             }
         }
@@ -1110,7 +1110,7 @@ namespace MICore
             get { return _targetArchitecture; }
             set
             {
-                VerifyCanModifyProperty("TargetArchitecture");
+                VerifyCanModifyProperty(nameof(TargetArchitecture));
                 _targetArchitecture = value;
             }
         }
@@ -1147,7 +1147,7 @@ namespace MICore
                 if (value == null)
                     throw new ArgumentNullException("SetupCommands");
 
-                VerifyCanModifyProperty("SetupCommands");
+                VerifyCanModifyProperty(nameof(SetupCommands));
                 _setupCommands = value;
             }
         }
@@ -1165,7 +1165,7 @@ namespace MICore
             get { return _customLaunchSetupCommands; }
             set
             {
-                VerifyCanModifyProperty("CustomLaunchSetupCommands");
+                VerifyCanModifyProperty(nameof(CustomLaunchSetupCommands));
                 _customLaunchSetupCommands = value;
             }
         }
@@ -1177,7 +1177,7 @@ namespace MICore
             get { return _launchCompleteCommand; }
             set
             {
-                VerifyCanModifyProperty("LaunchCompleteCommand");
+                VerifyCanModifyProperty(nameof(LaunchCompleteCommand));
                 _launchCompleteCommand = value;
             }
         }
@@ -1189,7 +1189,7 @@ namespace MICore
             get { return _debugChildProcesses; }
             protected set
             {
-                VerifyCanModifyProperty("DebugChildProcesses");
+                VerifyCanModifyProperty(nameof(DebugChildProcesses));
                 _debugChildProcesses = value;
             }
         }
@@ -1201,7 +1201,7 @@ namespace MICore
             get { return _sourceMap; }
             set
             {
-                VerifyCanModifyProperty("SourceMap");
+                VerifyCanModifyProperty(nameof(SourceMap));
                 _sourceMap = value;
             }
         }
@@ -1213,7 +1213,7 @@ namespace MICore
             get { return _environment; }
             set
             {
-                VerifyCanModifyProperty("Environment");
+                VerifyCanModifyProperty(nameof(Environment));
                 _environment = value;
             }
         }
@@ -1257,7 +1257,7 @@ namespace MICore
         public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, bool noDebug, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
         {
             if (string.IsNullOrWhiteSpace(exePath))
-                throw new ArgumentNullException("exePath");
+                throw new ArgumentNullException(nameof(exePath));
 
             options = options?.Trim();
             if (string.IsNullOrEmpty(options))

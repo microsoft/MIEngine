@@ -118,7 +118,7 @@ namespace MICore
         {
             if (ExclusiveLockToken.IsNullOrClosed(lockToken))
             {
-                throw new ArgumentNullException("lockToken");
+                throw new ArgumentNullException(nameof(lockToken));
             }
 
             if (threadId != _currentThreadId)
@@ -134,7 +134,7 @@ namespace MICore
         {
             if (ExclusiveLockToken.IsNullOrClosed(lockToken))
             {
-                throw new ArgumentNullException("lockToken");
+                throw new ArgumentNullException(nameof(lockToken));
             }
 
             if (frameLevel != _currentFrameLevel)

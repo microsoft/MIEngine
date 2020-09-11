@@ -287,7 +287,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (processId > int.MaxValue)
                 {
-                    throw new ArgumentOutOfRangeException("processId");
+                    throw new ArgumentOutOfRangeException(nameof(processId));
                 }
 
                 string getClrDbgUrl = GetMetric("GetClrDbgUrl") as string;

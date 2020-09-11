@@ -46,9 +46,9 @@ namespace AndroidDebugLauncher
         void IPlatformAppLauncher.Initialize(HostConfigurationStore configStore, IDeviceAppLauncherEventCallback eventCallback)
         {
             if (configStore == null)
-                throw new ArgumentNullException("configStore");
+                throw new ArgumentNullException(nameof(configStore));
             if (eventCallback == null)
-                throw new ArgumentNullException("eventCallback");
+                throw new ArgumentNullException(nameof(eventCallback));
 
             _eventCallback = eventCallback;
             RegistryRoot.Set(configStore.RegistryRoot);
@@ -58,7 +58,7 @@ namespace AndroidDebugLauncher
         void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
         {
             if (launcherXmlOptions == null)
-                throw new ArgumentNullException("launcherXmlOptions");
+                throw new ArgumentNullException(nameof(launcherXmlOptions));
 
             var androidXmlOptions = (MICore.Xml.LaunchOptions.AndroidLaunchOptions)launcherXmlOptions;
 

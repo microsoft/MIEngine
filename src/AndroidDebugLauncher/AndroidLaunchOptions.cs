@@ -19,7 +19,7 @@ namespace AndroidDebugLauncher
         {
             if (xmlOptions == null)
             {
-                throw new ArgumentNullException("xmlOptions");
+                throw new ArgumentNullException(nameof(xmlOptions));
             }
 
             this.Package = LaunchOptions.RequireAttribute(xmlOptions.Package, "Package");

@@ -111,7 +111,7 @@ namespace MICore
             }
             else if (exceptionCategory != s_exceptionCategory_CLR)
             {
-                throw new ArgumentOutOfRangeException("exceptionCategory");
+                throw new ArgumentOutOfRangeException(nameof(exceptionCategory));
             }
 
             if (exceptionBreakpointState.HasFlag(ExceptionBreakpointStates.BreakThrown))

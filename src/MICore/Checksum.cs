@@ -37,7 +37,7 @@ namespace MICore
         {
             if (checksumBytes == null)
             {
-                throw new ArgumentNullException("checksumBytes");
+                throw new ArgumentNullException(nameof(checksumBytes));
             }
 
             return new Checksum(hashAlgorithmName, checksumBytes);
@@ -53,7 +53,7 @@ namespace MICore
         {
             if (checksumString == null)
             {
-                throw new ArgumentNullException("checksumString");
+                throw new ArgumentNullException(nameof(checksumString));
             }
 
             Checksum checksum = new Checksum(hashAlgorithmName, StringToBytes(checksumString));
