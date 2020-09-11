@@ -61,7 +61,7 @@ namespace MICore
                     null /*UserCertificateSelectionCallback */
                     );
 
-                sslStream.AuthenticateAsClientAsync(tcpOptions.Hostname, certStore.Certificates, System.Security.Authentication.SslProtocols.Tls, false /* checkCertificateRevocation */).Wait();
+                sslStream.AuthenticateAsClientAsync(tcpOptions.Hostname, certStore.Certificates, System.Security.Authentication.SslProtocols.None, false /* checkCertificateRevocation */).Wait();
                 reader = new StreamReader(sslStream);
                 writer = new StreamWriter(sslStream);
             }

@@ -52,54 +52,44 @@
     <Rule Id="CA1707" Action="None" />
 
     <!-- TODO ENABLE -->
-    <Rule Id="CA1812" Action="None" />
-
-    <Rule Id="CA1724" Action="None" />
-    <Rule Id="CA1822" Action="None" />
-    <Rule Id="CA1801" Action="None" />
-    <Rule Id="CA1062" Action="None" />
-    <Rule Id="CA1051" Action="None" />
-    <Rule Id="CA1063" Action="None" />
-
-    <Rule Id="CA1805" Action="None" />
     <Rule Id="CA1001" Action="None" />
-    <Rule Id="CA1819" Action="None" />
-    <Rule Id="CA1819" Action="None" />
-
-    <Rule Id="CA1032" Action="None" />
-    <Rule Id="CA2237" Action="None" />
-    <Rule Id="CA1717" Action="None" />
-    <Rule Id="CA1714" Action="None" />
-    <Rule Id="CA1507" Action="None" />
-
-    <Rule Id="CA2227" Action="None" />
-    <Rule Id="CA1056" Action="None" />
-    <Rule Id="CA1034" Action="None" />
-
-    <Rule Id="CA2007" Action="None" />
     <Rule Id="CA1031" Action="None" />
-    <Rule Id="CA2208" Action="None" />
-    <Rule Id="CA2000" Action="None" />
-    <Rule Id="CA1825" Action="None" />
-    <Rule Id="CA1834" Action="None" />
-
-    <Rule Id="CA2002" Action="None" />
-    <Rule Id="CA2234" Action="None" />
-    <Rule Id="CA1065" Action="None" />
-
-    <Rule Id="CA2207" Action="None" />
+    <Rule Id="CA1032" Action="None" />
+    <Rule Id="CA1034" Action="None" />
+    <Rule Id="CA1051" Action="None" />
     <Rule Id="CA1054" Action="None" />
-    <Rule Id="CA1816" Action="None" />
+    <Rule Id="CA1056" Action="None" />
+    <Rule Id="CA1062" Action="None" />
+    <Rule Id="CA1063" Action="None" />
+    <Rule Id="CA1065" Action="None" />
+    <Rule Id="CA1507" Action="None" />
+    <Rule Id="CA1714" Action="None" />
     <Rule Id="CA1716" Action="None" />
-
-    <Rule Id="CA1829" Action="None" />
+    <Rule Id="CA1717" Action="None" />
+    <Rule Id="CA1724" Action="None" />
+    <Rule Id="CA1801" Action="None" />
+    <Rule Id="CA1805" Action="None" />
+    <Rule Id="CA1812" Action="None" />
+    <Rule Id="CA1816" Action="None" />
+    <Rule Id="CA1819" Action="None" />
+    <Rule Id="CA1819" Action="None" />
     <Rule Id="CA1820" Action="None" />
-    <Rule Id="CA5397" Action="None" />
-
-    <Rule Id="CA1827" Action="None" />
-    <Rule Id="CA1830" Action="None" />
-    <Rule Id="CA2008" Action="None" />
+    <Rule Id="CA1822" Action="None" />
     <Rule Id="CA1824" Action="None" />
+    <Rule Id="CA1825" Action="None" />
+    <Rule Id="CA1827" Action="None" />
+    <Rule Id="CA1829" Action="None" />
+    <Rule Id="CA1830" Action="None" />
+    <Rule Id="CA1834" Action="None" />
+    <Rule Id="CA2000" Action="None" />
+    <Rule Id="CA2002" Action="None" />
+    <Rule Id="CA2007" Action="None" />
+    <Rule Id="CA2008" Action="None" />
+    <Rule Id="CA2207" Action="None" />
+    <Rule Id="CA2208" Action="None" />
+    <Rule Id="CA2227" Action="None" />
+    <Rule Id="CA2234" Action="None" />
+    <Rule Id="CA2237" Action="None" />
 
     <!-- Warnings -->
     <Rule Id="CA1822" Action="None" />
