@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -866,6 +866,7 @@ namespace OpenDebugAD7
             InitializeResponse initializeResponse = new InitializeResponse()
             {
                 SupportsConfigurationDoneRequest = true,
+                SupportsCompletionsRequest = m_engine is IDebugProgramDAP,
                 SupportsEvaluateForHovers = true,
                 SupportsSetVariable = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
@@ -2428,6 +2429,50 @@ namespace OpenDebugAD7
             m_functionBreakpoints = newBreakpoints;
 
             responder.SetResponse(response);
+        }
+
+        protected override void HandleCompletionsRequestAsync(IRequestResponder<CompletionsArguments, CompletionsResponse> responder)
+        {
+            if (!m_isStopped)
+            {
+                responder.SetError(new ProtocolException("Failed to handle CompletionsRequest", new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
+            }
+
+            IDebugStackFrame2 frame = null;
+            int? frameId = responder.Arguments.FrameId;
+            if (frameId != null)
+                _ = m_frameHandles.TryGet(frameId.Value, out frame);
+
+            string command = responder.Arguments.Text;
+            if (command.StartsWith("`", StringComparison.Ordinal))
+                command = command.Substring(1);
+            else if (command.StartsWith("-exec ", StringComparison.Ordinal))
+                command = command.Substring(6);
+            try
+            {
+                var debugProgram = (IDebugProgramDAP)m_engine;
+                if (debugProgram.AutoCompleteCommand(command, frame, out string[] results) != HRConstants.S_OK)
+                {
+                    responder.SetError(new ProtocolException("Couldn't get results for auto-completion!"));
+                    return;
+                }
+                var matchlist = new List<CompletionItem>();
+                foreach (string result in results)
+                {
+                    matchlist.Add(new CompletionItem(result)
+                    {
+                        Text = "`" + result, // add cmd prefix for insertion text
+                        Start = 0, // overwrite the whole input string
+                        Length = responder.Arguments.Text.Length
+                    });
+                }
+                responder.SetResponse(new CompletionsResponse(matchlist));
+            }
+            catch (Exception e)
+            {
+                responder.SetError(new ProtocolException("Auto-completion failed!", e));
+            }
         }
 
         protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
