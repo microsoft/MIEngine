@@ -377,7 +377,7 @@ namespace Microsoft.SSHDebugPS.UI
                 return;
             }
 
-            if (!string.Equals(_statusMessage, statusMessage, StringComparison.CurrentCulture))
+            if (!string.Equals(_statusMessage, statusMessage, StringComparison.Ordinal))
             {
                 _statusMessage = statusMessage;
                 OnPropertyChanged(nameof(StatusMessage));
