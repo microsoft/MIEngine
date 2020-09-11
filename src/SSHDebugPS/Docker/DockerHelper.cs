@@ -113,7 +113,7 @@ namespace Microsoft.SSHDebugPS.Docker
                     }
                 });
             }
-            catch (CommandFailedException _)
+            catch (CommandFailedException)
             {
                 // only care whether call to obtain LCOW succeeded
                 return false;
@@ -138,7 +138,7 @@ namespace Microsoft.SSHDebugPS.Docker
                     delegateServerOS = args;
                 });
             }
-            catch (CommandFailedException _)
+            catch (CommandFailedException)
             {
                 // only care whether call to obtain server OS succeeded
                 return false;
@@ -163,7 +163,7 @@ namespace Microsoft.SSHDebugPS.Docker
                     delegateContainerPlatform = args;
                 });
             }
-            catch (CommandFailedException _)
+            catch (CommandFailedException)
             {
                 // only care whether call to obtain container platform succeeded
                 return false;
