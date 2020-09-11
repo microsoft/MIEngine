@@ -62,16 +62,11 @@ namespace Microsoft.MIDebugEngine
 
         private IDebugSettingsCallback110 _settingsCallback;
 
-        private static List<int> s_childProcessLaunch;
+        private static List<int> s_childProcessLaunch = new List<int>();
 
         private static int s_bpLongBindTimeout = 0;
 
         private IDebugUnixShellPort _unixPort;
-
-        static AD7Engine()
-        {
-            s_childProcessLaunch = new List<int>();
-        }
 
         public AD7Engine()
         {

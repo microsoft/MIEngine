@@ -164,11 +164,6 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        static VariableInformation()
-        {
-            s_isFunction = new Regex(@".+\(.*\).*");
-        }
-
         private VariableInformation(ThreadContext ctx, AD7Engine engine, AD7Thread thread)
         {
             _engine = engine;
@@ -339,7 +334,7 @@ namespace Microsoft.MIDebugEngine
                                  @"^const +char *\[[0-9]*\]$"
                              };
 
-        private static Regex s_isFunction;
+        private static Regex s_isFunction = new Regex(@".+\(.*\).*");
 
         private string StripFormatSpecifier(string exp, out string formatSpecifier)
         {
