@@ -51,6 +51,15 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
         /// <param name="pResult">Number of bits in a pointer.</param>
         /// [PreserveSig]
         int GetPointerSize([Out] out int pResult);
+
+        /// <summary>
+        /// Tries to complete a given command string.
+        /// </summary>
+        /// <param name="command">Partial command to complete</param>
+        /// <param name="stackFrame">Optional stack frame as context</param>
+        /// <param name="result">Completion List or null</param>
+        /// <returns></returns>
+        int AutoCompleteCommand([In] string command, [In] IDebugStackFrame2 stackFrame, [Out] out string[] result);
     }
 
     /// <summary>
