@@ -5,6 +5,8 @@
     <GeneratedAssemblyInfoFile>$(IntermediateOutputPath)GeneratedAssemblyInfo$(DefaultLanguageSourceExtension)</GeneratedAssemblyInfoFile>
   </PropertyGroup>
 
+  <Import Project=".\Analyzers.targets" />
+
   <PropertyGroup>
     <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <BuildDependsOn Condition="'$(IsXPlat)' == 'true'">DetermineCompilerBinary;$(BuildDependsOn)</BuildDependsOn>
