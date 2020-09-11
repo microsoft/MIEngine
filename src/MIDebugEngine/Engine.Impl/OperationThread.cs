@@ -95,7 +95,7 @@ namespace Microsoft.MIDebugEngine
         public void RunOperation(Operation op)
         {
             if (op == null)
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(op));
 
             SetOperationInternal(op);
         }
@@ -108,7 +108,7 @@ namespace Microsoft.MIDebugEngine
         public void RunOperation(AsyncOperation op)
         {
             if (op == null)
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(op));
 
             SetOperationInternal(op);
         }
@@ -116,7 +116,7 @@ namespace Microsoft.MIDebugEngine
         public void RunOperation(string text, CancellationTokenSource canTokenSource, AsyncProgressOperation op)
         {
             if (op == null)
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(op));
 
             SetOperationInternalWithProgress(op, text, canTokenSource);
         }
@@ -192,7 +192,7 @@ namespace Microsoft.MIDebugEngine
         public void PostOperation(Operation op)
         {
             if (op == null)
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(op));
 
             if (_isClosed)
                 throw new ObjectDisposedException("WorkerThread");

@@ -26,8 +26,6 @@ namespace Microsoft.DebugEngineHost
         {
             if (string.IsNullOrEmpty(registryRoot))
                 throw new ArgumentNullException("registryRoot");
-            if (string.IsNullOrEmpty("engineId"))
-                throw new ArgumentNullException("engineId");
 
             _registryRoot = registryRoot;
             _configKey = Registry.LocalMachine.OpenSubKey(registryRoot);

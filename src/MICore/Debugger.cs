@@ -469,7 +469,7 @@ namespace MICore
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException("options.TargetArchitecture");
+                    throw new ArgumentOutOfRangeException(nameof(arch));
             }
         }
 
@@ -1626,7 +1626,7 @@ namespace MICore
             {
                 if (throwOnError)
                 {
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException(nameof(addr));
                 }
                 return 0;
             }
@@ -1662,7 +1662,7 @@ namespace MICore
             {
                 if (throwOnError)
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException(null, nameof(str));
                 }
                 return value;
             }

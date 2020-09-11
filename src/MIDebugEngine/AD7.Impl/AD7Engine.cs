@@ -199,7 +199,7 @@ namespace Microsoft.MIDebugEngine
             if (celtPrograms != 1)
             {
                 Debug.Fail("SampleEngine only expects to see one program in a process");
-                throw new ArgumentException();
+                throw new ArgumentException(null, nameof(celtPrograms));
             }
             IDebugProgram2 portProgram = portProgramArray[0];
 
@@ -220,7 +220,7 @@ namespace Microsoft.MIDebugEngine
                     if (processId.ProcessIdType != (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM)
                     {
                         Debug.Fail("Invalid process to attach to");
-                        throw new ArgumentException();
+                        throw new ArgumentException(nameof(processId));
                     }
 
                     IDebugPort2 port;

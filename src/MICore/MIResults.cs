@@ -619,7 +619,7 @@ namespace MICore
             {
                 if (start < 0)
                 {
-                    throw new ArgumentException("start");
+                    throw new ArgumentException(null, nameof(start));
                 }
                 Start = start;
                 Length = len;
@@ -628,7 +628,7 @@ namespace MICore
             {
                 if (len > Length)
                 {
-                    throw new ArgumentException("len");
+                    throw new ArgumentException(null, nameof(len));
                 }
                 return new Span(Start + len, Length - len);
             }
@@ -636,7 +636,7 @@ namespace MICore
             {
                 if (Start > pos || pos > Start + Length)
                 {
-                    throw new ArgumentException("pos");
+                    throw new ArgumentException(null, nameof(pos));
                 }
                 return new Span(pos, Length - (pos - Start));
             }
@@ -644,7 +644,7 @@ namespace MICore
             {
                 if (len > Length)
                 {
-                    throw new ArgumentException("len");
+                    throw new ArgumentException(null, nameof(len));
                 }
                 return new Span(Start, len);
             }

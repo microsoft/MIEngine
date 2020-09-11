@@ -60,7 +60,7 @@ namespace MICore
                     commandFactory = new ClrdbgMICommandFactory();
                     break;
                 default:
-                    throw new ArgumentException("mode");
+                    throw new ArgumentException(null, nameof(mode));
             }
             commandFactory._debugger = debugger;
             commandFactory.Mode = mode;

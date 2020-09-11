@@ -243,7 +243,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                throw new ArgumentOutOfRangeException("LaunchInfo.options");
+                throw new ArgumentOutOfRangeException(null, nameof(_launchOptions));
             }
 
             MIDebugCommandDispatcher.AddProcess(this);

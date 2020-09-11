@@ -80,7 +80,7 @@ namespace MICore
         public PipeLaunchOptions(string pipePath, string pipeArguments, string pipeCommandArguments, string pipeCwd, IList<EnvironmentEntry> pipeEnvironment)
         {
             if (string.IsNullOrEmpty(pipePath))
-                throw new ArgumentNullException("PipePath");
+                throw new ArgumentNullException(nameof(pipePath));
 
             this.PipePath = pipePath;
             this.PipeArguments = pipeArguments;
@@ -214,11 +214,11 @@ namespace MICore
         {
             if (string.IsNullOrEmpty(hostname))
             {
-                throw new ArgumentException("hostname");
+                throw new ArgumentException(null, nameof(hostname));
             }
             if (port <= 0)
             {
-                throw new ArgumentException("port");
+                throw new ArgumentException(null, nameof(port));
             }
 
             this.Hostname = hostname;

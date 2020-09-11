@@ -210,7 +210,7 @@ namespace MICore
                 case 8:
                     return "double";
                 default:
-                    throw new ArgumentException("size");
+                    throw new ArgumentException(null, nameof(size));
             }
         }
 
