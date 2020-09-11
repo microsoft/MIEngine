@@ -71,11 +71,22 @@ namespace CppTests.Tests
                 runner.Expects.HitBreakpointEvent(HelloSourceName, 9)
                               .AfterConfigurationDone();
 
-                string[] completions = runner.CompletionsRequest("break");
+                // Test completion with -exec
+                string[] completions = runner.CompletionsRequest("-exec break");
                 Assert.Collection(completions,
-                    elem1 => Assert.Equal("break", elem1),
-                    elem2 => Assert.Equal("break-range", elem2)
+                    elem1 => Assert.Equal("-exec break", elem1),
+                    elem2 => Assert.Equal("-exec break-range", elem2)
                 );
+
+                // Test completion with `
+                completions = runner.CompletionsRequest("`pw");
+                Assert.Collection(completions,
+                    elem1 => Assert.Equal("`pwd", elem1)
+                );
+
+                // Test completions without -exec or `
+                completions = runner.CompletionsRequest("pw");
+                Assert.Empty(completions);
 
                 runner.Expects.ExitedEvent(0).TerminatedEvent().AfterContinue();
                 runner.DisconnectAndVerify();

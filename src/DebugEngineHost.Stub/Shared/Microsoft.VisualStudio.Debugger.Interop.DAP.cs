@@ -59,7 +59,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.DAP
         /// <param name="stackFrame">Optional stack frame as context</param>
         /// <param name="result">Completion List or null</param>
         /// <returns></returns>
-        int AutoCompleteCommand([In] string command, [In] IDebugStackFrame2 stackFrame, [Out] out string[] result);
+        int AutoComplete([In] string command, [In] IDebugStackFrame2 stackFrame, [Out] out string[] result);
     }
 
     /// <summary>

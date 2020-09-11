@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -2452,39 +2452,32 @@ namespace OpenDebugAD7
             if (frameId != null)
                 _ = m_frameHandles.TryGet(frameId.Value, out frame);
 
-            string command = responder.Arguments.Text;
-            if (command.StartsWith("`", StringComparison.Ordinal))
-                command = command.Substring(1);
-            else if (command.StartsWith("-exec ", StringComparison.Ordinal))
-                command = command.Substring(6);
             try
             {
-                var debugProgram = (IDebugProgramDAP)m_engine;
-                try
+                string command = responder.Arguments.Text;
+                var matchlist = new List<CompletionItem>();
+
+                var debugProgram = m_engine as IDebugProgramDAP;
+
+                if (debugProgram.AutoComplete(command, frame, out string[] results) == HRConstants.S_OK)
                 {
-                    int hr = debugProgram.AutoCompleteCommand(command, frame, out string[] results);
-                    var matchlist = new List<CompletionItem>();
                     foreach (string result in results)
                     {
-                        matchlist.Add(new CompletionItem(result)
+                        matchlist.Add(new CompletionItem()
                         {
-                            Text = "`" + result, // add cmd prefix for insertion text
-                            Start = 0, // overwrite the whole input string
-                            Length = responder.Arguments.Text.Length
+                            Label = result,
+                            Text = result,
+                            Start = 0
                         });
                     }
-                    responder.SetResponse(new CompletionsResponse(matchlist));
                 }
-                catch (NotImplementedException)
-                {
-                    // If MIDebugEngine does not implemented AutoCompleteCommand, just return an empty response.
-                    responder.SetResponse(new CompletionsResponse());
-                }
-                catch (Exception e)
-                {
-                    responder.SetError(new ProtocolException("Couldn't get results for auto-completion: " + e.Message));
-                    return;
-                }
+
+                responder.SetResponse(new CompletionsResponse(matchlist));
+            }
+            catch (NotImplementedException)
+            {
+                // If MIDebugEngine does not implemented AutoCompleted, just return an empty response.
+                responder.SetResponse(new CompletionsResponse());
             }
             catch (Exception e)
             {
