@@ -1,52 +1,95 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="Rules for MICore" Description="Code analysis rules for MICore.csproj." ToolsVersion="14.0">
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
-    <Rule Id="CA1304" Action="Error" />
-    <Rule Id="CA1305" Action="Error" />
-    <Rule Id="CA1306" Action="Error" />
-    <Rule Id="CA1307" Action="Error" />
-    <Rule Id="CA1309" Action="Error" />
-    <Rule Id="CA2100" Action="Error" />
-    <Rule Id="CA2102" Action="Error" />
-    <Rule Id="CA2103" Action="Error" />
-    <Rule Id="CA2104" Action="Error" />
-    <Rule Id="CA2105" Action="Error" />
-    <Rule Id="CA2106" Action="Error" />
-    <Rule Id="CA2107" Action="Error" />
-    <Rule Id="CA2108" Action="Error" />
-    <Rule Id="CA2109" Action="Error" />
-    <Rule Id="CA2111" Action="Error" />
-    <Rule Id="CA2112" Action="Error" />
-    <Rule Id="CA2114" Action="Error" />
-    <Rule Id="CA2115" Action="Error" />
-    <Rule Id="CA2116" Action="Error" />
-    <Rule Id="CA2117" Action="Error" />
-    <Rule Id="CA2118" Action="Error" />
-    <Rule Id="CA2119" Action="Error" />
-    <Rule Id="CA2120" Action="Error" />
-    <Rule Id="CA2121" Action="Error" />
-    <Rule Id="CA2122" Action="Error" />
-    <Rule Id="CA2123" Action="Error" />
-    <Rule Id="CA2124" Action="Error" />
-    <Rule Id="CA2126" Action="Error" />
-    <Rule Id="CA2130" Action="Error" />
-    <Rule Id="CA2131" Action="Error" />
-    <Rule Id="CA2132" Action="Error" />
-    <Rule Id="CA2133" Action="Error" />
-    <Rule Id="CA2134" Action="Error" />
-    <Rule Id="CA2135" Action="Error" />
-    <Rule Id="CA2136" Action="Error" />
-    <Rule Id="CA2137" Action="Error" />
-    <Rule Id="CA2138" Action="Error" />
-    <Rule Id="CA2139" Action="Error" />
-    <Rule Id="CA2140" Action="Error" />
-    <Rule Id="CA2141" Action="Error" />
-    <Rule Id="CA2142" Action="Error" />
-    <Rule Id="CA2143" Action="Error" />
-    <Rule Id="CA2144" Action="Error" />
-    <Rule Id="CA2145" Action="Error" />
-    <Rule Id="CA2146" Action="Error" />
-    <Rule Id="CA2147" Action="Error" />
-    <Rule Id="CA2149" Action="Error" />
+    <Rule Id="CA1304" Action="Error" Description="CA1304: Specify CultureInfo" />
+    <Rule Id="CA1305" Action="Error" Description="CA1305: Specify IFormatProvider" />
+    <Rule Id="CA1306" Action="Error" Description="CA1306: Set locale for data types" />
+    <Rule Id="CA1307" Action="Error" Description="CA1307: Specify StringComparison for clarity" />
+    <Rule Id="CA1309" Action="Error" Description="CA1309: Use ordinal StringComparison" />
+    <Rule Id="CA2100" Action="Error" Description="CA2100: Review SQL queries for security vulnerabilities" />
+    <Rule Id="CA2102" Action="Error" Description="CA2102: Catch non-CLSCompliant exceptions in general handlers" />
+    <Rule Id="CA2103" Action="Error" Description="CA2103: Review imperative security" />
+    <Rule Id="CA2104" Action="Error" Description="CA2104: Do not declare read only mutable reference types" />
+    <Rule Id="CA2105" Action="Error" Description="CA2105: Array fields should not be read only" />
+    <Rule Id="CA2106" Action="Error" Description="CA2106: Secure asserts" />
+    <Rule Id="CA2107" Action="Error" Description="CA2107: Review deny and permit only usage" />
+    <Rule Id="CA2108" Action="Error" Description="CA2108: Review declarative security on value types" />
+    <Rule Id="CA2109" Action="Error" Description="CA2109: Review visible event handlers" />
+    <Rule Id="CA2111" Action="Error" Description="CA2111: Pointers should not be visible" />
+    <Rule Id="CA2112" Action="Error" Description="CA2112: Secured types should not expose fields" />
+    <Rule Id="CA2114" Action="Error" Description="CA2114: Method security should be a superset of type" />
+    <Rule Id="CA2115" Action="Error" Description="Call GC.KeepAlive when using native resources" />
+    <Rule Id="CA2116" Action="Error" Description="CA2116: APTCA methods should only call APTCA methods" />
+    <Rule Id="CA2117" Action="Error" Description="CA2117: APTCA types should only extend APTCA base types" />
+    <Rule Id="CA2118" Action="Error" Description="CA2118: Review SuppressUnmanagedCodeSecurityAttribute usage" />
+    <Rule Id="CA2119" Action="Error" Description="CA2119: Seal methods that satisfy private interfaces" />
+    <Rule Id="CA2120" Action="Error" Description="CA2120: Secure serialization constructors" />
+    <Rule Id="CA2121" Action="Error" Description="CA2121: Static constructors should be private" />
+    <Rule Id="CA2122" Action="Error" Description="CA2122: Do not indirectly expose methods with link demands" />
+    <Rule Id="CA2123" Action="Error" Description="CA2123: Override link demands should be identical to base" />
+    <Rule Id="CA2124" Action="Error" Description="CA2124: Wrap vulnerable finally clauses in outer try" />
+    <Rule Id="CA2126" Action="Error" Description="CA2126: Type link demands require inheritance demands" />
+    <Rule Id="CA2130" Action="Error" Description="CA2130: Security critical constants should be transparent" />
+    <Rule Id="CA2131" Action="Error" Description="CA2131: Security critical types may not participate in type equivalence" />
+    <Rule Id="CA2132" Action="Error" Description="CA2132: Default constructors must be at least as critical as base type default constructors" />
+    <Rule Id="CA2133" Action="Error" Description="CA2133: Delegates must bind to methods with consistent transparency" />
+    <Rule Id="CA2134" Action="Error" Description="CA2134: Methods must keep consistent transparency when overriding base methods" />
+    <Rule Id="CA2135" Action="Error" Description="CA2135: Level 2 assemblies should not contain LinkDemands" />
+    <Rule Id="CA2136" Action="Error" Description="CA2136: Members should not have conflicting transparency annotations" />
+    <Rule Id="CA2137" Action="Error" Description="CA2137: Transparent methods must contain only verifiable IL" />
+    <Rule Id="CA2138" Action="Error" Description="CA2138: Transparent methods must not call methods with the SuppressUnmanagedCodeSecurity attribute" />
+    <Rule Id="CA2139" Action="Error" Description="CA2139: Transparent methods may not use the HandleProcessCorruptingExceptions attribute" />
+    <Rule Id="CA2140" Action="Error" Description="CA2140: Transparent code must not reference security critical items" />
+    <Rule Id="CA2141" Action="Error" Description="CA2141:Transparent methods must not satisfy LinkDemands" />
+    <Rule Id="CA2142" Action="Error" Description="CA2142: Transparent code should not be protected with LinkDemands" />
+    <Rule Id="CA2143" Action="Error" Description="CA2143: Transparent methods should not use security demands" />
+    <Rule Id="CA2144" Action="Error" Description="CA2144: Transparent code should not load assemblies from byte arrays" />
+    <Rule Id="CA2145" Action="Error" Description="CA2145: Transparent methods should not be decorated with the SuppressUnmanagedCodeSecurityAttribute" />
+    <Rule Id="CA2146" Action="Error" Description="CA2146: Types must be at least as critical as their base types and interfaces" />
+    <Rule Id="CA2147" Action="Error" Description="CA2147: Transparent methods may not use security asserts" />
+    <Rule Id="CA2149" Action="Error" Description="CA2149: Transparent methods must not call into native code" />
+
+    <!-- TODO(waan): Enable errors and warnings below -->
+
+    <!-- Errors -->
+    <Rule Id="CA1001" Action="None" Description="CA1001: Types that own disposable fields should be disposable" />
+    <Rule Id="CA1031" Action="None" Description="CA1031: Do not catch general exception types" />
+    <Rule Id="CA1032" Action="None" Description="CA1032: Implement standard exception constructors" />
+    <Rule Id="CA1034" Action="None" Description="CA1034: Nested types should not be visible" />
+    <Rule Id="CA1051" Action="None" Description="CA1051: Do not declare visible instance fields" />
+    <Rule Id="CA1054" Action="None" Description="CA1054: URI parameters should not be strings" />
+    <Rule Id="CA1056" Action="None" Description="CA1056: URI properties should not be strings" />
+    <Rule Id="CA1062" Action="None" Description="CA1062: Validate arguments of public methods" />
+    <Rule Id="CA1063" Action="None" Description="CA1063: Implement IDisposable correctly" />
+    <Rule Id="CA1065" Action="None" Description="CA1065: Do not raise exceptions in unexpected locations" />
+    <Rule Id="CA1707" Action="None" Description="CA1707: Identifiers should not contain underscores" />
+    <Rule Id="CA1716" Action="None" Description="CA1716: Identifiers should not match keywords" />
+    <Rule Id="CA1724" Action="None" Description="CA1724: Type names should not match namespaces" />
+    <Rule Id="CA1801" Action="None" Description="CA1801: Review unused parameters" />
+    <Rule Id="CA1805" Action="None" Description="CA1805: Do not initialize unnecessarily." />
+    <Rule Id="CA1812" Action="None" Description="CA1812: Avoid uninstantiated internal classes" />
+    <Rule Id="CA1819" Action="None" Description="CA1819: Properties should not return arrays" />
+    <Rule Id="CA1824" Action="None" Description="CA1824: Mark assemblies with NeutralResourcesLanguageAttribute" />
+    <Rule Id="CA2000" Action="None" Description="CA2000: Dispose objects before losing scope" />
+    <Rule Id="CA2007" Action="None" Description="CA2007: Do not directly await a Task" />
+    <Rule Id="CA2008" Action="None" Description="CA2008: Do not create tasks without passing a TaskScheduler" />
+    <Rule Id="CA2227" Action="None" Description="CA2227: Collection properties should be read only" />
+    <Rule Id="CA2237" Action="None" Description="CA2237: Mark ISerializable types with SerializableAttribute" />
+
+    <!-- Warnings -->
+    <Rule Id="CA1052" Action="None" Description="CA1052: Static holder types should be Static or NotInheritable" />
+    <Rule Id="CA1064" Action="None" Description="CA1064: Exceptions should be public" />
+    <Rule Id="CA1068" Action="None" Description="CA1068: CancellationToken parameters must come last" />
+    <Rule Id="CA1303" Action="None" Description="CA1303: Do not pass literals as localized parameters" />
+    <Rule Id="CA1308" Action="None" Description="CA1308: Normalize strings to uppercase" />
+    <Rule Id="CA1802" Action="None" Description="CA1802: Use Literals Where Appropriate" />
+    <Rule Id="CA1806" Action="None" Description="CA1806: Do not ignore method results" />
+    <Rule Id="CA1815" Action="None" Description="CA1815: Override equals and operator equals on value types" />
+    <Rule Id="CA1822" Action="None" Description="CA1822: Mark members as static" />
+    <Rule Id="CA1823" Action="None" Description="CA1823: Avoid unused private fields" />
+    <Rule Id="CA1825" Action="None" Description="CA1825: Avoid zero-length array allocations" />
+    <Rule Id="CA2213" Action="None" Description="CA2213: Disposable fields should be disposed" />
+    <Rule Id="CA2241" Action="None" Description="CA2241: Provide correct arguments to formatting methods" />
+    <Rule Id="CA2248" Action="None" Description="CA2248: Provide correct enum argument to Enum.HasFlag" />
   </Rules>
 </RuleSet>

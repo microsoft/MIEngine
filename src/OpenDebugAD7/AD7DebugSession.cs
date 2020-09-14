@@ -191,7 +191,7 @@ namespace OpenDebugAD7
                     try
                     {
                         sourceFileMap = sourceFileMapProperty.ToObject<Dictionary<string, string>>();
-                        sourceFileMappings = sourceFileMap.Count();
+                        sourceFileMappings = sourceFileMap.Count;
                     }
                     catch (Exception e)
                     {

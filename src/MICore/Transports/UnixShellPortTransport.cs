@@ -93,7 +93,8 @@ namespace MICore
             {
                 using (HttpClient httpClient = new HttpClient())
                 {
-                    using (var response = await httpClient.GetStreamAsync(getclrdbgUri))
+                    Uri uri = new Uri(getclrdbgUri);
+                    using (var response = await httpClient.GetStreamAsync(uri))
                     {
                         using (TextReader textReader = new StreamReader(response))
                         {
@@ -167,7 +168,7 @@ namespace MICore
                         _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
                     }
 
-                    if (line.Equals("Info: Launching clrdbg"))
+                    if (line.Equals("Info: Launching clrdbg", StringComparison.Ordinal))
                     {
                         _debuggerLaunched = true;
                         UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);

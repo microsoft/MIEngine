@@ -141,19 +141,19 @@ namespace WindowsDebugLauncher
                     switch (c)
                     {
                         case 'n':
-                            builder.Append("\n");
+                            builder.Append('\n');
                             break;
                         case 'r':
-                            builder.Append("\r");
+                            builder.Append('\r');
                             break;
                         case '\\':
-                            builder.Append("\\");
+                            builder.Append('\\');
                             break;
                         case '"':
-                            builder.Append("\"");
+                            builder.Append('\"');
                             break;
                         case ' ':
-                            builder.Append(" ");
+                            builder.Append(' ');
                             break;
                         default:
                             throw new ArgumentException(FormattableString.Invariant($"Invalid escape sequence: \\{c}"));

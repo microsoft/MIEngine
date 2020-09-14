@@ -165,7 +165,7 @@ namespace Microsoft.SSHDebugPS.UI
                     containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
                 }
 
-                if (containers.Count() > 0) 
+                if (containers.Any()) 
                 {
                     string serverOS;
 
@@ -217,7 +217,7 @@ namespace Microsoft.SSHDebugPS.UI
                 ContainerInstances = new ObservableCollection<IContainerViewModel>(containers.Select(item => new DockerContainerViewModel(item)).ToList());
                 OnPropertyChanged(nameof(ContainerInstances));
 
-                if (ContainerInstances.Count() > 0)
+                if (ContainerInstances.Count > 0)
                 {
 
                     if (selectedContainer != null)
@@ -239,16 +239,16 @@ namespace Microsoft.SSHDebugPS.UI
             }
             finally
             {
-                if (ContainerInstances.Count() > 0)
+                if (ContainerInstances.Count > 0)
                 {
-                    if (ContainerInstances.Count() < totalContainers)
+                    if (ContainerInstances.Count < totalContainers)
                     {
-                        UpdateStatusMessage(UIResources.ContainersNotAllParsedStatusText.FormatCurrentCultureWithArgs(totalContainers - ContainerInstances.Count()), isError: false);
-                        ContainersFoundText = UIResources.ContainersNotAllParsedText.FormatCurrentCultureWithArgs(ContainerInstances.Count(), totalContainers);
+                        UpdateStatusMessage(UIResources.ContainersNotAllParsedStatusText.FormatCurrentCultureWithArgs(totalContainers - ContainerInstances.Count), isError: false);
+                        ContainersFoundText = UIResources.ContainersNotAllParsedText.FormatCurrentCultureWithArgs(ContainerInstances.Count, totalContainers);
                     }
                     else
                     {
-                        ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count());
+                        ContainersFoundText = UIResources.ContainersFoundStatusText.FormatCurrentCultureWithArgs(ContainerInstances.Count);
                     }
                 }
                 else
@@ -377,7 +377,7 @@ namespace Microsoft.SSHDebugPS.UI
                 return;
             }
 
-            if (!string.Equals(_statusMessage, statusMessage, StringComparison.CurrentCulture))
+            if (!string.Equals(_statusMessage, statusMessage, StringComparison.Ordinal))
             {
                 _statusMessage = statusMessage;
                 OnPropertyChanged(nameof(StatusMessage));

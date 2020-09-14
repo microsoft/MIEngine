@@ -25,9 +25,7 @@ namespace Microsoft.DebugEngineHost
         public HostConfigurationStore(string registryRoot)
         {
             if (string.IsNullOrEmpty(registryRoot))
-                throw new ArgumentNullException("registryRoot");
-            if (string.IsNullOrEmpty("engineId"))
-                throw new ArgumentNullException("engineId");
+                throw new ArgumentNullException(nameof(registryRoot));
 
             _registryRoot = registryRoot;
             _configKey = Registry.LocalMachine.OpenSubKey(registryRoot);
@@ -93,7 +91,7 @@ namespace Microsoft.DebugEngineHost
         {
             if (string.IsNullOrEmpty(logFileName))
             {
-                throw new ArgumentNullException("logFileName");
+                throw new ArgumentNullException(nameof(logFileName));
             }
             object enableLoggingValue;
             if (!string.IsNullOrEmpty(enableLoggingSettingName))

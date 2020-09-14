@@ -164,11 +164,6 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        static VariableInformation()
-        {
-            s_isFunction = new Regex(@".+\(.*\).*");
-        }
-
         private VariableInformation(ThreadContext ctx, AD7Engine engine, AD7Thread thread)
         {
             _engine = engine;
@@ -339,7 +334,7 @@ namespace Microsoft.MIDebugEngine
                                  @"^const +char *\[[0-9]*\]$"
                              };
 
-        private static Regex s_isFunction;
+        private static Regex s_isFunction = new Regex(@".+\(.*\).*");
 
         private string StripFormatSpecifier(string exp, out string formatSpecifier)
         {
@@ -566,7 +561,7 @@ namespace Microsoft.MIDebugEngine
                             _attribsFetched = true;
                         }
                         Value = results.TryFindString("value");
-                        if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
+                        if ((string.IsNullOrEmpty(Value) || _format != null) && !string.IsNullOrEmpty(_internalName))
                         {
                             if (_format != null)
                             {
@@ -618,7 +613,7 @@ namespace Microsoft.MIDebugEngine
                 else
                     message = e.Message;
 
-                SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
+                SetAsError(string.Format(CultureInfo.CurrentCulture, ResourceStrings.Failed_ExecCommandError, message));
             }
         }
 
@@ -695,7 +690,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         if (children[p].TryFindUint("numchild") > 0)
                         {
-                            var variable = new VariableInformation("[" + (p / 2).ToString() + "]", this);
+                            var variable = new VariableInformation("[" + (p / 2).ToString(CultureInfo.InvariantCulture) + "]", this);
                             variable.CountChildren = 2;
                             var first = new VariableInformation(children[p], variable, "first");
                             var second = new VariableInformation(children[p + 1], this, "second");

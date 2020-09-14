@@ -65,7 +65,7 @@ namespace MICore
             return results.ResultClass == ResultClass.done;
         }
 
-        public override Task<TupleValue[]> StackListArguments(PrintValues printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
+        public override Task<TupleValue[]> StackListArguments(PrintValue printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
             // CLRDBG supports stack frame formatting, so this should not be used
             throw new NotImplementedException();
@@ -73,14 +73,14 @@ namespace MICore
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
         {
-            string threadFrameCommand = string.Format(@"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
+            string threadFrameCommand = string.Format(CultureInfo.InvariantCulture, @"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
 
             return await _debugger.CmdAsync(threadFrameCommand, expectedResultClass);
         }
 
         protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
         {
-            string threadCommand = string.Format(@"{0} --thread {1}", command, threadId);
+            string threadCommand = string.Format(CultureInfo.InvariantCulture, @"{0} --thread {1}", command, threadId);
 
             return await _debugger.CmdAsync(threadCommand, expectedResultClass);
         }
@@ -100,7 +100,7 @@ namespace MICore
             return s_exceptionCategories;
         }
 
-        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointState exceptionBreakpointState)
+        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
         {
             List<string> commandTokens = new List<string>();
             commandTokens.Add("-break-exception-insert");
@@ -111,19 +111,19 @@ namespace MICore
             }
             else if (exceptionCategory != s_exceptionCategory_CLR)
             {
-                throw new ArgumentOutOfRangeException("exceptionCategory");
+                throw new ArgumentOutOfRangeException(nameof(exceptionCategory));
             }
 
-            if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakThrown))
+            if (exceptionBreakpointState.HasFlag(ExceptionBreakpointStates.BreakThrown))
             {
-                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakUserHandled))
+                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointStates.BreakUserHandled))
                     commandTokens.Add("throw+user-unhandled");
                 else
                     commandTokens.Add("throw");
             }
             else
             {
-                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointState.BreakUserHandled))
+                if (exceptionBreakpointState.HasFlag(ExceptionBreakpointStates.BreakUserHandled))
                     commandTokens.Add("user-unhandled");
                 else
                     commandTokens.Add("unhandled");
@@ -164,7 +164,7 @@ namespace MICore
             return _debugger.CmdAsync(command, ResultClass.done);
         }
 
-        public override void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointState state)
+        public override void DecodeExceptionReceivedProperties(Results miExceptionResult, out Guid? exceptionCategory, out ExceptionBreakpointStates state)
         {
             string category = miExceptionResult.FindString("exception-category");
             if (category == "mda")
@@ -181,20 +181,20 @@ namespace MICore
             switch (stage)
             {
                 case "throw":
-                    state = ExceptionBreakpointState.BreakThrown;
+                    state = ExceptionBreakpointStates.BreakThrown;
                     break;
 
                 case "user-unhandled":
-                    state = ExceptionBreakpointState.BreakUserHandled;
+                    state = ExceptionBreakpointStates.BreakUserHandled;
                     break;
 
                 case "unhandled":
-                    state = ExceptionBreakpointState.None;
+                    state = ExceptionBreakpointStates.None;
                     break;
 
                 default:
                     Debug.Fail("Unknown exception-stage value");
-                    state = ExceptionBreakpointState.None;
+                    state = ExceptionBreakpointStates.None;
                     break;
             }
         }
@@ -214,7 +214,7 @@ namespace MICore
 
         public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format("-var-create - * \"{0}\" --evalFlags {1}", expression, (uint)dwFlags);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-create - * \"{0}\" --evalFlags {1}", expression, (uint)dwFlags);
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
             return results;
@@ -223,7 +223,7 @@ namespace MICore
         public override async Task<Results> VarListChildren(string variableReference, enum_DEBUGPROP_INFO_FLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             // Limit the number of children expanded to 1000 in case memory is uninitialized
-            string command = string.Format("-var-list-children --simple-values \"{0}\" --propertyInfoFlags {1} 0 1000", variableReference, (uint)dwFlags);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-list-children --simple-values \"{0}\" --propertyInfoFlags {1} 0 1000", variableReference, (uint)dwFlags);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;

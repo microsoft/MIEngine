@@ -257,7 +257,7 @@ namespace MICore
         {
             string reason = results.TryFindString("reason");
 
-            if (reason.StartsWith("exited") || reason.StartsWith("disconnected"))
+            if (reason.StartsWith("exited", StringComparison.Ordinal) || reason.StartsWith("disconnected", StringComparison.Ordinal))
             {
                 if (this.ProcessState != ProcessState.Exited)
                 {
@@ -469,7 +469,7 @@ namespace MICore
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException("options.TargetArchitecture");
+                    throw new ArgumentOutOfRangeException(nameof(arch));
             }
         }
 
@@ -878,7 +878,7 @@ namespace MICore
         {
             if (ExclusiveLockToken.IsNullOrClosed(exclusiveLockToken))
             {
-                throw new ArgumentNullException("exclusiveLockToken");
+                throw new ArgumentNullException(nameof(exclusiveLockToken));
             }
 
             return CmdAsyncInternal(command, expectedResultClass);
@@ -1626,7 +1626,7 @@ namespace MICore
             {
                 if (throwOnError)
                 {
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException(nameof(addr));
                 }
                 return 0;
             }
@@ -1662,7 +1662,7 @@ namespace MICore
             {
                 if (throwOnError)
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException(null, nameof(str));
                 }
                 return value;
             }

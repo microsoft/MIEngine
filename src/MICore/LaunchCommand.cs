@@ -28,10 +28,10 @@ namespace MICore
         public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false, Action<string> failureHandler = null, Func<string, Task> successHandler = null, Func<Results, Task> successResultsHandler = null)
         {
             if (commandText == null)
-                throw new ArgumentNullException("commandText");
+                throw new ArgumentNullException(nameof(commandText));
             commandText = commandText.Trim();
             if (commandText.Length == 0)
-                throw new ArgumentOutOfRangeException("commandText");
+                throw new ArgumentOutOfRangeException(nameof(commandText));
             this.IsMICommand = commandText[0] == '-';
             this.CommandText = commandText;
             this.Description = description;

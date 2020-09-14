@@ -62,16 +62,11 @@ namespace Microsoft.MIDebugEngine
 
         private IDebugSettingsCallback110 _settingsCallback;
 
-        private static List<int> s_childProcessLaunch;
+        private static List<int> s_childProcessLaunch = new List<int>();
 
         private static int s_bpLongBindTimeout = 0;
 
         private IDebugUnixShellPort _unixPort;
-
-        static AD7Engine()
-        {
-            s_childProcessLaunch = new List<int>();
-        }
 
         public AD7Engine()
         {
@@ -199,7 +194,7 @@ namespace Microsoft.MIDebugEngine
             if (celtPrograms != 1)
             {
                 Debug.Fail("SampleEngine only expects to see one program in a process");
-                throw new ArgumentException();
+                throw new ArgumentOutOfRangeException(nameof(celtPrograms));
             }
             IDebugProgram2 portProgram = portProgramArray[0];
 
@@ -220,7 +215,7 @@ namespace Microsoft.MIDebugEngine
                     if (processId.ProcessIdType != (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM)
                     {
                         Debug.Fail("Invalid process to attach to");
-                        throw new ArgumentException();
+                        throw new ArgumentOutOfRangeException(nameof(portProgramArray), "Could not find processId in given portProgramArray.");
                     }
 
                     IDebugPort2 port;
@@ -287,7 +282,7 @@ namespace Microsoft.MIDebugEngine
 
                 if (processId > int.MaxValue)
                 {
-                    throw new ArgumentOutOfRangeException("processId");
+                    throw new ArgumentOutOfRangeException(nameof(processId));
                 }
 
                 string getClrDbgUrl = GetMetric("GetClrDbgUrl") as string;

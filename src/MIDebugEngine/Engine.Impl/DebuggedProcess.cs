@@ -48,7 +48,7 @@ namespace Microsoft.MIDebugEngine
         private readonly EngineTelemetry _engineTelemetry = new EngineTelemetry();
         private bool _needTerminalReset;
         private HashSet<Tuple<string, string>> _fileTimestampWarnings;
-        private ProcessSequence _childProcessHandler;
+        private IProcessSequence _childProcessHandler;
         private bool _deleteEntryPointBreakpoint;
         private string _entryPointBreakpoint = string.Empty;
 
@@ -243,7 +243,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                throw new ArgumentOutOfRangeException("LaunchInfo.options");
+                throw new ArgumentOutOfRangeException(nameof(launchOptions));
             }
 
             MIDebugCommandDispatcher.AddProcess(this);
@@ -575,7 +575,7 @@ namespace Microsoft.MIDebugEngine
                 List<LaunchCommand> commands = await GetInitializeCommands();
                 _childProcessHandler?.Enable();
 
-                total = commands.Count();
+                total = commands.Count;
                 var i = 0;
                 foreach (var command in commands)
                 {
@@ -1291,7 +1291,7 @@ namespace Microsoft.MIDebugEngine
 
                 string description = results.Results.FindString("exception");
                 Guid? exceptionCategory;
-                ExceptionBreakpointState state;
+                ExceptionBreakpointStates state;
                 MICommandFactory.DecodeExceptionReceivedProperties(results.Results, out exceptionCategory, out state);
 
                 _callback.OnException(thread, exceptionName, description, 0, exceptionCategory, state);
@@ -1508,11 +1508,11 @@ namespace Microsoft.MIDebugEngine
 
                     ulong startAddr = 0;
                     ulong endAddr = 0;
-                    if (line.StartsWith("From")) // header line, ignore
+                    if (line.StartsWith("From", StringComparison.Ordinal)) // header line, ignore
                     {
                         continue;
                     }
-                    else if (line.StartsWith("0x"))  // module with load address
+                    else if (line.StartsWith("0x", StringComparison.Ordinal))  // module with load address
                     {
                         // line format: 0x<hex start addr>  0x<hex end addr>  [ Yes | No ]  <filename>
                         line = MICommandFactory.SpanNextAddr(line, out startAddr);
@@ -1528,12 +1528,12 @@ namespace Microsoft.MIDebugEngine
                     }
                     line = line.Trim();
                     bool symbolsLoaded;
-                    if (line.StartsWith("Yes"))
+                    if (line.StartsWith("Yes", StringComparison.Ordinal))
                     {
                         symbolsLoaded = true;
                         line = line.Substring(3);
                     }
-                    else if (line.StartsWith("No"))
+                    else if (line.StartsWith("No", StringComparison.Ordinal))
                     {
                         symbolsLoaded = false;
                         line = line.Substring(2);
@@ -1863,7 +1863,7 @@ namespace Microsoft.MIDebugEngine
         {
             List<VariableInformation> variables = new List<VariableInformation>();
 
-            ValueListValue localsAndParameters = await MICommandFactory.StackListVariables(PrintValues.NoValues, thread.Id, ctx.Level);
+            ValueListValue localsAndParameters = await MICommandFactory.StackListVariables(PrintValue.NoValues, thread.Id, ctx.Level);
 
             foreach (var localOrParamResult in localsAndParameters.Content)
             {
@@ -1883,7 +1883,7 @@ namespace Microsoft.MIDebugEngine
         {
             List<SimpleVariableInformation> parameters = new List<SimpleVariableInformation>();
 
-            ValueListValue localAndParameters = await MICommandFactory.StackListVariables(PrintValues.SimpleValues, thread.Id, ctx.Level);
+            ValueListValue localAndParameters = await MICommandFactory.StackListVariables(PrintValue.SimpleValues, thread.Id, ctx.Level);
 
             foreach (var results in localAndParameters.Content.Where(r => r.TryFindString("arg") == "1"))
             {
@@ -1898,7 +1898,7 @@ namespace Microsoft.MIDebugEngine
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {
             // If values are requested, request simple values, otherwise we'll use -var-create to get the type of argument it is.
-            var frames = await MICommandFactory.StackListArguments(values ? PrintValues.SimpleValues : PrintValues.NoValues, thread.Id, low, high);
+            var frames = await MICommandFactory.StackListArguments(values ? PrintValue.SimpleValues : PrintValue.NoValues, thread.Id, low, high);
             List<ArgumentList> parameters = new List<ArgumentList>();
 
             foreach (var f in frames)
@@ -1953,7 +1953,7 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<uint> ReadProcessMemory(ulong address, uint count, byte[] bytes)
         {
-            string cmd = "-data-read-memory-bytes " + EngineUtils.AsAddr(address, Is64BitArch) + " " + count.ToString();
+            string cmd = "-data-read-memory-bytes " + EngineUtils.AsAddr(address, Is64BitArch) + " " + count.ToString(CultureInfo.InvariantCulture);
             Results results = await CmdAsync(cmd, ResultClass.None);
             if (results.ResultClass == ResultClass.error)
             {
@@ -1996,7 +1996,7 @@ namespace Microsoft.MIDebugEngine
         internal async Task<Tuple<ulong, ulong>> FindValidMemoryRange(ulong address, uint count, int offset)
         {
             var ret = new Tuple<ulong, ulong>(0, 0);    // init to an empty range
-            string cmd = String.Format(CultureInfo.InvariantCulture, "-data-read-memory-bytes -o {0} {1} {2}", offset.ToString(), EngineUtils.AsAddr(address, Is64BitArch), count.ToString());
+            string cmd = String.Format(CultureInfo.InvariantCulture, "-data-read-memory-bytes -o {0} {1} {2}", offset.ToString(CultureInfo.InvariantCulture), EngineUtils.AsAddr(address, Is64BitArch), count.ToString(CultureInfo.InvariantCulture));
             Results results = await CmdAsync(cmd, ResultClass.None);
             if (results.ResultClass == ResultClass.error)
             {

@@ -86,7 +86,7 @@ namespace OpenDebugAD7
             }
             else
             {
-                throw new ArgumentException("guidHashAlgorithm");
+                throw new ArgumentOutOfRangeException(nameof(guidHashAlgorithm));
             }
 
             checksumBytes = null;

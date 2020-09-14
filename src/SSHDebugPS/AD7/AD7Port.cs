@@ -166,7 +166,7 @@ namespace Microsoft.SSHDebugPS
             IDebugPortEvents2 eventCallback = sinkInterface as IDebugPortEvents2;
             if (eventCallback == null)
             {
-                throw new ArgumentOutOfRangeException("sinkIterface");
+                throw new ArgumentOutOfRangeException(nameof(sinkInterface));
             }
 
             lock (_lock)

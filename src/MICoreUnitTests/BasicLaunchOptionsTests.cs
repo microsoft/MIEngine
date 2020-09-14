@@ -141,7 +141,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.SetupCommands[0].CommandText, "-gdb-set my-example-setting on");
             Assert.True(options.SetupCommands[0].Description.Contains("gdb-set"));
             Assert.False(options.SetupCommands[0].IgnoreFailures);
-            Assert.True(options.PipeEnvironment.Count() == 0);
+            Assert.True(options.PipeEnvironment.Count == 0);
         }
 
         [Fact]

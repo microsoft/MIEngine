@@ -94,7 +94,7 @@ namespace Microsoft.MIDebugEngine
         /// <param name="message">[Required] message to send</param>
         void OnError(string message);
         void OnBreakpoint(DebuggedThread thread, ReadOnlyCollection<object> clients);
-        void OnException(DebuggedThread thread, string name, string description, uint code, Guid? exceptionCategory = null, ExceptionBreakpointState state = ExceptionBreakpointState.None);
+        void OnException(DebuggedThread thread, string name, string description, uint code, Guid? exceptionCategory = null, ExceptionBreakpointStates state = ExceptionBreakpointStates.None);
         void OnStepComplete(DebuggedThread thread);
         void OnAsyncBreakComplete(DebuggedThread thread);
         void OnLoadComplete();

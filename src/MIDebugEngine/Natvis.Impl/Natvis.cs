@@ -137,9 +137,9 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
-        private static Regex s_variableName;
-        private static Regex s_subfieldNameHere;
-        private static Regex s_expression;
+        private static Regex s_variableName = new Regex("[a-zA-Z$_][a-zA-Z$_0-9]*");
+        private static Regex s_subfieldNameHere = new Regex(@"\G((\.|->)[a-zA-Z$_][a-zA-Z$_0-9]*)+");
+        private static Regex s_expression = new Regex(@"^\{[^\}]*\}");
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
         private Dictionary<string, VisualizerInfo> _vizCache;
@@ -159,13 +159,6 @@ namespace Microsoft.MIDebugEngine.Natvis
             ForVisualizedItems
         }
         public DisplayStringsState ShowDisplayStrings { get; set; }
-
-        static Natvis()
-        {
-            s_variableName = new Regex("[a-zA-Z$_][a-zA-Z$_0-9]*");
-            s_subfieldNameHere = new Regex(@"\G((\.|->)[a-zA-Z$_][a-zA-Z$_0-9]*)+");
-            s_expression = new Regex(@"^\{[^\}]*\}");
-        }
 
         internal Natvis(DebuggedProcess process, bool showDisplayString)
         {

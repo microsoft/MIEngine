@@ -20,7 +20,6 @@
     so we don't want it in the default output directory -->
     <OutputPath>bin\$(Configuration)</OutputPath>
     <DocumentationFile>$(DropRootDir)\ReferenceAssemblies\$(AssemblyName).xml</DocumentationFile>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>pdbonly</DebugType>
@@ -45,7 +44,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>

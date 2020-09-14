@@ -25,7 +25,7 @@ namespace AndroidDebugLauncher
         {
             if (versionParts == null)
             {
-                throw new ArgumentNullException("versionParts");
+                throw new ArgumentNullException(nameof(versionParts));
             }
 
             _versionParts = versionParts;
