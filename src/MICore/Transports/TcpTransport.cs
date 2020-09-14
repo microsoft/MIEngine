@@ -60,8 +60,14 @@ namespace MICore
                     callback,
                     null /*UserCertificateSelectionCallback */
                     );
-
+#if !XPLAT
+                // Starting with .NET Framework 4.7, this method authenticates using None, which allows the operating system to choose the best protocol to use, and to block protocols that are not secure.
                 sslStream.AuthenticateAsClientAsync(tcpOptions.Hostname, certStore.Certificates, System.Security.Authentication.SslProtocols.None, false /* checkCertificateRevocation */).Wait();
+
+#else
+                //  In .NET Framework 4.6 (and .NET Framework 4.5 with the latest security patches installed), the allowed TLS/SSL protocols versions are 1.2, 1.1, and 1.0 (unless you disable strong cryptography by editing the Windows Registry).
+                sslStream.AuthenticateAsClientAsync(tcpOptions.Hostname, certStore.Certificates, System.Security.Authentication.SslProtocols.Tls12, false /* checkCertificateRevocation */).Wait();
+#endif
                 reader = new StreamReader(sslStream);
                 writer = new StreamWriter(sslStream);
             }
