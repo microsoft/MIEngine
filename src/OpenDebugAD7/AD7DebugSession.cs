@@ -8,13 +8,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.DAP;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Utilities;
@@ -24,6 +24,7 @@ using OpenDebug;
 using OpenDebug.CustomProtocolObjects;
 using OpenDebugAD7.AD7Impl;
 using ProtocolMessages = Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
+using static System.FormattableString;
 
 namespace OpenDebugAD7
 {
@@ -620,7 +621,8 @@ namespace OpenDebugAD7
                 ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
                 SupportsLogPoints = true,
-                SupportsReadMemoryRequest = true
+                SupportsReadMemoryRequest = true,
+                SupportsModulesRequest = true,
             };
 
             responder.SetResponse(initializeResponse);
@@ -1541,6 +1543,56 @@ namespace OpenDebugAD7
                 string name;
                 pair.Value.GetName(out name);
                 response.Threads.Add(new OpenDebugThread(pair.Key, name));
+            }
+
+            responder.SetResponse(response);
+        }
+
+        private static long FileTimeToPosix(FILETIME ft)
+        {
+            long date = ((long)ft.dwHighDateTime << 32) + ft.dwLowDateTime;
+            // removes the diff between 1970 and 1601
+            // 100-nanoseconds = milliseconds * 10000
+            date -= 11644473600000L * 10000;
+
+            // converts back from 100-nanoseconds to seconds
+            return date / 10000000;
+        }
+
+        protected override void HandleModulesRequestAsync(IRequestResponder<ModulesArguments, ModulesResponse> responder)
+        {
+            var response = new ModulesResponse();
+
+            IEnumDebugModules2 enumDebugModules;
+            if (m_program.EnumModules(out enumDebugModules) == HRConstants.S_OK)
+            {
+                var debugModules = new IDebugModule2[1];
+
+                uint numReturned = 0;
+                while (enumDebugModules.Next(1, debugModules, ref numReturned) == HRConstants.S_OK && numReturned == 1)
+                {
+                    var debugModuleInfos = new MODULE_INFO[1];
+                    if (debugModules[0].GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
+                    {
+                        var debugModuleInfo = debugModuleInfos[0];
+                        var mod = new ProtocolMessages.Module(debugModuleInfo.m_bstrName, debugModuleInfo.m_bstrName)
+                        {
+                            Path = debugModuleInfo.m_bstrUrl,
+                            VsTimestampUTC = FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture),
+                            Version = debugModuleInfo.m_bstrVersion,
+                            VsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture),
+                            VsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture),
+                            VsModuleSize = (int)debugModuleInfo.m_dwSize,
+                            VsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder,
+                            SymbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation,
+                            SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) == 0 ? "✓" : "✗",
+                            VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) == 0,
+                            IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) == 0, // not set by gdb
+                            IsUserCode = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYSTEM) != 0, // not set by gdb
+                        };
+                        response.Modules.Add(mod);
+                    }
+                }
             }
 
             responder.SetResponse(response);
