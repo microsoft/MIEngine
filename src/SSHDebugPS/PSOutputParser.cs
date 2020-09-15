@@ -65,7 +65,7 @@ namespace Microsoft.SSHDebugPS
         private ColumnDef _ruserCol;
         private ColumnDef _argsCol;
 
-        public static string PSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" -axww ");
+        public static string PSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" axww ");
         public static string AltPSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" ");
 
         public static List<Process> Parse(string output, string username)
