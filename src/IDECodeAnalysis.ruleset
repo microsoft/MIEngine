@@ -1,53 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="Rules for MICore" Description="Code analysis rules for MICore.csproj." ToolsVersion="14.0">
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <!-- Do not add Deprecated Rules https://docs.microsoft.com/en-us/visualstudio/code-quality/fxcop-unported-deprecated-rules -->
     <Rule Id="CA1304" Action="Error" Description="CA1304: Specify CultureInfo" />
     <Rule Id="CA1305" Action="Error" Description="CA1305: Specify IFormatProvider" />
     <Rule Id="CA1306" Action="Error" Description="CA1306: Set locale for data types" />
     <Rule Id="CA1307" Action="Error" Description="CA1307: Specify StringComparison for clarity" />
     <Rule Id="CA1309" Action="Error" Description="CA1309: Use ordinal StringComparison" />
     <Rule Id="CA2100" Action="Error" Description="CA2100: Review SQL queries for security vulnerabilities" />
-    <Rule Id="CA2102" Action="Error" Description="CA2102: Catch non-CLSCompliant exceptions in general handlers" />
-    <Rule Id="CA2103" Action="Error" Description="CA2103: Review imperative security" />
-    <Rule Id="CA2104" Action="Error" Description="CA2104: Do not declare read only mutable reference types" />
-    <Rule Id="CA2105" Action="Error" Description="CA2105: Array fields should not be read only" />
-    <Rule Id="CA2106" Action="Error" Description="CA2106: Secure asserts" />
-    <Rule Id="CA2107" Action="Error" Description="CA2107: Review deny and permit only usage" />
-    <Rule Id="CA2108" Action="Error" Description="CA2108: Review declarative security on value types" />
     <Rule Id="CA2109" Action="Error" Description="CA2109: Review visible event handlers" />
-    <Rule Id="CA2111" Action="Error" Description="CA2111: Pointers should not be visible" />
-    <Rule Id="CA2112" Action="Error" Description="CA2112: Secured types should not expose fields" />
-    <Rule Id="CA2114" Action="Error" Description="CA2114: Method security should be a superset of type" />
-    <Rule Id="CA2115" Action="Error" Description="Call GC.KeepAlive when using native resources" />
-    <Rule Id="CA2116" Action="Error" Description="CA2116: APTCA methods should only call APTCA methods" />
-    <Rule Id="CA2117" Action="Error" Description="CA2117: APTCA types should only extend APTCA base types" />
-    <Rule Id="CA2118" Action="Error" Description="CA2118: Review SuppressUnmanagedCodeSecurityAttribute usage" />
     <Rule Id="CA2119" Action="Error" Description="CA2119: Seal methods that satisfy private interfaces" />
-    <Rule Id="CA2120" Action="Error" Description="CA2120: Secure serialization constructors" />
-    <Rule Id="CA2121" Action="Error" Description="CA2121: Static constructors should be private" />
-    <Rule Id="CA2122" Action="Error" Description="CA2122: Do not indirectly expose methods with link demands" />
-    <Rule Id="CA2123" Action="Error" Description="CA2123: Override link demands should be identical to base" />
-    <Rule Id="CA2124" Action="Error" Description="CA2124: Wrap vulnerable finally clauses in outer try" />
-    <Rule Id="CA2126" Action="Error" Description="CA2126: Type link demands require inheritance demands" />
-    <Rule Id="CA2130" Action="Error" Description="CA2130: Security critical constants should be transparent" />
-    <Rule Id="CA2131" Action="Error" Description="CA2131: Security critical types may not participate in type equivalence" />
-    <Rule Id="CA2132" Action="Error" Description="CA2132: Default constructors must be at least as critical as base type default constructors" />
-    <Rule Id="CA2133" Action="Error" Description="CA2133: Delegates must bind to methods with consistent transparency" />
-    <Rule Id="CA2134" Action="Error" Description="CA2134: Methods must keep consistent transparency when overriding base methods" />
-    <Rule Id="CA2135" Action="Error" Description="CA2135: Level 2 assemblies should not contain LinkDemands" />
-    <Rule Id="CA2136" Action="Error" Description="CA2136: Members should not have conflicting transparency annotations" />
-    <Rule Id="CA2137" Action="Error" Description="CA2137: Transparent methods must contain only verifiable IL" />
-    <Rule Id="CA2138" Action="Error" Description="CA2138: Transparent methods must not call methods with the SuppressUnmanagedCodeSecurity attribute" />
-    <Rule Id="CA2139" Action="Error" Description="CA2139: Transparent methods may not use the HandleProcessCorruptingExceptions attribute" />
-    <Rule Id="CA2140" Action="Error" Description="CA2140: Transparent code must not reference security critical items" />
-    <Rule Id="CA2141" Action="Error" Description="CA2141:Transparent methods must not satisfy LinkDemands" />
-    <Rule Id="CA2142" Action="Error" Description="CA2142: Transparent code should not be protected with LinkDemands" />
-    <Rule Id="CA2143" Action="Error" Description="CA2143: Transparent methods should not use security demands" />
-    <Rule Id="CA2144" Action="Error" Description="CA2144: Transparent code should not load assemblies from byte arrays" />
-    <Rule Id="CA2145" Action="Error" Description="CA2145: Transparent methods should not be decorated with the SuppressUnmanagedCodeSecurityAttribute" />
-    <Rule Id="CA2146" Action="Error" Description="CA2146: Types must be at least as critical as their base types and interfaces" />
-    <Rule Id="CA2147" Action="Error" Description="CA2147: Transparent methods may not use security asserts" />
-    <Rule Id="CA2149" Action="Error" Description="CA2149: Transparent methods must not call into native code" />
 
     <!-- TODO(waan): Enable errors and warnings below -->
 
