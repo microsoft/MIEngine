@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace OpenDebug.CustomProtocolObjects
 {
-    public class OpenDebugStoppedEvent : DebugEvent
+    public sealed class OpenDebugStoppedEvent : DebugEvent
     {
         // Summary:
         //     Protocol type for this event.
@@ -67,7 +67,7 @@ namespace OpenDebug.CustomProtocolObjects
         public int Column { get; set; }
     }
 
-    public class OpenDebugThread : Thread
+    public sealed class OpenDebugThread : Thread
     {
         public OpenDebugThread(int id, string name) : base()
         {

@@ -527,7 +527,7 @@ namespace OpenDebugAD7
             m_gotoCodeContexts.Clear();
         }
 
-        public void Stopped(IDebugThread2 thread)
+        private void Stopped(IDebugThread2 thread)
         {
             Debug.Assert(m_variableManager.IsEmpty(), "Why do we have variable handles?");
             Debug.Assert(m_frameHandles.IsEmpty, "Why do we have frame handles?");
@@ -537,6 +537,7 @@ namespace OpenDebugAD7
         internal void FireStoppedEvent(IDebugThread2 thread, StoppedEvent.ReasonValue reason, string text = null)
         {
             Stopped(thread);
+            UpdateCapabilities();
 
             // Switch to another thread as engines may not expect to be called back on their event thread
             ThreadPool.QueueUserWorkItem((o) =>
@@ -1033,6 +1034,27 @@ namespace OpenDebugAD7
             responder.SetResponse(initializeResponse);
         }
 
+        private bool m_canReverse = false;
+        private void UpdateCapabilities()
+        {
+            bool canReverse = ((IDebugReversibleEngineProgram160)m_engine).CanReverse() == HRConstants.S_OK;
+            if (canReverse == m_canReverse)
+                return;
+
+            m_canReverse = canReverse;
+            Protocol.SendEvent(new CapabilitiesEvent()
+            {
+                Capabilities = new InitializeResponse()
+                {
+                    SupportsStepBack = canReverse,
+                    ExceptionBreakpointFilters = null, // FIXME: this is just to prevent unwanted response entries
+                    CompletionTriggerCharacters = null,
+                    AdditionalModuleColumns = null,
+                    SupportedChecksumAlgorithms = null,
+                }
+            });
+        }
+
         protected override void HandleLaunchRequestAsync(IRequestResponder<LaunchArguments> responder)
         {
             const string telemetryEventName = DebuggerTelemetry.TelemetryLaunchEventName;
@@ -1161,13 +1183,7 @@ namespace OpenDebugAD7
                     eb.ThrowHR(hr);
                 }
 
-                Protocol.SendEvent(new CapabilitiesEvent()
-                {
-                    Capabilities = new InitializeResponse()
-                    {
-                        SupportsStepBack = ((IDebugReversibleEngineProgram160)m_engine).CanReverse() == HRConstants.S_OK
-                    }
-                });
+                UpdateCapabilities();
 
                 hr = m_engineLaunch.ResumeProcess(m_process);
                 if (hr < 0)
@@ -1364,13 +1380,7 @@ namespace OpenDebugAD7
                     eb.ThrowHR(hr);
                 }
 
-                Protocol.SendEvent(new CapabilitiesEvent()
-                {
-                    Capabilities = new InitializeResponse()
-                    {
-                        SupportsStepBack = ((IDebugReversibleEngineProgram160)m_engine).CanReverse() == HRConstants.S_OK
-                    }
-                });
+                UpdateCapabilities();
 
                 hr = m_engineLaunch.ResumeProcess(m_process);
                 if (hr < 0)
@@ -3501,8 +3511,6 @@ namespace OpenDebugAD7
 
         public void HandleIDebugExceptionEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            Stopped(pThread);
-
             IDebugExceptionEvent2 exceptionEvent = (IDebugExceptionEvent2)pEvent;
 
             string exceptionDescription;
