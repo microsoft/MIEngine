@@ -60,7 +60,7 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<VariableInformation> CreateMIDebuggerVariable(ThreadContext ctx, AD7Engine engine, AD7Thread thread)
         {
-            VariableInformation vi = new VariableInformation(Name, ctx, engine, thread, IsParameter);
+            VariableInformation vi = new VariableInformation(Name, Name, ctx, engine, thread, IsParameter);
             await vi.Eval();
             return vi;
         }
@@ -73,7 +73,7 @@ namespace Microsoft.MIDebugEngine
         { }
     }
 
-    internal class VariableInformation : IVariableInformation
+    internal sealed class VariableInformation : IVariableInformation
     {
         public string Name { get; private set; }
         public string Value { get; private set; }
@@ -185,12 +185,12 @@ namespace Microsoft.MIDebugEngine
         }
 
         //this constructor is used to create root nodes (local/params)
-        internal VariableInformation(string expr, ThreadContext ctx, AD7Engine engine, AD7Thread thread, bool isParameter = false)
+        internal VariableInformation(string displayName, string expr, ThreadContext ctx, AD7Engine engine, AD7Thread thread, bool isParameter = false)
             : this(ctx, engine, thread)
         {
             // strip off formatting string
             _strippedName = StripFormatSpecifier(expr, out _format);
-            Name = expr;
+            Name = displayName;
             IsParameter = isParameter;
             _parent = null;
             VariableNodeType = NodeType.Root;

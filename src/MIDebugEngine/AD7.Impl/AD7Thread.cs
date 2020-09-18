@@ -11,7 +11,7 @@ using MICore;
 namespace Microsoft.MIDebugEngine
 {
     // This class implements IDebugThread2 which represents a thread running in a program.
-    internal class AD7Thread : IDebugThread2
+    internal sealed class AD7Thread : IDebugThread2
     {
         private readonly AD7Engine _engine;
         private readonly DebuggedThread _debuggedThread;
