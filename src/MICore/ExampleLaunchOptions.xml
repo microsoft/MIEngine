@@ -66,4 +66,7 @@
     TargetArchitecture="x86"
     AdditionalSOLibSearchPath=""/>
 
+  <SSHLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
+    TargetMachine="169.254.2.3" TargetArchitecture="x64" MIMode="gdb" ExePath="a.out" WorkingDirectory="~/cppProject" ExeArguments="">
+  </SSHLaunchOptions>
 </Examples>
