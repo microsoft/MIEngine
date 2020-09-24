@@ -191,7 +191,11 @@ namespace MICore.Json.LaunchOptions
 
         #region Constructors
 
-        public SymbolLoadInfo(bool? loadAll, string exceptionList)
+        public SymbolLoadInfo()
+        {
+        }
+
+        public SymbolLoadInfo(bool? loadAll = null, string exceptionList = null)
         {
             this.LoadAll = loadAll;
             this.ExceptionList = exceptionList;
