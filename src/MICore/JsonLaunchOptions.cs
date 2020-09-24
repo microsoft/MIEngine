@@ -83,6 +83,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("pipeTransport", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public PipeTransport PipeTransport { get; set; }
+
+        /// <summary>
+        /// Supports explcit control of symbol loading. The processing of Exceptions lists and symserver entries.
+        /// </summary>
+        [JsonProperty("symbolLoadInfo", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public SymbolLoadInfo SymbolLoadInfo { get; set; }
     }
 
     public partial class AttachOptions : BaseOptions
@@ -114,7 +120,8 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
             Dictionary<string, object> sourceFileMap = null,
-            PipeTransport pipeTransport = null)
+            PipeTransport pipeTransport = null,
+            SymbolLoadInfo symbolLoadInfo = null)
         {
             this.Program = program;
             this.Type = type;
@@ -129,6 +136,7 @@ namespace MICore.Json.LaunchOptions
             this.ProcessId = processId;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
+            this.SymbolLoadInfo = symbolLoadInfo;
         }
 
         #endregion
@@ -156,6 +164,41 @@ namespace MICore.Json.LaunchOptions
         {
             this.Name = name;
             this.Value = value;
+        }
+
+        #endregion
+    }
+
+    public partial class SymbolLoadInfo
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// If true, symbols for all libs will be loaded, otherwise no solib symbols will be loaded. Modified by ExceptionList. Default value is true.
+        /// </summary>
+        [JsonProperty("loadAll", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? LoadAll { get; set; }
+
+        /// <summary>
+        /// List of filenames (wildcards allowed). Modifies behavior of LoadAll. 
+        /// If LoadAll is true then don't load symbols for libs that match any name in the list. 
+        /// Otherwise only load symbols for libs that match.
+        /// </summary>
+        [JsonProperty("exceptionList", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string ExceptionList { get; set; }
+
+        #endregion
+
+        #region Constructors
+
+        public SymbolLoadInfo()
+        {
+        }
+
+        public SymbolLoadInfo(bool? loadAll = null, string exceptionList = null)
+        {
+            this.LoadAll = loadAll;
+            this.ExceptionList = exceptionList;
         }
 
         #endregion
