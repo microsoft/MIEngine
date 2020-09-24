@@ -120,7 +120,8 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
             Dictionary<string, object> sourceFileMap = null,
-            PipeTransport pipeTransport = null)
+            PipeTransport pipeTransport = null,
+            SymbolLoadInfo symbolLoadInfo = null)
         {
             this.Program = program;
             this.Type = type;
@@ -135,6 +136,7 @@ namespace MICore.Json.LaunchOptions
             this.ProcessId = processId;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
+            this.SymbolLoadInfo = symbolLoadInfo;
         }
 
         #endregion
@@ -189,8 +191,10 @@ namespace MICore.Json.LaunchOptions
 
         #region Constructors
 
-        public SymbolLoadInfo()
+        public SymbolLoadInfo(bool? loadAll, string exceptionList)
         {
+            this.LoadAll = loadAll;
+            this.ExceptionList = exceptionList;
         }
 
         #endregion
