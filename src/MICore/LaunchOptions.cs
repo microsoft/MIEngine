@@ -1795,21 +1795,21 @@ namespace MICore
 
             if (options.SymbolLoadInfo != null)
             {
-                this.WaitDynamicLibLoad = !String.IsNullOrWhiteSpace(options.SymbolLoadInfo.ExceptionList) || options.SymbolLoadInfo.LoadAll.HasValue;
-
                 SymbolInfoLoadAll = options.SymbolLoadInfo.LoadAll.GetValueOrDefault(true);
 
-                if (DebuggerMIMode == MIMode.Lldb && !string.IsNullOrWhiteSpace(options.SymbolLoadInfo.ExceptionList))
+                if (!string.IsNullOrWhiteSpace(options.SymbolLoadInfo.ExceptionList))
                 {
-                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.SymbolLoadInfo.ExceptionList), nameof(MIMode.Lldb)));
+                    if (DebuggerMIMode == MIMode.Lldb)
+                    {
+                        throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.SymbolLoadInfo.ExceptionList), nameof(MIMode.Lldb)));
+                    }
+
+                    this.WaitDynamicLibLoad = true;
+                    SymbolInfoExceptionList.SetTo(options.SymbolLoadInfo.ExceptionList.Split(';'));
                 }
-
-                SymbolInfoExceptionList.SetTo(options.SymbolLoadInfo.ExceptionList == null ? new string[0] : options.SymbolLoadInfo.ExceptionList.Split(';'));
-
-                // Ensure that symbol loading options are consistent
-                if (!WaitDynamicLibLoad && !SymbolInfoExceptionList.IsEmpty)
+                else
                 {
-                    throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidSymbolInfo);
+                    SymbolInfoExceptionList.SetTo(new string[0]);
                 }
             }
 
