@@ -1792,6 +1792,27 @@ namespace MICore
             this.WaitDynamicLibLoad = false;
 
             this.SourceMap = SourceMapEntry.CreateCollection(options.SourceFileMap);
+
+            if (options.SymbolLoadInfo != null)
+            {
+                this.WaitDynamicLibLoad = !String.IsNullOrWhiteSpace(options.SymbolLoadInfo.ExceptionList) || options.SymbolLoadInfo.LoadAll.HasValue;
+
+                SymbolInfoLoadAll = options.SymbolLoadInfo.LoadAll.GetValueOrDefault(true);
+
+                if (DebuggerMIMode == MIMode.Lldb && !string.IsNullOrWhiteSpace(options.SymbolLoadInfo.ExceptionList))
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.SymbolLoadInfo.ExceptionList), nameof(MIMode.Lldb)));
+                }
+
+                SymbolInfoExceptionList.SetTo(options.SymbolLoadInfo.ExceptionList == null ? new string[0] : options.SymbolLoadInfo.ExceptionList.Split(';'));
+
+                // Ensure that symbol loading options are consistent
+                if (!WaitDynamicLibLoad && !SymbolInfoExceptionList.IsEmpty)
+                {
+                    throw new InvalidLaunchOptionsException(MICoreResources.Error_InvalidSymbolInfo);
+                }
+            }
+
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
