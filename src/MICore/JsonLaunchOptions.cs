@@ -416,7 +416,49 @@ namespace MICore.Json.LaunchOptions
         #endregion
     }
 
-    public partial class PipeTransport
+    public partial class PipeTransport : PipeTransportOptions
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is Windows and the field is defined in this configuration.
+        /// </summary>
+        [JsonProperty("windows", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public PipeTransportOptions Windows { get; private set; }
+
+        /// <summary>
+        /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is OSX and the field is defined in this configuration.
+        /// </summary>
+        [JsonProperty("osx", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public PipeTransportOptions OSX { get; private set; }
+
+        /// <summary>
+        /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is Linux and the field is defined in this configuration.
+        /// </summary>
+        [JsonProperty("linux", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public PipeTransportOptions Linux { get; private set; }
+
+        #endregion
+
+        #region Constructors
+
+        public PipeTransport()
+        {
+
+        }
+
+        public PipeTransport(PipeTransportOptions windows = null, PipeTransportOptions osx = null, PipeTransportOptions linux = null)
+        {
+            this.Windows = windows;
+            this.OSX = osx;
+            this.Linux = linux;
+        }
+
+        #endregion
+    }
+
+
+    public partial class PipeTransportOptions
     {
         #region Public Properties for Serialization
 
@@ -460,13 +502,13 @@ namespace MICore.Json.LaunchOptions
 
         #region Constructors
 
-        public PipeTransport()
+        public PipeTransportOptions()
         {
             this.PipeArgs = new List<string>();
             this.PipeEnv = new Dictionary<string, string>();
         }
 
-        public PipeTransport(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, string> pipeEnv = null, bool? quoteArgs = null)
+        public PipeTransportOptions(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, string> pipeEnv = null, bool? quoteArgs = null)
         {
             this.PipeCwd = pipeCwd;
             this.PipeProgram = pipeProgram;
