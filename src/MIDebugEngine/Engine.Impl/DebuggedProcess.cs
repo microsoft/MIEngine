@@ -110,19 +110,6 @@ namespace Microsoft.MIDebugEngine
                         _waitDialog.ShowWaitDialog(file);
                     }
                 }
-                else if (this.MICommandFactory.Mode == MIMode.Clrdbg)
-                {
-                    string id = results.Results.FindString("id");
-                    ulong baseAddr = results.Results.FindAddr("base-address");
-                    uint size = results.Results.FindUint("size");
-                    bool symbolsLoaded = results.Results.FindInt("symbols-loaded") != 0;
-                    var module = new DebuggedModule(id, file, baseAddr, size, symbolsLoaded, string.Empty, _loadOrder++);
-                    lock (_moduleList)
-                    {
-                        _moduleList.Add(module);
-                    }
-                    _callback.OnModuleLoad(module);
-                }
                 else if (!string.IsNullOrEmpty(file))
                 {
                     string addr = results.Results.TryFindString("loaded_addr");
@@ -167,7 +154,6 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 if (PlatformUtilities.IsOSX() &&
-                    localLaunchOptions.DebuggerMIMode != MIMode.Clrdbg &&
                     localLaunchOptions.DebuggerMIMode != MIMode.Lldb &&
                     !UnixUtilities.IsBinarySigned(localLaunchOptions.MIDebuggerPath, engine.Logger))
                 {
@@ -445,15 +431,6 @@ namespace Microsoft.MIDebugEngine
                 ThreadCache.ThreadGroupExitedEvent(result.Results.FindString("id"));
             };
 
-            MessageEvent += (object o, ResultEventArgs args) =>
-            {
-                OutputMessage outputMessage = DecodeOutputEvent(args.Results);
-                if (outputMessage != null)
-                {
-                    _callback.OnOutputMessage(outputMessage);
-                }
-            };
-
             TelemetryEvent += (object o, ResultEventArgs args) =>
             {
                 string eventName;
@@ -723,7 +700,6 @@ namespace Microsoft.MIDebugEngine
 
                     CheckCygwin(commands, localLaunchOptions);
 
-                    // ClrDbg doesn't need -file-exec-and-symbols set.
                     if (this.MICommandFactory.Mode == MIMode.Gdb)
                     {
                         if (_launchOptions is UnixShellPortLaunchOptions)
@@ -851,12 +827,9 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     // Environment variables are set for the debuggee only with the modes that support that
-                    if (this.MICommandFactory.Mode != MIMode.Clrdbg)
+                    foreach (EnvironmentEntry envEntry in _launchOptions.Environment)
                     {
-                        foreach (EnvironmentEntry envEntry in _launchOptions.Environment)
-                        {
-                            commands.Add(new LaunchCommand(MICommandFactory.GetSetEnvironmentVariableCommand(envEntry.Name, envEntry.Value)));
-                        }
+                        commands.Add(new LaunchCommand(MICommandFactory.GetSetEnvironmentVariableCommand(envEntry.Name, envEntry.Value)));
                     }
                 }
             }
@@ -1807,10 +1780,10 @@ namespace Microsoft.MIDebugEngine
 
         public void Detach()
         {
-            // Special casing sending the fake stopped event for clrdbg and lldb. 
+            // Special casing sending the fake stopped event for lldb. 
             // GDB prints out thread group exit events on mi command "-target-detach" which is handed by method HandleThreadGroupExited
             // GDB or the debuggee can terminate and those are handled by Terminate and TerminateProcess methods.
-            if (MICommandFactory.Mode == MIMode.Clrdbg || MICommandFactory.Mode == MIMode.Lldb)
+            if (MICommandFactory.Mode == MIMode.Lldb)
             {
                 ScheduleStdOutProcessing(@"*stopped,reason=""disconnected""");
             }
@@ -2030,71 +2003,6 @@ namespace Microsoft.MIDebugEngine
             ulong start = res.FindAddr("begin");
             ulong end = res.FindAddr("end");
             return new Tuple<ulong, ulong>(start, end);
-        }
-
-        private OutputMessage DecodeOutputEvent(Results results)
-        {
-            // NOTE: the message event is an MI Extension from clrdbg, though we could use in it the future for other debuggers
-            string text = results.TryFindString("text");
-            if (string.IsNullOrEmpty(text))
-            {
-                Debug.Fail("Bogus message event. Missing 'text' property.");
-                return null;
-            }
-
-            string sendTo = results.TryFindString("send-to");
-            if (string.IsNullOrEmpty(sendTo))
-            {
-                Debug.Fail("Bogus message event, missing 'send-to' property");
-                return null;
-            }
-
-            enum_MESSAGETYPE messageType;
-            switch (sendTo)
-            {
-                case "message-box":
-                    messageType = enum_MESSAGETYPE.MT_MESSAGEBOX;
-                    break;
-
-                case "output-window":
-                    messageType = enum_MESSAGETYPE.MT_OUTPUTSTRING;
-                    break;
-
-                default:
-                    Debug.Fail("Bogus message event. Unexpected 'send-to' property. Ignoring.");
-                    return null;
-            }
-
-            OutputMessage.Severity severity = OutputMessage.Severity.Warning;
-            switch (results.TryFindString("severity"))
-            {
-                case "error":
-                    severity = OutputMessage.Severity.Error;
-                    break;
-
-                case "warning":
-                    severity = OutputMessage.Severity.Warning;
-                    break;
-            }
-
-            switch (results.TryFindString("source"))
-            {
-                case "target-exception":
-                    messageType |= enum_MESSAGETYPE.MT_REASON_EXCEPTION;
-                    break;
-                case "jmc-prompt":
-                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE90.MT_REASON_JMC_PROMPT;
-                    break;
-                case "step-filter":
-                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE90.MT_REASON_STEP_FILTER;
-                    break;
-                case "fatal-error":
-                    messageType |= (enum_MESSAGETYPE)enum_MESSAGETYPE120.MT_FATAL_ERROR;
-                    break;
-            }
-
-            uint errorCode = results.TryFindUint("error-code") ?? 0;
-            return new OutputMessage(text, messageType, severity, errorCode);
         }
 
         private static RegisterGroup GetGroupForRegister(List<RegisterGroup> registerGroups, string name, EngineUtils.RegisterNameMap nameMap)

@@ -203,9 +203,8 @@ namespace Microsoft.MIDebugEngine
             }
 
             // Run Thread-info now to get the target-id
-            // ClrDbg doesn't support getting threadInfo while running.
             ResultValue resVal = null;
-            if (id >= 0 && _debugger.LaunchOptions.DebuggerMIMode != MIMode.Clrdbg)
+            if (id >= 0)
             {
                 uint? tid = null;
                 tid = (uint)id;
