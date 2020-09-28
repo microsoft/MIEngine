@@ -103,13 +103,44 @@ namespace MICore
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_EmptyPipePath));
             }
 
+            string pipeCwd = pipeTransport.PipeCwd;
+            string pipeProgram = pipeTransport.PipeProgram;
+            List<string> pipeArgs = pipeTransport.PipeArgs;
+            string debuggerPath = pipeTransport.DebuggerPath;
+            bool quoteArgs = pipeTransport.QuoteArgs.GetValueOrDefault(true);
+            Dictionary<string, string> pipeEnv = pipeTransport.PipeEnv;
+
+            Json.LaunchOptions.PipeTransportOptions platformSpecificTransportOptions = null;
+            if (PlatformUtilities.IsOSX() && pipeTransport.OSX != null)
+            {
+                platformSpecificTransportOptions = pipeTransport.OSX;
+            }
+            else if (PlatformUtilities.IsLinux() && pipeTransport.Linux != null)
+            {
+                platformSpecificTransportOptions = pipeTransport.Linux;
+            }
+            else if (PlatformUtilities.IsWindows() && pipeTransport.Windows != null)
+            {
+                platformSpecificTransportOptions = pipeTransport.Windows;
+            }
+
+            if (platformSpecificTransportOptions != null)
+            {
+                pipeProgram = platformSpecificTransportOptions.PipeProgram ?? pipeProgram;
+                pipeArgs = platformSpecificTransportOptions.PipeArgs ?? pipeArgs;
+                pipeCwd = platformSpecificTransportOptions.PipeCwd ?? pipeCwd;
+                pipeEnv = platformSpecificTransportOptions.PipeEnv ?? pipeEnv;
+                debuggerPath = platformSpecificTransportOptions.DebuggerPath ?? pipeTransport.DebuggerPath;
+                quoteArgs = platformSpecificTransportOptions.QuoteArgs ?? quoteArgs;
+            }
+
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
-                pipePath: pipeTransport.PipeProgram,
-                pipeArguments: EnsurePipeArguments(pipeTransport.PipeArgs, pipeTransport.DebuggerPath, gdbPathDefault, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
-                pipeCommandArguments: ParseArguments(pipeTransport.PipeArgs, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
-                pipeCwd: pipeTransport.PipeCwd,
-                pipeEnvironment: GetEnvironmentEntries(pipeTransport.PipeEnv)
-                );
+                pipePath: pipeProgram,
+                pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs),
+                pipeCommandArguments: ParseArguments(pipeArgs, quoteArgs),
+                pipeCwd: pipeCwd,
+                pipeEnvironment: GetEnvironmentEntries(pipeEnv)
+            );
 
             Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
             pipeOptions.InitializeCommonOptions(baseOptions);
