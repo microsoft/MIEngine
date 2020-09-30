@@ -7,6 +7,7 @@
 
 using System.Runtime.CompilerServices;
 using System.IO;
+using System.Collections;
 
 enum Client {
     None,
@@ -19,15 +20,16 @@ enum Configuration {
     Release
 };
 
+static class Utils {
+    public static string GetScriptFolder([CallerFilePath] string path = null) => Path.GetDirectoryName(path);
+}
+
 class Setup {
     Client Client { get; set;  }
 
     Configuration Configuration { get; set;  }
 
     string TargetPath { get; set; }
-
-    // Work-around helper method to get the source file location.
-    public static string GetSourceFile([CallerFilePath] string file = "") => file;
 
     public Setup()
     {
@@ -43,8 +45,6 @@ class Setup {
         Console.WriteLine("\tFor Example:");
         Console.WriteLine("\t\tC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Preview");
         Console.WriteLine("\t\tC:\\Users\\<USERNAME>\\.vscode\\extensions\\ms-vscode.cpptools-1.0.0");
-
-        System.Environment.Exit(1);
     }
 
     public void ParseArguments(IList<string> args)
@@ -52,6 +52,7 @@ class Setup {
         if (args.Count == 0)
         {
             PrintHelp();
+            System.Environment.Exit(1);
         }
 
         foreach (string arg in args)
@@ -63,6 +64,7 @@ class Setup {
                     case "help":
                     case "?":
                         PrintHelp();
+                        System.Environment.Exit(1);
                         break;
                     case "vs":
                         Client = Client.VS;
@@ -77,19 +79,13 @@ class Setup {
                         Configuration = Configuration.Release;
                         break;
                     default:
-                        Console.WriteLine(string.Format("Unknown flag {0}", arg));
-                        break;
+                        throw new ArgumentException(string.Format("Unknown flag '{0}'", arg));
                 }
             }
             else
             {
                 TargetPath = arg;
             }
-        }
-
-        if (string.IsNullOrWhiteSpace(TargetPath))
-        {
-            throw new ArgumentNullException(nameof(TargetPath));
         }
     }
 
@@ -155,7 +151,7 @@ class Setup {
 
     public void Run()
     {
-        string scriptDirectoryPath = Path.GetDirectoryName(GetSourceFile());
+        string scriptDirectoryPath = Utils.GetScriptFolder();
         string srcDirectoryPath = Path.GetFullPath(Path.Join(scriptDirectoryPath, "..", "src"));
         string binDirectoryPath = Path.GetFullPath(Path.Join(scriptDirectoryPath, "..", "bin"));
 
@@ -181,16 +177,41 @@ class Setup {
             }
         }
 
+        if (string.IsNullOrWhiteSpace(TargetPath))
+        {
+            if (Client == Client.VSCode)
+            {
+                string vscodeExtensionPath = Environment.ExpandEnvironmentVariables("%USERPROFILE%\\.vscode\\extensions");
+                IEnumerable<string> extensions = Directory.EnumerateDirectories(vscodeExtensionPath);
+
+                foreach (string extension in extensions)
+                {
+                    if (extension.Contains("ms-vscode.cpptools"))
+                    {
+                        TargetPath = extension;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(TargetPath))
+        {
+            throw new ArgumentNullException(nameof(TargetPath));
+        }
+
         string listFilePath = string.Empty;
 
         if (Client == Client.VS)
         {
             listFilePath = Path.Join(scriptDirectoryPath, "VS.CodeSpaces.list");
+            // Use <Configuration> folder.
             binDirectoryPath = Path.Join(binDirectoryPath, Configuration.ToString());
         }
         else if (Client == Client.VSCode)
         {
             listFilePath = Path.Join(scriptDirectoryPath, "VSCode.list");
+            // Use Desktop.<Configuration> folder.
             binDirectoryPath = Path.Join(binDirectoryPath, "Desktop." + Configuration.ToString());
         }
 
@@ -217,6 +238,7 @@ class Setup {
 
             Console.WriteLine(string.Format("Copying {0} to {1}.", srcPath, destPath));
 
+            // TODO: Support symlinking
             File.Copy(srcPath, destPath, overwrite: true);
         }
     }
@@ -226,3 +248,5 @@ class Setup {
 Setup setup = new Setup();
 setup.ParseArguments(Args);
 setup.Run();
+
+System.Environment.Exit(0);
