@@ -6,6 +6,7 @@
 */
 
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.IO;
 using System.Collections;
 
@@ -244,6 +245,11 @@ class Setup {
     }
 
 } 
+
+if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    throw new InvalidOperationException("This script is only supported for Windows.");
+}
 
 Setup setup = new Setup();
 setup.ParseArguments(Args);
