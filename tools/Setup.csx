@@ -215,7 +215,7 @@ class Setup {
             binDirectoryPath = Path.Join(binDirectoryPath, "Desktop." + Configuration.ToString());
         }
 
-        if (!File.Exists(binDirectoryPath))
+        if (!Directory.Exists(binDirectoryPath))
         {
             string configurationToUse = Client == Client.VS ? Configuration.ToString() : "Desktop." + Configuration.ToString();
             throw new InvalidOperationException(string.Format("'{0}' does not exist. Did you build {1}?", binDirectoryPath, configurationToUse));
