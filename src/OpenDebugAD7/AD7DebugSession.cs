@@ -2411,8 +2411,31 @@ namespace OpenDebugAD7
             string moduleLoadMessage = null;
             int isLoad = 0;
             ((IDebugModuleLoadEvent2)pEvent).GetModule(out module, ref moduleLoadMessage, ref isLoad);
-
+            
             m_logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
+
+            // test -- need to delete
+            var debugModuleInfos = new MODULE_INFO[1];
+            if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
+            {
+                var debugModuleInfo = debugModuleInfos[0];
+                var mod = new ProtocolMessages.Module(debugModuleInfo.m_bstrName, debugModuleInfo.m_bstrName)
+                {
+                    Path = debugModuleInfo.m_bstrUrl,
+                    VsTimestampUTC = FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture),
+                    Version = debugModuleInfo.m_bstrVersion,
+                    VsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture),
+                    VsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture),
+                    VsModuleSize = (int)debugModuleInfo.m_dwSize,
+                    VsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder,
+                    SymbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation,
+                    SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) == 0 ? "✓" : "✗",
+                    VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) == 0,
+                    IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) == 0, // not set by gdb
+                    IsUserCode = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYSTEM) != 0, // not set by gdb
+                };
+                Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.New, mod));
+            }
         }
 
         public void HandleIDebugBreakpointBoundEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
