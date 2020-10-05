@@ -80,13 +80,14 @@ namespace Microsoft.MIDebugEngine
                 {   
                     // step-by-step -- broken 
                     long ft = File.GetLastWriteTimeUtc(this.DebuggedModule.SymbolPath).ToFileTime();
-                    // UInt32 uift = Convert.ToUInt32(ft);
-                    // Int32 uift = Convert.ToInt32(ft); <- seems to be the problematic line
 
-                    info.m_TimeStamp.dwLowDateTime = Convert.ToUInt32(ft); // also problematic...maybe Convert.ToUInt32()
-                    // info.m_TimeStamp.dwHighDateTime = Convert.ToUInt32(ft); // uift >> 32);
+                    // info.m_TimeStamp.dwLowDateTime = (uint) (ft & 0xFFFFFFFF);
+                    // info.m_TimeStamp.dwHighDateTime = (uint) ((ulong) (ft >> 32));
+                    uint low = (uint) (ft & 0xFFFFFFFF);
+                    uint high = (uint) ((ulong) (ft >> 32));
+                    info.m_TimeStamp = new FILETIME{low, high}; // this is broken - wrong implementation?
 
-                    // info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP;
+                    info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP;
                 }
 
                 if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_URLSYMBOLLOCATION) != 0)
