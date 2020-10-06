@@ -85,7 +85,10 @@ namespace Microsoft.MIDebugEngine
                     // info.m_TimeStamp.dwHighDateTime = (uint) ((ulong) (ft >> 32));
                     uint low = (uint) (ft & 0xFFFFFFFF);
                     uint high = (uint) ((ulong) (ft >> 32));
-                    info.m_TimeStamp = new FILETIME{low, high}; // this is broken - wrong implementation?
+                    info.m_TimeStamp = new FILETIME(){
+                        dwLowDateTime = low,
+                        dwHighDateTime = high
+                    }; // this is broken - wrong implementation?
 
                     info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP;
                 }
