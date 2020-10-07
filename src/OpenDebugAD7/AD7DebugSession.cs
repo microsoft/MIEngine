@@ -611,7 +611,6 @@ namespace OpenDebugAD7
                 });
             }
 
-            // test -- need to delete; set additionalModuleColumns here
             List<ColumnDescriptor> additionalModuleColumns = new List<ColumnDescriptor>();
             additionalModuleColumns.Add(new ColumnDescriptor("vsLoadAddress", "Load Address", "string", ColumnDescriptor.TypeValue.String));
             additionalModuleColumns.Add(new ColumnDescriptor("vsPreferredLoadAddress", "Preferred Load Address", "string", ColumnDescriptor.TypeValue.String));
@@ -619,8 +618,6 @@ namespace OpenDebugAD7
             additionalModuleColumns.Add(new ColumnDescriptor("vsLoadOrder", "Order", "string", ColumnDescriptor.TypeValue.Number));
             additionalModuleColumns.Add(new ColumnDescriptor("vsTimestampUTC", "Timestamp", "string", ColumnDescriptor.TypeValue.UnixTimestampUTC));
             additionalModuleColumns.Add(new ColumnDescriptor("vsIs64Bit", "64-bit", "string", ColumnDescriptor.TypeValue.Boolean));
-
-            // additionalModuleColumns.Add(ColumnDescriptor("vsLoadAddress", "Load Address", Nullable<std::string>(), ColumnDescriptor.TypeValue.String, Nullable<int>()));
 
             InitializeResponse initializeResponse = new InitializeResponse()
             {
@@ -634,8 +631,7 @@ namespace OpenDebugAD7
                 SupportsLogPoints = true,
                 SupportsReadMemoryRequest = true,
                 SupportsModulesRequest = true,
-                // test -- need to delete; insert items here
-                AdditionalModuleColumns = additionalModuleColumns,
+                AdditionalModuleColumns = additionalModuleColumns
             };
 
             responder.SetResponse(initializeResponse);
@@ -2427,7 +2423,6 @@ namespace OpenDebugAD7
             
             m_logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
 
-            // test -- need to delete
             var debugModuleInfos = new MODULE_INFO[1];
             if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
             {

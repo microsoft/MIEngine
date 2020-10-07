@@ -73,26 +73,17 @@ namespace Microsoft.MIDebugEngine
                     info.m_dwLoadOrder = this.DebuggedModule.GetLoadOrder();
                     info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_LOADORDER;
                 }
-
-                // test -- need to delete
-                // this.DebuggedModule.SymbolPath
                 if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0)
                 {   
-                    // step-by-step -- broken 
                     long ft = File.GetLastWriteTimeUtc(this.DebuggedModule.SymbolPath).ToFileTime();
-
-                    // info.m_TimeStamp.dwLowDateTime = (uint) (ft & 0xFFFFFFFF);
-                    // info.m_TimeStamp.dwHighDateTime = (uint) ((ulong) (ft >> 32));
                     uint low = (uint) (ft & 0xFFFFFFFF);
                     uint high = (uint) ((ulong) (ft >> 32));
                     info.m_TimeStamp = new FILETIME(){
                         dwLowDateTime = low,
                         dwHighDateTime = high
-                    }; // this is broken - wrong implementation?
-
+                    };
                     info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP;
                 }
-
                 if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_URLSYMBOLLOCATION) != 0)
                 {
                     if (this.DebuggedModule.SymbolsLoaded)
