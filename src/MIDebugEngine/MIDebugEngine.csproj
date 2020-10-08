@@ -69,7 +69,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+	<Reference Include="Microsoft.VisualStudio.OLE.Interop">
+		<HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.OLE.Interop.16.7.30328.74/lib/net45/Microsoft.VisualStudio.OLE.Interop.dll</HintPath>
+		<ForceIncludeInVSIX>true</ForceIncludeInVSIX>
+	</Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">

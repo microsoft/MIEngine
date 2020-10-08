@@ -82,7 +82,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
+	<Reference Include="Microsoft.VisualStudio.OLE.Interop">
+		<HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.OLE.Interop.16.7.30328.74/lib/net45/Microsoft.VisualStudio.OLE.Interop.dll</HintPath>
+		<ForceIncludeInVSIX>true</ForceIncludeInVSIX>
+	</Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
       <ForceIncludeInVSIX>true</ForceIncludeInVSIX>

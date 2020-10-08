@@ -24,7 +24,6 @@ using OpenDebug;
 using OpenDebug.CustomProtocolObjects;
 using OpenDebugAD7.AD7Impl;
 using ProtocolMessages = Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
-using static System.FormattableString;
 
 namespace OpenDebugAD7
 {
@@ -263,6 +262,17 @@ namespace OpenDebugAD7
             }
 
             return tracepoints;
+        }
+
+        private static long FileTimeToPosix(FILETIME ft)
+        {
+            long date = ((long)ft.dwHighDateTime << 32) + ft.dwLowDateTime;
+            // removes the diff between 1970 and 1601
+            // 100-nanoseconds = milliseconds * 10000
+            date -= 11644473600000L * 10000;
+
+            // converts back from 100-nanoseconds to seconds
+            return date / 10000000;
         }
 
         #endregion
@@ -612,12 +622,15 @@ namespace OpenDebugAD7
             }
 
             List<ColumnDescriptor> additionalModuleColumns = new List<ColumnDescriptor>();
-            additionalModuleColumns.Add(new ColumnDescriptor("vsLoadAddress", "Load Address", "string", ColumnDescriptor.TypeValue.String));
-            additionalModuleColumns.Add(new ColumnDescriptor("vsPreferredLoadAddress", "Preferred Load Address", "string", ColumnDescriptor.TypeValue.String));
-            additionalModuleColumns.Add(new ColumnDescriptor("vsModuleSize", "Module Size", "string", ColumnDescriptor.TypeValue.Number));
-            additionalModuleColumns.Add(new ColumnDescriptor("vsLoadOrder", "Order", "string", ColumnDescriptor.TypeValue.Number));
-            additionalModuleColumns.Add(new ColumnDescriptor("vsTimestampUTC", "Timestamp", "string", ColumnDescriptor.TypeValue.UnixTimestampUTC));
-            additionalModuleColumns.Add(new ColumnDescriptor("vsIs64Bit", "64-bit", "string", ColumnDescriptor.TypeValue.Boolean));
+            if (responder.Arguments.ClientID == "visualstudio")
+            {
+                additionalModuleColumns.Add(new ColumnDescriptor("vsLoadAddress", "Load Address", "string", ColumnDescriptor.TypeValue.String));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsPreferredLoadAddress", "Preferred Load Address", "string", ColumnDescriptor.TypeValue.String));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsModuleSize", "Module Size", "string", ColumnDescriptor.TypeValue.Number));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsLoadOrder", "Order", "string", ColumnDescriptor.TypeValue.Number));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsTimestampUTC", "Timestamp", "string", ColumnDescriptor.TypeValue.UnixTimestampUTC));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsIs64Bit", "64-bit", "string", ColumnDescriptor.TypeValue.Boolean));
+            }
 
             InitializeResponse initializeResponse = new InitializeResponse()
             {
@@ -1557,17 +1570,12 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
-        private static long FileTimeToPosix(FILETIME ft)
+        // test -- need to delete; replace module ID here, first param
+        private static uint s_nextModuleId = 0;
+        public static uint GetNextModuleId()
         {
-            long date = ((long)ft.dwHighDateTime << 32) + ft.dwLowDateTime;
-            // removes the diff between 1970 and 1601
-            // 100-nanoseconds = milliseconds * 10000
-            date -= 11644473600000L * 10000;
-
-            // converts back from 100-nanoseconds to seconds
-            return date / 10000000;
+            return ++s_nextModuleId;
         }
-
         protected override void HandleModulesRequestAsync(IRequestResponder<ModulesArguments, ModulesResponse> responder)
         {
             var response = new ModulesResponse();
