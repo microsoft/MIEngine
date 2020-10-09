@@ -2214,7 +2214,7 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions.SourceMap != null)
             {
                 // Convert to Client source paths
-                compilerSrc = PlatformUtilities.NormalizeClientPath(compilerSrc);
+                compilerSrc = PlatformUtilities.PathToHostOSPath(compilerSrc);
 
                 StringComparison comp = _launchOptions.UseUnixSymbolPaths ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
                 foreach (var e in _launchOptions.SourceMap)

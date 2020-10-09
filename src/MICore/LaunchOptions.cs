@@ -316,8 +316,8 @@ namespace MICore
 
         public SourceMapEntry(Xml.LaunchOptions.SourceMapEntry xmlEntry)
         {
-            this.EditorPath = PlatformUtilities.NormalizeClientPath(xmlEntry.EditorPath);
-            this.CompileTimePath = PlatformUtilities.NormalizeClientPath(xmlEntry.CompileTimePath);
+            this.EditorPath = PlatformUtilities.PathToHostOSPath(xmlEntry.EditorPath);
+            this.CompileTimePath = PlatformUtilities.PathToHostOSPath(xmlEntry.CompileTimePath);
             this.UseForBreakpoints = xmlEntry.UseForBreakpoints;
         }
 
@@ -396,8 +396,8 @@ namespace MICore
                 {
                     sourceMaps.Add(new SourceMapEntry()
                     {
-                        CompileTimePath = PlatformUtilities.NormalizeClientPath(compileTimePath),
-                        EditorPath = PlatformUtilities.NormalizeClientPath(editorPath),
+                        CompileTimePath = PlatformUtilities.PathToHostOSPath(compileTimePath),
+                        EditorPath = PlatformUtilities.PathToHostOSPath(editorPath),
                         UseForBreakpoints = useForBreakpoints
                     });
                 }

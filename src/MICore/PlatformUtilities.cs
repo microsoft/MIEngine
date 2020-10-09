@@ -142,7 +142,7 @@ namespace MICore
             return windowsPath.Replace('\\', '/');
         }
 
-        public static string NormalizeClientPath(string path)
+        public static string PathToHostOSPath(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -151,11 +151,11 @@ namespace MICore
 
             if (IsWindows())
             {
-                return WindowsPathToUnixPath(path);
+                return UnixPathToWindowsPath(path);
             }
             else
             {
-                return UnixPathToWindowsPath(path);
+                return WindowsPathToUnixPath(path);
             }
         }
     }
