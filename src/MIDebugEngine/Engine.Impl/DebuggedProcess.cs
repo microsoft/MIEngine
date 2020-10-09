@@ -2214,7 +2214,7 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions.SourceMap != null)
             {
                 // Convert to Client source paths
-                compilerSrc = PlatformUtilities.PathToHostOSPath(compilerSrc);
+                string hostOSCompilerSrc = PlatformUtilities.PathToHostOSPath(compilerSrc);
 
                 StringComparison comp = _launchOptions.UseUnixSymbolPaths ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
                 foreach (var e in _launchOptions.SourceMap)
@@ -2223,9 +2223,9 @@ namespace Microsoft.MIDebugEngine
                     {
                         continue;   // don't try to map back if path has an empty compiler src tree
                     }
-                    if (compilerSrc.StartsWith(e.CompileTimePath, comp))
+                    if (hostOSCompilerSrc.StartsWith(e.CompileTimePath, comp))
                     {
-                        var file = compilerSrc.Substring(e.CompileTimePath.Length);
+                        var file = hostOSCompilerSrc.Substring(e.CompileTimePath.Length);
                         if (string.IsNullOrEmpty(file)) // matched the whole directory string
                         {
                             break;  // use default
