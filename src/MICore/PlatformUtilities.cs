@@ -131,6 +131,33 @@ namespace MICore
 #endif
             return null;
         }
+
+        public static string UnixPathToWindowsPath(string unixPath)
+        {
+            return unixPath.Replace('/', '\\');
+        }
+
+        public static string WindowsPathToUnixPath(string windowsPath)
+        {
+            return windowsPath.Replace('\\', '/');
+        }
+
+        public static string NormalizeClientPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return path;
+            }
+
+            if (IsWindows())
+            {
+                return WindowsPathToUnixPath(path);
+            }
+            else
+            {
+                return UnixPathToWindowsPath(path);
+            }
+        }
     }
 }
 

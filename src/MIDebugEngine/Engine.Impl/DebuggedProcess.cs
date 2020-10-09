@@ -1385,7 +1385,7 @@ namespace Microsoft.MIDebugEngine
         {
             if (this.UseUnixPathSeparators)
             {
-                path = path.Replace('\\', '/');
+                path = PlatformUtilities.WindowsPathToUnixPath(path);
             }
             else
             {
@@ -1408,7 +1408,7 @@ namespace Microsoft.MIDebugEngine
         {
             if (this.UseUnixSymbolPaths)
             {
-                path = path.Replace('\\', '/');
+                path = PlatformUtilities.WindowsPathToUnixPath(path);
             }
             else
             {
@@ -1444,11 +1444,6 @@ namespace Microsoft.MIDebugEngine
         }
 
         internal bool UseUnixSymbolPaths { get { return _launchOptions.UseUnixSymbolPaths; } }
-
-        internal static string UnixPathToWindowsPath(string unixPath)
-        {
-            return unixPath.Replace('/', '\\');
-        }
 
         internal void LoadSymbols(DebuggedModule module)
         {
@@ -2204,7 +2199,7 @@ namespace Microsoft.MIDebugEngine
                         compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
                         if (compilerSrc.IndexOf('\\') > 0)
                         {
-                            compilerSrc = compilerSrc.Replace('\\', '/'); // use Unix notation for the compiled path
+                            compilerSrc = PlatformUtilities.WindowsPathToUnixPath(compilerSrc); // use Unix notation for the compiled path
                         }
                         return true;
                     }
@@ -2218,6 +2213,9 @@ namespace Microsoft.MIDebugEngine
         {
             if (_launchOptions.SourceMap != null)
             {
+                // Convert to Client source paths
+                compilerSrc = PlatformUtilities.NormalizeClientPath(compilerSrc);
+
                 StringComparison comp = _launchOptions.UseUnixSymbolPaths ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
                 foreach (var e in _launchOptions.SourceMap)
                 {

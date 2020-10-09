@@ -310,14 +310,14 @@ namespace MICore
 
     public sealed class SourceMapEntry
     {
-        public SourceMapEntry() // used by launchers 
+        public SourceMapEntry() // used by launchers
         {
         }
 
         public SourceMapEntry(Xml.LaunchOptions.SourceMapEntry xmlEntry)
         {
-            this.EditorPath = xmlEntry.EditorPath;
-            this.CompileTimePath = xmlEntry.CompileTimePath;
+            this.EditorPath = PlatformUtilities.NormalizeClientPath(xmlEntry.EditorPath);
+            this.CompileTimePath = PlatformUtilities.NormalizeClientPath(xmlEntry.CompileTimePath);
             this.UseForBreakpoints = xmlEntry.UseForBreakpoints;
         }
 
@@ -356,6 +356,7 @@ namespace MICore
         public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Xml.LaunchOptions.SourceMapEntry[] source)
         {
             SourceMapEntry[] pathArray = source?.Select(x => new SourceMapEntry(x)).ToArray();
+
             if (pathArray == null)
             {
                 pathArray = new SourceMapEntry[0];
@@ -370,29 +371,35 @@ namespace MICore
 
             foreach (var item in source)
             {
-                if (item.Value is String)
+                string compileTimePath = item.Key;
+                string editorPath = null;
+                bool useForBreakpoints = true;
+
+                if (item.Value is string value)
                 {
-                    sourceMaps.Add(new SourceMapEntry()
-                    {
-                        CompileTimePath = item.Key,
-                        EditorPath = (String)item.Value,
-                        UseForBreakpoints = true
-                    });
+                    editorPath = value;
                 }
                 else if (item.Value is JObject)
                 {
                     Json.LaunchOptions.SourceFileMapOptions sourceMapItem =
                         ((JObject)item.Value).ToObject<Json.LaunchOptions.SourceFileMapOptions>();
-                    sourceMaps.Add(new SourceMapEntry()
-                    {
-                        CompileTimePath = item.Key,
-                        EditorPath = sourceMapItem.EditorPath,
-                        UseForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true)
-                    });
+
+                    editorPath = sourceMapItem.EditorPath;
+                    useForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true);
                 }
                 else
                 {
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapFormat, item.Key));
+                }
+
+                if (!string.IsNullOrEmpty(compileTimePath) && !string.IsNullOrEmpty(editorPath))
+                {
+                    sourceMaps.Add(new SourceMapEntry()
+                    {
+                        CompileTimePath = PlatformUtilities.NormalizeClientPath(compileTimePath),
+                        EditorPath = PlatformUtilities.NormalizeClientPath(editorPath),
+                        UseForBreakpoints = useForBreakpoints
+                    });
                 }
             }
             return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);

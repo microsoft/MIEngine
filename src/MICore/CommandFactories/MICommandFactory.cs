@@ -436,7 +436,7 @@ namespace MICore
             path = path.Trim();
             if (useUnixFormat)  // convert directory separators
             {
-                path = path.Replace('\\', '/');
+                path = PlatformUtilities.WindowsPathToUnixPath(path);
             }
             if (path.IndexOf(' ') != -1)    // path contains spaces. Convert to c-string format
             {
