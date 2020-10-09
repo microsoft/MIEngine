@@ -1589,11 +1589,19 @@ namespace OpenDebugAD7
                 VsModuleSize = (int)debugModuleInfo.m_dwSize,
                 VsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder,
                 SymbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation,
-                SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) == 0 ? "✓" : "✗",
-                VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) == 0,
-                IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) == 0, // not set by gdb
-                IsUserCode = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYSTEM) != 0, // not set by gdb
-            }; // end here?
+                SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) != 0 ? "✓" : "✗",
+                VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) != 0
+                // IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0 ? true : ((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_UNOPTIMIZED) != 0 ? false : null) // not set by gdb
+                // test -- need to delete?
+                // IsUserCode = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYSTEM) != 0 // not set by gdb
+            };
+            if((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0)
+            {
+                mod.IsOptimized = true;
+            } else if ((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_UNOPTIMIZED) != 0)
+            {
+                mod.IsOptimized = false;
+            }
             return mod;
         }
 
@@ -1605,7 +1613,6 @@ namespace OpenDebugAD7
             if (m_program.EnumModules(out enumDebugModules) == HRConstants.S_OK)
             {
                 var debugModules = new IDebugModule2[1];
-
                 uint numReturned = 0;
                 while (enumDebugModules.Next(1, debugModules, ref numReturned) == HRConstants.S_OK && numReturned == 1)
                 {
@@ -1613,6 +1620,8 @@ namespace OpenDebugAD7
                     if (debugModules[0].GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
                     {
                         var mod = ConvertToModule(debugModuleInfos[0]);
+                        (debugModules[0] as IDebugModule3).IsUserCode(out int isUserCode);
+                        mod.IsUserCode = isUserCode >= 0 ? isUserCode : null;
                         response.Modules.Add(mod);
                     }
                 }
@@ -2441,6 +2450,8 @@ namespace OpenDebugAD7
             if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
             {
                 var mod = ConvertToModule(debugModuleInfos[0]);
+                (module as IDebugModule3).IsUserCode(out int isUserCode);
+                mod.IsUserCode = isUserCode >= 0 ? isUserCode : null;
                 Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.New, mod));
             }
         }
