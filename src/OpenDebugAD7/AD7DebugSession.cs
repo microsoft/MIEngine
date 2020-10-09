@@ -1571,11 +1571,32 @@ namespace OpenDebugAD7
         }
 
         // test -- need to delete; replace module ID here, first param
-        private static uint s_nextModuleId = 0;
+        private static uint s_nextModuleId = 0; // change this?
         public static uint GetNextModuleId()
         {
             return ++s_nextModuleId;
         }
+
+        public static ProtocolMessages.Module ConvertToModule(MODULE_INFO debugModuleInfo)
+        {
+            var mod = new ProtocolMessages.Module(GetNextModuleId(), debugModuleInfo.m_bstrName)
+            {
+                Path = debugModuleInfo.m_bstrUrl,
+                VsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : "",
+                Version = debugModuleInfo.m_bstrVersion,
+                VsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture),
+                VsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture),
+                VsModuleSize = (int)debugModuleInfo.m_dwSize,
+                VsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder,
+                SymbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation,
+                SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) == 0 ? "✓" : "✗",
+                VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) == 0,
+                IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) == 0, // not set by gdb
+                IsUserCode = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYSTEM) != 0, // not set by gdb
+            }; // end here?
+            return mod;
+        }
+
         protected override void HandleModulesRequestAsync(IRequestResponder<ModulesArguments, ModulesResponse> responder)
         {
             var response = new ModulesResponse();
@@ -1588,25 +1609,10 @@ namespace OpenDebugAD7
                 uint numReturned = 0;
                 while (enumDebugModules.Next(1, debugModules, ref numReturned) == HRConstants.S_OK && numReturned == 1)
                 {
-                    var debugModuleInfos = new MODULE_INFO[1];
+                    var debugModuleInfos = new MODULE_INFO[1]; // start here?
                     if (debugModules[0].GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
                     {
-                        var debugModuleInfo = debugModuleInfos[0];
-                        var mod = new ProtocolMessages.Module(debugModuleInfo.m_bstrName, debugModuleInfo.m_bstrName)
-                        {
-                            Path = debugModuleInfo.m_bstrUrl,
-                            VsTimestampUTC = FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture),
-                            Version = debugModuleInfo.m_bstrVersion,
-                            VsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture),
-                            VsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture),
-                            VsModuleSize = (int)debugModuleInfo.m_dwSize,
-                            VsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder,
-                            SymbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation,
-                            SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) == 0 ? "✓" : "✗",
-                            VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) == 0,
-                            IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) == 0, // not set by gdb
-                            IsUserCode = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYSTEM) != 0, // not set by gdb
-                        };
+                        var mod = ConvertToModule(debugModuleInfos[0]);
                         response.Modules.Add(mod);
                     }
                 }
@@ -2434,22 +2440,7 @@ namespace OpenDebugAD7
             var debugModuleInfos = new MODULE_INFO[1];
             if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
             {
-                var debugModuleInfo = debugModuleInfos[0];
-                var mod = new ProtocolMessages.Module(debugModuleInfo.m_bstrName, debugModuleInfo.m_bstrName)
-                {
-                    Path = debugModuleInfo.m_bstrUrl,
-                    VsTimestampUTC = FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture),
-                    Version = debugModuleInfo.m_bstrVersion,
-                    VsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture),
-                    VsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture),
-                    VsModuleSize = (int)debugModuleInfo.m_dwSize,
-                    VsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder,
-                    SymbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation,
-                    SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) == 0 ? "✓" : "✗",
-                    VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) == 0,
-                    IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) == 0, // not set by gdb
-                    IsUserCode = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYSTEM) != 0, // not set by gdb
-                };
+                var mod = ConvertToModule(debugModuleInfos[0]);
                 Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.New, mod));
             }
         }

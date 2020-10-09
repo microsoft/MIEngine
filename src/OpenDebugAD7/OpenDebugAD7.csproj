@@ -178,6 +178,7 @@
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsXPlat)' == 'false'">
+	<DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.OLE.Interop.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
