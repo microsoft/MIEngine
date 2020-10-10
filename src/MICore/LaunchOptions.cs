@@ -379,20 +379,27 @@ namespace MICore
                 {
                     editorPath = value;
                 }
-                else if (item.Value is JObject)
+                else if (item.Value is JObject jObject)
                 {
-                    Json.LaunchOptions.SourceFileMapOptions sourceMapItem =
-                        ((JObject)item.Value).ToObject<Json.LaunchOptions.SourceFileMapOptions>();
+                    try
+                    {
+                        Json.LaunchOptions.SourceFileMapOptions sourceMapItem =
+                        jObject.ToObject<Json.LaunchOptions.SourceFileMapOptions>();
 
-                    editorPath = sourceMapItem.EditorPath;
-                    useForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true);
+                        editorPath = sourceMapItem.EditorPath;
+                        useForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true);
+                    }
+                    catch (JsonReaderException)
+                    {
+                        throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapFormat, compileTimePath));
+                    }
                 }
                 else
                 {
-                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapFormat, item.Key));
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapFormat, compileTimePath));
                 }
 
-                if (!string.IsNullOrEmpty(compileTimePath) && !string.IsNullOrEmpty(editorPath))
+                if (!string.IsNullOrEmpty(editorPath))
                 {
                     sourceMaps.Add(new SourceMapEntry()
                     {
@@ -400,6 +407,10 @@ namespace MICore
                         EditorPath = PlatformUtilities.PathToHostOSPath(editorPath),
                         UseForBreakpoints = useForBreakpoints
                     });
+                }
+                else
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapInvalidEditorPath));
                 }
             }
             return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);
