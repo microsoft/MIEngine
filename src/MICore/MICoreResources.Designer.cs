@@ -429,6 +429,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;editorPath&apos; can not be null or empty.
+        /// </summary>
+        public static string Error_SourceFileMapInvalidEditorPath {
+            get {
+                return ResourceManager.GetString("Error_SourceFileMapInvalidEditorPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This string is null or empty..
         /// </summary>
         public static string Error_StringIsNullOrEmpty {
