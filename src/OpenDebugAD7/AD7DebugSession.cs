@@ -1589,7 +1589,8 @@ namespace OpenDebugAD7
                 VsModuleSize = (int)debugModuleInfo.m_dwSize,
                 VsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder,
                 SymbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation,
-                SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) != 0 ? "✓" : "✗",
+                // SymbolStatus = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYMBOLS) != 0 ? "✓" : "✗",
+                SymbolStatus = debugModuleInfo.m_bstrDebugMessage,
                 VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) != 0,
                 IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0 ? true : ((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_UNOPTIMIZED) != 0 ? false : null) // not set by gdb
                 // test -- need to delete?
