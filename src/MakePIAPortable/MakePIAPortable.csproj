@@ -28,7 +28,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
-    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
     <DebugType>pdbonly</DebugType>
@@ -37,7 +36,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
-    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -64,9 +62,11 @@
     </ParameterGroup>
     <Task>
       <Using Namespace="Microsoft.Build.Utilities" />
-      <Code Type="Fragment" Language="cs"><![CDATA[
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
           ILDAsmFileLocation = Microsoft.Build.Utilities.ToolLocationHelper.GetPathToDotNetFrameworkSdkFile("ildasm.exe" , TargetDotNetFrameworkVersion.Latest);
-        ]]></Code>
+        ]]>
+      </Code>
     </Task>
   </UsingTask>
   <Target Name="GeneratePortablePIA" BeforeTargets="SignFiles" AfterTargets="Build">
@@ -75,7 +75,7 @@
     </FindILDAsm>
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
     <Error Condition="'$(ILDAsmFileLocation)' == ''" Text="Unable to locate ILDasm.exe" />
-    <Exec Command="$(OutputPath)MakePortableLegacyPIAS.cmd &quot;$(ILDAsmFileLocation)&quot; &quot;$(PIAOutput)&quot;" />
+    <Exec Command='$(OutputPath)MakePortableLegacyPIAS.cmd &quot;$(ILDAsmFileLocation)&quot; &quot;$(PIAOutput)&quot;' />
   </Target>
   <ItemGroup>
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.InteropA.dll" />

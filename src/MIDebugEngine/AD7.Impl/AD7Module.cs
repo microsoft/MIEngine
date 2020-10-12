@@ -188,8 +188,7 @@ namespace Microsoft.MIDebugEngine
         int IDebugModule3.IsUserCode(out int pfUser)
         {
             pfUser = 1;
-            // return Constants.S_OK;
-            return Constants.E_NOTIMPL;
+            return Constants.S_OK;
         }
 
         // Loads and initializes symbols for the current module when the user explicitly asks for them to load.
