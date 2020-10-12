@@ -2226,9 +2226,18 @@ namespace Microsoft.MIDebugEngine
                     if (hostOSCompilerSrc.StartsWith(e.CompileTimePath, comp))
                     {
                         var file = hostOSCompilerSrc.Substring(e.CompileTimePath.Length);
-                        if (string.IsNullOrEmpty(file)) // matched the whole directory string
+                        if (string.IsNullOrEmpty(file)) // matched the whole string
                         {
-                            break;  // use default
+                            if (hostOSCompilerSrc.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal) || hostOSCompilerSrc.EndsWith(Path.AltDirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                            {
+                                break;  // directory matched, use default.
+                            }
+                            else
+                            {
+                                // Is a file
+                                currentName = e.EditorPath;  // return the matches compile time path
+                                return true;
+                            }
                         }
                         // must do the path break at a directory boundry, i.e. at a '\' or '/' char
                         char firstFilechar = file[0];

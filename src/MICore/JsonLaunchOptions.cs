@@ -299,6 +299,12 @@ namespace MICore.Json.LaunchOptions
         [JsonProperty("externalConsole", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? ExternalConsole { get; set; }
 
+        /// <summary>
+        /// If true, disables debuggee console redirection that is required for Integrated Terminal support.
+        /// </summary>
+        [JsonProperty("avoidWindowsConsoleRedirection", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? AvoidWindowsConsoleRedirection { get; set; }
+
         #endregion
 
         #region Constructors

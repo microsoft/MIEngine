@@ -174,7 +174,7 @@ namespace OpenDebugAD7
             return true;
         }
 
-        private void SetCommonDebugSettings(Dictionary<string, JToken> args, out int sourceFileMappings)
+        private void SetCommonDebugSettings(Dictionary<string, JToken> args)
         {
             // Save the Just My Code setting. We will set it once the engine is created.
             m_sessionConfig.JustMyCode = args.GetValueAsBool("justMyCode").GetValueOrDefault(m_sessionConfig.JustMyCode);
@@ -210,26 +210,26 @@ namespace OpenDebugAD7
                     m_logger.SetLoggingConfiguration(LoggingCategory.AdapterResponse, traceResponse.Value);
                 }
             }
+        }
 
-            sourceFileMappings = 0;
-            Dictionary<string, string> sourceFileMap = null;
+        private void SetCommonMISettings(Dictionary<string, JToken> args)
+        {
+            string miMode = args.GetValueAsString("MIMode");
+
+            // If MIMode is not provided, set default to GDB. 
+            if (string.IsNullOrEmpty(miMode))
             {
-                dynamic sourceFileMapProperty = args.GetValueAsObject("sourceFileMap");
-                if (sourceFileMapProperty != null)
+                args["MIMode"] = "gdb";
+            }
+            else
+            {
+                // If lldb and there is no miDebuggerPath, set it.
+                bool hasMiDebuggerPath = args.ContainsKey("miDebuggerPath");
+                if (miMode == "lldb" && !hasMiDebuggerPath)
                 {
-                    try
-                    {
-                        sourceFileMap = sourceFileMapProperty.ToObject<Dictionary<string, string>>();
-                        sourceFileMappings = sourceFileMap.Count;
-                    }
-                    catch (Exception e)
-                    {
-                        SendMessageEvent(MessagePrefix.Error, "Configuration for 'sourceFileMap' has a format error and will be ignored.\nException: " + e.Message);
-                        sourceFileMap = null;
-                    }
+                    args["miDebuggerPath"] = MILaunchOptions.GetLLDBMIPath();
                 }
             }
-            m_pathConverter.m_pathMapper = new PathMapper(sourceFileMap);
         }
 
         private ProtocolException VerifyLocalProcessId(string processId, string telemetryEventName, out int pid)
@@ -774,8 +774,7 @@ namespace OpenDebugAD7
                 }
             }
 
-            int sourceFileMappings = 0;
-            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties, sourceFileMappings: out sourceFileMappings);
+            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties);
 
             bool success = false;
             try
@@ -790,22 +789,8 @@ namespace OpenDebugAD7
                 // Don't convert the workingDirectory string if we are a pipeTransport connection. We are assuming that the user has the correct directory separaters for their target OS
                 string workingDirectoryString = pipeTransport != null ? workingDirectory : m_pathConverter.ConvertClientPathToDebugger(workingDirectory);
 
-                bool debugServerUsed = false;
-                bool isOpenOCD = false;
-                bool stopAtEntrypoint;
-                bool visualizerFileUsed;
-                string launchOptions = MILaunchOptions.CreateLaunchOptions(
-                    program: program,
-                    workingDirectory: workingDirectoryString,
-                    args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
-                    isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
-                    stopAtEntry: out stopAtEntrypoint,
-                    isCoreDump: out m_isCoreDump,
-                    debugServerUsed: out debugServerUsed,
-                    isOpenOCD: out isOpenOCD,
-                    visualizerFileUsed: out visualizerFileUsed);
-
-                m_sessionConfig.StopAtEntrypoint = stopAtEntrypoint;
+                m_isCoreDump = responder.Arguments.ConfigurationProperties.ContainsKey("coreDumpPath");
+                m_sessionConfig.StopAtEntrypoint = !m_isCoreDump && (responder.Arguments.ConfigurationProperties.ContainsKey("stopAtEntry") && responder.Arguments.ConfigurationProperties.GetValueAsBool("stopAtEntry").GetValueOrDefault(false));
 
                 m_processId = Constants.InvalidProcessId;
                 m_processName = program;
@@ -816,6 +801,10 @@ namespace OpenDebugAD7
                     flags = enum_LAUNCH_FLAGS.LAUNCH_NODEBUG;
                 }
 
+                SetCommonMISettings(responder.Arguments.ConfigurationProperties);
+
+                string launchJson = JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties);
+
                 // Then attach
                 hr = m_engineLaunch.LaunchSuspended(null,
                     m_port,
@@ -823,7 +812,7 @@ namespace OpenDebugAD7
                     null,
                     null,
                     null,
-                    launchOptions,
+                    launchJson,
                     flags,
                     0,
                     0,
@@ -869,18 +858,11 @@ namespace OpenDebugAD7
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
 
-                properties.Add(DebuggerTelemetry.TelemetryIsCoreDump, m_isCoreDump);
-                if (debugServerUsed)
-                {
-                    properties.Add(DebuggerTelemetry.TelemetryUsesDebugServer, isOpenOCD ? "openocd" : "other");
-                }
                 if (flags.HasFlag(enum_LAUNCH_FLAGS.LAUNCH_NODEBUG))
                 {
                     properties.Add(DebuggerTelemetry.TelemetryIsNoDebug, true);
                 }
 
-                properties.Add(DebuggerTelemetry.TelemetryVisualizerFileUsed, visualizerFileUsed);
-                properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
 
                 DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - launchStartTime, properties);
@@ -930,8 +912,6 @@ namespace OpenDebugAD7
             JObject pipeTransport = responder.Arguments.ConfigurationProperties.GetValueAsObject("pipeTransport");
             bool isPipeTransport = (pipeTransport != null);
             bool isLocal = string.IsNullOrEmpty(miDebuggerServerAddress) && !isPipeTransport;
-            bool visualizerFileUsed = false;
-            int sourceFileMappings = 0;
             string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("MIMode");
 
             if (isLocal)
@@ -968,11 +948,10 @@ namespace OpenDebugAD7
                 return;
             }
 
-            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties, sourceFileMappings: out sourceFileMappings);
+            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties);
 
             string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program");
             string executable = null;
-            string launchOptions = null;
             bool success = false;
             try
             {
@@ -990,21 +969,6 @@ namespace OpenDebugAD7
                         responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1011, "debuggerPath is required for attachTransport."));
                         return;
                     }
-                    bool debugServerUsed = false;
-                    bool isOpenOCD = false;
-                    bool stopAtEntrypoint = false;
-
-                    launchOptions = MILaunchOptions.CreateLaunchOptions(
-                        program: program,
-                        workingDirectory: String.Empty, // No cwd for attach
-                        args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
-                        isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
-                        stopAtEntry: out stopAtEntrypoint,
-                        isCoreDump: out m_isCoreDump,
-                        debugServerUsed: out debugServerUsed,
-                        isOpenOCD: out isOpenOCD,
-                        visualizerFileUsed: out visualizerFileUsed);
-
 
                     if (string.IsNullOrEmpty(program))
                     {
@@ -1031,19 +995,6 @@ namespace OpenDebugAD7
                         return;
                     }
 
-                    bool debugServerUsed = false;
-                    bool isOpenOCD = false;
-                    bool stopAtEntrypoint = false;
-                    launchOptions = MILaunchOptions.CreateLaunchOptions(
-                        program: program,
-                        workingDirectory: string.Empty,
-                        args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
-                        isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
-                        stopAtEntry: out stopAtEntrypoint,
-                        isCoreDump: out m_isCoreDump,
-                        debugServerUsed: out debugServerUsed,
-                        isOpenOCD: out isOpenOCD,
-                        visualizerFileUsed: out visualizerFileUsed);
                     executable = program;
                     m_isAttach = true;
                 }
@@ -1054,8 +1005,12 @@ namespace OpenDebugAD7
                 }
                 m_processName = program ?? string.Empty;
 
+                SetCommonMISettings(responder.Arguments.ConfigurationProperties);
+
+                string launchJson = JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties);
+
                 // attach
-                int hr = m_engineLaunch.LaunchSuspended(null, m_port, executable, null, null, null, launchOptions, 0, 0, 0, 0, this, out m_process);
+                int hr = m_engineLaunch.LaunchSuspended(null, m_port, executable, null, null, null, launchJson, 0, 0, 0, 0, this, out m_process);
 
                 if (hr != HRConstants.S_OK)
                 {
@@ -1096,8 +1051,6 @@ namespace OpenDebugAD7
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
-                properties.Add(DebuggerTelemetry.TelemetryVisualizerFileUsed, visualizerFileUsed);
-                properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
 
                 DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - attachStartTime, properties);
                 success = true;
