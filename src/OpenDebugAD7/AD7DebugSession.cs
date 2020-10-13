@@ -2470,25 +2470,12 @@ namespace OpenDebugAD7
             if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
             {
                 var mod = ConvertToModule(debugModuleInfos[0], module);
-                Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.New, mod));
-            }
-        }
-
-        public void HandleIDebugModuleUnloadEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
-        {
-            IDebugModule2 module;
-            string moduleLoadMessage = null;
-            int isLoad = 0;
-            ((IDebugModuleLoadEvent2)pEvent).GetModule(out module, ref moduleLoadMessage, ref isLoad);
-
-            m_logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
-
-            var debugModuleInfos = new MODULE_INFO[1];
-            if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
-            {
-                var mod = ConvertToModule(debugModuleInfos[0], module);
-                ReleaseDebugModuleId((IntPtr)mod.Id);
-                Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.Removed, mod));
+                if (isLoad == 0){
+                    ReleaseDebugModuleId((IntPtr)mod.Id);
+                    Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.Removed, mod));
+                } else {
+                    Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.New, mod));
+                }
             }
         }
 
