@@ -69,28 +69,22 @@ namespace Microsoft.MIDebugEngine
                     info.m_dwLoadOrder = this.DebuggedModule.GetLoadOrder();
                     info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_LOADORDER;
                 }
-                if (this.Process.LaunchOptions is LocalLaunchOptions localLaunchOptions) // might want to clean up nested if's
+                if (this.Process.LaunchOptions is LocalLaunchOptions localLaunchOptions &&
+                    string.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress) && string.IsNullOrWhiteSpace(localLaunchOptions.DebugServer) &&
+                    (dwFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 &&
+                    this.DebuggedModule.Name != null)
                 {
-                    if (string.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress) && string.IsNullOrWhiteSpace(localLaunchOptions.DebugServer))
+                    try
                     {
-                        if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0)
-                        {   
-                            if (this.DebuggedModule.Name != null)
-                            {
-                                try
-                                {
-                                    long ft = File.GetLastWriteTimeUtc(this.DebuggedModule.Name).ToFileTime();
-                                    uint low = (uint) (ft & 0xFFFFFFFF);
-                                    uint high = (uint) ((ulong) (ft >> 32));
-                                    info.m_TimeStamp = new FILETIME(){
-                                        dwLowDateTime = low,
-                                        dwHighDateTime = high
-                                    };
-                                    info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP;
-                                } catch (Exception e) {}
-                            }
-                        }
-                    }
+                        long ft = File.GetLastWriteTimeUtc(this.DebuggedModule.Name).ToFileTime();
+                        uint low = (uint) (ft & 0xFFFFFFFF);
+                        uint high = (uint) ((ulong) (ft >> 32));
+                        info.m_TimeStamp = new FILETIME(){
+                            dwLowDateTime = low,
+                            dwHighDateTime = high
+                        };
+                        info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP;
+                    } catch (Exception e) {}
                 }
                 if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_URLSYMBOLLOCATION) != 0)
                 {
@@ -188,7 +182,7 @@ namespace Microsoft.MIDebugEngine
         int IDebugModule3.IsUserCode(out int pfUser)
         {
             pfUser = 1;
-            return Constants.S_OK;
+            return Constants.E_NOTIMPL;
         }
 
         // Loads and initializes symbols for the current module when the user explicitly asks for them to load.

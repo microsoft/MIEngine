@@ -1570,19 +1570,18 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
-        // test -- need to delete; replace module ID here, first param
-        private static uint s_nextModuleId = 0; // change this?
+        private static uint s_nextModuleId = 0;
         public static uint GetNextModuleId()
         {
             return ++s_nextModuleId;
         }
 
-        public static ProtocolMessages.Module ConvertToModule(MODULE_INFO debugModuleInfo)
+        public static ProtocolMessages.Module ConvertToModule(MODULE_INFO debugModuleInfo, IDebugModule2 module)
         {
             var mod = new ProtocolMessages.Module(GetNextModuleId(), debugModuleInfo.m_bstrName)
             {
                 Path = debugModuleInfo.m_bstrUrl,
-                VsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : "",
+                VsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : null,
                 Version = debugModuleInfo.m_bstrVersion,
                 VsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture),
                 VsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture),
@@ -1590,11 +1589,10 @@ namespace OpenDebugAD7
                 VsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder,
                 SymbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation,
                 SymbolStatus = debugModuleInfo.m_bstrDebugMessage,
-                VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) != 0,
-                IsOptimized = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0 ? true : ((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_UNOPTIMIZED) != 0 ? false : null) // not set by gdb
-                // test -- need to delete?
-                // IsUserCode = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_SYSTEM) != 0 // not set by gdb
+                VsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) != 0
             };
+            
+            // IsOptimized and IsUserCode are not set by gdb
             if((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0)
             {
                 mod.IsOptimized = true;
@@ -1602,6 +1600,12 @@ namespace OpenDebugAD7
             {
                 mod.IsOptimized = false;
             }
+            if (module is IDebugModule3 module3 && module3.IsUserCode(out int isUserCode) == HRConstants.S_OK)
+            {
+                if (isUserCode == 0) mod.IsUserCode = false;
+                else mod.IsUserCode = true;
+            }
+
             return mod;
         }
 
@@ -1619,9 +1623,7 @@ namespace OpenDebugAD7
                     var debugModuleInfos = new MODULE_INFO[1]; // start here?
                     if (debugModules[0].GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
                     {
-                        var mod = ConvertToModule(debugModuleInfos[0]);
-                        (debugModules[0] as IDebugModule3).IsUserCode(out int isUserCode);
-                        mod.IsUserCode = isUserCode >= 0 ? isUserCode : null;
+                        var mod = ConvertToModule(debugModuleInfos[0], debugModules[0]);
                         response.Modules.Add(mod);
                     }
                 }
@@ -2449,9 +2451,7 @@ namespace OpenDebugAD7
             var debugModuleInfos = new MODULE_INFO[1];
             if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
             {
-                var mod = ConvertToModule(debugModuleInfos[0]);
-                (module as IDebugModule3).IsUserCode(out int isUserCode);
-                mod.IsUserCode = isUserCode >= 0 ? isUserCode : null;
+                var mod = ConvertToModule(debugModuleInfos[0], module);
                 Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.New, mod));
             }
         }
