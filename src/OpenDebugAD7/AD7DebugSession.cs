@@ -67,6 +67,30 @@ namespace OpenDebugAD7
 
         private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
 
+        private static readonly HandleCollection<IDebugModule2> s_debugModules = new HandleCollection<IDebugModule2>();
+        public static IntPtr RegisterDebugModule(IDebugModule2 debugModule)
+        {
+            if (debugModule == null)
+            {
+                throw new ArgumentNullException(nameof(debugModule));
+            }
+
+            lock (s_debugModules)
+            {
+                return new IntPtr(s_debugModules.Create(debugModule));
+            }
+        }
+        public static void ReleaseDebugModuleId(IntPtr debugModuleId)
+        {
+            lock (s_debugModules)
+            {
+                if (!s_debugModules.Remove(debugModuleId.ToInt32()))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(debugModuleId));
+                }
+            }
+        }
+
         #region Constructor
 
         public AD7DebugSession(Stream debugAdapterStdIn, Stream debugAdapterStdOut, List<LoggingCategory> loggingCategories)
@@ -1570,15 +1594,9 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
-        private static uint s_nextModuleId = 0;
-        public static uint GetNextModuleId()
+        public static ProtocolMessages.Module ConvertToModule(in MODULE_INFO debugModuleInfo, IDebugModule2 module)
         {
-            return ++s_nextModuleId;
-        }
-
-        public static ProtocolMessages.Module ConvertToModule(MODULE_INFO debugModuleInfo, IDebugModule2 module)
-        {
-            var mod = new ProtocolMessages.Module(GetNextModuleId(), debugModuleInfo.m_bstrName)
+            var mod = new ProtocolMessages.Module(RegisterDebugModule(module), debugModuleInfo.m_bstrName)
             {
                 Path = debugModuleInfo.m_bstrUrl,
                 VsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : null,
@@ -1620,7 +1638,7 @@ namespace OpenDebugAD7
                 uint numReturned = 0;
                 while (enumDebugModules.Next(1, debugModules, ref numReturned) == HRConstants.S_OK && numReturned == 1)
                 {
-                    var debugModuleInfos = new MODULE_INFO[1]; // start here?
+                    var debugModuleInfos = new MODULE_INFO[1];
                     if (debugModules[0].GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
                     {
                         var mod = ConvertToModule(debugModuleInfos[0], debugModules[0]);
@@ -2453,6 +2471,24 @@ namespace OpenDebugAD7
             {
                 var mod = ConvertToModule(debugModuleInfos[0], module);
                 Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.New, mod));
+            }
+        }
+
+        public void HandleIDebugModuleUnloadEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            IDebugModule2 module;
+            string moduleLoadMessage = null;
+            int isLoad = 0;
+            ((IDebugModuleLoadEvent2)pEvent).GetModule(out module, ref moduleLoadMessage, ref isLoad);
+
+            m_logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
+
+            var debugModuleInfos = new MODULE_INFO[1];
+            if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
+            {
+                var mod = ConvertToModule(debugModuleInfos[0], module);
+                ReleaseDebugModuleId((IntPtr)mod.Id);
+                Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.Removed, mod));
             }
         }
 
