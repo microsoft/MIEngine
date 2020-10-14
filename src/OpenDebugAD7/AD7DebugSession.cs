@@ -53,7 +53,6 @@ namespace OpenDebugAD7
         private int m_firstStoppingEvent;
         private uint m_breakCounter = 0;
         private bool m_isAttach;
-        private bool m_isCoreDump;
         private bool m_isStopped = false;
         private bool m_isStepping = false;
 
@@ -310,14 +309,11 @@ namespace OpenDebugAD7
 
         public void BeforeContinue()
         {
-            if (!m_isCoreDump)
-            {
-                m_isStepping = false;
-                m_isStopped = false;
-                m_variableManager.Reset();
-                m_frameHandles.Reset();
-                m_threadFrameEnumInfos.Clear();
-            }
+            m_isStepping = false;
+            m_isStopped = false;
+            m_variableManager.Reset();
+            m_frameHandles.Reset();
+            m_threadFrameEnumInfos.Clear();
         }
 
         public void Stopped(IDebugThread2 thread)
@@ -789,8 +785,7 @@ namespace OpenDebugAD7
                 // Don't convert the workingDirectory string if we are a pipeTransport connection. We are assuming that the user has the correct directory separaters for their target OS
                 string workingDirectoryString = pipeTransport != null ? workingDirectory : m_pathConverter.ConvertClientPathToDebugger(workingDirectory);
 
-                m_isCoreDump = responder.Arguments.ConfigurationProperties.ContainsKey("coreDumpPath");
-                m_sessionConfig.StopAtEntrypoint = !m_isCoreDump && (responder.Arguments.ConfigurationProperties.ContainsKey("stopAtEntry") && responder.Arguments.ConfigurationProperties.GetValueAsBool("stopAtEntry").GetValueOrDefault(false));
+                m_sessionConfig.StopAtEntrypoint = responder.Arguments.ConfigurationProperties.GetValueAsBool("stopAtEntry").GetValueOrDefault(false);
 
                 m_processId = Constants.InvalidProcessId;
                 m_processName = program;
@@ -1205,10 +1200,7 @@ namespace OpenDebugAD7
             }
             catch (AD7Exception e)
             {
-                if (m_isCoreDump)
-                {
-                    responder.SetError(new ProtocolException(e.Message));
-                }
+                responder.SetError(new ProtocolException(e.Message));
             }
         }
 
