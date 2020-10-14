@@ -1,6 +1,6 @@
 name: $(Date:yyyMMdd).$(Rev:r)
 pr:
-- 'master'
+- 'main'
 jobs:
 - job: Debug
   pool: 'Hosted Windows 2019 with VS2019'
