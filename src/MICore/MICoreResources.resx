@@ -323,4 +323,7 @@ Error: {1}</value>
   <data name="Error_UnknownError" xml:space="preserve">
     <value>&lt;Unknown Error&gt;</value>
   </data>
+  <data name="Error_SourceFileMapInvalidEditorPath" xml:space="preserve">
+    <value>'editorPath' can not be null or empty</value>
+  </data>
 </root>
