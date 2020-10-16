@@ -84,7 +84,7 @@ namespace Microsoft.MIDebugEngine
                             dwHighDateTime = high
                         };
                         info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP;
-                    } catch (Exception e) {}
+                    } catch {}
                 }
                 if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_URLSYMBOLLOCATION) != 0)
                 {

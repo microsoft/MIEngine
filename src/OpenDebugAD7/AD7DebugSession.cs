@@ -67,26 +67,27 @@ namespace OpenDebugAD7
 
         private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
 
-        private static readonly HandleCollection<IDebugModule2> s_debugModules = new HandleCollection<IDebugModule2>();
-        public static IntPtr RegisterDebugModule(IDebugModule2 debugModule)
-        {
-            if (debugModule == null)
-            {
-                throw new ArgumentNullException(nameof(debugModule));
-            }
+        private int m_nextModuleHandle = 1;
+        private readonly Dictionary<IDebugModule2, int> m_moduleMap = new Dictionary<IDebugModule2, int>();
 
-            lock (s_debugModules)
+        private object RegisterDebugModule(IDebugModule2 debugModule)
+        {
+            Debug.Assert(!m_moduleMap.ContainsKey(debugModule));
+            lock (m_moduleMap)
             {
-                return new IntPtr(s_debugModules.Create(debugModule));
+                int moduleHandle = m_nextModuleHandle;
+                m_moduleMap[debugModule] = moduleHandle;
+                m_nextModuleHandle++;
+                return moduleHandle;
             }
         }
-        public static void ReleaseDebugModuleId(IntPtr debugModuleId)
+        private void ReleaseDebugModule(IDebugModule2 debugModule)
         {
-            lock (s_debugModules)
+            lock (m_moduleMap)
             {
-                if (!s_debugModules.Remove(debugModuleId.ToInt32()))
+                if (!m_moduleMap.Remove(debugModule))
                 {
-                    throw new ArgumentOutOfRangeException(nameof(debugModuleId));
+                    throw new ArgumentOutOfRangeException(debugModule.ToString());
                 }
             }
         }
@@ -646,15 +647,16 @@ namespace OpenDebugAD7
             }
 
             List<ColumnDescriptor> additionalModuleColumns = null;
-            if (responder.Arguments.ClientID == "visualstudio")
+            string clientId = responder.Arguments.ClientID;
+            if (clientId == "visualstudio" || clientId == "liveshare-server-host")
             {
                 additionalModuleColumns = new List<ColumnDescriptor>();
                 additionalModuleColumns.Add(new ColumnDescriptor("vsLoadAddress", "Load Address", "string", ColumnDescriptor.TypeValue.String));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsPreferredLoadAddress", "Preferred Load Address", "string", ColumnDescriptor.TypeValue.String));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsModuleSize", "Module Size", "string", ColumnDescriptor.TypeValue.Number));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsLoadOrder", "Order", "string", ColumnDescriptor.TypeValue.Number));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsPreferredLoadAddress", "Preferred Load Address"));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsModuleSize", "Module Size"));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsLoadOrder", "Order"));
                 additionalModuleColumns.Add(new ColumnDescriptor("vsTimestampUTC", "Timestamp", "string", ColumnDescriptor.TypeValue.UnixTimestampUTC));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsIs64Bit", "64-bit", "string", ColumnDescriptor.TypeValue.Boolean));
+                additionalModuleColumns.Add(new ColumnDescriptor("vsIs64Bit", "64-bit"));
             }
 
             InitializeResponse initializeResponse = new InitializeResponse()
@@ -1595,7 +1597,7 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
-        public static ProtocolMessages.Module ConvertToModule(in MODULE_INFO debugModuleInfo, IDebugModule2 module, bool isLoad)
+        private ProtocolMessages.Module ConvertToModule(in MODULE_INFO debugModuleInfo, IDebugModule2 module, bool isLoad)
         {
             var path = debugModuleInfo.m_bstrUrl;
             var vsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : null;
@@ -1617,7 +1619,8 @@ namespace OpenDebugAD7
                     VsModuleSize = vsModuleSize, VsLoadOrder = vsLoadOrder, SymbolFilePath = symbolFilePath, SymbolStatus = symbolStatus, VsIs64Bit = vsIs64Bit
                 };
             } else {
-                mod = new ProtocolMessages.Module(module.GetHashCode(), debugModuleInfo.m_bstrName)
+                m_moduleMap.TryGetValue(module, out int moduleId);
+                mod = new ProtocolMessages.Module(moduleId, debugModuleInfo.m_bstrName)
                 {
                     Path = path, VsTimestampUTC = vsTimestampUTC, Version = version, VsLoadAddress = vsLoadAddress, VsPreferredLoadAddress = vsPreferredLoadAddress,
                     VsModuleSize = vsModuleSize, VsLoadOrder = vsLoadOrder, SymbolFilePath = symbolFilePath, SymbolStatus = symbolStatus, VsIs64Bit = vsIs64Bit
@@ -2491,7 +2494,7 @@ namespace OpenDebugAD7
             {
                 if (isLoad == 0){
                     var mod = ConvertToModule(debugModuleInfos[0], module, false);
-                    ReleaseDebugModuleId((IntPtr)mod.Id);
+                    ReleaseDebugModule(module);
                     Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.Removed, mod));
                 } else {
                     var mod = ConvertToModule(debugModuleInfos[0], module, true);
