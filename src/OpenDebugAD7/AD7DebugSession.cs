@@ -81,13 +81,17 @@ namespace OpenDebugAD7
                 return moduleHandle;
             }
         }
-        private void ReleaseDebugModule(IDebugModule2 debugModule)
+        private int? ReleaseDebugModule(IDebugModule2 debugModule)
         {
             lock (m_moduleMap)
             {
-                if (!m_moduleMap.Remove(debugModule))
+                if (m_moduleMap.TryGetValue(debugModule, out int moduleId))
                 {
-                    throw new ArgumentOutOfRangeException(debugModule.ToString());
+                    m_moduleMap.Remove(debugModule);
+                    return moduleId;
+                } else {
+                    Debug.Fail("Trying to unload a module that has not been registered.");
+                    return null;
                 }
             }
         }
@@ -651,12 +655,42 @@ namespace OpenDebugAD7
             if (clientId == "visualstudio" || clientId == "liveshare-server-host")
             {
                 additionalModuleColumns = new List<ColumnDescriptor>();
-                additionalModuleColumns.Add(new ColumnDescriptor("vsLoadAddress", "Load Address", "string", ColumnDescriptor.TypeValue.String));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsPreferredLoadAddress", "Preferred Load Address"));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsModuleSize", "Module Size"));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsLoadOrder", "Order"));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsTimestampUTC", "Timestamp", "string", ColumnDescriptor.TypeValue.UnixTimestampUTC));
-                additionalModuleColumns.Add(new ColumnDescriptor("vsIs64Bit", "64-bit"));
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsLoadAddress",
+                    Label = "Load Address",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.String
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsPreferredLoadAddress",
+                    Label = "Preferred Load Address",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.String
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsModuleSize",
+                    Label = "Module Size",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.Number
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsLoadOrder",
+                    Label = "Order",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.Number
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsTimestampUTC",
+                    Label = "Timestamp",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.UnixTimestampUTC
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsIs64Bit",
+                    Label = "64-bit",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.Boolean
+                });
             }
 
             InitializeResponse initializeResponse = new InitializeResponse()
@@ -1597,57 +1631,53 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
-        private ProtocolMessages.Module ConvertToModule(in MODULE_INFO debugModuleInfo, IDebugModule2 module, bool isLoad)
+        private ProtocolMessages.Module ConvertToModule(in IDebugModule2 module, int moduleId)
         {
-            var path = debugModuleInfo.m_bstrUrl;
-            var vsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : null;
-            var version = debugModuleInfo.m_bstrVersion;
-            var vsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture);
-            var vsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture);
-            var vsModuleSize = (int)debugModuleInfo.m_dwSize;
-            var vsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder;
-            var symbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation;
-            var symbolStatus = debugModuleInfo.m_bstrDebugMessage;
-            var vsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) != 0;
-
-            ProtocolMessages.Module mod = null;
-            if (isLoad)
+            var debugModuleInfos = new MODULE_INFO[1];
+            if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
             {
-                mod = new ProtocolMessages.Module(RegisterDebugModule(module), debugModuleInfo.m_bstrName)
+                var debugModuleInfo = debugModuleInfos[0];
+
+                var path = debugModuleInfo.m_bstrUrl;
+                var vsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : null;
+                var version = debugModuleInfo.m_bstrVersion;
+                var vsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture);
+                var vsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture);
+                var vsModuleSize = (int)debugModuleInfo.m_dwSize;
+                var vsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder;
+                var symbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation;
+                var symbolStatus = debugModuleInfo.m_bstrDebugMessage;
+                var vsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) != 0;
+
+                ProtocolMessages.Module mod = new ProtocolMessages.Module(moduleId, debugModuleInfo.m_bstrName)
                 {
                     Path = path, VsTimestampUTC = vsTimestampUTC, Version = version, VsLoadAddress = vsLoadAddress, VsPreferredLoadAddress = vsPreferredLoadAddress,
                     VsModuleSize = vsModuleSize, VsLoadOrder = vsLoadOrder, SymbolFilePath = symbolFilePath, SymbolStatus = symbolStatus, VsIs64Bit = vsIs64Bit
                 };
-            } else {
-                m_moduleMap.TryGetValue(module, out int moduleId);
-                mod = new ProtocolMessages.Module(moduleId, debugModuleInfo.m_bstrName)
-                {
-                    Path = path, VsTimestampUTC = vsTimestampUTC, Version = version, VsLoadAddress = vsLoadAddress, VsPreferredLoadAddress = vsPreferredLoadAddress,
-                    VsModuleSize = vsModuleSize, VsLoadOrder = vsLoadOrder, SymbolFilePath = symbolFilePath, SymbolStatus = symbolStatus, VsIs64Bit = vsIs64Bit
-                };
-            }
             
-            // IsOptimized and IsUserCode are not set by gdb
-            if((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0)
-            {
-                mod.IsOptimized = true;
-            } else if ((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_UNOPTIMIZED) != 0)
-            {
-                mod.IsOptimized = false;
-            }
-            if (module is IDebugModule3 module3 && module3.IsUserCode(out int isUserCode) == HRConstants.S_OK)
-            {
-                if (isUserCode == 0)
+                // IsOptimized and IsUserCode are not set by gdb
+                if((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0)
                 {
-                    mod.IsUserCode = false;
-                }
-                else
+                    mod.IsOptimized = true;
+                } else if ((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_UNOPTIMIZED) != 0)
                 {
-                    mod.IsUserCode = true;
+                    mod.IsOptimized = false;
                 }
-            }
+                if (module is IDebugModule3 module3 && module3.IsUserCode(out int isUserCode) == HRConstants.S_OK)
+                {
+                    if (isUserCode == 0)
+                    {
+                        mod.IsUserCode = false;
+                    }
+                    else
+                    {
+                        mod.IsUserCode = true;
+                    }
+                }
 
-            return mod;
+                return mod;
+            }
+            return null;
         }
 
         protected override void HandleModulesRequestAsync(IRequestResponder<ModulesArguments, ModulesResponse> responder)
@@ -1661,10 +1691,11 @@ namespace OpenDebugAD7
                 uint numReturned = 0;
                 while (enumDebugModules.Next(1, debugModules, ref numReturned) == HRConstants.S_OK && numReturned == 1)
                 {
-                    var debugModuleInfos = new MODULE_INFO[1];
-                    if (debugModules[0].GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
+                    IDebugModule2 module = debugModules[0];
+                    var moduleId = RegisterDebugModule(module);
+                    if (moduleId != null)
                     {
-                        var mod = ConvertToModule(debugModuleInfos[0], debugModules[0], true);
+                        var mod = ConvertToModule(module, (int)moduleId);
                         response.Modules.Add(mod);
                     }
                 }
@@ -2489,16 +2520,24 @@ namespace OpenDebugAD7
             
             m_logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
 
-            var debugModuleInfos = new MODULE_INFO[1];
-            if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
+            int? moduleId = null;
+            ModuleEvent.ReasonValue reason = ModuleEvent.ReasonValue.Unknown;
+
+            if (isLoad != 0)
             {
-                if (isLoad == 0){
-                    var mod = ConvertToModule(debugModuleInfos[0], module, false);
-                    ReleaseDebugModule(module);
-                    Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.Removed, mod));
-                } else {
-                    var mod = ConvertToModule(debugModuleInfos[0], module, true);
-                    Protocol.SendEvent(new ModuleEvent(ModuleEvent.ReasonValue.New, mod));
+                moduleId = (int?)RegisterDebugModule(module);
+                reason = ModuleEvent.ReasonValue.New;
+            } else {
+                moduleId = ReleaseDebugModule(module);
+                reason = ModuleEvent.ReasonValue.Removed;
+            }
+
+            if (moduleId != null)
+            {
+                var mod = ConvertToModule(module, (int)moduleId);
+                if (mod != null)
+                {
+                    Protocol.SendEvent(new ModuleEvent(reason, mod));
                 }
             }
         }
