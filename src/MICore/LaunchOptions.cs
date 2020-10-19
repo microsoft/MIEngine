@@ -1805,10 +1805,83 @@ namespace MICore
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(source.Environment));
         }
 
+        private static List<string> TryAddWindowsDebuggeeConsoleRedirection(List<string> arguments)
+        {
+            if (PlatformUtilities.IsWindows()) // Only do this on Windows
+            {
+                bool stdInRedirected = false;
+                bool stdOutRedirected = false;
+                bool stdErrRedirected = false;
+
+                if (arguments != null)
+                {
+                    foreach (string rawArgument in arguments)
+                    {
+                        string argument = rawArgument.TrimStart();
+                        if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
+                        {
+                            stdErrRedirected = true;
+                        }
+                        if (argument.TrimStart().StartsWith("1>", StringComparison.Ordinal) || argument.TrimStart().StartsWith(">", StringComparison.Ordinal))
+                        {
+                            stdOutRedirected = true;
+                        }
+                        if (argument.TrimStart().StartsWith("0>", StringComparison.Ordinal) || argument.TrimStart().StartsWith("<", StringComparison.Ordinal))
+                        {
+                            stdInRedirected = true;
+                        }
+                    }
+                }
+
+                // If one (or more) are not redirected, then add redirection
+                if (!stdInRedirected || !stdOutRedirected || !stdErrRedirected)
+                {
+                    int argLength = arguments.Count;
+                    List<string> argList = new List<string>(argLength + 3);
+                    if (arguments != null)
+                    {
+                        argList.AddRange(arguments);
+                    }
+
+                    if (!stdErrRedirected)
+                    {
+                        argList.Add("2>CON");
+                    }
+
+                    if (!stdOutRedirected)
+                    {
+                        argList.Add("1>CON");
+                    }
+
+                    if (!stdInRedirected)
+                    {
+                        argList.Add("<CON");
+                    }
+
+                    return argList;
+                }
+            }
+
+            return arguments;
+        }
+
         public void InitializeLaunchOptions(Json.LaunchOptions.LaunchOptions launch)
         {
             this.DebuggerMIMode = ConvertMIModeString(RequireAttribute(launch.MIMode, nameof(launch.MIMode)));
-            this.ExeArguments = ParseArguments(launch.Args);
+
+            List<string> args = launch.Args;
+
+            if (Host.GetHostUIIdentifier() == HostUIIdentifier.VSCode &&
+                HostRunInTerminal.IsRunInTerminalAvailable() && 
+                !launch.ExternalConsole.GetValueOrDefault(false) &&
+                string.IsNullOrEmpty(launch.CoreDumpPath) &&
+                !launch.AvoidWindowsConsoleRedirection.GetValueOrDefault(false) &&
+                !(this is PipeLaunchOptions)) // Make sure we are not doing a PipeLaunch
+            {
+                args = TryAddWindowsDebuggeeConsoleRedirection(args);
+            }
+
+            this.ExeArguments = ParseArguments(args);
             this.WorkingDirectory = launch.Cwd ?? String.Empty;
 
             this.CoreDumpPath = launch.CoreDumpPath;
@@ -2046,7 +2119,8 @@ namespace MICore
             return String.Empty;
         }
 
-        private static char[] s_ARGUMENT_SEPARATORS = new char[] { ' ', '\t' };
+        // gdb does not like parenthesis without being quoted
+        private static char[] s_ARGUMENT_SEPARATORS = { ' ', '\t', '(', ')' };
         protected static string QuoteArgument(string arg)
         {
             // If its not quoted and it has an argument separater, then quote it. 

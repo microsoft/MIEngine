@@ -68,8 +68,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    
-    
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -139,7 +137,6 @@
     <Compile Include="Telemetry\DebuggerTelemetry.cs" />
     <Compile Include="AD7Exception.cs" />
     <Compile Include="ErrorBuilder.cs" />
-    <Compile Include="PathMapper.cs" />
     <Compile Include="MILaunchOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="OpenDebug\CustomProtocolObjects.cs" />
