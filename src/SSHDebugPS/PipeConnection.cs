@@ -4,14 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.Threading;
-using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.SSHDebugPS.Utilities;
-using System.Windows.Documents;
 using System.Text;
+using System.Threading;
+using Microsoft.SSHDebugPS.Utilities;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -191,6 +186,8 @@ namespace Microsoft.SSHDebugPS
             return true;
         }
 
+        protected virtual string ProcFSErrorMessage => StringResources.Error_ProcFSError;
+
         /// <summary>
         /// Query /proc for a list of processes
         /// </summary>
@@ -203,7 +200,7 @@ namespace Microsoft.SSHDebugPS
             string commandOutput;
             if (!ExecuteCommand(ProcFSOutputParser.CommandText, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
             {
-                errorMessage = StringResources.Error_ProcFSError.FormatCurrentCultureWithArgs(errorMessage);
+                errorMessage = ProcFSErrorMessage.FormatCurrentCultureWithArgs(errorMessage);
                 return false;
             }
 

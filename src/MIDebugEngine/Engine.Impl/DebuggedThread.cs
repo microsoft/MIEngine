@@ -43,7 +43,7 @@ namespace Microsoft.MIDebugEngine
         private List<DebuggedThread> _deadThreads;
         private List<DebuggedThread> _newThreads;
         private Dictionary<string, List<int>> _threadGroups;
-        private static uint s_targetId;
+        private static uint s_targetId = uint.MaxValue;
         private const string c_defaultGroupId = "i1";  // gdb's default group id, also used for any process without group ids
 
         private List<DebuggedThread> DeadThreads
@@ -68,11 +68,6 @@ namespace Microsoft.MIDebugEngine
                 }
                 return _newThreads;
             }
-        }
-
-        static ThreadCache()
-        {
-            s_targetId = uint.MaxValue;
         }
 
         internal ThreadCache(ISampleEngineCallback callback, DebuggedProcess debugger)
@@ -208,9 +203,8 @@ namespace Microsoft.MIDebugEngine
             }
 
             // Run Thread-info now to get the target-id
-            // ClrDbg doesn't support getting threadInfo while running.
             ResultValue resVal = null;
-            if (id >= 0 && _debugger.LaunchOptions.DebuggerMIMode != MIMode.Clrdbg)
+            if (id >= 0)
             {
                 uint? tid = null;
                 tid = (uint)id;

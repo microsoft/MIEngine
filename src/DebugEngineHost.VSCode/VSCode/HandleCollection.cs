@@ -61,7 +61,7 @@ namespace Microsoft.DebugEngineHost.VSCode
                 T value;
                 if (!TryGet(handle, out value))
                 {
-                    throw new ArgumentOutOfRangeException("handle");
+                    throw new ArgumentOutOfRangeException(nameof(handle));
                 }
 
                 return value;

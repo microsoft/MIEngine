@@ -15,6 +15,8 @@ namespace Microsoft.MIDebugEngine
     #region Base Class
     internal class AD7Enum<T, I> where I : class
     {
+        private static readonly object _lock = new object();
+
         private readonly T[] _data;
         private uint _position;
 
@@ -43,7 +45,7 @@ namespace Microsoft.MIDebugEngine
 
         public int Reset()
         {
-            lock (this)
+            lock (_lock)
             {
                 _position = 0;
 
@@ -60,7 +62,7 @@ namespace Microsoft.MIDebugEngine
 
         private int Move(uint celt, T[] rgelt, out uint celtFetched)
         {
-            lock (this)
+            lock (_lock)
             {
                 int hr = Constants.S_OK;
                 celtFetched = (uint)_data.Length - _position;

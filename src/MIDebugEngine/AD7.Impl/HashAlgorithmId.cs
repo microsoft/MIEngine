@@ -28,10 +28,10 @@ namespace Microsoft.MIDebugEngine
             MIHashAlgorithmName = hashAlgorithmName;
         }
 
-        public static HashAlgorithmId MD5 = new HashAlgorithmId(AD7Guids.guidSourceHashMD5, 16, MIHashAlgorithmName.MD5);
-        public static HashAlgorithmId SHA1 = new HashAlgorithmId(AD7Guids.guidSourceHashSHA1, 20, MIHashAlgorithmName.SHA1);
-        public static HashAlgorithmId SHA1Normalized = new HashAlgorithmId(AD7Guids.guidSourceHashSHA1Normalized, 20, MIHashAlgorithmName.SHA1);
-        public static HashAlgorithmId SHA256 = new HashAlgorithmId(AD7Guids.guidSourceHashSHA256, 32, MIHashAlgorithmName.SHA256);
-        public static HashAlgorithmId SHA256Normalized = new HashAlgorithmId(AD7Guids.guidSourceHashSHA256Normalized, 32, MIHashAlgorithmName.SHA256);
+        public static readonly HashAlgorithmId MD5 = new HashAlgorithmId(AD7Guids.guidSourceHashMD5, 16, MIHashAlgorithmName.MD5);
+        public static readonly HashAlgorithmId SHA1 = new HashAlgorithmId(AD7Guids.guidSourceHashSHA1, 20, MIHashAlgorithmName.SHA1);
+        public static readonly HashAlgorithmId SHA1Normalized = new HashAlgorithmId(AD7Guids.guidSourceHashSHA1Normalized, 20, MIHashAlgorithmName.SHA1);
+        public static readonly HashAlgorithmId SHA256 = new HashAlgorithmId(AD7Guids.guidSourceHashSHA256, 32, MIHashAlgorithmName.SHA256);
+        public static readonly HashAlgorithmId SHA256Normalized = new HashAlgorithmId(AD7Guids.guidSourceHashSHA256Normalized, 32, MIHashAlgorithmName.SHA256);
     }
 }

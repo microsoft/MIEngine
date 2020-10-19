@@ -31,7 +31,7 @@ namespace Microsoft.MIDebugEngine
 
             LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_debuggedProcess.LaunchOptions;
 
-            string cygwinPath = origCygwinPath.Replace('\\', '/');
+            string cygwinPath = PlatformUtilities.WindowsPathToUnixPath(origCygwinPath);
 
             string windowsPath = cygwinPath;
 

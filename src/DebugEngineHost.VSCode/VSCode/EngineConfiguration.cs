@@ -102,7 +102,7 @@ namespace Microsoft.DebugEngineHost.VSCode
         {
             if (adapterDirectory == null)
             {
-                throw new ArgumentNullException("adapterDirectory");
+                throw new ArgumentNullException(nameof(adapterDirectory));
             }
 
             if (Interlocked.CompareExchange(ref s_adapterDirectory, adapterDirectory, null) != null)

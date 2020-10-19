@@ -323,10 +323,15 @@
                                Text="{Binding Name}"
                                ToolTip="{Binding Name}"
                                Style="{StaticResource HeaderLabelStyle}" />
-                    <TextBlock DockPanel.Dock="Right"
+                    <TextBlock DockPanel.Dock="Left"
                                x:Name="Id"
                                Text="{Binding ShortId, StringFormat=' ({0}...)'}"
                                ToolTip="{Binding Id}"
+                               Style="{StaticResource HeaderTextBlockStyle}" />
+                    <TextBlock DockPanel.Dock="Right"
+                               x:Name="Platform"
+                               Text="{Binding Platform, StringFormat=' ({0})'}"
+                               ToolTip="{Binding Platform}"
                                Style="{StaticResource HeaderTextBlockStyle}" />
                 </DockPanel>
 
@@ -335,6 +340,7 @@
                       x:Name="GridBody"
                       Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -352,61 +358,75 @@
                                 Value="{DynamicResource {x:Static platformui:EnvironmentColors.SystemCaptionTextBrushKey}}" />
                         </Style>
                     </Grid.Resources>
-                    <!-- Image -->
+                    <!-- Platform -->
                     <!-- No Top margin on first row -->
                     <TextBlock Grid.Row="0"
                            Grid.Column="0"
-                           x:Uid="uidImage"
-                           Text="{x:Static local:UIResources.ImageLabelText}"
+                           x:Uid="uidPlatform"
+                           Text="{x:Static local:UIResources.PlatformLabelText}"
                            Margin="6,0,0,0"
                            Style="{StaticResource BodyLabelStyle}" />
                     <TextBlock Grid.Row="0"
                                Grid.Column="1"
                                Tag="1"
-                               x:Name="image"
-                               Text="{Binding Image}"
-                               ToolTip="{Binding Image}"
+                               x:Name="platform"
+                               Text="{Binding Platform}"
+                               ToolTip="{Binding Platform}"
                                Margin="6,0,12,0"
                                Style="{StaticResource BodyTextBlockStyle}" />
 
-                    <!-- Command -->
+                    <!-- Image -->
                     <TextBlock Grid.Row="1"
                            Grid.Column="0"
-                           x:Uid="uidCommand"
-                           Text="{x:Static local:UIResources.CommandLabelText}"
+                           x:Uid="uidImage"
+                           Text="{x:Static local:UIResources.ImageLabelText}"
                            Style="{StaticResource BodyLabelStyle}" />
                     <TextBlock Grid.Row="1"
                                Grid.Column="1"
                                Tag="2"
+                               x:Name="image"
+                               Text="{Binding Image}"
+                               ToolTip="{Binding Image}"
+                               Style="{StaticResource BodyTextBlockStyle}" />
+
+                    <!-- Command -->
+                    <TextBlock Grid.Row="2"
+                           Grid.Column="0"
+                           x:Uid="uidCommand"
+                           Text="{x:Static local:UIResources.CommandLabelText}"
+                           Style="{StaticResource BodyLabelStyle}" />
+                    <TextBlock Grid.Row="2"
+                               Grid.Column="1"
+                               Tag="3"
                                x:Name="command"
                                Text="{Binding Command}"
                                Style="{StaticResource BodyTextBlockStyle}"
                                ToolTip="{Binding Command}" />
 
                     <!-- Status -->
-                    <TextBlock Grid.Row="2"
+                    <TextBlock Grid.Row="3"
                            Grid.Column="0"
                            x:Uid="uidStatus"
                            Text="{x:Static local:UIResources.StatusLabelText}"
                            Style="{StaticResource BodyLabelStyle}" />
-                    <TextBlock Grid.Row="2"
+                    <TextBlock Grid.Row="3"
                                Grid.Column="1"
-                               Tag="3"
+                               Tag="4"
                                x:Name="status"
                                Text="{Binding Status}"
                                Style="{StaticResource BodyTextBlockStyle}"
                                ToolTip="{Binding Status}" />
 
                     <!-- Created -->
-                    <TextBlock Grid.Row="3"
+                    <TextBlock Grid.Row="4"
                            Grid.Column="0"
                            x:Uid="uidCreated"
                            Text="{x:Static local:UIResources.CreatedLabelText}"
                            Style="{StaticResource BodyLabelStyle}" />
-                    <TextBlock Grid.Row="3"
+                    <TextBlock Grid.Row="4"
                                Grid.Column="1"
                                Grid.ColumnSpan="2"
-                               Tag="4"
+                               Tag="5"
                                x:Name="created"
                                Text="{Binding Created}"
                                Style="{StaticResource BodyTextBlockStyle}"
@@ -414,16 +434,16 @@
 
                     <!-- Ports -->
                     <!-- Modified Margin on bottom -->
-                    <TextBlock Grid.Row="4"
+                    <TextBlock Grid.Row="5"
                            Grid.Column="0"
                            x:Uid="uidPorts"
                            Text="{x:Static local:UIResources.PortsLabelText}"
                            Margin="6,4,0,4"
                            Style="{StaticResource BodyLabelStyle}" />
-                    <TextBlock Grid.Row="4"
+                    <TextBlock Grid.Row="5"
                                Grid.Column="1"
                                Grid.ColumnSpan="2"
-                               Tag="5"
+                               Tag="6"
                                x:Name="ports"
                                Text="{Binding FormattedListOfPorts}"
                                Style="{StaticResource BodyTextBlockStyle}"

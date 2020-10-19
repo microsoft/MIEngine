@@ -2,10 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.DebugEngineHost;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
@@ -241,6 +243,15 @@ namespace Microsoft.SSHDebugPS.Docker
             }
             else
                 return new RemoteCommandRunner(settings, OuterConnection);
+        }
+
+        protected override string ProcFSErrorMessage
+        {
+            get
+            {
+                HostTelemetry.SendEvent(TelemetryHelper.Event_ProcFSError);
+                return String.Concat(base.ProcFSErrorMessage, Environment.NewLine, StringResources.Error_EnsureDockerContainerIsLinux);
+            }
         }
     }
 }

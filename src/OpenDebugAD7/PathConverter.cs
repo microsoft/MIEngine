@@ -9,7 +9,6 @@ namespace OpenDebugAD7
 {
     internal class PathConverter
     {
-        internal PathMapper m_pathMapper { get; set; }
         internal bool DebuggerLinesStartAt1 { get; set; }
         internal bool ClientLinesStartAt1 { get; set; }
         internal bool DebuggerPathsAreURI { get; set; }
@@ -53,8 +52,6 @@ namespace OpenDebugAD7
 
         internal string ConvertDebuggerPathToClient(string path)
         {
-            path = m_pathMapper.ResolveSymbolPath(path);
-
             if (Path.DirectorySeparatorChar == '/')
             {
                 path = path.Replace('\\', '/');

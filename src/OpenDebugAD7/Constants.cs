@@ -32,5 +32,6 @@ namespace OpenDebugAD7
         public const uint EvaluationTimeout = 5000;
         public const int DisconnectTimeout = 2000;
         public const int DefaultTracepointCallstackDepth = 10;
+        public const int InvalidProcessId = -1;
     }
 }

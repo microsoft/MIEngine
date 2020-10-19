@@ -8,13 +8,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.DAP;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Utilities;
@@ -34,6 +34,7 @@ namespace OpenDebugAD7
 
         private IDebugProcess2 m_process;
         private string m_processName;
+        private int m_processId = Constants.InvalidProcessId;
         private IDebugEngineLaunch2 m_engineLaunch;
         private IDebugEngine2 m_engine;
         private EngineConfiguration m_engineConfiguration;
@@ -52,7 +53,6 @@ namespace OpenDebugAD7
         private int m_firstStoppingEvent;
         private uint m_breakCounter = 0;
         private bool m_isAttach;
-        private bool m_isCoreDump;
         private bool m_isStopped = false;
         private bool m_isStepping = false;
 
@@ -65,6 +65,35 @@ namespace OpenDebugAD7
         private VariableManager m_variableManager;
 
         private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
+
+        private int m_nextModuleHandle = 1;
+        private readonly Dictionary<IDebugModule2, int> m_moduleMap = new Dictionary<IDebugModule2, int>();
+
+        private object RegisterDebugModule(IDebugModule2 debugModule)
+        {
+            Debug.Assert(!m_moduleMap.ContainsKey(debugModule));
+            lock (m_moduleMap)
+            {
+                int moduleHandle = m_nextModuleHandle;
+                m_moduleMap[debugModule] = moduleHandle;
+                m_nextModuleHandle++;
+                return moduleHandle;
+            }
+        }
+        private int? ReleaseDebugModule(IDebugModule2 debugModule)
+        {
+            lock (m_moduleMap)
+            {
+                if (m_moduleMap.TryGetValue(debugModule, out int moduleId))
+                {
+                    m_moduleMap.Remove(debugModule);
+                    return moduleId;
+                } else {
+                    Debug.Fail("Trying to unload a module that has not been registered.");
+                    return null;
+                }
+            }
+        }
 
         #region Constructor
 
@@ -144,7 +173,7 @@ namespace OpenDebugAD7
             return true;
         }
 
-        private void SetCommonDebugSettings(Dictionary<string, JToken> args, out int sourceFileMappings)
+        private void SetCommonDebugSettings(Dictionary<string, JToken> args)
         {
             // Save the Just My Code setting. We will set it once the engine is created.
             m_sessionConfig.JustMyCode = args.GetValueAsBool("justMyCode").GetValueOrDefault(m_sessionConfig.JustMyCode);
@@ -180,26 +209,26 @@ namespace OpenDebugAD7
                     m_logger.SetLoggingConfiguration(LoggingCategory.AdapterResponse, traceResponse.Value);
                 }
             }
+        }
 
-            sourceFileMappings = 0;
-            Dictionary<string, string> sourceFileMap = null;
+        private void SetCommonMISettings(Dictionary<string, JToken> args)
+        {
+            string miMode = args.GetValueAsString("MIMode");
+
+            // If MIMode is not provided, set default to GDB. 
+            if (string.IsNullOrEmpty(miMode))
             {
-                dynamic sourceFileMapProperty = args.GetValueAsObject("sourceFileMap");
-                if (sourceFileMapProperty != null)
+                args["MIMode"] = "gdb";
+            }
+            else
+            {
+                // If lldb and there is no miDebuggerPath, set it.
+                bool hasMiDebuggerPath = args.ContainsKey("miDebuggerPath");
+                if (miMode == "lldb" && !hasMiDebuggerPath)
                 {
-                    try
-                    {
-                        sourceFileMap = sourceFileMapProperty.ToObject<Dictionary<string, string>>();
-                        sourceFileMappings = sourceFileMap.Count();
-                    }
-                    catch (Exception e)
-                    {
-                        SendMessageEvent(MessagePrefix.Error, "Configuration for 'sourceFileMap' has a format error and will be ignored.\nException: " + e.Message);
-                        sourceFileMap = null;
-                    }
+                    args["miDebuggerPath"] = MILaunchOptions.GetLLDBMIPath();
                 }
             }
-            m_pathConverter.m_pathMapper = new PathMapper(sourceFileMap);
         }
 
         private ProtocolException VerifyLocalProcessId(string processId, string telemetryEventName, out int pid)
@@ -263,20 +292,28 @@ namespace OpenDebugAD7
             return tracepoints;
         }
 
+        private static long FileTimeToPosix(FILETIME ft)
+        {
+            long date = ((long)ft.dwHighDateTime << 32) + ft.dwLowDateTime;
+            // removes the diff between 1970 and 1601
+            // 100-nanoseconds = milliseconds * 10000
+            date -= 11644473600000L * 10000;
+
+            // converts back from 100-nanoseconds to seconds
+            return date / 10000000;
+        }
+
         #endregion
 
         #region AD7EventHandlers helper methods
 
         public void BeforeContinue()
         {
-            if (!m_isCoreDump)
-            {
-                m_isStepping = false;
-                m_isStopped = false;
-                m_variableManager.Reset();
-                m_frameHandles.Reset();
-                m_threadFrameEnumInfos.Clear();
-            }
+            m_isStepping = false;
+            m_isStopped = false;
+            m_variableManager.Reset();
+            m_frameHandles.Reset();
+            m_threadFrameEnumInfos.Clear();
         }
 
         public void Stopped(IDebugThread2 thread)
@@ -609,6 +646,49 @@ namespace OpenDebugAD7
                 });
             }
 
+            List<ColumnDescriptor> additionalModuleColumns = null;
+            string clientId = responder.Arguments.ClientID;
+            if (clientId == "visualstudio" || clientId == "liveshare-server-host")
+            {
+                additionalModuleColumns = new List<ColumnDescriptor>();
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsLoadAddress",
+                    Label = "Load Address",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.String
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsPreferredLoadAddress",
+                    Label = "Preferred Load Address",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.String
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsModuleSize",
+                    Label = "Module Size",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.Number
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsLoadOrder",
+                    Label = "Order",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.Number
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsTimestampUTC",
+                    Label = "Timestamp",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.UnixTimestampUTC
+                });
+                additionalModuleColumns.Add(new ColumnDescriptor(){
+                    AttributeName = "vsIs64Bit",
+                    Label = "64-bit",
+                    Format = "string",
+                    Type = ColumnDescriptor.TypeValue.Boolean
+                });
+            }
+
             InitializeResponse initializeResponse = new InitializeResponse()
             {
                 SupportsConfigurationDoneRequest = true,
@@ -618,7 +698,10 @@ namespace OpenDebugAD7
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
                 ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
-                SupportsLogPoints = true
+                SupportsLogPoints = true,
+                SupportsReadMemoryRequest = true,
+                SupportsModulesRequest = true,
+                AdditionalModuleColumns = additionalModuleColumns
             };
 
             responder.SetResponse(initializeResponse);
@@ -687,8 +770,7 @@ namespace OpenDebugAD7
                 }
             }
 
-            int sourceFileMappings = 0;
-            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties, sourceFileMappings: out sourceFileMappings);
+            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties);
 
             bool success = false;
             try
@@ -703,23 +785,9 @@ namespace OpenDebugAD7
                 // Don't convert the workingDirectory string if we are a pipeTransport connection. We are assuming that the user has the correct directory separaters for their target OS
                 string workingDirectoryString = pipeTransport != null ? workingDirectory : m_pathConverter.ConvertClientPathToDebugger(workingDirectory);
 
-                bool debugServerUsed = false;
-                bool isOpenOCD = false;
-                bool stopAtEntrypoint;
-                bool visualizerFileUsed;
-                string launchOptions = MILaunchOptions.CreateLaunchOptions(
-                    program: program,
-                    workingDirectory: workingDirectoryString,
-                    args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
-                    isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
-                    stopAtEntry: out stopAtEntrypoint,
-                    isCoreDump: out m_isCoreDump,
-                    debugServerUsed: out debugServerUsed,
-                    isOpenOCD: out isOpenOCD,
-                    visualizerFileUsed: out visualizerFileUsed);
+                m_sessionConfig.StopAtEntrypoint = responder.Arguments.ConfigurationProperties.GetValueAsBool("stopAtEntry").GetValueOrDefault(false);
 
-                m_sessionConfig.StopAtEntrypoint = stopAtEntrypoint;
-
+                m_processId = Constants.InvalidProcessId;
                 m_processName = program;
 
                 enum_LAUNCH_FLAGS flags = enum_LAUNCH_FLAGS.LAUNCH_DEBUG;
@@ -728,6 +796,10 @@ namespace OpenDebugAD7
                     flags = enum_LAUNCH_FLAGS.LAUNCH_NODEBUG;
                 }
 
+                SetCommonMISettings(responder.Arguments.ConfigurationProperties);
+
+                string launchJson = JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties);
+
                 // Then attach
                 hr = m_engineLaunch.LaunchSuspended(null,
                     m_port,
@@ -735,7 +807,7 @@ namespace OpenDebugAD7
                     null,
                     null,
                     null,
-                    launchOptions,
+                    launchJson,
                     flags,
                     0,
                     0,
@@ -781,18 +853,11 @@ namespace OpenDebugAD7
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
 
-                properties.Add(DebuggerTelemetry.TelemetryIsCoreDump, m_isCoreDump);
-                if (debugServerUsed)
-                {
-                    properties.Add(DebuggerTelemetry.TelemetryUsesDebugServer, isOpenOCD ? "openocd" : "other");
-                }
                 if (flags.HasFlag(enum_LAUNCH_FLAGS.LAUNCH_NODEBUG))
                 {
                     properties.Add(DebuggerTelemetry.TelemetryIsNoDebug, true);
                 }
 
-                properties.Add(DebuggerTelemetry.TelemetryVisualizerFileUsed, visualizerFileUsed);
-                properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
 
                 DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - launchStartTime, properties);
@@ -842,8 +907,6 @@ namespace OpenDebugAD7
             JObject pipeTransport = responder.Arguments.ConfigurationProperties.GetValueAsObject("pipeTransport");
             bool isPipeTransport = (pipeTransport != null);
             bool isLocal = string.IsNullOrEmpty(miDebuggerServerAddress) && !isPipeTransport;
-            bool visualizerFileUsed = false;
-            int sourceFileMappings = 0;
             string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("MIMode");
 
             if (isLocal)
@@ -880,11 +943,10 @@ namespace OpenDebugAD7
                 return;
             }
 
-            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties, sourceFileMappings: out sourceFileMappings);
+            SetCommonDebugSettings(responder.Arguments.ConfigurationProperties);
 
             string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program");
             string executable = null;
-            string launchOptions = null;
             bool success = false;
             try
             {
@@ -902,21 +964,6 @@ namespace OpenDebugAD7
                         responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1011, "debuggerPath is required for attachTransport."));
                         return;
                     }
-                    bool debugServerUsed = false;
-                    bool isOpenOCD = false;
-                    bool stopAtEntrypoint = false;
-
-                    launchOptions = MILaunchOptions.CreateLaunchOptions(
-                        program: program,
-                        workingDirectory: String.Empty, // No cwd for attach
-                        args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
-                        isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
-                        stopAtEntry: out stopAtEntrypoint,
-                        isCoreDump: out m_isCoreDump,
-                        debugServerUsed: out debugServerUsed,
-                        isOpenOCD: out isOpenOCD,
-                        visualizerFileUsed: out visualizerFileUsed);
-
 
                     if (string.IsNullOrEmpty(program))
                     {
@@ -943,27 +990,22 @@ namespace OpenDebugAD7
                         return;
                     }
 
-                    bool debugServerUsed = false;
-                    bool isOpenOCD = false;
-                    bool stopAtEntrypoint = false;
-                    launchOptions = MILaunchOptions.CreateLaunchOptions(
-                        program: program,
-                        workingDirectory: string.Empty,
-                        args: JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties),
-                        isPipeLaunch: responder.Arguments.ConfigurationProperties.ContainsKey("pipeTransport"),
-                        stopAtEntry: out stopAtEntrypoint,
-                        isCoreDump: out m_isCoreDump,
-                        debugServerUsed: out debugServerUsed,
-                        isOpenOCD: out isOpenOCD,
-                        visualizerFileUsed: out visualizerFileUsed);
                     executable = program;
                     m_isAttach = true;
                 }
 
+                if (int.TryParse(processId, NumberStyles.None, CultureInfo.InvariantCulture, out m_processId))
+                {
+                    m_processId = Constants.InvalidProcessId;
+                }
                 m_processName = program ?? string.Empty;
 
+                SetCommonMISettings(responder.Arguments.ConfigurationProperties);
+
+                string launchJson = JsonConvert.SerializeObject(responder.Arguments.ConfigurationProperties);
+
                 // attach
-                int hr = m_engineLaunch.LaunchSuspended(null, m_port, executable, null, null, null, launchOptions, 0, 0, 0, 0, this, out m_process);
+                int hr = m_engineLaunch.LaunchSuspended(null, m_port, executable, null, null, null, launchJson, 0, 0, 0, 0, this, out m_process);
 
                 if (hr != HRConstants.S_OK)
                 {
@@ -1004,8 +1046,6 @@ namespace OpenDebugAD7
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
-                properties.Add(DebuggerTelemetry.TelemetryVisualizerFileUsed, visualizerFileUsed);
-                properties.Add(DebuggerTelemetry.TelemetrySourceFileMappings, sourceFileMappings);
 
                 DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - attachStartTime, properties);
                 success = true;
@@ -1160,10 +1200,7 @@ namespace OpenDebugAD7
             }
             catch (AD7Exception e)
             {
-                if (m_isCoreDump)
-                {
-                    responder.SetError(new ProtocolException(e.Message));
-                }
+                responder.SetError(new ProtocolException(e.Message));
             }
         }
 
@@ -1365,7 +1402,8 @@ namespace OpenDebugAD7
                                     Dictionary<string, Variable> variablesDictionary = new Dictionary<string, Variable>();
                                     for (uint c = 0; c < count; c++)
                                     {
-                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags);
+                                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
+                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
                                         int uniqueCounter = 2;
                                         string variableName = variable.Name;
                                         string variableNameFormat = "{0} #{1}";
@@ -1382,8 +1420,9 @@ namespace OpenDebugAD7
                                 }
                                 else
                                 {
+                                    string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
                                     // Shortcut when no duplicate can exist
-                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags));
+                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
                                 }
                             }
                         }
@@ -1534,6 +1573,82 @@ namespace OpenDebugAD7
                 response.Threads.Add(new OpenDebugThread(pair.Key, name));
             }
 
+            responder.SetResponse(response);
+        }
+
+        private ProtocolMessages.Module ConvertToModule(in IDebugModule2 module, int moduleId)
+        {
+            var debugModuleInfos = new MODULE_INFO[1];
+            if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
+            {
+                var debugModuleInfo = debugModuleInfos[0];
+
+                var path = debugModuleInfo.m_bstrUrl;
+                var vsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : null;
+                var version = debugModuleInfo.m_bstrVersion;
+                var vsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture);
+                var vsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture);
+                var vsModuleSize = (int)debugModuleInfo.m_dwSize;
+                var vsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder;
+                var symbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation;
+                var symbolStatus = debugModuleInfo.m_bstrDebugMessage;
+                var vsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) != 0;
+
+                ProtocolMessages.Module mod = new ProtocolMessages.Module(moduleId, debugModuleInfo.m_bstrName)
+                {
+                    Path = path, VsTimestampUTC = vsTimestampUTC, Version = version, VsLoadAddress = vsLoadAddress, VsPreferredLoadAddress = vsPreferredLoadAddress,
+                    VsModuleSize = vsModuleSize, VsLoadOrder = vsLoadOrder, SymbolFilePath = symbolFilePath, SymbolStatus = symbolStatus, VsIs64Bit = vsIs64Bit
+                };
+            
+                // IsOptimized and IsUserCode are not set by gdb
+                if((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0)
+                {
+                    mod.IsOptimized = true;
+                } else if ((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_UNOPTIMIZED) != 0)
+                {
+                    mod.IsOptimized = false;
+                }
+                if (module is IDebugModule3 module3 && module3.IsUserCode(out int isUserCode) == HRConstants.S_OK)
+                {
+                    if (isUserCode == 0)
+                    {
+                        mod.IsUserCode = false;
+                    }
+                    else
+                    {
+                        mod.IsUserCode = true;
+                    }
+                }
+
+                return mod;
+            }
+            return null;
+        }
+
+        protected override void HandleModulesRequestAsync(IRequestResponder<ModulesArguments, ModulesResponse> responder)
+        {
+            var response = new ModulesResponse();
+            IEnumDebugModules2 enumDebugModules;
+            if (m_program.EnumModules(out enumDebugModules) == HRConstants.S_OK)
+            {
+                var debugModules = new IDebugModule2[1];
+                uint numReturned = 0;
+                while (enumDebugModules.Next(1, debugModules, ref numReturned) == HRConstants.S_OK && numReturned == 1)
+                {
+                    IDebugModule2 module = debugModules[0];
+                    int moduleId;
+                    lock (m_moduleMap)
+                    {
+                        if (!m_moduleMap.TryGetValue(module, out moduleId))
+                        {
+                            Debug.Fail("Missing ModuleLoadEvent?");
+                            continue;
+                        }
+                    }
+                    var mod = ConvertToModule(module, moduleId);
+                    response.Modules.Add(mod);
+                }
+            }
             responder.SetResponse(response);
         }
 
@@ -2010,7 +2125,9 @@ namespace OpenDebugAD7
                 return;
             }
 
-            Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags);
+            string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
+
+            Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
 
             if (context != EvaluateArguments.ContextValue.Hover)
             {
@@ -2024,9 +2141,73 @@ namespace OpenDebugAD7
             {
                 Result = variable.Value,
                 Type = variable.Type,
-                VariablesReference = variable.VariablesReference
+                VariablesReference = variable.VariablesReference,
+                MemoryReference = memoryReference
             });
+        }
 
+
+        protected override void HandleReadMemoryRequestAsync(IRequestResponder<ReadMemoryArguments, ReadMemoryResponse> responder)
+        {
+            int hr;
+            ReadMemoryArguments rma = responder.Arguments;
+            ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_ReadMemory);
+            try
+            {
+                if (string.IsNullOrEmpty(rma.MemoryReference))
+                {
+                    throw new ArgumentException("ReadMemoryArguments.MemoryReference is null or empty.");
+                }
+
+                ulong address;
+                if (rma.MemoryReference.StartsWith("0x", StringComparison.Ordinal))
+                {
+                    address = Convert.ToUInt64(rma.MemoryReference.Substring(2), 16);
+                }
+                else
+                {
+                    address = Convert.ToUInt64(rma.MemoryReference, 10);
+                }
+
+                if (rma.Offset.HasValue && rma.Offset.Value != 0)
+                {
+                    if (rma.Offset < 0)
+                    {
+                        address += (ulong)rma.Offset.Value;
+                    }
+                    else
+                    {
+                        address -= (ulong)-rma.Offset.Value;
+                    }
+                }
+
+                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 memoryContext);
+                eb.CheckHR(hr);
+
+                byte[] data = new byte[rma.Count];
+                uint unreadableBytes = 0;
+                uint bytesRead = 0;
+
+                if (rma.Count != 0)
+                {
+                    hr = m_program.GetMemoryBytes(out IDebugMemoryBytes2 debugMemoryBytes);
+                    eb.CheckHR(hr);
+
+                    hr = debugMemoryBytes.ReadAt(memoryContext, (uint)rma.Count, data, out bytesRead, ref unreadableBytes);
+                    eb.CheckHR(hr);
+                }
+
+                responder.SetResponse(new ReadMemoryResponse()
+                {
+                    Address = string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address),
+                    Data = Convert.ToBase64String(data, 0, (int)bytesRead),
+                    UnreadableBytes = (int?)unreadableBytes
+                });
+            }
+            catch (Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+            }
         }
 
         #endregion
@@ -2075,6 +2256,7 @@ namespace OpenDebugAD7
             RegisterSyncEventHandler(typeof(IDebugBreakpointErrorEvent2), HandleIDebugBreakpointErrorEvent2);
             RegisterSyncEventHandler(typeof(IDebugOutputStringEvent2), HandleIDebugOutputStringEvent2);
             RegisterSyncEventHandler(typeof(IDebugMessageEvent2), HandleIDebugMessageEvent2);
+            RegisterSyncEventHandler(typeof(IDebugProcessInfoUpdatedEvent158), HandleIDebugProcessInfoUpdatedEvent158);
 
             // Async Handlers
             RegisterAsyncEventHandler(typeof(IDebugProgramCreateEvent2), HandleIDebugProgramCreateEvent2);
@@ -2156,7 +2338,7 @@ namespace OpenDebugAD7
                 {
                     foreach (var tp in tracepoints)
                     {
-                        int hr = tp.GetLogMessage(pThread, Constants.ParseRadix, m_processName, out string logMessage);
+                        int hr = tp.GetLogMessage(pThread, Constants.ParseRadix, m_processName, m_processId, out string logMessage);
                         if (hr != HRConstants.S_OK)
                         {
                             DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryTracepointEventName, logMessage);
@@ -2283,8 +2465,29 @@ namespace OpenDebugAD7
             string moduleLoadMessage = null;
             int isLoad = 0;
             ((IDebugModuleLoadEvent2)pEvent).GetModule(out module, ref moduleLoadMessage, ref isLoad);
-
+            
             m_logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
+
+            int? moduleId = null;
+            ModuleEvent.ReasonValue reason = ModuleEvent.ReasonValue.Unknown;
+
+            if (isLoad != 0)
+            {
+                moduleId = (int?)RegisterDebugModule(module);
+                reason = ModuleEvent.ReasonValue.New;
+            } else {
+                moduleId = ReleaseDebugModule(module);
+                reason = ModuleEvent.ReasonValue.Removed;
+            }
+
+            if (moduleId != null)
+            {
+                var mod = ConvertToModule(module, (int)moduleId);
+                if (mod != null)
+                {
+                    Protocol.SendEvent(new ModuleEvent(reason, mod));
+                }
+            }
         }
 
         public void HandleIDebugBreakpointBoundEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
@@ -2469,6 +2672,42 @@ namespace OpenDebugAD7
 
                     m_logger.Write(category, text);
                 }
+            }
+        }
+
+        public void HandleIDebugProcessInfoUpdatedEvent158(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
+        {
+            IDebugProcessInfoUpdatedEvent158 debugProcessInfoUpdated = pEvent as IDebugProcessInfoUpdatedEvent158;
+
+            if (debugProcessInfoUpdated != null && 
+                debugProcessInfoUpdated.GetUpdatedProcessInfo(out string name, out uint systemProcessId) == HRConstants.S_OK)
+            {
+                // Update Process Name and Id
+                m_processName = name;
+                m_processId = (int)systemProcessId;
+
+                // Send ProcessEvent to Client
+                ProcessEvent processEvent = new ProcessEvent();
+                processEvent.Name = m_processName;
+                processEvent.SystemProcessId = m_processId;
+
+                if (m_isAttach)
+                {
+                    processEvent.StartMethod = ProcessEvent.StartMethodValue.Attach;
+                }
+                else
+                {
+                    processEvent.StartMethod = ProcessEvent.StartMethodValue.Launch;
+                }
+
+                if (m_engine is IDebugProgramDAP debugProgram)
+                {
+                    if (debugProgram.GetPointerSize(out int pointerSize) == HRConstants.S_OK)
+                    {
+                        processEvent.PointerSize = pointerSize;
+                    }
+                }
+                Protocol.SendEvent(processEvent);
             }
         }
 

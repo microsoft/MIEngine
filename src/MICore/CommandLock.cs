@@ -25,10 +25,10 @@ namespace MICore
         {
             // Either both commandLock and value are non-zero (non-Null case), or both are zero (Null case)
             if (commandLock == null)
-                throw new ArgumentNullException("commandLock");
+                throw new ArgumentNullException(nameof(commandLock));
 
             if (value == 0)
-                throw new ArgumentOutOfRangeException("value");
+                throw new ArgumentOutOfRangeException(nameof(value));
 
             _commandLock = commandLock;
             _value = value;
