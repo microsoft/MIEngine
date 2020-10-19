@@ -69,6 +69,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+	<Reference Include="Microsoft.VisualStudio.OLE.Interop">
+	  <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.OLE.Interop.16.7.30328.74/lib/net45/Microsoft.VisualStudio.OLE.Interop.dll</HintPath>
+	</Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">

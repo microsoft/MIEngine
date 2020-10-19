@@ -2,14 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
-using System.Threading;
-using MICore;
 using System.Globalization;
-using System.Threading.Tasks;
+using System.IO;
+using MICore;
+using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.OLE.Interop;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -70,6 +68,23 @@ namespace Microsoft.MIDebugEngine
                 {
                     info.m_dwLoadOrder = this.DebuggedModule.GetLoadOrder();
                     info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_LOADORDER;
+                }
+                if (this.Process.LaunchOptions is LocalLaunchOptions localLaunchOptions &&
+                    string.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress) && string.IsNullOrWhiteSpace(localLaunchOptions.DebugServer) &&
+                    (dwFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 &&
+                    this.DebuggedModule.Name != null)
+                {
+                    try
+                    {
+                        long ft = File.GetLastWriteTimeUtc(this.DebuggedModule.Name).ToFileTime();
+                        uint low = (uint) (ft & 0xFFFFFFFF);
+                        uint high = (uint) ((ulong) (ft >> 32));
+                        info.m_TimeStamp = new FILETIME(){
+                            dwLowDateTime = low,
+                            dwHighDateTime = high
+                        };
+                        info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP;
+                    } catch {}
                 }
                 if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_URLSYMBOLLOCATION) != 0)
                 {
@@ -167,7 +182,7 @@ namespace Microsoft.MIDebugEngine
         int IDebugModule3.IsUserCode(out int pfUser)
         {
             pfUser = 1;
-            return Constants.S_OK;
+            return Constants.E_NOTIMPL;
         }
 
         // Loads and initializes symbols for the current module when the user explicitly asks for them to load.
