@@ -1683,7 +1683,6 @@ namespace OpenDebugAD7
         protected override void HandleModulesRequestAsync(IRequestResponder<ModulesArguments, ModulesResponse> responder)
         {
             var response = new ModulesResponse();
-
             IEnumDebugModules2 enumDebugModules;
             if (m_program.EnumModules(out enumDebugModules) == HRConstants.S_OK)
             {
@@ -1692,15 +1691,19 @@ namespace OpenDebugAD7
                 while (enumDebugModules.Next(1, debugModules, ref numReturned) == HRConstants.S_OK && numReturned == 1)
                 {
                     IDebugModule2 module = debugModules[0];
-                    var moduleId = RegisterDebugModule(module);
-                    if (moduleId != null)
+                    int moduleId;
+                    lock (m_moduleMap)
                     {
-                        var mod = ConvertToModule(module, (int)moduleId);
-                        response.Modules.Add(mod);
+                        if (!m_moduleMap.TryGetValue(module, out moduleId))
+                        {
+                            Debug.Fail("Missing ModuleLoadEvent?");
+                            continue;
+                        }
                     }
+                    var mod = ConvertToModule(module, moduleId);
+                    response.Modules.Add(mod);
                 }
             }
-
             responder.SetResponse(response);
         }
 
