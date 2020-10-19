@@ -58,7 +58,7 @@ class Setup {
 
         foreach (string arg in args)
         {
-            if (arg.StartsWith("-") || arg.StartsWith("/"))
+            if (arg.StartsWith("-"))
             {
                 switch(arg.Substring(1).ToLower())
                 {
@@ -69,6 +69,10 @@ class Setup {
                         break;
                     case "vs":
                         Client = Client.VS;
+                        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        {
+                            throw new InvalidOperationException("Patching MIEngine with VS bits is not applicable for non-Windows Platforms.");
+                        }
                         break;
                     case "vscode":
                         Client = Client.VSCode;
@@ -182,7 +186,15 @@ class Setup {
         {
             if (Client == Client.VSCode)
             {
-                string vscodeExtensionPath = Environment.ExpandEnvironmentVariables("%USERPROFILE%\\.vscode\\extensions");
+                string vscodeExtensionPath = string.Empty;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    vscodeExtensionPath = Environment.ExpandEnvironmentVariables("%USERPROFILE%\\.vscode\\extensions");
+                }
+                else
+                {
+                    vscodeExtensionPath = Path.Join(Environment.GetEnvironmentVariable("HOME"), ".vscode/extensions");
+                }
                 IEnumerable<string> extensions = Directory.EnumerateDirectories(vscodeExtensionPath);
 
                 foreach (string extension in extensions)
@@ -237,6 +249,18 @@ class Setup {
             }
             string destPath = Path.Join(TargetPath, lff.InstallDir, lff.FileName);
 
+            // Normalize Paths for OS
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                srcPath = srcPath.Replace('/', '\\');
+                destPath = destPath.Replace('/', '\\');
+            }
+            else 
+            {
+                srcPath = srcPath.Replace('\\', '/');
+                destPath = destPath.Replace('\\', '/');
+            }
+
             Console.WriteLine(string.Format("Copying {0} to {1}.", srcPath, destPath));
 
             // TODO: Support symlinking
@@ -244,11 +268,6 @@ class Setup {
         }
     }
 
-} 
-
-if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-{
-    throw new InvalidOperationException("This script is only supported for Windows.");
 }
 
 Setup setup = new Setup();
