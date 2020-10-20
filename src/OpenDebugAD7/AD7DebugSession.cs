@@ -1252,7 +1252,8 @@ namespace OpenDebugAD7
                                 enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |   // with argument names and types
                                 enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
                                 enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES |
-                                enum_FRAMEINFO_FLAGS.FIF_FLAGS;
+                                enum_FRAMEINFO_FLAGS.FIF_FLAGS |
+                                enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
 
                             IEnumDebugFrameInfo2 frameEnum;
                             thread.EnumFrameInfo(flags, Constants.EvaluationRadix, out frameEnum);
@@ -1308,13 +1309,24 @@ namespace OpenDebugAD7
                             textPosition = TextPositionTuple.GetTextPositionOfFrame(m_pathConverter, frame) ?? TextPositionTuple.Nil;
                         }
 
+                        int? moduleId = null;
+                        IDebugModule2 module = frameInfo.m_pModule;
+                        if (module != null)
+                        {
+                            if (m_moduleMap.TryGetValue(module, out int mapModuleId))
+                            {
+                                moduleId = mapModuleId;
+                            }
+                        }
+
                         response.StackFrames.Add(new ProtocolMessages.StackFrame()
                         {
                             Id = frameReference,
                             Name = frameInfo.m_bstrFuncName,
                             Source = textPosition.Source,
                             Line = textPosition.Line,
-                            Column = textPosition.Column
+                            Column = textPosition.Column,
+                            ModuleId = moduleId
                         });
                     }
 
