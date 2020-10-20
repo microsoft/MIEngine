@@ -26,7 +26,7 @@ namespace OpenDebugAD7
 
         internal void Reset()
         {
-            m_variableHandles.Clear();
+            m_variableHandles.Reset();
         }
 
         internal Boolean IsEmpty()
