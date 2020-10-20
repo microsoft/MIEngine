@@ -40,7 +40,7 @@ class Setup {
 
     private void PrintHelp()
     {
-        Console.WriteLine("USAGE: dotnet script Setup.csx -- <Target-Path> [-vs|-vscode] [-debug|-release]");
+        Console.WriteLine("USAGE: Setup.[sh|cmd] -- <Target-Path> [-vs|-vscode] [-debug|-release]");
         Console.WriteLine("");
         Console.WriteLine("\t<Target-Path> is the path to the VS Code C/C++ Extension or root path of Visual Studio.");
         Console.WriteLine("\tFor Example:");

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if ! hash dotnet 2>/dev/null; then
     echo "ERROR: The dotnet is not installed. see: https://dotnet.microsoft.com/download/dotnet-core"
     exit 1
