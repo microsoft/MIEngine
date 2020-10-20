@@ -44,7 +44,7 @@ namespace OpenDebugAD7
 
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
-        private readonly HandleCollection<IDebugCodeContext2> m_gotoCodeContexts = new HandleCollection<IDebugCodeContext2>();
+        private readonly List<IDebugCodeContext2> m_gotoCodeContexts = new List<IDebugCodeContext2>();
 
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
@@ -351,7 +351,7 @@ namespace OpenDebugAD7
             m_isStepping = false;
             m_isStopped = false;
             m_variableManager.Reset();
-            m_frameHandles.Clear();
+            m_frameHandles.Reset();
 			m_gotoCodeContexts.Clear();
         }
 
