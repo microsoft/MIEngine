@@ -1313,9 +1313,12 @@ namespace OpenDebugAD7
                         IDebugModule2 module = frameInfo.m_pModule;
                         if (module != null)
                         {
-                            if (m_moduleMap.TryGetValue(module, out int mapModuleId))
+                            lock (m_moduleMap)
                             {
-                                moduleId = mapModuleId;
+                                if (m_moduleMap.TryGetValue(module, out int mapModuleId))
+                                {
+                                    moduleId = mapModuleId;
+                                }
                             }
                         }
 
