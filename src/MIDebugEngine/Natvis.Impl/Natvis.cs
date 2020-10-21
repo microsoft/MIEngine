@@ -6,18 +6,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
 using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
-using System.Diagnostics;
-using System.Threading;
 using MICore;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
 using Microsoft.DebugEngineHost;
 using System.Reflection;
-
 using Logger = MICore.Logger;
 using Microsoft.VisualStudio.Debugger.Interop.DAP;
 
@@ -142,9 +137,9 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
-        private static Regex s_variableName;
-        private static Regex s_subfieldNameHere;
-        private static Regex s_expression;
+        private static Regex s_variableName = new Regex("[a-zA-Z$_][a-zA-Z$_0-9]*");
+        private static Regex s_subfieldNameHere = new Regex(@"\G((\.|->)[a-zA-Z$_][a-zA-Z$_0-9]*)+");
+        private static Regex s_expression = new Regex(@"^\{[^\}]*\}");
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
         private Dictionary<string, VisualizerInfo> _vizCache;
@@ -164,13 +159,6 @@ namespace Microsoft.MIDebugEngine.Natvis
             ForVisualizedItems
         }
         public DisplayStringsState ShowDisplayStrings { get; set; }
-
-        static Natvis()
-        {
-            s_variableName = new Regex("[a-zA-Z$_][a-zA-Z$_0-9]*");
-            s_subfieldNameHere = new Regex(@"\G((\.|->)[a-zA-Z$_][a-zA-Z$_0-9]*)+");
-            s_expression = new Regex(@"^\{[^\}]*\}");
-        }
 
         internal Natvis(DebuggedProcess process, bool showDisplayString)
         {
@@ -433,7 +421,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             if (expr.EndsWith(",viz", StringComparison.Ordinal))
             {
                 expr = expr.Substring(0, expr.Length - 4);
-                variable = new VariableInformation(expr, frame.ThreadContext, frame.Engine, frame.Thread);
+                variable = new VariableInformation(expr, expr, frame.ThreadContext, frame.Engine, frame.Thread);
                 variable.SyncEval();
                 if (!variable.Error)
                 {
@@ -442,7 +430,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             else
             {
-                variable = new VariableInformation(expr, frame.ThreadContext, frame.Engine, frame.Thread);
+                variable = new VariableInformation(expr, expr, frame.ThreadContext, frame.Engine, frame.Thread);
             }
             return variable;
         }
@@ -490,7 +478,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         if (EvalCondition(vp.Condition, variable, visualizer.ScopedNames))
                         {
-                            IVariableInformation ptrExpr = GetExpression('*' + vp.Value, variable, visualizer.ScopedNames);
+                            IVariableInformation ptrExpr = GetExpression("*(" + vp.Value + ")", variable, visualizer.ScopedNames);
                             string typename = ptrExpr.TypeName;
                             if (String.IsNullOrWhiteSpace(typename))
                             {

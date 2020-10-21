@@ -18,7 +18,6 @@ namespace Microsoft.MIDebugEngine
         public static readonly Guid guidFilterLocalsPlusArgs = new Guid("e74721bb-10c0-40f5-807f-920d37f95419");
         public static readonly Guid guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
         public static readonly Guid guidLanguageCpp = new Guid("3a12d0b7-c26c-11d0-b442-00a0244a1dd2");
-        public static readonly Guid guidLanguageCs = new Guid("{3F5162F8-07C6-11D3-9053-00C04FA302A1}");
         public static readonly Guid guidLanguageC = new Guid("63A08714-FC37-11D2-904C-00C04FA302A1");
         public static readonly Guid guidSourceHashMD5 = new Guid("406ea660-64cf-4c82-b6f0-42d48172a799");
         public static readonly Guid guidSourceHashSHA1 = new Guid("ff1816ec-aa5e-4d10-87f7-6f4963833460");

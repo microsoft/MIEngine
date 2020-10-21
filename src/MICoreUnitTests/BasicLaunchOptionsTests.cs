@@ -46,68 +46,6 @@ namespace MICoreUnitTests
         }
 
         [Fact]
-        public void TestLaunchOptions_Local2()
-        {
-            // Differences from #1: There is an empty CustomLaunchSetupCommands, and MIMode is set
-            string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
-            string content = string.Concat("<LocalLaunchOptions\n",
-                "MIDebuggerPath=\"", fakeFilePath, "\"\n",
-                "MIDebuggerServerAddress=\"myserverbox:345\"\n",
-                "ExePath=\"", fakeFilePath, "\"\n",
-                "TargetArchitecture=\"arm\"\n",
-                "MIMode=\"clrdbg\"",
-                ">\n",
-                "  <CustomLaunchSetupCommands>\n",
-                "  </CustomLaunchSetupCommands>\n",
-                "</LocalLaunchOptions>");
-
-            var baseOptions = GetLaunchOptions(content);
-            Assert.IsAssignableFrom(typeof(LocalLaunchOptions), baseOptions);
-            var options = (LocalLaunchOptions)baseOptions;
-
-            Assert.Equal(options.MIDebuggerPath, fakeFilePath);
-            Assert.Equal(options.MIDebuggerServerAddress, "myserverbox:345");
-            Assert.Equal(options.ExePath, fakeFilePath);
-            Assert.Equal(options.TargetArchitecture, TargetArchitecture.ARM);
-            Assert.True(string.IsNullOrEmpty(options.AdditionalSOLibSearchPath));
-            Assert.True(string.IsNullOrEmpty(options.AbsolutePrefixSOLibSearchPath));
-            Assert.Equal(options.DebuggerMIMode, MIMode.Clrdbg);
-            Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecRun);
-            Assert.True(options.CustomLaunchSetupCommands != null && options.CustomLaunchSetupCommands.Count == 0);
-            Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 0);
-            Assert.True(String.IsNullOrEmpty(options.CoreDumpPath));
-            Assert.False(options.UseExternalConsole);
-            Assert.False(options.IsCoreDump);
-        }
-
-        [Fact]
-        public void TestLaunchOptions_Local3()
-        {
-            // Differences from #2: required argument 'MIDebuggerPath' is missing
-            string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
-            string content = string.Concat("<LocalLaunchOptions\n",
-                "MIDebuggerServerAddress=\"myserverbox:345\"\n",
-                "ExePath=\"", fakeFilePath, "\"\n",
-                "TargetArchitecture=\"arm\"\n",
-                "MIMode=\"clrdbg\"",
-                ">\n",
-                "  <CustomLaunchSetupCommands>\n",
-                "  </CustomLaunchSetupCommands>\n",
-                "</LocalLaunchOptions>");
-
-            try
-            {
-                var baseOptions = GetLaunchOptions(content);
-                Assert.True(false, "Code path should be unreachable");
-            }
-            catch (InvalidLaunchOptionsException e)
-            {
-                Assert.True(e.Message.Contains("MIDebuggerPath"));
-            }
-        }
-
-
-        [Fact]
         public void TestLaunchOptions_Pipe1()
         {
             string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
@@ -141,7 +79,7 @@ namespace MICoreUnitTests
             Assert.Equal(options.SetupCommands[0].CommandText, "-gdb-set my-example-setting on");
             Assert.True(options.SetupCommands[0].Description.Contains("gdb-set"));
             Assert.False(options.SetupCommands[0].IgnoreFailures);
-            Assert.True(options.PipeEnvironment.Count() == 0);
+            Assert.True(options.PipeEnvironment.Count == 0);
         }
 
         [Fact]

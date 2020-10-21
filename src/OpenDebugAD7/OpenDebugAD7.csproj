@@ -43,8 +43,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -70,8 +68,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -84,6 +80,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+	<Reference Include="Microsoft.VisualStudio.OLE.Interop">
+		<HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.OLE.Interop.16.7.30328.74/lib/net45/Microsoft.VisualStudio.OLE.Interop.dll</HintPath>
+		<ForceIncludeInVSIX>true</ForceIncludeInVSIX>
+	</Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
       <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
       <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
@@ -106,7 +106,7 @@
     </Reference>
     <!-- Same version as in packages.config -->
     <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol">
-      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Shared.VsCodeDebugProtocol.16.6.40406.1/lib/net45/Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll</HintPath>
+      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Shared.VsCodeDebugProtocol.16.7.40526.2/lib/net45/Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll</HintPath>
       <ForceIncludeInVSIX>true</ForceIncludeInVSIX>
     </Reference>
     <Reference Include="Newtonsoft.Json">
@@ -137,7 +137,6 @@
     <Compile Include="Telemetry\DebuggerTelemetry.cs" />
     <Compile Include="AD7Exception.cs" />
     <Compile Include="ErrorBuilder.cs" />
-    <Compile Include="PathMapper.cs" />
     <Compile Include="MILaunchOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="OpenDebug\CustomProtocolObjects.cs" />
@@ -173,6 +172,7 @@
     <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.exe.config" />
     <DropUnsignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.OLE.Interop.dll" />
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsXPlat)' == 'false'">

@@ -66,7 +66,7 @@ namespace OpenDebugAD7.AD7Impl
             var ad7Process = process as AD7Process;
             if (ad7Process == null)
             {
-                throw new ArgumentOutOfRangeException("process");
+                throw new ArgumentOutOfRangeException(nameof(process));
             }
 
             lock (_processMap)

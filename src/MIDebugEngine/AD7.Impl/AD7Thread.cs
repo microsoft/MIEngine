@@ -11,7 +11,7 @@ using MICore;
 namespace Microsoft.MIDebugEngine
 {
     // This class implements IDebugThread2 which represents a thread running in a program.
-    internal class AD7Thread : IDebugThread2
+    internal sealed class AD7Thread : IDebugThread2
     {
         private readonly AD7Engine _engine;
         private readonly DebuggedThread _debuggedThread;
@@ -83,10 +83,9 @@ namespace Microsoft.MIDebugEngine
         // Determines whether the next statement can be set to the given stack frame and code context.
         int IDebugThread2.CanSetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext)
         {
-            // CLRDBG TODO: This implementation should be changed to compare the method token
             ulong addr = ((AD7MemoryAddress)codeContext).Address;
             AD7StackFrame frame = ((AD7StackFrame)stackFrame);
-            if (frame.ThreadContext.Level != 0 || frame.Thread != this || !frame.ThreadContext.pc.HasValue || _engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Clrdbg)
+            if (frame.ThreadContext.Level != 0 || frame.Thread != this || !frame.ThreadContext.pc.HasValue)
             {
                 return Constants.S_FALSE;
             }
@@ -276,10 +275,9 @@ namespace Microsoft.MIDebugEngine
         // Sets the next statement to the given stack frame and code context.
         int IDebugThread2.SetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext)
         {
-            // CLRDBG TODO: This implementation should be changed to call an MI command
             ulong addr = ((AD7MemoryAddress)codeContext).Address;
             AD7StackFrame frame = ((AD7StackFrame)stackFrame);
-            if (frame.ThreadContext.Level != 0 || frame.Thread != this || !frame.ThreadContext.pc.HasValue || _engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Clrdbg)
+            if (frame.ThreadContext.Level != 0 || frame.Thread != this || !frame.ThreadContext.pc.HasValue)
             {
                 return Constants.S_FALSE;
             }

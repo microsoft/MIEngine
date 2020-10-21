@@ -41,8 +41,6 @@ namespace Microsoft.MIDebugEngine
         /// <returns>[Optional] Module, if the frame has one</returns>
         internal DebuggedModule FindModule(DebuggedProcess process)
         {
-            // CLRDBG TODO: Use module id to find the module
-
             if (this.pc.HasValue)
             {
                 return process.ResolveAddress(this.pc.Value);
@@ -94,7 +92,7 @@ namespace Microsoft.MIDebugEngine
         /// <param name="message">[Required] message to send</param>
         void OnError(string message);
         void OnBreakpoint(DebuggedThread thread, ReadOnlyCollection<object> clients);
-        void OnException(DebuggedThread thread, string name, string description, uint code, Guid? exceptionCategory = null, ExceptionBreakpointState state = ExceptionBreakpointState.None);
+        void OnException(DebuggedThread thread, string name, string description, uint code, Guid? exceptionCategory = null, ExceptionBreakpointStates state = ExceptionBreakpointStates.None);
         void OnStepComplete(DebuggedThread thread);
         void OnAsyncBreakComplete(DebuggedThread thread);
         void OnLoadComplete();

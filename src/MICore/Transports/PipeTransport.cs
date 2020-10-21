@@ -16,6 +16,8 @@ namespace MICore
 {
     public class PipeTransport : StreamTransport
     {
+        private static readonly object _lock = new object();
+
         private Process _process;
         private StreamReader _stdErrReader;
         private int _remainingReaders;
@@ -73,7 +75,7 @@ namespace MICore
             _process.StartInfo.UseShellExecute = false;
             _process.StartInfo.CreateNoWindow = true;
 
-            lock (_process)
+            lock (_lock)
             {
                 this.Callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "Starting: \"{0}\" {1}", _process.StartInfo.FileName, _process.StartInfo.Arguments));
 
@@ -281,7 +283,7 @@ namespace MICore
             // Wait until 'Init' gets a chance to set m_Reader/m_Writer before sending up the debugger exit event
             if (_reader == null || _writer == null)
             {
-                lock (_process)
+                lock (_lock)
                 {
                     if (_reader == null || _writer == null)
                     {

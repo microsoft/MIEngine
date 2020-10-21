@@ -125,13 +125,10 @@ namespace MICore
 
         internal static bool GetRequiresRootAttach(MIMode mode)
         {
-            if (mode != MIMode.Clrdbg)
+            // If "ptrace_scope" is a value other than 0, only root can attach to arbitrary processes
+            if (GetPtraceScope() != 0)
             {
-                // If "ptrace_scope" is a value other than 0, only root can attach to arbitrary processes
-                if (GetPtraceScope() != 0)
-                {
-                    return true; // Attaching to any non-child process requires root
-                }
+                return true; // Attaching to any non-child process requires root
             }
 
             return false;

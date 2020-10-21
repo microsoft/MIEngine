@@ -27,9 +27,9 @@ namespace IOSDebugLauncher
         public IOSLaunchOptions(string exePath, MICore.Xml.LaunchOptions.IOSLaunchOptions xmlOptions)
         {
             if (string.IsNullOrEmpty(exePath))
-                throw new ArgumentNullException("exePath");
+                throw new ArgumentNullException(nameof(exePath));
             if (xmlOptions == null)
-                throw new ArgumentNullException("xmlOptions");
+                throw new ArgumentNullException(nameof(xmlOptions));
 
             this.ExePath = exePath;
             this.RemoteMachineName = LaunchOptions.RequireAttribute(xmlOptions.RemoteMachineName, "RemoteMachineName");

@@ -14,6 +14,8 @@ namespace Microsoft.SSHDebugPS
     #region Base Class
     internal class AD7Enum<T, I> where I : class
     {
+        private static readonly object _lock = new object();
+
         private readonly T[] _data;
         private uint _position;
 
@@ -42,7 +44,7 @@ namespace Microsoft.SSHDebugPS
 
         public int Reset()
         {
-            lock (this)
+            lock (_lock)
             {
                 _position = 0;
 
@@ -59,7 +61,7 @@ namespace Microsoft.SSHDebugPS
 
         private int Move(uint celt, T[] rgelt, out uint celtFetched)
         {
-            lock (this)
+            lock (_lock)
             {
                 int hr = HR.S_OK;
                 celtFetched = (uint)_data.Length - _position;
