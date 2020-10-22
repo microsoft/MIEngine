@@ -5,6 +5,12 @@ jobs:
 - job: Debug
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: DotNetCoreCLI@2
+    displayName: dotnet restore
+    inputs:
+      command: restore
+      projects: 'src/DebugEngineHost.Stub/DebugEngineHost.Stub.csproj'
+      includeNuGetOrg: true
   - task: MSBuild@1
     inputs:
       solution: 'BuildAndTest.proj'

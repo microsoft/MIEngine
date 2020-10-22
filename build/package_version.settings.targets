@@ -1,0 +1,5 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Microsoft_VisualStudio_Debugger_Interop_Portable_Version>1.0.1</Microsoft_VisualStudio_Debugger_Interop_Portable_Version>
+    </PropertyGroup>
+</Project>
