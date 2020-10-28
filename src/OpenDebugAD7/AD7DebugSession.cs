@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -44,7 +45,9 @@ namespace OpenDebugAD7
 
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
-        private readonly List<IDebugCodeContext2> m_gotoCodeContexts = new List<IDebugCodeContext2>();
+
+        private readonly ConcurrentDictionary<int, IDebugCodeContext2> m_gotoCodeContexts = new ConcurrentDictionary<int, IDebugCodeContext2>();
+        private int m_nextContextId = 1;
 
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
@@ -1333,15 +1336,17 @@ namespace OpenDebugAD7
             var builder = new ErrorBuilder(() => AD7Resources.Error_UnableToSetNextStatement);
             try
             {
-                var gotoTarget = m_gotoCodeContexts[responder.Arguments.TargetId];
-                IDebugThread2 thread = null;
-                lock (m_threads)
+                if (m_gotoCodeContexts.TryGetValue(responder.Arguments.TargetId, out IDebugCodeContext2 gotoTarget))
                 {
-                    if (!m_threads.TryGetValue(responder.Arguments.ThreadId, out thread))
-                        throw new AD7Exception("Unknown thread id: " + responder.Arguments.ThreadId.ToString(CultureInfo.InvariantCulture));
+                    IDebugThread2 thread = null;
+                    lock (m_threads)
+                    {
+                        if (!m_threads.TryGetValue(responder.Arguments.ThreadId, out thread))
+                            throw new AD7Exception("Unknown thread id: " + responder.Arguments.ThreadId.ToString(CultureInfo.InvariantCulture));
+                    }
+                    BeforeContinue();
+                    builder.CheckHR(thread.SetNextStatement(null, gotoTarget));
                 }
-                BeforeContinue();
-                builder.CheckHR(thread.SetNextStatement(null, gotoTarget));
             }
             catch (AD7Exception e)
             {
@@ -1386,11 +1391,16 @@ namespace OpenDebugAD7
                         IDebugDocumentContext2 documentContext;
                         if (codeContext.GetDocumentContext(out documentContext) == HRConstants.S_OK)
                         {
-                            var pos = new TEXT_POSITION[1];
-                            if (documentContext.GetStatementRange(pos, null) == HRConstants.S_OK)
-                                line = m_pathConverter.ConvertDebuggerLineToClient((int)pos[0].dwLine);
+                            var startPos = new TEXT_POSITION[1];
+                            var endPos = new TEXT_POSITION[1];
+                            if (documentContext.GetStatementRange(startPos, endPos) == HRConstants.S_OK)
+                                line = m_pathConverter.ConvertDebuggerLineToClient((int)startPos[0].dwLine);
                         }
-                        targets.Add(new GotoTarget(m_gotoCodeContexts.Create(codeContext), contextName, line));
+
+                        int codeContextId = m_nextContextId++;
+                        m_gotoCodeContexts.TryAdd(codeContextId, codeContext);
+
+                        targets.Add(new GotoTarget(codeContextId, contextName, line));
                     }
                 }
 

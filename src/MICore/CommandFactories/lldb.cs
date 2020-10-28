@@ -186,7 +186,7 @@ namespace MICore
 
         public override async Task ExecJump(ulong address)
         {
-            string command = "jump *" + string.Format("0x{0:X}", address);
+            string command = "jump *" + string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address);
             await _debugger.CmdAsync(command, ResultClass.running);
         }
 
