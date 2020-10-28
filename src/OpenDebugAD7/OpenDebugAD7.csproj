@@ -22,8 +22,7 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFrameworkVersion Condition="'$(IsXPlat)' == 'true'">v4.6.2</TargetFrameworkVersion>
-    <TargetFrameworkVersion Condition="'$(IsXPlat)' == 'false'">v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <AppConfig Condition="'$(IsXPlat)' == 'true'">App.VSCode.config</AppConfig>
     <AppConfig Condition="'$(IsXPlat)' == 'false'">App.VS.config</AppConfig>
   </PropertyGroup>
