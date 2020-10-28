@@ -13,41 +13,8 @@
     <BuildDependsOn>$(BuildDependsOn);GenerateMonoSymbols</BuildDependsOn>
   </PropertyGroup>
 
-  <UsingTask TaskName="GetRuntime" 
-             TaskFactory="CodeTaskFactory" 
-             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >
-    <ParameterGroup>
-      <IsMonoRuntime ParameterType="System.Boolean" Output="true" />
-    </ParameterGroup>
-    <Task>
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-        IsMonoRuntime = System.Type.GetType("Mono.Runtime") != null;
-        ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
-  <Target Name="DetermineCompilerBinary">
-    <GetRuntime>
-      <Output PropertyName="IsMonoRuntime" TaskParameter="IsMonoRuntime" />
-    </GetRuntime>
-
-    <Exec Condition="'$(IsMonoRuntime)' == 'true'"
-          ConsoleToMsBuild="true"
-          Command="dirname `which mcs`">
-      <Output TaskParameter="ConsoleOutput" PropertyName="McsPath" />
-    </Exec>
-
-    <PropertyGroup Condition="'$(IsMonoRuntime)' == 'true'">
-      <!-- If we're running on Mono, Roslyn will fail to sign the binaries, so use mcs instead -->      
-      <CscToolExe>mcs</CscToolExe>
-      <CscToolPath>$(McsPath)/</CscToolPath>
-    </PropertyGroup>
-  </Target>
-
   <Target Name="GenerateMonoSymbols"
-          Condition="'$(IsXPlat)' == 'true' AND '$(IsMonoRuntime)' == 'false' AND '$(ShouldGenerateMonoSymbols)' == 'true'">
+          Condition="'$(IsXPlat)' == 'true' AND '$(ShouldGenerateMonoSymbols)' == 'true'">
     <!-- If we're building the Desktop config on Windows, run pdb2mdb to generate Mono symbols as well -->
     <Exec Command="&quot;$(NugetPackagesDirectory)\Mono.Unofficial.pdb2mdb.4.2.3.4\tools\pdb2mdb.exe&quot; &quot;$(TargetPath)&quot;" />
   </Target>
