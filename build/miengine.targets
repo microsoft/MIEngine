@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
-    <BuildDependsOn Condition="'$(IsXPlat)' == 'true'">DetermineCompilerBinary;$(BuildDependsOn)</BuildDependsOn>
     <BuildDependsOn>$(BuildDependsOn);GenerateMonoSymbols</BuildDependsOn>
   </PropertyGroup>
 
