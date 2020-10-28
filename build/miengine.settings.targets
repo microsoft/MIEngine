@@ -1,8 +1,12 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
-  
   <!--
   Settings file which is included by all the shipping code projects in the repo.
   -->
+
+  <!-- Validate OS -->
+  <Target Name="OSPlatformCheck" BeforeTargets="Build" Condition="!$([MSBuild]::IsOSPlatform('windows'))" >
+    <Error Text="'MIDebugEngine' does not build on non-windows platforms." />
+  </Target>
   
   <Import Project="all_projects.settings.targets"/>
   <Import Project="version.settings.targets" />
@@ -37,7 +41,6 @@
     <Otherwise>
       <PropertyGroup>
         <IsXPlat>false</IsXPlat>
-        <IsMonoRuntime>false</IsMonoRuntime>
       </PropertyGroup>
     </Otherwise>
   </Choose>
