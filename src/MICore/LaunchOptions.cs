@@ -443,7 +443,7 @@ namespace MICore
 
         private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
         {
-            if (!String.IsNullOrWhiteSpace(launchOptions.MiDebuggerServerAddress))
+            if (!String.IsNullOrWhiteSpace(launchOptions.DebugServerPath))
             {
                 this.DebugServer = launchOptions.DebugServerPath;
                 this.DebugServerArgs = launchOptions.DebugServerArgs;
