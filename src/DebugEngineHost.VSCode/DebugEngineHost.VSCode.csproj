@@ -121,10 +121,9 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutDir)\Microsoft.DebugEngineHost.dll.mdb" />
   </ItemGroup>
-  <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
-  <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFiles">
+  <Target Name="GetDropFiles" BeforeTargets="DropFiles">
     <ItemGroup>
-      <DropUnsignedFile Condition="'$(IsMonoRuntime)' == 'false'" Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
+      <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     </ItemGroup>
   </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
