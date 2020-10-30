@@ -61,35 +61,7 @@ namespace OpenDebugAD7.AD7Impl
             checksumData[0].ByteCount = 0;
             checksumData[0].pBytes = IntPtr.Zero;
 
-#if !XPLAT
-            byte[] checksumBytes = null;
-            try
-            {
-                checksumBytes = _document.GetChecksums(guidAlgorithm);
-            }
-            catch (Exception e)
-            {
-                Logger.WriteLine(string.Format(CultureInfo.InvariantCulture, "Failed to calculate checksums for '{0}'", Path));
-                Logger.WriteLine(string.Format(CultureInfo.InvariantCulture, "Exception: ''", e.Message));
-                return System.Runtime.InteropServices.Marshal.GetHRForException(e);
-            }
-
-            if (checksumBytes == null)
-            {
-                // failed to calculate a checksum
-                return HRConstants.E_FAIL;
-            }
-
-            checksumData[0].ByteCount = (uint)checksumBytes.Length;
-            checksumData[0].pBytes = System.Runtime.InteropServices.Marshal.AllocCoTaskMem(checksumBytes.Length);
-            System.Runtime.InteropServices.Marshal.Copy(checksumBytes, 0, checksumData[0].pBytes, checksumBytes.Length);
-
-            return HRConstants.S_OK;
-#else
-            // TODO: IncrementalHash is the only thing we can use on .net core but it is not supported by mono
-            // TODO: Make this work on mono somehow when checksums are needed
             return HRConstants.E_NOTIMPL;
-#endif
         }
 
         public int IsChecksumEnabled(out int fChecksumEnabled)
@@ -98,12 +70,8 @@ namespace OpenDebugAD7.AD7Impl
 
             if (_config.RequireExactSource)
             {
-#if !XPLAT
-                fChecksumEnabled = 1;
-#else
                 // TODO: see comment in GetChecksum
                 fChecksumEnabled = 0;
-#endif
             }
             return HRConstants.S_OK;
         }

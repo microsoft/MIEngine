@@ -89,6 +89,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("symbolLoadInfo", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public SymbolLoadInfo SymbolLoadInfo { get; set; }
+
+        /// <summary>
+        /// One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }].
+        /// </summary>
+        [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<SetupCommand> SetupCommands { get; protected set; }
     }
 
     public partial class AttachOptions : BaseOptions
@@ -219,12 +225,6 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("cwd", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Cwd { get; set; }
-
-        /// <summary>
-        /// One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }].
-        /// </summary>
-        [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<SetupCommand> SetupCommands { get; private set; }
 
         /// <summary>
         /// If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }].
