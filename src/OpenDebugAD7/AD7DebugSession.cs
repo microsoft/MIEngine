@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -14,7 +15,6 @@ using Microsoft.DebugEngineHost;
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.DAP;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Utilities;
@@ -47,7 +47,6 @@ namespace OpenDebugAD7
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
 
         private IDebugProgram2 m_program;
-        private readonly Dictionary<int, IDebugThread2> m_threads = new Dictionary<int, IDebugThread2>();
 
         private ManualResetEvent m_disconnectedOrTerminated;
         private int m_firstStoppingEvent;
@@ -63,37 +62,10 @@ namespace OpenDebugAD7
         private PathConverter m_pathConverter = new PathConverter();
 
         private VariableManager m_variableManager;
+        private ModuleManager m_moduleManager;
+        private ThreadManager m_threadManager;
 
         private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
-
-        private int m_nextModuleHandle = 1;
-        private readonly Dictionary<IDebugModule2, int> m_moduleMap = new Dictionary<IDebugModule2, int>();
-
-        private object RegisterDebugModule(IDebugModule2 debugModule)
-        {
-            Debug.Assert(!m_moduleMap.ContainsKey(debugModule));
-            lock (m_moduleMap)
-            {
-                int moduleHandle = m_nextModuleHandle;
-                m_moduleMap[debugModule] = moduleHandle;
-                m_nextModuleHandle++;
-                return moduleHandle;
-            }
-        }
-        private int? ReleaseDebugModule(IDebugModule2 debugModule)
-        {
-            lock (m_moduleMap)
-            {
-                if (m_moduleMap.TryGetValue(debugModule, out int moduleId))
-                {
-                    m_moduleMap.Remove(debugModule);
-                    return moduleId;
-                } else {
-                    Debug.Fail("Trying to unload a module that has not been registered.");
-                    return null;
-                }
-            }
-        }
 
         #region Constructor
 
@@ -113,6 +85,8 @@ namespace OpenDebugAD7
             m_breakpoints = new Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>>();
             m_functionBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
             m_variableManager = new VariableManager();
+            m_moduleManager = new ModuleManager();
+            m_threadManager = new ThreadManager();
         }
 
         #endregion
@@ -290,17 +264,6 @@ namespace OpenDebugAD7
             }
 
             return tracepoints;
-        }
-
-        private static long FileTimeToPosix(FILETIME ft)
-        {
-            long date = ((long)ft.dwHighDateTime << 32) + ft.dwLowDateTime;
-            // removes the diff between 1970 and 1601
-            // 100-nanoseconds = milliseconds * 10000
-            date -= 11644473600000L * 10000;
-
-            // converts back from 100-nanoseconds to seconds
-            return date / 10000000;
         }
 
         #endregion
@@ -563,13 +526,10 @@ namespace OpenDebugAD7
             // If we are already running ignore additional step requests
             if (m_isStopped)
             {
-                IDebugThread2 thread = null;
-                lock (m_threads)
+                IDebugThread2 thread = m_threadManager.TryGetThread(threadId);
+                if (thread == null)
                 {
-                    if (!m_threads.TryGetValue(threadId, out thread))
-                    {
-                        throw new AD7Exception(errorMessage);
-                    }
+                    throw new AD7Exception(errorMessage);
                 }
 
                 BeforeContinue();
@@ -1156,14 +1116,15 @@ namespace OpenDebugAD7
 
             // Sometimes we can get a threadId of 0. Make sure we don't look it up in this case, otherwise we will crash.
             IDebugThread2 thread = null;
-            lock (m_threads)
+            if (threadId != 0)
             {
-                if (threadId != 0 && !m_threads.TryGetValue(threadId, out thread))
-                {
-                    // We do not accept nonzero unknown threadIds.
-                    Debug.Fail("Unknown threadId passed to Continue!");
-                    return;
-                }
+                thread = m_threadManager.TryGetThread(threadId);
+            }
+            if (thread == null)
+            {
+                // We do not accept nonzero unknown threadIds.
+                Debug.Fail("Unknown threadId passed to Continue!");
+                return;
             }
 
             BeforeContinue();
@@ -1241,28 +1202,25 @@ namespace OpenDebugAD7
                 ThreadFrameEnumInfo frameEnumInfo;
                 if (!m_threadFrameEnumInfos.TryGetValue(threadReference, out frameEnumInfo))
                 {
-                    IDebugThread2 thread;
-                    lock (m_threads)
+                    IDebugThread2 thread = m_threadManager.TryGetThread(threadReference);
+                    if (thread != null)
                     {
-                        if (m_threads.TryGetValue(threadReference, out thread))
-                        {
-                            var flags = enum_FRAMEINFO_FLAGS.FIF_FRAME |   // need a frame object
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME |        // need a function name
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE | // with the module specified
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |   // with argument names and types
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES |
-                                enum_FRAMEINFO_FLAGS.FIF_FLAGS |
-                                enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
+                        var flags = enum_FRAMEINFO_FLAGS.FIF_FRAME |   // need a frame object
+                            enum_FRAMEINFO_FLAGS.FIF_FUNCNAME |        // need a function name
+                            enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE | // with the module specified
+                            enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |   // with argument names and types
+                            enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
+                            enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES |
+                            enum_FRAMEINFO_FLAGS.FIF_FLAGS |
+                            enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
 
-                            IEnumDebugFrameInfo2 frameEnum;
-                            thread.EnumFrameInfo(flags, Constants.EvaluationRadix, out frameEnum);
-                            uint totalFrames;
-                            frameEnum.GetCount(out totalFrames);
+                        IEnumDebugFrameInfo2 frameEnum;
+                        thread.EnumFrameInfo(flags, Constants.EvaluationRadix, out frameEnum);
+                        uint totalFrames;
+                        frameEnum.GetCount(out totalFrames);
 
-                            frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
-                            m_threadFrameEnumInfos.Add(threadReference, frameEnumInfo);
-                        }
+                        frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                        m_threadFrameEnumInfos.Add(threadReference, frameEnumInfo);
                     }
                 }
 
@@ -1309,19 +1267,6 @@ namespace OpenDebugAD7
                             textPosition = TextPositionTuple.GetTextPositionOfFrame(m_pathConverter, frame) ?? TextPositionTuple.Nil;
                         }
 
-                        int? moduleId = null;
-                        IDebugModule2 module = frameInfo.m_pModule;
-                        if (module != null)
-                        {
-                            lock (m_moduleMap)
-                            {
-                                if (m_moduleMap.TryGetValue(module, out int mapModuleId))
-                                {
-                                    moduleId = mapModuleId;
-                                }
-                            }
-                        }
-
                         response.StackFrames.Add(new ProtocolMessages.StackFrame()
                         {
                             Id = frameReference,
@@ -1329,7 +1274,7 @@ namespace OpenDebugAD7
                             Source = textPosition.Source,
                             Line = textPosition.Line,
                             Column = textPosition.Column,
-                            ModuleId = moduleId
+                            ModuleId = m_moduleManager.GetModuleId(frameInfo.m_pModule)
                         });
                     }
 
@@ -1574,11 +1519,7 @@ namespace OpenDebugAD7
             ThreadsResponse response = new ThreadsResponse();
 
             // Make a copy of the threads list
-            Dictionary<int, IDebugThread2> threads;
-            lock (m_threads)
-            {
-                threads = new Dictionary<int, IDebugThread2>(m_threads);
-            }
+            ConcurrentDictionary<int, IDebugThread2> threads = m_threadManager.Copy();
 
             // iterate over the collection asking the engine for the name
             foreach (var pair in threads)
@@ -1589,55 +1530,6 @@ namespace OpenDebugAD7
             }
 
             responder.SetResponse(response);
-        }
-
-        private ProtocolMessages.Module ConvertToModule(in IDebugModule2 module, int moduleId)
-        {
-            var debugModuleInfos = new MODULE_INFO[1];
-            if (module.GetInfo(enum_MODULE_INFO_FIELDS.MIF_ALLFIELDS, debugModuleInfos) == HRConstants.S_OK)
-            {
-                var debugModuleInfo = debugModuleInfos[0];
-
-                var path = debugModuleInfo.m_bstrUrl;
-                var vsTimestampUTC = (debugModuleInfo.dwValidFields & enum_MODULE_INFO_FIELDS.MIF_TIMESTAMP) != 0 ? FileTimeToPosix(debugModuleInfo.m_TimeStamp).ToString(CultureInfo.InvariantCulture) : null;
-                var version = debugModuleInfo.m_bstrVersion;
-                var vsLoadAddress = debugModuleInfo.m_addrLoadAddress.ToString(CultureInfo.InvariantCulture);
-                var vsPreferredLoadAddress = debugModuleInfo.m_addrPreferredLoadAddress.ToString(CultureInfo.InvariantCulture);
-                var vsModuleSize = (int)debugModuleInfo.m_dwSize;
-                var vsLoadOrder = (int)debugModuleInfo.m_dwLoadOrder;
-                var symbolFilePath = debugModuleInfo.m_bstrUrlSymbolLocation;
-                var symbolStatus = debugModuleInfo.m_bstrDebugMessage;
-                var vsIs64Bit = (debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_64BIT) != 0;
-
-                ProtocolMessages.Module mod = new ProtocolMessages.Module(moduleId, debugModuleInfo.m_bstrName)
-                {
-                    Path = path, VsTimestampUTC = vsTimestampUTC, Version = version, VsLoadAddress = vsLoadAddress, VsPreferredLoadAddress = vsPreferredLoadAddress,
-                    VsModuleSize = vsModuleSize, VsLoadOrder = vsLoadOrder, SymbolFilePath = symbolFilePath, SymbolStatus = symbolStatus, VsIs64Bit = vsIs64Bit
-                };
-            
-                // IsOptimized and IsUserCode are not set by gdb
-                if((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0)
-                {
-                    mod.IsOptimized = true;
-                } else if ((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_UNOPTIMIZED) != 0)
-                {
-                    mod.IsOptimized = false;
-                }
-                if (module is IDebugModule3 module3 && module3.IsUserCode(out int isUserCode) == HRConstants.S_OK)
-                {
-                    if (isUserCode == 0)
-                    {
-                        mod.IsUserCode = false;
-                    }
-                    else
-                    {
-                        mod.IsUserCode = true;
-                    }
-                }
-
-                return mod;
-            }
-            return null;
         }
 
         protected override void HandleModulesRequestAsync(IRequestResponder<ModulesArguments, ModulesResponse> responder)
@@ -1651,17 +1543,23 @@ namespace OpenDebugAD7
                 while (enumDebugModules.Next(1, debugModules, ref numReturned) == HRConstants.S_OK && numReturned == 1)
                 {
                     IDebugModule2 module = debugModules[0];
-                    int moduleId;
-                    lock (m_moduleMap)
+                    int? moduleId = m_moduleManager.GetModuleId(module);
+
+                    if (!moduleId.HasValue)
                     {
-                        if (!m_moduleMap.TryGetValue(module, out moduleId))
-                        {
-                            Debug.Fail("Missing ModuleLoadEvent?");
-                            continue;
-                        }
+                        Debug.Fail("Missing ModuleLoadEvent?");
+                        continue;
                     }
-                    var mod = ConvertToModule(module, moduleId);
-                    response.Modules.Add(mod);
+
+                    ProtocolMessages.Module mod = m_moduleManager.ConvertToModule(module, moduleId.Value);
+                    if (mod != null)
+                    {
+                        response.Modules.Add(mod);
+                    }
+                    else
+                    {
+                        Debug.Fail("Failed to convert IDebugModule2 to ProtocolMessages.Module.");
+                    }
                 }
             }
             responder.SetResponse(response);
@@ -2455,23 +2353,16 @@ namespace OpenDebugAD7
 
         public void HandleIDebugThreadCreateEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            int id = pThread.Id();
-            lock (m_threads)
-            {
-                m_threads[id] = pThread;
-            }
-            Protocol.SendEvent(new ThreadEvent(ThreadEvent.ReasonValue.Started, id));
+            int threadId = pThread.Id();
+            m_threadManager.TryAddThread(pThread);
+            Protocol.SendEvent(new ThreadEvent(ThreadEvent.ReasonValue.Started, threadId));
         }
 
         public void HandleIDebugThreadDestroyEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            int id = pThread.Id();
-
-            lock (m_threads)
-            {
-                m_threads.Remove(id);
-            }
-            Protocol.SendEvent(new ThreadEvent(ThreadEvent.ReasonValue.Exited, id));
+            int threadId = pThread.Id();
+            m_threadManager.TryRemoveThread(threadId);
+            Protocol.SendEvent(new ThreadEvent(ThreadEvent.ReasonValue.Exited, threadId));
         }
 
         public void HandleIDebugModuleLoadEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
@@ -2488,16 +2379,17 @@ namespace OpenDebugAD7
 
             if (isLoad != 0)
             {
-                moduleId = (int?)RegisterDebugModule(module);
+                moduleId = m_moduleManager.RegisterDebugModule(module);
                 reason = ModuleEvent.ReasonValue.New;
-            } else {
-                moduleId = ReleaseDebugModule(module);
+            } else 
+            {
+                moduleId = m_moduleManager.ReleaseDebugModule(module);
                 reason = ModuleEvent.ReasonValue.Removed;
             }
 
-            if (moduleId != null)
+            if (moduleId.HasValue)
             {
-                var mod = ConvertToModule(module, (int)moduleId);
+                var mod = m_moduleManager.ConvertToModule(module, moduleId.Value);
                 if (mod != null)
                 {
                     Protocol.SendEvent(new ModuleEvent(reason, mod));
