@@ -701,7 +701,8 @@ namespace OpenDebugAD7
                 SupportsLogPoints = true,
                 SupportsReadMemoryRequest = true,
                 SupportsModulesRequest = true,
-                AdditionalModuleColumns = additionalModuleColumns
+                AdditionalModuleColumns = additionalModuleColumns,
+                SupportsDisassembleRequest = true
             };
 
             responder.SetResponse(initializeResponse);
@@ -1667,6 +1668,70 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
+        protected override void HandleDisassembleRequestAsync(IRequestResponder<DisassembleArguments, DisassembleResponse> responder)
+        {
+            DisassembleResponse response = new DisassembleResponse();
+
+            int hr;
+            DisassembleArguments disassembleArguments = responder.Arguments;
+            string memoryReference = disassembleArguments.MemoryReference;
+            int? offset = disassembleArguments.Offset;
+
+            Debug.Assert(!string.IsNullOrEmpty(memoryReference));
+            try
+            {
+                ulong address;
+                if (memoryReference.StartsWith("0x", StringComparison.Ordinal))
+                {
+                    address = Convert.ToUInt64(memoryReference.Substring(2), 16);
+                } else {
+                    address = Convert.ToUInt64(memoryReference, 10);
+                }
+                if (offset.HasValue && offset.Value != 0)
+                {
+                    if (offset < 0)
+                    {
+                        address += (ulong)offset.Value;
+                    } else {
+                        address -= (ulong)-offset.Value;
+                    }
+                }
+
+                IDebugDisassemblyStream2 disassemblyStream;
+                IDebugMemoryContext2 memoryContext;
+                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out memoryContext);
+                if (m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, (IDebugCodeContext2)memoryContext , out disassemblyStream) == HRConstants.S_OK)
+                {
+                    if (disassemblyStream.Seek(enum_SEEK_START.SEEK_START_BEGIN, (IDebugCodeContext2)memoryContext, address, (long)disassembleArguments.InstructionOffset) == HRConstants.S_OK)
+                    {
+                        DisassemblyData[] prgDisassembly = new DisassemblyData[disassembleArguments.InstructionCount];
+                        if (disassemblyStream.Read((uint)disassembleArguments.InstructionCount, enum_DISASSEMBLY_STREAM_FIELDS.DSF_ALL, out uint pdwInstructionsRead, prgDisassembly) == HRConstants.S_OK)
+                        {
+                            Debug.Assert(disassembleArguments.InstructionCount == pdwInstructionsRead);
+                            foreach (DisassemblyData data in prgDisassembly)
+                            {
+                                DisassembledInstruction instruction = new DisassembledInstruction() {
+                                    Address = data.bstrAddress,
+                                    InstructionBytes = data.bstrCodeBytes,
+                                    Instruction = data.bstrOpcode,
+                                    Symbol = data.bstrSymbol,
+                                    // Location = data.uCodeLocationId,
+                                    Line = (int?)data.posBeg.dwLine,
+                                    Column = (int?)data.posBeg.dwColumn,
+                                    EndLine = (int?)data.posEnd.dwLine,
+                                    EndColumn = (int?)data.posEnd.dwColumn
+                                };
+                                response.Instructions.Add(instruction);
+                            }
+                        }
+                    }
+
+                }
+            } catch { }
+
+            responder.SetResponse(response);
+        }
+
         protected override void HandleSetBreakpointsRequestAsync(IRequestResponder<SetBreakpointsArguments, SetBreakpointsResponse> responder)
         {
             SetBreakpointsResponse response = new SetBreakpointsResponse();
@@ -2160,7 +2225,6 @@ namespace OpenDebugAD7
                 MemoryReference = memoryReference
             });
         }
-
 
         protected override void HandleReadMemoryRequestAsync(IRequestResponder<ReadMemoryArguments, ReadMemoryResponse> responder)
         {
