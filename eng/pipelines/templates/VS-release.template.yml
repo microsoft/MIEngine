@@ -1,0 +1,25 @@
+---
+steps:
+- checkout: self
+
+- template: ../tasks/NuGetToolInstaller.yml
+
+- template: ../tasks/MicroBuildSigningPlugin.yml
+
+- template: ../tasks/MicroBuildLocalizationPlugin.yml
+
+- template: ../steps/BuildSolution.yml
+
+- template: ../steps/CollectAndPublishBinaries.yml
+  parameters:
+    TargetFolder: '$(Build.StagingDirectory)\drop'
+    ArtifactName: 'drop'
+
+- template: ../steps/CopyAndPublishSymbols.yml
+
+- template: ../steps/PackAndPublishVSPackages.yml
+  parameters:
+    BasePath: $(Build.StagingDirectory)
+
+- template: ../tasks/MicroBuildCleanup.yml
+...

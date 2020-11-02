@@ -3,7 +3,6 @@
   <ItemGroup>
     <FilesToSign Include="@(DropSignedFile)">
       <Authenticode>Microsoft400</Authenticode>
-      <StrongName>StrongName</StrongName>
     </FilesToSign>
   </ItemGroup>
 
@@ -13,7 +12,7 @@
       <DropDir Condition="'$(DropSubDir)'!=''">$(DropRootDir)\$(DropSubDir)</DropDir>
     </PropertyGroup>
     <!--In official builds of the lab configuration, make sure that the MicroBuild props are included in any project that uses DropFiles-->
-    <Error Condition="'$(MicroBuild_SigningTargetsImported)'!='true' and '$(Lab)'!='false' and '$(TEST_LAB_BUILD)'=='' and '$(BUILD_BUILDURI)'!=''" Text="MicroBuild.Core.props must be included in projects that use DropFiles." />
+    <Error Condition="'$(PkgMicrosoft_VisualStudioEng_MicroBuild_Core)'=='' and '$(Lab)'!='false' and '$(TEST_LAB_BUILD)'=='' and '$(BUILD_BUILDURI)'!=''" Text="MicroBuild.Core.props must be included in projects that use DropFiles." />
     <MakeDir Condition="!Exists($(DropDir))" Directories="$(DropDir)" />
     <Copy DestinationFolder="$(DropDir)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)" />
   </Target>

@@ -1,9 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
-  <!-- miengine.settings.targets must be imported first as it sets $(NuGetPackagesDirectory) -->
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\build\miengine.settings.targets" />
-  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
-  <Import Project="packages.props" />
   <PropertyGroup>
     <!--Visual Studio will prompt to upgrade the project unless $(MinimumVisualStudioVersion)==$(VisualStudioVersion), to make
     VS happy, we will conditionally set MinimumVisualStudioVersion based on what version is opening the project -->
@@ -13,6 +9,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <TargetFrameworkProfile />
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -62,7 +59,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="SuppressFromVsix.targets" />
   <PropertyGroup>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -73,7 +69,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.MIDebugPackage</RootNamespace>
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFramework>net462</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Because the MIEngine ships in Visual Studio, it is recommended NOT to install the .vsix
@@ -91,54 +87,33 @@
     <VsSDKIncludes Condition=" '$(VsSDKIncludes)' == '' ">$(VsSDKInstall)\VisualStudioIntegration\Common\inc</VsSDKIncludes>
     <VsSDKToolsPath Condition=" '$(VsSDKToolsPath)' == '' ">$(VsSDKInstall)\VisualStudioIntegration\Tools\bin</VsSDKToolsPath>
   </PropertyGroup>
+
+ <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)" />    
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="$(Microsoft_VisualStudio_Shell_Framework_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
+
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.10.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_10_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.11.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_11_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.12.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_12_0_Version)" />
+
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop" Version="$(Microsoft_VisualStudio_Shell_Interop_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="$(Microsoft_VisualStudio_Shell_Interop_10_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.11.0" Version="$(Microsoft_VisualStudio_Shell_Interop_11_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.12.0" Version="$(Microsoft_VisualStudio_Shell_Interop_12_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.8.0" Version="$(Microsoft_VisualStudio_Shell_Interop_8_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.9.0" Version="$(Microsoft_VisualStudio_Shell_Interop_9_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="$(Microsoft_VisualStudio_Threading_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.TextManager.Interop" Version="$(Microsoft_VisualStudio_TextManager_Interop_Version)" />
+    <!--NOTE: this reference is here to enable CreatePkgDef.exe to succeed when compiling in VS in a version != the shell targetting version -->
+    <PackageReference Include="Microsoft.VisualStudio.Utilities" Version="$(Microsoft_VisualStudio_Utilities_Version)" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="$(Microsoft_VSSDK_BuildTools_Version)" GeneratePathProperty="true"/>
+
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
+  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0">
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.12.0">
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.TextManager.Interop">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.15.0.$(Microsoft_VisualStudio_Shell_15_0_Version)\lib\Microsoft.VisualStudio.Shell.15.0.dll">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Threading.$(Microsoft_VisualStudio_Threading_Version)\lib\net45\Microsoft.VisualStudio.Threading.dll">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Shell.Framework.$(Microsoft_VisualStudio_Shell_Framework_Version)\lib\net45\Microsoft.VisualStudio.Shell.Framework.dll">
-      <Private>False</Private>
-    </Reference>
-    <!--NOTE: this reference is here to enable CreatePkgDef.exe to succeed when compiling in VS in a version != the shell targetting version -->
-    <Reference Include="$(NugetPackagesDirectory)\Microsoft.VisualStudio.Utilities.$(Microsoft_VisualStudio_Utilities_Version)\lib\net45\Microsoft.VisualStudio.Utilities.dll">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -157,6 +132,9 @@
     <Compile Include="MIDebugPackagePackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />
+    <Content Include="Microsoft.MIDebugPackage.pkgdef">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">
@@ -174,10 +152,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="packages.props" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -351,10 +325,7 @@
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\build\miengine.targets" />
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
-  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
   <!--
   Target to drop the built files into a directory.
   For the official build, we need to drop files to the build share

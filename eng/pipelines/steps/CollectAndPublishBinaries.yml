@@ -1,0 +1,21 @@
+# Copies the binaries to a folder and publish them
+---
+parameters:
+  TargetFolder: '$(Build.SourcesDirectory)\drop'
+  ArtifactName: 'drop'
+
+steps:
+- template: ../tasks/CopyFiles.yml
+  parameters:
+    displayName: 'Copy Files to: ${{ parameters.TargetFolder }}'
+    SourceFolder: '$(Build.BinariesDirectory)'
+    TargetFolder: ${{ parameters.TargetFolder }}
+    CleanTargetFolder: true
+    OverWrite: true
+
+- template: ../tasks/PublishPipelineArtifact.yml
+  parameters:
+    displayName: 'Publish Binaries'
+    path: ${{ parameters.TargetFolder }}
+    artifactName: '${{ parameters.ArtifactName }}'
+...
