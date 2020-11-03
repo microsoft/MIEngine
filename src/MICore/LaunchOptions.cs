@@ -443,7 +443,7 @@ namespace MICore
 
         private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
         {
-            if (!String.IsNullOrWhiteSpace(launchOptions.MiDebuggerServerAddress))
+            if (!String.IsNullOrWhiteSpace(launchOptions.DebugServerPath))
             {
                 this.DebugServer = launchOptions.DebugServerPath;
                 this.DebugServerArgs = launchOptions.DebugServerArgs;
@@ -1711,6 +1711,8 @@ namespace MICore
                 }
             }
 
+            this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
+
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
@@ -1885,8 +1887,6 @@ namespace MICore
             this.WorkingDirectory = launch.Cwd ?? String.Empty;
 
             this.CoreDumpPath = launch.CoreDumpPath;
-
-            this.SetupCommands = LaunchCommand.CreateCollection(launch.SetupCommands);
 
             if (launch.CustomLaunchSetupCommands.Any())
             {
