@@ -303,6 +303,31 @@ namespace OpenDebugAD7
             return date / 10000000;
         }
 
+        private IDebugMemoryContext2 GetMemoryContext(string memoryReference, int? offset, out ulong address, out int hr)
+        {
+            if (memoryReference.StartsWith("0x", StringComparison.Ordinal))
+            {
+                address = Convert.ToUInt64(memoryReference.Substring(2), 16);
+            }
+            else
+            {
+                address = Convert.ToUInt64(memoryReference, 10);
+            }
+            if (offset.HasValue && offset.Value != 0)
+            {
+                if (offset < 0)
+                {
+                    address += (ulong)offset.Value;
+                }
+                else
+                {
+                    address -= (ulong)-offset.Value;
+                }
+            }
+            hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 memoryContext);
+            return memoryContext;
+        }
+
         #endregion
 
         #region AD7EventHandlers helper methods
@@ -1668,39 +1693,18 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
+        // test -- need to delete
         protected override void HandleDisassembleRequestAsync(IRequestResponder<DisassembleArguments, DisassembleResponse> responder)
         {
             DisassembleResponse response = new DisassembleResponse();
 
             int hr;
             DisassembleArguments disassembleArguments = responder.Arguments;
-            string memoryReference = disassembleArguments.MemoryReference;
-            int? offset = disassembleArguments.Offset;
-
-            Debug.Assert(!string.IsNullOrEmpty(memoryReference));
+            Debug.Assert(!string.IsNullOrEmpty(disassembleArguments.MemoryReference));
             try
             {
-                ulong address;
-                if (memoryReference.StartsWith("0x", StringComparison.Ordinal))
-                {
-                    address = Convert.ToUInt64(memoryReference.Substring(2), 16);
-                } else {
-                    address = Convert.ToUInt64(memoryReference, 10);
-                }
-                if (offset.HasValue && offset.Value != 0)
-                {
-                    if (offset < 0)
-                    {
-                        address += (ulong)offset.Value;
-                    } else {
-                        address -= (ulong)-offset.Value;
-                    }
-                }
-
-                IDebugDisassemblyStream2 disassemblyStream;
-                IDebugMemoryContext2 memoryContext;
-                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out memoryContext);
-                if (m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, (IDebugCodeContext2)memoryContext , out disassemblyStream) == HRConstants.S_OK)
+                IDebugMemoryContext2 memoryContext = GetMemoryContext(disassembleArguments.MemoryReference, disassembleArguments.Offset, out ulong address, out hr);
+                if (m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, (IDebugCodeContext2)memoryContext , out IDebugDisassemblyStream2 disassemblyStream) == HRConstants.S_OK)
                 {
                     if (disassemblyStream.Seek(enum_SEEK_START.SEEK_START_BEGIN, (IDebugCodeContext2)memoryContext, address, (long)disassembleArguments.InstructionOffset) == HRConstants.S_OK)
                     {
@@ -2238,29 +2242,7 @@ namespace OpenDebugAD7
                     throw new ArgumentException("ReadMemoryArguments.MemoryReference is null or empty.");
                 }
 
-                ulong address;
-                if (rma.MemoryReference.StartsWith("0x", StringComparison.Ordinal))
-                {
-                    address = Convert.ToUInt64(rma.MemoryReference.Substring(2), 16);
-                }
-                else
-                {
-                    address = Convert.ToUInt64(rma.MemoryReference, 10);
-                }
-
-                if (rma.Offset.HasValue && rma.Offset.Value != 0)
-                {
-                    if (rma.Offset < 0)
-                    {
-                        address += (ulong)rma.Offset.Value;
-                    }
-                    else
-                    {
-                        address -= (ulong)-rma.Offset.Value;
-                    }
-                }
-
-                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 memoryContext);
+                IDebugMemoryContext2 memoryContext = GetMemoryContext(rma.MemoryReference, rma.Offset, out ulong address, out hr);
                 eb.CheckHR(hr);
 
                 byte[] data = new byte[rma.Count];
