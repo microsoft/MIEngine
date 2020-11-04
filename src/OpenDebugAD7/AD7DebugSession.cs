@@ -303,7 +303,7 @@ namespace OpenDebugAD7
             return date / 10000000;
         }
 
-        private IDebugMemoryContext2 GetMemoryContext(string memoryReference, int? offset, out ulong address, out int hr)
+        private int GetMemoryContext(string memoryReference, int? offset, out IDebugMemoryContext2 memoryContext, out ulong address)
         {
             if (memoryReference.StartsWith("0x", StringComparison.Ordinal))
             {
@@ -324,8 +324,8 @@ namespace OpenDebugAD7
                     address -= (ulong)-offset.Value;
                 }
             }
-            hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 memoryContext);
-            return memoryContext;
+            int hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out memoryContext);
+            return hr;
         }
 
         #endregion
@@ -1697,43 +1697,63 @@ namespace OpenDebugAD7
         protected override void HandleDisassembleRequestAsync(IRequestResponder<DisassembleArguments, DisassembleResponse> responder)
         {
             DisassembleResponse response = new DisassembleResponse();
-
-            int hr;
             DisassembleArguments disassembleArguments = responder.Arguments;
             Debug.Assert(!string.IsNullOrEmpty(disassembleArguments.MemoryReference));
             try
             {
-                IDebugMemoryContext2 memoryContext = GetMemoryContext(disassembleArguments.MemoryReference, disassembleArguments.Offset, out ulong address, out hr);
-                if (m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, (IDebugCodeContext2)memoryContext , out IDebugDisassemblyStream2 disassemblyStream) == HRConstants.S_OK)
+                if (GetMemoryContext(disassembleArguments.MemoryReference, disassembleArguments.Offset, out IDebugMemoryContext2 memoryContext, out ulong address) == HRConstants.S_OK)
                 {
-                    if (disassemblyStream.Seek(enum_SEEK_START.SEEK_START_BEGIN, (IDebugCodeContext2)memoryContext, address, (long)disassembleArguments.InstructionOffset) == HRConstants.S_OK)
+                    IDebugCodeContext2 codeContext = memoryContext as IDebugCodeContext2;
+                    if (!(codeContext is IDebugCodeContext2))
                     {
+                        throw new AD7Exception(AD7Resources.Error_ConvertMemoryContext);
+                    }
+                    if (m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, codeContext, out IDebugDisassemblyStream2 disassemblyStream) == HRConstants.S_OK)
+                    {
+                        if (disassembleArguments.InstructionOffset != 0)
+                        {
+                            if (disassemblyStream.Seek(enum_SEEK_START.SEEK_START_BEGIN, codeContext, address, (long)disassembleArguments.InstructionOffset) != HRConstants.S_OK)
+                            {
+                                throw new AD7Exception(AD7Resources.Error_SeekDisassemblyStream);
+                            }
+                        }
                         DisassemblyData[] prgDisassembly = new DisassemblyData[disassembleArguments.InstructionCount];
                         if (disassemblyStream.Read((uint)disassembleArguments.InstructionCount, enum_DISASSEMBLY_STREAM_FIELDS.DSF_ALL, out uint pdwInstructionsRead, prgDisassembly) == HRConstants.S_OK)
                         {
                             Debug.Assert(disassembleArguments.InstructionCount == pdwInstructionsRead);
                             foreach (DisassemblyData data in prgDisassembly)
                             {
+                                if (data.dwFlags.HasFlag(enum_DISASSEMBLY_FLAGS.DF_HASSOURCE))
+                                {
+                                    Debug.Fail("Warning: engine supports mixed instruction/source disassembly, but OpenDebugAD7 does not.");
+                                }
                                 DisassembledInstruction instruction = new DisassembledInstruction() {
                                     Address = data.bstrAddress,
                                     InstructionBytes = data.bstrCodeBytes,
                                     Instruction = data.bstrOpcode,
-                                    Symbol = data.bstrSymbol,
-                                    // Location = data.uCodeLocationId,
-                                    Line = (int?)data.posBeg.dwLine,
-                                    Column = (int?)data.posBeg.dwColumn,
-                                    EndLine = (int?)data.posEnd.dwLine,
-                                    EndColumn = (int?)data.posEnd.dwColumn
+                                    Symbol = data.bstrSymbol
                                 };
                                 response.Instructions.Add(instruction);
                             }
                         }
+                        else
+                        {
+                            throw new AD7Exception(AD7Resources.Error_ReadDisassemblyStream);
+                        }
                     }
-
+                    else
+                    {
+                        throw new AD7Exception(AD7Resources.Error_GetDisassemblyStream);
+                    }
                 }
-            } catch { }
-
-            responder.SetResponse(response);
+                else
+                {
+                    throw new AD7Exception(AD7Resources.Error_GetMemoryContext);
+                }
+                responder.SetResponse(response);
+            } catch (AD7Exception e) {
+                responder.SetError(new ProtocolException(e.Message));
+            }
         }
 
         protected override void HandleSetBreakpointsRequestAsync(IRequestResponder<SetBreakpointsArguments, SetBreakpointsResponse> responder)
@@ -2242,7 +2262,7 @@ namespace OpenDebugAD7
                     throw new ArgumentException("ReadMemoryArguments.MemoryReference is null or empty.");
                 }
 
-                IDebugMemoryContext2 memoryContext = GetMemoryContext(rma.MemoryReference, rma.Offset, out ulong address, out hr);
+                hr = GetMemoryContext(rma.MemoryReference, rma.Offset, out IDebugMemoryContext2 memoryContext, out ulong address);
                 eb.CheckHR(hr);
 
                 byte[] data = new byte[rma.Count];

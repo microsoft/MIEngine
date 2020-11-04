@@ -326,4 +326,19 @@ Error: {1}</value>
   <data name="Error_SourceFileMapInvalidEditorPath" xml:space="preserve">
     <value>'editorPath' can not be null or empty</value>
   </data>
+  <data name="Error_GetMemoryContext" xml:space="preserve">
+    <value>Failed to get memory context.</value>
+  </data>
+  <data name="Error_GetDisassemblyStream" xml:space="preserve">
+    <value>Failed to get disassembly stream.</value>
+  </data>
+  <data name="Error_ReadDisassemblyStream" xml:space="preserve">
+    <value>Failed to read disassembly stream.</value>
+  </data>
+  <data name="Error_ConvertMemoryContext" xml:space="preserve">
+    <value>Failed to convert memory context to code context.</value>
+  </data>
+  <data name="Error_SeekDisassemblyStream" xml:space="preserve">
+    <value>Failed to seek disassembly stream.</value>
+  </data>
 </root>
