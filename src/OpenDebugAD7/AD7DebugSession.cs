@@ -313,6 +313,7 @@ namespace OpenDebugAD7
             {
                 address = Convert.ToUInt64(memoryReference, 10);
             }
+
             if (offset.HasValue && offset.Value != 0)
             {
                 if (offset < 0)
@@ -324,6 +325,7 @@ namespace OpenDebugAD7
                     address -= (ulong)-offset.Value;
                 }
             }
+
             int hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out memoryContext);
             return hr;
         }
@@ -1693,7 +1695,6 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
-        // test -- need to delete
         protected override void HandleDisassembleRequestAsync(IRequestResponder<DisassembleArguments, DisassembleResponse> responder)
         {
             DisassembleResponse response = new DisassembleResponse();
@@ -1701,57 +1702,40 @@ namespace OpenDebugAD7
             Debug.Assert(!string.IsNullOrEmpty(disassembleArguments.MemoryReference));
             try
             {
-                if (GetMemoryContext(disassembleArguments.MemoryReference, disassembleArguments.Offset, out IDebugMemoryContext2 memoryContext, out ulong address) == HRConstants.S_OK)
+                ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Disassemble);
+
+                eb.CheckHR(GetMemoryContext(disassembleArguments.MemoryReference, disassembleArguments.Offset, out IDebugMemoryContext2 memoryContext, out ulong address));
+                IDebugCodeContext2 codeContext = memoryContext as IDebugCodeContext2;
+                if (codeContext == null)
                 {
-                    IDebugCodeContext2 codeContext = memoryContext as IDebugCodeContext2;
-                    if (!(codeContext is IDebugCodeContext2))
-                    {
-                        throw new AD7Exception(AD7Resources.Error_ConvertMemoryContext);
-                    }
-                    if (m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, codeContext, out IDebugDisassemblyStream2 disassemblyStream) == HRConstants.S_OK)
-                    {
-                        if (disassembleArguments.InstructionOffset != 0)
-                        {
-                            if (disassemblyStream.Seek(enum_SEEK_START.SEEK_START_BEGIN, codeContext, address, (long)disassembleArguments.InstructionOffset) != HRConstants.S_OK)
-                            {
-                                throw new AD7Exception(AD7Resources.Error_SeekDisassemblyStream);
-                            }
-                        }
-                        DisassemblyData[] prgDisassembly = new DisassemblyData[disassembleArguments.InstructionCount];
-                        if (disassemblyStream.Read((uint)disassembleArguments.InstructionCount, enum_DISASSEMBLY_STREAM_FIELDS.DSF_ALL, out uint pdwInstructionsRead, prgDisassembly) == HRConstants.S_OK)
-                        {
-                            Debug.Assert(disassembleArguments.InstructionCount == pdwInstructionsRead);
-                            foreach (DisassemblyData data in prgDisassembly)
-                            {
-                                if (data.dwFlags.HasFlag(enum_DISASSEMBLY_FLAGS.DF_HASSOURCE))
-                                {
-                                    Debug.Fail("Warning: engine supports mixed instruction/source disassembly, but OpenDebugAD7 does not.");
-                                }
-                                DisassembledInstruction instruction = new DisassembledInstruction() {
-                                    Address = data.bstrAddress,
-                                    InstructionBytes = data.bstrCodeBytes,
-                                    Instruction = data.bstrOpcode,
-                                    Symbol = data.bstrSymbol
-                                };
-                                response.Instructions.Add(instruction);
-                            }
-                        }
-                        else
-                        {
-                            throw new AD7Exception(AD7Resources.Error_ReadDisassemblyStream);
-                        }
-                    }
-                    else
-                    {
-                        throw new AD7Exception(AD7Resources.Error_GetDisassemblyStream);
-                    }
+                    eb.CheckHR(HRConstants.E_NOTIMPL);
                 }
-                else
+
+                eb.CheckHR(m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, codeContext, out IDebugDisassemblyStream2 disassemblyStream));
+                if (disassembleArguments.InstructionOffset != 0)
                 {
-                    throw new AD7Exception(AD7Resources.Error_GetMemoryContext);
+                    eb.CheckHR(disassemblyStream.Seek(enum_SEEK_START.SEEK_START_BEGIN, codeContext, address, (long)disassembleArguments.InstructionOffset));
+                }
+
+                DisassemblyData[] prgDisassembly = new DisassemblyData[disassembleArguments.InstructionCount];
+                eb.CheckHR(disassemblyStream.Read((uint)disassembleArguments.InstructionCount, enum_DISASSEMBLY_STREAM_FIELDS.DSF_ALL, out uint pdwInstructionsRead, prgDisassembly));
+                Debug.Assert(disassembleArguments.InstructionCount == pdwInstructionsRead);
+                foreach (DisassemblyData data in prgDisassembly)
+                {
+                    if (data.dwFlags.HasFlag(enum_DISASSEMBLY_FLAGS.DF_HASSOURCE))
+                    {
+                        Debug.Fail("Warning: engine supports mixed instruction/source disassembly, but OpenDebugAD7 does not.");
+                    }
+                    DisassembledInstruction instruction = new DisassembledInstruction() {
+                        Address = data.bstrAddress,
+                        InstructionBytes = data.bstrCodeBytes,
+                        Instruction = data.bstrOpcode,
+                        Symbol = data.bstrSymbol
+                    };
+                    response.Instructions.Add(instruction);
                 }
                 responder.SetResponse(response);
-            } catch (AD7Exception e) {
+            } catch (Exception e) {
                 responder.SetError(new ProtocolException(e.Message));
             }
         }

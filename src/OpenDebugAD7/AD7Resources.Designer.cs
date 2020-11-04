@@ -254,6 +254,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to disassemble. {0}.
+        /// </summary>
+        internal static string Error_Scenario_Disassemble {
+            get {
+                return ResourceManager.GetString("Error_Scenario_Disassemble", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to evaluate expression. {0}.
         /// </summary>
         internal static string Error_Scenario_Evaluate {
@@ -522,56 +531,6 @@ namespace OpenDebugAD7 {
         internal static string Warning_Scenario_TerminateProcess {
             get {
                 return ResourceManager.GetString("Warning_Scenario_TerminateProcess", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to get memory context.
-        ///.
-        /// </summary>
-        internal static string Error_GetMemoryContext {
-            get {
-                return ResourceManager.GetString("Error_GetMemoryContext", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to get disassembly stream.
-        ///.
-        /// </summary>
-        internal static string Error_GetDisassemblyStream {
-            get {
-                return ResourceManager.GetString("Error_GetDisassemblyStream", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to read disassembly stream.
-        ///.
-        /// </summary>
-        internal static string Error_ReadDisassemblyStream {
-            get {
-                return ResourceManager.GetString("Error_ReadDisassemblyStream", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to convert memory context to code context.
-        ///.
-        /// </summary>
-        internal static string Error_ConvertMemoryContext {
-            get {
-                return ResourceManager.GetString("Error_ConvertMemoryContext", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to seek disassembly stream.
-        ///.
-        /// </summary>
-        internal static string Error_SeekDisassemblyStream {
-            get {
-                return ResourceManager.GetString("Error_SeekDisassemblyStream", resourceCulture);
             }
         }
     }

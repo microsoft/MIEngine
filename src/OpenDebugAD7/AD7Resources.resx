@@ -285,4 +285,7 @@
   <data name="Error_Scenario_ReadMemory" xml:space="preserve">
     <value>Unable to read memory. {0}</value>
   </data>
+  <data name="Error_Scenario_Disassemble" xml:space="preserve">
+    <value>Unable to disassemble. {0}</value>
+  </data>
 </root>
