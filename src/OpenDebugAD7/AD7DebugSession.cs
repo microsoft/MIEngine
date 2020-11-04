@@ -1712,7 +1712,7 @@ namespace OpenDebugAD7
                 }
 
                 eb.CheckHR(m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, codeContext, out IDebugDisassemblyStream2 disassemblyStream));
-                if (disassembleArguments.InstructionOffset != 0)
+                if (disassembleArguments.InstructionOffset.GetValueOrDefault(0) != 0)
                 {
                     eb.CheckHR(disassemblyStream.Seek(enum_SEEK_START.SEEK_START_BEGIN, codeContext, address, (long)disassembleArguments.InstructionOffset));
                 }
