@@ -186,6 +186,9 @@ namespace MICore
         private async Task JumpInternal(string target)
         {
             // temporary breakpoint + jump
+            // NB: the gdb docs state: "Resume execution at line linespec. Execution stops again immediately if there is a breakpoint there."
+            //     We rely on this. If another thread hits a breakpoint before that we have a UX problem
+            //     and would need to handle this via scheduler-locking for all-stop mode and ??? for non-stop mode.
             await _debugger.CmdAsync("-break-insert -t " + target, ResultClass.done);
             await _debugger.CmdAsync("-exec-jump " + target, ResultClass.running);
         }
