@@ -254,6 +254,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to disassemble. {0}.
+        /// </summary>
+        internal static string Error_Scenario_Disassemble {
+            get {
+                return ResourceManager.GetString("Error_Scenario_Disassemble", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to evaluate expression. {0}.
         /// </summary>
         internal static string Error_Scenario_Evaluate {
