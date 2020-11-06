@@ -303,6 +303,33 @@ namespace OpenDebugAD7
             return date / 10000000;
         }
 
+        private int GetMemoryContext(string memoryReference, int? offset, out IDebugMemoryContext2 memoryContext, out ulong address)
+        {
+            if (memoryReference.StartsWith("0x", StringComparison.Ordinal))
+            {
+                address = Convert.ToUInt64(memoryReference.Substring(2), 16);
+            }
+            else
+            {
+                address = Convert.ToUInt64(memoryReference, 10);
+            }
+
+            if (offset.HasValue && offset.Value != 0)
+            {
+                if (offset < 0)
+                {
+                    address += (ulong)offset.Value;
+                }
+                else
+                {
+                    address -= (ulong)-offset.Value;
+                }
+            }
+
+            int hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out memoryContext);
+            return hr;
+        }
+
         #endregion
 
         #region AD7EventHandlers helper methods
@@ -701,7 +728,8 @@ namespace OpenDebugAD7
                 SupportsLogPoints = true,
                 SupportsReadMemoryRequest = true,
                 SupportsModulesRequest = true,
-                AdditionalModuleColumns = additionalModuleColumns
+                AdditionalModuleColumns = additionalModuleColumns,
+                SupportsDisassembleRequest = true
             };
 
             responder.SetResponse(initializeResponse);
@@ -1667,6 +1695,51 @@ namespace OpenDebugAD7
             responder.SetResponse(response);
         }
 
+        protected override void HandleDisassembleRequestAsync(IRequestResponder<DisassembleArguments, DisassembleResponse> responder)
+        {
+            DisassembleResponse response = new DisassembleResponse();
+            DisassembleArguments disassembleArguments = responder.Arguments;
+            Debug.Assert(!string.IsNullOrEmpty(disassembleArguments.MemoryReference));
+            try
+            {
+                ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Disassemble);
+
+                eb.CheckHR(GetMemoryContext(disassembleArguments.MemoryReference, disassembleArguments.Offset, out IDebugMemoryContext2 memoryContext, out ulong address));
+                IDebugCodeContext2 codeContext = memoryContext as IDebugCodeContext2;
+                if (codeContext == null)
+                {
+                    eb.CheckHR(HRConstants.E_NOTIMPL);
+                }
+
+                eb.CheckHR(m_program.GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE.DSS_ALL, codeContext, out IDebugDisassemblyStream2 disassemblyStream));
+                if (disassembleArguments.InstructionOffset.GetValueOrDefault(0) != 0)
+                {
+                    eb.CheckHR(disassemblyStream.Seek(enum_SEEK_START.SEEK_START_BEGIN, codeContext, address, (long)disassembleArguments.InstructionOffset));
+                }
+
+                DisassemblyData[] prgDisassembly = new DisassemblyData[disassembleArguments.InstructionCount];
+                eb.CheckHR(disassemblyStream.Read((uint)disassembleArguments.InstructionCount, enum_DISASSEMBLY_STREAM_FIELDS.DSF_ALL, out uint pdwInstructionsRead, prgDisassembly));
+                Debug.Assert(disassembleArguments.InstructionCount == pdwInstructionsRead);
+                foreach (DisassemblyData data in prgDisassembly)
+                {
+                    if (data.dwFlags.HasFlag(enum_DISASSEMBLY_FLAGS.DF_HASSOURCE))
+                    {
+                        Debug.Fail("Warning: engine supports mixed instruction/source disassembly, but OpenDebugAD7 does not.");
+                    }
+                    DisassembledInstruction instruction = new DisassembledInstruction() {
+                        Address = data.bstrAddress,
+                        InstructionBytes = data.bstrCodeBytes,
+                        Instruction = data.bstrOpcode,
+                        Symbol = data.bstrSymbol
+                    };
+                    response.Instructions.Add(instruction);
+                }
+                responder.SetResponse(response);
+            } catch (Exception e) {
+                responder.SetError(new ProtocolException(e.Message));
+            }
+        }
+
         protected override void HandleSetBreakpointsRequestAsync(IRequestResponder<SetBreakpointsArguments, SetBreakpointsResponse> responder)
         {
             SetBreakpointsResponse response = new SetBreakpointsResponse();
@@ -2161,7 +2234,6 @@ namespace OpenDebugAD7
             });
         }
 
-
         protected override void HandleReadMemoryRequestAsync(IRequestResponder<ReadMemoryArguments, ReadMemoryResponse> responder)
         {
             int hr;
@@ -2174,29 +2246,7 @@ namespace OpenDebugAD7
                     throw new ArgumentException("ReadMemoryArguments.MemoryReference is null or empty.");
                 }
 
-                ulong address;
-                if (rma.MemoryReference.StartsWith("0x", StringComparison.Ordinal))
-                {
-                    address = Convert.ToUInt64(rma.MemoryReference.Substring(2), 16);
-                }
-                else
-                {
-                    address = Convert.ToUInt64(rma.MemoryReference, 10);
-                }
-
-                if (rma.Offset.HasValue && rma.Offset.Value != 0)
-                {
-                    if (rma.Offset < 0)
-                    {
-                        address += (ulong)rma.Offset.Value;
-                    }
-                    else
-                    {
-                        address -= (ulong)-rma.Offset.Value;
-                    }
-                }
-
-                hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out IDebugMemoryContext2 memoryContext);
+                hr = GetMemoryContext(rma.MemoryReference, rma.Offset, out IDebugMemoryContext2 memoryContext, out ulong address);
                 eb.CheckHR(hr);
 
                 byte[] data = new byte[rma.Count];
