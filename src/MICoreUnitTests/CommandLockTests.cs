@@ -202,7 +202,7 @@ namespace MICoreUnitTests
             foreach (Task t in pendingTasks)
             {
                 Assert.True(t.IsCompleted);
-                Assert.IsType(typeof(DebuggerDisposedException), t.Exception.InnerException);
+                Assert.IsType<DebuggerDisposedException>(t.Exception.InnerException);
                 Assert.Equal("CloseAbortsOperationsTest complete", t.Exception.InnerException.Message);
             }
         }
