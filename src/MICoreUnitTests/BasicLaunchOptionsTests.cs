@@ -27,17 +27,17 @@ namespace MICoreUnitTests
                 "/>");
 
             var baseOptions = GetLaunchOptions(content);
-            Assert.IsAssignableFrom(typeof(LocalLaunchOptions), baseOptions);
+            Assert.IsAssignableFrom<LocalLaunchOptions>(baseOptions);
             var options = (LocalLaunchOptions)baseOptions;
 
             Assert.Equal(options.MIDebuggerPath, fakeFilePath);
-            Assert.Equal(options.MIDebuggerServerAddress, "myserverbox:345");
+            Assert.Equal("myserverbox:345", options.MIDebuggerServerAddress);
             Assert.Equal(options.ExePath, fakeFilePath);
-            Assert.Equal(options.TargetArchitecture, TargetArchitecture.ARM);
+            Assert.Equal(TargetArchitecture.ARM, options.TargetArchitecture);
             Assert.True(string.IsNullOrEmpty(options.AdditionalSOLibSearchPath));
             Assert.True(string.IsNullOrEmpty(options.AbsolutePrefixSOLibSearchPath));
-            Assert.Equal(options.DebuggerMIMode, MIMode.Gdb);
-            Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecRun);
+            Assert.Equal(MIMode.Gdb, options.DebuggerMIMode);
+            Assert.Equal(LaunchCompleteCommand.ExecRun, options.LaunchCompleteCommand);
             Assert.Null(options.CustomLaunchSetupCommands);
             Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 0);
             Assert.True(String.IsNullOrEmpty(options.CoreDumpPath));
@@ -61,23 +61,23 @@ namespace MICoreUnitTests
                 "</PipeLaunchOptions>");
 
             var baseOptions = GetLaunchOptions(content);
-            Assert.IsAssignableFrom(typeof(PipeLaunchOptions), baseOptions);
+            Assert.IsAssignableFrom<PipeLaunchOptions>(baseOptions);
             var options = (PipeLaunchOptions)baseOptions;
 
             Assert.Equal(options.PipePath, fakeFilePath);
-            Assert.Equal(options.PipeCwd, null);
-            Assert.Equal(options.ExePath, "/home/user/myname/foo");
-            Assert.Equal(options.ExeArguments, "arg1 arg2");
-            Assert.Equal(options.TargetArchitecture, TargetArchitecture.X64);
+            Assert.Null(options.PipeCwd);
+            Assert.Equal("/home/user/myname/foo", options.ExePath);
+            Assert.Equal("arg1 arg2", options.ExeArguments);
+            Assert.Equal(TargetArchitecture.X64, options.TargetArchitecture);
             Assert.True(string.IsNullOrEmpty(options.AdditionalSOLibSearchPath));
             Assert.True(string.IsNullOrEmpty(options.AbsolutePrefixSOLibSearchPath));
-            Assert.Equal(options.DebuggerMIMode, MIMode.Gdb);
-            Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecRun);
+            Assert.Equal(MIMode.Gdb, options.DebuggerMIMode);
+            Assert.Equal(LaunchCompleteCommand.ExecRun, options.LaunchCompleteCommand);
             Assert.True(options.CustomLaunchSetupCommands == null);
             Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 1);
             Assert.True(options.SetupCommands[0].IsMICommand);
-            Assert.Equal(options.SetupCommands[0].CommandText, "-gdb-set my-example-setting on");
-            Assert.True(options.SetupCommands[0].Description.Contains("gdb-set"));
+            Assert.Equal("-gdb-set my-example-setting on", options.SetupCommands[0].CommandText);
+            Assert.Contains("gdb-set", options.SetupCommands[0].Description, StringComparison.Ordinal);
             Assert.False(options.SetupCommands[0].IgnoreFailures);
             Assert.True(options.PipeEnvironment.Count == 0);
         }
@@ -109,28 +109,28 @@ namespace MICoreUnitTests
                 "</PipeLaunchOptions>");
 
             var baseOptions = GetLaunchOptions(content);
-            Assert.IsAssignableFrom(typeof(PipeLaunchOptions), baseOptions);
+            Assert.IsAssignableFrom<PipeLaunchOptions>(baseOptions);
             var options = (PipeLaunchOptions)baseOptions;
 
             Assert.Equal(options.PipePath, fakeFilePath);
-            Assert.Equal(options.PipeCwd, "/home/user/my program/src");
-            Assert.Equal(options.ExePath, "/home/user/myname/foo");
-            Assert.Equal(options.TargetArchitecture, TargetArchitecture.X64);
-            Assert.Equal(options.AbsolutePrefixSOLibSearchPath, "/system/bin");
+            Assert.Equal("/home/user/my program/src", options.PipeCwd);
+            Assert.Equal("/home/user/myname/foo", options.ExePath);
+            Assert.Equal(TargetArchitecture.X64, options.TargetArchitecture);
+            Assert.Equal("/system/bin", options.AbsolutePrefixSOLibSearchPath);
             string[] searchPaths = options.GetSOLibSearchPath().ToArray();
-            Assert.Equal(searchPaths.Length, 2);
-            Assert.Equal(searchPaths[0], "/home/user/myname");
-            Assert.Equal(searchPaths[1], "/a/b/c");
-            Assert.Equal(options.DebuggerMIMode, MIMode.Lldb);
+            Assert.Equal(2, searchPaths.Length);
+            Assert.Equal("/home/user/myname", searchPaths[0]);
+            Assert.Equal("/a/b/c", searchPaths[1]);
+            Assert.Equal(MIMode.Lldb, options.DebuggerMIMode);
             Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 0);
             Assert.True(options.CustomLaunchSetupCommands != null && options.CustomLaunchSetupCommands.Count == 1);
             var command = options.CustomLaunchSetupCommands[0];
             Assert.False(command.IsMICommand);
-            Assert.Equal(command.CommandText, "Example command");
-            Assert.Equal(command.Description, "Example description");
-            Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.None);
-            Assert.Equal(options.PipeEnvironment.First().Name, "PipeVar1");
-            Assert.Equal(options.PipeEnvironment.First().Value, "PipeValue1");
+            Assert.Equal("Example command", command.CommandText);
+            Assert.Equal("Example description", command.Description);
+            Assert.Equal(LaunchCompleteCommand.None, options.LaunchCompleteCommand);
+            Assert.Equal("PipeVar1", options.PipeEnvironment.First().Name);
+            Assert.Equal("PipeValue1", options.PipeEnvironment.First().Value);
         }
 
         // TODO this test is broken by a bug: the assembly binder only searches the unit test
@@ -156,19 +156,19 @@ namespace MICoreUnitTests
             </TcpLaunchOptions>";
 
             var baseOptions = GetLaunchOptions(content);
-            Assert.IsAssignableFrom(typeof(TcpLaunchOptions), baseOptions);
+            Assert.IsAssignableFrom<TcpLaunchOptions>(baseOptions);
             var options = (TcpLaunchOptions)baseOptions;
 
-            Assert.Equal(options.ExePath, "/a/b/c");
-            Assert.Equal(options.TargetArchitecture, TargetArchitecture.ARM);
-            Assert.Equal(options.DebuggerMIMode, MIMode.Gdb);
+            Assert.Equal("/a/b/c", options.ExePath);
+            Assert.Equal(TargetArchitecture.ARM, options.TargetArchitecture);
+            Assert.Equal(MIMode.Gdb, options.DebuggerMIMode);
             Assert.True(options.SetupCommands != null && options.SetupCommands.Count == 0);
             Assert.True(options.CustomLaunchSetupCommands != null && options.CustomLaunchSetupCommands.Count == 1);
             var command = options.CustomLaunchSetupCommands[0];
             Assert.True(command.IsMICommand);
-            Assert.Equal(command.CommandText, "-target-attach 1234");
-            Assert.Equal(command.Description, "Attaching to the 'foo' process");
-            Assert.Equal(options.LaunchCompleteCommand, LaunchCompleteCommand.ExecContinue);
+            Assert.Equal("-target-attach 1234", command.CommandText);
+            Assert.Equal("Attaching to the 'foo' process", command.Description);
+            Assert.Equal(LaunchCompleteCommand.ExecContinue, options.LaunchCompleteCommand);
         }
 
         [Fact]
@@ -187,7 +187,7 @@ namespace MICoreUnitTests
             }
             catch (InvalidLaunchOptionsException e)
             {
-                Assert.True(e.Message.Contains("Port"));
+                Assert.Contains("Port", e.Message, StringComparison.Ordinal);
             }
         }
 
@@ -204,7 +204,7 @@ namespace MICoreUnitTests
             }
             catch (InvalidLaunchOptionsException e)
             {
-                Assert.True(e.Message.StartsWith("Launch options", StringComparison.Ordinal));
+                Assert.StartsWith("Launch options", e.Message, StringComparison.Ordinal);
             }
         }
 
@@ -221,7 +221,7 @@ namespace MICoreUnitTests
             }
             catch (InvalidLaunchOptionsException e)
             {
-                Assert.True(e.Message.StartsWith("Launch options", StringComparison.Ordinal));
+                Assert.StartsWith("Launch options", e.Message, StringComparison.Ordinal);
             }
         }
 
@@ -245,7 +245,7 @@ namespace MICoreUnitTests
             }
             catch (InvalidLaunchOptionsException e)
             {
-                Assert.True(e.Message.StartsWith("Launch options", StringComparison.Ordinal));
+                Assert.StartsWith("Launch options", e.Message, StringComparison.Ordinal);
             }
         }
 
@@ -254,7 +254,7 @@ namespace MICoreUnitTests
         /// Verify that types relied upon by launcher extensions are exported by MIEngine in current build. 
         /// Don't change this test without checking with C++ team.
         /// </summary>
-        public void VerifyCoreApisPresent()
+        internal void VerifyCoreApisPresent()
         {
             LaunchOptions launchOptions = new LocalLaunchOptions("/usr/bin/gdb", "10.10.10.10:2345");
             launchOptions.ExePath = @"c:\users\me\myapp.out";

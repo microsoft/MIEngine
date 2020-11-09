@@ -15,10 +15,10 @@ namespace MICoreUnitTests
         {
             NdkToolVersion v;
             Assert.True(NdkToolVersion.TryParse("1.2.3.4.5", out v));
-            Assert.Equal(v.ToString(), "1.2.3.4.5");
+            Assert.Equal("1.2.3.4.5", v.ToString());
 
             Assert.True(NdkToolVersion.TryParse("6.7", out v));
-            Assert.Equal(v.ToString(), "6.7");
+            Assert.Equal("6.7", v.ToString());
 
             Assert.False(NdkToolVersion.TryParse("1", out v));
             Assert.False(NdkToolVersion.TryParse("1.0-beta", out v));
@@ -48,7 +48,7 @@ namespace MICoreUnitTests
             NdkToolVersion[] versions = { v1, v2, v3 };
             IEnumerable<string> versionStrings = versions.OrderByDescending((x) => x).Select((x) => x.ToString());
             string orderedResults = string.Join(", ", versionStrings);
-            Assert.Equal(orderedResults, "2.0, 1.2.3, 1.2");
+            Assert.Equal("2.0, 1.2.3, 1.2", orderedResults);
         }
 
         [Fact]
@@ -56,16 +56,16 @@ namespace MICoreUnitTests
         {
             NdkReleaseId r;
             Assert.True(NdkReleaseId.TryParse("r1", out r));
-            Assert.Equal(r.ToString(), "r1");
+            Assert.Equal("r1", r.ToString());
 
             Assert.True(NdkReleaseId.TryParse("r1a", out r));
-            Assert.Equal(r.ToString(), "r1");
+            Assert.Equal("r1", r.ToString());
 
             Assert.True(NdkReleaseId.TryParse("r10", out r));
-            Assert.Equal(r.ToString(), "r10");
+            Assert.Equal("r10", r.ToString());
 
             Assert.True(NdkReleaseId.TryParse("r10b (64-bit)", out r));
-            Assert.Equal(r.ToString(), "r10b");
+            Assert.Equal("r10b", r.ToString());
 
             Assert.False(NdkReleaseId.TryParse("100", out r));
             Assert.False(NdkReleaseId.TryParse("r", out r));
@@ -99,7 +99,7 @@ namespace MICoreUnitTests
             Assert.Equal("r1", r.ToString());
 
             Assert.True(NdkReleaseId.TryParseRevision("13.2.0", out r));
-            Assert.Equal(r.ToString(), "r13c");
+            Assert.Equal("r13c", r.ToString());
 
             Assert.False(NdkReleaseId.TryParseRevision("100", out r));
             Assert.False(NdkReleaseId.TryParseRevision("r11b", out r));

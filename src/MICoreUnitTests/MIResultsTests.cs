@@ -68,7 +68,7 @@ namespace MICoreUnitTests
             string miString = @"name=""value"""; // name="value"
             Results results = r.ParseResultList(miString);
 
-            Assert.Equal(1, results.Content.Length);
+            Assert.Single(results.Content);
             Assert.Equal("name", results.Content[0].Name);
             Assert.True(results.Content[0].Value is ConstValue);
             Assert.Equal("value", (results.Content[0].Value as ConstValue).Content);
