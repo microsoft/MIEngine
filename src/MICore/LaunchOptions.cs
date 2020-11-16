@@ -1819,6 +1819,12 @@ namespace MICore
                 {
                     foreach (string rawArgument in arguments)
                     {
+                        // Skip on null or blank arguments.
+                        if (string.IsNullOrWhiteSpace(rawArgument))
+                        {
+                            continue;
+                        }
+
                         string argument = rawArgument.TrimStart();
                         if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
                         {
@@ -2123,8 +2129,10 @@ namespace MICore
         private static char[] s_ARGUMENT_SEPARATORS = { ' ', '\t', '(', ')' };
         protected static string QuoteArgument(string arg)
         {
-            // If its not quoted and it has an argument separater, then quote it. 
-            if (arg[0] != '"' && arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0)
+            // Quote if:
+            // 1. string is null or empty and convert to a quoted empty string.
+            // 2. Its not quoted and it has an argument seperator. 
+            if (string.IsNullOrEmpty(arg) || (arg[0] != '"' && arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0))
             {
                 return '"' + arg + '"';
             }
