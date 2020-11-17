@@ -569,7 +569,7 @@ namespace OpenDebugAD7
                 uint nProps;
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
-                    response.Variables.Add(m_variableManager.CreateVariable(ref props[0], GetDefaultPropertyInfoFlags()));
+                    response.Variables.Add(m_variableManager.CreateVariable(props[0].pProperty, GetDefaultPropertyInfoFlags()));
                 }
             }
 
