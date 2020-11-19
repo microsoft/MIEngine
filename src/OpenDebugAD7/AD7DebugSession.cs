@@ -305,6 +305,8 @@ namespace OpenDebugAD7
 
         private int GetMemoryContext(string memoryReference, int? offset, out IDebugMemoryContext2 memoryContext, out ulong address)
         {
+            memoryContext = null;
+
             if (memoryReference.StartsWith("0x", StringComparison.Ordinal))
             {
                 address = Convert.ToUInt64(memoryReference.Substring(2), 16);
@@ -326,7 +328,13 @@ namespace OpenDebugAD7
                 }
             }
 
-            int hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out memoryContext);
+            int hr = HRConstants.E_NOTIMPL; // Engine does not support IDebugMemoryBytesDAP
+
+            if (m_engine is IDebugMemoryBytesDAP debugMemoryBytesDAPEngine)
+            {
+                hr = debugMemoryBytesDAPEngine.CreateMemoryContext(address, out memoryContext);
+            }
+
             return hr;
         }
 
