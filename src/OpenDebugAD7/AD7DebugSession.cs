@@ -43,7 +43,6 @@ namespace OpenDebugAD7
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
-        private readonly Dictionary<int, ThreadFrameEnumInfo> m_threadFrameEnumInfos = new Dictionary<int, ThreadFrameEnumInfo>();
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
 
         private IDebugProgram2 m_program;
@@ -340,14 +339,12 @@ namespace OpenDebugAD7
             m_isStopped = false;
             m_variableManager.Reset();
             m_frameHandles.Reset();
-            m_threadFrameEnumInfos.Clear();
         }
 
         public void Stopped(IDebugThread2 thread)
         {
             Debug.Assert(m_variableManager.IsEmpty(), "Why do we have variable handles?");
             Debug.Assert(m_frameHandles.IsEmpty, "Why do we have frame handles?");
-            Debug.Assert(m_threadFrameEnumInfos.Count == 0, "Why do we have thread frame enums?");
             m_isStopped = true;
         }
 
@@ -535,13 +532,13 @@ namespace OpenDebugAD7
             m_logger.WriteLine(category, prefixString + text);
         }
 
-        private VariablesResponse VariablesFromFrame(IDebugStackFrame2 frame)
+        private VariablesResponse VariablesFromFrame(IDebugStackFrame2 frame, uint radix)
         {
             VariablesResponse response = new VariablesResponse();
 
             uint n;
             IEnumDebugPropertyInfo2 varEnum;
-            if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
+            if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, radix, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
             {
                 DEBUG_PROPERTY_INFO[] props = new DEBUG_PROPERTY_INFO[1];
                 uint nProps;
@@ -729,7 +726,8 @@ namespace OpenDebugAD7
                 SupportsReadMemoryRequest = true,
                 SupportsModulesRequest = true,
                 AdditionalModuleColumns = additionalModuleColumns,
-                SupportsDisassembleRequest = true
+                SupportsDisassembleRequest = true,
+                SupportsValueFormattingOptions = true,
             };
 
             responder.SetResponse(initializeResponse);
@@ -1266,31 +1264,77 @@ namespace OpenDebugAD7
             // Make sure we are stopped and receiving valid input or else return an empty stack trace
             if (m_isStopped && startFrame >= 0 && levels >= 0)
             {
-                ThreadFrameEnumInfo frameEnumInfo;
-                if (!m_threadFrameEnumInfos.TryGetValue(threadReference, out frameEnumInfo))
+                ThreadFrameEnumInfo frameEnumInfo = null;
+                IDebugThread2 thread;
+                lock (m_threads)
                 {
-                    IDebugThread2 thread;
-                    lock (m_threads)
+                    if (m_threads.TryGetValue(threadReference, out thread))
                     {
-                        if (m_threads.TryGetValue(threadReference, out thread))
+                        enum_FRAMEINFO_FLAGS flags = enum_FRAMEINFO_FLAGS.FIF_FUNCNAME | // need a function name
+                                                     enum_FRAMEINFO_FLAGS.FIF_FRAME | // need a frame object
+                                                     enum_FRAMEINFO_FLAGS.FIF_FLAGS |
+                                                     enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
+
+                        uint radix = Constants.EvaluationRadix;
+
+                        if (responder.Arguments.Format != null)
                         {
-                            var flags = enum_FRAMEINFO_FLAGS.FIF_FRAME |   // need a frame object
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME |        // need a function name
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE | // with the module specified
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |   // with argument names and types
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES |
-                                enum_FRAMEINFO_FLAGS.FIF_FLAGS |
-                                enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
+                            StackFrameFormat format = responder.Arguments.Format;
 
-                            IEnumDebugFrameInfo2 frameEnum;
-                            thread.EnumFrameInfo(flags, Constants.EvaluationRadix, out frameEnum);
-                            uint totalFrames;
-                            frameEnum.GetCount(out totalFrames);
+                            if (format.Hex == true)
+                            {
+                                radix = 16;
+                            }
 
-                            frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
-                            m_threadFrameEnumInfos.Add(threadReference, frameEnumInfo);
+                            if (format.Line == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
+                            }
+
+                            if (format.Module == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
+                            }
+
+                            if (format.Parameters == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS;
+                            }
+
+                            if (format.ParameterNames == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                            }
+
+                            if (format.ParameterTypes == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES;
+                            }
+
+                            if (format.ParameterValues == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES;
+                            }
                         }
+                        else
+                        {
+                            // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types
+                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE |
+                                     enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
+                                     enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
+                                     enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                        }
+
+                        thread.EnumFrameInfo(flags, radix, out IEnumDebugFrameInfo2 frameEnum);
+                        frameEnum.GetCount(out uint totalFrames);
+
+                        frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                    }
+                    else
+                    {
+                        // Invalid thread specified
+                        responder.SetError(new ProtocolException(String.Format(CultureInfo.CurrentCulture, AD7Resources.Error_PropertyInvalid, StackTraceRequest.RequestType, "threadId")));
+                        return;
                     }
                 }
 
@@ -1414,12 +1458,24 @@ namespace OpenDebugAD7
                 return;
             }
 
+            uint radix = Constants.EvaluationRadix;
+
+            if (responder.Arguments.Format != null)
+            {
+                ValueFormat format = responder.Arguments.Format;
+
+                if (format.Hex == true)
+                {
+                    radix = 16;
+                }
+            }
+
             Object container;
             if (m_variableManager.TryGet(reference, out container))
             {
                 if (container is IDebugStackFrame2)
                 {
-                    response = VariablesFromFrame(container as IDebugStackFrame2);
+                    response = VariablesFromFrame(container as IDebugStackFrame2, radix);
                 }
                 else
                 {
@@ -1430,7 +1486,7 @@ namespace OpenDebugAD7
 
                         Guid empty = Guid.Empty;
                         IEnumDebugPropertyInfo2 childEnum;
-                        if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, Constants.EvaluationRadix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out childEnum) == 0)
+                        if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, radix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out childEnum) == 0)
                         {
                             uint count;
                             childEnum.GetCount(out count);

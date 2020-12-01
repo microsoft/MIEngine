@@ -227,6 +227,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}: property &apos;{1}&apos; is invalid..
+        /// </summary>
+        internal static string Error_PropertyInvalid {
+            get {
+                return ResourceManager.GetString("Error_PropertyInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: property &apos;{1}&apos; is missing, null, or empty.
         /// </summary>
         internal static string Error_PropertyMissing {

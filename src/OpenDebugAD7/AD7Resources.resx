@@ -288,4 +288,8 @@
   <data name="Error_Scenario_Disassemble" xml:space="preserve">
     <value>Unable to disassemble. {0}</value>
   </data>
+  <data name="Error_PropertyInvalid" xml:space="preserve">
+    <value>{0}: property '{1}' is invalid.</value>
+    <comment>{0} is the name of the command, {1} is the name of the property</comment>
+  </data>
 </root>
