@@ -299,6 +299,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to retrieve stack trace. {0}.
+        /// </summary>
+        internal static string Error_Scenario_StackTrace {
+            get {
+                return ResourceManager.GetString("Error_Scenario_StackTrace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to step in. {0}.
         /// </summary>
         internal static string Error_Scenario_Step_In {

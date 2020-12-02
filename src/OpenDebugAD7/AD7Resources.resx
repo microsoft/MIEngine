@@ -292,4 +292,7 @@
     <value>{0}: property '{1}' is invalid.</value>
     <comment>{0} is the name of the command, {1} is the name of the property</comment>
   </data>
+  <data name="Error_Scenario_StackTrace" xml:space="preserve">
+    <value>Unable to retrieve stack trace. {0}</value>
+  </data>
 </root>
