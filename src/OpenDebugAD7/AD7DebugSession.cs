@@ -39,6 +39,7 @@ namespace OpenDebugAD7
         private IDebugEngine2 m_engine;
         private EngineConfiguration m_engineConfiguration;
         private AD7Port m_port;
+        private string clientId;
 
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
@@ -682,7 +683,7 @@ namespace OpenDebugAD7
             }
 
             List<ColumnDescriptor> additionalModuleColumns = null;
-            string clientId = responder.Arguments.ClientID;
+            clientId = responder.Arguments.ClientID;
             if (clientId == "visualstudio" || clientId == "liveshare-server-host")
             {
                 additionalModuleColumns = new List<ColumnDescriptor>();
@@ -745,6 +746,12 @@ namespace OpenDebugAD7
 
         protected override void HandleLaunchRequestAsync(IRequestResponder<LaunchArguments> responder)
         {
+            if (clientId == "visualstudio" && !responder.Arguments.ConfigurationProperties.GetValueAsBool("externalConsole").GetValueOrDefault(false))
+            {
+                responder.SetError(new ProtocolException("Integrated terminal is not supported in Visual Studio. To fix, set external console to true."));
+                return;
+            }
+
             const string telemetryEventName = DebuggerTelemetry.TelemetryLaunchEventName;
 
             int hr;
@@ -934,6 +941,12 @@ namespace OpenDebugAD7
 
         protected override void HandleAttachRequestAsync(IRequestResponder<AttachArguments> responder)
         {
+            if (clientId == "visualstudio" && !responder.Arguments.ConfigurationProperties.GetValueAsBool("externalConsole").GetValueOrDefault(false))
+            {
+                responder.SetError(new ProtocolException("Integrated terminal is not supported in Visual Studio. To fix, set external console to true."));
+                return;
+            }
+
             const string telemetryEventName = DebuggerTelemetry.TelemetryAttachEventName;
 
             // ProcessId can be either a string or an int. We attempt to parse as int, if that does not exist we attempt to parse as a string.
