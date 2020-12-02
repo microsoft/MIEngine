@@ -1289,9 +1289,9 @@ namespace OpenDebugAD7
                     if (m_threads.TryGetValue(threadReference, out thread))
                     {
                         enum_FRAMEINFO_FLAGS flags = enum_FRAMEINFO_FLAGS.FIF_FUNCNAME | // need a function name
-                                                     enum_FRAMEINFO_FLAGS.FIF_FRAME | // need a frame object
-                                                     enum_FRAMEINFO_FLAGS.FIF_FLAGS |
-                                                     enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
+                                                        enum_FRAMEINFO_FLAGS.FIF_FRAME | // need a frame object
+                                                        enum_FRAMEINFO_FLAGS.FIF_FLAGS |
+                                                        enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
 
                         uint radix = Constants.EvaluationRadix;
 
@@ -1338,9 +1338,9 @@ namespace OpenDebugAD7
                         {
                             // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types
                             flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE |
-                                     enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
-                                     enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
-                                     enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
+                                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
+                                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
                         }
 
                         if (m_settingsCallback != null)
@@ -1351,10 +1351,18 @@ namespace OpenDebugAD7
 
                         ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_StackTrace);
 
-                        eb.CheckHR(thread.EnumFrameInfo(flags, radix, out IEnumDebugFrameInfo2 frameEnum));
-                        eb.CheckHR(frameEnum.GetCount(out uint totalFrames));
+                        try
+                        {
+                            eb.CheckHR(thread.EnumFrameInfo(flags, radix, out IEnumDebugFrameInfo2 frameEnum));
+                            eb.CheckHR(frameEnum.GetCount(out uint totalFrames));
 
-                        frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                            frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                        }
+                        catch (AD7Exception ex)
+                        {
+                            responder.SetError(new ProtocolException(ex.Message, ex));
+                            return;
+                        }
                     }
                     else
                     {
@@ -2237,6 +2245,24 @@ namespace OpenDebugAD7
                 return;
             }
 
+            uint radix = Constants.EvaluationRadix;
+
+            if (responder.Arguments.Format != null)
+            {
+                ValueFormat format = responder.Arguments.Format;
+
+                if (format.Hex == true)
+                {
+                    radix = 16;
+                }
+            }
+
+            if (m_settingsCallback != null)
+            {
+                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                m_settingsCallback.Radix = radix;
+            }
+
             IDebugExpressionContext2 expressionContext;
             hr = frame.GetExpressionContext(out expressionContext);
             eb.CheckHR(hr);
@@ -2289,24 +2315,6 @@ namespace OpenDebugAD7
             if (context == EvaluateArguments.ContextValue.Hover) // No side effects for data tips
             {
                 propertyInfoFlags |= (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_NOSIDEEFFECTS;
-            }
-
-            uint radix = Constants.EvaluationRadix;
-
-            if (responder.Arguments.Format != null)
-            {
-                ValueFormat format = responder.Arguments.Format;
-
-                if (format.Hex == true)
-                {
-                    radix = 16;
-                }
-            }
-
-            if (m_settingsCallback != null)
-            {
-                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
-                m_settingsCallback.Radix = radix;
             }
 
             property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo);
