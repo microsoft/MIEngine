@@ -163,11 +163,11 @@ namespace Microsoft.MIDebugEngine
                 return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
             // try to interpret the result as an address
             string v = _variableInformation.Value;
-            v = v.Trim();
-            if (v.Length == 0)
+            if (string.IsNullOrWhiteSpace(v))
             {
                 return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
             }
+            v = v.Trim();
             if (v[0] == '{')
             {
                 // strip type name and trailing spaces
