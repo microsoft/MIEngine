@@ -39,7 +39,7 @@ namespace OpenDebugAD7
         private IDebugEngine2 m_engine;
         private EngineConfiguration m_engineConfiguration;
         private AD7Port m_port;
-        private string clientId;
+        private ClientId m_clientId;
 
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
@@ -623,6 +623,22 @@ namespace OpenDebugAD7
             }
         }
 
+        private enum ClientId
+        {
+            VisualStudio,
+            VsCode,
+            LiveshareServerHost,
+            Unknown
+        };
+
+        private bool IsClientVS
+        {
+            get
+            {
+                return m_clientId == ClientId.VisualStudio || m_clientId == ClientId.LiveshareServerHost;
+            }
+        }
+
         #endregion
 
         #region DebugAdapterBase
@@ -683,8 +699,23 @@ namespace OpenDebugAD7
             }
 
             List<ColumnDescriptor> additionalModuleColumns = null;
-            clientId = responder.Arguments.ClientID;
-            if (clientId == "visualstudio" || clientId == "liveshare-server-host")
+            string clientId = responder.Arguments.ClientID;
+            if (clientId == "visualstudio")
+            {
+                m_clientId = ClientId.VisualStudio;
+            } else if (clientId == "vscode")
+            {
+                m_clientId = ClientId.VsCode;
+            } else if (clientId == "liveshare-server-host")
+            {
+                m_clientId = ClientId.LiveshareServerHost;
+            }
+            else
+            {
+                m_clientId = ClientId.Unknown;
+            }
+
+            if (IsClientVS)
             {
                 additionalModuleColumns = new List<ColumnDescriptor>();
                 additionalModuleColumns.Add(new ColumnDescriptor(){
@@ -746,7 +777,7 @@ namespace OpenDebugAD7
 
         protected override void HandleLaunchRequestAsync(IRequestResponder<LaunchArguments> responder)
         {
-            if (clientId == "visualstudio" && !responder.Arguments.ConfigurationProperties.GetValueAsBool("externalConsole").GetValueOrDefault(false))
+            if (IsClientVS && !responder.Arguments.ConfigurationProperties.GetValueAsBool("externalConsole").GetValueOrDefault(false))
             {
                 responder.SetError(new ProtocolException("Integrated terminal is not supported in Visual Studio. To fix, set external console to true."));
                 return;
@@ -941,12 +972,6 @@ namespace OpenDebugAD7
 
         protected override void HandleAttachRequestAsync(IRequestResponder<AttachArguments> responder)
         {
-            if (clientId == "visualstudio" && !responder.Arguments.ConfigurationProperties.GetValueAsBool("externalConsole").GetValueOrDefault(false))
-            {
-                responder.SetError(new ProtocolException("Integrated terminal is not supported in Visual Studio. To fix, set external console to true."));
-                return;
-            }
-
             const string telemetryEventName = DebuggerTelemetry.TelemetryAttachEventName;
 
             // ProcessId can be either a string or an int. We attempt to parse as int, if that does not exist we attempt to parse as a string.
