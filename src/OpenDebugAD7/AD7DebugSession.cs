@@ -625,10 +625,10 @@ namespace OpenDebugAD7
 
         private enum ClientId
         {
+            Unknown,
             VisualStudio,
             VsCode,
-            LiveshareServerHost,
-            Unknown
+            LiveshareServerHost
         };
 
         private bool IsClientVS
@@ -668,15 +668,39 @@ namespace OpenDebugAD7
             // Default is that they are URIs
             m_pathConverter.ClientPathsAreURI = !(arguments.PathFormat.GetValueOrDefault(InitializeArguments.PathFormatValue.Unknown) == InitializeArguments.PathFormatValue.Path);
 
+            string clientId = responder.Arguments.ClientID;
+            if (clientId == "visualstudio")
+            {
+                m_clientId = ClientId.VisualStudio;
+            }
+            else if (clientId == "vscode")
+            {
+                m_clientId = ClientId.VsCode;
+            }
+            else if (clientId == "liveshare-server-host")
+            {
+                m_clientId = ClientId.LiveshareServerHost;
+            }
+            else
+            {
+                m_clientId = ClientId.Unknown;
+            }
+
             // If the UI supports RunInTerminal, then register the callback.
             if (arguments.SupportsRunInTerminalRequest.GetValueOrDefault(false))
             {
                 HostRunInTerminal.RegisterRunInTerminalCallback((title, cwd, useExternalConsole, commandArgs, env, success, error) =>
                 {
+                    RunInTerminalArguments.KindValue kind = useExternalConsole ? RunInTerminalArguments.KindValue.External : RunInTerminalArguments.KindValue.Integrated;
+                    if (IsClientVS)
+                    {
+                        kind = RunInTerminalArguments.KindValue.External;
+                    }
+
                     RunInTerminalRequest request = new RunInTerminalRequest()
                     {
                         Arguments = commandArgs.ToList<string>(),
-                        Kind = useExternalConsole ? RunInTerminalArguments.KindValue.External : RunInTerminalArguments.KindValue.Integrated,
+                        Kind = kind,
                         Title = title,
                         Cwd = cwd,
                         Env = env
@@ -699,21 +723,6 @@ namespace OpenDebugAD7
             }
 
             List<ColumnDescriptor> additionalModuleColumns = null;
-            string clientId = responder.Arguments.ClientID;
-            if (clientId == "visualstudio")
-            {
-                m_clientId = ClientId.VisualStudio;
-            } else if (clientId == "vscode")
-            {
-                m_clientId = ClientId.VsCode;
-            } else if (clientId == "liveshare-server-host")
-            {
-                m_clientId = ClientId.LiveshareServerHost;
-            }
-            else
-            {
-                m_clientId = ClientId.Unknown;
-            }
 
             if (IsClientVS)
             {
@@ -777,11 +786,13 @@ namespace OpenDebugAD7
 
         protected override void HandleLaunchRequestAsync(IRequestResponder<LaunchArguments> responder)
         {
+            /*
             if (IsClientVS && !responder.Arguments.ConfigurationProperties.GetValueAsBool("externalConsole").GetValueOrDefault(false))
             {
                 responder.SetError(new ProtocolException("Integrated terminal is not supported in Visual Studio. To fix, set external console to true."));
                 return;
             }
+            */
 
             const string telemetryEventName = DebuggerTelemetry.TelemetryLaunchEventName;
 
