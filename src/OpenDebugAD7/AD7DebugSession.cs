@@ -780,14 +780,6 @@ namespace OpenDebugAD7
 
         protected override void HandleLaunchRequestAsync(IRequestResponder<LaunchArguments> responder)
         {
-            /*
-            if (IsClientVS && !responder.Arguments.ConfigurationProperties.GetValueAsBool("externalConsole").GetValueOrDefault(false))
-            {
-                responder.SetError(new ProtocolException("Integrated terminal is not supported in Visual Studio. To fix, set external console to true."));
-                return;
-            }
-            */
-
             const string telemetryEventName = DebuggerTelemetry.TelemetryLaunchEventName;
 
             int hr;
