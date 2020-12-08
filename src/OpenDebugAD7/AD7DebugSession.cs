@@ -694,6 +694,8 @@ namespace OpenDebugAD7
             }
 
             // If the UI supports RunInTerminal, then register the callback.
+            // NOTE: Currently we don't support using the RunInTerminal request with VS or Windows Codespaces.
+            //       This is because: (1) they don't support 'Integrated' terminal, and (2) for MIEngine, we don't ship WindowsDebugLauncher.exe.
             if (!IsClientVS && arguments.SupportsRunInTerminalRequest.GetValueOrDefault(false))
             {
                 HostRunInTerminal.RegisterRunInTerminalCallback((title, cwd, useExternalConsole, commandArgs, env, success, error) =>
