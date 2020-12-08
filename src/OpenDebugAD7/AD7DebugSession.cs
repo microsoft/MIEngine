@@ -687,20 +687,14 @@ namespace OpenDebugAD7
             }
 
             // If the UI supports RunInTerminal, then register the callback.
-            if (arguments.SupportsRunInTerminalRequest.GetValueOrDefault(false))
+            if (!IsClientVS && arguments.SupportsRunInTerminalRequest.GetValueOrDefault(false))
             {
                 HostRunInTerminal.RegisterRunInTerminalCallback((title, cwd, useExternalConsole, commandArgs, env, success, error) =>
                 {
-                    RunInTerminalArguments.KindValue kind = useExternalConsole ? RunInTerminalArguments.KindValue.External : RunInTerminalArguments.KindValue.Integrated;
-                    if (IsClientVS)
-                    {
-                        kind = RunInTerminalArguments.KindValue.External;
-                    }
-
                     RunInTerminalRequest request = new RunInTerminalRequest()
                     {
                         Arguments = commandArgs.ToList<string>(),
-                        Kind = kind,
+                        Kind = useExternalConsole ? RunInTerminalArguments.KindValue.External : RunInTerminalArguments.KindValue.Integrated,
                         Title = title,
                         Cwd = cwd,
                         Env = env
