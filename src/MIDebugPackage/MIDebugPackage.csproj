@@ -1,94 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project>
   <Import Project="..\..\build\miengine.settings.targets" />
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
+
   <PropertyGroup>
-    <!--Visual Studio will prompt to upgrade the project unless $(MinimumVisualStudioVersion)==$(VisualStudioVersion), to make
-    VS happy, we will conditionally set MinimumVisualStudioVersion based on what version is opening the project -->
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
-    <MinimumVisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">$(VisualStudioVersion)</MinimumVisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <TargetFrameworkProfile />
-    <OutputPath>$(MIDefaultOutputPath)</OutputPath>
-    <EnableDefaultItems>false</EnableDefaultItems>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants);CODE_ANALYSIS;TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <Import Project="SuppressFromVsix.targets" />
-  <PropertyGroup>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{4F38F986-5C93-44CB-A387-AEF3737E6D22}</ProjectGuid>
-    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFramework>net472</TargetFramework>
     <RootNamespace>Microsoft.MIDebugPackage</RootNamespace>
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup>
-    <!-- Because the MIEngine ships in Visual Studio, it is recommended NOT to install the .vsix
-         Instead, The Visual Studio files should be directly updated.
-         The VSIX is built because it is useful for F5 from VS targeting the experimental instance. -->
-    <TargetVsixContainerName>$(AssemblyName).DoNotInstall.vsix</TargetVsixContainerName>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartAction>Program</StartAction>
-    <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
-    <StartArguments>/rootsuffix Exp</StartArguments>
-  </PropertyGroup>
-  <!-- This is to fix a build issue where VSSDK BuildTools are not able to be found. -->
-  <PropertyGroup Condition=" '$(VsSDKInstall)' != '' ">
-    <VsSDKIncludes Condition=" '$(VsSDKIncludes)' == '' ">$(VsSDKInstall)\VisualStudioIntegration\Common\inc</VsSDKIncludes>
-    <VsSDKToolsPath Condition=" '$(VsSDKToolsPath)' == '' ">$(VsSDKInstall)\VisualStudioIntegration\Tools\bin</VsSDKToolsPath>
+    <OutputPath>$(MIDefaultOutputPath)</OutputPath>
   </PropertyGroup>
 
- <ItemGroup>
+  <PropertyGroup>
+    <GeneratePkgDefFile>true</GeneratePkgDefFile>
+    <IncludeAssemblyInVSIXContainer>false</IncludeAssemblyInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInLocalVSIXDeployment>true</IncludeDebugSymbolsInLocalVSIXDeployment>
+  </PropertyGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)" />    
     <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="$(Microsoft_VisualStudio_Shell_Framework_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
@@ -112,41 +40,6 @@
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Design" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Guids.cs" />
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="MIDebugPackagePackage.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PkgCmdID.cs" />
-    <Content Include="Microsoft.MIDebugPackage.pkgdef">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx">
-      <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
-    </EmbeddedResource>
-  </ItemGroup>
   <ItemGroup>
     <Content Include="OpenFolderSchema.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -272,6 +165,7 @@
     <!-- Include file for local VS development builds. For Non-VS Builds, it will be dropped by MakePIAPortable project -->
     <DropUnsignedFile Include="$(OutDir)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
@@ -325,6 +219,22 @@
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Because the MIEngine ships in Visual Studio, it is recommended NOT to install the .vsix
+         Instead, The Visual Studio files should be directly updated.
+         The VSIX is built because it is useful for F5 from VS targeting the experimental instance. -->
+    <TargetVsixContainerName>$(AssemblyName).vsix</TargetVsixContainerName>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartAction>Program</StartAction>
+    <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix Exp</StartArguments>
+  </PropertyGroup>
+
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
+
   <Import Project="..\..\build\miengine.targets" />
   <!--
   Target to drop the built files into a directory.
@@ -332,7 +242,4 @@
   For normal builds, we drop files to <enlistment-root>\bin\debug\drop for easy sharing
   -->
   <Import Project="..\..\build\DropFiles.targets" />
-  <!-- Extra empty msbuild targets to make it happy -->
-  <Target Name="SetDevPathEnvironment" />
-  <Target Name="GenerateResourceAndCtoFileResources" />
 </Project>
