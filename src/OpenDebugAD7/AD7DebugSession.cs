@@ -39,6 +39,7 @@ namespace OpenDebugAD7
         private IDebugEngine2 m_engine;
         private EngineConfiguration m_engineConfiguration;
         private AD7Port m_port;
+        private ClientId m_clientId;
         private DebugSettingsCallback m_settingsCallback;
 
         private readonly DebugEventLogger m_logger;
@@ -620,6 +621,22 @@ namespace OpenDebugAD7
             }
         }
 
+        private enum ClientId
+        {
+            Unknown,
+            VisualStudio,
+            VsCode,
+            LiveshareServerHost
+        };
+
+        private bool IsClientVS
+        {
+            get
+            {
+                return m_clientId == ClientId.VisualStudio || m_clientId == ClientId.LiveshareServerHost;
+            }
+        }
+
         #endregion
 
         #region DebugAdapterBase
@@ -658,8 +675,28 @@ namespace OpenDebugAD7
             // Default is that they are URIs
             m_pathConverter.ClientPathsAreURI = !(arguments.PathFormat.GetValueOrDefault(InitializeArguments.PathFormatValue.Unknown) == InitializeArguments.PathFormatValue.Path);
 
+            string clientId = responder.Arguments.ClientID;
+            if (clientId == "visualstudio")
+            {
+                m_clientId = ClientId.VisualStudio;
+            }
+            else if (clientId == "vscode")
+            {
+                m_clientId = ClientId.VsCode;
+            }
+            else if (clientId == "liveshare-server-host")
+            {
+                m_clientId = ClientId.LiveshareServerHost;
+            }
+            else
+            {
+                m_clientId = ClientId.Unknown;
+            }
+
             // If the UI supports RunInTerminal, then register the callback.
-            if (arguments.SupportsRunInTerminalRequest.GetValueOrDefault(false))
+            // NOTE: Currently we don't support using the RunInTerminal request with VS or Windows Codespaces.
+            //       This is because: (1) they don't support 'Integrated' terminal, and (2) for MIEngine, we don't ship WindowsDebugLauncher.exe.
+            if (!IsClientVS && arguments.SupportsRunInTerminalRequest.GetValueOrDefault(false))
             {
                 HostRunInTerminal.RegisterRunInTerminalCallback((title, cwd, useExternalConsole, commandArgs, env, success, error) =>
                 {
@@ -689,8 +726,8 @@ namespace OpenDebugAD7
             }
 
             List<ColumnDescriptor> additionalModuleColumns = null;
-            string clientId = responder.Arguments.ClientID;
-            if (clientId == "visualstudio" || clientId == "liveshare-server-host")
+
+            if (IsClientVS)
             {
                 additionalModuleColumns = new List<ColumnDescriptor>();
                 additionalModuleColumns.Add(new ColumnDescriptor(){
