@@ -53,11 +53,9 @@
   </PropertyGroup>
   
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTest_TestFramework_Version)" />
-  </ItemGroup>
-
-  <ItemGroup Label="References">
-    <Reference Include="System" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTest_TestFramework_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Label="Project References">

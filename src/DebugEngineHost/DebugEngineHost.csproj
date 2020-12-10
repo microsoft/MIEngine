@@ -59,26 +59,86 @@
   </PropertyGroup>
 
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.ComponentModelHost" Version="$(Microsoft_VisualStudio_ComponentModelHost_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Engine" Version="$(Microsoft_VisualStudio_Debugger_Engine_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_10_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.11.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_11_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.12.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_12_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.InteropA" Version="$(Microsoft_VisualStudio_Debugger_InteropA_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="$(Microsoft_VisualStudio_Shell_Framework_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.12.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_12_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop" Version="$(Microsoft_VisualStudio_Shell_Interop_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="$(Microsoft_VisualStudio_Shell_Interop_10_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.11.0" Version="$(Microsoft_VisualStudio_Shell_Interop_11_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.12.0" Version="$(Microsoft_VisualStudio_Shell_Interop_12_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.8.0" Version="$(Microsoft_VisualStudio_Shell_Interop_8_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.9.0" Version="$(Microsoft_VisualStudio_Shell_Interop_9_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime" Version="$(Microsoft_VisualStudio_Shell_Interop_15_0_DesignTime_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="$(Microsoft_VisualStudio_Threading_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Workspace" Version="$(Microsoft_VisualStudio_Workspace_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Workspace.VSIntegration" Version="$(Microsoft_VisualStudio_Workspace_VSIntegration_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.ComponentModelHost" Version="$(Microsoft_VisualStudio_ComponentModelHost_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Engine" Version="$(Microsoft_VisualStudio_Debugger_Engine_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_10_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.11.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_11_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.12.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_12_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.InteropA" Version="$(Microsoft_VisualStudio_Debugger_InteropA_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="$(Microsoft_VisualStudio_Shell_Framework_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.12.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_12_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop" Version="$(Microsoft_VisualStudio_Shell_Interop_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="$(Microsoft_VisualStudio_Shell_Interop_10_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.11.0" Version="$(Microsoft_VisualStudio_Shell_Interop_11_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.12.0" Version="$(Microsoft_VisualStudio_Shell_Interop_12_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.8.0" Version="$(Microsoft_VisualStudio_Shell_Interop_8_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.9.0" Version="$(Microsoft_VisualStudio_Shell_Interop_9_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime" Version="$(Microsoft_VisualStudio_Shell_Interop_15_0_DesignTime_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="$(Microsoft_VisualStudio_Threading_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Workspace" Version="$(Microsoft_VisualStudio_Workspace_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Workspace.VSIntegration" Version="$(Microsoft_VisualStudio_Workspace_VSIntegration_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Label="Assembly to Generate">
@@ -86,10 +146,7 @@
   </ItemGroup>
 
   <ItemGroup Label="References">
-    <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
     <Reference Include="Microsoft.Internal.VisualStudio.Shell.Interop.14.0.DesignTime">
       <HintPath>$(GeneratedAssembliesDir)Microsoft.Internal.VisualStudio.Shell.Interop.14.0.DesignTime.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>

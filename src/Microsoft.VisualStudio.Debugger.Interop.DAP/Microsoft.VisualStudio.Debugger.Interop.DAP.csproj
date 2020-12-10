@@ -59,10 +59,6 @@
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>
 
-  <ItemGroup Label="References">
-    <Reference Include="System" />
-  </ItemGroup>
-
   <PropertyGroup>
     <DropSubDir>ReferenceAssemblies</DropSubDir>
   </PropertyGroup>

@@ -73,6 +73,7 @@
   </PropertyGroup>
 
   <ItemGroup Label="NuGet Packages">
+    <!-- TODO: Include in VSIX. (Optional since we don't F5 the DebugAdapterHost.Launch scenario.) -->
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
@@ -80,12 +81,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>
-
-  <ItemGroup Label="References">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
+  
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\DebugEngineHost.VSCode\DebugEngineHost.VSCode.csproj">
       <Project>{81de2423-fb5e-4069-b3c5-4c13ce76dc0a}</Project>
@@ -98,7 +94,7 @@
     </ProjectReference>
   </ItemGroup>
   
-  <ItemGroup>
+  <ItemGroup Label="OpenDebugAD7 Drop Files">
     <DropSignedFile Include="$(OutputPath)\OpenDebugAD7.exe" />
     <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.exe.config" />
     <DropUnsignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
@@ -106,7 +102,7 @@
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.OLE.Interop.dll" />
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
+  <ItemGroup Label="OpenDebugAD7 Drop Files for XPlat" Condition="'$(IsXPlat)' == 'false'">
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />

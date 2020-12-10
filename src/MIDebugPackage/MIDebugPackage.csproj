@@ -3,7 +3,7 @@
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <RootNamespace>Microsoft.MIDebugPackage</RootNamespace>
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
@@ -11,36 +11,93 @@
 
   <PropertyGroup>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
-    <IncludeAssemblyInVSIXContainer>false</IncludeAssemblyInVSIXContainer>
+
+    <!-- VSIX Options -->
+    <UseCodebase>true</UseCodebase>
+    <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>true</IncludeDebugSymbolsInLocalVSIXDeployment>
+    <!-- Because the MIEngine ships in Visual Studio, it is recommended NOT to install the .vsix
+         Instead, The Visual Studio files should be directly updated.
+         The VSIX is built because it is useful for F5 from VS targeting the experimental instance. -->
+    <TargetVsixContainerName>$(AssemblyName).DoNotInstall.vsix</TargetVsixContainerName>
+
+    <!-- F5 Experimental Instance if MIDebugPackage is the startup project. -->
+    <StartAction>Program</StartAction>
+    <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)" />    
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="$(Microsoft_VisualStudio_Shell_Framework_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
-
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.10.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_10_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.11.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_11_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.12.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_12_0_Version)" />
-
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop" Version="$(Microsoft_VisualStudio_Shell_Interop_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="$(Microsoft_VisualStudio_Shell_Interop_10_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.11.0" Version="$(Microsoft_VisualStudio_Shell_Interop_11_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.12.0" Version="$(Microsoft_VisualStudio_Shell_Interop_12_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.8.0" Version="$(Microsoft_VisualStudio_Shell_Interop_8_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.9.0" Version="$(Microsoft_VisualStudio_Shell_Interop_9_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="$(Microsoft_VisualStudio_Threading_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.TextManager.Interop" Version="$(Microsoft_VisualStudio_TextManager_Interop_Version)" />
+  <ItemGroup Label="NuGet Packages">
+    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="$(Microsoft_VisualStudio_Shell_Framework_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.10.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_10_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.11.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_11_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Immutable.12.0" Version="$(Microsoft_VisualStudio_Shell_Immutable_12_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop" Version="$(Microsoft_VisualStudio_Shell_Interop_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="$(Microsoft_VisualStudio_Shell_Interop_10_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+      <!-- TODO(https://github.com/NuGet/Home/issues/10188): EmbedInteropTypes -->
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.11.0" Version="$(Microsoft_VisualStudio_Shell_Interop_11_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+      <!-- TODO(https://github.com/NuGet/Home/issues/10188): EmbedInteropTypes -->
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.12.0" Version="$(Microsoft_VisualStudio_Shell_Interop_12_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.8.0" Version="$(Microsoft_VisualStudio_Shell_Interop_8_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.9.0" Version="$(Microsoft_VisualStudio_Shell_Interop_9_0_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="$(Microsoft_VisualStudio_Threading_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.TextManager.Interop" Version="$(Microsoft_VisualStudio_TextManager_Interop_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <!--NOTE: this reference is here to enable CreatePkgDef.exe to succeed when compiling in VS in a version != the shell targetting version -->
-    <PackageReference Include="Microsoft.VisualStudio.Utilities" Version="$(Microsoft_VisualStudio_Utilities_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Utilities" Version="$(Microsoft_VisualStudio_Utilities_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="$(Microsoft_VSSDK_BuildTools_Version)" GeneratePathProperty="true"/>
-
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>
 
   <ItemGroup>
+  <Content Include="Resources\Package.ico" />
     <Content Include="OpenFolderSchema.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -49,18 +106,12 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="SuppressFromVsix.targets" />
-  </ItemGroup>
-  <ItemGroup>
+    <None Include="Resources\Images.png" />
     <VSCTCompile Include="MIDebugPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Images.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\Package.ico" />
-  </ItemGroup>
+
   <ItemDefinitionGroup Condition="'$(LocalizationEnabled)'=='true'">
     <FilesToLocalize>
       <Languages>$(VS)</Languages>
@@ -68,12 +119,14 @@
       <HasLceComments>false</HasLceComments>
     </FilesToLocalize>
   </ItemDefinitionGroup>
+
   <ItemGroup Condition="'$(LocalizationEnabled)'=='true'">
     <FilesToLocalize Include="$(OutDir)OpenFolderSchema.json">
       <LciCommentFile>$(MIEngineRoot)loc\LCI\OpenFolderSchema.json.lci</LciCommentFile>
       <TranslationFile>$(MIEngineRoot)loc\LCL\{Lang}\OpenFolderSchema.json.lcl</TranslationFile>
     </FilesToLocalize>
   </ItemGroup>
+
   <Target Name="DropLocalizeDir" AfterTargets="Localize;DropFiles" Condition="'$(LocalizationEnabled)'=='true'">
     <PropertyGroup>
       <LocalizedDropDir>$(DropRootDir)\loc\</LocalizedDropDir>
@@ -126,14 +179,15 @@
     </ItemGroup>
     <Copy DestinationFiles="@(LocalizedFileToDrop->'$(LocalizedDropDir)%(LCID)\%(filename)%(extension)')" SourceFiles="@(LocalizedFileToDrop)" ContinueOnError="true" />
   </Target>
-  <ItemGroup>
+
+  <ItemGroup Label="MIDebugEngine for both VS and XPlat">
     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
+  <ItemGroup Label="MIDebugEngine for VS" Condition="'$(IsXPlat)' == 'false'">
     <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
@@ -156,7 +210,7 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
     <DropUnsignedFile Include="$(OutDir)\OpenFolderSchema.json" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsXPlat)' == 'true'">
+  <ItemGroup Label="Debug Files and Scripts for XPlat" Condition="'$(IsXPlat)' == 'true'">
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
@@ -166,7 +220,7 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Label="Project References">
     <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
       <Name>MICore</Name>
@@ -216,21 +270,6 @@
       <VsixSubPath>vscode</VsixSubPath>
     </ProjectReference>
   </ItemGroup>
-  <PropertyGroup>
-    <UseCodebase>true</UseCodebase>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <!-- Because the MIEngine ships in Visual Studio, it is recommended NOT to install the .vsix
-         Instead, The Visual Studio files should be directly updated.
-         The VSIX is built because it is useful for F5 from VS targeting the experimental instance. -->
-    <TargetVsixContainerName>$(AssemblyName).vsix</TargetVsixContainerName>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartAction>Program</StartAction>
-    <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
-    <StartArguments>/rootsuffix Exp</StartArguments>
-  </PropertyGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />

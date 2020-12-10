@@ -38,8 +38,6 @@
   
   <ItemGroup Label="References">
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
-    <Reference Include="System" />
-    <!-- <Reference Include="Microsoft.CSharp" /> -->
   </ItemGroup>
   
   <ItemGroup>
