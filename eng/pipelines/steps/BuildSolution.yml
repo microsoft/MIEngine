@@ -18,4 +18,7 @@ steps:
     solution: ${{ parameters.Solution }}
     configuration: ${{ parameters.Configuration }}
     msbuildArguments: ${{ parameters.BuildArguments }}
+    env: { 
+      "SIGN_TYPE": "$(SignType)" 
+    } 
 ...

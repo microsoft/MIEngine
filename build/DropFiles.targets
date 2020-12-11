@@ -1,9 +1,16 @@
 ﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
-  <ItemGroup>
+  <ItemGroup Condition="'$(SIGN_TYPE)' == 'real'">
     <FilesToSign Include="@(DropSignedFile)">
       <Authenticode>Microsoft400</Authenticode>
       <StrongName>StrongName</StrongName>
+    </FilesToSign>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SIGN_TYPE)' != 'real'">
+    <!-- Can not 'test' sign with StrongName -->
+    <FilesToSign Include="@(DropSignedFile)">
+      <Authenticode>Microsoft400</Authenticode>
     </FilesToSign>
   </ItemGroup>
 

@@ -12,6 +12,7 @@ parameters:
   
   displayName: 'Build solution'
   enabled: true
+  env: {}
   continueOnError: false
   condition: succeeded()
   timeoutInMinutes: 0
@@ -134,6 +135,7 @@ steps:
     createLogFile : ${{ parameters.createLogFile }}
     logFileVerbosity : ${{ parameters.logFileVerbosity }}
   enabled: ${{ parameters.enabled }}
+  env: ${{ parameters.env }}
   condition: ${{ parameters.condition }}
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
   continueOnError: ${{ parameters.continueOnError }}
