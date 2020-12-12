@@ -22,6 +22,6 @@ steps:
     displayName: 'NuGet push'
     command: push
     searchPatternPush: '$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.MIEngine.*.nupkg;$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.UnixPortSupplier.*.nupkg'
-    feedPublish: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/VS/nuget/v3/index.json'
+    feedPublish: '97a41293-2972-4f48-8c0e-05493ae82010' # VS
     condition: and(succeeded(), eq(variables['SignType'], 'real'))
 ...
