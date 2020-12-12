@@ -9,6 +9,8 @@ steps:
 - template: ../tasks/MicroBuildLocalizationPlugin.yml
 
 - template: ../steps/BuildSolution.yml
+  parameters:
+    Configuration: 'Lab.Release'
 
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
