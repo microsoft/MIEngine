@@ -11,6 +11,10 @@ steps:
     TargetPath: $(FileShareDropPath)\$(Build.BuildNumber)
 
 # Publish Symbols to FileShare
+- script: |
+    mkdir $(FileShareDropPath)\$(Build.BuildNumber)\symbols
+  displayName: "Create symbols folder"
+
 - task: MicroBuildArchiveSymbols@1
   displayName: Index Symbols on Symweb
   inputs:
