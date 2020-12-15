@@ -18,5 +18,7 @@ steps:
 
 - template: ../steps/CopyAndPublishSymbols.yml
 
+- template: ../steps/ArchivePublicSymbolsAndUploadToFileShare.yml
+
 - template: ../tasks/MicroBuildCleanup.yml
 ...

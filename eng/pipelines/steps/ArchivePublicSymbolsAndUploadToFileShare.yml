@@ -1,0 +1,25 @@
+---
+steps:
+- task: MicroBuildArchiveSymbols@1
+  displayName: Index Symbols on Symweb
+  inputs:
+    SymbolsFeatureName: MIEngine
+    SymbolsSymwebProject: VS
+    SymbolsUncPath: $(FileShareDropPath)\$(Build.BuildNumber)\symbols
+    SymbolsEmailContacts: $(SymbolsEmailContacts)
+    
+- task: CopyPublishBuildArtifacts@1
+  displayName: Publish Drop
+  inputs:
+    CopyRoot: $(Build.BinariesDirectory)
+    Contents: '**'
+    ArtifactName: Desktop.Release
+    ArtifactType: FilePath
+    TargetPath: $(FileShareDropPath)\$(Build.BuildNumber)
+
+- task: MicroBuildStaticDrop@1
+  displayName: Update Static Drop
+  inputs:
+    Contents: '**\bin'
+    TargetPath: $(FileShareDropPath)\latest
+...
