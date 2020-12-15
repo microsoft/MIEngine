@@ -15,6 +15,13 @@ steps:
     mkdir $(FileShareDropPath)\$(Build.BuildNumber)\symbols
   displayName: "Create symbols folder"
 
+# Copy symbols to FileShare
+- task: CopyFiles@2
+  inputs:
+    sourceFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+    contents: '**' 
+    targetFolder: $(FileShareDropPath)\$(Build.BuildNumber)\symbols
+
 - task: MicroBuildArchiveSymbols@1
   displayName: Index Symbols on Symweb
   inputs:
