@@ -1,5 +1,15 @@
 ---
 steps:
+- task: PublishSymbols@1
+  displayName: Index Sources
+  continueOnError: True
+  inputs:
+    SymbolsPath: $(FileShareDropPath)\$(Build.BuildNumber)\symbols
+    SearchPattern: '**\bin\**\*.*db'
+    SymbolsFolder: $(Build.BinariesDirectory)
+    SkipIndexing: true
+    SymbolsArtifactName: ''
+
 - task: MicroBuildArchiveSymbols@1
   displayName: Index Symbols on Symweb
   inputs:
