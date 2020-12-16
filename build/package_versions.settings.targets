@@ -42,7 +42,7 @@
         <Microsoft_VisualStudio_Workspace_Version>15.0.392</Microsoft_VisualStudio_Workspace_Version>
         <Microsoft_VisualStudio_Workspace_VSIntegration_Version>15.0.392</Microsoft_VisualStudio_Workspace_VSIntegration_Version>
         <Microsoft_VisualStudio_TextManager_Interop_Version>16.7.30328.74</Microsoft_VisualStudio_TextManager_Interop_Version>
-        <Microsoft_VSSDK_BuildTools_Version>16.7.3069</Microsoft_VSSDK_BuildTools_Version>
+        <Microsoft_VSSDK_BuildTools_Version>16.8.3038</Microsoft_VSSDK_BuildTools_Version>
         <envDTE_Version>8.0.2</envDTE_Version>
     </PropertyGroup>
 </Project>
