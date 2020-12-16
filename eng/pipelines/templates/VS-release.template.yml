@@ -14,7 +14,7 @@ steps:
 
 - template: ../tasks/SignVerify.yml
   parameters:
-    TargetFolders: '$(Build.BinariesDirectory)\drop'
+    TargetFolders: '$(Build.BinariesDirectory)'
 
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
