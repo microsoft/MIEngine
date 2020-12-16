@@ -11,6 +11,10 @@ steps:
     Configuration: 'Desktop.Release'
     BuildArguments: '/p:Lab=$(Lab)'
 
+- template: ../tasks/SignVerify.yml
+  parameters:
+    TargetFolders: '$(Build.BinariesDirectory)\drop'
+
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
     TargetFolder: '$(Build.StagingDirectory)\bin'
