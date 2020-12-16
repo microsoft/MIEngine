@@ -12,14 +12,14 @@ steps:
   parameters:
     Configuration: 'Lab.Release'
 
-- template: ../tasks/SignVerify.yml
-  parameters:
-    TargetFolders: '$(Build.BinariesDirectory)'
-
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
     TargetFolder: '$(Build.StagingDirectory)\drop'
     ArtifactName: 'drop'
+
+- template: ../tasks/SignVerify.yml
+  parameters:
+    TargetFolders: '$(Build.StagingDirectory)\drop'
 
 - template: ../steps/CopyAndPublishSymbols.yml
 
