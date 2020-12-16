@@ -1,0 +1,28 @@
+---
+steps:
+- checkout: self
+
+- template: ../tasks/NuGetToolInstaller.yml
+
+- template: ../tasks/MicroBuildSigningPlugin.yml
+
+- template: ../steps/BuildSolution.yml
+  parameters:
+    Configuration: 'Desktop.Release'
+    BuildArguments: '/p:Lab=$(Lab)'
+
+- template: ../steps/CollectAndPublishBinaries.yml
+  parameters:
+    TargetFolder: '$(Build.StagingDirectory)\bin'
+    ArtifactName: 'bin'
+
+- template: ../tasks/SignVerify.yml
+  parameters:
+    TargetFolders: '$(Build.StagingDirectory)\bin'
+
+- template: ../steps/CopyAndPublishSymbols.yml
+
+- template: ../steps/ArchivePublicSymbolsAndUploadToFileShare.yml
+
+- template: ../tasks/MicroBuildCleanup.yml
+...

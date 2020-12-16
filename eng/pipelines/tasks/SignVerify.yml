@@ -1,0 +1,13 @@
+---
+parameters:
+    TargetFolders: '$(Build.BinariesDirectory)'
+
+steps:
+- task: ms-vseng.MicroBuildShipTasks.7c429315-71ba-4cb3-94bb-f829c95f7915.MicroBuildCodesignVerify@3
+  displayName: 'Verify Signed Files'
+  inputs:
+    TargetFolders: |
+      ${{ parameters.TargetFolders }}
+    ApprovalListPathForCerts: '$(Build.SourcesDirectory)\eng\pipelines\resources\signing_exclusion.txt'
+  condition: and(succeeded(), eq(variables['SignType'], 'real'))
+...
