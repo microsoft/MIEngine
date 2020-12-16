@@ -24,5 +24,15 @@
     <MakeDir Condition="!Exists($(DropDir))" Directories="$(DropDir)" />
     <Copy DestinationFolder="$(DropDir)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)" />
   </Target>
+
+  <Target Name="SignThirdPartyFiles" BeforeTargets="MSDeployPackagePublish" DependsOnTargets="Publish">
+    <SignFiles Files="@(PublishThirdPartyFilesToSign)"
+               Type="$(SignType)"
+               BinariesDirectory="$(PublishIntermediateOutputPath)"
+               IntermediatesDirectory="$(IntermediateOutputPath)"
+               ESRPSigning=""
+               UseBearerToken=""
+               Condition=" '@(PublishThirdPartyFilesToSign)' != '' " />
+  </Target>
   
 </Project>

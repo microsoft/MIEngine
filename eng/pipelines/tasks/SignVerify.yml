@@ -8,4 +8,6 @@ steps:
   inputs:
     TargetFolders: |
       ${{ parameters.TargetFolders }}
+    ApprovalListPathForCerts: '$(Build.SourcesDirectory)\eng\pipelines\resources\signing_exclusion.txt'
+  condition: and(succeeded(), eq(variables['SignType'], 'real'))
 ...
