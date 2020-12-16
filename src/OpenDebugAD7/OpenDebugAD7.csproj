@@ -97,10 +97,7 @@
   <ItemGroup Label="OpenDebugAD7 Drop Files">
     <DropSignedFile Include="$(OutputPath)\OpenDebugAD7.exe" />
     <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.exe.config" />
-    <PublishThirdPartyFilesToSign Include="$(OutputPath)\Newtonsoft.Json.dll">
-      <Authenticode>3PartySHA2</Authenticode>
-      <StrongName>None</StrongName>
-    </PublishThirdPartyFilesToSign>
+    <DropThirdPartySignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.OLE.Interop.dll" />
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />

@@ -14,7 +14,15 @@
     </FilesToSign>
   </ItemGroup>
 
-  <Target Name="DropFiles" AfterTargets="SignFiles;Build" Condition="'@(DropUnsignedFile);@(DropSignedFile)' != ';'">
+  <!-- Sign 3rd Party dlls -->
+  <ItemGroup>
+    <FilesToSign Include="@(DropThirdPartySignedFile)">
+      <Authenticode>3PartySHA2</Authenticode>
+      <StrongName>None</StrongName>
+    </FilesToSign>
+  </ItemGroup>
+
+  <Target Name="DropFiles" AfterTargets="SignFiles;Build" Condition="'@(DropUnsignedFile);@(DropSignedFile);@(DropThirdPartySignedFile)' != ';;'">
     <PropertyGroup>
       <DropDir>$(DropRootDir)</DropDir>
       <DropDir Condition="'$(DropSubDir)'!=''">$(DropRootDir)\$(DropSubDir)</DropDir>
@@ -22,17 +30,7 @@
     <!--In official builds of the lab configuration, make sure that the MicroBuild props are included in any project that uses DropFiles-->
     <Error Condition="'$(PkgMicrosoft_VisualStudioEng_MicroBuild_Core)'=='' and '$(Lab)'!='false' and '$(TEST_LAB_BUILD)'=='' and '$(BUILD_BUILDURI)'!=''" Text="MicroBuild.Core.props must be included in projects that use DropFiles." />
     <MakeDir Condition="!Exists($(DropDir))" Directories="$(DropDir)" />
-    <Copy DestinationFolder="$(DropDir)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile)" />
-  </Target>
-
-  <Target Name="SignThirdPartyFiles" BeforeTargets="MSDeployPackagePublish" DependsOnTargets="Publish">
-    <SignFiles Files="@(PublishThirdPartyFilesToSign)"
-               Type="$(SignType)"
-               BinariesDirectory="$(PublishIntermediateOutputPath)"
-               IntermediatesDirectory="$(IntermediateOutputPath)"
-               ESRPSigning=""
-               UseBearerToken=""
-               Condition=" '@(PublishThirdPartyFilesToSign)' != '' " />
+    <Copy DestinationFolder="$(DropDir)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile);@(DropThirdPartySignedFile)" />
   </Target>
   
 </Project>
