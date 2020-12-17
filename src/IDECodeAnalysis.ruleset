@@ -2,56 +2,56 @@
 <RuleSet Name="Rules for MICore" Description="Code analysis rules for MICore.csproj." ToolsVersion="14.0">
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <!-- Do not add Deprecated Rules https://docs.microsoft.com/en-us/visualstudio/code-quality/fxcop-unported-deprecated-rules -->
-    <Rule Id="CA1304" Action="Error" Description="CA1304: Specify CultureInfo" />
-    <Rule Id="CA1305" Action="Error" Description="CA1305: Specify IFormatProvider" />
-    <Rule Id="CA1306" Action="Error" Description="CA1306: Set locale for data types" />
-    <Rule Id="CA1307" Action="Error" Description="CA1307: Specify StringComparison for clarity" />
-    <Rule Id="CA1309" Action="Error" Description="CA1309: Use ordinal StringComparison" />
-    <Rule Id="CA2100" Action="Error" Description="CA2100: Review SQL queries for security vulnerabilities" />
-    <Rule Id="CA2109" Action="Error" Description="CA2109: Review visible event handlers" />
-    <Rule Id="CA2119" Action="Error" Description="CA2119: Seal methods that satisfy private interfaces" />
+    <Rule Id="CA1304" Action="Error" />
+    <Rule Id="CA1305" Action="Error" />
+    <Rule Id="CA1306" Action="Error" />
+    <Rule Id="CA1307" Action="Error" />
+    <Rule Id="CA1309" Action="Error" />
+    <Rule Id="CA2100" Action="Error" />
+    <Rule Id="CA2109" Action="Error" />
+    <Rule Id="CA2119" Action="Error" />
 
     <!-- TODO(waan): Enable errors and warnings below -->
 
     <!-- Errors -->
-    <Rule Id="CA1001" Action="None" Description="CA1001: Types that own disposable fields should be disposable" />
-    <Rule Id="CA1031" Action="None" Description="CA1031: Do not catch general exception types" />
-    <Rule Id="CA1032" Action="None" Description="CA1032: Implement standard exception constructors" />
-    <Rule Id="CA1034" Action="None" Description="CA1034: Nested types should not be visible" />
-    <Rule Id="CA1051" Action="None" Description="CA1051: Do not declare visible instance fields" />
-    <Rule Id="CA1054" Action="None" Description="CA1054: URI parameters should not be strings" />
-    <Rule Id="CA1056" Action="None" Description="CA1056: URI properties should not be strings" />
-    <Rule Id="CA1062" Action="None" Description="CA1062: Validate arguments of public methods" />
-    <Rule Id="CA1063" Action="None" Description="CA1063: Implement IDisposable correctly" />
-    <Rule Id="CA1065" Action="None" Description="CA1065: Do not raise exceptions in unexpected locations" />
-    <Rule Id="CA1707" Action="None" Description="CA1707: Identifiers should not contain underscores" />
-    <Rule Id="CA1716" Action="None" Description="CA1716: Identifiers should not match keywords" />
-    <Rule Id="CA1724" Action="None" Description="CA1724: Type names should not match namespaces" />
-    <Rule Id="CA1801" Action="None" Description="CA1801: Review unused parameters" />
-    <Rule Id="CA1805" Action="None" Description="CA1805: Do not initialize unnecessarily." />
-    <Rule Id="CA1812" Action="None" Description="CA1812: Avoid uninstantiated internal classes" />
-    <Rule Id="CA1819" Action="None" Description="CA1819: Properties should not return arrays" />
-    <Rule Id="CA1824" Action="None" Description="CA1824: Mark assemblies with NeutralResourcesLanguageAttribute" />
-    <Rule Id="CA2000" Action="None" Description="CA2000: Dispose objects before losing scope" />
-    <Rule Id="CA2007" Action="None" Description="CA2007: Do not directly await a Task" />
-    <Rule Id="CA2008" Action="None" Description="CA2008: Do not create tasks without passing a TaskScheduler" />
-    <Rule Id="CA2227" Action="None" Description="CA2227: Collection properties should be read only" />
-    <Rule Id="CA2237" Action="None" Description="CA2237: Mark ISerializable types with SerializableAttribute" />
+    <Rule Id="CA1001" Action="None" />
+    <Rule Id="CA1031" Action="None" />
+    <Rule Id="CA1032" Action="None" />
+    <Rule Id="CA1034" Action="None" />
+    <Rule Id="CA1051" Action="None" />
+    <Rule Id="CA1054" Action="None" />
+    <Rule Id="CA1056" Action="None" />
+    <Rule Id="CA1062" Action="None" />
+    <Rule Id="CA1063" Action="None" />
+    <Rule Id="CA1065" Action="None" />
+    <Rule Id="CA1707" Action="None" />
+    <Rule Id="CA1716" Action="None" />
+    <Rule Id="CA1724" Action="None" />
+    <Rule Id="CA1801" Action="None" />
+    <Rule Id="CA1805" Action="None" />
+    <Rule Id="CA1812" Action="None" />
+    <Rule Id="CA1819" Action="None" />
+    <Rule Id="CA1824" Action="None" />
+    <Rule Id="CA2000" Action="None" />
+    <Rule Id="CA2007" Action="None" />
+    <Rule Id="CA2008" Action="None" />
+    <Rule Id="CA2227" Action="None" />
+    <Rule Id="CA2237" Action="None" />
 
     <!-- Warnings -->
-    <Rule Id="CA1052" Action="None" Description="CA1052: Static holder types should be Static or NotInheritable" />
-    <Rule Id="CA1064" Action="None" Description="CA1064: Exceptions should be public" />
-    <Rule Id="CA1068" Action="None" Description="CA1068: CancellationToken parameters must come last" />
-    <Rule Id="CA1303" Action="None" Description="CA1303: Do not pass literals as localized parameters" />
-    <Rule Id="CA1308" Action="None" Description="CA1308: Normalize strings to uppercase" />
-    <Rule Id="CA1802" Action="None" Description="CA1802: Use Literals Where Appropriate" />
-    <Rule Id="CA1806" Action="None" Description="CA1806: Do not ignore method results" />
-    <Rule Id="CA1815" Action="None" Description="CA1815: Override equals and operator equals on value types" />
-    <Rule Id="CA1822" Action="None" Description="CA1822: Mark members as static" />
-    <Rule Id="CA1823" Action="None" Description="CA1823: Avoid unused private fields" />
-    <Rule Id="CA1825" Action="None" Description="CA1825: Avoid zero-length array allocations" />
-    <Rule Id="CA2213" Action="None" Description="CA2213: Disposable fields should be disposed" />
-    <Rule Id="CA2241" Action="None" Description="CA2241: Provide correct arguments to formatting methods" />
-    <Rule Id="CA2248" Action="None" Description="CA2248: Provide correct enum argument to Enum.HasFlag" />
+    <Rule Id="CA1052" Action="None" />
+    <Rule Id="CA1064" Action="None" />
+    <Rule Id="CA1068" Action="None" />
+    <Rule Id="CA1303" Action="None" />
+    <Rule Id="CA1308" Action="None" />
+    <Rule Id="CA1802" Action="None" />
+    <Rule Id="CA1806" Action="None" />
+    <Rule Id="CA1815" Action="None" />
+    <Rule Id="CA1822" Action="None" />
+    <Rule Id="CA1823" Action="None" />
+    <Rule Id="CA1825" Action="None" />
+    <Rule Id="CA2213" Action="None" />
+    <Rule Id="CA2241" Action="None" />
+    <Rule Id="CA2248" Action="None" />
   </Rules>
 </RuleSet>
