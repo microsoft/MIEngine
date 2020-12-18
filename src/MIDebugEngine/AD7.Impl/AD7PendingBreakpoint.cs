@@ -128,7 +128,7 @@ namespace Microsoft.MIDebugEngine
             {
                 AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, address, functionName);
 
-                return new AD7DocumentContext(new MITextPosition(_documentName, _startPosition[0], _startPosition[0]), codeContext, _engine.DebuggedProcess);
+                return new AD7DocumentContext(new MITextPosition(_documentName, _startPosition[0], _startPosition[0]), codeContext);
             }
             else
             {
