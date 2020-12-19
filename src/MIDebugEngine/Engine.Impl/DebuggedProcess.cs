@@ -845,7 +845,7 @@ namespace Microsoft.MIDebugEngine
                 // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
                 LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, (string resStr) =>
                 {
-                    if (resStr.Contains("cygwin"))
+                    if (resStr.Contains("cygwin") || resStr.Contains("msys"))
                     {
                         this.IsCygwin = true;
                         this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
