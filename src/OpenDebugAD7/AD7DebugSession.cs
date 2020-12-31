@@ -158,7 +158,7 @@ namespace OpenDebugAD7
             return new ProtocolException(message, new Message(error, message));
         }
 
-        private bool ValidateProgramPath(ref string program)
+        private bool ValidateProgramPath(ref string program, string miMode)
         {
             // Make sure the slashes go in the correct direction
             char directorySeparatorChar = Path.DirectorySeparatorChar;
@@ -171,6 +171,14 @@ namespace OpenDebugAD7
             program = m_pathConverter.ConvertLaunchPathForVsCode(program);
             if (!File.Exists(program))
             {
+                // On macOS, check to see if we are trying to debug an app bundle (.app).
+                // 'app bundles' contain various resources and executables in a folder.
+                // LLDB understands how to target these bundles.
+                if (Utilities.IsOSX() && program.EndsWith(".app", StringComparison.OrdinalIgnoreCase) && miMode.Equals("lldb", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Directory.Exists(program);
+                }
+
                 // On Windows, check if we are just missing a '.exe' from the file name. This way we can use the same
                 // launch.json on all platforms.
                 if (Utilities.IsWindows())
@@ -925,7 +933,7 @@ namespace OpenDebugAD7
             // The target remote could be any OS, so we don't try to change anything.
             if (!skipFilesystemChecks)
             {
-                if (!ValidateProgramPath(ref program))
+                if (!ValidateProgramPath(ref program, mimode))
                 {
                     responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1002, String.Format(CultureInfo.CurrentCulture, "launch: program '{0}' does not exist", program)));
                     return;
@@ -1164,7 +1172,7 @@ namespace OpenDebugAD7
                         return;
                     }
 
-                    if (!ValidateProgramPath(ref program))
+                    if (!ValidateProgramPath(ref program, mimode))
                     {
                         responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1010, String.Format(CultureInfo.CurrentCulture, "attach: program path '{0}' does not exist", program)));
                         return;
