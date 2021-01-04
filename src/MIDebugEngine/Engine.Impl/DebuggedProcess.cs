@@ -2265,6 +2265,10 @@ namespace Microsoft.MIDebugEngine
             string currentName = string.Empty;
             if (!string.IsNullOrEmpty(file))
             {
+                if (IsCygwin)
+                {
+                    file = CygwinFilePathMapper.MapCygwinToWindows(file);
+                }
                 MapCompileTimeSrcToCurrentSrc(file, out currentName);
             }
             return currentName;
