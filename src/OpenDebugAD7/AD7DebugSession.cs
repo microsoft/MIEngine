@@ -1571,65 +1571,66 @@ namespace OpenDebugAD7
             }
 
             Object container;
-            if (m_variableManager.TryGet(reference, out container))
+            if (!m_variableManager.TryGet(reference, out container))
             {
-                if (container is VariableScope variableScope)
+                responder.SetResponse(response);
+                return;
+            }
+            if (container is VariableScope variableScope)
+            {
+                response = VariablesFromFrame(variableScope, radix);
+                responder.SetResponse(response);
+                return;
+            }
+
+            if (!(container is VariableEvaluationData variableEvaluationData))
+            {
+                Debug.Assert(false, "Unexpected type in _variableHandles collection");
+                responder.SetResponse(response);
+                return;
+            }
+
+            Guid empty = Guid.Empty;
+            IDebugProperty2 property = variableEvaluationData.DebugProperty;
+            if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, radix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out IEnumDebugPropertyInfo2 childEnum) == 0)
+            {
+                uint count;
+                childEnum.GetCount(out count);
+                if (count > 0)
                 {
-                    response = VariablesFromFrame(variableScope, radix);
-                }
-                else
-                {
-                    if (container is VariableEvaluationData variableEvaluationData)
+                    DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
+                    childEnum.Next(count, childProperties, out count);
+
+                    if (count > 1)
                     {
-                        Guid empty = Guid.Empty;
-                        IDebugProperty2 property = variableEvaluationData.DebugProperty;
-                        if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, radix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out IEnumDebugPropertyInfo2 childEnum) == 0)
+                        // Ensure that items with duplicate names such as multiple anonymous unions will display in VS Code
+                        var variablesDictionary = new Dictionary<string, Variable>();
+                        for (uint c = 0; c < count; c++)
                         {
-                            uint count;
-                            childEnum.GetCount(out count);
-                            if (count > 0)
+                            string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
+                            var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
+                            int uniqueCounter = 2;
+                            string variableName = variable.Name;
+                            string variableNameFormat = "{0} #{1}";
+                            while (variablesDictionary.ContainsKey(variableName))
                             {
-                                DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
-                                childEnum.Next(count, childProperties, out count);
-
-                                if (count > 1)
-                                {
-                                    // Ensure that items with duplicate names such as multiple anonymous unions will display in VS Code
-                                    var variablesDictionary = new Dictionary<string, Variable>();
-                                    for (uint c = 0; c < count; c++)
-                                    {
-                                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
-                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
-                                        int uniqueCounter = 2;
-                                        string variableName = variable.Name;
-                                        string variableNameFormat = "{0} #{1}";
-                                        while (variablesDictionary.ContainsKey(variableName))
-                                        {
-                                            variableName = String.Format(CultureInfo.InvariantCulture, variableNameFormat, variable.Name, uniqueCounter++);
-                                        }
-
-                                        variable.Name = variableName;
-                                        variablesDictionary[variableName] = variable;
-                                    }
-
-                                    response.Variables.AddRange(variablesDictionary.Values);
-                                }
-                                else
-                                {
-                                    string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
-                                    // Shortcut when no duplicate can exist
-                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
-                                }
+                                variableName = String.Format(CultureInfo.InvariantCulture, variableNameFormat, variable.Name, uniqueCounter++);
                             }
+
+                            variable.Name = variableName;
+                            variablesDictionary[variableName] = variable;
                         }
+
+                        response.Variables.AddRange(variablesDictionary.Values);
                     }
                     else
                     {
-                        Debug.Assert(false, "Unexpected type in _variableHandles collection");
+                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
+                        // Shortcut when no duplicate can exist
+                        response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
                     }
                 }
             }
-
             responder.SetResponse(response);
         }
 
