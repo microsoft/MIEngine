@@ -181,8 +181,8 @@ namespace Microsoft.MIDebugEngine
                 new Entry( "fooff", false, "FPU" ),
                 new Entry( "fop", false, "FPU" ),
                 new Entry( "mxcsr", false, "SSE" ),
-                new Entry( "xmm.+", true, "SSE" ),
-                new Entry( "ymm.+", true, "AVX" ),
+                new Entry( "xmm[0-9]+", true, "SSE" ),
+                new Entry( "ymm[0-9]+", true, "AVX" ),
                 new Entry( "mm[0-7][0-7]", true, "AMD3DNow" ),
                 new Entry( "mm[0-7]", true, "MMX" ),
             };
