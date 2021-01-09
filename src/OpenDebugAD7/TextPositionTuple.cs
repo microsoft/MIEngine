@@ -41,7 +41,6 @@ namespace OpenDebugAD7
                     Path = convertedFilePath,
                     Name = Path.GetFileName(convertedFilePath)
                 };
-
                 int line = converter.ConvertDebuggerLineToClient((int)beginPosition[0].dwLine);
                 int column = unchecked((int)(beginPosition[0].dwColumn + 1));
 

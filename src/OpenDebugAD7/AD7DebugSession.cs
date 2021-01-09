@@ -1596,18 +1596,21 @@ namespace OpenDebugAD7
                         });
                     }
 
-                    Parallel.ForEach(response.StackFrames, frame =>
+                    if (!IsClientVS)
                     {
-                        if (frame.Source == null)
-                            return;
-                        var task = new Task<bool>(() => File.Exists(frame.Source.Path));
-                        task.Start();
-                        if (task.Wait(500) && !task.Result)
+                        Parallel.ForEach(response.StackFrames, frame =>
                         {
-                            // mark the stack frame to be skipped by default
-                            frame.Source.PresentationHint = Source.PresentationHintValue.Deemphasize;
-                        }
-                    });
+                            if (frame.Source == null)
+                                return;
+                            var task = new Task<bool>(() => File.Exists(frame.Source.Path));
+                            task.Start();
+                            if (task.Wait(500) && !task.Result)
+                            {
+                                // mark the stack frame to be skipped by default
+                                frame.Source.PresentationHint = Source.PresentationHintValue.Deemphasize;
+                            }
+                        });
+                    }
 
                     response.TotalFrames = (int)frameEnumInfo.TotalFrames;
                 }
