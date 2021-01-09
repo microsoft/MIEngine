@@ -1334,11 +1334,11 @@ namespace OpenDebugAD7
             }
 
             var builder = new ErrorBuilder(() => AD7Resources.Error_UnableToSetNextStatement);
+            IDebugThread2 thread = null;
             try
             {
                 if (m_gotoCodeContexts.TryGetValue(responder.Arguments.TargetId, out IDebugCodeContext2 gotoTarget))
                 {
-                    IDebugThread2 thread = null;
                     lock (m_threads)
                     {
                         if (!m_threads.TryGetValue(responder.Arguments.ThreadId, out thread))
@@ -1352,9 +1352,11 @@ namespace OpenDebugAD7
             {
                 m_isStopped = true;
                 responder.SetError(new ProtocolException(e.Message));
+                return;
             }
 
             responder.SetResponse(response);
+            FireStoppedEvent(thread, StoppedEvent.ReasonValue.Goto);
         }
 
         protected override void HandleGotoTargetsRequestAsync(IRequestResponder<GotoTargetsArguments, GotoTargetsResponse> responder)
