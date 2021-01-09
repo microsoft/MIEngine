@@ -543,20 +543,20 @@ namespace OpenDebugAD7
             m_logger.WriteLine(category, prefixString + text);
         }
 
-        private VariablesResponse VariablesFromFrame(VariablesRef vref, uint radix)
+        private VariablesResponse VariablesFromFrame(VariableScope vref, uint radix)
         {
             var frame = vref.StackFrame;
-            var scope = vref.Scope;
+            var category = vref.Category;
 
             var response = new VariablesResponse();
 
             Guid filter = Guid.Empty;
-            switch (scope)
+            switch (category)
             {
-            case VariablesScope.Locals:
+            case VariableCategory.Locals:
                 filter = s_guidFilterAllLocalsPlusArgs;
                 break;
-            case VariablesScope.Registers:
+            case VariableCategory.Registers:
                 filter = s_guidFilterRegisters;
                 break;
             }
@@ -1519,7 +1519,7 @@ namespace OpenDebugAD7
                         response.Scopes.Add(new Scope()
                         {
                             Name = AD7Resources.Locals_Scope_Name,
-                            VariablesReference = m_variableManager.Create(new VariablesRef() { StackFrame = frame, Scope = VariablesScope.Locals }),
+                            VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Locals }),
                             PresentationHint = Scope.PresentationHintValue.Locals,
                             Expensive = false
                         });
@@ -1531,7 +1531,7 @@ namespace OpenDebugAD7
                 response.Scopes.Add(new Scope()
                 {
                     Name = AD7Resources.Registers_Scope_Name,
-                    VariablesReference = m_variableManager.Create(new VariablesRef() { StackFrame = frame, Scope = VariablesScope.Registers }),
+                    VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Registers }),
                     PresentationHint = Scope.PresentationHintValue.Registers,
                     Expensive = true
                 });
@@ -1573,20 +1573,17 @@ namespace OpenDebugAD7
             Object container;
             if (m_variableManager.TryGet(reference, out container))
             {
-                if (container is VariablesRef)
+                if (container is VariableScope variableScope)
                 {
-                    response = VariablesFromFrame(container as VariablesRef, radix);
+                    response = VariablesFromFrame(variableScope, radix);
                 }
                 else
                 {
-                    if (container is VariableEvaluationData)
+                    if (container is VariableEvaluationData variableEvaluationData)
                     {
-                        VariableEvaluationData variableEvaluationData = (VariableEvaluationData)container;
-                        IDebugProperty2 property = variableEvaluationData.DebugProperty;
-
                         Guid empty = Guid.Empty;
-                        IEnumDebugPropertyInfo2 childEnum;
-                        if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, radix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out childEnum) == 0)
+                        IDebugProperty2 property = variableEvaluationData.DebugProperty;
+                        if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, radix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out IEnumDebugPropertyInfo2 childEnum) == 0)
                         {
                             uint count;
                             childEnum.GetCount(out count);
@@ -1660,26 +1657,25 @@ namespace OpenDebugAD7
             IDebugProperty2 property = null;
             IEnumDebugPropertyInfo2 varEnum = null;
             int hr = HRConstants.E_FAIL;
-            if (container is VariablesRef)
+            if (container is VariableScope variableScope)
             {
                 Guid filter = Guid.Empty;
-                switch (((VariablesRef)container).Scope)
+                switch (variableScope.Category)
                 {
-                case VariablesScope.Locals:
+                case VariableCategory.Locals:
                     filter = s_guidFilterAllLocalsPlusArgs;
                     break;
-                case VariablesScope.Registers:
+                case VariableCategory.Registers:
                     filter = s_guidFilterRegisters;
                     break;
                 }
 
-                uint n;
-                hr = ((VariablesRef)container).StackFrame.EnumProperties(
+                hr = variableScope.StackFrame.EnumProperties(
                     flags,
                     Constants.EvaluationRadix,
                     ref filter,
                     Constants.EvaluationTimeout,
-                    out n,
+                    out _,
                     out varEnum);
             }
             else if (container is VariableEvaluationData)

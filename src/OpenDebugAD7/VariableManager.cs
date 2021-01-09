@@ -14,21 +14,21 @@ namespace OpenDebugAD7
         internal enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags;
     }
 
-    internal enum VariablesScope
+    internal enum VariableCategory
     {
         Locals,
         Registers
     }
 
-    internal class VariablesRef
+    internal class VariableScope
     {
         internal IDebugStackFrame2 StackFrame;
-        internal VariablesScope Scope;
+        internal VariableCategory Category;
     }
 
     internal class VariableManager
     {
-        // NOTE: The value being stored can be a VariablesRef or a VariableEvaluationData
+        // NOTE: The value being stored can be a VariableScope or a VariableEvaluationData
         private readonly HandleCollection<Object> m_variableHandles;
 
         internal VariableManager()
@@ -51,9 +51,9 @@ namespace OpenDebugAD7
             return m_variableHandles.TryGet(handle, out value);
         }
 
-        internal int Create(VariablesRef vref)
+        internal int Create(VariableScope scope)
         {
-            return m_variableHandles.Create(vref);
+            return m_variableHandles.Create(scope);
         }
 
         internal Variable CreateVariable(IDebugProperty2 property, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)
