@@ -79,7 +79,7 @@ namespace OpenDebugAD7
             }
 
             int handle = GetVariableHandle(propertyInfo, propertyInfoFlags);
-            return new Variable
+            var v = new Variable
             {
                 Name = name,
                 Value = val,
@@ -88,6 +88,11 @@ namespace OpenDebugAD7
                 EvaluateName = propertyInfo.bstrFullName,
                 MemoryReference = memoryReference
             };
+
+            if (propertyInfo.dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
+                v.PresentationHint = new VariablePresentationHint() { Attributes = VariablePresentationHint.AttributesValue.ReadOnly };
+
+            return v;
         }
 
         internal int GetVariableHandle(DEBUG_PROPERTY_INFO propertyInfo, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)
