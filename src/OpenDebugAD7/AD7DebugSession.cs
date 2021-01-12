@@ -1508,34 +1508,29 @@ namespace OpenDebugAD7
             }
 
             IDebugStackFrame2 frame;
-            if (m_frameHandles.TryGet(frameReference, out frame))
+            if (!m_frameHandles.TryGet(frameReference, out frame))
             {
-                uint n;
-                IEnumDebugPropertyInfo2 varEnum;
-                if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
-                {
-                    if (n > 0)
-                    {
-                        response.Scopes.Add(new Scope()
-                        {
-                            Name = AD7Resources.Locals_Scope_Name,
-                            VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Locals }),
-                            PresentationHint = Scope.PresentationHintValue.Locals,
-                            Expensive = false
-                        });
-                    }
-                }
-
-                // registers should always be present
-                // and it's too expensive to read all values just to add the scope
-                response.Scopes.Add(new Scope()
-                {
-                    Name = AD7Resources.Registers_Scope_Name,
-                    VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Registers }),
-                    PresentationHint = Scope.PresentationHintValue.Registers,
-                    Expensive = true
-                });
+                responder.SetError(new ProtocolException(AD7Resources.Error_StackFrameNotFound));
+                return;
             }
+
+            response.Scopes.Add(new Scope()
+            {
+                Name = AD7Resources.Locals_Scope_Name,
+                VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Locals }),
+                PresentationHint = Scope.PresentationHintValue.Locals,
+                Expensive = false
+            });
+
+            // registers should always be present
+            // and it's too expensive to read all values just to add the scope
+            response.Scopes.Add(new Scope()
+            {
+                Name = AD7Resources.Registers_Scope_Name,
+                VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Registers }),
+                PresentationHint = Scope.PresentationHintValue.Registers,
+                Expensive = true
+            });
 
             responder.SetResponse(response);
         }
