@@ -1684,7 +1684,7 @@ namespace OpenDebugAD7
                 }
 
                 hr = debugProperty.EnumChildren(
-                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
+                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP | enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME | enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB,
                     Constants.EvaluationRadix,
                     ref s_guidFilterAllLocalsPlusArgs,
                     enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL,
@@ -1699,20 +1699,17 @@ namespace OpenDebugAD7
                 uint nProps;
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
-                    DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
-                    props[0].pProperty.GetPropertyInfo(flags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
-
-                    if (propertyInfo[0].bstrName == name)
+                    if (props[0].bstrName == name)
                     {
                         // Make sure we can assign to this variable.
-                        if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
+                        if (props[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, name);
                             responder.SetError(new ProtocolException(message, new Message(1107, message)));
                             return;
                         }
 
-                        property = propertyInfo[0].pProperty;
+                        property = props[0].pProperty;
                         break;
                     }
                 }
