@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Logger = MICore.Logger;
@@ -845,7 +846,9 @@ namespace Microsoft.MIDebugEngine
                 // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
                 LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, (string resStr) =>
                 {
-                    if (resStr.Contains("cygwin"))
+                    // Look to see if configuration has "cywgin" within a word boundry.
+                    // Also look for "msys" since it is a modified version of Cygwin.
+                    if (Regex.IsMatch(resStr, "\\bcygwin\\b|\\bmsys\\b"))
                     {
                         this.IsCygwin = true;
                         this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
@@ -2265,6 +2268,10 @@ namespace Microsoft.MIDebugEngine
             string currentName = string.Empty;
             if (!string.IsNullOrEmpty(file))
             {
+                if (IsCygwin)
+                {
+                    file = CygwinFilePathMapper.MapCygwinToWindows(file);
+                }
                 MapCompileTimeSrcToCurrentSrc(file, out currentName);
             }
             return currentName;
