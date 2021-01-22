@@ -52,7 +52,7 @@ namespace Microsoft.MIDebugEngine
 
             if (_textPosition != null)
             {
-                _documentCxt = new AD7DocumentContext(_textPosition, _codeCxt, this.Engine.DebuggedProcess);
+                _documentCxt = new AD7DocumentContext(_textPosition, _codeCxt);
 
                 if (_codeCxt != null)
                 {

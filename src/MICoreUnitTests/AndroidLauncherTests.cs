@@ -28,13 +28,13 @@ namespace MICoreUnitTests
                 "DeviceId=\"default\"/>");
 
             var options = CreateFromXml(content);
-            Assert.Equal(options.Package, "com.example.hellojni");
-            Assert.Equal(options.LaunchActivity, ".HelloJni");
-            Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
+            Assert.Equal("com.example.hellojni", options.Package);
+            Assert.Equal(".HelloJni", options.LaunchActivity);
+            Assert.Equal(MICore.TargetArchitecture.ARM, options.TargetArchitecture);
             Assert.Equal(options.IntermediateDirectory, temp);
-            Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
-            Assert.Equal(options.AbsolutePrefixSOLibSearchPath, "\"\"");
-            Assert.Equal(options.DeviceId, "default");
+            Assert.Equal("c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug", options.AdditionalSOLibSearchPath);
+            Assert.Equal("\"\"", options.AbsolutePrefixSOLibSearchPath);
+            Assert.Equal("default", options.DeviceId);
             Assert.False(options.IsAttach);
         }
 
@@ -59,7 +59,7 @@ namespace MICoreUnitTests
             }
             catch (MICore.InvalidLaunchOptionsException e)
             {
-                Assert.True(e.Message.Contains("LaunchActivity"));
+                Assert.Contains("LaunchActivity", e.Message, StringComparison.Ordinal);
             }
         }
 
@@ -105,14 +105,14 @@ namespace MICoreUnitTests
                 "Attach=\"true\"/>");
 
             var options = CreateFromXml(content);
-            Assert.Equal(options.Package, "com.example.hellojni");
-            Assert.Equal(null, options.LaunchActivity);
-            Assert.Equal(options.TargetArchitecture, MICore.TargetArchitecture.ARM);
+            Assert.Equal("com.example.hellojni", options.Package);
+            Assert.Null(options.LaunchActivity);
+            Assert.Equal(MICore.TargetArchitecture.ARM, options.TargetArchitecture);
             Assert.Equal(options.IntermediateDirectory, temp);
-            Assert.Equal(options.AdditionalSOLibSearchPath, "c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug");
-            Assert.Equal(options.AbsolutePrefixSOLibSearchPath, "\"\"");
-            Assert.Equal(options.DeviceId, "default");
-            Assert.Equal(options.IsAttach, true);
+            Assert.Equal("c:\\example\\bin\\debug;c:\\someotherdir\\bin\\debug", options.AdditionalSOLibSearchPath);
+            Assert.Equal("\"\"", options.AbsolutePrefixSOLibSearchPath);
+            Assert.Equal("default", options.DeviceId);
+            Assert.True(options.IsAttach);
         }
 
         [Fact]
@@ -137,7 +137,7 @@ namespace MICoreUnitTests
             }
             catch (MICore.InvalidLaunchOptionsException e)
             {
-                Assert.True(e.Message.Contains("BadValue"));
+                Assert.Contains("BadValue", e.Message, StringComparison.Ordinal);
             }
         }
 
@@ -157,59 +157,59 @@ namespace MICoreUnitTests
             string[] lines = GetFakeProcessListText1();
             TextColumn[] columns = TextColumn.TryParseHeader(lines[0]);
             Assert.True(columns != null && columns.Length == 8);
-            Assert.Equal(columns[0].Name, "USER");
-            Assert.Equal(columns[1].Name, "PID");
-            Assert.Equal(columns[2].Name, "PPID");
-            Assert.Equal(columns[3].Name, "VSIZE");
-            Assert.Equal(columns[4].Name, "RSS");
-            Assert.Equal(columns[5].Name, "WCHAN");
-            Assert.Equal(columns[6].Name, "PC");
-            Assert.Equal(columns[7].Name, "NAME");
+            Assert.Equal("USER", columns[0].Name);
+            Assert.Equal("PID", columns[1].Name);
+            Assert.Equal("PPID", columns[2].Name);
+            Assert.Equal("VSIZE", columns[3].Name);
+            Assert.Equal("RSS", columns[4].Name);
+            Assert.Equal("WCHAN", columns[5].Name);
+            Assert.Equal("PC", columns[6].Name);
+            Assert.Equal("NAME", columns[7].Name);
 
-            Assert.Equal(columns[0].ExtractCell(lines[1]), "root");
-            Assert.Equal(columns[1].ExtractCell(lines[1]), "1");
-            Assert.Equal(columns[2].ExtractCell(lines[1]), "0");
-            Assert.Equal(columns[3].ExtractCell(lines[1]), "640");
-            Assert.Equal(columns[4].ExtractCell(lines[1]), "496");
-            Assert.Equal(columns[5].ExtractCell(lines[1]), "c00bd520");
-            Assert.Equal(columns[6].ExtractCell(lines[1]), "00019fb8 S");
-            Assert.Equal(columns[7].ExtractCell(lines[1]), "/init");
+            Assert.Equal("root", columns[0].ExtractCell(lines[1]));
+            Assert.Equal("1", columns[1].ExtractCell(lines[1]));
+            Assert.Equal("0", columns[2].ExtractCell(lines[1]));
+            Assert.Equal("640", columns[3].ExtractCell(lines[1]));
+            Assert.Equal("496", columns[4].ExtractCell(lines[1]));
+            Assert.Equal("c00bd520", columns[5].ExtractCell(lines[1]));
+            Assert.Equal("00019fb8 S", columns[6].ExtractCell(lines[1]));
+            Assert.Equal("/init", columns[7].ExtractCell(lines[1]));
 
-            Assert.Equal(columns[0].ExtractCell(lines[2]), "root");
-            Assert.Equal(columns[1].ExtractCell(lines[2]), "2");
-            Assert.Equal(columns[2].ExtractCell(lines[2]), "0");
-            Assert.Equal(columns[3].ExtractCell(lines[2]), "0");
-            Assert.Equal(columns[4].ExtractCell(lines[2]), "0");
-            Assert.Equal(columns[5].ExtractCell(lines[2]), "c00335a0");
-            Assert.Equal(columns[6].ExtractCell(lines[2]), "00000000 S");
-            Assert.Equal(columns[7].ExtractCell(lines[2]), "fake_name");
+            Assert.Equal("root", columns[0].ExtractCell(lines[2]));
+            Assert.Equal("2", columns[1].ExtractCell(lines[2]));
+            Assert.Equal("0", columns[2].ExtractCell(lines[2]));
+            Assert.Equal("0", columns[3].ExtractCell(lines[2]));
+            Assert.Equal("0", columns[4].ExtractCell(lines[2]));
+            Assert.Equal("c00335a0", columns[5].ExtractCell(lines[2]));
+            Assert.Equal("00000000 S", columns[6].ExtractCell(lines[2]));
+            Assert.Equal("fake_name", columns[7].ExtractCell(lines[2]));
 
-            Assert.Equal(columns[0].ExtractCell(lines[3]), "root");
-            Assert.Equal(columns[1].ExtractCell(lines[3]), "3");
-            Assert.Equal(columns[2].ExtractCell(lines[3]), "2");
-            Assert.Equal(columns[3].ExtractCell(lines[3]), "0");
-            Assert.Equal(columns[4].ExtractCell(lines[3]), "0");
-            Assert.Equal(columns[5].ExtractCell(lines[3]), "c001e39c");
-            Assert.Equal(columns[6].ExtractCell(lines[3]), "00000000 S");
-            Assert.Equal(columns[7].ExtractCell(lines[3]), "fake_name");
+            Assert.Equal("root", columns[0].ExtractCell(lines[3]));
+            Assert.Equal("3", columns[1].ExtractCell(lines[3]));
+            Assert.Equal("2", columns[2].ExtractCell(lines[3]));
+            Assert.Equal("0", columns[3].ExtractCell(lines[3]));
+            Assert.Equal("0", columns[4].ExtractCell(lines[3]));
+            Assert.Equal("c001e39c", columns[5].ExtractCell(lines[3]));
+            Assert.Equal("00000000 S", columns[6].ExtractCell(lines[3]));
+            Assert.Equal("fake_name", columns[7].ExtractCell(lines[3]));
 
-            Assert.Equal(columns[0].ExtractCell(lines[4]), "u0_a56");
-            Assert.Equal(columns[1].ExtractCell(lines[4]), "1165");
-            Assert.Equal(columns[2].ExtractCell(lines[4]), "50");
-            Assert.Equal(columns[3].ExtractCell(lines[4]), "211416");
-            Assert.Equal(columns[4].ExtractCell(lines[4]), "16040");
-            Assert.Equal(columns[5].ExtractCell(lines[4]), "ffffffff");
-            Assert.Equal(columns[6].ExtractCell(lines[4]), "b6f46798 S");
-            Assert.Equal(columns[7].ExtractCell(lines[4]), "com.example.hellojni");
+            Assert.Equal("u0_a56", columns[0].ExtractCell(lines[4]));
+            Assert.Equal("1165", columns[1].ExtractCell(lines[4]));
+            Assert.Equal("50", columns[2].ExtractCell(lines[4]));
+            Assert.Equal("211416", columns[3].ExtractCell(lines[4]));
+            Assert.Equal("16040", columns[4].ExtractCell(lines[4]));
+            Assert.Equal("ffffffff", columns[5].ExtractCell(lines[4]));
+            Assert.Equal("b6f46798 S", columns[6].ExtractCell(lines[4]));
+            Assert.Equal("com.example.hellojni", columns[7].ExtractCell(lines[4]));
 
-            Assert.Equal(columns[0].ExtractCell(lines[5]), "root");
-            Assert.Equal(columns[1].ExtractCell(lines[5]), "1181");
-            Assert.Equal(columns[2].ExtractCell(lines[5]), "59");
-            Assert.Equal(columns[3].ExtractCell(lines[5]), "1236");
-            Assert.Equal(columns[4].ExtractCell(lines[5]), "460");
-            Assert.Equal(columns[5].ExtractCell(lines[5]), "00000000");
-            Assert.Equal(columns[6].ExtractCell(lines[5]), "b6f11158 R");
-            Assert.Equal(columns[7].ExtractCell(lines[5]), "ps");
+            Assert.Equal("root", columns[0].ExtractCell(lines[5]));
+            Assert.Equal("1181", columns[1].ExtractCell(lines[5]));
+            Assert.Equal("59", columns[2].ExtractCell(lines[5]));
+            Assert.Equal("1236", columns[3].ExtractCell(lines[5]));
+            Assert.Equal("460", columns[4].ExtractCell(lines[5]));
+            Assert.Equal("00000000", columns[5].ExtractCell(lines[5]));
+            Assert.Equal("b6f11158 R", columns[6].ExtractCell(lines[5]));
+            Assert.Equal("ps", columns[7].ExtractCell(lines[5]));
         }
 
         [Fact]
@@ -220,16 +220,16 @@ namespace MICoreUnitTests
             var processListParer = new ProcessListParser(GetFakeProcessListText1());
 
             result = processListParer.FindProcesses("hellojni");
-            Assert.Equal(result.Count, 0);
+            Assert.Empty(result);
 
             result = processListParer.FindProcesses("com.example.hellojni");
-            Assert.Equal(result.Count, 1);
-            Assert.Equal(result[0], 1165);
+            Assert.Single(result);
+            Assert.Equal(1165, result[0]);
 
             result = processListParer.FindProcesses("fake_name");
-            Assert.Equal(result.Count, 2);
-            Assert.Equal(result[0], 2);
-            Assert.Equal(result[1], 3);
+            Assert.Equal(2, result.Count);
+            Assert.Equal(2, result[0]);
+            Assert.Equal(3, result[1]);
         }
 
         [Fact]
@@ -240,15 +240,15 @@ namespace MICoreUnitTests
             var processListParer = new ProcessListParser(GetFakeProcessListText2());
 
             result = processListParer.FindProcesses("hellojni");
-            Assert.Equal(result.Count, 0);
+            Assert.Empty(result);
 
             result = processListParer.FindProcesses("com.example.hellojni");
-            Assert.Equal(result.Count, 1);
-            Assert.Equal(result[0], 7848);
+            Assert.Single(result);
+            Assert.Equal(7848, result[0]);
 
             result = processListParer.FindProcesses("com.example.memory_hog");
-            Assert.Equal(result.Count, 1);
-            Assert.Equal(result[0], 7915);
+            Assert.Single(result);
+            Assert.Equal(7915, result[0]);
         }
 
         private string[] GetFakeProcessListText1()
@@ -291,14 +291,14 @@ namespace MICoreUnitTests
         public void TestPwdOutputParser()
         {
             string result = PwdOutputParser.ExtractWorkingDirectory("/example/directory", "does-not-matter");
-            Assert.Equal(result, "/example/directory");
+            Assert.Equal("/example/directory", result);
 
             string outputWithDebugSpew = string.Concat(
                 "Function: selinux_compare_spd_ram , priority [2] , priority version is VE=SEPF_SM-G920I_5.0.2_0011\n",
                 "[DEBUG] get_category: variable seinfo: default sensitivity: NULL, cateogry: NULL\n",
                 "/data/data/com.Android53");
             result = PwdOutputParser.ExtractWorkingDirectory(outputWithDebugSpew, "com.Android53");
-            Assert.Equal(result, "/data/data/com.Android53");
+            Assert.Equal("/data/data/com.Android53", result);
 
             try
             {

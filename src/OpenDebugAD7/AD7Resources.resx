@@ -145,6 +145,9 @@
   <data name="Locals_Scope_Name" xml:space="preserve">
     <value>Locals</value>
   </data>
+  <data name="Registers_Scope_Name" xml:space="preserve">
+    <value>Registers</value>
+  </data>
   <data name="Msg_COMQC_E_BAD_MESSAGE" xml:space="preserve">
     <value>The message is improperly formatted or was damaged in transit.</value>
   </data>
@@ -287,5 +290,12 @@
   </data>
   <data name="Error_Scenario_Disassemble" xml:space="preserve">
     <value>Unable to disassemble. {0}</value>
+  </data>
+  <data name="Error_PropertyInvalid" xml:space="preserve">
+    <value>{0}: property '{1}' is invalid.</value>
+    <comment>{0} is the name of the command, {1} is the name of the property</comment>
+  </data>
+  <data name="Error_Scenario_StackTrace" xml:space="preserve">
+    <value>Unable to retrieve stack trace. {0}</value>
   </data>
 </root>

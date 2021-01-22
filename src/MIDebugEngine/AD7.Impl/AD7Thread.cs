@@ -112,6 +112,15 @@ namespace Microsoft.MIDebugEngine
             enumObject = null;
             try
             {
+                uint radix = _engine.CurrentRadix();
+                if (radix != _engine.DebuggedProcess.MICommandFactory.Radix)
+                {
+                    _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                    {
+                        await _engine.UpdateRadixAsync(radix);
+                    });
+                }
+
                 // get the thread's stack frames
                 System.Collections.Generic.List<ThreadContext> stackFrames = null;
                 _engine.DebuggedProcess.WorkerThread.RunOperation(async () => stackFrames = await _engine.DebuggedProcess.ThreadCache.StackFrames(_debuggedThread));

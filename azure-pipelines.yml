@@ -5,10 +5,21 @@ jobs:
 - job: Debug
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
   - task: MSBuild@1
     inputs:
-      solution: 'BuildAndTest.proj'
+      solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
       configuration: 'Debug'
+  - task: VSTest@2
+    inputs:
+      testAssemblyVer2: |
+        $(Build.SourcesDirectory)\bin\Debug\MICoreUnitTests.dll
+        $(Build.SourcesDirectory)\bin\Debug\JDbgUnitTests.dll
+        $(Build.SourcesDirectory)\bin\Debug\SSHDebugTests.dll
   - task: PublishTestResults@2
     inputs:
       testResultsFormat: 'xUnit'
@@ -19,10 +30,21 @@ jobs:
 - job: Release
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
   - task: MSBuild@1
     inputs:
-      solution: 'BuildAndTest.proj'
+      solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
       configuration: 'Release'
+  - task: VSTest@2
+    inputs:
+      testAssemblyVer2: |
+        $(Build.SourcesDirectory)\bin\Release\MICoreUnitTests.dll
+        $(Build.SourcesDirectory)\bin\Release\JDbgUnitTests.dll
+        $(Build.SourcesDirectory)\bin\Release\SSHDebugTests.dll
   - task: PublishTestResults@2
     inputs:
       testResultsFormat: 'xUnit'
@@ -33,18 +55,27 @@ jobs:
 - job: DesktopDebug
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
   - task: MSBuild@1
     inputs:
-      solution: 'BuildAndTest.proj'
+      solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
       configuration: 'Desktop.Debug'
-
 
 - job: DesktopRelease
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
   - task: MSBuild@1
     inputs:
-      solution: 'BuildAndTest.proj'
+      solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
       configuration: 'Desktop.Release'
 
 - job: LabRelease
@@ -52,9 +83,14 @@ jobs:
   variables:
     TEST_LAB_BUILD: 'true'
   steps:
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
   - task: MSBuild@1
     inputs:
-      solution: 'BuildAndTest.proj'
+      solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
       configuration: 'Lab.Release'
 
 - job: LabDebug
@@ -62,7 +98,12 @@ jobs:
   variables:
     TEST_LAB_BUILD: 'true'
   steps:
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
   - task: MSBuild@1
     inputs:
-      solution: 'BuildAndTest.proj'
+      solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
       configuration: 'Lab.Debug'

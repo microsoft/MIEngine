@@ -1,0 +1,311 @@
+# NuGetCommand
+# 
+# Restore, pack, or push NuGet packages, or run a NuGet command. Supports NuGet.org and authenticated feeds
+# like Azure Artifacts and MyGet. Uses NuGet.exe and works with .NET Framework apps. For .NET Core and
+# .NET Standard apps, use the .NET Core task.
+# 
+# Version: 2.179.0
+# 
+# Reference: https://docs.microsoft.com/azure/devops/pipelines/tasks/package/nuget
+# Task.json: https://github.com/microsoft/azure-pipelines-tasks/raw/master/Tasks/NuGetCommandV2/task.json
+---
+parameters:
+  # region Step Configurations
+  
+  displayName: 'NuGet Command'
+  enabled: true
+  continueOnError: false
+  condition: succeeded()
+  timeoutInMinutes: 0
+  
+  # endregion
+  
+  # region Feeds and authentication
+  
+  # Feeds to use
+  # 
+  # You can either select a feed from Azure Artifacts and/or NuGet.org here, or commit a nuget.config file
+  # to your source code repository and set its path here.
+  # Options:
+  #   select
+  #   config
+  selectOrConfig : "select"  # Required
+  
+  # Use packages from this Azure Artifacts/TFS feed
+  # 
+  # Include the selected feed in the generated NuGet.config. You must have Azure Artifacts installed and
+  # licensed to select a feed here.
+  feedRestore : ""  # Used when selectOrConfig = select
+  
+  # Use packages from NuGet.org
+  # 
+  # Include NuGet.org in the generated NuGet.config.
+  includeNuGetOrg : true # Used when selectOrConfig = select
+  
+  # Path to NuGet.config
+  # 
+  # The NuGet.config in your repository that specifies the feeds from which to restore packages.
+  nugetConfigPath : ""  # Used when selectOrConfig = config
+  
+  # Credentials for feeds outside this organization/collection
+  # 
+  # Credentials to use for external registries located in the selected NuGet.config. For feeds in this organization/collection,
+  # leave this blank; the build’s credentials are used automatically.
+  externalEndpoints : "" # Used when selectOrConfig = config
+  
+  # endregion
+  
+  # region Advanced
+  
+  # Disable local cache
+  # 
+  # Prevents NuGet from using packages from local machine caches.
+  noCache : false # Required
+  
+  # Disable parallel processing
+  # 
+  # Prevents NuGet from installing multiple packages in parallel.
+  disableParallelProcessing : false # Required
+  
+  # Destination directory
+  # 
+  # Specifies the folder in which packages are installed. If no folder is specified, packages are restored
+  # into a packages/ folder alongside the selected solution, packages.config, or project.json.
+  packagesDirectory : "" # Required
+  
+  # Verbosity
+  # 
+  # Specifies the amount of detail displayed in the output.
+  # Options:
+  #   Quiet
+  #   Normal
+  #   Detailed
+  verbosityRestore : "Detailed"  # Required
+  
+  # endregion
+  
+  # region Advanced
+  
+  # Publish pipeline metadata
+  # 
+  # Associate this build/release pipeline’s metadata (run #, source code information) with the package
+  publishPackageMetadata : true # Used when command = push && nuGetFeedType = internal
+  
+  # Verbosity
+  # 
+  # Specifies the amount of detail displayed in the output.
+  # Options:
+  #   Quiet
+  #   Normal
+  #   Detailed
+  verbosityPush : "Detailed"  # Required
+  
+  # endregion
+  
+  # region Pack options
+  
+  # Automatic package versioning
+  # 
+  # Cannot be used with include referenced projects. If you choose 'Use the date and time', this will generate
+  # a [SemVer](http://semver.org/spec/v1.0.0.html)-compliant version formatted as `X.Y.Z-ci-datetime` where
+  # you choose X, Y, and Z.If you choose 'Use an environment variable', you must select an environment variable
+  # and ensure it contains the version number you want to use.If you choose 'Use the build number', this
+  # will use the build number to version your package. **Note:** Under Options set the build number format
+  # to be '[$(BuildDefinitionName)_$(Year:yyyy).$(Month).$(DayOfMonth)$(Rev:.r)](https://go.microsoft.com/fwlink/?LinkID=627416)'.
+  # Options:
+  #   off
+  #   byPrereleaseNumber
+  #   byEnvVar
+  #   byBuildNumber
+  versioningScheme : "off"  # Required
+  
+  # Include referenced projects
+  # 
+  # Include referenced projects either as dependencies or as part of the package. Cannot be used with automatic
+  # package versioning. If a referenced project has a corresponding nuspec file that has the same name as
+  # the project, then that referenced project is added as a dependency. Otherwise, the referenced project
+  # is added as part of the package. [Learn more](https://docs.microsoft.com/en-us/nuget/tools/cli-ref-pack).
+  includeReferencedProjects : false # Used when versioningScheme = off
+  
+  # Environment variable
+  # 
+  # Enter the variable name without $, $env, or %.
+  versionEnvVar : "" # Used when versioningScheme = byEnvVar
+  
+  # Major
+  # 
+  # The 'X' in version [X.Y.Z](http://semver.org/spec/v1.0.0.html)
+  requestedMajorVersion : "1" # Used when versioningScheme = byPrereleaseNumber
+  
+  # Minor
+  # 
+  # The 'Y' in version [X.Y.Z](http://semver.org/spec/v1.0.0.html)
+  requestedMinorVersion : "0" # Used when versioningScheme = byPrereleaseNumber
+  
+  # Patch
+  # 
+  # The 'Z' in version [X.Y.Z](http://semver.org/spec/v1.0.0.html)
+  requestedPatchVersion : "0" # Used when versioningScheme = byPrereleaseNumber
+  
+  # Time zone
+  # 
+  # Specifies the desired time zone used to produce the version of the package. Selecting UTC is recommended
+  # if you're using hosted build agents as their date and time might differ.
+  # Options:
+  #   utc
+  #   local
+  packTimezone : "utc"  # Used when versioningScheme = byPrereleaseNumber
+  
+  # Create symbols package
+  # 
+  # Specifies that the package contains sources and symbols. When used with a .nuspec file, this creates
+  # a regular NuGet package file and the corresponding symbols package.
+  includeSymbols : false # Optional
+  
+  # Tool Package
+  # 
+  # Determines if the output files of the project should be in the tool folder.
+  toolPackage : false # Optional
+  
+  # endregion
+  
+  # region Advanced
+  
+  # Additional build properties
+  # 
+  # Specifies a list of token=value pairs, separated by semicolons, where each occurrence of $token$ in the
+  # .nuspec file will be replaced with the given value. Values can be strings in quotation marks.
+  buildProperties : "" # Optional
+  
+  # Base path
+  # 
+  # The base path of the files defined in the nuspec file.
+  basePath : "" # Optional
+  
+  # Verbosity
+  # 
+  # Specifies the amount of detail displayed in the output.
+  # Options:
+  #   Quiet
+  #   Normal
+  #   Detailed
+  verbosityPack : "Detailed"  # Required
+  
+  # endregion
+  
+  # region Ungrouped Configurations
+  
+  # Command
+  # 
+  # The NuGet command to run. Select 'Custom' to add arguments or to use a different command.
+  # Options:
+  #   restore
+  #   pack
+  #   push
+  #   custom
+  command : "restore"  # Required
+  
+  # Path to solution, packages.config, or project.json
+  # 
+  # The path to the solution, packages.config, or project.json file that references the packages to be restored.
+  solution : ""  # Used when command = restore
+  
+  # Path to NuGet package(s) to publish
+  # 
+  # The pattern to match or path to nupkg files to be uploaded. Multiple patterns can be separated by a semicolon.
+  searchPatternPush : ""  # Used when command = push
+  
+  # Target feed location
+  # Options:
+  #   internal
+  #   external
+  nuGetFeedType : "internal"  # Used when command = push
+  
+  # Target feed
+  # 
+  # Select a feed hosted in this account. You must have Azure Artifacts installed and licensed to select
+  # a feed here.
+  feedPublish : ""  # Used when command = push && nuGetFeedType = internal
+  
+  # Allow duplicates to be skipped
+  # 
+  # If you continually publish a set of packages and only change the version number of the subset of packages
+  # that changed, use this option. It allows the task to report success even if some of your packages are
+  # rejected with 409 Conflict errors.This option is currently only available on Azure Pipelines and using
+  # Windows agents. If NuGet.exe encounters a conflict, the task will fail. This option will not work and
+  # publish will fail if you are within a proxy environment.
+  allowPackageConflicts : false # Used when command = push && nuGetFeedType = internal
+  
+  # NuGet server
+  # 
+  # The NuGet service connection that contains the external NuGet server’s credentials.
+  externalEndpoint : "" # Used when command = push && nuGetFeedType = external
+  
+  # Path to csproj or nuspec file(s) to pack
+  # 
+  # Pattern to search for csproj directories to pack.You can separate multiple patterns with a semicolon,
+  # and you can make a pattern negative by prefixing it with '!'. Example: `**\*.csproj;!**\*.Tests.csproj`
+  searchPatternPack : ""  # Used when command = pack
+  
+  # Configuration to package
+  # 
+  # When using a csproj file this specifies the configuration to package
+  configurationToPack : "$(BuildConfiguration)" # Used when command = pack
+  
+  # Package folder
+  # 
+  # Folder where packages will be created. If empty, packages will be created at the source root.
+  outputDir : ""  # Used when command = pack
+  
+  # Command and arguments
+  # 
+  # The command and arguments which will be passed to NuGet.exe for execution. If NuGet 3.5 or later is used,
+  # authenticated commands like list, restore, and publish against any feed in this organization/collection
+  # that the Project Collection Build Service has access to will be automatically authenticated.
+  arguments : "" # Used when command = custom
+  
+  # endregion
+  
+steps:
+- task: NuGetCommand@2
+  displayName: ${{ parameters.DisplayName }}
+  inputs:
+    command : ${{ parameters.command }}
+    solution : ${{ parameters.solution }}
+    selectOrConfig : ${{ parameters.selectOrConfig }}
+    feedRestore : ${{ parameters.feedRestore }}
+    includeNuGetOrg : ${{ parameters.includeNuGetOrg }}
+    nugetConfigPath : ${{ parameters.nugetConfigPath }}
+    externalEndpoints : ${{ parameters.externalEndpoints }}
+    noCache : ${{ parameters.noCache }}
+    disableParallelProcessing : ${{ parameters.disableParallelProcessing }}
+    packagesDirectory : ${{ parameters.packagesDirectory }}
+    verbosityRestore : ${{ parameters.verbosityRestore }}
+    searchPatternPush : ${{ parameters.searchPatternPush }}
+    nuGetFeedType : ${{ parameters.nuGetFeedType }}
+    feedPublish : ${{ parameters.feedPublish }}
+    publishPackageMetadata : ${{ parameters.publishPackageMetadata }}
+    allowPackageConflicts : ${{ parameters.allowPackageConflicts }}
+    externalEndpoint : ${{ parameters.externalEndpoint }}
+    verbosityPush : ${{ parameters.verbosityPush }}
+    searchPatternPack : ${{ parameters.searchPatternPack }}
+    configurationToPack : ${{ parameters.configurationToPack }}
+    outputDir : ${{ parameters.outputDir }}
+    versioningScheme : ${{ parameters.versioningScheme }}
+    includeReferencedProjects : ${{ parameters.includeReferencedProjects }}
+    versionEnvVar : ${{ parameters.versionEnvVar }}
+    requestedMajorVersion : ${{ parameters.requestedMajorVersion }}
+    requestedMinorVersion : ${{ parameters.requestedMinorVersion }}
+    requestedPatchVersion : ${{ parameters.requestedPatchVersion }}
+    packTimezone : ${{ parameters.packTimezone }}
+    includeSymbols : ${{ parameters.includeSymbols }}
+    toolPackage : ${{ parameters.toolPackage }}
+    buildProperties : ${{ parameters.buildProperties }}
+    basePath : ${{ parameters.basePath }}
+    verbosityPack : ${{ parameters.verbosityPack }}
+    arguments : ${{ parameters.arguments }}
+  enabled: ${{ parameters.enabled }}
+  condition: ${{ parameters.condition }}
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  continueOnError: ${{ parameters.continueOnError }}
+...

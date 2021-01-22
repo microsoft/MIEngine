@@ -39,11 +39,12 @@ namespace OpenDebugAD7
         private IDebugEngine2 m_engine;
         private EngineConfiguration m_engineConfiguration;
         private AD7Port m_port;
+        private ClientId m_clientId;
+        private DebugSettingsCallback m_settingsCallback;
 
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
-        private readonly Dictionary<int, ThreadFrameEnumInfo> m_threadFrameEnumInfos = new Dictionary<int, ThreadFrameEnumInfo>();
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
 
         private IDebugProgram2 m_program;
@@ -65,6 +66,7 @@ namespace OpenDebugAD7
         private VariableManager m_variableManager;
 
         private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
+        private static Guid s_guidFilterRegisters = new Guid("223ae797-bd09-4f28-8241-2763bdc5f713");
 
         private int m_nextModuleHandle = 1;
         private readonly Dictionary<IDebugModule2, int> m_moduleMap = new Dictionary<IDebugModule2, int>();
@@ -305,6 +307,8 @@ namespace OpenDebugAD7
 
         private int GetMemoryContext(string memoryReference, int? offset, out IDebugMemoryContext2 memoryContext, out ulong address)
         {
+            memoryContext = null;
+
             if (memoryReference.StartsWith("0x", StringComparison.Ordinal))
             {
                 address = Convert.ToUInt64(memoryReference.Substring(2), 16);
@@ -326,7 +330,13 @@ namespace OpenDebugAD7
                 }
             }
 
-            int hr = ((IDebugMemoryBytesDAP)m_engine).CreateMemoryContext(address, out memoryContext);
+            int hr = HRConstants.E_NOTIMPL; // Engine does not support IDebugMemoryBytesDAP
+
+            if (m_engine is IDebugMemoryBytesDAP debugMemoryBytesDAPEngine)
+            {
+                hr = debugMemoryBytesDAPEngine.CreateMemoryContext(address, out memoryContext);
+            }
+
             return hr;
         }
 
@@ -340,14 +350,12 @@ namespace OpenDebugAD7
             m_isStopped = false;
             m_variableManager.Reset();
             m_frameHandles.Reset();
-            m_threadFrameEnumInfos.Clear();
         }
 
         public void Stopped(IDebugThread2 thread)
         {
             Debug.Assert(m_variableManager.IsEmpty(), "Why do we have variable handles?");
             Debug.Assert(m_frameHandles.IsEmpty, "Why do we have frame handles?");
-            Debug.Assert(m_threadFrameEnumInfos.Count == 0, "Why do we have thread frame enums?");
             m_isStopped = true;
         }
 
@@ -535,15 +543,29 @@ namespace OpenDebugAD7
             m_logger.WriteLine(category, prefixString + text);
         }
 
-        private VariablesResponse VariablesFromFrame(IDebugStackFrame2 frame)
+        private VariablesResponse VariablesFromFrame(VariableScope vref, uint radix)
         {
-            VariablesResponse response = new VariablesResponse();
+            var frame = vref.StackFrame;
+            var category = vref.Category;
+
+            var response = new VariablesResponse();
+
+            Guid filter = Guid.Empty;
+            switch (category)
+            {
+            case VariableCategory.Locals:
+                filter = s_guidFilterAllLocalsPlusArgs;
+                break;
+            case VariableCategory.Registers:
+                filter = s_guidFilterRegisters;
+                break;
+            }
 
             uint n;
             IEnumDebugPropertyInfo2 varEnum;
-            if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
+            if (frame.EnumProperties(GetDefaultPropertyInfoFlags(), radix, ref filter, 0, out n, out varEnum) == HRConstants.S_OK)
             {
-                DEBUG_PROPERTY_INFO[] props = new DEBUG_PROPERTY_INFO[1];
+                var props = new DEBUG_PROPERTY_INFO[1];
                 uint nProps;
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
@@ -557,10 +579,7 @@ namespace OpenDebugAD7
         public enum_DEBUGPROP_INFO_FLAGS GetDefaultPropertyInfoFlags()
         {
             enum_DEBUGPROP_INFO_FLAGS flags =
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_TYPE |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB |
+                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD |
                 enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP |
                 enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME |
                 (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_FORCE_REAL_FUNCEVAL;
@@ -614,6 +633,22 @@ namespace OpenDebugAD7
             }
         }
 
+        private enum ClientId
+        {
+            Unknown,
+            VisualStudio,
+            VsCode,
+            LiveshareServerHost
+        };
+
+        private bool IsClientVS
+        {
+            get
+            {
+                return m_clientId == ClientId.VisualStudio || m_clientId == ClientId.LiveshareServerHost;
+            }
+        }
+
         #endregion
 
         #region DebugAdapterBase
@@ -638,13 +673,42 @@ namespace OpenDebugAD7
             m_disconnectedOrTerminated = new ManualResetEvent(false);
             m_firstStoppingEvent = 0;
 
+            if (m_engine is IDebugEngine110 engine110)
+            {
+                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed to individual
+                //  APIs.  To support this mechanism outside of VS, provide a fake settings callback here that we can use to control
+                //  the radix.
+                m_settingsCallback = new DebugSettingsCallback();
+                engine110.SetMainThreadSettingsCallback110(m_settingsCallback);
+            }
+
             m_pathConverter.ClientLinesStartAt1 = arguments.LinesStartAt1.GetValueOrDefault(true);
 
             // Default is that they are URIs
             m_pathConverter.ClientPathsAreURI = !(arguments.PathFormat.GetValueOrDefault(InitializeArguments.PathFormatValue.Unknown) == InitializeArguments.PathFormatValue.Path);
 
+            string clientId = responder.Arguments.ClientID;
+            if (clientId == "visualstudio")
+            {
+                m_clientId = ClientId.VisualStudio;
+            }
+            else if (clientId == "vscode")
+            {
+                m_clientId = ClientId.VsCode;
+            }
+            else if (clientId == "liveshare-server-host")
+            {
+                m_clientId = ClientId.LiveshareServerHost;
+            }
+            else
+            {
+                m_clientId = ClientId.Unknown;
+            }
+
             // If the UI supports RunInTerminal, then register the callback.
-            if (arguments.SupportsRunInTerminalRequest.GetValueOrDefault(false))
+            // NOTE: Currently we don't support using the RunInTerminal request with VS or Windows Codespaces.
+            //       This is because: (1) they don't support 'Integrated' terminal, and (2) for MIEngine, we don't ship WindowsDebugLauncher.exe.
+            if (!IsClientVS && arguments.SupportsRunInTerminalRequest.GetValueOrDefault(false))
             {
                 HostRunInTerminal.RegisterRunInTerminalCallback((title, cwd, useExternalConsole, commandArgs, env, success, error) =>
                 {
@@ -674,8 +738,8 @@ namespace OpenDebugAD7
             }
 
             List<ColumnDescriptor> additionalModuleColumns = null;
-            string clientId = responder.Arguments.ClientID;
-            if (clientId == "visualstudio" || clientId == "liveshare-server-host")
+
+            if (IsClientVS)
             {
                 additionalModuleColumns = new List<ColumnDescriptor>();
                 additionalModuleColumns.Add(new ColumnDescriptor(){
@@ -726,10 +790,11 @@ namespace OpenDebugAD7
                 ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label }).ToList(),
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
                 SupportsLogPoints = true,
-                SupportsReadMemoryRequest = true,
+                SupportsReadMemoryRequest = m_engine is IDebugMemoryBytesDAP, // TODO: Read from configuration or query engine for capabilities.
                 SupportsModulesRequest = true,
                 AdditionalModuleColumns = additionalModuleColumns,
-                SupportsDisassembleRequest = true
+                SupportsDisassembleRequest = true,
+                SupportsValueFormattingOptions = true,
             };
 
             responder.SetResponse(initializeResponse);
@@ -1266,31 +1331,93 @@ namespace OpenDebugAD7
             // Make sure we are stopped and receiving valid input or else return an empty stack trace
             if (m_isStopped && startFrame >= 0 && levels >= 0)
             {
-                ThreadFrameEnumInfo frameEnumInfo;
-                if (!m_threadFrameEnumInfos.TryGetValue(threadReference, out frameEnumInfo))
+                ThreadFrameEnumInfo frameEnumInfo = null;
+                IDebugThread2 thread;
+                lock (m_threads)
                 {
-                    IDebugThread2 thread;
-                    lock (m_threads)
+                    if (m_threads.TryGetValue(threadReference, out thread))
                     {
-                        if (m_threads.TryGetValue(threadReference, out thread))
-                        {
-                            var flags = enum_FRAMEINFO_FLAGS.FIF_FRAME |   // need a frame object
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME |        // need a function name
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE | // with the module specified
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |   // with argument names and types
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
-                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES |
-                                enum_FRAMEINFO_FLAGS.FIF_FLAGS |
-                                enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
+                        enum_FRAMEINFO_FLAGS flags = enum_FRAMEINFO_FLAGS.FIF_FUNCNAME | // need a function name
+                                                        enum_FRAMEINFO_FLAGS.FIF_FRAME | // need a frame object
+                                                        enum_FRAMEINFO_FLAGS.FIF_FLAGS |
+                                                        enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
 
-                            IEnumDebugFrameInfo2 frameEnum;
-                            thread.EnumFrameInfo(flags, Constants.EvaluationRadix, out frameEnum);
-                            uint totalFrames;
-                            frameEnum.GetCount(out totalFrames);
+                        uint radix = Constants.EvaluationRadix;
+
+                        if (responder.Arguments.Format != null)
+                        {
+                            StackFrameFormat format = responder.Arguments.Format;
+
+                            if (format.Hex == true)
+                            {
+                                radix = 16;
+                            }
+
+                            if (format.Line == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
+                            }
+
+                            if (format.Module == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
+                            }
+
+                            if (format.Parameters == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS;
+                            }
+
+                            if (format.ParameterNames == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                            }
+
+                            if (format.ParameterTypes == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES;
+                            }
+
+                            if (format.ParameterValues == true)
+                            {
+                                flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES;
+                            }
+                        }
+                        else
+                        {
+                            // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types
+                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE |
+                                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
+                                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
+                                        enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                        }
+
+                        if (m_settingsCallback != null)
+                        {
+                            // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                            m_settingsCallback.Radix = radix;
+                        }
+
+                        ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_StackTrace);
+
+                        try
+                        {
+                            eb.CheckHR(thread.EnumFrameInfo(flags, radix, out IEnumDebugFrameInfo2 frameEnum));
+                            eb.CheckHR(frameEnum.GetCount(out uint totalFrames));
 
                             frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
-                            m_threadFrameEnumInfos.Add(threadReference, frameEnumInfo);
                         }
+                        catch (AD7Exception ex)
+                        {
+                            responder.SetError(new ProtocolException(ex.Message, ex));
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        // Invalid thread specified
+                        responder.SetError(new ProtocolException(String.Format(CultureInfo.CurrentCulture, AD7Resources.Error_PropertyInvalid, StackTraceRequest.RequestType, "threadId")));
+                        return;
                     }
                 }
 
@@ -1381,23 +1508,29 @@ namespace OpenDebugAD7
             }
 
             IDebugStackFrame2 frame;
-            if (m_frameHandles.TryGet(frameReference, out frame))
+            if (!m_frameHandles.TryGet(frameReference, out frame))
             {
-                uint n;
-                IEnumDebugPropertyInfo2 varEnum;
-                if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
-                {
-                    if (n > 0)
-                    {
-                        response.Scopes.Add(new Scope()
-                        {
-                            Name = AD7Resources.Locals_Scope_Name,
-                            VariablesReference = m_variableManager.Create(frame),
-                            Expensive = false
-                        });
-                    }
-                }
+                responder.SetError(new ProtocolException(AD7Resources.Error_StackFrameNotFound));
+                return;
             }
+
+            response.Scopes.Add(new Scope()
+            {
+                Name = AD7Resources.Locals_Scope_Name,
+                VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Locals }),
+                PresentationHint = Scope.PresentationHintValue.Locals,
+                Expensive = false
+            });
+
+            // registers should always be present
+            // and it's too expensive to read all values just to add the scope
+            response.Scopes.Add(new Scope()
+            {
+                Name = AD7Resources.Registers_Scope_Name,
+                VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Registers }),
+                PresentationHint = Scope.PresentationHintValue.Registers,
+                Expensive = true
+            });
 
             responder.SetResponse(response);
         }
@@ -1414,69 +1547,85 @@ namespace OpenDebugAD7
                 return;
             }
 
-            Object container;
-            if (m_variableManager.TryGet(reference, out container))
+            uint radix = Constants.EvaluationRadix;
+
+            if (responder.Arguments.Format != null)
             {
-                if (container is IDebugStackFrame2)
+                ValueFormat format = responder.Arguments.Format;
+
+                if (format.Hex == true)
                 {
-                    response = VariablesFromFrame(container as IDebugStackFrame2);
-                }
-                else
-                {
-                    if (container is VariableEvaluationData)
-                    {
-                        VariableEvaluationData variableEvaluationData = (VariableEvaluationData)container;
-                        IDebugProperty2 property = variableEvaluationData.DebugProperty;
-
-                        Guid empty = Guid.Empty;
-                        IEnumDebugPropertyInfo2 childEnum;
-                        if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, Constants.EvaluationRadix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out childEnum) == 0)
-                        {
-                            uint count;
-                            childEnum.GetCount(out count);
-                            if (count > 0)
-                            {
-                                DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
-                                childEnum.Next(count, childProperties, out count);
-
-                                if (count > 1)
-                                {
-                                    // Ensure that items with duplicate names such as multiple anonymous unions will display in VS Code
-                                    Dictionary<string, Variable> variablesDictionary = new Dictionary<string, Variable>();
-                                    for (uint c = 0; c < count; c++)
-                                    {
-                                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
-                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
-                                        int uniqueCounter = 2;
-                                        string variableName = variable.Name;
-                                        string variableNameFormat = "{0} #{1}";
-                                        while (variablesDictionary.ContainsKey(variableName))
-                                        {
-                                            variableName = String.Format(CultureInfo.InvariantCulture, variableNameFormat, variable.Name, uniqueCounter++);
-                                        }
-
-                                        variable.Name = variableName;
-                                        variablesDictionary[variableName] = variable;
-                                    }
-
-                                    response.Variables.AddRange(variablesDictionary.Values);
-                                }
-                                else
-                                {
-                                    string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
-                                    // Shortcut when no duplicate can exist
-                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Debug.Assert(false, "Unexpected type in _variableHandles collection");
-                    }
+                    radix = 16;
                 }
             }
 
+            if (m_settingsCallback != null)
+            {
+                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                m_settingsCallback.Radix = radix;
+            }
+
+            Object container;
+            if (!m_variableManager.TryGet(reference, out container))
+            {
+                responder.SetResponse(response);
+                return;
+            }
+            if (container is VariableScope variableScope)
+            {
+                response = VariablesFromFrame(variableScope, radix);
+                responder.SetResponse(response);
+                return;
+            }
+
+            if (!(container is VariableEvaluationData variableEvaluationData))
+            {
+                Debug.Assert(false, "Unexpected type in _variableHandles collection");
+                responder.SetResponse(response);
+                return;
+            }
+
+            Guid empty = Guid.Empty;
+            IDebugProperty2 property = variableEvaluationData.DebugProperty;
+            if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, radix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out IEnumDebugPropertyInfo2 childEnum) == 0)
+            {
+                uint count;
+                childEnum.GetCount(out count);
+                if (count > 0)
+                {
+                    DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
+                    childEnum.Next(count, childProperties, out count);
+
+                    if (count > 1)
+                    {
+                        // Ensure that items with duplicate names such as multiple anonymous unions will display in VS Code
+                        var variablesDictionary = new Dictionary<string, Variable>();
+                        for (uint c = 0; c < count; c++)
+                        {
+                            string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
+                            var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
+                            int uniqueCounter = 2;
+                            string variableName = variable.Name;
+                            string variableNameFormat = "{0} #{1}";
+                            while (variablesDictionary.ContainsKey(variableName))
+                            {
+                                variableName = String.Format(CultureInfo.InvariantCulture, variableNameFormat, variable.Name, uniqueCounter++);
+                            }
+
+                            variable.Name = variableName;
+                            variablesDictionary[variableName] = variable;
+                        }
+
+                        response.Variables.AddRange(variablesDictionary.Values);
+                    }
+                    else
+                    {
+                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
+                        // Shortcut when no duplicate can exist
+                        response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
+                    }
+                }
+            }
             responder.SetResponse(response);
         }
 
@@ -1504,15 +1653,25 @@ namespace OpenDebugAD7
             IDebugProperty2 property = null;
             IEnumDebugPropertyInfo2 varEnum = null;
             int hr = HRConstants.E_FAIL;
-            if (container is IDebugStackFrame2)
+            if (container is VariableScope variableScope)
             {
-                uint n;
-                hr = ((IDebugStackFrame2)container).EnumProperties(
-                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
+                Guid filter = Guid.Empty;
+                switch (variableScope.Category)
+                {
+                case VariableCategory.Locals:
+                    filter = s_guidFilterAllLocalsPlusArgs;
+                    break;
+                case VariableCategory.Registers:
+                    filter = s_guidFilterRegisters;
+                    break;
+                }
+
+                hr = variableScope.StackFrame.EnumProperties(
+                    flags,
                     Constants.EvaluationRadix,
-                    ref s_guidFilterAllLocalsPlusArgs,
+                    ref filter,
                     Constants.EvaluationTimeout,
-                    out n,
+                    out _,
                     out varEnum);
             }
             else if (container is VariableEvaluationData)
@@ -1525,7 +1684,7 @@ namespace OpenDebugAD7
                 }
 
                 hr = debugProperty.EnumChildren(
-                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
+                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP | enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME | enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB,
                     Constants.EvaluationRadix,
                     ref s_guidFilterAllLocalsPlusArgs,
                     enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL,
@@ -1540,20 +1699,17 @@ namespace OpenDebugAD7
                 uint nProps;
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
-                    DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
-                    props[0].pProperty.GetPropertyInfo(flags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
-
-                    if (propertyInfo[0].bstrName == name)
+                    if (props[0].bstrName == name)
                     {
                         // Make sure we can assign to this variable.
-                        if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
+                        if (props[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, name);
                             responder.SetError(new ProtocolException(message, new Message(1107, message)));
                             return;
                         }
 
-                        property = propertyInfo[0].pProperty;
+                        property = props[0].pProperty;
                         break;
                     }
                 }
@@ -1642,7 +1798,7 @@ namespace OpenDebugAD7
                     Path = path, VsTimestampUTC = vsTimestampUTC, Version = version, VsLoadAddress = vsLoadAddress, VsPreferredLoadAddress = vsPreferredLoadAddress,
                     VsModuleSize = vsModuleSize, VsLoadOrder = vsLoadOrder, SymbolFilePath = symbolFilePath, SymbolStatus = symbolStatus, VsIs64Bit = vsIs64Bit
                 };
-            
+
                 // IsOptimized and IsUserCode are not set by gdb
                 if((debugModuleInfo.m_dwModuleFlags & enum_MODULE_FLAGS.MODULE_FLAG_OPTIMIZED) != 0)
                 {
@@ -2149,6 +2305,24 @@ namespace OpenDebugAD7
                 return;
             }
 
+            uint radix = Constants.EvaluationRadix;
+
+            if (responder.Arguments.Format != null)
+            {
+                ValueFormat format = responder.Arguments.Format;
+
+                if (format.Hex == true)
+                {
+                    radix = 16;
+                }
+            }
+
+            if (m_settingsCallback != null)
+            {
+                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                m_settingsCallback.Radix = radix;
+            }
+
             IDebugExpressionContext2 expressionContext;
             hr = frame.GetExpressionContext(out expressionContext);
             eb.CheckHR(hr);
@@ -2203,7 +2377,7 @@ namespace OpenDebugAD7
                 propertyInfoFlags |= (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_NOSIDEEFFECTS;
             }
 
-            property.GetPropertyInfo(propertyInfoFlags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
+            property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo);
 
             // If the expression evaluation produces an error result and we are trying to get the expression for data tips
             // return a failure result so that VS code won't display the error message in data tips
@@ -2530,7 +2704,7 @@ namespace OpenDebugAD7
             string moduleLoadMessage = null;
             int isLoad = 0;
             ((IDebugModuleLoadEvent2)pEvent).GetModule(out module, ref moduleLoadMessage, ref isLoad);
-            
+
             m_logger.WriteLine(LoggingCategory.Module, moduleLoadMessage);
 
             int? moduleId = null;
@@ -2777,5 +2951,36 @@ namespace OpenDebugAD7
         }
 
         #endregion
+
+        private class DebugSettingsCallback : IDebugSettingsCallback110
+        {
+            public DebugSettingsCallback()
+            {
+                Radix = Constants.EvaluationRadix;
+            }
+
+            internal uint Radix { get; set; }
+
+            int IDebugSettingsCallback110.GetDisplayRadix(out uint pdwRadix)
+            {
+                pdwRadix = Radix;
+                return HRConstants.S_OK;
+            }
+
+            int IDebugSettingsCallback110.GetUserDocumentPath(out string pbstrUserDocumentPath)
+            {
+                throw new NotImplementedException();
+            }
+
+            int IDebugSettingsCallback110.ShouldHideNonPublicMembers(out int pfHideNonPublicMembers)
+            {
+                throw new NotImplementedException();
+            }
+
+            int IDebugSettingsCallback110.ShouldSuppressImplicitToStringCalls(out int pfSuppressImplicitToStringCalls)
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

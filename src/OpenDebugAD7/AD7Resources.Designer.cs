@@ -227,6 +227,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}: property &apos;{1}&apos; is invalid..
+        /// </summary>
+        internal static string Error_PropertyInvalid {
+            get {
+                return ResourceManager.GetString("Error_PropertyInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: property &apos;{1}&apos; is missing, null, or empty.
         /// </summary>
         internal static string Error_PropertyMissing {
@@ -286,6 +295,15 @@ namespace OpenDebugAD7 {
         internal static string Error_Scenario_ReadMemory {
             get {
                 return ResourceManager.GetString("Error_Scenario_ReadMemory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to retrieve stack trace. {0}.
+        /// </summary>
+        internal static string Error_Scenario_StackTrace {
+            get {
+                return ResourceManager.GetString("Error_Scenario_StackTrace", resourceCulture);
             }
         }
         
@@ -412,6 +430,16 @@ namespace OpenDebugAD7 {
         internal static string Locals_Scope_Name {
             get {
                 return ResourceManager.GetString("Locals_Scope_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Registers.
+        /// </summary>
+        internal static string Registers_Scope_Name
+        {
+            get {
+                return ResourceManager.GetString("Registers_Scope_Name", resourceCulture);
             }
         }
         
