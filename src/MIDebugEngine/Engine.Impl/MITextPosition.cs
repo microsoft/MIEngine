@@ -39,6 +39,8 @@ namespace Microsoft.MIDebugEngine
             if (string.IsNullOrWhiteSpace(filename))
                 return null;
 
+            filename = PlatformUtilities.PathToHostOSPath(filename);
+
             uint? line = miTuple.TryFindUint("line");
             if (!line.HasValue || line.Value == 0)
                 return null;
