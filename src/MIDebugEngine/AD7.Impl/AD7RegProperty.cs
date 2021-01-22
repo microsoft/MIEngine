@@ -100,7 +100,9 @@ namespace Microsoft.MIDebugEngine
 
         public int GetMemoryContext(out IDebugMemoryContext2 ppMemory)
         {
-            throw new NotImplementedException();
+            ppMemory = null;
+
+            return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
         }
 
         public int GetParent(out IDebugProperty2 ppParent)

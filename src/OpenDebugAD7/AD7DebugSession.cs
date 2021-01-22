@@ -66,6 +66,7 @@ namespace OpenDebugAD7
         private VariableManager m_variableManager;
 
         private static Guid s_guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
+        private static Guid s_guidFilterRegisters = new Guid("223ae797-bd09-4f28-8241-2763bdc5f713");
 
         private int m_nextModuleHandle = 1;
         private readonly Dictionary<IDebugModule2, int> m_moduleMap = new Dictionary<IDebugModule2, int>();
@@ -542,15 +543,29 @@ namespace OpenDebugAD7
             m_logger.WriteLine(category, prefixString + text);
         }
 
-        private VariablesResponse VariablesFromFrame(IDebugStackFrame2 frame, uint radix)
+        private VariablesResponse VariablesFromFrame(VariableScope vref, uint radix)
         {
-            VariablesResponse response = new VariablesResponse();
+            var frame = vref.StackFrame;
+            var category = vref.Category;
+
+            var response = new VariablesResponse();
+
+            Guid filter = Guid.Empty;
+            switch (category)
+            {
+            case VariableCategory.Locals:
+                filter = s_guidFilterAllLocalsPlusArgs;
+                break;
+            case VariableCategory.Registers:
+                filter = s_guidFilterRegisters;
+                break;
+            }
 
             uint n;
             IEnumDebugPropertyInfo2 varEnum;
-            if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, radix, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
+            if (frame.EnumProperties(GetDefaultPropertyInfoFlags(), radix, ref filter, 0, out n, out varEnum) == HRConstants.S_OK)
             {
-                DEBUG_PROPERTY_INFO[] props = new DEBUG_PROPERTY_INFO[1];
+                var props = new DEBUG_PROPERTY_INFO[1];
                 uint nProps;
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
@@ -564,10 +579,7 @@ namespace OpenDebugAD7
         public enum_DEBUGPROP_INFO_FLAGS GetDefaultPropertyInfoFlags()
         {
             enum_DEBUGPROP_INFO_FLAGS flags =
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_TYPE |
-                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB |
+                enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD |
                 enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP |
                 enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME |
                 (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_FORCE_REAL_FUNCEVAL;
@@ -1496,23 +1508,29 @@ namespace OpenDebugAD7
             }
 
             IDebugStackFrame2 frame;
-            if (m_frameHandles.TryGet(frameReference, out frame))
+            if (!m_frameHandles.TryGet(frameReference, out frame))
             {
-                uint n;
-                IEnumDebugPropertyInfo2 varEnum;
-                if (frame.EnumProperties(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 10, ref s_guidFilterAllLocalsPlusArgs, 0, out n, out varEnum) == HRConstants.S_OK)
-                {
-                    if (n > 0)
-                    {
-                        response.Scopes.Add(new Scope()
-                        {
-                            Name = AD7Resources.Locals_Scope_Name,
-                            VariablesReference = m_variableManager.Create(frame),
-                            Expensive = false
-                        });
-                    }
-                }
+                responder.SetError(new ProtocolException(AD7Resources.Error_StackFrameNotFound));
+                return;
             }
+
+            response.Scopes.Add(new Scope()
+            {
+                Name = AD7Resources.Locals_Scope_Name,
+                VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Locals }),
+                PresentationHint = Scope.PresentationHintValue.Locals,
+                Expensive = false
+            });
+
+            // registers should always be present
+            // and it's too expensive to read all values just to add the scope
+            response.Scopes.Add(new Scope()
+            {
+                Name = AD7Resources.Registers_Scope_Name,
+                VariablesReference = m_variableManager.Create(new VariableScope() { StackFrame = frame, Category = VariableCategory.Registers }),
+                PresentationHint = Scope.PresentationHintValue.Registers,
+                Expensive = true
+            });
 
             responder.SetResponse(response);
         }
@@ -1548,68 +1566,66 @@ namespace OpenDebugAD7
             }
 
             Object container;
-            if (m_variableManager.TryGet(reference, out container))
+            if (!m_variableManager.TryGet(reference, out container))
             {
-                if (container is IDebugStackFrame2)
+                responder.SetResponse(response);
+                return;
+            }
+            if (container is VariableScope variableScope)
+            {
+                response = VariablesFromFrame(variableScope, radix);
+                responder.SetResponse(response);
+                return;
+            }
+
+            if (!(container is VariableEvaluationData variableEvaluationData))
+            {
+                Debug.Assert(false, "Unexpected type in _variableHandles collection");
+                responder.SetResponse(response);
+                return;
+            }
+
+            Guid empty = Guid.Empty;
+            IDebugProperty2 property = variableEvaluationData.DebugProperty;
+            if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, radix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out IEnumDebugPropertyInfo2 childEnum) == 0)
+            {
+                uint count;
+                childEnum.GetCount(out count);
+                if (count > 0)
                 {
-                    response = VariablesFromFrame(container as IDebugStackFrame2, radix);
-                }
-                else
-                {
-                    if (container is VariableEvaluationData)
+                    DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
+                    childEnum.Next(count, childProperties, out count);
+
+                    if (count > 1)
                     {
-                        VariableEvaluationData variableEvaluationData = (VariableEvaluationData)container;
-                        IDebugProperty2 property = variableEvaluationData.DebugProperty;
-
-                        Guid empty = Guid.Empty;
-                        IEnumDebugPropertyInfo2 childEnum;
-                        if (property.EnumChildren(variableEvaluationData.propertyInfoFlags, radix, ref empty, enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL, null, Constants.EvaluationTimeout, out childEnum) == 0)
+                        // Ensure that items with duplicate names such as multiple anonymous unions will display in VS Code
+                        var variablesDictionary = new Dictionary<string, Variable>();
+                        for (uint c = 0; c < count; c++)
                         {
-                            uint count;
-                            childEnum.GetCount(out count);
-                            if (count > 0)
+                            string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
+                            var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
+                            int uniqueCounter = 2;
+                            string variableName = variable.Name;
+                            string variableNameFormat = "{0} #{1}";
+                            while (variablesDictionary.ContainsKey(variableName))
                             {
-                                DEBUG_PROPERTY_INFO[] childProperties = new DEBUG_PROPERTY_INFO[count];
-                                childEnum.Next(count, childProperties, out count);
-
-                                if (count > 1)
-                                {
-                                    // Ensure that items with duplicate names such as multiple anonymous unions will display in VS Code
-                                    Dictionary<string, Variable> variablesDictionary = new Dictionary<string, Variable>();
-                                    for (uint c = 0; c < count; c++)
-                                    {
-                                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
-                                        var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
-                                        int uniqueCounter = 2;
-                                        string variableName = variable.Name;
-                                        string variableNameFormat = "{0} #{1}";
-                                        while (variablesDictionary.ContainsKey(variableName))
-                                        {
-                                            variableName = String.Format(CultureInfo.InvariantCulture, variableNameFormat, variable.Name, uniqueCounter++);
-                                        }
-
-                                        variable.Name = variableName;
-                                        variablesDictionary[variableName] = variable;
-                                    }
-
-                                    response.Variables.AddRange(variablesDictionary.Values);
-                                }
-                                else
-                                {
-                                    string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
-                                    // Shortcut when no duplicate can exist
-                                    response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
-                                }
+                                variableName = String.Format(CultureInfo.InvariantCulture, variableNameFormat, variable.Name, uniqueCounter++);
                             }
+
+                            variable.Name = variableName;
+                            variablesDictionary[variableName] = variable;
                         }
+
+                        response.Variables.AddRange(variablesDictionary.Values);
                     }
                     else
                     {
-                        Debug.Assert(false, "Unexpected type in _variableHandles collection");
+                        string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
+                        // Shortcut when no duplicate can exist
+                        response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
                     }
                 }
             }
-
             responder.SetResponse(response);
         }
 
@@ -1637,15 +1653,25 @@ namespace OpenDebugAD7
             IDebugProperty2 property = null;
             IEnumDebugPropertyInfo2 varEnum = null;
             int hr = HRConstants.E_FAIL;
-            if (container is IDebugStackFrame2)
+            if (container is VariableScope variableScope)
             {
-                uint n;
-                hr = ((IDebugStackFrame2)container).EnumProperties(
-                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
+                Guid filter = Guid.Empty;
+                switch (variableScope.Category)
+                {
+                case VariableCategory.Locals:
+                    filter = s_guidFilterAllLocalsPlusArgs;
+                    break;
+                case VariableCategory.Registers:
+                    filter = s_guidFilterRegisters;
+                    break;
+                }
+
+                hr = variableScope.StackFrame.EnumProperties(
+                    flags,
                     Constants.EvaluationRadix,
-                    ref s_guidFilterAllLocalsPlusArgs,
+                    ref filter,
                     Constants.EvaluationTimeout,
-                    out n,
+                    out _,
                     out varEnum);
             }
             else if (container is VariableEvaluationData)
@@ -1658,7 +1684,7 @@ namespace OpenDebugAD7
                 }
 
                 hr = debugProperty.EnumChildren(
-                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP,
+                    enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP | enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME | enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB,
                     Constants.EvaluationRadix,
                     ref s_guidFilterAllLocalsPlusArgs,
                     enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ALL,
@@ -1673,20 +1699,17 @@ namespace OpenDebugAD7
                 uint nProps;
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
-                    DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
-                    props[0].pProperty.GetPropertyInfo(flags, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propertyInfo);
-
-                    if (propertyInfo[0].bstrName == name)
+                    if (props[0].bstrName == name)
                     {
                         // Make sure we can assign to this variable.
-                        if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
+                        if (props[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, name);
                             responder.SetError(new ProtocolException(message, new Message(1107, message)));
                             return;
                         }
 
-                        property = propertyInfo[0].pProperty;
+                        property = props[0].pProperty;
                         break;
                     }
                 }
