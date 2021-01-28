@@ -182,44 +182,6 @@ namespace Microsoft.MIDebugEngine
             return _configStore.GetEngineMetric(metric);
         }
 
-        public int Jump(string filename, int line)
-        {
-            try
-            {
-                _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Jump(filename, line));
-            }
-            catch (InvalidCoreDumpOperationException)
-            {
-                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
-            }
-            catch (Exception e)
-            {
-                _engineCallback.OnError(EngineUtils.GetExceptionDescription(e));
-                return Constants.E_ABORT;
-            }
-
-            return Constants.S_OK;
-        }
-
-        public int Jump(ulong address)
-        {
-            try
-            {
-                _debuggedProcess.WorkerThread.RunOperation(() => _debuggedProcess.Jump(address));
-            }
-            catch (InvalidCoreDumpOperationException)
-            {
-                return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
-            }
-            catch (Exception e)
-            {
-                _engineCallback.OnError(EngineUtils.GetExceptionDescription(e));
-                return Constants.E_ABORT;
-            }
-
-            return Constants.S_OK;
-        }
-
         #region IDebugEngine2 Members
 
         // Attach the debug engine to a program.
@@ -877,7 +839,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     var codeCxt = new AD7MemoryAddress(this, a, null);
                     TEXT_POSITION pos;
-                    pos.dwLine = line;
+                    pos.dwLine = line - 1;
                     pos.dwColumn = 0;
                     MITextPosition textPosition = new MITextPosition(documentName, pos, pos);
                     codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt));

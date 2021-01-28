@@ -177,19 +177,6 @@ namespace MICore
             throw new NotImplementedException("lldb catch command");
         }
 
-        // TODO: update these if they become available in lldb-mi
-        public override async Task ExecJump(string filename, int line)
-        {
-            string command = "jump " + filename + ":" + line;
-            await _debugger.CmdAsync(command, ResultClass.running);
-        }
-
-        public override async Task ExecJump(ulong address)
-        {
-            string command = "jump *" + string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address);
-            await _debugger.CmdAsync(command, ResultClass.running);
-        }
-
         /// <summary>
         /// Assigns the value of an expression to a variable.
         /// Since LLDB only accepts assigning values to variables, the expression may need to be evaluated.

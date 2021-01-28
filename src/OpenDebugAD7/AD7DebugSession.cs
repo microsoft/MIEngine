@@ -1326,37 +1326,7 @@ namespace OpenDebugAD7
 
         protected override void HandleGotoRequestAsync(IRequestResponder<GotoArguments> responder)
         {
-            var response = new GotoResponse();
-            if (!m_isStopped)
-            {
-                responder.SetResponse(response);
-                return;
-            }
-
-            var builder = new ErrorBuilder(() => AD7Resources.Error_UnableToSetNextStatement);
-            IDebugThread2 thread = null;
-            try
-            {
-                if (m_gotoCodeContexts.TryGetValue(responder.Arguments.TargetId, out IDebugCodeContext2 gotoTarget))
-                {
-                    lock (m_threads)
-                    {
-                        if (!m_threads.TryGetValue(responder.Arguments.ThreadId, out thread))
-                            throw new AD7Exception("Unknown thread id: " + responder.Arguments.ThreadId.ToString(CultureInfo.InvariantCulture));
-                    }
-                    BeforeContinue();
-                    builder.CheckHR(thread.SetNextStatement(null, gotoTarget));
-                }
-            }
-            catch (AD7Exception e)
-            {
-                m_isStopped = true;
-                responder.SetError(new ProtocolException(e.Message));
-                return;
-            }
-
-            responder.SetResponse(response);
-            FireStoppedEvent(thread, StoppedEvent.ReasonValue.Goto);
+            responder.SetError(new ProtocolException("Not implemented exception."));
         }
 
         protected override void HandleGotoTargetsRequestAsync(IRequestResponder<GotoTargetsArguments, GotoTargetsResponse> responder)
@@ -1387,8 +1357,10 @@ namespace OpenDebugAD7
                     while (codeContextsEnum.Next(1, codeContexts, ref nProps) == HRConstants.S_OK)
                     {
                         var codeContext = codeContexts[0];
+
                         string contextName;
                         codeContext.GetName(out contextName);
+
                         line = responder.Arguments.Line;
                         IDebugDocumentContext2 documentContext;
                         if (codeContext.GetDocumentContext(out documentContext) == HRConstants.S_OK)
@@ -1399,10 +1371,23 @@ namespace OpenDebugAD7
                                 line = m_pathConverter.ConvertDebuggerLineToClient((int)startPos[0].dwLine);
                         }
 
+                        string instructionPointerReference = null;
+                        CONTEXT_INFO[] contextInfo = new CONTEXT_INFO[1];
+                        if (codeContext.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS, contextInfo) == HRConstants.S_OK)
+                        {
+                            instructionPointerReference = contextInfo[0].bstrAddress;
+                        }
+
                         int codeContextId = m_nextContextId++;
                         m_gotoCodeContexts.TryAdd(codeContextId, codeContext);
 
-                        targets.Add(new GotoTarget(codeContextId, contextName, line));
+                        targets.Add(new GotoTarget()
+                        {
+                            Id = codeContextId,
+                            Label = contextName,
+                            Line = line,
+                            InstructionPointerReference = instructionPointerReference
+                        });
                     }
                 }
 
