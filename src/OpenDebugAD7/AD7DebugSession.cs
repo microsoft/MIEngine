@@ -355,7 +355,7 @@ namespace OpenDebugAD7
             m_isStopped = false;
             m_variableManager.Reset();
             m_frameHandles.Reset();
-			m_gotoCodeContexts.Clear();
+            m_gotoCodeContexts.Clear();
         }
 
         public void Stopped(IDebugThread2 thread)
@@ -1326,7 +1326,7 @@ namespace OpenDebugAD7
 
         protected override void HandleGotoRequestAsync(IRequestResponder<GotoArguments> responder)
         {
-            responder.SetError(new ProtocolException("Not implemented exception."));
+            responder.SetError(new ProtocolException(AD7Resources.Error_NotImplementedSetNextStatement));
         }
 
         protected override void HandleGotoTargetsRequestAsync(IRequestResponder<GotoTargetsArguments, GotoTargetsResponse> responder)
@@ -1334,7 +1334,8 @@ namespace OpenDebugAD7
             var response = new GotoTargetsResponse();
 
             var source = responder.Arguments.Source;
-            // TODO: handle this for disassembly debugging
+
+            // Virtual documents don't have paths
             if (source.Path == null)
             {
                 responder.SetResponse(response);
@@ -1373,7 +1374,8 @@ namespace OpenDebugAD7
 
                         string instructionPointerReference = null;
                         CONTEXT_INFO[] contextInfo = new CONTEXT_INFO[1];
-                        if (codeContext.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS, contextInfo) == HRConstants.S_OK)
+                        if (codeContext.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS, contextInfo) == HRConstants.S_OK &&
+                            contextInfo[0].dwFields.HasFlag(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS))
                         {
                             instructionPointerReference = contextInfo[0].bstrAddress;
                         }
