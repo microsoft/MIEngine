@@ -201,6 +201,8 @@ namespace MICore
 
         public override Task ExecJump(ulong address)
         {
+            return _debugger.ConsoleCmdAsync("set $pc = " + string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address), false);
+
             string target = "*" + string.Format(CultureInfo.InvariantCulture, "0x{0:X}", address);
             return JumpInternal(target);
         }

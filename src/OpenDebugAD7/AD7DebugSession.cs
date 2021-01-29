@@ -1355,7 +1355,7 @@ namespace OpenDebugAD7
                         if (!m_threads.TryGetValue(responder.Arguments.ThreadId, out thread))
                             throw new AD7Exception("Unknown thread id: " + responder.Arguments.ThreadId.ToString(CultureInfo.InvariantCulture));
                     }
-                    BeforeContinue();
+                    //BeforeContinue();
                     builder.CheckHR(thread.SetNextStatement(null, gotoTarget));
                 }
             }

@@ -216,6 +216,7 @@ namespace Microsoft.MIDebugEngine
                 _engineCallback.OnError(EngineUtils.GetExceptionDescription(e));
                 return Constants.E_ABORT;
             }
+            DebuggedProcess.ThreadCache.MarkDirty();
 
             return Constants.S_OK;
         }
