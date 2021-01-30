@@ -1477,6 +1477,11 @@ namespace OpenDebugAD7
                             }
                         }
 
+                        IDebugCodeContext2 memoryAddress = null;
+                        frame.GetCodeContext(out memoryAddress);
+                        var contextInfo = new CONTEXT_INFO[1];
+                        memoryAddress.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ALLFIELDS, contextInfo); // test -- need to delete; need to check if call is successful
+
                         response.StackFrames.Add(new ProtocolMessages.StackFrame()
                         {
                             Id = frameReference,
@@ -1484,7 +1489,8 @@ namespace OpenDebugAD7
                             Source = textPosition.Source,
                             Line = textPosition.Line,
                             Column = textPosition.Column,
-                            ModuleId = moduleId
+                            ModuleId = moduleId,
+                            InstructionPointerReference = contextInfo[0].bstrAddressAbsolute // bstrAddress
                         });
                     }
 
