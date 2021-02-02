@@ -298,4 +298,7 @@
   <data name="Error_Scenario_StackTrace" xml:space="preserve">
     <value>Unable to retrieve stack trace. {0}</value>
   </data>
+  <data name="Error_NotImplementedSetNextStatement" xml:space="preserve">
+    <value>Set next statement is not supported by the current debugger.</value>
+  </data>
 </root>

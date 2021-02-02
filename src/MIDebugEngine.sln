@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Android", "Android", "{2865
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CF02407C-BF37-4D51-83F4-845A7F36C101}"
 	ProjectSection(SolutionItems) = preProject
+		..\.editorconfig = ..\.editorconfig
 		IDECodeAnalysis.ruleset = IDECodeAnalysis.ruleset
 	EndProjectSection
 EndProject
@@ -59,7 +60,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.VisualStudio.Debu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MIDebugPackage", "MIDebugPackage\MIDebugPackage.csproj", "{A8D8E02F-4258-4F2E-88B6-A50FEBD5AD8C}"
 	ProjectSection(ProjectDependencies) = postProject
-			{15BCBEF4-1C2B-412B-925B-34A049097E62} = {15BCBEF4-1C2B-412B-925B-34A049097E62}
+		{15BCBEF4-1C2B-412B-925B-34A049097E62} = {15BCBEF4-1C2B-412B-925B-34A049097E62}
 	EndProjectSection
 EndProject
 Global
