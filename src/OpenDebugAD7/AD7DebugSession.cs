@@ -1544,11 +1544,13 @@ namespace OpenDebugAD7
 
                         int frameReference = 0;
                         TextPositionTuple textPosition = TextPositionTuple.Nil;
+                        IDebugCodeContext2 memoryAddress = null;
 
                         if (frame != null)
                         {
                             frameReference = m_frameHandles.Create(frame);
                             textPosition = TextPositionTuple.GetTextPositionOfFrame(m_pathConverter, frame) ?? TextPositionTuple.Nil;
+                            frame.GetCodeContext(out memoryAddress);
                         }
 
                         int? moduleId = null;
@@ -1564,6 +1566,13 @@ namespace OpenDebugAD7
                             }
                         }
 
+                        string instructionPointerReference = null;
+                        var contextInfo = new CONTEXT_INFO[1];
+                        if (memoryAddress?.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS, contextInfo) == HRConstants.S_OK && contextInfo[0].dwFields.HasFlag(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS))
+                        {
+                            instructionPointerReference = contextInfo[0].bstrAddress;
+                        }
+
                         response.StackFrames.Add(new ProtocolMessages.StackFrame()
                         {
                             Id = frameReference,
@@ -1571,7 +1580,8 @@ namespace OpenDebugAD7
                             Source = textPosition.Source,
                             Line = textPosition.Line,
                             Column = textPosition.Column,
-                            ModuleId = moduleId
+                            ModuleId = moduleId,
+                            InstructionPointerReference = instructionPointerReference
                         });
                     }
 
