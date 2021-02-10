@@ -14,7 +14,7 @@ namespace Microsoft.MIDebugEngine
     // The property is usually the result of an expression evaluation. 
     //
     // The sample engine only supports locals and parameters for functions that have symbols loaded.
-    internal class AD7Property : IDebugProperty3
+    internal class AD7Property : IDebugProperty3, IDebugProperty160
     {
         private static uint s_maxChars = 1000000;
         private byte[] _bytes;
@@ -413,6 +413,26 @@ namespace Microsoft.MIDebugEngine
                 }
             }
             return Constants.E_FAIL;
+        }
+
+        /*
+         * test -- need to delete; insert something here
+         * See https://devdiv.visualstudio.com/DevDiv/_git/Concord?path=%2Fsrc%2Fimpl%2Fad7%2FProperty.cpp, Line 1413
+         * Maybe this as well: https://devdiv.visualstudio.com/DevDiv/_git/VSCodeDebugAdapterHost?path=%2Fsrc%2Fproduct%2FVsCodeDebuggerHost%2FAD7%2FImplementation%2FAD7Property.cs&_a=contents&version=GBmain, Line 226?
+         */
+        public int GetDataBreakpointInfo160(out string pbstrAddress, out uint pSize, out string pbstrDisplayName, out string pbstrError)
+        {
+            int hr = Constants.S_OK;
+
+            pbstrAddress = "";
+            pSize = 0;
+            pbstrDisplayName = "";
+            pbstrError = "";
+
+            // to be continued...
+            // trying to access _variableInformation.Address() and Size() here...
+
+            return hr;
         }
     }
 

@@ -78,3 +78,6 @@
 ; "SetNextStatement"=dword:00000001
 ; "SuspendThread"=dword:00000001
 "GlobalVisualizersDirectory"="$PackageFolder$"
+
+"BreakWhenValueChanges"=dword:00000001
+"DataBPAsString"=dword:00000001

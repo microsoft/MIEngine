@@ -90,6 +90,19 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
+        public async Task<string> Address()
+        {
+            // ask GDB to evaluate "&expression"
+            string command = "&"+_strippedName;
+            return await MIDebugCommandDispatcher.ExecuteCommand(command, _debuggedProcess, ignoreFailures: true);
+        }
+        public async Task<uint> Size()
+        {
+            // ask GDB to evaluate "sizeof(expression)"
+            string command = "sizeof("+_strippedName+")";
+            string size =  await MIDebugCommandDispatcher.ExecuteCommand(command, _debuggedProcess, ignoreFailures: true);
+            return Convert.ToUInt32(size, CultureInfo.InvariantCulture);
+        }
 
         private static bool IsPointer(string typeName)
         {
