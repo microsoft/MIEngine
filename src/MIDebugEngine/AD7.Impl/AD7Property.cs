@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
 
@@ -424,13 +422,12 @@ namespace Microsoft.MIDebugEngine
         {
             int hr = Constants.S_OK;
 
-            pbstrAddress = "";
-            pSize = 0;
-            pbstrDisplayName = "";
-            pbstrError = "";
-
             // to be continued...
             // trying to access _variableInformation.Address() and Size() here...
+            pbstrAddress = _variableInformation.Address();
+            pSize = _variableInformation.Size();
+            pbstrDisplayName = _variableInformation.Name; // or do we want FullName here?
+            pbstrError = "";
 
             return hr;
         }

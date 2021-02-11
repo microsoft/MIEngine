@@ -3,11 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
 using System.Diagnostics;
-using System.Threading;
 using MICore;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -41,6 +38,9 @@ namespace Microsoft.MIDebugEngine
         bool IsReadOnly();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         bool IsPreformatted { get; set; }
+
+        string Address();
+        uint Size();
     }
 
     internal class SimpleVariableInformation
@@ -90,18 +90,39 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
-        public async Task<string> Address()
+        /*
+            private string GetExpressionValue(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames)
+            {
+                string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames);
+                IVariableInformation expressionVariable = new VariableInformation(processedExpr, variable, _process.Engine, null);
+                expressionVariable.SyncEval();
+                return FormatDisplayString(expressionVariable);
+            }
+
+            public void SyncEval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
+            {
+                Task eval = Task.Run(async () =>
+                {
+                    await Eval(dwFlags, dwDAPFlags);
+                });
+                eval.Wait();
+            }
+         */
+        public string Address()
         {
             // ask GDB to evaluate "&expression"
             string command = "&"+_strippedName;
-            return await MIDebugCommandDispatcher.ExecuteCommand(command, _debuggedProcess, ignoreFailures: true);
+            IVariableInformation execVariable = new VariableInformation(command, this);
+            execVariable.SyncEval();
+            return _engine.DebuggedProcess.Natvis.FormatDisplayString(execVariable);
         }
-        public async Task<uint> Size()
+        public uint Size()
         {
             // ask GDB to evaluate "sizeof(expression)"
             string command = "sizeof("+_strippedName+")";
-            string size =  await MIDebugCommandDispatcher.ExecuteCommand(command, _debuggedProcess, ignoreFailures: true);
-            return Convert.ToUInt32(size, CultureInfo.InvariantCulture);
+            IVariableInformation execVariable = new VariableInformation(command, this);
+            execVariable.SyncEval();
+            return Convert.ToUInt32(_engine.DebuggedProcess.Natvis.FormatDisplayString(execVariable), CultureInfo.InvariantCulture);
         }
 
         private static bool IsPointer(string typeName)
