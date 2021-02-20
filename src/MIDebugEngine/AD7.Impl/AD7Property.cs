@@ -83,7 +83,15 @@ namespace Microsoft.MIDebugEngine
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_RAW_STRING;
                 }
+
                 propertyInfo.dwAttrib |= variable.Access;
+
+                /*
+                if (!string.IsNullOrEmpty(variable.Address()) && variable.Size() > 0)
+                {
+                    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
+                }
+                */
             }
 
             // If the debugger has asked for the property, or the property has children (meaning it is a pointer in the sample)

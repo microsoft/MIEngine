@@ -44,6 +44,8 @@
 ; "SuspendThread"=dword:00000001
 "CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
 "GlobalVisualizersDirectory"="$PackageFolder$"
+"BreakWhenValueChanges"=dword:00000001
+"DataBPAsString"=dword:00000001
 
 [$RootKey$\AD7Metrics\Engine\{91744D97-430F-42C1-9779-A5813EBD6AB2}\PortSupplier]
 ; SSH Port Supplier
@@ -78,6 +80,3 @@
 ; "SetNextStatement"=dword:00000001
 ; "SuspendThread"=dword:00000001
 "GlobalVisualizersDirectory"="$PackageFolder$"
-
-"BreakWhenValueChanges"=dword:00000001
-"DataBPAsString"=dword:00000001
