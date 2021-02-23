@@ -90,32 +90,15 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
-        /*
-            private string GetExpressionValue(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames)
-            {
-                string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames);
-                IVariableInformation expressionVariable = new VariableInformation(processedExpr, variable, _process.Engine, null);
-                expressionVariable.SyncEval();
-                return FormatDisplayString(expressionVariable);
-            }
-
-            public void SyncEval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
-            {
-                Task eval = Task.Run(async () =>
-                {
-                    await Eval(dwFlags, dwDAPFlags);
-                });
-                eval.Wait();
-            }
-         */
         public string Address()
         {
             // ask GDB to evaluate "&expression"
-            string command = "&"+_strippedName;
+            string command = "&("+_strippedName+")";
             IVariableInformation execVariable = new VariableInformation(command, this);
             execVariable.SyncEval();
             return _engine.DebuggedProcess.Natvis.FormatDisplayString(execVariable);
         }
+
         public uint Size()
         {
             // ask GDB to evaluate "sizeof(expression)"

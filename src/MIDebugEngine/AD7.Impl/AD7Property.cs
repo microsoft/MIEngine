@@ -86,12 +86,7 @@ namespace Microsoft.MIDebugEngine
 
                 propertyInfo.dwAttrib |= variable.Access;
 
-                /*
-                if (!string.IsNullOrEmpty(variable.Address()) && variable.Size() > 0)
-                {
-                    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
-                }
-                */
+                propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
             }
 
             // If the debugger has asked for the property, or the property has children (meaning it is a pointer in the sample)
@@ -421,17 +416,10 @@ namespace Microsoft.MIDebugEngine
             return Constants.E_FAIL;
         }
 
-        /*
-         * test -- need to delete; insert something here
-         * See https://devdiv.visualstudio.com/DevDiv/_git/Concord?path=%2Fsrc%2Fimpl%2Fad7%2FProperty.cpp, Line 1413
-         * Maybe this as well: https://devdiv.visualstudio.com/DevDiv/_git/VSCodeDebugAdapterHost?path=%2Fsrc%2Fproduct%2FVsCodeDebuggerHost%2FAD7%2FImplementation%2FAD7Property.cs&_a=contents&version=GBmain, Line 226?
-         */
         public int GetDataBreakpointInfo160(out string pbstrAddress, out uint pSize, out string pbstrDisplayName, out string pbstrError)
         {
             int hr = Constants.S_OK;
 
-            // to be continued...
-            // trying to access _variableInformation.Address() and Size() here...
             pbstrAddress = _variableInformation.Address();
             pSize = _variableInformation.Size();
             pbstrDisplayName = _variableInformation.Name; // or do we want FullName here?
