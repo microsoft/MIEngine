@@ -1109,11 +1109,13 @@ namespace Microsoft.MIDebugEngine
                     if (frame.Contains("file"))
                     {
                         this.EntrypointHit = true;
+                        await this.OnEntrypointHit();
                     }
                 }
                 else
                 {
                     this.EntrypointHit = true;
+                    await this.OnEntrypointHit();
                 }
 
                 CmdContinueAsync();
