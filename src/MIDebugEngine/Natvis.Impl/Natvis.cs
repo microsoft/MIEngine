@@ -65,11 +65,11 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         public string Address()
         {
-            throw new NotImplementedException();
+            return Parent.Address();
         }
         public uint Size()
         {
-            throw new NotImplementedException();
+            return Parent.Size();
         }
     }
 

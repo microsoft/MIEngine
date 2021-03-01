@@ -93,19 +93,15 @@ namespace Microsoft.MIDebugEngine
         public string Address()
         {
             // ask GDB to evaluate "&expression"
-            string command = "&("+_strippedName+")";
-            IVariableInformation execVariable = new VariableInformation(command, this);
-            execVariable.SyncEval();
-            return _engine.DebuggedProcess.Natvis.FormatDisplayString(execVariable);
+            string command = "&("+FullName()+")";
+            return EvalDependentExpression(command);
         }
 
         public uint Size()
         {
             // ask GDB to evaluate "sizeof(expression)"
-            string command = "sizeof("+_strippedName+")";
-            IVariableInformation execVariable = new VariableInformation(command, this);
-            execVariable.SyncEval();
-            return Convert.ToUInt32(_engine.DebuggedProcess.Natvis.FormatDisplayString(execVariable), CultureInfo.InvariantCulture);
+            string command = "sizeof("+FullName()+")";
+            return Convert.ToUInt32(EvalDependentExpression(command), CultureInfo.InvariantCulture);
         }
 
         private static bool IsPointer(string typeName)
@@ -144,6 +140,9 @@ namespace Microsoft.MIDebugEngine
                             }
                         }
                         _fullname = '(' + parentName + ')' + op + _strippedName;
+                        break;
+                    case NodeType.Dereference:
+                        _fullname = "*(" + _parent.FullName() + ")";
                         break;
                     case NodeType.BaseClass:
                     case NodeType.AccessQualifier:
@@ -286,6 +285,10 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.AnonymousUnion;
             }
+            else if (Name[0] == '*')
+            {
+                VariableNodeType = NodeType.Dereference;
+            }
             else
             {
                 _strippedName = Name;
@@ -335,6 +338,7 @@ namespace Microsoft.MIDebugEngine
         {
             Root,
             Field,
+            Dereference,
             ArrayElement,
             BaseClass,
             AccessQualifier,

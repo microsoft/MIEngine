@@ -418,14 +418,22 @@ namespace Microsoft.MIDebugEngine
 
         public int GetDataBreakpointInfo160(out string pbstrAddress, out uint pSize, out string pbstrDisplayName, out string pbstrError)
         {
-            int hr = Constants.S_OK;
-
-            pbstrAddress = _variableInformation.Address();
-            pSize = _variableInformation.Size();
-            pbstrDisplayName = _variableInformation.Name; // or do we want FullName here?
-            pbstrError = "";
-
-            return hr;
+            try
+            {
+                pbstrAddress = _variableInformation.Address();
+                pSize = _variableInformation.Size();
+                pbstrDisplayName = _variableInformation.Name;
+                pbstrError = "";
+                return Constants.S_OK;
+            }
+            catch (Exception e)
+            {
+                pbstrAddress = null;
+                pSize = 0;
+                pbstrDisplayName = null;
+                pbstrError = e.Message;
+            }
+            return Constants.E_FAIL;
         }
     }
 
