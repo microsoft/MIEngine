@@ -36,6 +36,7 @@
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>
   
@@ -66,6 +67,7 @@
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
+    <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
   </ItemGroup>
   <Target Name="CopyToVSCodeFolder" AfterTargets="DropFiles">
     <ItemGroup>
