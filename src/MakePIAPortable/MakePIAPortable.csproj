@@ -69,7 +69,7 @@
   </ItemGroup>
   <Target Name="CopyToVSCodeFolder" AfterTargets="DropFiles">
     <ItemGroup>
-      <VSCodeFolderInteropFile Include="$(DropDir)\Microsoft.VisualStudio.Debugger.InteropA.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
+      <VSCodeFolderInteropFile Include="$(DropDir)\Microsoft.VisualStudio.Debugger.InteropA.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
     </ItemGroup>
     <Move SourceFiles="@(VSCodeFolderInteropFile)" DestinationFolder="$(DropDir)\vscode\" />
   </Target>

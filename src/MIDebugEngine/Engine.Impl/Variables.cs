@@ -90,11 +90,24 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
+        private static readonly string[] s_validAddressFormats = new string[] {
+            @"^0x[0-9a-fA-F]+$",
+            @"^(0x[0-9a-fA-F]+)\b"
+        };
+
         public string Address()
         {
             // ask GDB to evaluate "&expression"
             string command = "&("+FullName()+")";
-            return EvalDependentExpression(command);
+            var result = EvalDependentExpression(command);
+            for (int i = 0; i < s_validAddressFormats.Length; i++)
+            {
+                if (Regex.IsMatch(result, s_validAddressFormats[i]))
+                {
+                    return result;
+                }
+            }
+            return null;
         }
 
         public uint Size()
@@ -285,7 +298,7 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.AnonymousUnion;
             }
-            else if (Name[0] == '*')
+            else if (Name.Length > 1 && Name[0] == '*')
             {
                 VariableNodeType = NodeType.Dereference;
             }

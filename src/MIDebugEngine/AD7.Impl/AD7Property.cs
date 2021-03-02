@@ -77,6 +77,9 @@ namespace Microsoft.MIDebugEngine
                 if (variable.Error)
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR;
+                } else
+                {
+                    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
                 }
 
                 if (variable.IsStringType)
@@ -85,8 +88,6 @@ namespace Microsoft.MIDebugEngine
                 }
 
                 propertyInfo.dwAttrib |= variable.Access;
-
-                propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
             }
 
             // If the debugger has asked for the property, or the property has children (meaning it is a pointer in the sample)
