@@ -38,7 +38,6 @@ namespace Microsoft.MIDebugEngine
         bool IsReadOnly();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         bool IsPreformatted { get; set; }
-
         string Address();
         uint Size();
     }
@@ -107,7 +106,8 @@ namespace Microsoft.MIDebugEngine
                     return result;
                 }
             }
-            return null;
+            string errorMessage = String.Format(CultureInfo.InvariantCulture, "Unexpected result {0} from evaluating {1}", result, command);
+            throw new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", errorMessage);
         }
 
         public uint Size()

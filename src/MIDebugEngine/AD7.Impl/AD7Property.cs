@@ -82,7 +82,6 @@ namespace Microsoft.MIDebugEngine
                 } else
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
-                    // test -- need to delete; insert something here
                     if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(variable.FullName()))
                     {
                         if (_engine.DebuggedProcess.VariableNameAddressMap.Contains(variable.FullName() + "," + variable.Address()))
@@ -90,14 +89,12 @@ namespace Microsoft.MIDebugEngine
                             propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
                         }
                     }
-                    // propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
                 }
 
                 if (variable.IsStringType)
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_RAW_STRING;
                 }
-
                 propertyInfo.dwAttrib |= variable.Access;
             }
 
@@ -436,7 +433,6 @@ namespace Microsoft.MIDebugEngine
                 pSize = _variableInformation.Size();
                 pbstrDisplayName = _variableInformation.Name;
                 pbstrError = "";
-                // test -- need to delete; add or remove variable in DataBreakpointVariables
                 lock (_engine.DebuggedProcess.DataBreakpointVariables)
                 {
                     if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(_variableInformation.FullName()))
