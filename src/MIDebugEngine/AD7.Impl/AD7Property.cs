@@ -82,9 +82,10 @@ namespace Microsoft.MIDebugEngine
                 } else
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
-                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(variable.FullName()))
+                    string fullName = variable.FullName();
+                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(fullName))
                     {
-                        if (_engine.DebuggedProcess.VariableNameAddressMap.Contains(variable.FullName() + "," + variable.Address()))
+                        if (_engine.DebuggedProcess.VariableNameAddressMap.Contains(fullName + "," + variable.Address()))
                         {
                             propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
                         }
@@ -433,17 +434,19 @@ namespace Microsoft.MIDebugEngine
                 pSize = _variableInformation.Size();
                 pbstrDisplayName = _variableInformation.Name;
                 pbstrError = "";
+
+                string fullName = _variableInformation.FullName();
                 lock (_engine.DebuggedProcess.DataBreakpointVariables)
                 {
-                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(_variableInformation.FullName()))
+                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(fullName))
                     {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(_variableInformation.FullName());
-                        // _engine.DebuggedProcess.VariableNameAddressMap.Remove(_variableInformation.FullName() + "," + pbstrAddress);
+                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(fullName);
+                        // _engine.DebuggedProcess.VariableNameAddressMap.Remove(fullName + "," + pbstrAddress);
                     }
                     else
                     {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Add(_variableInformation.FullName());
-                        _engine.DebuggedProcess.VariableNameAddressMap.Add(_variableInformation.FullName() + "," + pbstrAddress);
+                        _engine.DebuggedProcess.DataBreakpointVariables.Add(fullName);
+                        _engine.DebuggedProcess.VariableNameAddressMap.Add(fullName + "," + pbstrAddress);
                     }
                 }
                 return Constants.S_OK;
