@@ -26,6 +26,8 @@ namespace Microsoft.MIDebugEngine
             _variableInformation = vi;
         }
 
+        private static ulong DBG_ATTRIB_HAS_DATA_BREAKPOINT = 0x1000000000000000;
+
         // Construct a DEBUG_PROPERTY_INFO representing this local or parameter.
         public DEBUG_PROPERTY_INFO ConstructDebugPropertyInfo(enum_DEBUGPROP_INFO_FLAGS dwFields)
         {
@@ -80,6 +82,15 @@ namespace Microsoft.MIDebugEngine
                 } else
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
+                    // test -- need to delete; insert something here
+                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(variable.FullName()))
+                    {
+                        if (_engine.DebuggedProcess.VariableNameAddressMap.Contains(variable.FullName() + "," + variable.Address()))
+                        {
+                            propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
+                        }
+                    }
+                    // propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
                 }
 
                 if (variable.IsStringType)
@@ -425,6 +436,12 @@ namespace Microsoft.MIDebugEngine
                 pSize = _variableInformation.Size();
                 pbstrDisplayName = _variableInformation.Name;
                 pbstrError = "";
+                // test -- need to delete; add variable to DataBreakpointVariables
+                lock (_engine.DebuggedProcess.DataBreakpointVariables)
+                {
+                    _engine.DebuggedProcess.DataBreakpointVariables.Add(_variableInformation.FullName());
+                }
+                _engine.DebuggedProcess.VariableNameAddressMap.Add(_variableInformation.FullName() + "," + pbstrAddress);
                 return Constants.S_OK;
             }
             catch (Exception e)
