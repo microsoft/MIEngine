@@ -436,12 +436,20 @@ namespace Microsoft.MIDebugEngine
                 pSize = _variableInformation.Size();
                 pbstrDisplayName = _variableInformation.Name;
                 pbstrError = "";
-                // test -- need to delete; add variable to DataBreakpointVariables
+                // test -- need to delete; add or remove variable in DataBreakpointVariables
                 lock (_engine.DebuggedProcess.DataBreakpointVariables)
                 {
-                    _engine.DebuggedProcess.DataBreakpointVariables.Add(_variableInformation.FullName());
+                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(_variableInformation.FullName()))
+                    {
+                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(_variableInformation.FullName());
+                        // _engine.DebuggedProcess.VariableNameAddressMap.Remove(_variableInformation.FullName() + "," + pbstrAddress);
+                    }
+                    else
+                    {
+                        _engine.DebuggedProcess.DataBreakpointVariables.Add(_variableInformation.FullName());
+                        _engine.DebuggedProcess.VariableNameAddressMap.Add(_variableInformation.FullName() + "," + pbstrAddress);
+                    }
                 }
-                _engine.DebuggedProcess.VariableNameAddressMap.Add(_variableInformation.FullName() + "," + pbstrAddress);
                 return Constants.S_OK;
             }
             catch (Exception e)
