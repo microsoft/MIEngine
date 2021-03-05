@@ -70,6 +70,7 @@
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />
   </ItemGroup>
 
   <ItemGroup>
