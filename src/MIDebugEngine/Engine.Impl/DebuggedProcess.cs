@@ -25,9 +25,7 @@ namespace Microsoft.MIDebugEngine
         public AD_PROCESS_ID Id { get; private set; }
         public AD7Engine Engine { get; private set; }
         public List<string> VariablesToDelete { get; private set; }
-        public List<string> DataBreakpointVariables { get; private set; }
         public List<IVariableInformation> ActiveVariables { get; private set; }
-        public HashSet<string> VariableNameAddressMap { get; private set; }
         public VariableInformation ReturnValue { get; private set; }
         public SourceLineCache SourceLineCache { get; private set; }
         public ThreadCache ThreadCache { get; private set; }
@@ -84,9 +82,7 @@ namespace Microsoft.MIDebugEngine
             ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, configStore);
 
             VariablesToDelete = new List<string>();
-            DataBreakpointVariables = new List<string>();
             this.ActiveVariables = new List<IVariableInformation>();
-            VariableNameAddressMap = new HashSet<string>();
             _fileTimestampWarnings = new HashSet<Tuple<string, string>>();
 
             OutputStringEvent += delegate (object o, string message)

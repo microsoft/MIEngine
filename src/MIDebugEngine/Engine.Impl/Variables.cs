@@ -3,8 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
+using System.Collections;
 using System.Diagnostics;
+using System.Threading;
 using MICore;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -38,8 +41,6 @@ namespace Microsoft.MIDebugEngine
         bool IsReadOnly();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         bool IsPreformatted { get; set; }
-        string Address();
-        uint Size();
     }
 
     internal class SimpleVariableInformation
@@ -89,33 +90,6 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
-        private static readonly string[] s_validAddressFormats = new string[] {
-            @"^0x[0-9a-fA-F]+$",
-            @"^(0x[0-9a-fA-F]+)\b"
-        };
-
-        public string Address()
-        {
-            // ask GDB to evaluate "&expression"
-            string command = "&("+FullName()+")";
-            var result = EvalDependentExpression(command);
-            for (int i = 0; i < s_validAddressFormats.Length; i++)
-            {
-                if (Regex.IsMatch(result, s_validAddressFormats[i]))
-                {
-                    return result;
-                }
-            }
-            string errorMessage = String.Format(CultureInfo.InvariantCulture, "Unexpected result {0} from evaluating {1}", result, command);
-            throw new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", errorMessage);
-        }
-
-        public uint Size()
-        {
-            // ask GDB to evaluate "sizeof(expression)"
-            string command = "sizeof("+FullName()+")";
-            return Convert.ToUInt32(EvalDependentExpression(command), CultureInfo.InvariantCulture);
-        }
 
         private static bool IsPointer(string typeName)
         {
@@ -153,9 +127,6 @@ namespace Microsoft.MIDebugEngine
                             }
                         }
                         _fullname = '(' + parentName + ')' + op + _strippedName;
-                        break;
-                    case NodeType.Dereference:
-                        _fullname = "*(" + _parent.FullName() + ")";
                         break;
                     case NodeType.BaseClass:
                     case NodeType.AccessQualifier:
@@ -298,10 +269,6 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.AnonymousUnion;
             }
-            else if (Name.Length > 1 && Name[0] == '*')
-            {
-                VariableNodeType = NodeType.Dereference;
-            }
             else
             {
                 _strippedName = Name;
@@ -351,7 +318,6 @@ namespace Microsoft.MIDebugEngine
         {
             Root,
             Field,
-            Dereference,
             ArrayElement,
             BaseClass,
             AccessQualifier,

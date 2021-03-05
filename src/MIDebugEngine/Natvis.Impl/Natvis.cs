@@ -15,7 +15,6 @@ using Microsoft.DebugEngineHost;
 using System.Reflection;
 using Logger = MICore.Logger;
 using Microsoft.VisualStudio.Debugger.Interop.DAP;
-using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine.Natvis
 {
@@ -62,15 +61,6 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
         }
         public bool IsPreformatted { get { return Parent.IsPreformatted; } set { } }
-
-        public string Address()
-        {
-            return Parent.Address();
-        }
-        public uint Size()
-        {
-            return Parent.Size();
-        }
     }
 
     internal class VisualizerWrapper : SimpleWrapper
