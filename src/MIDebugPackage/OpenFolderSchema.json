@@ -207,7 +207,7 @@
                   },
                   "pipeCmd": {
                     "type": "array",
-                    "description": "Command line arguments passed to the pipe program to execute commands.",
+                    "description": "Arguments passed to the pipe executable to run a remote Unix (ex: bash or similar) shell command. This is used for running 'kill' on the remote system, or other commands that the debugger may need. If not specified, the debugger will do its best without the shell. But some features, such as setting breakpoints in run mode, may not work. This string should contain the string '{0}' which will be replaced with the command to execute.",
                     "items": {
                       "type": "string"
                     }
