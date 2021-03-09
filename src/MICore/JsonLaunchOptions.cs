@@ -487,7 +487,7 @@ namespace MICore.Json.LaunchOptions
         public List<string> PipeArgs { get; private set; }
 
         /// <summary>
-        /// Command line arguments passed to the pipe program to execute a reote command.
+        /// Command line arguments passed to the pipe program to execute a remote command.
         /// </summary>
         [JsonProperty("pipeCmd", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<string> PipeCmd { get; private set; }
