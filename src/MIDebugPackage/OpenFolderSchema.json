@@ -205,6 +205,13 @@
                       "type": "string"
                     }
                   },
+                  "pipeCmd": {
+                    "type": "array",
+                    "description": "Command line arguments passed to the pipe program to execute commands.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
                   "debuggerPath": {
                     "type": "string",
                     "description": "The full path to the debugger on the target machine, for example /usr/bin/gdb."
