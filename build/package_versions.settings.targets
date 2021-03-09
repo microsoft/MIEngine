@@ -2,6 +2,7 @@
     <PropertyGroup>
         <Microsoft_VisualStudio_Debugger_Interop_Portable_Version>1.0.1</Microsoft_VisualStudio_Debugger_Interop_Portable_Version>
         <Microsoft_VisualStudio_Debugger_Interop_15_0_Version>15.8.28010</Microsoft_VisualStudio_Debugger_Interop_15_0_Version>
+        <Microsoft_VisualStudio_Debugger_Interop_16_0_Version>16.8.30322.176</Microsoft_VisualStudio_Debugger_Interop_16_0_Version>
         <Microsoft_VisualStudio_OLE_Interop_Version>16.7.30328.74</Microsoft_VisualStudio_OLE_Interop_Version>
         <Newtonsoft_Json_VSCode_Version>9.0.1</Newtonsoft_Json_VSCode_Version>
         <Newtonsoft_Json_VS_Version>6.0.8</Newtonsoft_Json_VS_Version>
