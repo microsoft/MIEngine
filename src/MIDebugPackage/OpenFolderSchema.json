@@ -61,10 +61,14 @@
                 "type": "object",
                 "description": "Optional source file mappings passed to the debug engine. Format: '{ \"<Compiler source location>\": \"<Editor source location>\" }' OR '{ \"<Compiler source location>\": { \"editorPath\": \"<Editor source location>\", \"useForBreakpoints\": true } }'. \nExample: '{ \"/home/user/foo\": \"C:\\foo\" }' OR '{ \"/home/user/foo\": { \"editorPath\": \"c:\\foo\", \"useForBreakpoints\": true } }'.",
                 "additionalProperties": {
-                  "anyOf": {
-                    "type": "string",
-                    "$ref": "#/definitions/cpp_schema/definitions/sourceFileMapOptions"
-                  }
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "$ref": "#/definitions/cpp_schema/definitions/sourceFileMapOptions"
+                    }
+                  ]
                 }
               },
               "MIMode": {
