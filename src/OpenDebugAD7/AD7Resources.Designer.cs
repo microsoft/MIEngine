@@ -227,6 +227,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Set next statement is not supported by the current debugger..
+        /// </summary>
+        internal static string Error_NotImplementedSetNextStatement {
+            get {
+                return ResourceManager.GetString("Error_NotImplementedSetNextStatement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: property &apos;{1}&apos; is invalid..
         /// </summary>
         internal static string Error_PropertyInvalid {
@@ -434,16 +443,6 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Registers.
-        /// </summary>
-        internal static string Registers_Scope_Name
-        {
-            get {
-                return ResourceManager.GetString("Registers_Scope_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Debugger failed to signal process termination..
         /// </summary>
         internal static string MissingDebuggerTerminationEvent {
@@ -531,6 +530,15 @@ namespace OpenDebugAD7 {
         internal static string ProcessExitMessage {
             get {
                 return ResourceManager.GetString("ProcessExitMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Registers.
+        /// </summary>
+        internal static string Registers_Scope_Name {
+            get {
+                return ResourceManager.GetString("Registers_Scope_Name", resourceCulture);
             }
         }
         

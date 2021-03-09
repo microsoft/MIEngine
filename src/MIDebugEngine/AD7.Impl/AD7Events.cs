@@ -407,7 +407,7 @@ namespace Microsoft.MIDebugEngine
         {
             _name = name;
             _code = code;
-            _description = description ?? name;
+            _description = string.IsNullOrEmpty(description) ? name : description;
             _category = exceptionCategory ?? EngineConstants.EngineId;
 
             switch (state)

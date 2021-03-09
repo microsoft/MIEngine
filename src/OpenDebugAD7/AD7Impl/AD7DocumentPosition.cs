@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace OpenDebugAD7.AD7Impl
 {
-    internal class AD7DocumentPosition : IDebugDocumentPosition2, IDebugDocumentPosition110
+    internal sealed class AD7DocumentPosition : IDebugDocumentPosition2, IDebugDocumentPosition110
     {
         public string Path
         {

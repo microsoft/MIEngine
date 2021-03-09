@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -27,7 +28,7 @@ using ProtocolMessages = Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messa
 
 namespace OpenDebugAD7
 {
-    internal class AD7DebugSession : DebugAdapterBase, IDebugPortNotify2, IDebugEventCallback2
+    internal sealed class AD7DebugSession : DebugAdapterBase, IDebugPortNotify2, IDebugEventCallback2
     {
         // This is a general purpose lock. Don't hold it across long operations.
         private readonly object m_lock = new object();
@@ -44,6 +45,10 @@ namespace OpenDebugAD7
 
         private readonly DebugEventLogger m_logger;
         private readonly Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>> m_breakpoints;
+
+        private readonly ConcurrentDictionary<int, IDebugCodeContext2> m_gotoCodeContexts = new ConcurrentDictionary<int, IDebugCodeContext2>();
+        private int m_nextContextId = 1;
+
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
 
@@ -350,6 +355,7 @@ namespace OpenDebugAD7
             m_isStopped = false;
             m_variableManager.Reset();
             m_frameHandles.Reset();
+            m_gotoCodeContexts.Clear();
         }
 
         public void Stopped(IDebugThread2 thread)
@@ -793,6 +799,7 @@ namespace OpenDebugAD7
                 SupportsReadMemoryRequest = m_engine is IDebugMemoryBytesDAP, // TODO: Read from configuration or query engine for capabilities.
                 SupportsModulesRequest = true,
                 AdditionalModuleColumns = additionalModuleColumns,
+                SupportsGotoTargetsRequest = true,
                 SupportsDisassembleRequest = true,
                 SupportsValueFormattingOptions = true,
             };
@@ -1317,6 +1324,86 @@ namespace OpenDebugAD7
             responder.SetResponse(new PauseResponse());
         }
 
+        protected override void HandleGotoRequestAsync(IRequestResponder<GotoArguments> responder)
+        {
+            responder.SetError(new ProtocolException(AD7Resources.Error_NotImplementedSetNextStatement));
+        }
+
+        protected override void HandleGotoTargetsRequestAsync(IRequestResponder<GotoTargetsArguments, GotoTargetsResponse> responder)
+        {
+            var response = new GotoTargetsResponse();
+
+            var source = responder.Arguments.Source;
+
+            // Virtual documents don't have paths
+            if (source.Path == null)
+            {
+                responder.SetResponse(response);
+                return;
+            }
+
+            try
+            {
+                string convertedPath = m_pathConverter.ConvertClientPathToDebugger(source.Path);
+                int line = m_pathConverter.ConvertClientLineToDebugger(responder.Arguments.Line);
+                var docPos = new AD7DocumentPosition(m_sessionConfig, convertedPath, line);
+
+                var targets = new List<GotoTarget>();
+
+                IEnumDebugCodeContexts2 codeContextsEnum;
+                if (m_program.EnumCodeContexts(docPos, out codeContextsEnum) == HRConstants.S_OK)
+                {
+                    var codeContexts = new IDebugCodeContext2[1];
+                    uint nProps = 0;
+                    while (codeContextsEnum.Next(1, codeContexts, ref nProps) == HRConstants.S_OK)
+                    {
+                        var codeContext = codeContexts[0];
+
+                        string contextName;
+                        codeContext.GetName(out contextName);
+
+                        line = responder.Arguments.Line;
+                        IDebugDocumentContext2 documentContext;
+                        if (codeContext.GetDocumentContext(out documentContext) == HRConstants.S_OK)
+                        {
+                            var startPos = new TEXT_POSITION[1];
+                            var endPos = new TEXT_POSITION[1];
+                            if (documentContext.GetStatementRange(startPos, endPos) == HRConstants.S_OK)
+                                line = m_pathConverter.ConvertDebuggerLineToClient((int)startPos[0].dwLine);
+                        }
+
+                        string instructionPointerReference = null;
+                        CONTEXT_INFO[] contextInfo = new CONTEXT_INFO[1];
+                        if (codeContext.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS, contextInfo) == HRConstants.S_OK &&
+                            contextInfo[0].dwFields.HasFlag(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS))
+                        {
+                            instructionPointerReference = contextInfo[0].bstrAddress;
+                        }
+
+                        int codeContextId = m_nextContextId++;
+                        m_gotoCodeContexts.TryAdd(codeContextId, codeContext);
+
+                        targets.Add(new GotoTarget()
+                        {
+                            Id = codeContextId,
+                            Label = contextName,
+                            Line = line,
+                            InstructionPointerReference = instructionPointerReference
+                        });
+                    }
+                }
+
+                response.Targets = targets;
+            }
+            catch (AD7Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+                return;
+            }
+
+            responder.SetResponse(response);
+        }
+
         protected override void HandleStackTraceRequestAsync(IRequestResponder<StackTraceArguments, StackTraceResponse> responder)
         {
             int threadReference = responder.Arguments.ThreadId;
@@ -1457,11 +1544,13 @@ namespace OpenDebugAD7
 
                         int frameReference = 0;
                         TextPositionTuple textPosition = TextPositionTuple.Nil;
+                        IDebugCodeContext2 memoryAddress = null;
 
                         if (frame != null)
                         {
                             frameReference = m_frameHandles.Create(frame);
                             textPosition = TextPositionTuple.GetTextPositionOfFrame(m_pathConverter, frame) ?? TextPositionTuple.Nil;
+                            frame.GetCodeContext(out memoryAddress);
                         }
 
                         int? moduleId = null;
@@ -1477,6 +1566,13 @@ namespace OpenDebugAD7
                             }
                         }
 
+                        string instructionPointerReference = null;
+                        var contextInfo = new CONTEXT_INFO[1];
+                        if (memoryAddress?.GetInfo(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS, contextInfo) == HRConstants.S_OK && contextInfo[0].dwFields.HasFlag(enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS))
+                        {
+                            instructionPointerReference = contextInfo[0].bstrAddress;
+                        }
+
                         response.StackFrames.Add(new ProtocolMessages.StackFrame()
                         {
                             Id = frameReference,
@@ -1484,7 +1580,8 @@ namespace OpenDebugAD7
                             Source = textPosition.Source,
                             Line = textPosition.Line,
                             Column = textPosition.Column,
-                            ModuleId = moduleId
+                            ModuleId = moduleId,
+                            InstructionPointerReference = instructionPointerReference
                         });
                     }
 
