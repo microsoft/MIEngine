@@ -487,6 +487,12 @@ namespace MICore.Json.LaunchOptions
         public List<string> PipeArgs { get; private set; }
 
         /// <summary>
+        /// Command line arguments passed to the pipe program to execute a reote command.
+        /// </summary>
+        [JsonProperty("pipeCmd", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<string> PipeCmd { get; private set; }
+
+        /// <summary>
         /// The full path to the debugger on the target machine, for example /usr/bin/gdb.
         /// </summary>
         [JsonProperty("debuggerPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
