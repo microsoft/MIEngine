@@ -11,7 +11,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -27,7 +26,6 @@ namespace Microsoft.MIDebugEngine
         public List<string> VariablesToDelete { get; private set; }
         public List<string> DataBreakpointVariables { get; private set; }
         public List<IVariableInformation> ActiveVariables { get; private set; }
-        public HashSet<string> VariableNameAddressMap { get; private set; }
         public VariableInformation ReturnValue { get; private set; }
         public SourceLineCache SourceLineCache { get; private set; }
         public ThreadCache ThreadCache { get; private set; }
@@ -86,7 +84,6 @@ namespace Microsoft.MIDebugEngine
             VariablesToDelete = new List<string>();
             DataBreakpointVariables = new List<string>();
             this.ActiveVariables = new List<IVariableInformation>();
-            VariableNameAddressMap = new HashSet<string>();
             _fileTimestampWarnings = new HashSet<Tuple<string, string>>();
 
             OutputStringEvent += delegate (object o, string message)

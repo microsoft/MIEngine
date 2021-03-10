@@ -1,17 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using MICore;
-using System.Diagnostics;
 using Microsoft.DebugEngineHost;
-using System.Globalization;
+using Microsoft.VisualStudio.Debugger.Interop;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -45,6 +42,7 @@ namespace Microsoft.MIDebugEngine
         private IEnumerable<Checksum> _checksums = null;
 
         public DebuggedProcess DebuggedProcess { get { return _engine.DebuggedProcess; } }
+        public string Address { get { return _address; } }
 
         internal string BreakpointId
         {
@@ -273,6 +271,14 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
+                        // test -- need to delete; insert something here
+                        lock (_engine.DebuggedProcess.DataBreakpointVariables)
+                        {
+                            if (!_engine.DebuggedProcess.DataBreakpointVariables.Contains(_address)) // might need to expand condition
+                            {
+                                _engine.DebuggedProcess.DataBreakpointVariables.Add(_address);
+                            }
+                        }
                         return Constants.S_OK;
                     }
                 }

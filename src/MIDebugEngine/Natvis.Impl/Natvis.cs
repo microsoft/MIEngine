@@ -1,21 +1,19 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MICore;
+using Microsoft.DebugEngineHost;
+using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.DAP;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Globalization;
-using Microsoft.VisualStudio.Debugger.Interop;
-using MICore;
-using System.Text.RegularExpressions;
-using System.Xml.Serialization;
-using System.Xml;
 using System.IO;
-using Microsoft.DebugEngineHost;
 using System.Reflection;
-using Logger = MICore.Logger;
-using Microsoft.VisualStudio.Debugger.Interop.DAP;
-using System.Threading.Tasks;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace Microsoft.MIDebugEngine.Natvis
 {

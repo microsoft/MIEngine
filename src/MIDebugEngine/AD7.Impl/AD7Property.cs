@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using Microsoft.VisualStudio.Debugger.Interop;
+using System;
 using System.Diagnostics;
 
 namespace Microsoft.MIDebugEngine
@@ -82,13 +82,15 @@ namespace Microsoft.MIDebugEngine
                 } else
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
-                    string fullName = variable.FullName();
-                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(fullName))
+                    try
                     {
-                        if (_engine.DebuggedProcess.VariableNameAddressMap.Contains(fullName + "," + variable.Address()))
+                        if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(variable.Address() + "," + variable.FullName()))
                         {
                             propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
                         }
+                    } catch (MICore.UnexpectedMIResultException e)
+                    {
+                        // do something here
                     }
                 }
 
@@ -430,25 +432,10 @@ namespace Microsoft.MIDebugEngine
         {
             try
             {
-                pbstrAddress = _variableInformation.Address();
+                pbstrAddress = _variableInformation.Address() + "," + _variableInformation.Name;
                 pSize = _variableInformation.Size();
                 pbstrDisplayName = _variableInformation.Name;
                 pbstrError = "";
-
-                string fullName = _variableInformation.FullName();
-                lock (_engine.DebuggedProcess.DataBreakpointVariables)
-                {
-                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(fullName))
-                    {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(fullName);
-                        // _engine.DebuggedProcess.VariableNameAddressMap.Remove(fullName + "," + pbstrAddress);
-                    }
-                    else
-                    {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Add(fullName);
-                        _engine.DebuggedProcess.VariableNameAddressMap.Add(fullName + "," + pbstrAddress);
-                    }
-                }
                 return Constants.S_OK;
             }
             catch (Exception e)

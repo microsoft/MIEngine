@@ -1,15 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MICore;
+using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.DAP;
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
-using MICore;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using System.Globalization;
-using Microsoft.VisualStudio.Debugger.Interop.DAP;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
