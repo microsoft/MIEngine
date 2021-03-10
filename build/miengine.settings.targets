@@ -1,10 +1,15 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
-  
   <!--
   Settings file which is included by all the shipping code projects in the repo.
   -->
+
+  <!-- Validate OS -->
+  <Target Name="OSPlatformCheck" BeforeTargets="Build" Condition="!$([MSBuild]::IsOSPlatform('windows'))" >
+    <Error Text="'MIDebugEngine' does not build on non-windows platforms." />
+  </Target>
   
   <Import Project="all_projects.settings.targets"/>
+  <Import Project="package_versions.settings.targets" />
   <Import Project="version.settings.targets" />
 
   <Choose>
@@ -37,7 +42,6 @@
     <Otherwise>
       <PropertyGroup>
         <IsXPlat>false</IsXPlat>
-        <IsMonoRuntime>false</IsMonoRuntime>
       </PropertyGroup>
     </Otherwise>
   </Choose>
@@ -52,6 +56,11 @@
     <DropRootDir Condition="'$(TF_BUILD_BINARIESDIRECTORY)'!=''">$(TF_BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropRootDir>
     <DropRootDir Condition="'$(BUILD_BINARIESDIRECTORY)'!=''">$(BUILD_BINARIESDIRECTORY)\$(DropConfigurationName)</DropRootDir>
     <DropRootDir Condition="'$(DropRootDir)'==''">$(MIEngineRoot)bin\$(DropConfigurationName)\drop</DropRootDir>
+
+    <!-- SDK Project Variables -->
+    <Configurations>Debug;Release;Desktop.Debug;Desktop.Release;Lab.Debug;Lab.Release</Configurations>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
    
 </Project>

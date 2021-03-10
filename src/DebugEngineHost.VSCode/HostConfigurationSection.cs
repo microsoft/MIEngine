@@ -16,7 +16,10 @@ namespace Microsoft.DebugEngineHost
             _defaultTriggers = defaultTriggers;
         }
 
-        public void Dispose() { }
+        public void Dispose() 
+        {
+            GC.SuppressFinalize(this);
+        }
 
         public object GetValue(string valueName)
         {

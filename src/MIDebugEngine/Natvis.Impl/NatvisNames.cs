@@ -32,16 +32,9 @@ namespace Microsoft.MIDebugEngine.Natvis
             Dimensions = Dims;
         }
 
-        private static Regex s_identifier;
-        private static Regex s_numeric;
-        private static Regex s_simpleType;
-        private static readonly TypeName s_any;
-
-        static TypeName()
-        {
-            s_identifier = new Regex("^[a-zA-Z$_][a-zA-Z$_0-9]*");
-            s_numeric = new Regex("^[0-9]+(u|l|ul)*");        // only decimal constants
-            s_simpleType = new Regex(
+        private static Regex s_identifier = new Regex("^[a-zA-Z$_][a-zA-Z$_0-9]*");
+        private static Regex s_numeric = new Regex("^[0-9]+(u|l|ul)*");        // only decimal constants
+        private static Regex s_simpleType = new Regex(
                     @"^(signed\s+char|unsigned\s+char|char16_t|char32_t|wchar_t|char|"
                     + @"signed\s+short\s+int|signed\s+short|unsigned\s+short\s+int|unsigned\s+short|short\s+int|short|"
                     + @"signed\s+int|unsigned\s+int|int|"
@@ -50,9 +43,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                     + @"float|double|"
                     + @"long\s+double|bool|void)\b" // matches prefixes ending in '$' (e.g. void$Foo), these are checked for below
                 );
-            s_any = new TypeName();
-            s_any.IsWildcard = true;
-        }
+        private static readonly TypeName s_any = new TypeName()
+        {
+            IsWildcard = true
+        };
 
         private TypeName()
         {

@@ -45,7 +45,7 @@ namespace JDbg
 
             if (packet.Length < JdwpCommand.HEADER_SIZE)
             {
-                throw new ArgumentException("buffer too small to be a full packet", "packet");
+                throw new ArgumentException("buffer too small to be a full packet", nameof(packet));
             }
 
             //byte 8 of the packet header tells us whether this is a reply or not

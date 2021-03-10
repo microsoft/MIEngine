@@ -62,16 +62,11 @@ namespace Microsoft.MIDebugEngine
 
         private IDebugSettingsCallback110 _settingsCallback;
 
-        private static List<int> s_childProcessLaunch;
+        private static List<int> s_childProcessLaunch = new List<int>();
 
         private static int s_bpLongBindTimeout = 0;
 
         private IDebugUnixShellPort _unixPort;
-
-        static AD7Engine()
-        {
-            s_childProcessLaunch = new List<int>();
-        }
 
         public AD7Engine()
         {
@@ -199,7 +194,7 @@ namespace Microsoft.MIDebugEngine
             if (celtPrograms != 1)
             {
                 Debug.Fail("SampleEngine only expects to see one program in a process");
-                throw new ArgumentException();
+                throw new ArgumentOutOfRangeException(nameof(celtPrograms));
             }
             IDebugProgram2 portProgram = portProgramArray[0];
 
@@ -220,7 +215,7 @@ namespace Microsoft.MIDebugEngine
                     if (processId.ProcessIdType != (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM)
                     {
                         Debug.Fail("Invalid process to attach to");
-                        throw new ArgumentException();
+                        throw new ArgumentOutOfRangeException(nameof(portProgramArray), "Could not find processId in given portProgramArray.");
                     }
 
                     IDebugPort2 port;
@@ -271,11 +266,7 @@ namespace Microsoft.MIDebugEngine
             if (unixPort != null)
             {
                 MIMode miMode;
-                if (_engineGuid == EngineConstants.ClrdbgEngine)
-                {
-                    miMode = MIMode.Clrdbg;
-                }
-                else if (_engineGuid == EngineConstants.GdbEngine)
+                if (_engineGuid == EngineConstants.GdbEngine)
                 {
                     miMode = MIMode.Gdb;
                 }
@@ -287,21 +278,13 @@ namespace Microsoft.MIDebugEngine
 
                 if (processId > int.MaxValue)
                 {
-                    throw new ArgumentOutOfRangeException("processId");
+                    throw new ArgumentOutOfRangeException(nameof(processId));
                 }
-
-                string getClrDbgUrl = GetMetric("GetClrDbgUrl") as string;
-                string remoteDebuggerInstallationDirectory = GetMetric("RemoteInstallationDirectory") as string;
-                string remoteDebuggerInstallationSubDirectory = GetMetric("RemoteInstallationSubDirectory") as string;
-                string clrDbgVersion = GetMetric("ClrDbgVersion") as string;
 
                 launchOptions = LaunchOptions.CreateForAttachRequest(unixPort,
                                                                     (int)processId,
                                                                     miMode,
-                                                                    getClrDbgUrl,
-                                                                    remoteDebuggerInstallationDirectory,
-                                                                    remoteDebuggerInstallationSubDirectory,
-                                                                    clrDbgVersion, Logger);
+                                                                    Logger);
             }
             else
             {
@@ -718,15 +701,7 @@ namespace Microsoft.MIDebugEngine
             {
                 _pollThread.RunOperation(() => _debuggedProcess.CmdTerminate());
 
-                if (_debuggedProcess.MICommandFactory.Mode != MIMode.Clrdbg)
-                {
-                    _debuggedProcess.Terminate();
-                }
-                else
-                {
-                    // Clrdbg issues a proper exit event on CmdTerminate call, don't call _debuggedProcess.Terminate() which
-                    // simply sends a fake exit event that overrides the exit code of the real one
-                }
+                _debuggedProcess.Terminate();
             }
             catch (ObjectDisposedException)
             {
@@ -867,7 +842,7 @@ namespace Microsoft.MIDebugEngine
                     pos.dwLine = line;
                     pos.dwColumn = 0;
                     MITextPosition textPosition = new MITextPosition(documentName, pos, pos);
-                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt, this.DebuggedProcess));
+                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt));
                     codeContexts.Add(codeCxt);
                 }
                 if (codeContexts.Count > 0)

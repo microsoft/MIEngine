@@ -71,16 +71,6 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB) != 0)
             {
-                // Only check this property if we're running under clrdbg, other engines require
-                // double the mi messages since var-show-attributes is a separate call.
-                if (_engine.DebuggedProcess.MICommandFactory.Mode == MICore.MIMode.Clrdbg)
-                {
-                    if (variable.IsReadOnly())
-                    {
-                        propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY;
-                    }
-                }
-
                 if (variable.CountChildren != 0)
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_OBJ_IS_EXPANDABLE;
@@ -173,11 +163,11 @@ namespace Microsoft.MIDebugEngine
                 return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
             // try to interpret the result as an address
             string v = _variableInformation.Value;
-            v = v.Trim();
-            if (v.Length == 0)
+            if (string.IsNullOrWhiteSpace(v))
             {
                 return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
             }
+            v = v.Trim();
             if (v[0] == '{')
             {
                 // strip type name and trailing spaces

@@ -352,7 +352,7 @@ namespace Microsoft.MIDebugPackage
             if (results != null && results.Length > 0)
             {
                 // Make sure that we are printing whole lines
-                if (!results.EndsWith("\n") && !results.EndsWith("\r\n"))
+                if (!results.EndsWith("\n", StringComparison.Ordinal) && !results.EndsWith("\r\n", StringComparison.Ordinal))
                 {
                     results = results + "\n";
                 }

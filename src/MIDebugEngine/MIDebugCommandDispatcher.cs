@@ -32,7 +32,7 @@ namespace Microsoft.MIDebugEngine
         internal static Task<string> ExecuteCommand(string command, DebuggedProcess process, bool ignoreFailures = false)
         {
             if (string.IsNullOrWhiteSpace(command))
-                throw new ArgumentNullException("command");
+                throw new ArgumentNullException(nameof(command));
 
             if (process == null)
             {

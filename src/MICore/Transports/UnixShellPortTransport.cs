@@ -26,7 +26,6 @@ namespace MICore
         private UnixShellPortLaunchOptions _launchOptions;
 
         private const string ErrorPrefix = "Error:";
-        private const string ShellScriptName = "GetClrDbg.sh";
 
         private class UnixShellAsyncCommandCallback: IDebugUnixShellCommandCallback
         {
@@ -57,67 +56,8 @@ namespace MICore
             _logger = logger;
             _startRemoteDebuggerCommand = _launchOptions.StartRemoteDebuggerCommand;
 
-            if (_launchOptions.DebuggerMIMode == MIMode.Clrdbg)
-            {
-                if (!UnixShellPortLaunchOptions.HasSuccessfulPreviousLaunch(_launchOptions))
-                {
-                    waitLoop?.SetText(MICoreResources.Info_InstallingDebuggerOnRemote);
-                    try
-                    {
-                        Task.Run(() => DownloadAndCopyFileToRemote(_launchOptions.DebuggerInstallationDirectory, _launchOptions.GetClrDbgUrl)).Wait();
-                    }
-                    catch (Exception e)
-                    {
-                        // Even if downloading & copying to remote fails, we will still try to invoke the script as it might already exist.
-                        string message = String.Format(CultureInfo.CurrentCulture, MICoreResources.Warning_DownloadingClrDbgToRemote, e.Message);
-                        _callback.AppendToInitializationLog(message);
-                    }
-                }
-            }
-
             _callback.AppendToInitializationLog(string.Format(CultureInfo.CurrentCulture, MICoreResources.Info_StartingUnixCommand, _startRemoteDebuggerCommand));
             _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, true, this, out _asyncCommand);
-        }
-
-        /// <summary>
-        /// Downloads and copies the GetClrDbg.sh shell script to the remote machine.
-        /// </summary>
-        /// <param name="remoteDirectory">Location on the remote machine.</param>
-        /// <param name="getclrdbgUri">URI of the GetClrDbg.sh script.</param>
-        /// <returns>Full path of the location of GetClrDbg.sh on the remote machine.</returns>
-        private async Task<string> DownloadAndCopyFileToRemote(string remoteDirectory, string getclrdbgUri)
-        {
-            string localFile = Path.GetTempFileName();
-            string remoteFilePath = null;
-            try
-            {
-                using (HttpClient httpClient = new HttpClient())
-                {
-                    using (var response = await httpClient.GetStreamAsync(getclrdbgUri))
-                    {
-                        using (TextReader textReader = new StreamReader(response))
-                        {
-                            using (Stream destinationStream = File.Create(localFile))
-                            {
-                                await response.CopyToAsync(destinationStream);
-                            }
-                        }
-                    }
-                }
-
-                _launchOptions.UnixPort.MakeDirectory(remoteDirectory);
-                remoteFilePath = remoteDirectory + Path.AltDirectorySeparatorChar + ShellScriptName;
-                _launchOptions.UnixPort.CopyFile(localFile, remoteFilePath);
-            }
-            finally
-            {
-                if (File.Exists(localFile))
-                {
-                    File.Delete(localFile);
-                }
-            }
-
-            return remoteFilePath;
         }
 
         public void Close()
@@ -156,23 +96,7 @@ namespace MICore
         {
             if (!_debuggerLaunched)
             {
-                if (_launchOptions.DebuggerMIMode != MIMode.Clrdbg)
-                {
-                    _debuggerLaunched = true;
-                }
-                else
-                {
-                    if (line != null && line.StartsWith(ErrorPrefix, System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        _callback.OnStdErrorLine(line.Substring(ErrorPrefix.Length).Trim());
-                    }
-
-                    if (line.Equals("Info: Launching clrdbg"))
-                    {
-                        _debuggerLaunched = true;
-                        UnixShellPortLaunchOptions.SetSuccessfulLaunch(_launchOptions);
-                    }
-                }
+                _debuggerLaunched = true;
             }
 
             if (!string.IsNullOrEmpty(line))

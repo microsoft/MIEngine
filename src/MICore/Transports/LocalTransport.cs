@@ -27,7 +27,7 @@ namespace MICore
             proc.StartInfo.FileName = localOptions.MIDebuggerPath;
             proc.StartInfo.Arguments = localOptions.GetMiDebuggerArgs();
 
-            // LLDB has the -environment-cd mi command that is used to set the working dir for gdb/clrdbg, but it doesn't work.
+            // LLDB has the -environment-cd mi command that is used to set the working dir for gdb, but it doesn't work.
             // So, set lldb's working dir to the user's requested folder before launch.
             proc.StartInfo.WorkingDirectory = options.DebuggerMIMode == MIMode.Lldb ? options.WorkingDirectory : miDebuggerDir;
 
@@ -47,16 +47,6 @@ namespace MICore
                 var gdbInitFile = Path.Combine(options.WorkingDirectory, ".gdbinit");
                 if (File.Exists(gdbInitFile))
                     proc.StartInfo.Arguments += " -x \"" + gdbInitFile + "\"";
-            }
-
-            // Only pass the environment to launch clrdbg. For other modes, there are commands that set the environment variables
-            // directly for the debuggee.
-            if (options.DebuggerMIMode == MIMode.Clrdbg)
-            {
-                foreach (EnvironmentEntry entry in localOptions.Environment)
-                {
-                    proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
-                }
             }
 
             InitProcess(proc, out reader, out writer);

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using MICore;
+using System.Globalization;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -324,7 +325,7 @@ namespace Microsoft.MIDebugEngine
             {
                 file = process.EscapeSymbolPath(file);
             }
-            string cmd = "-data-disassemble -f " + file + " -l " + line.ToString() + " -n " + dwInstructions.ToString() + " -- 1";
+            string cmd = "-data-disassemble -f " + file + " -l " + line.ToString(CultureInfo.InvariantCulture) + " -n " + dwInstructions.ToString(CultureInfo.InvariantCulture) + " -- 1";
             Results results = await process.CmdAsync(cmd, ResultClass.None);
             if (results.ResultClass != ResultClass.done)
             {

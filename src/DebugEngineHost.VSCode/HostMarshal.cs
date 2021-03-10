@@ -30,7 +30,7 @@ namespace Microsoft.DebugEngineHost
         {
             if (documentPosition == null)
             {
-                throw new ArgumentNullException("documentPosition");
+                throw new ArgumentNullException(nameof(documentPosition));
             }
 
             lock (s_documentPositions)
@@ -43,7 +43,7 @@ namespace Microsoft.DebugEngineHost
         {
             if (functionPosition == null)
             {
-                throw new ArgumentNullException("functionPosition");
+                throw new ArgumentNullException(nameof(functionPosition));
             }
 
             lock (s_functionPositions)
@@ -96,7 +96,7 @@ namespace Microsoft.DebugEngineHost
                 IDebugDocumentPosition2 documentPosition;
                 if (!s_documentPositions.TryGet((int)documentPositionId, out documentPosition))
                 {
-                    throw new ArgumentOutOfRangeException("documentPositionId");
+                    throw new ArgumentOutOfRangeException(nameof(documentPositionId));
                 }
 
                 return documentPosition;
@@ -110,7 +110,7 @@ namespace Microsoft.DebugEngineHost
                 IDebugFunctionPosition2 functionPosition;
                 if (!s_functionPositions.TryGet((int)functionPositionId, out functionPosition))
                 {
-                    throw new ArgumentOutOfRangeException("functionPositionId");
+                    throw new ArgumentOutOfRangeException(nameof(functionPositionId));
                 }
 
                 return functionPosition;
