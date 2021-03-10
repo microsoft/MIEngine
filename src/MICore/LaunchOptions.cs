@@ -1126,6 +1126,18 @@ namespace MICore
             }
         }
 
+        private bool _requireHardwareBreakpoints = false;
+
+        public bool RequireHardwareBreakpoints
+        {
+            get { return _requireHardwareBreakpoints;  }
+            set
+            {
+                VerifyCanModifyProperty(nameof(RequireHardwareBreakpoints));
+                _requireHardwareBreakpoints = value;
+            }
+        }
+
         public string GetOptionsString()
         {
             try
@@ -1715,6 +1727,7 @@ namespace MICore
 
             this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
 
+            this.RequireHardwareBreakpoints = options.RequireHardwareBreakpoints.GetValueOrDefault(false);
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)

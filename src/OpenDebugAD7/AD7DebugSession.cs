@@ -2887,6 +2887,7 @@ namespace OpenDebugAD7
                             }
                         }
 
+                        string outputMessage; // output message to be written to debug console
                         AD7BreakPointRequest ad7BPRequest = (AD7BreakPointRequest)breakpointRequest;
                         Breakpoint bp = null;
                         if (ad7BPRequest.DocumentPosition != null)
@@ -2900,15 +2901,18 @@ namespace OpenDebugAD7
                                     Line = m_pathConverter.ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line),
                                     Message = errorMsg
                                 };
+
+                                outputMessage = errorMsg;
                             }
                             else
                             {
+                                outputMessage = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_ConditionBreakpoint, ad7BPRequest.Condition, errorMsg);
                                 bp = new Breakpoint()
                                 {
                                     Verified = false,
                                     Id = (int)ad7BPRequest.Id,
                                     Line = m_pathConverter.ConvertDebuggerLineToClient(ad7BPRequest.DocumentPosition.Line),
-                                    Message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_ConditionBreakpoint, ad7BPRequest.Condition, errorMsg)
+                                    Message = outputMessage
                                 };
                             }
                         }
@@ -2923,10 +2927,13 @@ namespace OpenDebugAD7
                             };
 
                             // TODO: currently VSCode will ignore the error message from "breakpoint" event, the workaround is to log the error to output window
-                            string outputMsg = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_FunctionBreakpoint, ad7BPRequest.FunctionPosition.Name, errorMsg);
-                            m_logger.WriteLine(LoggingCategory.DebuggerError, outputMsg);
+                            outputMessage = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_FunctionBreakpoint, ad7BPRequest.FunctionPosition.Name, errorMsg);
                         }
 
+                        if (!string.IsNullOrEmpty(outputMessage))
+                        {
+                            SendMessageEvent(MessagePrefix.Error, outputMessage);
+                        }
                         ad7BPRequest.BindResult = bp;
                         Protocol.SendEvent(new BreakpointEvent(BreakpointEvent.ReasonValue.Changed, bp));
                     }

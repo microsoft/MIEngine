@@ -427,6 +427,10 @@ namespace MICore
             {
                 cmd.Append("-d ");
             }
+            if (_debugger.LaunchOptions.RequireHardwareBreakpoints)
+            {
+                cmd.Append("-h ");
+            }
             return Task<StringBuilder>.FromResult(cmd);
         }
 

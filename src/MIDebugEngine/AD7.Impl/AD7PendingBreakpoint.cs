@@ -428,7 +428,20 @@ namespace Microsoft.MIDebugEngine
                 _deleted = true;
                 if (_engine.DebuggedProcess.ProcessState != ProcessState.Stopped && !_engine.DebuggedProcess.MICommandFactory.AllowCommandsWhileRunning())
                 {
-                    _pendingDelete = true;
+                    if (_engine.DebuggedProcess.LaunchOptions.RequireHardwareBreakpoints)
+                    {
+                        // Hardware breakpoint deletion should not be deferred
+                        // because the debugger needs to keep an accurate count
+                        // of the number of used hardware breakpoint registers.
+                        _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+                        {
+                            _engine.DebuggedProcess.AddInternalBreakAction(
+                                () => _bp?.DeleteAsync(_engine.DebuggedProcess));
+                        });
+                    } else
+                    {
+                        _pendingDelete = true;
+                    }
                 }
                 else if (_bp != null)
                 {

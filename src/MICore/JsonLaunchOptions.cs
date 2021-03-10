@@ -95,6 +95,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<SetupCommand> SetupCommands { get; protected set; }
+
+        /// <summary>
+        /// If true, always use hardware breakpoints.
+        /// </summary>
+        [JsonProperty("requireHardwareBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? RequireHardwareBreakpoints { get; protected set; }
     }
 
     public partial class AttachOptions : BaseOptions
@@ -125,6 +131,7 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerPath = null,
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
+            bool? requireHardwareBreakpoints = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null,
             SymbolLoadInfo symbolLoadInfo = null)
@@ -140,6 +147,7 @@ namespace MICore.Json.LaunchOptions
             this.MiDebuggerArgs = miDebuggerArgs;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
             this.ProcessId = processId;
+            this.RequireHardwareBreakpoints = requireHardwareBreakpoints;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
             this.SymbolLoadInfo = symbolLoadInfo;
@@ -344,6 +352,7 @@ namespace MICore.Json.LaunchOptions
             int? serverLaunchTimeout = null,
             string coreDumpPath = null,
             bool? externalConsole = null,
+            bool? requireHardwareBreakpoints = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null)
         {
@@ -372,6 +381,7 @@ namespace MICore.Json.LaunchOptions
             this.ServerLaunchTimeout = serverLaunchTimeout;
             this.CoreDumpPath = coreDumpPath;
             this.ExternalConsole = externalConsole;
+            this.RequireHardwareBreakpoints = requireHardwareBreakpoints;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
         }
