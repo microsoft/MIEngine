@@ -161,6 +161,72 @@ namespace MICore.Json.LaunchOptions
         #endregion
     }
 
+    public partial class SymbolLoadInfo
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// If true, symbols for all libs will be loaded, otherwise no solib symbols will be loaded. Modified by ExceptionList. Default value is true.
+        /// </summary>
+        [JsonProperty("loadAll", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? LoadAll { get; set; }
+
+        /// <summary>
+        /// List of filenames (wildcards allowed). Modifies behavior of LoadAll. 
+        /// If LoadAll is true then don't load symbols for libs that match any name in the list. 
+        /// Otherwise only load symbols for libs that match.
+        /// </summary>
+        [JsonProperty("exceptionList", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string ExceptionList { get; set; }
+
+        #endregion
+
+        #region Constructors
+
+        public SymbolLoadInfo()
+        {
+        }
+
+        public SymbolLoadInfo(bool? loadAll = null, string exceptionList = null)
+        {
+            this.LoadAll = loadAll;
+            this.ExceptionList = exceptionList;
+        }
+
+        #endregion
+    }
+
+    public class ExtendedRemote
+    {
+        #region Public Properties for Serialization
+
+        [JsonProperty("pid", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        private int? _pid;
+        public int? Pid { 
+            get {
+                return this._pid;
+            }
+            set {
+                this._pid = value;
+            }
+        }
+
+        #endregion
+
+        #region Constructors
+
+        public ExtendedRemote()
+        {
+        }
+
+        public ExtendedRemote(int? pid = 0)
+        {
+            this.Pid = pid;
+        }
+
+        #endregion
+    }
+
     public partial class LaunchOptions : BaseOptions
     {
         #region Public Properties for Serialization
@@ -256,6 +322,15 @@ namespace MICore.Json.LaunchOptions
         [JsonProperty("externalConsole", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? ExternalConsole { get; set; }
 
+        /// <summary>
+        /// If true, disables debuggee console redirection that is required for Integrated Terminal support.
+        /// </summary>
+        [JsonProperty("avoidWindowsConsoleRedirection", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? AvoidWindowsConsoleRedirection { get; set; }
+
+        [JsonProperty("extendedRemote", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public ExtendedRemote ExtendedRemote { get; set; }
+
         #endregion
 
         #region Constructors
@@ -267,6 +342,7 @@ namespace MICore.Json.LaunchOptions
             this.CustomLaunchSetupCommands = new List<SetupCommand>();
             this.Environment = new List<Environment>();
             this.SourceFileMap = new Dictionary<string, object>();
+            this.ExtendedRemote = new ExtendedRemote();
         }
 
         public LaunchOptions(
@@ -296,7 +372,8 @@ namespace MICore.Json.LaunchOptions
             string coreDumpPath = null,
             bool? externalConsole = null,
             Dictionary<string, object> sourceFileMap = null,
-            PipeTransport pipeTransport = null)
+            PipeTransport pipeTransport = null,
+            ExtendedRemote extendedRemote = null)
         {
             this.Program = program;
             this.Args = args;
@@ -325,6 +402,7 @@ namespace MICore.Json.LaunchOptions
             this.ExternalConsole = externalConsole;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
+            this.ExtendedRemote = extendedRemote;
         }
 
         #endregion

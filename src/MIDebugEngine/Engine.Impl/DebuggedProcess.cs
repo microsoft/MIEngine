@@ -843,7 +843,11 @@ namespace Microsoft.MIDebugEngine
                     if (null != localLaunchOptions)
                     {
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
-                        if (!string.IsNullOrWhiteSpace(destination))
+                        if(localLaunchOptions?.ExtendedRemote != null) {
+                            commands.Add(new LaunchCommand("-target-select extended-remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
+                            commands.Add(new LaunchCommand("-target-attach " + localLaunchOptions?.ExtendedRemote.Pid.ToString(CultureInfo.InvariantCulture)));
+                        }
+                        else if (!string.IsNullOrWhiteSpace(destination))
                         {
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                         }

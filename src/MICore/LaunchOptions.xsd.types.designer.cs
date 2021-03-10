@@ -98,6 +98,10 @@ namespace MICore.Xml.LaunchOptions {
         [System.Xml.Serialization.XmlAttributeAttribute()]
         [System.ComponentModel.DefaultValueAttribute(true)]
         public bool WaitDynamicLibLoad;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public ExtendedRemote ExtendedRemote;
         
         public AndroidLaunchOptions() {
             this.Attach = false;
@@ -192,6 +196,15 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string ExePath;
+    }
+    
+    /// <remarks/>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    public class ExtendedRemote
+    {
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int Pid;
     }
     
     /// <remarks/>
@@ -448,6 +461,10 @@ namespace MICore.Xml.LaunchOptions {
         [System.Xml.Serialization.XmlAttributeAttribute()]
         [System.ComponentModel.DefaultValueAttribute(true)]
         public bool WaitDynamicLibLoad;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public ExtendedRemote ExtendedRemote;
         
         public BaseLaunchOptions() {
             this.WaitDynamicLibLoad = true;
