@@ -95,12 +95,6 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<SetupCommand> SetupCommands { get; protected set; }
-
-        /// <summary>
-        /// Optional parameter. If true, the debugger should stop after connecting to the target.
-        /// </summary>
-        [JsonProperty("stopAtConnect", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool? StopAtConnect { get; set; }
     }
 
     public partial class AttachOptions : BaseOptions
@@ -133,8 +127,7 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerServerAddress = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null,
-            SymbolLoadInfo symbolLoadInfo = null,
-            bool? stopAtConnect = null)
+            SymbolLoadInfo symbolLoadInfo = null)
         {
             this.Program = program;
             this.Type = type;
@@ -150,7 +143,6 @@ namespace MICore.Json.LaunchOptions
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
             this.SymbolLoadInfo = symbolLoadInfo;
-            this.StopAtConnect = stopAtConnect;
         }
 
         #endregion
@@ -312,6 +304,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("avoidWindowsConsoleRedirection", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? AvoidWindowsConsoleRedirection { get; set; }
+
+        /// <summary>
+        /// Optional parameter. If true, the debugger should stop after connecting to the target.
+        /// </summary>
+        [JsonProperty("stopAtConnect", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? StopAtConnect { get; set; }
 
         #endregion
 

@@ -1729,7 +1729,7 @@ namespace MICore
             }
 
             this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
-            this.StopAtConnect = options.StopAtConnect ?? false;
+
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
@@ -1922,6 +1922,7 @@ namespace MICore
             }
 
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(launch.Environment));
+            this.StopAtConnect = launch.StopAtConnect ?? false;
         }
 
         public void InitializeAttachOptions(Json.LaunchOptions.AttachOptions attach)
