@@ -139,7 +139,7 @@ namespace MICore
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
                 pipePath: pipeProgram,
                 pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs),
-                pipeCommandArguments: ParseArguments(pipeCmd, quoteArgs),
+                pipeCommandArguments: ParseArguments(pipeCmd??pipeArgs, quoteArgs),
                 pipeCwd: pipeCwd,
                 pipeEnvironment: GetEnvironmentEntries(pipeEnv)
             );
