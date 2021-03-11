@@ -1126,6 +1126,21 @@ namespace MICore
             }
         }
 
+        private bool _stopAtConnect;
+
+        /// <summary>
+        /// Optional parameter. If true, the debugger should stop after connecting to the target.
+        /// </summary>
+        public bool StopAtConnect
+        {
+            get { return _stopAtConnect; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(StopAtConnect));
+                _stopAtConnect = value;
+            }
+        }
+
         public string GetOptionsString()
         {
             try
@@ -1714,7 +1729,7 @@ namespace MICore
             }
 
             this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
-
+            this.StopAtConnect = options.StopAtConnect ?? false;
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
