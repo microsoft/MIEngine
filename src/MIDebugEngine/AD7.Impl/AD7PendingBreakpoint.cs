@@ -42,7 +42,7 @@ namespace Microsoft.MIDebugEngine
         private IEnumerable<Checksum> _checksums = null;
 
         public DebuggedProcess DebuggedProcess { get { return _engine.DebuggedProcess; } }
-        public string Address { get { return _address; } }
+        public BP_REQUEST_INFO BpRequestInfo { get { return _bpRequestInfo; } }
 
         internal string BreakpointId
         {
@@ -239,7 +239,7 @@ namespace Microsoft.MIDebugEngine
 
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
-                                    _address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    _address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3).Split(',')[0];
                                     _size = (uint)_bpRequestInfo.bpLocation.unionmember4;
                                     if (_condition != null)
                                     {
@@ -271,12 +271,15 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
-                        // test -- need to delete; insert something here
-                        lock (_engine.DebuggedProcess.DataBreakpointVariables)
+                        if ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_DATA_STRING)
                         {
-                            if (!_engine.DebuggedProcess.DataBreakpointVariables.Contains(_address)) // might need to expand condition
+                            lock (_engine.DebuggedProcess.DataBreakpointVariables)
                             {
-                                _engine.DebuggedProcess.DataBreakpointVariables.Add(_address);
+                                string addressName = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                if (!_engine.DebuggedProcess.DataBreakpointVariables.Contains(addressName)) // might need to expand condition
+                                {
+                                    _engine.DebuggedProcess.DataBreakpointVariables.Add(addressName);
+                                }
                             }
                         }
                         return Constants.S_OK;
