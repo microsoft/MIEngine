@@ -1,0 +1,57 @@
+# EditorConfig is awesome: http://EditorConfig.org
+# This configuration is respected by multiple editors
+# Using basic settings to unify indentation in repo
+
+# top-most EditorConfig file
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+trim_trailing_whitespace = true
+
+# XML Formats
+
+[*.{xml,csproj,androidproj,vcxproj,vcxproj.filters,nuspec,vsct,resx,config,targets,props,xsd,natvis,playlist}]
+indent_size = 2
+
+# JSON and YML
+[*.yml]
+[*.json]
+indent_size = 2
+
+# .NET
+
+[*.cs]
+file_header_template = // Copyright (c) Microsoft. All rights reserved.\n// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+dotnet_sort_system_directives_first = false
+
+# static fields should have s_ prefix
+dotnet_naming_rule.static_fields_should_have_prefix.severity = warning
+dotnet_naming_rule.static_fields_should_have_prefix.symbols  = static_fields
+dotnet_naming_rule.static_fields_should_have_prefix.style    = static_prefix_style
+dotnet_naming_symbols.static_fields.applicable_kinds   = field
+dotnet_naming_symbols.static_fields.required_modifiers = static
+dotnet_naming_symbols.static_fields.applicable_accessibilities = private, internal, private_protected
+dotnet_naming_style.static_prefix_style.required_prefix = s_
+dotnet_naming_style.static_prefix_style.capitalization = camel_case
+
+# internal and private fields should be _camelCase
+dotnet_naming_rule.camel_case_for_private_internal_fields.severity = warning
+dotnet_naming_rule.camel_case_for_private_internal_fields.symbols  = private_internal_fields
+dotnet_naming_rule.camel_case_for_private_internal_fields.style    = camel_case_underscore_style
+dotnet_naming_symbols.private_internal_fields.applicable_kinds = field
+dotnet_naming_symbols.private_internal_fields.applicable_accessibilities = private, internal
+dotnet_naming_style.camel_case_underscore_style.required_prefix = _
+dotnet_naming_style.camel_case_underscore_style.capitalization = camel_case
+
+dotnet_style_readonly_field = true:warning
+
+# Unix Shell scripts
+[*.sh]
+charset = utf-8
+end_of_line = lf
+
+[*.sln]
+indent_style = tab

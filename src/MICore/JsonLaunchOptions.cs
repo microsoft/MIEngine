@@ -83,6 +83,18 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("pipeTransport", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public PipeTransport PipeTransport { get; set; }
+
+        /// <summary>
+        /// Supports explcit control of symbol loading. The processing of Exceptions lists and symserver entries.
+        /// </summary>
+        [JsonProperty("symbolLoadInfo", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public SymbolLoadInfo SymbolLoadInfo { get; set; }
+
+        /// <summary>
+        /// One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }].
+        /// </summary>
+        [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<SetupCommand> SetupCommands { get; protected set; }
     }
 
     public partial class AttachOptions : BaseOptions
@@ -114,7 +126,8 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
             Dictionary<string, object> sourceFileMap = null,
-            PipeTransport pipeTransport = null)
+            PipeTransport pipeTransport = null,
+            SymbolLoadInfo symbolLoadInfo = null)
         {
             this.Program = program;
             this.Type = type;
@@ -129,6 +142,7 @@ namespace MICore.Json.LaunchOptions
             this.ProcessId = processId;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
+            this.SymbolLoadInfo = symbolLoadInfo;
         }
 
         #endregion
@@ -161,6 +175,41 @@ namespace MICore.Json.LaunchOptions
         #endregion
     }
 
+    public partial class SymbolLoadInfo
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// If true, symbols for all libs will be loaded, otherwise no solib symbols will be loaded. Modified by ExceptionList. Default value is true.
+        /// </summary>
+        [JsonProperty("loadAll", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? LoadAll { get; set; }
+
+        /// <summary>
+        /// List of filenames (wildcards allowed). Modifies behavior of LoadAll. 
+        /// If LoadAll is true then don't load symbols for libs that match any name in the list. 
+        /// Otherwise only load symbols for libs that match.
+        /// </summary>
+        [JsonProperty("exceptionList", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string ExceptionList { get; set; }
+
+        #endregion
+
+        #region Constructors
+
+        public SymbolLoadInfo()
+        {
+        }
+
+        public SymbolLoadInfo(bool? loadAll = null, string exceptionList = null)
+        {
+            this.LoadAll = loadAll;
+            this.ExceptionList = exceptionList;
+        }
+
+        #endregion
+    }
+
     public partial class LaunchOptions : BaseOptions
     {
         #region Public Properties for Serialization
@@ -176,12 +225,6 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("cwd", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Cwd { get; set; }
-
-        /// <summary>
-        /// One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }].
-        /// </summary>
-        [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<SetupCommand> SetupCommands { get; private set; }
 
         /// <summary>
         /// If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }].
@@ -255,6 +298,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("externalConsole", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? ExternalConsole { get; set; }
+
+        /// <summary>
+        /// If true, disables debuggee console redirection that is required for Integrated Terminal support.
+        /// </summary>
+        [JsonProperty("avoidWindowsConsoleRedirection", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? AvoidWindowsConsoleRedirection { get; set; }
 
         #endregion
 
@@ -373,7 +422,49 @@ namespace MICore.Json.LaunchOptions
         #endregion
     }
 
-    public partial class PipeTransport
+    public partial class PipeTransport : PipeTransportOptions
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is Windows and the field is defined in this configuration.
+        /// </summary>
+        [JsonProperty("windows", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public PipeTransportOptions Windows { get; private set; }
+
+        /// <summary>
+        /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is OSX and the field is defined in this configuration.
+        /// </summary>
+        [JsonProperty("osx", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public PipeTransportOptions OSX { get; private set; }
+
+        /// <summary>
+        /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is Linux and the field is defined in this configuration.
+        /// </summary>
+        [JsonProperty("linux", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public PipeTransportOptions Linux { get; private set; }
+
+        #endregion
+
+        #region Constructors
+
+        public PipeTransport()
+        {
+
+        }
+
+        public PipeTransport(PipeTransportOptions windows = null, PipeTransportOptions osx = null, PipeTransportOptions linux = null)
+        {
+            this.Windows = windows;
+            this.OSX = osx;
+            this.Linux = linux;
+        }
+
+        #endregion
+    }
+
+
+    public partial class PipeTransportOptions
     {
         #region Public Properties for Serialization
 
@@ -394,6 +485,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("pipeArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<string> PipeArgs { get; private set; }
+
+        /// <summary>
+        /// Command line arguments passed to the pipe program to execute a remote command.
+        /// </summary>
+        [JsonProperty("pipeCmd", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<string> PipeCmd { get; private set; }
 
         /// <summary>
         /// The full path to the debugger on the target machine, for example /usr/bin/gdb.
@@ -417,13 +514,13 @@ namespace MICore.Json.LaunchOptions
 
         #region Constructors
 
-        public PipeTransport()
+        public PipeTransportOptions()
         {
             this.PipeArgs = new List<string>();
             this.PipeEnv = new Dictionary<string, string>();
         }
 
-        public PipeTransport(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, string> pipeEnv = null, bool? quoteArgs = null)
+        public PipeTransportOptions(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, string> pipeEnv = null, bool? quoteArgs = null)
         {
             this.PipeCwd = pipeCwd;
             this.PipeProgram = pipeProgram;

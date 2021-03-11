@@ -37,7 +37,7 @@ namespace MICore
         {
             if (checksumBytes == null)
             {
-                throw new ArgumentNullException("checksumBytes");
+                throw new ArgumentNullException(nameof(checksumBytes));
             }
 
             return new Checksum(hashAlgorithmName, checksumBytes);
@@ -53,7 +53,7 @@ namespace MICore
         {
             if (checksumString == null)
             {
-                throw new ArgumentNullException("checksumString");
+                throw new ArgumentNullException(nameof(checksumString));
             }
 
             Checksum checksum = new Checksum(hashAlgorithmName, StringToBytes(checksumString));
@@ -121,7 +121,7 @@ namespace MICore
             {
                 if (builder.Length > 0)
                 {
-                    builder.Append(" ");
+                    builder.Append(' ');
                 }
                 builder.Append(string.Format(CultureInfo.InvariantCulture, "--{0}checksum ", group.Key.ToString()));
                 builder.Append(string.Join(",", group));

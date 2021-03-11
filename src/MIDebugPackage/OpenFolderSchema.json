@@ -61,10 +61,14 @@
                 "type": "object",
                 "description": "Optional source file mappings passed to the debug engine. Format: '{ \"<Compiler source location>\": \"<Editor source location>\" }' OR '{ \"<Compiler source location>\": { \"editorPath\": \"<Editor source location>\", \"useForBreakpoints\": true } }'. \nExample: '{ \"/home/user/foo\": \"C:\\foo\" }' OR '{ \"/home/user/foo\": { \"editorPath\": \"c:\\foo\", \"useForBreakpoints\": true } }'.",
                 "additionalProperties": {
-                  "anyOf": {
-                    "type": "string",
-                    "$ref": "#/definitions/cpp_schema/definitions/sourceFileMapOptions"
-                  }
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "$ref": "#/definitions/cpp_schema/definitions/sourceFileMapOptions"
+                    }
+                  ]
                 }
               },
               "MIMode": {
@@ -201,6 +205,13 @@
                   "pipeArgs": {
                     "type": "array",
                     "description": "Command line arguments passed to the pipe program to configure the connection.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "pipeCmd": {
+                    "type": "array",
+                    "description": "Arguments passed to the pipe executable to run a remote Unix (ex: bash or similar) shell command. This is used for running 'kill' on the remote system, or other commands that the debugger may need. If not specified, the debugger will do its best without the shell. But some features, such as setting breakpoints in run mode, may not work. This string should contain the string '{0}' which will be replaced with the command to execute.",
                     "items": {
                       "type": "string"
                     }

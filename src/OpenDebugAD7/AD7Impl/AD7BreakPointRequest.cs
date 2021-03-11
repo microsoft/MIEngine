@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 
 namespace OpenDebugAD7.AD7Impl
 {
-    internal class AD7BreakPointRequest : IDebugBreakpointRequest2, IDebugBreakpointChecksumRequest2
+    internal sealed class AD7BreakPointRequest : IDebugBreakpointRequest2, IDebugBreakpointChecksumRequest2
     {
         private static uint s_nextBreakpointId = 0;
 

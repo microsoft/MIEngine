@@ -1,14 +1,10 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!--Fix the assembly version for DebugEngineHost as all the versions of this dll must have the same assembly identity
     NOTE: Ths must be set BEFORE importing miengine.settings.targets-->
     <AssemblyVersion>1.0.0</AssemblyVersion>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <!-- miengine.settings.targets must be imported first as it sets $(NuGetPackagesDirectory) -->
   <Import Project="..\..\build\miengine.settings.targets" />
-  <Import Project="$(NugetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NugetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
@@ -24,7 +20,7 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
     <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFramework>net462</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -33,8 +29,6 @@
     <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
     <DebugType>pdbonly</DebugType>
@@ -42,8 +36,6 @@
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -69,8 +61,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -80,61 +70,28 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.InteropA">
-      <HintPath>$(NuGetPackagesDirectory)/Microsoft.VisualStudio.Debugger.Interop.Portable.1.0.1/lib/portable-net45+net46+dnxcore50/Microsoft.VisualStudio.Debugger.InteropA.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>$(NuGetPackagesDirectory)\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
-    </Reference>
+
+  <ItemGroup Label="NuGet Packages">
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" />
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="HostLogger.cs" />
-    <Compile Include="HostRunInTerminal.cs" />
-    <Compile Include="HostTelemetry.cs" />
-    <Compile Include="Logger.cs" />
-    <Compile Include="VSCode\EngineConfiguration.cs" />
-    <Compile Include="Host.cs" />
-    <Compile Include="HostConfigurationSection.cs" />
-    <Compile Include="HostConfigurationStore.cs" />
-    <Compile Include="HostLoader.cs" />
-    <Compile Include="HostMarshal.cs" />
-    <Compile Include="HostNatvisProject.cs" />
-    <Compile Include="HostOutputWindow.cs" />
-    <Compile Include="HostResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>HostResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="HostWaitDialog.cs" />
-    <Compile Include="HostWaitLoop.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VSCode\ExceptionBreakpointFilter.cs" />
-    <Compile Include="VSCode\ExceptionSettings.cs" />
-    <Compile Include="VSCode\HandleCollection.cs" />
-  </ItemGroup>
+
   <ItemGroup>
     <Content Include="_Readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="HostResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>HostResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+
   <ItemGroup>
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutDir)\Microsoft.DebugEngineHost.dll.mdb" />
   </ItemGroup>
-  <!-- Necessary because IsMonoRuntime isn't set until after DetermineCompilerBinary is run. -->
-  <Target Name="GetDropFiles" AfterTargets="DetermineCompilerBinary" BeforeTargets="DropFiles">
+
+  <Target Name="GetDropFiles" BeforeTargets="DropFiles">
     <ItemGroup>
-      <DropUnsignedFile Condition="'$(IsMonoRuntime)' == 'false'" Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
+      <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
     </ItemGroup>
   </Target>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  
   <Import Project="..\..\build\miengine.targets" />
-  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
   <Import Project="..\..\build\DropFiles.targets" />
 </Project>

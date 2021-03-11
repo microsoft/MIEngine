@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<!--This is an example launch options file for launching with clrdbg to debug a process on Windows. To use this, 
-adjust the 'PipePath' and the various paths in the top of ExampleClrdbgLaunch.cmd as necessary. -->
-<PipeLaunchOptions xmlns="http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014"
-  PipePath="C:\vsplatdbgmdd\MICore\ExampleClrdbgLaunch.cmd" PipeArguments="" 
-  TargetArchitecture="amd64" MIMode="clrdbg"/>

@@ -83,7 +83,7 @@ namespace Microsoft.DebugEngineHost
             }
             else
             {
-                throw new ArgumentException("logFileName");
+                throw new ArgumentOutOfRangeException(nameof(logFileName));
             }
             return writer;
         }
