@@ -351,41 +351,6 @@ namespace OpenDebug
             return fallback;
         }
 
-        public static string ExpandVariables(string format, dynamic variables, bool underscoredOnly = true)
-        {
-            Type type = variables.GetType();
-            return s_VARIABLE.Replace(format, match =>
-            {
-                string name = match.Groups[1].Value;
-                if (!underscoredOnly || name.StartsWith("_", StringComparison.Ordinal))
-                {
-                    PropertyInfo property = type.GetTypeInfo().GetDeclaredProperty(name);
-                    if (property != null)
-                    {
-                        object value = property.GetValue(variables, null);
-                        return value.ToString();
-                    }
-                    return '{' + name + ": not found}";
-                }
-                return match.Groups[0].Value;
-            });
-        }
-
-        public static string GetString(dynamic args, string property, string dflt = null)
-        {
-            var s = (string)args[property];
-            if (s == null)
-            {
-                return dflt;
-            }
-            s = s.Trim();
-            if (s.Length == 0)
-            {
-                return dflt;
-            }
-            return s;
-        }
-
         internal static string GetExceptionDescription(Exception exception)
         {
             if (!IsCorruptingException(exception))

@@ -80,7 +80,7 @@ namespace MICore
         public PipeLaunchOptions(string pipePath, string pipeArguments, string pipeCommandArguments, string pipeCwd, IList<EnvironmentEntry> pipeEnvironment)
         {
             if (string.IsNullOrEmpty(pipePath))
-                throw new ArgumentNullException("PipePath");
+                throw new ArgumentNullException(nameof(pipePath));
 
             this.PipePath = pipePath;
             this.PipeArguments = pipeArguments;
@@ -103,13 +103,46 @@ namespace MICore
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_EmptyPipePath));
             }
 
+            string pipeCwd = pipeTransport.PipeCwd;
+            string pipeProgram = pipeTransport.PipeProgram;
+            List<string> pipeArgs = pipeTransport.PipeArgs;
+            List<string> pipeCmd = pipeTransport.PipeCmd;
+            string debuggerPath = pipeTransport.DebuggerPath;
+            bool quoteArgs = pipeTransport.QuoteArgs.GetValueOrDefault(true);
+            Dictionary<string, string> pipeEnv = pipeTransport.PipeEnv;
+
+            Json.LaunchOptions.PipeTransportOptions platformSpecificTransportOptions = null;
+            if (PlatformUtilities.IsOSX() && pipeTransport.OSX != null)
+            {
+                platformSpecificTransportOptions = pipeTransport.OSX;
+            }
+            else if (PlatformUtilities.IsLinux() && pipeTransport.Linux != null)
+            {
+                platformSpecificTransportOptions = pipeTransport.Linux;
+            }
+            else if (PlatformUtilities.IsWindows() && pipeTransport.Windows != null)
+            {
+                platformSpecificTransportOptions = pipeTransport.Windows;
+            }
+
+            if (platformSpecificTransportOptions != null)
+            {
+                pipeProgram = platformSpecificTransportOptions.PipeProgram ?? pipeProgram;
+                pipeArgs = platformSpecificTransportOptions.PipeArgs ?? pipeArgs;
+                pipeCmd = platformSpecificTransportOptions.PipeCmd ?? pipeCmd;
+                pipeCwd = platformSpecificTransportOptions.PipeCwd ?? pipeCwd;
+                pipeEnv = platformSpecificTransportOptions.PipeEnv ?? pipeEnv;
+                debuggerPath = platformSpecificTransportOptions.DebuggerPath ?? pipeTransport.DebuggerPath;
+                quoteArgs = platformSpecificTransportOptions.QuoteArgs ?? quoteArgs;
+            }
+
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
-                pipePath: pipeTransport.PipeProgram,
-                pipeArguments: EnsurePipeArguments(pipeTransport.PipeArgs, pipeTransport.DebuggerPath, gdbPathDefault, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
-                pipeCommandArguments: ParseArguments(pipeTransport.PipeArgs, pipeTransport.QuoteArgs.GetValueOrDefault(true)),
-                pipeCwd: pipeTransport.PipeCwd,
-                pipeEnvironment: GetEnvironmentEntries(pipeTransport.PipeEnv)
-                );
+                pipePath: pipeProgram,
+                pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs),
+                pipeCommandArguments: ParseArguments(pipeCmd??pipeArgs, quoteArgs),
+                pipeCwd: pipeCwd,
+                pipeEnvironment: GetEnvironmentEntries(pipeEnv)
+            );
 
             Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
             pipeOptions.InitializeCommonOptions(baseOptions);
@@ -214,11 +247,11 @@ namespace MICore
         {
             if (string.IsNullOrEmpty(hostname))
             {
-                throw new ArgumentException("hostname");
+                throw new ArgumentException(null, nameof(hostname));
             }
             if (port <= 0)
             {
-                throw new ArgumentException("port");
+                throw new ArgumentException(null, nameof(port));
             }
 
             this.Hostname = hostname;
@@ -279,14 +312,14 @@ namespace MICore
 
     public sealed class SourceMapEntry
     {
-        public SourceMapEntry() // used by launchers 
+        public SourceMapEntry() // used by launchers
         {
         }
 
         public SourceMapEntry(Xml.LaunchOptions.SourceMapEntry xmlEntry)
         {
-            this.EditorPath = xmlEntry.EditorPath;
-            this.CompileTimePath = xmlEntry.CompileTimePath;
+            this.EditorPath = PlatformUtilities.PathToHostOSPath(xmlEntry.EditorPath);
+            this.CompileTimePath = PlatformUtilities.PathToHostOSPath(xmlEntry.CompileTimePath);
             this.UseForBreakpoints = xmlEntry.UseForBreakpoints;
         }
 
@@ -325,6 +358,7 @@ namespace MICore
         public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Xml.LaunchOptions.SourceMapEntry[] source)
         {
             SourceMapEntry[] pathArray = source?.Select(x => new SourceMapEntry(x)).ToArray();
+
             if (pathArray == null)
             {
                 pathArray = new SourceMapEntry[0];
@@ -335,33 +369,50 @@ namespace MICore
 
         public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, object> source)
         {
-            IList<SourceMapEntry> sourceMaps = new List<SourceMapEntry>(source.Keys.Count());
+            IList<SourceMapEntry> sourceMaps = new List<SourceMapEntry>(source.Keys.Count);
 
             foreach (var item in source)
             {
-                if (item.Value is String)
+                string compileTimePath = item.Key;
+                string editorPath = null;
+                bool useForBreakpoints = true;
+
+                if (item.Value is string value)
                 {
-                    sourceMaps.Add(new SourceMapEntry()
-                    {
-                        CompileTimePath = item.Key,
-                        EditorPath = (String)item.Value,
-                        UseForBreakpoints = true
-                    });
+                    editorPath = value;
                 }
-                else if (item.Value is JObject)
+                else if (item.Value is JObject jObject)
                 {
-                    Json.LaunchOptions.SourceFileMapOptions sourceMapItem =
-                        ((JObject)item.Value).ToObject<Json.LaunchOptions.SourceFileMapOptions>();
+                    try
+                    {
+                        Json.LaunchOptions.SourceFileMapOptions sourceMapItem =
+                        jObject.ToObject<Json.LaunchOptions.SourceFileMapOptions>();
+
+                        editorPath = sourceMapItem.EditorPath;
+                        useForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true);
+                    }
+                    catch (JsonReaderException)
+                    {
+                        throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapFormat, compileTimePath));
+                    }
+                }
+                else
+                {
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapFormat, compileTimePath));
+                }
+
+                if (!string.IsNullOrEmpty(editorPath))
+                {
                     sourceMaps.Add(new SourceMapEntry()
                     {
-                        CompileTimePath = item.Key,
-                        EditorPath = sourceMapItem.EditorPath,
-                        UseForBreakpoints = sourceMapItem.UseForBreakpoints.GetValueOrDefault(true)
+                        CompileTimePath = PlatformUtilities.PathToHostOSPath(compileTimePath),
+                        EditorPath = PlatformUtilities.PathToHostOSPath(editorPath),
+                        UseForBreakpoints = useForBreakpoints
                     });
                 }
                 else
                 {
-                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapFormat, item.Key));
+                    throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapInvalidEditorPath));
                 }
             }
             return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);
@@ -380,7 +431,7 @@ namespace MICore
         public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress)
         {
             if (string.IsNullOrEmpty(MIDebuggerPath))
-                throw new ArgumentNullException("MIDebuggerPath");
+                throw new ArgumentNullException(nameof(MIDebuggerPath));
 
             this.MIDebuggerPath = MIDebuggerPath;
             this.MIDebuggerServerAddress = MIDebuggerServerAddress;
@@ -394,7 +445,7 @@ namespace MICore
 
         private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
         {
-            if (!String.IsNullOrWhiteSpace(launchOptions.MiDebuggerServerAddress))
+            if (!String.IsNullOrWhiteSpace(launchOptions.DebugServerPath))
             {
                 this.DebugServer = launchOptions.DebugServerPath;
                 this.DebugServerArgs = launchOptions.DebugServerArgs;
@@ -698,86 +749,13 @@ namespace MICore
         public string StartRemoteDebuggerCommand { get; private set; }
         public Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort UnixPort { get; private set; }
 
-        /// <summary>
-        /// After a successful launch of ClrDbg from a VS session, the subsequent debugging in the same VS will not attempt to download ClrDbg on the remote machine.
-        /// This keeps track of the ports where the debugger was successfully launched.
-        /// </summary>
-        private static HashSet<string> s_LaunchSuccessSet = new HashSet<string>();
-
-        /// <summary>
-        /// Url to get the GetClrDbg.sh script from.
-        /// </summary>
-        public string GetClrDbgUrl { get; private set; } = "https://aka.ms/getclrdbgsh";
-
-        /// <summary>
-        /// Default location of the debugger on the remote machine.
-        /// </summary>
-        public string DebuggerInstallationDirectory { get; private set; } = ".vs-debugger";
-
-        /// <summary>
-        /// Meta version of the clrdbg.
-        /// </summary>
-        /// TODO: placeholder. Needs to be fixed in the pkgdef as well.
-        public string ClrDbgVersion { get; private set; } = "vs2015u2";
-
-        /// <summary>
-        /// Sub directory where the clrdbg should be downloaded relative to <see name="DebuggerInstallationDirectory"/>
-        /// </summary>
-        public string ClrDbgInstallationSubDirectory { get; private set; } = "vs2015u2";
-
-        /// <summary>
-        /// Shell command invoked after a successful launch of clrdbg. 
-        /// Launches the existing clrdbg.
-        /// </summary>
-        /// /// <remarks>
-        /// {0} - Base directory of debugger
-        /// {1} - clrdbg version.
-        /// {2} - Subdirectory where clrdbg should be installed.
-        /// </remarks>
-        private const string ClrdbgFirstLaunchCommand = "cd {0} && chmod +x ./GetClrDbg.sh && ./GetClrDbg.sh -v {1} -l {0}/{2} -d";
-
-        /// <summary>
-        /// Shell command invoked after a successful launch of clrdbg. 
-        /// Launches the existing clrdbg.
-        /// </summary>
-        /// /// <remarks>
-        /// {0} - Base directory of debugger
-        /// {1} - clrdbg version.
-        /// {2} - Subdirectory where clrdbg should be installed.
-        /// </remarks>
-        private const string ClrdbgSubsequentLaunchCommand = "cd {0} && ./GetClrDbg.sh -v {1} -l {0}/{2} -d -s";
-
         public UnixShellPortLaunchOptions(string startRemoteDebuggerCommand,
                 Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
                 MIMode miMode,
-                BaseLaunchOptions baseLaunchOptions,
-                string getClrDbgUrl = null,
-                string remoteDebuggerInstallationDirectory = null,
-                string remoteDebuggerInstallationSubDirectory = null,
-                string clrdbgVersion = null)
+                BaseLaunchOptions baseLaunchOptions)
         {
             this.UnixPort = unixPort;
             this.DebuggerMIMode = miMode;
-
-            if (!string.IsNullOrWhiteSpace(getClrDbgUrl))
-            {
-                GetClrDbgUrl = getClrDbgUrl;
-            }
-
-            if (!string.IsNullOrWhiteSpace(remoteDebuggerInstallationDirectory))
-            {
-                DebuggerInstallationDirectory = remoteDebuggerInstallationDirectory;
-            }
-
-            if (!string.IsNullOrWhiteSpace(remoteDebuggerInstallationSubDirectory))
-            {
-                ClrDbgInstallationSubDirectory = remoteDebuggerInstallationSubDirectory;
-            }
-
-            if (!string.IsNullOrWhiteSpace(clrdbgVersion))
-            {
-                ClrDbgVersion = clrdbgVersion;
-            }
 
             if (string.IsNullOrEmpty(startRemoteDebuggerCommand))
             {
@@ -790,30 +768,8 @@ namespace MICore
                         // TODO: Someday we should likely use a download script here too
                         startRemoteDebuggerCommand = "lldb-mi --interpreter=mi";
                         break;
-                    case MIMode.Clrdbg:
-                        string debuggerHomeDirectory;
-                        if (DebuggerInstallationDirectory.StartsWith("/", StringComparison.OrdinalIgnoreCase))
-                        {
-                            debuggerHomeDirectory = DebuggerInstallationDirectory;
-                        }
-                        else
-                        {
-                            string userHomeDirectory = UnixPort.GetUserHomeDirectory();
-                            debuggerHomeDirectory = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", userHomeDirectory, DebuggerInstallationDirectory);
-                        }
-
-                        if (!HasSuccessfulPreviousLaunch(this))
-                        {
-                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgFirstLaunchCommand, debuggerHomeDirectory, ClrDbgVersion, ClrDbgInstallationSubDirectory);
-                        }
-                        else
-                        {
-                            startRemoteDebuggerCommand = string.Format(CultureInfo.InvariantCulture, ClrdbgSubsequentLaunchCommand, debuggerHomeDirectory, ClrDbgVersion, ClrDbgInstallationSubDirectory);
-                        }
-                        break;
-
                     default:
-                        throw new ArgumentOutOfRangeException("miMode");
+                        throw new ArgumentOutOfRangeException(nameof(miMode));
                 }
             }
 
@@ -824,54 +780,6 @@ namespace MICore
                 this.InitializeCommonOptions(baseLaunchOptions);
                 this.BaseOptions = baseLaunchOptions;
             }
-        }
-
-        /// <summary>
-        /// Records for a specific portname, the remote launch was successful.
-        /// </summary>
-        /// <param name="launchOptions">launch options</param>
-        public static void SetSuccessfulLaunch(UnixShellPortLaunchOptions launchOptions)
-        {
-            IDebugPort2 debugPort = launchOptions.UnixPort as IDebugPort2;
-            if (debugPort != null)
-            {
-                string portName = null;
-                debugPort.GetPortName(out portName);
-                if (!string.IsNullOrWhiteSpace(portName))
-                {
-                    lock (s_LaunchSuccessSet)
-                    {
-                        // If it is successful once, we expect the clrdbg launch to be successful atleast till the end of the current VS session. 
-                        // The portname will not be removed from the list.
-                        s_LaunchSuccessSet.Add(portName);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns true if the previous launch was ever successful on the same session false otherwise.
-        /// </summary>
-        /// <param name="launchOptions">launch options</param>
-        public static bool HasSuccessfulPreviousLaunch(UnixShellPortLaunchOptions launchOptions)
-        {
-            IDebugPort2 debugPort = launchOptions.UnixPort as IDebugPort2;
-            if (debugPort != null)
-            {
-                string portName = null;
-                debugPort.GetPortName(out portName);
-                if (!string.IsNullOrWhiteSpace(portName))
-                {
-                    lock (s_LaunchSuccessSet)
-                    {
-                        // If it is successful once, we expect the clrdbg launch to be successful atleast till the end of the current VS session. 
-                        // The portname will not be removed from the list.
-                        return s_LaunchSuccessSet.Contains(portName);
-                    }
-                }
-            }
-
-            return false;
         }
     }
 
@@ -895,7 +803,7 @@ namespace MICore
             get { return _miMode; }
             set
             {
-                VerifyCanModifyProperty("DebuggerMIMode");
+                VerifyCanModifyProperty(nameof(DebuggerMIMode));
                 _miMode = value;
             }
         }
@@ -913,7 +821,7 @@ namespace MICore
             {
                 if (value == null)
                     throw new ArgumentNullException("BaseOptions");
-                VerifyCanModifyProperty("BaseOptions");
+                VerifyCanModifyProperty(nameof(BaseOptions));
 
                 _baseOptions = value;
             }
@@ -932,7 +840,7 @@ namespace MICore
             {
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentOutOfRangeException("ExePath");
-                VerifyCanModifyProperty("ExePath");
+                VerifyCanModifyProperty(nameof(ExePath));
 
                 _exePath = value;
             }
@@ -947,7 +855,7 @@ namespace MICore
             get { return _exeArguments; }
             set
             {
-                VerifyCanModifyProperty("ExeArguments");
+                VerifyCanModifyProperty(nameof(ExeArguments));
                 _exeArguments = value;
             }
         }
@@ -962,7 +870,7 @@ namespace MICore
             get { return _processId; }
             protected set
             {
-                VerifyCanModifyProperty("ProcessId");
+                VerifyCanModifyProperty(nameof(ProcessId));
                 _processId = value;
             }
         }
@@ -979,7 +887,7 @@ namespace MICore
             }
             protected set
             {
-                VerifyCanModifyProperty("CoreDumpPath");
+                VerifyCanModifyProperty(nameof(CoreDumpPath));
 
                 // CoreDumpPath is allowed to be null/empty
                 _coreDumpPath = value;
@@ -999,7 +907,7 @@ namespace MICore
             get { return _workingDirectory; }
             set
             {
-                VerifyCanModifyProperty("WorkingDirectory");
+                VerifyCanModifyProperty(nameof(WorkingDirectory));
                 _workingDirectory = value;
             }
         }
@@ -1013,7 +921,7 @@ namespace MICore
             get { return _absolutePrefixSoLibSearchPath; }
             set
             {
-                VerifyCanModifyProperty("AbsolutePrefixSOLibSearchPath");
+                VerifyCanModifyProperty(nameof(AbsolutePrefixSOLibSearchPath));
                 _absolutePrefixSoLibSearchPath = value;
             }
         }
@@ -1027,7 +935,7 @@ namespace MICore
             get { return _additionalSOLibSearchPath; }
             set
             {
-                VerifyCanModifyProperty("AdditionalSOLibSearchPath");
+                VerifyCanModifyProperty(nameof(AdditionalSOLibSearchPath));
                 _additionalSOLibSearchPath = value;
             }
         }
@@ -1041,7 +949,7 @@ namespace MICore
             get { return _visualizerFile; }
             set
             {
-                VerifyCanModifyProperty("VisualizerFile");
+                VerifyCanModifyProperty(nameof(VisualizerFile));
                 _visualizerFile = value;
             }
         }
@@ -1055,7 +963,7 @@ namespace MICore
             get { return _waitDynamicLibLoad; }
             set
             {
-                VerifyCanModifyProperty("WaitDynamicLibLoad");
+                VerifyCanModifyProperty(nameof(WaitDynamicLibLoad));
                 _waitDynamicLibLoad = value;
             }
         }
@@ -1069,7 +977,7 @@ namespace MICore
             get { return _siLoadAll;  }
             set
             {
-                VerifyCanModifyProperty("SymbolInfoLoadAll");
+                VerifyCanModifyProperty(nameof(SymbolInfoLoadAll));
                 _siLoadAll = value;
             }
         }
@@ -1084,7 +992,7 @@ namespace MICore
             get { return _siExceptionList; }
             set
             {
-                VerifyCanModifyProperty("SymbolInfoExceptionList");
+                VerifyCanModifyProperty(nameof(SymbolInfoExceptionList));
                 _siExceptionList = value;
             }
         }
@@ -1110,7 +1018,7 @@ namespace MICore
             get { return _targetArchitecture; }
             set
             {
-                VerifyCanModifyProperty("TargetArchitecture");
+                VerifyCanModifyProperty(nameof(TargetArchitecture));
                 _targetArchitecture = value;
             }
         }
@@ -1147,7 +1055,7 @@ namespace MICore
                 if (value == null)
                     throw new ArgumentNullException("SetupCommands");
 
-                VerifyCanModifyProperty("SetupCommands");
+                VerifyCanModifyProperty(nameof(SetupCommands));
                 _setupCommands = value;
             }
         }
@@ -1165,7 +1073,7 @@ namespace MICore
             get { return _customLaunchSetupCommands; }
             set
             {
-                VerifyCanModifyProperty("CustomLaunchSetupCommands");
+                VerifyCanModifyProperty(nameof(CustomLaunchSetupCommands));
                 _customLaunchSetupCommands = value;
             }
         }
@@ -1177,7 +1085,7 @@ namespace MICore
             get { return _launchCompleteCommand; }
             set
             {
-                VerifyCanModifyProperty("LaunchCompleteCommand");
+                VerifyCanModifyProperty(nameof(LaunchCompleteCommand));
                 _launchCompleteCommand = value;
             }
         }
@@ -1189,7 +1097,7 @@ namespace MICore
             get { return _debugChildProcesses; }
             protected set
             {
-                VerifyCanModifyProperty("DebugChildProcesses");
+                VerifyCanModifyProperty(nameof(DebugChildProcesses));
                 _debugChildProcesses = value;
             }
         }
@@ -1201,7 +1109,7 @@ namespace MICore
             get { return _sourceMap; }
             set
             {
-                VerifyCanModifyProperty("SourceMap");
+                VerifyCanModifyProperty(nameof(SourceMap));
                 _sourceMap = value;
             }
         }
@@ -1213,7 +1121,7 @@ namespace MICore
             get { return _environment; }
             set
             {
-                VerifyCanModifyProperty("Environment");
+                VerifyCanModifyProperty(nameof(Environment));
                 _environment = value;
             }
         }
@@ -1257,7 +1165,7 @@ namespace MICore
         public static LaunchOptions GetInstance(HostConfigurationStore configStore, string exePath, string args, string dir, string options, bool noDebug, IDeviceAppLauncherEventCallback eventCallback, TargetEngine targetEngine, Logger logger)
         {
             if (string.IsNullOrWhiteSpace(exePath))
-                throw new ArgumentNullException("exePath");
+                throw new ArgumentNullException(nameof(exePath));
 
             options = options?.Trim();
             if (string.IsNullOrEmpty(options))
@@ -1439,10 +1347,6 @@ namespace MICore
         public static LaunchOptions CreateForAttachRequest(Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.IDebugUnixShellPort unixPort,
                                                             int processId,
                                                             MIMode miMode,
-                                                            string getClrDbgUrl,
-                                                            string remoteDebuggingDirectory,
-                                                            string remoteDebuggingSubDirectory,
-                                                            string debuggerVersion,
                                                             Logger logger)
         {
             var suppOptions = GetOptionsFromFile(logger);
@@ -1468,11 +1372,7 @@ namespace MICore
                 options = new UnixShellPortLaunchOptions(startRemoteDebuggerCommand: null,
                                                            unixPort: unixPort,
                                                            miMode: miMode,
-                                                           baseLaunchOptions: null,
-                                                           getClrDbgUrl: getClrDbgUrl,
-                                                           remoteDebuggerInstallationDirectory: remoteDebuggingDirectory,
-                                                           remoteDebuggerInstallationSubDirectory: remoteDebuggingSubDirectory,
-                                                           clrdbgVersion: debuggerVersion);
+                                                           baseLaunchOptions: null);
             }
 
             options.ProcessId = processId;
@@ -1792,6 +1692,29 @@ namespace MICore
             this.WaitDynamicLibLoad = false;
 
             this.SourceMap = SourceMapEntry.CreateCollection(options.SourceFileMap);
+
+            if (options.SymbolLoadInfo != null)
+            {
+                SymbolInfoLoadAll = options.SymbolLoadInfo.LoadAll.GetValueOrDefault(true);
+
+                if (!string.IsNullOrWhiteSpace(options.SymbolLoadInfo.ExceptionList))
+                {
+                    if (DebuggerMIMode == MIMode.Lldb)
+                    {
+                        throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.SymbolLoadInfo.ExceptionList), nameof(MIMode.Lldb)));
+                    }
+
+                    this.WaitDynamicLibLoad = true;
+                    SymbolInfoExceptionList.SetTo(options.SymbolLoadInfo.ExceptionList.Split(';'));
+                }
+                else
+                {
+                    SymbolInfoExceptionList.SetTo(new string[0]);
+                }
+            }
+
+            this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
+
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
@@ -1886,15 +1809,92 @@ namespace MICore
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(source.Environment));
         }
 
+        private static List<string> TryAddWindowsDebuggeeConsoleRedirection(List<string> arguments)
+        {
+            if (PlatformUtilities.IsWindows()) // Only do this on Windows
+            {
+                bool stdInRedirected = false;
+                bool stdOutRedirected = false;
+                bool stdErrRedirected = false;
+
+                if (arguments != null)
+                {
+                    foreach (string rawArgument in arguments)
+                    {
+                        // Skip on null or blank arguments.
+                        if (string.IsNullOrWhiteSpace(rawArgument))
+                        {
+                            continue;
+                        }
+
+                        string argument = rawArgument.TrimStart();
+                        if (argument.TrimStart().StartsWith("2>", StringComparison.Ordinal))
+                        {
+                            stdErrRedirected = true;
+                        }
+                        if (argument.TrimStart().StartsWith("1>", StringComparison.Ordinal) || argument.TrimStart().StartsWith(">", StringComparison.Ordinal))
+                        {
+                            stdOutRedirected = true;
+                        }
+                        if (argument.TrimStart().StartsWith("0>", StringComparison.Ordinal) || argument.TrimStart().StartsWith("<", StringComparison.Ordinal))
+                        {
+                            stdInRedirected = true;
+                        }
+                    }
+                }
+
+                // If one (or more) are not redirected, then add redirection
+                if (!stdInRedirected || !stdOutRedirected || !stdErrRedirected)
+                {
+                    int argLength = arguments.Count;
+                    List<string> argList = new List<string>(argLength + 3);
+                    if (arguments != null)
+                    {
+                        argList.AddRange(arguments);
+                    }
+
+                    if (!stdErrRedirected)
+                    {
+                        argList.Add("2>CON");
+                    }
+
+                    if (!stdOutRedirected)
+                    {
+                        argList.Add("1>CON");
+                    }
+
+                    if (!stdInRedirected)
+                    {
+                        argList.Add("<CON");
+                    }
+
+                    return argList;
+                }
+            }
+
+            return arguments;
+        }
+
         public void InitializeLaunchOptions(Json.LaunchOptions.LaunchOptions launch)
         {
             this.DebuggerMIMode = ConvertMIModeString(RequireAttribute(launch.MIMode, nameof(launch.MIMode)));
-            this.ExeArguments = ParseArguments(launch.Args);
+
+            List<string> args = launch.Args;
+
+            if (Host.GetHostUIIdentifier() == HostUIIdentifier.VSCode &&
+                HostRunInTerminal.IsRunInTerminalAvailable() && 
+                !launch.ExternalConsole.GetValueOrDefault(false) &&
+                string.IsNullOrEmpty(launch.CoreDumpPath) &&
+                !launch.AvoidWindowsConsoleRedirection.GetValueOrDefault(false) &&
+                !(this is PipeLaunchOptions)) // Make sure we are not doing a PipeLaunch
+            {
+                args = TryAddWindowsDebuggeeConsoleRedirection(args);
+            }
+
+            this.ExeArguments = ParseArguments(args);
             this.WorkingDirectory = launch.Cwd ?? String.Empty;
 
             this.CoreDumpPath = launch.CoreDumpPath;
-
-            this.SetupCommands = LaunchCommand.CreateCollection(launch.SetupCommands);
 
             if (launch.CustomLaunchSetupCommands.Any())
             {
@@ -1911,6 +1911,7 @@ namespace MICore
 
         public void InitializeAttachOptions(Json.LaunchOptions.AttachOptions attach)
         {
+            this.DebuggerMIMode = ConvertMIModeString(RequireAttribute(attach.MIMode, nameof(attach.MIMode)));
             this.ProcessId = attach.ProcessId;
         }
 
@@ -2097,8 +2098,6 @@ namespace MICore
                     return MIMode.Gdb;
                 case "lldb":
                     return MIMode.Lldb;
-                case "clrdbg":
-                    return MIMode.Clrdbg;
                 default:
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "MIMode"));
             }
@@ -2108,7 +2107,6 @@ namespace MICore
         {
             Debug.Assert((uint)MIMode.Gdb == (uint)Xml.LaunchOptions.MIMode.gdb, "Enum values don't line up!");
             Debug.Assert((uint)MIMode.Lldb == (uint)Xml.LaunchOptions.MIMode.lldb, "Enum values don't line up!");
-            Debug.Assert((uint)MIMode.Clrdbg == (uint)Xml.LaunchOptions.MIMode.clrdbg, "Enum values don't line up!");
             return (MIMode)source;
         }
 
@@ -2130,11 +2128,14 @@ namespace MICore
             return String.Empty;
         }
 
-        private static char[] s_ARGUMENT_SEPARATORS = new char[] { ' ', '\t' };
+        // gdb does not like parenthesis without being quoted
+        private static char[] s_ARGUMENT_SEPARATORS = { ' ', '\t', '(', ')' };
         protected static string QuoteArgument(string arg)
         {
-            // If its not quoted and it has an argument separater, then quote it. 
-            if (arg[0] != '"' && arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0)
+            // Quote if:
+            // 1. string is null or empty and convert to a quoted empty string.
+            // 2. Its not quoted and it has an argument seperator. 
+            if (string.IsNullOrEmpty(arg) || (arg[0] != '"' && arg.IndexOfAny(s_ARGUMENT_SEPARATORS) >= 0))
             {
                 return '"' + arg + '"';
             }

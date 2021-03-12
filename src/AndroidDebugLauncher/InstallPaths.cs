@@ -240,12 +240,12 @@ namespace AndroidDebugLauncher
 
             if (string.IsNullOrEmpty(ndkRoot))
             {
-                throw new ArgumentNullException("ndkRoot");
+                throw new ArgumentNullException(nameof(ndkRoot));
             }
 
             if (possiblePaths == null || !possiblePaths.Any())
             {
-                throw new ArgumentOutOfRangeException("possiblePaths");
+                throw new ArgumentOutOfRangeException(nameof(possiblePaths));
             }
 
             string value = TryGetRegistryValue(RegistryRoot.Value + @"\Debugger", registryValueName, RegistryView.Default);

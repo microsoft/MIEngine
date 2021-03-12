@@ -42,19 +42,19 @@ namespace Microsoft.MIDebugEngine
         private class SettingsUpdates
         {
             // Threading note: these are only modified on the main thread
-            public ExceptionBreakpointState? NewCategoryState;
-            public readonly Dictionary<string, ExceptionBreakpointState> RulesToAdd;
+            public ExceptionBreakpointStates? NewCategoryState;
+            public readonly Dictionary<string, ExceptionBreakpointStates> RulesToAdd;
             public readonly HashSet<string> RulesToRemove = new HashSet<string>();
 
-            public SettingsUpdates(/*OPTIONAL*/ ExceptionBreakpointState? initialNewCategoryState, /*OPTIONAL*/ ReadOnlyDictionary<string, ExceptionBreakpointState> initialRuleChanges)
+            public SettingsUpdates(/*OPTIONAL*/ ExceptionBreakpointStates? initialNewCategoryState, /*OPTIONAL*/ ReadOnlyDictionary<string, ExceptionBreakpointStates> initialRuleChanges)
             {
                 this.NewCategoryState = initialNewCategoryState;
 
                 // The dictionary constructor which takes a read only dictionary is unhappy if we pass in null, so switch off which constructor we call
                 if (initialRuleChanges != null)
-                    this.RulesToAdd = new Dictionary<string, ExceptionBreakpointState>(initialRuleChanges);
+                    this.RulesToAdd = new Dictionary<string, ExceptionBreakpointStates>(initialRuleChanges);
                 else
-                    this.RulesToAdd = new Dictionary<string, ExceptionBreakpointState>();
+                    this.RulesToAdd = new Dictionary<string, ExceptionBreakpointStates>();
             }
         }
 
@@ -91,12 +91,12 @@ namespace Microsoft.MIDebugEngine
         {
             private readonly ExceptionManager _parent;
             public readonly string CategoryName;
-            public readonly ExceptionBreakpointState DefaultCategoryState;
-            public readonly ReadOnlyDictionary<string, ExceptionBreakpointState> DefaultRules;
+            public readonly ExceptionBreakpointStates DefaultCategoryState;
+            public readonly ReadOnlyDictionary<string, ExceptionBreakpointStates> DefaultRules;
 
             // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCatagory), and we
             // guarantee that there will only be one active FlushSettingsUpdates task at a time
-            public ExceptionBreakpointState CategoryState;
+            public ExceptionBreakpointStates CategoryState;
             public readonly Dictionary<string, ulong> CurrentRules = new Dictionary<string, ulong>();
 
             private readonly object _updateLock = new object();
@@ -108,13 +108,13 @@ namespace Microsoft.MIDebugEngine
                 _parent = parent;
                 this.CategoryName = categoryName;
                 this.DefaultCategoryState = RegistryToExceptionBreakpointState(categoryKey.GetValue("*"));
-                Dictionary<string, ExceptionBreakpointState> exceptionSettings = new Dictionary<string, ExceptionBreakpointState>();
+                Dictionary<string, ExceptionBreakpointStates> exceptionSettings = new Dictionary<string, ExceptionBreakpointStates>();
                 foreach (string valueName in categoryKey.GetValueNames())
                 {
                     if (string.IsNullOrEmpty(valueName) || valueName == "*" || !ExceptionManager.IsSupportedException(valueName))
                         continue;
 
-                    ExceptionBreakpointState value = RegistryToExceptionBreakpointState(categoryKey.GetValue(valueName));
+                    ExceptionBreakpointStates value = RegistryToExceptionBreakpointState(categoryKey.GetValue(valueName));
                     if (value == this.DefaultCategoryState)
                     {
                         Debug.Fail("Redundant exception trigger found in the registry.");
@@ -123,7 +123,7 @@ namespace Microsoft.MIDebugEngine
 
                     exceptionSettings.Add(valueName, value);
                 }
-                this.DefaultRules = new ReadOnlyDictionary<string, ExceptionBreakpointState>(exceptionSettings);
+                this.DefaultRules = new ReadOnlyDictionary<string, ExceptionBreakpointStates>(exceptionSettings);
                 _settingsUpdate = new SettingsUpdates(this.DefaultCategoryState, this.DefaultRules);
             }
 
@@ -150,10 +150,10 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
-            private static ExceptionBreakpointState RegistryToExceptionBreakpointState(/*OPTIONAL*/ object registryValue)
+            private static ExceptionBreakpointStates RegistryToExceptionBreakpointState(/*OPTIONAL*/ object registryValue)
             {
                 if (registryValue == null || !(registryValue is int))
-                    return ExceptionBreakpointState.None;
+                    return ExceptionBreakpointStates.None;
 
                 enum_EXCEPTION_STATE value = (enum_EXCEPTION_STATE)(int)registryValue;
                 return ExceptionManager.ToExceptionBreakpointState(value);
@@ -278,7 +278,7 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        private static void SetCategory(ExceptionCategorySettings categorySettings, ExceptionBreakpointState newState)
+        private static void SetCategory(ExceptionCategorySettings categorySettings, ExceptionBreakpointStates newState)
         {
             using (var settingsUpdateHolder = categorySettings.GetSettingsUpdate())
             {
@@ -429,15 +429,15 @@ namespace Microsoft.MIDebugEngine
         {
             // Update the category
             if (updates.NewCategoryState.HasValue && (
-                updates.NewCategoryState.Value != ExceptionBreakpointState.None || // send down a rule if the category isn't in the default state
+                updates.NewCategoryState.Value != ExceptionBreakpointStates.None || // send down a rule if the category isn't in the default state
                 categorySettings.CurrentRules.Count != 0)) // Or if we have other rules for the category that we need to blow away
             {
-                ExceptionBreakpointState newCategoryState = updates.NewCategoryState.Value;
+                ExceptionBreakpointStates newCategoryState = updates.NewCategoryState.Value;
                 categorySettings.CategoryState = newCategoryState;
                 categorySettings.CurrentRules.Clear();
 
                 IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
-                if (newCategoryState != ExceptionBreakpointState.None)
+                if (newCategoryState != ExceptionBreakpointStates.None)
                 {
                     ulong breakpointId = breakpointIds.Single();
                     categorySettings.CurrentRules.Add("*", breakpointId);
@@ -466,7 +466,7 @@ namespace Microsoft.MIDebugEngine
             }
 
             // process any adds
-            foreach (IGrouping<ExceptionBreakpointState, string> grouping in updates.RulesToAdd.GroupBy((pair) => pair.Value, (pair) => pair.Key))
+            foreach (IGrouping<ExceptionBreakpointStates, string> grouping in updates.RulesToAdd.GroupBy((pair) => pair.Value, (pair) => pair.Key))
             {
                 IEnumerable<string> exceptionNames = grouping;
 
@@ -523,14 +523,14 @@ namespace Microsoft.MIDebugEngine
             return new ReadOnlyDictionary<Guid, ExceptionCategorySettings>(categoryMap);
         }
 
-        private static ExceptionBreakpointState ToExceptionBreakpointState(enum_EXCEPTION_STATE ad7ExceptionState)
+        private static ExceptionBreakpointStates ToExceptionBreakpointState(enum_EXCEPTION_STATE ad7ExceptionState)
         {
-            ExceptionBreakpointState returnValue = ExceptionBreakpointState.None;
+            ExceptionBreakpointStates returnValue = ExceptionBreakpointStates.None;
 
             if ((ad7ExceptionState & (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE)) != 0)
-                returnValue |= ExceptionBreakpointState.BreakThrown;
+                returnValue |= ExceptionBreakpointStates.BreakThrown;
             if (ad7ExceptionState.HasFlag(enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT))
-                returnValue |= ExceptionBreakpointState.BreakUserHandled;
+                returnValue |= ExceptionBreakpointStates.BreakUserHandled;
 
             return returnValue;
         }

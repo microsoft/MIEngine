@@ -14,9 +14,7 @@
     <MakeDir Condition="!Exists('$(IntermediateOutputPath)')" Directories="$(IntermediateOutputPath)" />
     <PropertyGroup>
       <XsdParameters>LaunchOptions.xsd /classes /namespace:$(RootNamespace).Xml.LaunchOptions </XsdParameters>
-      <!-- Mono's XSD.exe uses /outputdir instead of /out -->
-      <XsdParameters Condition="'$(IsMonoRuntime)' == 'false'">$(XsdParameters) /out:"$(IntermediateOutputPath)."</XsdParameters>
-      <XsdParameters Condition="'$(IsMonoRuntime)' == 'true'">$(XsdParameters) /outputdir:"$(IntermediateOutputPath)."</XsdParameters>
+      <XsdParameters>$(XsdParameters) /out:"$(IntermediateOutputPath)."</XsdParameters>
       <XsdParameters Condition="'$(IsXPlat)' == 'false'">$(XsdParameters) /fields</XsdParameters>
 
       <XsdCandidateFile>$(IntermediateOutputPath)LaunchOptions.cs</XsdCandidateFile>
@@ -94,8 +92,7 @@
       <!-- Fix for VS 2019 -->
       <CompilerPath Condition="'$(CompilerPath)' == '' and Exists('$(RoslynTargetsPath)\csc.exe')">$(RoslynTargetsPath)\csc.exe</CompilerPath>
 
-      <RefPath Condition="'$(IsMonoRuntime)' == 'false'">$(MSBuildFrameworkToolsPath)</RefPath>
-      <RefPath Condition="'$(IsMonoRuntime)' == 'true'">$(SDK40ToolsPath)</RefPath>
+      <RefPath>$(MSBuildFrameworkToolsPath)</RefPath>
     </PropertyGroup>
 
     <Error Condition="'$(SDK40ToolsPath)'==''" Text="SDK40ToolsPath msbuild property is undefined." />

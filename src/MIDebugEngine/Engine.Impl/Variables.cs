@@ -3,11 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
 using System.Diagnostics;
-using System.Threading;
 using MICore;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -41,6 +38,8 @@ namespace Microsoft.MIDebugEngine
         bool IsReadOnly();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         bool IsPreformatted { get; set; }
+        string Address();
+        uint Size();
     }
 
     internal class SimpleVariableInformation
@@ -60,7 +59,7 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<VariableInformation> CreateMIDebuggerVariable(ThreadContext ctx, AD7Engine engine, AD7Thread thread)
         {
-            VariableInformation vi = new VariableInformation(Name, ctx, engine, thread, IsParameter);
+            VariableInformation vi = new VariableInformation(Name, Name, ctx, engine, thread, IsParameter);
             await vi.Eval();
             return vi;
         }
@@ -73,7 +72,7 @@ namespace Microsoft.MIDebugEngine
         { }
     }
 
-    internal class VariableInformation : IVariableInformation
+    internal sealed class VariableInformation : IVariableInformation
     {
         public string Name { get; private set; }
         public string Value { get; private set; }
@@ -90,6 +89,33 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
+        private static readonly string[] s_validAddressFormats = new string[] {
+            @"^0x[0-9a-fA-F]+$",
+            @"^(0x[0-9a-fA-F]+)\b"
+        };
+
+        public string Address()
+        {
+            // ask GDB to evaluate "&expression"
+            string command = "&("+FullName()+")";
+            var result = EvalDependentExpression(command);
+            for (int i = 0; i < s_validAddressFormats.Length; i++)
+            {
+                if (Regex.IsMatch(result, s_validAddressFormats[i]))
+                {
+                    return result;
+                }
+            }
+            string errorMessage = String.Format(CultureInfo.InvariantCulture, "Unexpected result {0} from evaluating {1}", result, command);
+            throw new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", errorMessage);
+        }
+
+        public uint Size()
+        {
+            // ask GDB to evaluate "sizeof(expression)"
+            string command = "sizeof("+FullName()+")";
+            return Convert.ToUInt32(EvalDependentExpression(command), CultureInfo.InvariantCulture);
+        }
 
         private static bool IsPointer(string typeName)
         {
@@ -128,6 +154,9 @@ namespace Microsoft.MIDebugEngine
                         }
                         _fullname = '(' + parentName + ')' + op + _strippedName;
                         break;
+                    case NodeType.Dereference:
+                        _fullname = "*(" + _parent.FullName() + ")";
+                        break;
                     case NodeType.BaseClass:
                     case NodeType.AccessQualifier:
                         _fullname = _parent.FullName();
@@ -164,11 +193,6 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        static VariableInformation()
-        {
-            s_isFunction = new Regex(@".+\(.*\).*");
-        }
-
         private VariableInformation(ThreadContext ctx, AD7Engine engine, AD7Thread thread)
         {
             _engine = engine;
@@ -190,12 +214,12 @@ namespace Microsoft.MIDebugEngine
         }
 
         //this constructor is used to create root nodes (local/params)
-        internal VariableInformation(string expr, ThreadContext ctx, AD7Engine engine, AD7Thread thread, bool isParameter = false)
+        internal VariableInformation(string displayName, string expr, ThreadContext ctx, AD7Engine engine, AD7Thread thread, bool isParameter = false)
             : this(ctx, engine, thread)
         {
             // strip off formatting string
             _strippedName = StripFormatSpecifier(expr, out _format);
-            Name = expr;
+            Name = displayName;
             IsParameter = isParameter;
             _parent = null;
             VariableNodeType = NodeType.Root;
@@ -274,6 +298,10 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.AnonymousUnion;
             }
+            else if (Name.Length > 1 && Name[0] == '*')
+            {
+                VariableNodeType = NodeType.Dereference;
+            }
             else
             {
                 _strippedName = Name;
@@ -323,6 +351,7 @@ namespace Microsoft.MIDebugEngine
         {
             Root,
             Field,
+            Dereference,
             ArrayElement,
             BaseClass,
             AccessQualifier,
@@ -339,7 +368,7 @@ namespace Microsoft.MIDebugEngine
                                  @"^const +char *\[[0-9]*\]$"
                              };
 
-        private static Regex s_isFunction;
+        private static Regex s_isFunction = new Regex(@".+\(.*\).*");
 
         private string StripFormatSpecifier(string exp, out string formatSpecifier)
         {
@@ -566,7 +595,7 @@ namespace Microsoft.MIDebugEngine
                             _attribsFetched = true;
                         }
                         Value = results.TryFindString("value");
-                        if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
+                        if ((string.IsNullOrEmpty(Value) || _format != null) && !string.IsNullOrEmpty(_internalName))
                         {
                             if (_format != null)
                             {
@@ -618,7 +647,7 @@ namespace Microsoft.MIDebugEngine
                 else
                     message = e.Message;
 
-                SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
+                SetAsError(string.Format(CultureInfo.CurrentCulture, ResourceStrings.Failed_ExecCommandError, message));
             }
         }
 
@@ -695,7 +724,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         if (children[p].TryFindUint("numchild") > 0)
                         {
-                            var variable = new VariableInformation("[" + (p / 2).ToString() + "]", this);
+                            var variable = new VariableInformation("[" + (p / 2).ToString(CultureInfo.InvariantCulture) + "]", this);
                             variable.CountChildren = 2;
                             var first = new VariableInformation(children[p], variable, "first");
                             var second = new VariableInformation(children[p + 1], this, "second");

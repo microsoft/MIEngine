@@ -30,7 +30,7 @@ namespace AndroidDebugLauncher
         {
             if (releaseNumber == 0)
             {
-                throw new ArgumentOutOfRangeException("releaseNumber");
+                throw new ArgumentOutOfRangeException(nameof(releaseNumber));
             }
 
             this.ReleaseNumber = releaseNumber;

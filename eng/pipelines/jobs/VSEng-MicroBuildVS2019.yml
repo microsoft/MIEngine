@@ -1,0 +1,12 @@
+---
+parameters:
+  JobName: 'VSEng-MicroBuildVS2019'
+  BuildTemplate: ''
+
+jobs:
+- job: ${{ parameters.JobName }}
+  pool:
+    name: VSEng-MicroBuildVS2019
+  steps:
+  - template: ../templates/${{ parameters.BuildTemplate }}.template.yml
+...

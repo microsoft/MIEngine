@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
 
@@ -14,7 +12,7 @@ namespace Microsoft.MIDebugEngine
     // The property is usually the result of an expression evaluation. 
     //
     // The sample engine only supports locals and parameters for functions that have symbols loaded.
-    internal class AD7Property : IDebugProperty3
+    internal class AD7Property : IDebugProperty3, IDebugProperty160
     {
         private static uint s_maxChars = 1000000;
         private byte[] _bytes;
@@ -27,6 +25,8 @@ namespace Microsoft.MIDebugEngine
             _engine = engine;
             _variableInformation = vi;
         }
+
+        private static ulong DBG_ATTRIB_HAS_DATA_BREAKPOINT = 0x1000000000000000;
 
         // Construct a DEBUG_PROPERTY_INFO representing this local or parameter.
         public DEBUG_PROPERTY_INFO ConstructDebugPropertyInfo(enum_DEBUGPROP_INFO_FLAGS dwFields)
@@ -71,16 +71,6 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB) != 0)
             {
-                // Only check this property if we're running under clrdbg, other engines require
-                // double the mi messages since var-show-attributes is a separate call.
-                if (_engine.DebuggedProcess.MICommandFactory.Mode == MICore.MIMode.Clrdbg)
-                {
-                    if (variable.IsReadOnly())
-                    {
-                        propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY;
-                    }
-                }
-
                 if (variable.CountChildren != 0)
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_OBJ_IS_EXPANDABLE;
@@ -89,6 +79,17 @@ namespace Microsoft.MIDebugEngine
                 if (variable.Error)
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR;
+                } else
+                {
+                    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
+                    string fullName = variable.FullName();
+                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(fullName))
+                    {
+                        if (_engine.DebuggedProcess.VariableNameAddressMap.Contains(fullName + "," + variable.Address()))
+                        {
+                            propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
+                        }
+                    }
                 }
 
                 if (variable.IsStringType)
@@ -173,11 +174,11 @@ namespace Microsoft.MIDebugEngine
                 return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
             // try to interpret the result as an address
             string v = _variableInformation.Value;
-            v = v.Trim();
-            if (v.Length == 0)
+            if (string.IsNullOrWhiteSpace(v))
             {
                 return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
             }
+            v = v.Trim();
             if (v[0] == '{')
             {
                 // strip type name and trailing spaces
@@ -421,6 +422,41 @@ namespace Microsoft.MIDebugEngine
                 {
                     errorString = e.Message;
                 }
+            }
+            return Constants.E_FAIL;
+        }
+
+        public int GetDataBreakpointInfo160(out string pbstrAddress, out uint pSize, out string pbstrDisplayName, out string pbstrError)
+        {
+            try
+            {
+                pbstrAddress = _variableInformation.Address();
+                pSize = _variableInformation.Size();
+                pbstrDisplayName = _variableInformation.Name;
+                pbstrError = "";
+
+                string fullName = _variableInformation.FullName();
+                lock (_engine.DebuggedProcess.DataBreakpointVariables)
+                {
+                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(fullName))
+                    {
+                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(fullName);
+                        // _engine.DebuggedProcess.VariableNameAddressMap.Remove(fullName + "," + pbstrAddress);
+                    }
+                    else
+                    {
+                        _engine.DebuggedProcess.DataBreakpointVariables.Add(fullName);
+                        _engine.DebuggedProcess.VariableNameAddressMap.Add(fullName + "," + pbstrAddress);
+                    }
+                }
+                return Constants.S_OK;
+            }
+            catch (Exception e)
+            {
+                pbstrAddress = null;
+                pSize = 0;
+                pbstrDisplayName = null;
+                pbstrError = e.Message;
             }
             return Constants.E_FAIL;
         }

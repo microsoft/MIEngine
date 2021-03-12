@@ -13,7 +13,7 @@ using System.Globalization;
 
 namespace Microsoft.MIDebugEngine
 {
-    public interface ProcessSequence
+    public interface IProcessSequence
     {
         Task Enable();
         /// <summary>
@@ -26,7 +26,7 @@ namespace Microsoft.MIDebugEngine
         void ThreadCreatedEvent(Results results);
     }
 
-    internal class DebugUnixChild : ProcessSequence
+    internal class DebugUnixChild : IProcessSequence
     {
         private enum State
         {
@@ -64,7 +64,7 @@ namespace Microsoft.MIDebugEngine
                 uint inf = _process.InferiorByPid(state.Newpid);
                 if (inf != 0)
                 {
-                    await _process.ConsoleCmdAsync("inferior " + inf.ToString(), allowWhileRunning: false);
+                    await _process.ConsoleCmdAsync("inferior " + inf.ToString(CultureInfo.InvariantCulture), allowWhileRunning: false);
                     if (!string.IsNullOrEmpty(_mainBreak))
                     {
                         await _process.MICommandFactory.BreakDelete(_mainBreak);
@@ -84,7 +84,7 @@ namespace Microsoft.MIDebugEngine
                 uint inf = _process.InferiorByPid(state.Newpid);
                 if (inf != 0)
                 {
-                    await _process.ConsoleCmdAsync("inferior " + inf.ToString(), allowWhileRunning: false);
+                    await _process.ConsoleCmdAsync("inferior " + inf.ToString(CultureInfo.InvariantCulture), allowWhileRunning: false);
                     await SetBreakAtMain();
                     state.State = State.AtExec;
                     await _process.MICommandFactory.ExecContinue();  // run the child
@@ -100,7 +100,7 @@ namespace Microsoft.MIDebugEngine
                 uint inf = _process.InferiorByPid(state.Newpid);
                 if (inf != 0)
                 {
-                    await _process.ConsoleCmdAsync("inferior " + inf.ToString(), allowWhileRunning: false);
+                    await _process.ConsoleCmdAsync("inferior " + inf.ToString(CultureInfo.InvariantCulture), allowWhileRunning: false);
                     await _process.MICommandFactory.ExecContinue();  // run the child
                 }
             }
@@ -147,7 +147,7 @@ namespace Microsoft.MIDebugEngine
             uint inf = _process.InferiorByPid(state.Newpid);
             if (inf == 0)
                 return false;    // cannot process the child
-            await _process.ConsoleCmdAsync("inferior " + inf.ToString(), allowWhileRunning: false);
+            await _process.ConsoleCmdAsync("inferior " + inf.ToString(CultureInfo.InvariantCulture), allowWhileRunning: false);
             await _process.MICommandFactory.TargetDetach();     // detach from the child
             await _process.ConsoleCmdAsync("inferior 1", allowWhileRunning: false);
             return true;

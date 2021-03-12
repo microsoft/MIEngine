@@ -1,0 +1,50 @@
+# NuGetToolInstaller
+# 
+# Acquires a specific version of NuGet from the internet or the tools cache and adds it to the PATH. Use
+# this task to change the version of NuGet used in the NuGet tasks.
+# 
+# Version: 1.179.0
+# 
+# Reference: https://docs.microsoft.com/azure/devops/pipelines/tasks/tool/nuget
+# Task.json: https://github.com/microsoft/azure-pipelines-tasks/raw/master/Tasks/NuGetToolInstallerV1/task.json
+---
+parameters:
+  # region Step Configurations
+  
+  displayName: 'Install NuGet'
+  enabled: true
+  continueOnError: false
+  condition: succeeded()
+  timeoutInMinutes: 0
+  
+  # endregion
+  
+  # region Advanced
+  
+  # Version of NuGet.exe to install
+  # 
+  # A version or version range that specifies the NuGet version to make available on the path. Use x as a
+  # wildcard. See the [list of available NuGet versions](http://dist.nuget.org/tools.json).If you want to
+  # match a pre-release version, the specification must contain a major, minor, patch, and pre-release version
+  # from the list above.Examples: 4.x, 3.3.x, 2.8.6, >=4.0.0-0If unspecified, a version will be chosen automatically.
+  versionSpec : "" # Optional
+  
+  # Always check for new versions
+  # 
+  # Always check for and download the latest available version of NuGet.exe which satisfies the version spec.Enabling
+  # this option could cause unexpected build breaks when a new version of NuGet is released.
+  checkLatest : false # Optional
+  
+  # endregion
+  
+steps:
+- task: NuGetToolInstaller@1
+  displayName: ${{ parameters.DisplayName }}
+  inputs:
+    versionSpec : ${{ parameters.versionSpec }}
+    checkLatest : ${{ parameters.checkLatest }}
+  enabled: ${{ parameters.enabled }}
+  condition: ${{ parameters.condition }}
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  continueOnError: ${{ parameters.continueOnError }}
+...

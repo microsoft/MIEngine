@@ -403,24 +403,24 @@ namespace Microsoft.MIDebugEngine
     {
         public const string IID = "51A94113-8788-4A54-AE15-08B74FF922D0";
 
-        public AD7ExceptionEvent(string name, string description, uint code, Guid? exceptionCategory, ExceptionBreakpointState state)
+        public AD7ExceptionEvent(string name, string description, uint code, Guid? exceptionCategory, ExceptionBreakpointStates state)
         {
             _name = name;
             _code = code;
-            _description = description ?? name;
+            _description = string.IsNullOrEmpty(description) ? name : description;
             _category = exceptionCategory ?? EngineConstants.EngineId;
 
             switch (state)
             {
-                case ExceptionBreakpointState.None:
+                case ExceptionBreakpointStates.None:
                     _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE;
                     break;
 
-                case ExceptionBreakpointState.BreakThrown:
+                case ExceptionBreakpointStates.BreakThrown:
                     _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE;
                     break;
 
-                case ExceptionBreakpointState.BreakUserHandled:
+                case ExceptionBreakpointStates.BreakUserHandled:
                     _state = enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
                     break;
 

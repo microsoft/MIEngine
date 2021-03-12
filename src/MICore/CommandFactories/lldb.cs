@@ -77,7 +77,7 @@ namespace MICore
         public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             string quoteEscapedExpression = EscapeQuotes(expression);
-            string command = string.Format("-var-create - - \"{0}\"", quoteEscapedExpression);  // use '-' to indicate that "--frame" should be used to determine the frame number
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-create - - \"{0}\"", quoteEscapedExpression);  // use '-' to indicate that "--frame" should be used to determine the frame number
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
             return results;
@@ -88,7 +88,7 @@ namespace MICore
             // This override is necessary because lldb treats any object with children as not a simple object.
             // This prevents char* and char** from returning a value when queried by -var-list-children
             // Limit the number of children expanded to 1000 in case memory is uninitialized
-            string command = string.Format("-var-list-children --all-values \"{0}\" 0 1000", variableReference);
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-list-children --all-values \"{0}\" 0 1000", variableReference);
             Results results = await _debugger.CmdAsync(command, resultClass);
 
             return results;
@@ -96,14 +96,14 @@ namespace MICore
 
         protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel)
         {
-            string threadFrameCommand = string.Format(@"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
+            string threadFrameCommand = string.Format(CultureInfo.InvariantCulture, @"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
 
             return await _debugger.CmdAsync(threadFrameCommand, exepctedResultClass);
         }
 
         protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
         {
-            string threadCommand = string.Format(@"{0} --thread {1}", command, threadId);
+            string threadCommand = string.Format(CultureInfo.InvariantCulture, @"{0} --thread {1}", command, threadId);
 
             return await _debugger.CmdAsync(threadCommand, expectedResultClass);
         }

@@ -118,7 +118,7 @@ namespace IOSDebugLauncher
                         }
                         else
                         {
-                            exceptionDispatchInfo = ExceptionDispatchInfo.Capture(new LauncherException(string.Format(LauncherResources.Error_VcRemoteUnknown, response.StatusCode.ToString())));
+                            exceptionDispatchInfo = ExceptionDispatchInfo.Capture(new LauncherException(string.Format(CultureInfo.CurrentCulture, LauncherResources.Error_VcRemoteUnknown, response.StatusCode.ToString())));
                             failureCode = Telemetry.VcRemoteFailureCode.VcRemoteUnkown.ToString();
                         }
                     }
