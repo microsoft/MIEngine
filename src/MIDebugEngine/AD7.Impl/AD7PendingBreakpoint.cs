@@ -42,12 +42,12 @@ namespace Microsoft.MIDebugEngine
         private IEnumerable<Checksum> _checksums = null;
 
         public DebuggedProcess DebuggedProcess { get { return _engine.DebuggedProcess; } }
-        public BP_REQUEST_INFO BpRequestInfo { get { return _bpRequestInfo; } }
 
         internal string BreakpointId
         {
             get { return _bp == null ? string.Empty : _bp.Number; }
         }
+        internal string AddressId { get; private set; }
 
         internal bool Enabled { get { return _enabled; } }
         internal bool Deleted { get { return _deleted; } }
@@ -239,7 +239,17 @@ namespace Microsoft.MIDebugEngine
 
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
-                                    _address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3).Split(',')[0];
+                                    string address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    if (address.Contains(","))
+                                    {
+                                        this.AddressId = address;
+                                        _address = address.Split(',')[0];
+                                    }
+                                    else
+                                    {
+                                        this.AddressId = null;
+                                        _address = address;
+                                    }
                                     _size = (uint)_bpRequestInfo.bpLocation.unionmember4;
                                     if (_condition != null)
                                     {

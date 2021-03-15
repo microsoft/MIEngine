@@ -89,22 +89,17 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
-        private static readonly string[] s_validAddressFormats = new string[] {
-            @"^0x[0-9a-fA-F]+$",
-            @"^(0x[0-9a-fA-F]+)\b"
-        };
+        static readonly Lazy<Regex> s_addressPattern = new Lazy<Regex>(() => new Regex(@"^(0x[0-9a-fA-F]+)\b"));
 
         public string Address()
         {
             // ask GDB to evaluate "&expression"
             string command = "&("+FullName()+")";
             var result = EvalDependentExpression(command);
-            for (int i = 0; i < s_validAddressFormats.Length; i++)
+            Match m = s_addressPattern.Value.Match(result);
+            if (m.Success)
             {
-                if (Regex.IsMatch(result, s_validAddressFormats[i]))
-                {
-                    return result;
-                }
+                return m.Captures[0].ToString();
             }
             string errorMessage = String.Format(CultureInfo.InvariantCulture, "Unexpected result {0} from evaluating {1}", result, command);
             throw new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", errorMessage);

@@ -4,6 +4,7 @@
 using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
+using System.Diagnostics;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -53,14 +54,15 @@ namespace Microsoft.MIDebugEngine
         {
             if (Delete() == Constants.S_OK)
             {
-                if ((enum_BP_LOCATION_TYPE)PendingBreakpoint.BpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_DATA_STRING)
+                if (this.IsDataBreakpoint)
                 {
                     lock (_engine.DebuggedProcess.DataBreakpointVariables)
                     {
-                        string addressName = HostMarshal.GetDataBreakpointStringForIntPtr(PendingBreakpoint.BpRequestInfo.bpLocation.unionmember3);
-                        if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(addressName)) // might need to expand condition
+                        string addressId = _pendingBreakpoint.AddressId;
+                        if (addressId != null)
                         {
-                            _engine.DebuggedProcess.DataBreakpointVariables.Remove(addressName);
+                            Debug.Assert(_engine.DebuggedProcess.DataBreakpointVariables.Contains(addressId));
+                            _engine.DebuggedProcess.DataBreakpointVariables.Remove(addressId);
                         }
                     }
                 }
@@ -84,19 +86,19 @@ namespace Microsoft.MIDebugEngine
         int IDebugBoundBreakpoint2.Enable(int fEnable)
         {
             Enabled = fEnable == 0 ? false : true;
-            if ((enum_BP_LOCATION_TYPE)PendingBreakpoint.BpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_DATA_STRING)
+            if (this.IsDataBreakpoint)
             {
                 lock (_engine.DebuggedProcess.DataBreakpointVariables)
                 {
-                    string addressName = HostMarshal.GetDataBreakpointStringForIntPtr(PendingBreakpoint.BpRequestInfo.bpLocation.unionmember3);
-                    bool InDataBreakpointVariables = _engine.DebuggedProcess.DataBreakpointVariables.Contains(addressName);
-                    if (Enabled && !InDataBreakpointVariables) // might need to expand condition
+                    string addressId = _pendingBreakpoint.AddressId;
+                    bool InDataBreakpointVariables = _engine.DebuggedProcess.DataBreakpointVariables.Contains(addressId);
+                    if (Enabled && !InDataBreakpointVariables)
                     {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Add(addressName);
+                        _engine.DebuggedProcess.DataBreakpointVariables.Add(addressId);
                     }
                     else if (!Enabled && InDataBreakpointVariables)
                     {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(addressName);
+                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(addressId);
                     }
                 }
             }
