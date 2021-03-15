@@ -446,7 +446,7 @@ namespace Microsoft.MIDebugEngine
             {
                 pbstrAddress = _variableInformation.Address() + "," + _variableInformation.FullName();
                 pSize = _variableInformation.Size();
-                pbstrDisplayName = _variableInformation.Name;
+                pbstrDisplayName = _variableInformation.FullName();
                 pbstrError = "";
                 return Constants.S_OK;
             }

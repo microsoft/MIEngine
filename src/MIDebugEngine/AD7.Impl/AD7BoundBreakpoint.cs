@@ -91,14 +91,17 @@ namespace Microsoft.MIDebugEngine
                 lock (_engine.DebuggedProcess.DataBreakpointVariables)
                 {
                     string addressId = _pendingBreakpoint.AddressId;
-                    bool InDataBreakpointVariables = _engine.DebuggedProcess.DataBreakpointVariables.Contains(addressId);
-                    if (Enabled && !InDataBreakpointVariables)
+                    if (addressId != null)
                     {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Add(addressId);
-                    }
-                    else if (!Enabled && InDataBreakpointVariables)
-                    {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(addressId);
+                        bool InDataBreakpointVariables = _engine.DebuggedProcess.DataBreakpointVariables.Contains(addressId);
+                        if (Enabled && !InDataBreakpointVariables)
+                        {
+                            _engine.DebuggedProcess.DataBreakpointVariables.Add(addressId);
+                        }
+                        else if (!Enabled && InDataBreakpointVariables)
+                        {
+                            _engine.DebuggedProcess.DataBreakpointVariables.Remove(addressId);
+                        }
                     }
                 }
             }
