@@ -1138,6 +1138,18 @@ namespace MICore
             }
         }
 
+        private int _hardwareBreakpointLimit;
+
+        public int HardwareBreakpointLimit
+        {
+            get { return _hardwareBreakpointLimit; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(HardwareBreakpointLimit));
+                _hardwareBreakpointLimit = value;
+            }
+        }
+
         public string GetOptionsString()
         {
             try
@@ -1727,7 +1739,13 @@ namespace MICore
 
             this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
 
-            this.RequireHardwareBreakpoints = options.RequireHardwareBreakpoints.GetValueOrDefault(false);
+            this.RequireHardwareBreakpoints = options.HardwareBreakpointInfo?.Enable ?? false;
+            this.HardwareBreakpointLimit = options.HardwareBreakpointInfo?.Limit ?? 0;
+
+            if (this.RequireHardwareBreakpoints && DebuggerMIMode == MIMode.Lldb)
+            {
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.HardwareBreakpointInfo.Limit), nameof(MIMode.Lldb)));
+            }
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
