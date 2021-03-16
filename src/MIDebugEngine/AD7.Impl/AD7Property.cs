@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using Microsoft.VisualStudio.Debugger.Interop;
+using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -41,10 +42,11 @@ namespace Microsoft.MIDebugEngine
             }
 
             DEBUG_PROPERTY_INFO propertyInfo = new DEBUG_PROPERTY_INFO();
+            string fullName = variable.FullName();
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME) != 0)
             {
-                propertyInfo.bstrFullName = variable.FullName();
+                propertyInfo.bstrFullName = fullName;
                 if (propertyInfo.bstrFullName != null)
                 {
                     propertyInfo.dwFields |= enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME;
@@ -82,12 +84,24 @@ namespace Microsoft.MIDebugEngine
                 } else
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_DATA;
-                    string fullName = variable.FullName();
-                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(fullName))
+                    if (!string.IsNullOrEmpty(fullName))
                     {
-                        if (_engine.DebuggedProcess.VariableNameAddressMap.Contains(fullName + "," + variable.Address()))
+                        lock (_engine.DebuggedProcess.DataBreakpointVariables)
                         {
-                            propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
+                            if (_engine.DebuggedProcess.DataBreakpointVariables.Any(candidate =>
+                                candidate.Length > fullName.Length
+                                && candidate.EndsWith(fullName, StringComparison.Ordinal)
+                                && candidate[candidate.Length - fullName.Length - 1] == ','))
+                            {
+                                try
+                                {
+                                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(variable.Address() + "," + fullName))
+                                    {
+                                        propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
+                                    }
+                                }
+                                catch (Exception e) { }
+                            }
                         }
                     }
                 }
@@ -430,25 +444,10 @@ namespace Microsoft.MIDebugEngine
         {
             try
             {
-                pbstrAddress = _variableInformation.Address();
+                pbstrAddress = _variableInformation.Address() + "," + _variableInformation.FullName();
                 pSize = _variableInformation.Size();
-                pbstrDisplayName = _variableInformation.Name;
+                pbstrDisplayName = _variableInformation.FullName();
                 pbstrError = "";
-
-                string fullName = _variableInformation.FullName();
-                lock (_engine.DebuggedProcess.DataBreakpointVariables)
-                {
-                    if (_engine.DebuggedProcess.DataBreakpointVariables.Contains(fullName))
-                    {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Remove(fullName);
-                        // _engine.DebuggedProcess.VariableNameAddressMap.Remove(fullName + "," + pbstrAddress);
-                    }
-                    else
-                    {
-                        _engine.DebuggedProcess.DataBreakpointVariables.Add(fullName);
-                        _engine.DebuggedProcess.VariableNameAddressMap.Add(fullName + "," + pbstrAddress);
-                    }
-                }
                 return Constants.S_OK;
             }
             catch (Exception e)

@@ -1,17 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using MICore;
-using System.Diagnostics;
 using Microsoft.DebugEngineHost;
-using System.Globalization;
+using Microsoft.VisualStudio.Debugger.Interop;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -50,6 +47,7 @@ namespace Microsoft.MIDebugEngine
         {
             get { return _bp == null ? string.Empty : _bp.Number; }
         }
+        internal string AddressId { get; private set; }
 
         internal bool Enabled { get { return _enabled; } }
         internal bool Deleted { get { return _deleted; } }
@@ -241,7 +239,17 @@ namespace Microsoft.MIDebugEngine
 
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
-                                    _address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    string address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    if (address.Contains(","))
+                                    {
+                                        this.AddressId = address;
+                                        _address = address.Split(',')[0];
+                                    }
+                                    else
+                                    {
+                                        this.AddressId = null;
+                                        _address = address;
+                                    }
                                     _size = (uint)_bpRequestInfo.bpLocation.unionmember4;
                                     if (_condition != null)
                                     {
@@ -273,6 +281,17 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
+                        if ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_DATA_STRING)
+                        {
+                            lock (_engine.DebuggedProcess.DataBreakpointVariables)
+                            {
+                                string addressName = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                if (!_engine.DebuggedProcess.DataBreakpointVariables.Contains(addressName)) // might need to expand condition
+                                {
+                                    _engine.DebuggedProcess.DataBreakpointVariables.Add(addressName);
+                                }
+                            }
+                        }
                         return Constants.S_OK;
                     }
                 }
