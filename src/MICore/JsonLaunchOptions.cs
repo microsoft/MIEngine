@@ -97,7 +97,7 @@ namespace MICore.Json.LaunchOptions
         public List<SetupCommand> SetupCommands { get; protected set; }
 
         /// <summary>
-        /// Force all breakpoints to be hardware breakpoints. Enforce an optional limit if specified. Example: "hardwareBreakpoint": { "require": true, "limit": 5 }.
+        /// Explicitly control whether hardware breakpoints are used. If an optional limit is provided, additionally restrict the number of hardware breakpoints for remote targets. Example: "hardwareBreakpoints": { "require": true, "limit": 5 }.
         /// </summary>
         [JsonProperty("hardwareBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public HardwareBreakpointInfo HardwareBreakpointInfo { get; set; }
@@ -229,7 +229,7 @@ namespace MICore.Json.LaunchOptions
         public bool Require { get; set; }
 
         /// <summary>
-        /// If provided, limit the number of hardware breakpoints to the given number. Default is 0, in which case there is no limit. This setting is only enforced with remote GDB targets.
+        /// When <see cref="Require"/> is true, restrict the number of available hardware breakpoints. Default is 0, in which case there is no limit. This setting is only enforced with remote GDB targets.
         /// </summary>
         [JsonProperty("limit", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public int? Limit { get; set; }
