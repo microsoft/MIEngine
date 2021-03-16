@@ -481,7 +481,15 @@ namespace Microsoft.MIDebugEngine
                     _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
                     {
                         _engine.DebuggedProcess.AddInternalBreakAction(
-                            () => bp.EnableAsync(_enabled, _engine.DebuggedProcess)
+                            async () => {
+                                try
+                                {
+                                    await bp.EnableAsync(_enabled, _engine.DebuggedProcess);
+                                } catch (UnexpectedMIResultException exc)
+                                {
+                                    this.SetError(new AD7ErrorBreakpoint(this, exc.MIError, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR), true);
+                                }
+                            }
                         );
                     });
                 }
