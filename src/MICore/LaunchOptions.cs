@@ -1739,7 +1739,7 @@ namespace MICore
 
             this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
 
-            this.RequireHardwareBreakpoints = options.HardwareBreakpointInfo?.Enable ?? false;
+            this.RequireHardwareBreakpoints = options.HardwareBreakpointInfo?.Require ?? false;
             this.HardwareBreakpointLimit = options.HardwareBreakpointInfo?.Limit ?? 0;
 
             if (this.HardwareBreakpointLimit > 0 && DebuggerMIMode == MIMode.Lldb)
