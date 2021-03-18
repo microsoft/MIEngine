@@ -1742,9 +1742,9 @@ namespace MICore
             this.RequireHardwareBreakpoints = options.HardwareBreakpointInfo?.Require ?? false;
             this.HardwareBreakpointLimit = options.HardwareBreakpointInfo?.Limit ?? 0;
 
-            if (this.HardwareBreakpointLimit > 0 && DebuggerMIMode == MIMode.Lldb)
+            if (this.RequireHardwareBreakpoints && DebuggerMIMode == MIMode.Lldb)
             {
-                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.HardwareBreakpointInfo.Limit), nameof(MIMode.Lldb)));
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.HardwareBreakpointInfo.Require), nameof(MIMode.Lldb)));
             }
         }
 
