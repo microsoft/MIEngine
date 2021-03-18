@@ -305,6 +305,12 @@ namespace MICore.Json.LaunchOptions
         [JsonProperty("avoidWindowsConsoleRedirection", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool? AvoidWindowsConsoleRedirection { get; set; }
 
+        /// <summary>
+        /// Optional parameter. If true, the debugger should stop after connecting to the target.
+        /// </summary>
+        [JsonProperty("stopAtConnect", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? StopAtConnect { get; set; }
+
         #endregion
 
         #region Constructors
@@ -345,7 +351,8 @@ namespace MICore.Json.LaunchOptions
             string coreDumpPath = null,
             bool? externalConsole = null,
             Dictionary<string, object> sourceFileMap = null,
-            PipeTransport pipeTransport = null)
+            PipeTransport pipeTransport = null,
+            bool? stopAtConnect = null)
         {
             this.Program = program;
             this.Args = args;
@@ -374,6 +381,7 @@ namespace MICore.Json.LaunchOptions
             this.ExternalConsole = externalConsole;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
+            this.StopAtConnect = stopAtConnect;
         }
 
         #endregion
@@ -485,6 +493,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("pipeArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<string> PipeArgs { get; private set; }
+
+        /// <summary>
+        /// Command line arguments passed to the pipe program to execute a remote command.
+        /// </summary>
+        [JsonProperty("pipeCmd", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<string> PipeCmd { get; private set; }
 
         /// <summary>
         /// The full path to the debugger on the target machine, for example /usr/bin/gdb.

@@ -106,6 +106,7 @@ namespace MICore
             string pipeCwd = pipeTransport.PipeCwd;
             string pipeProgram = pipeTransport.PipeProgram;
             List<string> pipeArgs = pipeTransport.PipeArgs;
+            List<string> pipeCmd = pipeTransport.PipeCmd;
             string debuggerPath = pipeTransport.DebuggerPath;
             bool quoteArgs = pipeTransport.QuoteArgs.GetValueOrDefault(true);
             Dictionary<string, string> pipeEnv = pipeTransport.PipeEnv;
@@ -128,6 +129,7 @@ namespace MICore
             {
                 pipeProgram = platformSpecificTransportOptions.PipeProgram ?? pipeProgram;
                 pipeArgs = platformSpecificTransportOptions.PipeArgs ?? pipeArgs;
+                pipeCmd = platformSpecificTransportOptions.PipeCmd ?? pipeCmd;
                 pipeCwd = platformSpecificTransportOptions.PipeCwd ?? pipeCwd;
                 pipeEnv = platformSpecificTransportOptions.PipeEnv ?? pipeEnv;
                 debuggerPath = platformSpecificTransportOptions.DebuggerPath ?? pipeTransport.DebuggerPath;
@@ -137,7 +139,7 @@ namespace MICore
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
                 pipePath: pipeProgram,
                 pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs),
-                pipeCommandArguments: ParseArguments(pipeArgs, quoteArgs),
+                pipeCommandArguments: ParseArguments(pipeCmd??pipeArgs, quoteArgs),
                 pipeCwd: pipeCwd,
                 pipeEnvironment: GetEnvironmentEntries(pipeEnv)
             );
@@ -1124,6 +1126,21 @@ namespace MICore
             }
         }
 
+        private bool _stopAtConnect;
+
+        /// <summary>
+        /// Optional parameter. If true, the debugger should stop after connecting to the target.
+        /// </summary>
+        public bool StopAtConnect
+        {
+            get { return _stopAtConnect; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(StopAtConnect));
+                _stopAtConnect = value;
+            }
+        }
+
         public string GetOptionsString()
         {
             try
@@ -1905,10 +1922,12 @@ namespace MICore
             }
 
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(launch.Environment));
+            this.StopAtConnect = launch.StopAtConnect ?? false;
         }
 
         public void InitializeAttachOptions(Json.LaunchOptions.AttachOptions attach)
         {
+            this.DebuggerMIMode = ConvertMIModeString(RequireAttribute(attach.MIMode, nameof(attach.MIMode)));
             this.ProcessId = attach.ProcessId;
         }
 

@@ -1,18 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MICore;
+using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.DAP;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
 using System.Diagnostics;
-using System.Threading;
-using MICore;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using System.Globalization;
-using Microsoft.VisualStudio.Debugger.Interop.DAP;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -41,6 +38,8 @@ namespace Microsoft.MIDebugEngine
         bool IsReadOnly();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         bool IsPreformatted { get; set; }
+        string Address();
+        uint Size();
     }
 
     internal class SimpleVariableInformation
@@ -90,6 +89,28 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
+        static readonly Lazy<Regex> s_addressPattern = new Lazy<Regex>(() => new Regex(@"^(0x[0-9a-fA-F]+)\b"));
+
+        public string Address()
+        {
+            // ask GDB to evaluate "&expression"
+            string command = "&("+FullName()+")";
+            var result = EvalDependentExpression(command);
+            Match m = s_addressPattern.Value.Match(result);
+            if (m.Success)
+            {
+                return m.Captures[0].ToString();
+            }
+            string errorMessage = String.Format(CultureInfo.InvariantCulture, "Unexpected result {0} from evaluating {1}", result, command);
+            throw new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", errorMessage);
+        }
+
+        public uint Size()
+        {
+            // ask GDB to evaluate "sizeof(expression)"
+            string command = "sizeof("+FullName()+")";
+            return Convert.ToUInt32(EvalDependentExpression(command), CultureInfo.InvariantCulture);
+        }
 
         private static bool IsPointer(string typeName)
         {
@@ -127,6 +148,9 @@ namespace Microsoft.MIDebugEngine
                             }
                         }
                         _fullname = '(' + parentName + ')' + op + _strippedName;
+                        break;
+                    case NodeType.Dereference:
+                        _fullname = "*(" + _parent.FullName() + ")";
                         break;
                     case NodeType.BaseClass:
                     case NodeType.AccessQualifier:
@@ -269,6 +293,10 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.AnonymousUnion;
             }
+            else if (Name.Length > 1 && Name[0] == '*')
+            {
+                VariableNodeType = NodeType.Dereference;
+            }
             else
             {
                 _strippedName = Name;
@@ -318,6 +346,7 @@ namespace Microsoft.MIDebugEngine
         {
             Root,
             Field,
+            Dereference,
             ArrayElement,
             BaseClass,
             AccessQualifier,

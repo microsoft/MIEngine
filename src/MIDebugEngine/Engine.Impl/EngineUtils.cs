@@ -145,6 +145,16 @@ namespace Microsoft.MIDebugEngine
 
             private static readonly Entry[] s_X86Registers = new Entry[]
             {
+                new Entry( "rax", false, "CPU" ),
+                new Entry( "rcx", false, "CPU" ),
+                new Entry( "rdx", false, "CPU" ),
+                new Entry( "rbx", false, "CPU" ),
+                new Entry( "rsp", false, "CPU" ),
+                new Entry( "rbp", false, "CPU" ),
+                new Entry( "rsi", false, "CPU" ),
+                new Entry( "rdi", false, "CPU" ),
+                new Entry( "rip", false, "CPU" ),
+                new Entry( "r[0-9]+$", true, "CPU" ),
                 new Entry( "eax", false, "CPU" ),
                 new Entry( "ecx", false, "CPU" ),
                 new Entry( "edx", false, "CPU" ),
@@ -155,46 +165,26 @@ namespace Microsoft.MIDebugEngine
                 new Entry( "edi", false, "CPU" ),
                 new Entry( "eip", false, "CPU" ),
                 new Entry( "eflags", false, "CPU" ),
-                new Entry( "cs", false, "CPU" ),
-                new Entry( "ss", false, "CPU" ),
-                new Entry( "ds", false, "CPU" ),
-                new Entry( "es", false, "CPU" ),
-                new Entry( "fs", false, "CPU" ),
-                new Entry( "gs", false, "CPU" ),
-                new Entry( "st", true, "CPU" ),
-                new Entry( "fctrl", false, "CPU" ),
-                new Entry( "fstat", false, "CPU" ),
-                new Entry( "ftag", false, "CPU" ),
-                new Entry( "fiseg", false, "CPU" ),
-                new Entry( "fioff", false, "CPU" ),
-                new Entry( "foseg", false, "CPU" ),
-                new Entry( "fooff", false, "CPU" ),
-                new Entry( "fop", false, "CPU" ),
-                new Entry( "mxcsr", false, "CPU" ),
-                new Entry( "orig_eax", false, "CPU" ),
-                new Entry( "al", false, "CPU" ),
-                new Entry( "cl", false, "CPU" ),
-                new Entry( "dl", false, "CPU" ),
-                new Entry( "bl", false, "CPU" ),
-                new Entry( "ah", false, "CPU" ),
-                new Entry( "ch", false, "CPU" ),
-                new Entry( "dh", false, "CPU" ),
-                new Entry( "bh", false, "CPU" ),
-                new Entry( "ax", false, "CPU" ),
-                new Entry( "cx", false, "CPU" ),
-                new Entry( "dx", false, "CPU" ),
-                new Entry( "bx", false, "CPU" ),
-                new Entry( "bp", false, "CPU" ),
-                new Entry( "si", false, "CPU" ),
-                new Entry( "di", false, "CPU" ),
-                new Entry( "mm[0-7]", true, "MMX" ),
-                new Entry( "xmm[0-7]ih", true, "SSE2" ),
-                new Entry( "xmm[0-7]il", true, "SSE2" ),
-                new Entry( "xmm[0-7]dh", true, "SSE2" ),
-                new Entry( "xmm[0-7]dl", true, "SSE2" ),
-                new Entry( "xmm[0-7][0-7]", true, "SSE" ),
-                new Entry( "ymm.+", true, "AVX" ),
+                new Entry( "cs", false, "Segs" ),
+                new Entry( "ss", false, "Segs" ),
+                new Entry( "ds", false, "Segs" ),
+                new Entry( "es", false, "Segs" ),
+                new Entry( "fs", false, "Segs" ),
+                new Entry( "gs", false, "Segs" ),
+                new Entry( "st", true, "FPU" ),
+                new Entry( "fctrl", false, "FPU" ),
+                new Entry( "fstat", false, "FPU" ),
+                new Entry( "ftag", false, "FPU" ),
+                new Entry( "fiseg", false, "FPU" ),
+                new Entry( "fioff", false, "FPU" ),
+                new Entry( "foseg", false, "FPU" ),
+                new Entry( "fooff", false, "FPU" ),
+                new Entry( "fop", false, "FPU" ),
+                new Entry( "mxcsr", false, "SSE" ),
+                new Entry( "xmm[0-9]+", true, "SSE" ),
+                new Entry( "ymm[0-9]+", true, "AVX" ),
                 new Entry( "mm[0-7][0-7]", true, "AMD3DNow" ),
+                new Entry( "mm[0-7]", true, "MMX" ),
             };
 
             private static readonly Entry[] s_allRegisters = new Entry[]
@@ -206,11 +196,11 @@ namespace Microsoft.MIDebugEngine
             {
                 // TODO: more robust mechanism for determining processor architecture
                 RegisterNameMap map = new RegisterNameMap();
-                if (registerNames[0][0] == 'r') // registers are prefixed with 'r', assume ARM and initialize its register sets
+                if (registerNames.Contains("lr"))
                 {
                     map._map = s_arm32Registers;
                 }
-                else if (registerNames[0][0] == 'e') // x86 register set
+                else if (registerNames.Contains("eax")) // x86 register set
                 {
                     map._map = s_X86Registers;
                 }
