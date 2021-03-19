@@ -1,12 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop;
+using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -54,7 +52,23 @@ namespace Microsoft.MIDebugEngine
         // Called when the breakpoint is being deleted by the user.
         int IDebugBoundBreakpoint2.Delete()
         {
-            return Delete();
+            if (Delete() == Constants.S_OK)
+            {
+                if (this.IsDataBreakpoint)
+                {
+                    lock (_engine.DebuggedProcess.DataBreakpointVariables)
+                    {
+                        string addressId = _pendingBreakpoint.AddressId;
+                        if (addressId != null)
+                        {
+                            Debug.Assert(_engine.DebuggedProcess.DataBreakpointVariables.Contains(addressId));
+                            _engine.DebuggedProcess.DataBreakpointVariables.Remove(addressId);
+                        }
+                    }
+                }
+                return Constants.S_OK;
+            }
+            return Constants.E_FAIL;
         }
 
         //called by the AD7 Entry Point and by the Detach code path to clean up breakpoints on detach
@@ -72,6 +86,25 @@ namespace Microsoft.MIDebugEngine
         int IDebugBoundBreakpoint2.Enable(int fEnable)
         {
             Enabled = fEnable == 0 ? false : true;
+            if (this.IsDataBreakpoint)
+            {
+                lock (_engine.DebuggedProcess.DataBreakpointVariables)
+                {
+                    string addressId = _pendingBreakpoint.AddressId;
+                    if (addressId != null)
+                    {
+                        bool InDataBreakpointVariables = _engine.DebuggedProcess.DataBreakpointVariables.Contains(addressId);
+                        if (Enabled && !InDataBreakpointVariables)
+                        {
+                            _engine.DebuggedProcess.DataBreakpointVariables.Add(addressId);
+                        }
+                        else if (!Enabled && InDataBreakpointVariables)
+                        {
+                            _engine.DebuggedProcess.DataBreakpointVariables.Remove(addressId);
+                        }
+                    }
+                }
+            }
             return Constants.S_OK;
         }
 

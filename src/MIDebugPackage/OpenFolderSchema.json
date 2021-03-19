@@ -170,6 +170,10 @@
               },
               "pipeTransport": {
                 "$ref": "#/definitions/cpp_schema/definitions/pipeTransportOptions"
+              },
+              "stopAtConnect": {
+                "type": "boolean",
+                "description": "If true, the debugger should stop after connecting to the target. If false, the debugger will continue after connecting. \nDefaults to false."
               }
             },
             "definitions": {
