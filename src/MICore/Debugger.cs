@@ -906,7 +906,7 @@ namespace MICore
 
         private Task<Results> CmdBreakUnix(int debugeePid, ResultClass expectedResultClass)
         {
-            // Send sigint to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
+            // Send sigtrap to the debuggee process. This is the equivalent of hitting ctrl-c on the console.
             // This will cause gdb to async-break. This is necessary because gdb does not support async break
             // when attached.
             UnixUtilities.Interrupt(debugeePid);
