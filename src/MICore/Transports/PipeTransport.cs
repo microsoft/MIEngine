@@ -41,7 +41,7 @@ namespace MICore
                 return false;
             }
 
-            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -2 {0}", pid);
+            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -5 {0}", pid);
             return WrappedExecuteSyncCommand(MICoreResources.Info_KillingPipeProcess, killCmd, Timeout.Infinite) == 0;
         }
 

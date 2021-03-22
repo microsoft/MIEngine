@@ -634,7 +634,8 @@ namespace MICore
 
             if (results.TryFindString("reason") == "signal-received")
             {
-                if (results.TryFindString("signal-name") == "SIGINT")
+                if (results.TryFindString("signal-name") == "SIGINT" || 
+                    results.TryFindString("signal-name") == "SIGTRAP")
                 {
                     isAsyncBreak = true;
                 }

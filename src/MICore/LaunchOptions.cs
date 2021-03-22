@@ -1126,6 +1126,21 @@ namespace MICore
             }
         }
 
+        private bool _stopAtConnect;
+
+        /// <summary>
+        /// Optional parameter. If true, the debugger should stop after connecting to the target.
+        /// </summary>
+        public bool StopAtConnect
+        {
+            get { return _stopAtConnect; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(StopAtConnect));
+                _stopAtConnect = value;
+            }
+        }
+
         private bool _requireHardwareBreakpoints = false;
 
         public bool RequireHardwareBreakpoints
@@ -1938,6 +1953,7 @@ namespace MICore
             }
 
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(launch.Environment));
+            this.StopAtConnect = launch.StopAtConnect ?? false;
         }
 
         public void InitializeAttachOptions(Json.LaunchOptions.AttachOptions attach)

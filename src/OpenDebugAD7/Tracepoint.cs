@@ -162,7 +162,7 @@ namespace OpenDebugAD7
                                 hr = pDocumentContext.GetStatementRange(textPosBeg, textPosEnd);
                                 if (hr >= 0)
                                 {
-                                    return string.Format(CultureInfo.InvariantCulture, "{0}({1})", fileName, textPosBeg[0].dwLine + 1);
+                                    return string.Format(CultureInfo.InvariantCulture, "{0}:{1}", fileName, textPosBeg[0].dwLine + 1);
                                 }
                             }
                         }
