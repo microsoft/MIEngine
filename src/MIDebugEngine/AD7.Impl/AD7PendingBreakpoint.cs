@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -159,6 +161,33 @@ namespace Microsoft.MIDebugEngine
 
         #region IDebugPendingBreakpoint2 Members
 
+        public string EvalDependentExpression(string expr)
+        {
+            string val = null;
+            Task eval = Task.Run(async () =>
+            {
+                val = await _engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(expr, 0, 0);
+            });
+            eval.Wait();
+            return val;
+        }
+
+        static readonly Lazy<Regex> s_addressPattern = new Lazy<Regex>(() => new Regex(@"^(0x[0-9a-fA-F]+)\b"));
+
+        public string Address(string fullName)
+        {
+            // ask GDB to evaluate "&expression"
+            string command = "&(" + fullName + ")";
+            var result = EvalDependentExpression(command);
+            Match m = s_addressPattern.Value.Match(result);
+            if (m.Success)
+            {
+                return m.Captures[0].ToString();
+            }
+            string errorMessage = String.Format(CultureInfo.InvariantCulture, "Unexpected result {0} from evaluating {1}", result, command);
+            throw new UnexpectedMIResultException(_engine.DebuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", errorMessage);
+        }
+
         // Binds this pending breakpoint to one or more code locations.
         int IDebugPendingBreakpoint2.Bind()
         {
@@ -239,16 +268,25 @@ namespace Microsoft.MIDebugEngine
 
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
-                                    string address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
-                                    if (address.Contains(","))
+                                    string address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3); // this returns "*test" and "&test" (expression, broken) or "0x7ffc7e9513f0" (address, working)
+                                    // test -- need to delete; insert something here
+                                    // need to check for 0x => if no 0x, get the address
+                                    if (address.Contains("0x"))
                                     {
-                                        this.AddressId = address;
-                                        _address = address.Split(',')[0];
-                                    }
-                                    else
+                                        if (address.Contains(","))
+                                        {
+                                            this.AddressId = address;
+                                            _address = address.Split(',')[0];
+                                        }
+                                        else
+                                        {
+                                            this.AddressId = null;
+                                            _address = address;
+                                        }
+                                    } else
                                     {
                                         this.AddressId = null;
-                                        _address = address;
+                                        _address = Address(address);
                                     }
                                     _size = (uint)_bpRequestInfo.bpLocation.unionmember4;
                                     if (_condition != null)
