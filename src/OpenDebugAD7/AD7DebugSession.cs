@@ -2876,14 +2876,16 @@ namespace OpenDebugAD7
                     if (pendingBreakpoint.GetBreakpointRequest(out breakpointRequest) == 0)
                     {
                         string errorMsg = string.Empty;
+                        enum_BP_ERROR_TYPE errorType = enum_BP_ERROR_TYPE.BPET_NONE;
 
                         IDebugErrorBreakpointResolution2 errorBreakpointResolution;
                         if (errorBreakpoint.GetBreakpointResolution(out errorBreakpointResolution) == 0)
                         {
                             BP_ERROR_RESOLUTION_INFO[] bpInfo = new BP_ERROR_RESOLUTION_INFO[1];
-                            if (errorBreakpointResolution.GetResolutionInfo(enum_BPERESI_FIELDS.BPERESI_MESSAGE, bpInfo) == 0)
+                            if (errorBreakpointResolution.GetResolutionInfo(enum_BPERESI_FIELDS.BPERESI_MESSAGE | enum_BPERESI_FIELDS.BPERESI_TYPE, bpInfo) == 0)
                             {
                                 errorMsg = bpInfo[0].bstrMessage;
+                                errorType = bpInfo[0].dwType;
                             }
                         }
 
@@ -2930,7 +2932,7 @@ namespace OpenDebugAD7
                             outputMessage = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_FunctionBreakpoint, ad7BPRequest.FunctionPosition.Name, errorMsg);
                         }
 
-                        if (!string.IsNullOrEmpty(outputMessage))
+                        if (!string.IsNullOrEmpty(outputMessage) && ((errorType & enum_BP_ERROR_TYPE.BPET_SEV_MASK) > enum_BP_ERROR_TYPE.BPET_SEV_LOW))
                         {
                             SendMessageEvent(MessagePrefix.Error, outputMessage);
                         }
