@@ -325,6 +325,12 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task BindAsync()
         {
+            if (_engine.DebuggedProcess.LaunchOptions.RequireHardwareBreakpoints)
+            {
+                // Flush pending deletes so the debugger knows how many hardware breakpoint registers are still occupied
+                await _bpManager.DeleteBreakpointsPendingDeletion();
+            }
+
             if (CanBind())
             {
                 PendingBreakpoint.BindResult bindResult;
@@ -416,13 +422,6 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // Returns true when deletes can be deferred for later deletion
-        private bool PendingDeletesEnabled()
-        {
-            // Hardware breakpoint deletion should not be deferred because the debugger needs to keep an accurate count of the number of used hardware breakpoint registers.
-            return !_engine.DebuggedProcess.LaunchOptions.RequireHardwareBreakpoints;
-        }
-
         // Deletes this pending breakpoint and all breakpoints bound from it.
         int IDebugPendingBreakpoint2.Delete()
         {
@@ -435,17 +434,7 @@ namespace Microsoft.MIDebugEngine
                 _deleted = true;
                 if (_engine.DebuggedProcess.ProcessState != ProcessState.Stopped && !_engine.DebuggedProcess.MICommandFactory.AllowCommandsWhileRunning())
                 {
-                    if (!PendingDeletesEnabled() && _bp != null)
-                    {
-                        _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
-                        {
-                            _engine.DebuggedProcess.AddInternalBreakAction(
-                                () => _bp.DeleteAsync(_engine.DebuggedProcess));
-                        });
-                    } else
-                    {
-                        _pendingDelete = true;
-                    }
+                    _pendingDelete = true;
                 }
                 else if (_bp != null)
                 {
