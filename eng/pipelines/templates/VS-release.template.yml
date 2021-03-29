@@ -4,6 +4,10 @@ steps:
 
 - template: ../tasks/NuGetToolInstaller.yml
 
+- task: NuGetAuthenticate@0
+  inputs:
+    forceReinstallCredentialProvider: true
+
 - template: ../tasks/MicroBuildSigningPlugin.yml
 
 - template: ../tasks/MicroBuildLocalizationPlugin.yml

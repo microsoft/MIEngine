@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>MakePIAPortable</RootNamespace>
     <AssemblyName>MakePIAPortable</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>

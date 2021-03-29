@@ -17,7 +17,7 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <AppConfig Condition="'$(IsXPlat)' == 'true'">App.VSCode.config</AppConfig>
     <AppConfig Condition="'$(IsXPlat)' == 'false'">App.VS.config</AppConfig>
   </PropertyGroup>
@@ -74,7 +74,7 @@
 
   <ItemGroup Label="NuGet Packages">
     <!-- TODO: Include in VSIX. (Optional since we don't F5 the DebugAdapterHost.Launch scenario.) -->
-    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="16.7.30328.74" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />

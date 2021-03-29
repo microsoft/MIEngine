@@ -21,7 +21,7 @@
     <DebugType>pdbonly</DebugType>
     <NonShipping>true</NonShipping>
     <EnableSourceLink>false</EnableSourceLink>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>false</Optimize>
@@ -60,9 +60,14 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
 
+  <Import Project="..\..\build\Debugger.PIAs.NonPortable.Packages.settings.targets" />
+
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
+  </ItemGroup>
+
+  <ItemGroup Label="Missing Package Override">
+    <PackageReference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime" Version="17.0.0-preview-1-31124-062" />
   </ItemGroup>
 
   <PropertyGroup>

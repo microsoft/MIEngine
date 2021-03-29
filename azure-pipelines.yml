@@ -5,6 +5,10 @@ jobs:
 - job: Debug
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -30,6 +34,10 @@ jobs:
 - job: Release
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -55,6 +63,10 @@ jobs:
 - job: DesktopDebug
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -68,6 +80,10 @@ jobs:
 - job: DesktopRelease
   pool: 'Hosted Windows 2019 with VS2019'
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -83,6 +99,10 @@ jobs:
   variables:
     TEST_LAB_BUILD: 'true'
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -98,6 +118,10 @@ jobs:
   variables:
     TEST_LAB_BUILD: 'true'
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
