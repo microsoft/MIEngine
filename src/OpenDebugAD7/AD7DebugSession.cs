@@ -2932,7 +2932,7 @@ namespace OpenDebugAD7
                             outputMessage = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_FunctionBreakpoint, ad7BPRequest.FunctionPosition.Name, errorMsg);
                         }
 
-                        if (!string.IsNullOrEmpty(outputMessage) && ((errorType & enum_BP_ERROR_TYPE.BPET_SEV_MASK) > enum_BP_ERROR_TYPE.BPET_SEV_LOW))
+                        if (!string.IsNullOrEmpty(outputMessage) && ((errorType & enum_BP_ERROR_TYPE.BPET_TYPE_ERROR) != 0))
                         {
                             SendMessageEvent(MessagePrefix.Error, outputMessage);
                         }

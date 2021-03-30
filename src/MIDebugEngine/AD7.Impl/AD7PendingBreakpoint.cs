@@ -360,7 +360,7 @@ namespace Microsoft.MIDebugEngine
                     }
                     if (bindResult.BoundBreakpoints == null || bindResult.BoundBreakpoints.Count == 0)
                     {
-                        this.SetError(new AD7ErrorBreakpoint(this, bindResult.ErrorMessage), true);
+                        this.SetError(new AD7ErrorBreakpoint(this, bindResult.ErrorMessage, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR), true);
                     }
                     else
                     {
