@@ -393,6 +393,8 @@ namespace Microsoft.MIDebugEngine
             return s_bpLongBindTimeout;
         }
 
+        public int GetBPLongEnableTimeout() => GetBPLongBindTimeout();
+
         // Informs a DE that the program specified has been atypically terminated and that the DE should
         // clean up all references to the program and send a program destroy event.
         public int DestroyProgram(IDebugProgram2 pProgram)

@@ -471,20 +471,35 @@ namespace Microsoft.MIDebugEngine
                 PendingBreakpoint bp = _bp;
                 if (bp != null)
                 {
+                    Task enableTask = null;
                     _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
                     {
-                        _engine.DebuggedProcess.AddInternalBreakAction(
-                            async () => {
-                                try
-                                {
-                                    await bp.EnableAsync(_enabled, _engine.DebuggedProcess);
-                                } catch (UnexpectedMIResultException exc)
-                                {
-                                    this.SetError(new AD7ErrorBreakpoint(this, exc.MIError, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR), true);
-                                }
-                            }
+                        enableTask = _engine.DebuggedProcess.AddInternalBreakAction(
+                            () => bp.EnableAsync(_enabled, _engine.DebuggedProcess)
                         );
                     });
+                    try
+                    {
+                        // Using similar timeout logic to what's used in Bind so we don't block too long
+                        enableTask.Wait(_engine.GetBPLongEnableTimeout());
+                        if (!enableTask.IsCompleted)
+                        {
+                            _enabled = false;
+                            this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.LongEnable, enum_BP_ERROR_TYPE.BPET_SEV_LOW | enum_BP_ERROR_TYPE.BPET_TYPE_WARNING), true);
+                            return Constants.E_FAIL;
+                        }
+                    } catch (AggregateException e)
+                    {
+                        var miException = e.GetBaseException() as UnexpectedMIResultException;
+                        if (miException != null) {
+                            string errorMessage = miException.MIError;
+                            _enabled = false;
+                            this.SetError(new AD7ErrorBreakpoint(this, errorMessage, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR), true);
+                            // explicitly send error message because VS doesn't surface the error otherwise
+                            _engine.Callback.OnError(errorMessage);
+                            return Constants.E_FAIL;
+                        }
+                    }
                 }
             }
 

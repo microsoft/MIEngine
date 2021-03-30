@@ -168,6 +168,9 @@
   <data name="LongBind" xml:space="preserve">
     <value>Attempting to bind the breakpoint....</value>
   </data>
+  <data name="LongEnable" xml:space="preserve">
+    <value>Attempting to enable the breakpoint....</value>
+  </data>
   <data name="NoSideEffectsVisualizerMessage" xml:space="preserve">
     <value>Explicit refresh required for visualized expressions</value>
   </data>

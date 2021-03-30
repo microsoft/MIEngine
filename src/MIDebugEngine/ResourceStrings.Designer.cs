@@ -238,6 +238,15 @@ namespace Microsoft.MIDebugEngine {
                 return ResourceManager.GetString("LongBind", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Attempting to enable the breakpoint.....
+        /// </summary>
+        internal static string LongEnable {
+            get {
+                return ResourceManager.GetString("LongEnable", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Failed to find thread {0} for break event.
