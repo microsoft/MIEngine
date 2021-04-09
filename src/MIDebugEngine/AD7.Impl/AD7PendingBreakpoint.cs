@@ -327,6 +327,12 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task BindAsync()
         {
+            if (IsHardwareBreakpoint)
+            {
+                // Flush pending deletes so the debugger knows how many hardware breakpoint registers are still occupied
+                await _bpManager.DeleteBreakpointsPendingDeletion();
+            }
+
             if (CanBind())
             {
                 PendingBreakpoint.BindResult bindResult;
