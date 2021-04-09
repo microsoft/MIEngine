@@ -95,6 +95,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<SetupCommand> SetupCommands { get; protected set; }
+
+        /// <summary>
+        /// Explicitly control whether hardware breakpoints are used. If an optional limit is provided, additionally restrict the number of hardware breakpoints for remote targets. Example: "hardwareBreakpoints": { "require": true, "limit": 5 }.
+        /// </summary>
+        [JsonProperty("hardwareBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public HardwareBreakpointInfo HardwareBreakpointInfo { get; set; }
     }
 
     public partial class AttachOptions : BaseOptions
@@ -125,6 +131,7 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerPath = null,
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
+            HardwareBreakpointInfo hardwareBreakpointInfo = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null,
             SymbolLoadInfo symbolLoadInfo = null)
@@ -140,6 +147,7 @@ namespace MICore.Json.LaunchOptions
             this.MiDebuggerArgs = miDebuggerArgs;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
             this.ProcessId = processId;
+            this.HardwareBreakpointInfo = hardwareBreakpointInfo;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
             this.SymbolLoadInfo = symbolLoadInfo;
@@ -205,6 +213,39 @@ namespace MICore.Json.LaunchOptions
         {
             this.LoadAll = loadAll;
             this.ExceptionList = exceptionList;
+        }
+
+        #endregion
+    }
+
+    public partial class HardwareBreakpointInfo
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// If true, always use hardware breakpoints. Default value is false.
+        /// </summary>
+        [JsonProperty("require")]
+        public bool Require { get; set; }
+
+        /// <summary>
+        /// When <see cref="Require"/> is true, restrict the number of available hardware breakpoints. Default is 0, in which case there is no limit. This setting is only enforced with remote GDB targets.
+        /// </summary>
+        [JsonProperty("limit", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public int? Limit { get; set; }
+
+        #endregion
+
+        #region Constructors
+
+        public HardwareBreakpointInfo()
+        {
+        }
+
+        public HardwareBreakpointInfo(bool require = false, int? limit = null)
+        {
+            this.Require = require;
+            this.Limit = limit;
         }
 
         #endregion
@@ -350,6 +391,7 @@ namespace MICore.Json.LaunchOptions
             int? serverLaunchTimeout = null,
             string coreDumpPath = null,
             bool? externalConsole = null,
+            HardwareBreakpointInfo hardwareBreakpointInfo = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null,
             bool? stopAtConnect = null)
@@ -379,6 +421,7 @@ namespace MICore.Json.LaunchOptions
             this.ServerLaunchTimeout = serverLaunchTimeout;
             this.CoreDumpPath = coreDumpPath;
             this.ExternalConsole = externalConsole;
+            this.HardwareBreakpointInfo = hardwareBreakpointInfo;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
             this.StopAtConnect = stopAtConnect;
