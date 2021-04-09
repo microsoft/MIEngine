@@ -55,6 +55,8 @@ namespace Microsoft.MIDebugEngine
 
         internal bool IsDataBreakpoint { get { return _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING; } }
 
+        internal bool IsHardwareBreakpoint { get { return _engine.DebuggedProcess.LaunchOptions.RequireHardwareBreakpoints; } }
+
         internal PendingBreakpoint PendingBreakpoint { get { return _bp; } }
 
         public AD7PendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, AD7Engine engine, BreakpointManager bpManager)
