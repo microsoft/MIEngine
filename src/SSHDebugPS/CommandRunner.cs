@@ -294,6 +294,7 @@ namespace Microsoft.SSHDebugPS
         {
             try
             {
+                string result = string.Empty;
                 while (!token.IsCancellationRequested)
                 {
                     char[] buffer = new char[BUFMAX];
@@ -302,10 +303,20 @@ namespace Microsoft.SSHDebugPS
 
                     if (task.Result > 0)
                     {
-                        action(new string(buffer, 0, task.Result));
+                        result += new string(buffer, 0, task.Result);
+                        if (task.Result < BUFMAX)
+                        {
+                            action(result);
+                            result = string.Empty;
+                        }
                     }
                     else
                     {
+                        if (string.IsNullOrEmpty(result))
+                        {
+                            action(result);
+                            result = string.Empty;
+                        }
                         if (checkForExitedProcess)
                         {
                             VerifyProcessExitedAndNotify();
