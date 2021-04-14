@@ -270,6 +270,11 @@ namespace Microsoft.MIDebugEngine
                             }
                         }
                     }
+
+                    if (!_enabled && IsHardwareBreakpoint) {
+                        return Constants.S_OK;
+                    }
+
                     return BindWithTimeout();
                 }
                 else
@@ -483,24 +488,24 @@ namespace Microsoft.MIDebugEngine
 
             _enabled = newValue;
 
-            // We always unbind first, even when toggling enable on, to ensure breakpoint errors show up in VS.
-            // Otherwise, a disabled breakpoint that is set before starting the debug session will not show an error when it is enabled.
-            lock (_boundBreakpoints)
-            {
-                foreach (var boundBp in _boundBreakpoints)
-                {
-                    _engine.Callback.OnBreakpointUnbound(boundBp, enum_BP_UNBOUND_REASON.BPUR_UNKNOWN);
-                }
-                (this as IDebugPendingBreakpoint2).Delete();
-                _boundBreakpoints.Clear();
-                _BPError = null;
-                 // this pending breakpoint is not actually deleted, just disabled, so override these flags
-                _deleted = false;
-            }
-
             if (_enabled)
             {
                 return BindWithTimeout();
+            }
+            else
+            {
+                lock (_boundBreakpoints)
+                {
+                    foreach (var boundBp in _boundBreakpoints)
+                    {
+                        _engine.Callback.OnBreakpointUnbound(boundBp, enum_BP_UNBOUND_REASON.BPUR_UNKNOWN);
+                    }
+                    (this as IDebugPendingBreakpoint2).Delete();
+                    _boundBreakpoints.Clear();
+                    _BPError = null;
+                     // this pending breakpoint is not actually deleted, just disabled, so override this flag
+                    _deleted = false;
+                }
             }
 
             return Constants.S_OK;
