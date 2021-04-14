@@ -51,6 +51,10 @@ namespace Microsoft.MIDebugEngine
 
         internal bool Enabled { get { return _enabled; } }
         internal bool Deleted { get { return _deleted; } }
+
+        /// <summary>
+        /// Returns true if either this breakpoint is deleted, or if this is a hardware breakpoint that has been disabled.
+        /// </summary>
         internal bool PendingDelete { get { return _pendingDelete; } }
 
         internal bool IsDataBreakpoint { get { return _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING; } }
@@ -492,7 +496,6 @@ namespace Microsoft.MIDebugEngine
                 _BPError = null;
                  // this pending breakpoint is not actually deleted, just disabled, so override these flags
                 _deleted = false;
-                _pendingDelete = false;
             }
 
             if (_enabled)
