@@ -87,12 +87,6 @@ namespace Microsoft.SSHDebugPS.SSH
             }
         }
 
-        public override void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
-        {
-            string errorMessage;
-            exitCode = ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
-        }
-
         public override int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage)
         {
             INonHostedCommand command = _remoteSystem.Shell.ExecuteCommand(commandText, timeout);
