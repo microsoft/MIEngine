@@ -72,6 +72,21 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Update="AD7Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AD7Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="AD7Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AD7Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
   <ItemGroup Label="NuGet Packages">
     <!-- TODO: Include in VSIX. (Optional since we don't F5 the DebugAdapterHost.Launch scenario.) -->
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)" />
