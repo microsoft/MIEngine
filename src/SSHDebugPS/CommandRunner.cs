@@ -312,7 +312,7 @@ namespace Microsoft.SSHDebugPS
                     }
                     else
                     {
-                        if (string.IsNullOrEmpty(result))
+                        if (!string.IsNullOrEmpty(result))
                         {
                             action(result);
                             result = string.Empty;
