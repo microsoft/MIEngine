@@ -50,18 +50,6 @@
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
 
-  <ItemGroup Label="Missing Package Override">
-    <!--The Microsoft.VisualStudio.Shell.15.0 package points at packages that don't exist. Pull in ones that do. -->
-    <PackageReference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime" Version="17.0.0-preview-1-31124-062" />
-    <PackageReference Include="Microsoft.VisualStudio.ProjectAggregator" Version="17.0.0-preview-1-31121-010" />
-  </ItemGroup>
-  
-  <ItemGroup Label="Stop Compliation Packages">
-    <!--Prevent old interop assemblies from being compiled -->
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop" Version="16.9.31023.347" ExcludeAssets="compile" PrivateAssets="compile" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="16.9.31023.347" ExcludeAssets="compile" PrivateAssets="compile" />
-  </ItemGroup>
-
   <ItemGroup>
   <Content Include="Resources\Package.ico" />
     <Content Include="OpenFolderSchema.json">

@@ -37,6 +37,45 @@ namespace MakePIAPortable
             { "System.ValueType", System_Runtime },
             { "System.Collections.Generic.IEnumerable", System_Runtime },
             { "System.Reflection.DefaultMemberAttribute", System_Runtime },
+            { "System.Reflection.AssemblyDelaySignAttribute", System_Runtime},
+            { "System.Runtime.CompilerServices.CompilationRelaxationsAttribute", System_Runtime },
+            { "System.Runtime.CompilerServices.RuntimeCompatibilityAttribute", System_Runtime },
+            { "System.Diagnostics.DebuggableAttribute", System_Runtime },
+            { "System.Reflection.AssemblyTitleAttribute", System_Runtime },
+            { "System.Runtime.Versioning.TargetFrameworkAttribute", System_Runtime },
+            { "System.Resources.SatelliteContractVersionAttribute", System_Runtime },
+            { "System.Reflection.AssemblyCompanyAttribute", System_Runtime },
+            { "System.Reflection.AssemblyConfigurationAttribute", System_Runtime },
+            { "System.Reflection.AssemblyCopyrightAttribute", System_Runtime },
+            { "System.Reflection.AssemblyFileVersionAttribute", System_Runtime },
+            { "System.Reflection.AssemblyInformationalVersionAttribute", System_Runtime },
+            { "System.Reflection.AssemblyProductAttribute", System_Runtime },
+            { "System.Runtime.InteropServices.ComVisibleAttribute", System_Runtime },
+            { "System.Runtime.InteropServices.ComSourceInterfacesAttribute", System_Runtime },
+            { "System.Runtime.InteropServices.ComEventInterfaceAttribute", System_Runtime },
+            { "System.Runtime.CompilerServices.CompilerGeneratedAttribute", System_Runtime },
+            { "System.MulticastDelegate", System_Runtime },
+            { "System.IAsyncResult", System_Runtime },
+            { "System.AsyncCallback", System_Runtime },
+            { "System.IDisposable", System_Runtime },
+            { "System.Runtime.InteropServices.ComTypes.IConnectionPointContainer", System_Runtime },
+            { "System.Collections.ArrayList", System_Runtime },
+            { "System.Runtime.InteropServices.ComTypes.IConnectionPoint", System_Runtime },
+            { "System.Runtime.CompilerServices.RuntimeHelpers", System_Runtime },
+            { "System.Array", System_Runtime },
+            { "System.RuntimeFieldHandle", System_Runtime },
+            { "System.Threading.Monitor", System_Runtime },
+            { "System.Runtime.InteropServices.Marshal", System_Runtime },
+            { "System.GC", System_Runtime },
+            { "System.Exception", System_Runtime },
+            { "System.Collections.IEnumerable", System_Runtime },
+            { "System.Collections.IEnumerator", System_Runtime },
+            { "System.DateTime", System_Runtime },
+            { "System.ObsoleteAttribute", System_Runtime },
+            { "System.Runtime.InteropServices.InAttribute", System_Runtime },
+            { "System.Runtime.InteropServices.ComTypes.ITypeLib", System_Runtime },
+            { "System.Runtime.InteropServices.TypeIdentifierAttribute", System_Runtime },
+            { "System.Runtime.InteropServices.TypeLibFuncAttribute", System_Runtime },
 
             // System.Runtime.InteropServices
             { "System.Runtime.InteropServices.ClassInterfaceAttribute", System_Runtime_InteropServices },
@@ -45,7 +84,7 @@ namespace MakePIAPortable
             { "System.Runtime.InteropServices.ComInterfaceType", System_Runtime_InteropServices },
             { "System.Runtime.InteropServices.DispIdAttribute", System_Runtime_InteropServices },
             { "System.Runtime.InteropServices.GuidAttribute", System_Runtime_InteropServices},
-            { "System.Runtime.InteropServices.InterfaceTypeAttribute", System_Runtime_InteropServices }
+            { "System.Runtime.InteropServices.InterfaceTypeAttribute", System_Runtime_InteropServices },
         };
 
         static int Main(string[] args)
@@ -247,11 +286,22 @@ namespace MakePIAPortable
         {
             return line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(") ||
                 line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.ComConversionLossAttribute::.ctor()") ||
-                line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.TypeLibTypeAttribute::.ctor(");
+                line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.TypeLibTypeAttribute::.ctor(") ||
+                line.Contains(".custom instance void [mscorlib]System.Runtime.CompilerServices.IsReadOnlyAttribute::.ctor(") || 
+                line.Contains(".custom instance void [mscorlib]System.Runtime.CompilerServices.DateTimeConstantAttribute::.ctor(");
         }
 
         private static void SkipCustomAttribute(string firstLine, InputFile inputFile)
         {
+            // Handle cases where the custom attribute ends on the same line, but with trailing comments.
+            // E.g.
+            //    .custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = ( 01 00 08 4F 4C 45 2E 42 4F 4F 4C 00 00 )          // ...OLE.BOOL..
+            int startOfCommentIndex = firstLine.IndexOf("//", StringComparison.Ordinal);
+            if (startOfCommentIndex != -1)
+            {
+                firstLine = firstLine.Substring(0, startOfCommentIndex);
+            }
+
             // This is a single line attribute, no need to search for the end of it.
             if (firstLine.TrimEnd(' ', '\t').EndsWith(")", StringComparison.Ordinal))
                 return;

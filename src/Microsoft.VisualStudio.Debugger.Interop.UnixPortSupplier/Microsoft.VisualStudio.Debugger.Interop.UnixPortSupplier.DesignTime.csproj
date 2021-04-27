@@ -65,11 +65,7 @@
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>
-
-  <ItemGroup Label="Missing Package Override">
-    <PackageReference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime" Version="17.0.0-preview-1-31124-062" />
-  </ItemGroup>
-
+  
   <PropertyGroup>
     <DropSubDir>ReferenceAssemblies</DropSubDir>
   </PropertyGroup>

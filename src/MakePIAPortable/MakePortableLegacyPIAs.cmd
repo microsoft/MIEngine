@@ -29,6 +29,7 @@ set pias=%pias% Microsoft.VisualStudio.Debugger.Interop.11.0.dll
 set pias=%pias% Microsoft.VisualStudio.Debugger.Interop.12.0.dll
 set pias=%pias% Microsoft.VisualStudio.Debugger.Interop.15.0.dll
 set pias=%pias% Microsoft.VisualStudio.Debugger.Interop.16.0.dll
+set pias=%pias% Microsoft.VisualStudio.Interop.dll
 
 set PIAERROR=
 for %%i in (%pias%) do call :ProcessPIA %%i
