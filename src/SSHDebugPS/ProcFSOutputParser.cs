@@ -21,15 +21,15 @@ namespace Microsoft.SSHDebugPS
         private List<Process> _processList = new List<Process>();
         private uint _shellProcess = uint.MaxValue;
 
-        public static List<Process> Parse(string output, string username)
+        public static List<Process> Parse(string output, SystemInformation systemInformation)
         {
-            return new ProcFSOutputParser().ParseInternal(output, username);
+            return new ProcFSOutputParser().ParseInternal(output, systemInformation);
         }
 
         private ProcFSOutputParser()
         { }
 
-        private List<Process> ParseInternal(string output, string username)
+        private List<Process> ParseInternal(string output, SystemInformation systemInformation)
         {
             using (var reader = new StringReader(output))
             {
@@ -39,7 +39,7 @@ namespace Microsoft.SSHDebugPS
                     if (line == null)
                         break;
 
-                    ProcessLine(line.Trim(), username);
+                    ProcessLine(line.Trim(), systemInformation);
                 }
 
                 if (_processList.Count == 0)
@@ -56,7 +56,7 @@ namespace Microsoft.SSHDebugPS
             return _processList;
         }
 
-        private void ProcessLine(string line, string username)
+        private void ProcessLine(string line, SystemInformation systemInformation)
         {
             if (string.IsNullOrWhiteSpace(line))
                 return;
@@ -100,9 +100,12 @@ namespace Microsoft.SSHDebugPS
             }
 
             // If the passed in username is empty, then treat all processes as the same user
-            bool isSameUser = string.IsNullOrWhiteSpace(username) ? true : username.Equals(procUsername, StringComparison.Ordinal);
+            bool isSameUser = string.IsNullOrWhiteSpace(systemInformation.UserName) ? true : systemInformation.UserName.Equals(procUsername, StringComparison.Ordinal);
 
-            Process process = new Process(processId, procUsername, commandLine, isSameUser);
+            // Note:
+            //    For Flags, will need to parse /proc/[pid]/stat flags.
+            //    But at this commit, flags are unused for Linux scenarios.
+            Process process = new Process(processId, systemInformation.Architecture, /* TODO: Flags */ 0, procUsername, commandLine, isSameUser);
             _processList.Add(process);
         }
     }

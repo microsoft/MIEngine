@@ -53,16 +53,32 @@ namespace Microsoft.SSHDebugPS
     public class Process
     {
         public uint Id { get; private set; }
+        public uint Flags { get; private set; }
+        public string SystemArch { get; private set; }
         public string CommandLine { get; private set; }
         public string UserName { get; private set; }
         public bool IsSameUser { get; private set; }
 
-        public Process(uint id, string userName, string commandLine, bool isSameUser)
+        public Process(uint id, string arch, uint flags, string userName, string commandLine, bool isSameUser)
         {
             this.Id = id;
+            this.Flags = flags;
             this.UserName = userName;
             this.CommandLine = commandLine;
             this.IsSameUser = isSameUser;
+            this.SystemArch = arch;
+        }
+    }
+
+    public class SystemInformation
+    {
+        public string UserName { get; private set; }
+        public string Architecture { get; private set; }
+
+        public SystemInformation(string username, string architecture)
+        {
+            this.UserName = username;
+            this.Architecture = architecture;
         }
     }
 }

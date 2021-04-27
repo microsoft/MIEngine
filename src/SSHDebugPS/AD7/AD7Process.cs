@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -10,10 +11,12 @@ using System.Threading;
 namespace Microsoft.SSHDebugPS
 {
     [System.Diagnostics.DebuggerDisplay("{_processId}: {_commandLine}")]
-    internal class AD7Process : IDebugProcess2, IDebugProcessSecurity2, IDebugProcessEx2
+    internal class AD7Process : IDebugProcess2, IDebugProcessSecurity2, IDebugProcessEx2, IDebugUnixProcess
     {
         private readonly AD7Port _port;
         private readonly uint _processId;
+        private readonly string _systemArch;
+        private readonly uint _flags;
         private readonly string _commandLine;
         private readonly string _userName;
         private readonly bool _isSameUser;
@@ -32,6 +35,8 @@ namespace Microsoft.SSHDebugPS
             _commandLine = psProcess.CommandLine;
             _userName = psProcess.UserName;
             _isSameUser = psProcess.IsSameUser;
+            _flags = psProcess.Flags;
+            _systemArch = psProcess.SystemArch;
         }
 
         public int Attach(IDebugEventCallback2 pCallback, Guid[] rgguidSpecificEngines, uint celtSpecificEngines, int[] rghrEngineAttach)
@@ -279,6 +284,28 @@ namespace Microsoft.SSHDebugPS
             }
 
             return HR.S_OK;
+        }
+
+        string IDebugUnixProcess.GetProcessArchitecture()
+        {
+            // For Apple Silicon M1, it is possible that the process we are attaching to is being emulated as x86_64. 
+            // The process is emulated if it has process flags has P_TRANSLATED (0x20000).
+            if (_port.IsOSX() && _systemArch == "arm64")
+            {
+                if ((_flags & 0x20000) != 0)
+                {
+                    return "x86_64";
+                }
+                else
+                {
+                    return "arm64";
+                }
+            }
+            else
+            {
+                // Process architecture is the system architecture.
+                return _systemArch;
+            }
         }
     }
 }

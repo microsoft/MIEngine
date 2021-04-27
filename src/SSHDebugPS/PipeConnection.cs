@@ -108,9 +108,11 @@ namespace Microsoft.SSHDebugPS
             return commandOutput.StartsWith("Linux", StringComparison.OrdinalIgnoreCase);
         }
 
-        public bool TryGetUsername(out string username)
+        public bool TryGetSystemInformation(out SystemInformation systemInformation)
         {
-            username = string.Empty;
+            systemInformation = null;
+
+            string username = string.Empty;
             string command = "id -u -n";
             string commandOutput;
             string errorMessage;
@@ -118,25 +120,38 @@ namespace Microsoft.SSHDebugPS
             {
 
                 username = commandOutput;
-                return true;
             }
 
-            return false;
+            string architecture = string.Empty;
+            command = "uname -m";
+            if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
+            {
+
+                architecture = commandOutput;
+            }
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(architecture))
+            {
+                return false;
+            }
+
+            systemInformation = new SystemInformation(username, architecture);
+            return true;
         }
 
         public override List<Process> ListProcesses()
         {
-            string username;
-            TryGetUsername(out username);
+            SystemInformation systemInformation;
+            TryGetSystemInformation(out systemInformation);
 
             List<Process> processes;
             string psErrorMessage;
             // Try using 'ps' first
-            if (!PSListProcess(username, out psErrorMessage, out processes))
+            if (!PSListProcess(systemInformation, out psErrorMessage, out processes))
             {
                 string procErrorMessage;
                 // try using the /proc file system
-                if (!ProcFSListProcess(username, out procErrorMessage, out processes))
+                if (!ProcFSListProcess(systemInformation, out procErrorMessage, out processes))
                 {
                     StringBuilder sb = new StringBuilder();
                     sb.Append(psErrorMessage);
@@ -155,7 +170,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Query 'ps' command for a list of processes
         /// </summary>
-        private bool PSListProcess(string username, out string errorMessage, out List<Process> processes)
+        private bool PSListProcess(SystemInformation systemInformation, out string errorMessage, out List<Process> processes)
         {
             errorMessage = string.Empty;
             string commandOutput;
@@ -182,7 +197,7 @@ namespace Microsoft.SSHDebugPS
                 }
             }
 
-            processes = PSOutputParser.Parse(commandOutput, username);
+            processes = PSOutputParser.Parse(commandOutput, systemInformation);
             return true;
         }
 
@@ -191,7 +206,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Query /proc for a list of processes
         /// </summary>
-        private bool ProcFSListProcess(string username, out string errorMessage, out List<Process> processes)
+        private bool ProcFSListProcess(SystemInformation systemInformation, out string errorMessage, out List<Process> processes)
         {
             errorMessage = string.Empty;
             processes = null;
@@ -204,7 +219,7 @@ namespace Microsoft.SSHDebugPS
                 return false;
             }
 
-            processes = ProcFSOutputParser.Parse(commandOutput, username);
+            processes = ProcFSOutputParser.Parse(commandOutput, systemInformation);
             return true;
         }
 
