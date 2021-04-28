@@ -103,13 +103,10 @@
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
   </ItemGroup>
   <ItemGroup Label="OpenDebugAD7 Drop Files for XPlat" Condition="'$(IsXPlat)' == 'false'">
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Interop.dll" />
+    <!-- 
+      Any libraries that exist in VS but are needed for VS OpenDebugAD7 
+      scenarios will need to be added via VS Setup files.
+    -->
     <DropUnsignedFile Include="$(OutputPath)\cppdbg.ad7Engine.json" />
   </ItemGroup>
   <Target Name="GetDropFiles" BeforeTargets="DropFiles">
