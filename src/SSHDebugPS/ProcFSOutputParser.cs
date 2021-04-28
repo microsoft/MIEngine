@@ -21,7 +21,7 @@ namespace Microsoft.SSHDebugPS
         private List<Process> _processList = new List<Process>();
         private uint _shellProcess = uint.MaxValue;
 
-        public static List<Process> Parse(string output, SystemInformation systemInformation)
+        internal static List<Process> Parse(string output, SystemInformation systemInformation)
         {
             return new ProcFSOutputParser().ParseInternal(output, systemInformation);
         }
@@ -104,8 +104,7 @@ namespace Microsoft.SSHDebugPS
 
             // Note:
             //    For Flags, will need to parse /proc/[pid]/stat flags.
-            //    But at this commit, flags are unused for Linux scenarios.
-            Process process = new Process(processId, systemInformation.Architecture, /* TODO: Flags */ 0, procUsername, commandLine, isSameUser);
+            Process process = new Process(processId, systemInformation.Architecture, /* Flags */ 0, procUsername, commandLine, isSameUser);
             _processList.Add(process);
         }
     }

@@ -108,17 +108,19 @@ namespace Microsoft.SSHDebugPS
             return commandOutput.StartsWith("Linux", StringComparison.OrdinalIgnoreCase);
         }
 
-        public bool TryGetSystemInformation(out SystemInformation systemInformation)
+        /// <summary>
+        /// Retrieves system information such as username and architecture
+        /// </summary>
+        /// <returns>SystemInformation containing username and architecture. If it was unable to obtain any of these, the value will be set to string.Empty.</returns>
+        public SystemInformation GetSystemInformation()
         {
-            systemInformation = null;
+            string commandOutput;
+            string errorMessage;
 
             string username = string.Empty;
             string command = "id -u -n";
-            string commandOutput;
-            string errorMessage;
             if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
             {
-
                 username = commandOutput;
             }
 
@@ -126,23 +128,15 @@ namespace Microsoft.SSHDebugPS
             command = "uname -m";
             if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
             {
-
                 architecture = commandOutput;
             }
 
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(architecture))
-            {
-                return false;
-            }
-
-            systemInformation = new SystemInformation(username, architecture);
-            return true;
+            return new SystemInformation(username, architecture);
         }
 
         public override List<Process> ListProcesses()
         {
-            SystemInformation systemInformation;
-            TryGetSystemInformation(out systemInformation);
+            SystemInformation systemInformation = GetSystemInformation();
 
             List<Process> processes;
             string psErrorMessage;

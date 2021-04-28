@@ -164,7 +164,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// <summary>
         /// Gets the architecture unix process.
         /// </summary>
-        /// <returns>the string representation of the process's architecture</returns>
+        /// <returns>The string representation of the process's architecture. The format of this is architecture-specific and will match that returned by uname -m. Example: 'x86_64'</returns>
         string GetProcessArchitecture();
     };
 }

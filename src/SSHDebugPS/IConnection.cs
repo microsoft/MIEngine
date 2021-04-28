@@ -53,6 +53,9 @@ namespace Microsoft.SSHDebugPS
     public class Process
     {
         public uint Id { get; private set; }
+        /// <summary>
+        /// Only used by the PSOutputParser
+        /// </summary>
         public uint Flags { get; private set; }
         public string SystemArch { get; private set; }
         public string CommandLine { get; private set; }
@@ -70,7 +73,7 @@ namespace Microsoft.SSHDebugPS
         }
     }
 
-    public class SystemInformation
+    internal class SystemInformation
     {
         public string UserName { get; private set; }
         public string Architecture { get; private set; }

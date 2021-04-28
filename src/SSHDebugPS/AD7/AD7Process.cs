@@ -16,12 +16,16 @@ namespace Microsoft.SSHDebugPS
         private readonly AD7Port _port;
         private readonly uint _processId;
         private readonly string _systemArch;
-        private readonly uint _flags;
         private readonly string _commandLine;
         private readonly string _userName;
         private readonly bool _isSameUser;
         private readonly Lazy<Guid> _uniqueId = new Lazy<Guid>(() => Guid.NewGuid(), LazyThreadSafetyMode.ExecutionAndPublication);
         private IDebugProgram2 _program;
+
+        /// <summary>
+        /// Flags are only used in ps command scenarios. It will be set to 0 for others.
+        /// </summary>
+        private readonly uint _flags;
 
         /// <summary>
         /// Returns true if _commandLine appears to hold a real file name + args rather than just a description
@@ -35,8 +39,9 @@ namespace Microsoft.SSHDebugPS
             _commandLine = psProcess.CommandLine;
             _userName = psProcess.UserName;
             _isSameUser = psProcess.IsSameUser;
-            _flags = psProcess.Flags;
             _systemArch = psProcess.SystemArch;
+
+            _flags = psProcess.Flags;
         }
 
         public int Attach(IDebugEventCallback2 pCallback, Guid[] rgguidSpecificEngines, uint celtSpecificEngines, int[] rghrEngineAttach)
