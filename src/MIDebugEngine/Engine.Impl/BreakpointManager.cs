@@ -265,7 +265,7 @@ namespace Microsoft.MIDebugEngine
             lock (_pendingBreakpoints)
             {
                 breakpointsPendingDeletion = _pendingBreakpoints.FindAll((b) => b.PendingDelete);
-                _pendingBreakpoints.RemoveAll((b) => b.PendingDelete);
+                _pendingBreakpoints.RemoveAll((b) => b.Deleted);
             }
 
             if (breakpointsPendingDeletion != null)
