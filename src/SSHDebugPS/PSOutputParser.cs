@@ -59,27 +59,28 @@ namespace Microsoft.SSHDebugPS
         // Use padding to expand column width. 10 for pid and 32 for userid as that is the max size for each
         // Tested this format with different distributions of Linux and container distributions. This command (and the alternative without the flags) seems 
         // to be the one that works the best between standard *nix and BusyBox implementations of ps.
-        private const string PSCommandLineFormat = "ps{0}-o pid=pppppppppp -o ruser=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr -o args";
-        private string _currentUserName;
+        private const string PSCommandLineFormat = "ps{0}-o pid=pppppppppp -o flags=ffffffff -o ruser=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr -o args";
+        private SystemInformation _currentSystemInformation;
         private ColumnDef _pidCol;
+        private ColumnDef _flagsCol;
         private ColumnDef _ruserCol;
         private ColumnDef _argsCol;
 
         public static string PSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" axww ");
         public static string AltPSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" ");
 
-        public static List<Process> Parse(string output, string username)
+        public static List<Process> Parse(string output, SystemInformation systemInformation)
         {
-            return new PSOutputParser().ParseInternal(output, username);
+            return new PSOutputParser().ParseInternal(output, systemInformation);
         }
 
         private PSOutputParser()
         {
         }
 
-        private List<Process> ParseInternal(string output, string username)
+        private List<Process> ParseInternal(string output, SystemInformation systemInformation)
         {
-            _currentUserName = username;
+            _currentSystemInformation = systemInformation;
             List<Process> processList = new List<Process>();
 
             using (var reader = new StringReader(output))
@@ -135,6 +136,15 @@ namespace Microsoft.SSHDebugPS
             if (!SkipNonWhitespace(headerLine, ref index))
                 return false;
 
+            _flagsCol = new ColumnDef(colStart, index);
+
+            if (!SkipWhitespace(headerLine, ref index))
+                return false;
+
+            colStart = index;
+            if (!SkipNonWhitespace(headerLine, ref index))
+                return false;
+
             _ruserCol = new ColumnDef(colStart, index);
 
             if (!SkipWhitespace(headerLine, ref index))
@@ -160,15 +170,20 @@ namespace Microsoft.SSHDebugPS
             if (!uint.TryParse(pidText, NumberStyles.None, CultureInfo.InvariantCulture, out pid))
                 return null;
 
+            uint flags;
+            string flagsText = _flagsCol.Extract(line);
+            if (!uint.TryParse(flagsText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out flags))
+                return null;
+
             string ruser = _ruserCol.Extract(line);
             string commandLine = _argsCol.Extract(line);
             if (string.IsNullOrEmpty(commandLine))
                 return null;
 
             bool isSameUser;
-            if (!string.IsNullOrEmpty(_currentUserName))
+            if (!string.IsNullOrEmpty(_currentSystemInformation.UserName))
             {
-                isSameUser = _currentUserName.Equals(ruser, StringComparison.Ordinal);
+                isSameUser = _currentSystemInformation.UserName.Equals(ruser, StringComparison.Ordinal);
             }
             else
             {
@@ -176,7 +191,7 @@ namespace Microsoft.SSHDebugPS
                 isSameUser = !string.Equals(ruser, "root", StringComparison.Ordinal);
             }
 
-            return new Process(pid, ruser, commandLine, isSameUser);
+            return new Process(pid, _currentSystemInformation.Architecture, flags, ruser, commandLine, isSameUser);
         }
 
         private static bool SkipWhitespace(string line, ref int index)
