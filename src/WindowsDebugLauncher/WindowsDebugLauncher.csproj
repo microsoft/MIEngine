@@ -1,9 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <!-- miengine.settings.targets must be imported first as it sets $(NuGetPackagesDirectory) -->
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\build\miengine.settings.targets" />
-  <Import Project="$(NugetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(NugetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
@@ -12,7 +8,6 @@
     <RootNamespace>WindowsDebugLauncher</RootNamespace>
     <AssemblyName>WindowsDebugLauncher</AssemblyName>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
@@ -20,7 +15,7 @@
     <StartAction>Program</StartAction>
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFramework>net462</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
@@ -40,26 +35,23 @@
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <!-- <Reference Include="Microsoft.CSharp" /> -->
+  
+  <ItemGroup Label="References">
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
+  
   <ItemGroup>
     <DropSignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\WindowsDebugLauncher.exe" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="DebugLauncher.cs" />
-    <Compile Include="Program.cs" />
-  </ItemGroup>
+
   <Target Name="GetDropFiles" BeforeTargets="DropFiles">
     <ItemGroup>
       <DropSignedFile Include="$(OutputPath)\WindowsDebugLauncher.exe" />
       <DropUnsignedFile Include="$(OutputPath)\WindowsDebugLauncher.pdb" />
     </ItemGroup>
   </Target>
-  <Import Condition="'$(IsXPlat)' == 'true'" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
   <Import Project="..\..\build\miengine.targets" />
-  <Import Project="$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(NuGetPackagesDirectory)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
   <Import Project="..\..\build\DropFiles.targets" />
   <!-- Force the project to be an exe before the compile step. This is used by CoreCLR builds. -->
   <Target Name="BeforeBuild">

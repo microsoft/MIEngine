@@ -2,20 +2,17 @@
   <PropertyGroup>
     <!-- Disable Legacy FxCop -->
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
 
     <!-- Point to ruleset -->
     <CodeAnalysisRuleSet>..\IDECodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   
   <ItemGroup>
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.CodeAnalysis.VersionCheckAnalyzer.3.3.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.VersionCheckAnalyzer.resources.dll" />
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.CodeAnalysis.VersionCheckAnalyzer.3.3.0\analyzers\dotnet\Microsoft.CodeAnalysis.VersionCheckAnalyzer.dll" />
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.CodeQuality.Analyzers.3.3.0\analyzers\dotnet\cs\Humanizer.dll" />
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.CodeQuality.Analyzers.3.3.0\analyzers\dotnet\cs\Microsoft.CodeQuality.Analyzers.dll" />
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.CodeQuality.Analyzers.3.3.0\analyzers\dotnet\cs\Microsoft.CodeQuality.CSharp.Analyzers.dll" />
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.NetCore.Analyzers.3.3.0\analyzers\dotnet\cs\Microsoft.NetCore.Analyzers.dll" />
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.NetCore.Analyzers.3.3.0\analyzers\dotnet\cs\Microsoft.NetCore.CSharp.Analyzers.dll" />
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.NetFramework.Analyzers.3.3.0\analyzers\dotnet\cs\Microsoft.NetFramework.Analyzers.dll" />
-    <Analyzer Include="$(NugetPackagesDirectory)\Microsoft.NetFramework.Analyzers.3.3.0\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0" PrivateAssets="all"  />
+    <PackageReference Include="Microsoft.CodeAnalysis.VersionCheckAnalyzer" Version="3.3.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="3.3.0" PrivateAssets="all"  />
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="3.3.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NetFramework.Analyzers" Version="3.3.0" PrivateAssets="all"  />
   </ItemGroup>
 </Project>

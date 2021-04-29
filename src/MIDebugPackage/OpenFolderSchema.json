@@ -61,10 +61,14 @@
                 "type": "object",
                 "description": "Optional source file mappings passed to the debug engine. Format: '{ \"<Compiler source location>\": \"<Editor source location>\" }' OR '{ \"<Compiler source location>\": { \"editorPath\": \"<Editor source location>\", \"useForBreakpoints\": true } }'. \nExample: '{ \"/home/user/foo\": \"C:\\foo\" }' OR '{ \"/home/user/foo\": { \"editorPath\": \"c:\\foo\", \"useForBreakpoints\": true } }'.",
                 "additionalProperties": {
-                  "anyOf": {
-                    "type": "string",
-                    "$ref": "#/definitions/cpp_schema/definitions/sourceFileMapOptions"
-                  }
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "$ref": "#/definitions/cpp_schema/definitions/sourceFileMapOptions"
+                    }
+                  ]
                 }
               },
               "MIMode": {
@@ -166,6 +170,13 @@
               },
               "pipeTransport": {
                 "$ref": "#/definitions/cpp_schema/definitions/pipeTransportOptions"
+              },
+              "stopAtConnect": {
+                "type": "boolean",
+                "description": "If true, the debugger should stop after connecting to the target. If false, the debugger will continue after connecting. \nDefaults to false."
+              },
+              "hardwareBreakpoints": {
+                "$ref": "#/definitions/cpp_schema/definitions/hardwareBreakpointsOptions"
               }
             },
             "definitions": {
@@ -205,6 +216,13 @@
                       "type": "string"
                     }
                   },
+                  "pipeCmd": {
+                    "type": "array",
+                    "description": "Arguments passed to the pipe executable to run a remote Unix (ex: bash or similar) shell command. This is used for running 'kill' on the remote system, or other commands that the debugger may need. If not specified, the debugger will do its best without the shell. But some features, such as setting breakpoints in run mode, may not work. This string should contain the string '{0}' which will be replaced with the command to execute.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
                   "debuggerPath": {
                     "type": "string",
                     "description": "The full path to the debugger on the target machine, for example /usr/bin/gdb."
@@ -232,6 +250,19 @@
                   "useForBreakpoints": {
                     "type": "boolean",
                     "description": "When setting breakpoints, this source mapping should be used. \nIf 'false', only the filename and line number is used for setting breakpoints. \nIf 'true', breakpoints will be set with the full path to the file and line number only when this source mapping is used. Otherwise just filename and line number will be used when setting breakpoints. \nDefault is 'true'."
+                  }
+                }
+              },
+              "hardwareBreakpointsOptions": {
+                "type": "object",
+                "properties": {
+                  "require": {
+                    "type": "boolean",
+                    "description": "If true, always use hardware breakpoints. \nDefaults to false."
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Optional limit on the number of available hardware breakpoints to use. Only enforced when \"require\" is true and \"limit\" is greater than 0. \nDefaults to 0."
                   }
                 }
               }

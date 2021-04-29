@@ -839,10 +839,10 @@ namespace Microsoft.MIDebugEngine
                 {
                     var codeCxt = new AD7MemoryAddress(this, a, null);
                     TEXT_POSITION pos;
-                    pos.dwLine = line;
+                    pos.dwLine = line - 1;
                     pos.dwColumn = 0;
                     MITextPosition textPosition = new MITextPosition(documentName, pos, pos);
-                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt, this.DebuggedProcess));
+                    codeCxt.SetDocumentContext(new AD7DocumentContext(textPosition, codeCxt));
                     codeContexts.Add(codeCxt);
                 }
                 if (codeContexts.Count > 0)

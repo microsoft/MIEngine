@@ -1,0 +1,24 @@
+# Restore and Build Solution
+---
+parameters:
+  Solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
+  Configuration: 'Release'
+  BuildArguments: ''
+
+steps:
+- template: ../tasks/NuGetCommand.yml
+  parameters:
+    Command: 'restore'
+    solution: ${{ parameters.Solution }}
+    FeedsToUse: 'config'
+    NugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
+
+- template: ../tasks/MSBuild.yml
+  parameters:
+    solution: ${{ parameters.Solution }}
+    configuration: ${{ parameters.Configuration }}
+    msbuildArguments: ${{ parameters.BuildArguments }}
+    env: { 
+      "SIGN_TYPE": "$(SignType)" 
+    } 
+...

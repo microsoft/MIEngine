@@ -1,0 +1,77 @@
+# PublishPipelineArtifact
+# 
+# Publish (upload) a file or directory as a named artifact for the current run
+# 
+# Version: 1.2.3
+# 
+# Reference: https://docs.microsoft.com/azure/devops/pipelines/tasks/utility/publish-pipeline-artifact
+# Task.json: https://raw.githubusercontent.com/microsoft/azure-pipelines-tasks/master/Tasks/PublishPipelineArtifactV1/task.json
+---
+parameters:
+  # region Step Configurations
+  
+  displayName: 'Publish Pipeline Artifact'
+  enabled: true
+  continueOnError: false
+  condition: succeeded()
+  timeoutInMinutes: 0
+  
+  # endregion
+  
+  # region Ungrouped Configurations
+  
+  # File or directory path
+  # 
+  # The path of the file or directory to publish. Can be absolute or relative to the default working directory.
+  # Can include [variables](https://go.microsoft.com/fwlink/?LinkID=550988), but wildcards are not supported.
+  path : ""  # Required
+  
+  # Artifact name
+  # 
+  # Name of the artifact to publish. If not set, defaults to a unique ID scoped to the job.
+  artifactName : "" # Optional
+  
+  # Artifact publish location
+  # 
+  # Choose whether to store the artifact in Azure Pipelines, or to copy it to a file share that must be accessible
+  # from the pipeline agent.
+  # Options:
+  #   pipeline
+  #   filepath
+  artifactType : "pipeline"  # Required
+  
+  # File share path
+  # 
+  # The file share to which the artifact files will be copied. This can include variables. Example: \\\\my\\share\\$(Build.DefinitionName)\\$(Build.BuildNumber).
+  # Publishing artifacts from a Linux or macOS agent to a file share is not supported.
+  fileSharePath : "" # Used when artifactType = filepath
+  
+  # Parallel copy
+  # 
+  # Select whether to copy files in parallel using multiple threads for greater potential throughput. If
+  # this setting is not enabled, one thread will be used.
+  parallel : false # Used when artifactType = filepath
+  
+  # Parallel count
+  # 
+  # Enter the degree of parallelism, or number of threads used, to perform the copy. The value must be at
+  # least 1 and not greater than 128.
+  parallelCount : 8 # Used when artifactType = filepath && parallel = true
+  
+  # endregion
+  
+steps:
+- task: PublishPipelineArtifact@1
+  displayName: ${{ parameters.DisplayName }}
+  inputs:
+    path : ${{ parameters.path }}
+    artifactName : ${{ parameters.artifactName }}
+    artifactType : ${{ parameters.artifactType }}
+    fileSharePath : ${{ parameters.fileSharePath }}
+    parallel : ${{ parameters.parallel }}
+    parallelCount : ${{ parameters.parallelCount }}
+  enabled: ${{ parameters.enabled }}
+  condition: ${{ parameters.condition }}
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  continueOnError: ${{ parameters.continueOnError }}
+...

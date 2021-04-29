@@ -414,6 +414,8 @@ namespace MICore
 
         #region Breakpoints
 
+        public virtual Task<StringBuilder> BuildEntryBreakInsert() => Task.FromResult(new StringBuilder("-break-insert -f "));
+
         public virtual Task<StringBuilder> BuildBreakInsert(string condition, bool enabled)
         {
             StringBuilder cmd = new StringBuilder("-break-insert -f ");
@@ -426,6 +428,10 @@ namespace MICore
             if (!enabled)
             {
                 cmd.Append("-d ");
+            }
+            if (_debugger.LaunchOptions.RequireHardwareBreakpoints)
+            {
+                cmd.Append("-h ");
             }
             return Task<StringBuilder>.FromResult(cmd);
         }
@@ -630,7 +636,8 @@ namespace MICore
 
             if (results.TryFindString("reason") == "signal-received")
             {
-                if (results.TryFindString("signal-name") == "SIGINT")
+                if (results.TryFindString("signal-name") == "SIGINT" || 
+                    results.TryFindString("signal-name") == "SIGTRAP")
                 {
                     isAsyncBreak = true;
                 }

@@ -11,8 +11,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Logger = MICore.Logger;
@@ -24,6 +24,7 @@ namespace Microsoft.MIDebugEngine
         public AD_PROCESS_ID Id { get; private set; }
         public AD7Engine Engine { get; private set; }
         public List<string> VariablesToDelete { get; private set; }
+        public List<string> DataBreakpointVariables { get; private set; }
         public List<IVariableInformation> ActiveVariables { get; private set; }
         public VariableInformation ReturnValue { get; private set; }
         public SourceLineCache SourceLineCache { get; private set; }
@@ -81,6 +82,7 @@ namespace Microsoft.MIDebugEngine
             ExceptionManager = new ExceptionManager(MICommandFactory, _worker, _callback, configStore);
 
             VariablesToDelete = new List<string>();
+            DataBreakpointVariables = new List<string>();
             this.ActiveVariables = new List<IVariableInformation>();
             _fileTimestampWarnings = new HashSet<Tuple<string, string>>();
 
@@ -811,7 +813,7 @@ namespace Microsoft.MIDebugEngine
                     };
 
                     // Builds '-break-insert' for 'main'.
-                    StringBuilder breakInsertCommand = await this.MICommandFactory.BuildBreakInsert(condition: null, enabled: true);
+                    StringBuilder breakInsertCommand = await this.MICommandFactory.BuildEntryBreakInsert();
                     breakInsertCommand.Append("main");
 
                     commands.Add(new LaunchCommand(breakInsertCommand.ToString(), ignoreFailures: true, successResultsHandler: breakMainSuccessResultsHandler));
@@ -822,6 +824,10 @@ namespace Microsoft.MIDebugEngine
                         if (!string.IsNullOrWhiteSpace(destination))
                         {
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
+
+                            if (localLaunchOptions.RequireHardwareBreakpoints && localLaunchOptions.HardwareBreakpointLimit > 0) {
+                                commands.Add(new LaunchCommand(string.Format(CultureInfo.InvariantCulture, "-interpreter-exec console \"set remote hardware-breakpoint-limit {0}\"", localLaunchOptions.HardwareBreakpointLimit.ToString(CultureInfo.InvariantCulture))));
+                            }
                         }
 
                     }
@@ -845,7 +851,9 @@ namespace Microsoft.MIDebugEngine
                 // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
                 LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, (string resStr) =>
                 {
-                    if (resStr.Contains("cygwin"))
+                    // Look to see if configuration has "cywgin" within a word boundry.
+                    // Also look for "msys" since it is a modified version of Cygwin.
+                    if (Regex.IsMatch(resStr, "\\bcygwin\\b|\\bmsys\\b"))
                     {
                         this.IsCygwin = true;
                         this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
@@ -1096,24 +1104,41 @@ namespace Microsoft.MIDebugEngine
             if (String.IsNullOrWhiteSpace(reason) && !this.EntrypointHit)
             {
                 breakRequest = BreakRequest.None;   // don't let stopping interfere with launch processing
+                bool shouldContinue = true;
 
+                if (_launchOptions.StopAtConnect)
+                {
+                    this.EntrypointHit = true;
+                    await this.ClearEntrypointBreakpoint();
+
+                    // Send a breakpoint event to force the client to stop (entry point may not stop depending on how the user started debugging)
+                    _callback.OnBreakpoint(thread, new ReadOnlyCollection<object>(new AD7BoundBreakpoint[] { }));
+                    shouldContinue = false;
+                }
                 // MinGW sends a stopped event on attach. gdb<->gdbserver also sends a stopped event when first attached.
                 // If this is a gdb<->gdbserver connection, ignore this as the entryPoint
-                if (IsLocalLaunchUsingServer())
+                else if (IsLocalLaunchUsingServer())
                 {
                     // If the stopped event occurs on gdbserver, ignore it unless it contains a filename.
                     TupleValue frame = results.Results.TryFind<TupleValue>("frame");
                     if (frame.Contains("file"))
                     {
                         this.EntrypointHit = true;
+                        await this.ClearEntrypointBreakpoint();
+                        _callback.OnEntryPoint(thread);
+                        shouldContinue = false;
                     }
                 }
                 else
                 {
                     this.EntrypointHit = true;
+                    await this.ClearEntrypointBreakpoint();
                 }
 
-                CmdContinueAsync();
+                if (shouldContinue)
+                {
+                    CmdContinueAsync();
+                }
                 FireDeviceAppLauncherResume();
             }
             else if (reason == "entry-point-hit")
@@ -1308,6 +1333,14 @@ namespace Microsoft.MIDebugEngine
                 await ConsoleCmdAsync("process handle --pass true --stop false --notify false SIGHUP", allowWhileRunning: false, ignoreFailures: true);
             }
 
+            await this.ClearEntrypointBreakpoint();
+        }
+
+        /// <summary>
+        /// Attempts to remove the breakpoint automatically set at the entrypoint of the application.
+        /// </summary>
+        private async Task ClearEntrypointBreakpoint()
+        {
             if (this._deleteEntryPointBreakpoint && !String.IsNullOrWhiteSpace(this._entryPointBreakpoint))
             {
                 // Try and delete the entrypoint breakpoint. We only try this once but in some cases this won't succeed
@@ -2265,6 +2298,10 @@ namespace Microsoft.MIDebugEngine
             string currentName = string.Empty;
             if (!string.IsNullOrEmpty(file))
             {
+                if (IsCygwin)
+                {
+                    file = CygwinFilePathMapper.MapCygwinToWindows(file);
+                }
                 MapCompileTimeSrcToCurrentSrc(file, out currentName);
             }
             return currentName;

@@ -1,0 +1,27 @@
+# Pack and Publish NuGet Packages for VS
+# Creates:
+#    - VS.Redist.Debugger.MDD.MIEngine
+#    - VS.Redist.Debugger.MDD.UnixPortSupplier
+---
+parameters:
+  BasePath: $(Build.StagingDirectory)
+
+steps:
+- template: ../tasks/NuGetCommand.yml
+  parameters:
+    displayName: 'NuGet pack'
+    command: pack
+    searchPatternPack: '$(Build.SourcesDirectory)\MIEngine.mdd.nuspec;$(Build.SourcesDirectory)\MIEngine.UnixPortSupplier.nuspec'
+    configurationToPack: Release
+    versioningScheme: byEnvVar
+    versionEnvVar: 'BUILD_BUILDNUMBER'
+    basePath: ${{ parameters.BasePath }}
+
+- template: ../tasks/NuGetCommand.yml
+  parameters:
+    displayName: 'NuGet push'
+    command: push
+    searchPatternPush: '$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.MIEngine.*.nupkg;$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.UnixPortSupplier.*.nupkg'
+    feedPublish: '97a41293-2972-4f48-8c0e-05493ae82010' # VS
+    condition: and(succeeded(), eq(variables['SignType'], 'real'))
+...

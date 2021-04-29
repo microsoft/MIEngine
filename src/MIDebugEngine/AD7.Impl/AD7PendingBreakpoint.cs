@@ -1,17 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using MICore;
-using System.Diagnostics;
 using Microsoft.DebugEngineHost;
-using System.Globalization;
+using Microsoft.VisualStudio.Debugger.Interop;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -50,12 +47,19 @@ namespace Microsoft.MIDebugEngine
         {
             get { return _bp == null ? string.Empty : _bp.Number; }
         }
+        internal string AddressId { get; private set; }
 
         internal bool Enabled { get { return _enabled; } }
         internal bool Deleted { get { return _deleted; } }
+
+        /// <summary>
+        /// Returns true if either this breakpoint is deleted, or if this is a hardware breakpoint that has been disabled.
+        /// </summary>
         internal bool PendingDelete { get { return _pendingDelete; } }
 
         internal bool IsDataBreakpoint { get { return _bpRequestInfo.bpLocation.bpLocationType == (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING; } }
+
+        internal bool IsHardwareBreakpoint { get { return _engine.DebuggedProcess.LaunchOptions.RequireHardwareBreakpoints; } }
 
         internal PendingBreakpoint PendingBreakpoint { get { return _bp; } }
 
@@ -128,7 +132,7 @@ namespace Microsoft.MIDebugEngine
             {
                 AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, address, functionName);
 
-                return new AD7DocumentContext(new MITextPosition(_documentName, _startPosition[0], _startPosition[0]), codeContext, _engine.DebuggedProcess);
+                return new AD7DocumentContext(new MITextPosition(_documentName, _startPosition[0], _startPosition[0]), codeContext);
             }
             else
             {
@@ -241,7 +245,17 @@ namespace Microsoft.MIDebugEngine
 
                                     break;
                                 case enum_BP_LOCATION_TYPE.BPLT_DATA_STRING:
-                                    _address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    string address = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                                    if (address.Contains(","))
+                                    {
+                                        this.AddressId = address;
+                                        _address = address.Split(',')[0];
+                                    }
+                                    else
+                                    {
+                                        this.AddressId = null;
+                                        _address = address;
+                                    }
                                     _size = (uint)_bpRequestInfo.bpLocation.unionmember4;
                                     if (_condition != null)
                                     {
@@ -257,24 +271,11 @@ namespace Microsoft.MIDebugEngine
                         }
                     }
 
-                    Task bindTask = null;
-                    _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
-                    {
-                        bindTask = _engine.DebuggedProcess.AddInternalBreakAction(this.BindAsync);
-                    });
-
-                    bindTask.Wait(_engine.GetBPLongBindTimeout());
-                    if (!bindTask.IsCompleted)
-                    {
-                        //send a low severity warning bp. This will allow the UI to respond quickly, and if the mi debugger doesn't end up binding, this warning will get 
-                        //replaced by the real mi debugger error text
-                        this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.LongBind, enum_BP_ERROR_TYPE.BPET_SEV_LOW | enum_BP_ERROR_TYPE.BPET_TYPE_WARNING), true);
-                        return Constants.S_FALSE;
-                    }
-                    else
-                    {
+                    if (!_enabled && IsHardwareBreakpoint) {
                         return Constants.S_OK;
                     }
+
+                    return BindWithTimeout();
                 }
                 else
                 {
@@ -304,8 +305,47 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
+        private int BindWithTimeout()
+        {
+            Task bindTask = null;
+            _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+            {
+                bindTask = _engine.DebuggedProcess.AddInternalBreakAction(this.BindAsync);
+            });
+
+            bindTask.Wait(_engine.GetBPLongBindTimeout());
+            if (!bindTask.IsCompleted)
+            {
+                //send a low severity warning bp. This will allow the UI to respond quickly, and if the mi debugger doesn't end up binding, this warning will get 
+                //replaced by the real mi debugger error text
+                this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.LongBind, enum_BP_ERROR_TYPE.BPET_SEV_LOW | enum_BP_ERROR_TYPE.BPET_TYPE_WARNING), true);
+                return Constants.S_FALSE;
+            }
+            else
+            {
+                if ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_DATA_STRING)
+                {
+                    lock (_engine.DebuggedProcess.DataBreakpointVariables)
+                    {
+                        string addressName = HostMarshal.GetDataBreakpointStringForIntPtr(_bpRequestInfo.bpLocation.unionmember3);
+                        if (!_engine.DebuggedProcess.DataBreakpointVariables.Contains(addressName)) // might need to expand condition
+                        {
+                            _engine.DebuggedProcess.DataBreakpointVariables.Add(addressName);
+                        }
+                    }
+                }
+                return Constants.S_OK;
+            }
+        }
+
         internal async Task BindAsync()
         {
+            if (IsHardwareBreakpoint)
+            {
+                // Flush pending deletes so the debugger knows how many hardware breakpoint registers are still occupied
+                await _bpManager.DeleteBreakpointsPendingDeletion();
+            }
+
             if (CanBind())
             {
                 PendingBreakpoint.BindResult bindResult;
@@ -429,6 +469,7 @@ namespace Microsoft.MIDebugEngine
             {
                 bp = _bp;
                 _bp = null;
+                _pendingDelete = false;
             }
             if (bp != null)
             {
@@ -436,8 +477,41 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        // Toggles the enabled state of this pending breakpoint.
-        int IDebugPendingBreakpoint2.Enable(int fEnable)
+        private int EnableUsingBindAndDelete(int fEnable)
+        {
+            bool newValue = fEnable == 0 ? false : true;
+
+            if (_enabled == newValue)
+            {
+                return Constants.S_OK;
+            }
+
+            _enabled = newValue;
+
+            if (_enabled)
+            {
+                return BindWithTimeout();
+            }
+            else
+            {
+                lock (_boundBreakpoints)
+                {
+                    foreach (var boundBp in _boundBreakpoints)
+                    {
+                        _engine.Callback.OnBreakpointUnbound(boundBp, enum_BP_UNBOUND_REASON.BPUR_UNKNOWN);
+                    }
+                    (this as IDebugPendingBreakpoint2).Delete();
+                    _boundBreakpoints.Clear();
+                    _BPError = null;
+                     // this pending breakpoint is not actually deleted, just disabled, so override this flag
+                    _deleted = false;
+                }
+            }
+
+            return Constants.S_OK;
+        }
+
+        private int EnableUsingEnableAndDisable(int fEnable)
         {
             bool newValue = fEnable == 0 ? false : true;
             if (_enabled != newValue)
@@ -457,6 +531,9 @@ namespace Microsoft.MIDebugEngine
 
             return Constants.S_OK;
         }
+
+        // Toggles the enabled state of this pending breakpoint.
+        int IDebugPendingBreakpoint2.Enable(int fEnable) => IsHardwareBreakpoint ? EnableUsingBindAndDelete(fEnable) : EnableUsingEnableAndDisable(fEnable);
 
         // Enumerates all breakpoints bound from this pending breakpoint
         int IDebugPendingBreakpoint2.EnumBoundBreakpoints(out IEnumDebugBoundBreakpoints2 ppEnum)

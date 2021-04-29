@@ -1,0 +1,142 @@
+# MSBuild
+# 
+# Build with MSBuild
+# 
+# Version: 1.179.0
+# 
+# Reference: https://docs.microsoft.com/azure/devops/pipelines/tasks/build/msbuild
+# Task.json: https://github.com/microsoft/azure-pipelines-tasks/raw/master/Tasks/MSBuildV1/task.json
+---
+parameters:
+  # region Step Configurations
+  
+  displayName: 'Build solution'
+  enabled: true
+  env: {}
+  continueOnError: false
+  condition: succeeded()
+  timeoutInMinutes: 0
+  
+  # endregion
+  
+  # region Advanced
+  
+  # Build in Parallel
+  # 
+  # If your MSBuild target configuration is compatible with building in parallel, you can optionally check
+  # this input to pass the /m switch to MSBuild (Windows only). If your target configuration is not compatible
+  # with building in parallel, checking this option may cause your build to result in file-in-use errors,
+  # or intermittent or inconsistent build failures.
+  maximumCpuCount : false # Optional
+  
+  # Restore NuGet Packages
+  # 
+  # This option is deprecated. To restore NuGet packages, add a [NuGet](https://docs.microsoft.com/azure/devops/pipelines/tasks/package/nuget)
+  # task before the build.
+  restoreNugetPackages : false # Optional
+  
+  # Record Project Details
+  # 
+  # Optionally record timeline details for each project (Windows only).
+  logProjectEvents : false # Optional
+  
+  # Create Log File
+  # 
+  # Optionally create a log file (Windows only).
+  createLogFile : false # Optional
+  
+  # Log File Verbosity
+  # 
+  # Optional log file verbosity.
+  # Options:
+  #   quiet
+  #   minimal
+  #   normal
+  #   detailed
+  #   diagnostic
+  logFileVerbosity : "normal"  # Used when createLogFile = true
+  
+  # endregion
+  
+  # region Ungrouped Configurations
+  
+  # Project
+  # 
+  # Relative path from repo root of the project(s) or solution(s) to run.  Wildcards can be used.  For example,
+  # `**/*.csproj` for all csproj files in all sub folders.
+  solution : ""  # Required
+  
+  # MSBuild
+  # Options:
+  #   version
+  #   location
+  msbuildLocationMethod : "version"  # Optional
+  
+  # MSBuild Version
+  # 
+  # If the preferred version cannot be found, the latest version found will be used instead. On an macOS
+  # agent, xbuild (Mono) will be used if version is lower than 15.0.
+  # Options:
+  #   latest
+  #   16.0
+  #   15.0
+  #   14.0
+  #   12.0
+  #   4.0
+  msbuildVersion : "latest"  # Used when msbuildLocationMethod = version
+  
+  # MSBuild Architecture
+  # 
+  # Optionally supply the architecture (x86, x64) of MSBuild to run.
+  # Options:
+  #   x86
+  #   x64
+  msbuildArchitecture : "x86"  # Used when msbuildLocationMethod = version
+  
+  # Path to MSBuild
+  # 
+  # Optionally supply the path to MSBuild.
+  msbuildLocation : "" # Used when msbuildLocationMethod = location
+  
+  # Platform
+  platform : "" # Optional
+  
+  # Configuration
+  configuration : "" # Optional
+  
+  # MSBuild Arguments
+  # 
+  # Additional arguments passed to MSBuild (on Windows) and xbuild (on macOS).
+  msbuildArguments : "" # Optional
+  
+  # Clean
+  # 
+  # Run a clean build (/t:clean) prior to the build.
+  clean : false # Optional
+  
+  # endregion
+  
+steps:
+- task: MSBuild@1
+  displayName: ${{ parameters.DisplayName }}
+  inputs:
+    solution : ${{ parameters.solution }}
+    msbuildLocationMethod : ${{ parameters.msbuildLocationMethod }}
+    msbuildVersion : ${{ parameters.msbuildVersion }}
+    msbuildArchitecture : ${{ parameters.msbuildArchitecture }}
+    msbuildLocation : ${{ parameters.msbuildLocation }}
+    platform : ${{ parameters.platform }}
+    configuration : ${{ parameters.configuration }}
+    msbuildArguments : ${{ parameters.msbuildArguments }}
+    clean : ${{ parameters.clean }}
+    maximumCpuCount : ${{ parameters.maximumCpuCount }}
+    restoreNugetPackages : ${{ parameters.restoreNugetPackages }}
+    logProjectEvents : ${{ parameters.logProjectEvents }}
+    createLogFile : ${{ parameters.createLogFile }}
+    logFileVerbosity : ${{ parameters.logFileVerbosity }}
+  enabled: ${{ parameters.enabled }}
+  env: ${{ parameters.env }}
+  condition: ${{ parameters.condition }}
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  continueOnError: ${{ parameters.continueOnError }}
+...

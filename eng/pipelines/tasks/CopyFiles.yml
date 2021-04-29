@@ -1,0 +1,82 @@
+# CopyFiles
+# 
+# Copy files from a source folder to a target folder using patterns matching file paths (not folder paths)
+# 
+# Version: 2.178.0
+# 
+# Reference: https://docs.microsoft.com/azure/devops/pipelines/tasks/utility/copy-files
+# Task.json: https://github.com/microsoft/azure-pipelines-tasks/raw/master/Tasks/CopyFilesV2/task.json
+---
+parameters:
+  # region Step Configurations
+  
+  displayName: 'Copy Files'
+  enabled: true
+  continueOnError: false
+  condition: succeeded()
+  timeoutInMinutes: 0
+  
+  # endregion
+  
+  # region Advanced
+  
+  # Clean Target Folder
+  # 
+  # Delete all existing files in target folder before copy
+  CleanTargetFolder : false # Optional
+  
+  # Overwrite
+  # 
+  # Replace existing file in target folder
+  OverWrite : false # Optional
+  
+  # Flatten Folders
+  # 
+  # Flatten the folder structure and copy all files into the specified target folder.
+  flattenFolders : false # Optional
+  
+  # Preserve Target Timestamp
+  # 
+  # Using the original source file, preserve the target file timestamp.
+  preserveTimestamp : false # Optional
+  
+  # endregion
+  
+  # region Ungrouped Configurations
+  
+  # Source Folder
+  # 
+  # The source folder that the copy pattern(s) will be run from.  Empty is the root of the repo.  Use [variables](https://go.microsoft.com/fwlink/?LinkID=550988)
+  # if files are not in the repo. Example: $(agent.builddirectory)
+  SourceFolder : ""  # Optional
+  
+  # Contents
+  # 
+  # File paths to include as part of the copy. Supports multiple lines of match patterns. [More Information](https://go.microsoft.com/fwlink/?LinkID=708389)
+  Contents : | # Required
+    **
+  
+  # Target Folder
+  # 
+  # Target folder or UNC path files will copy to. You can use [variables](http://go.microsoft.com/fwlink/?LinkID=550988).
+  # Example: $(build.artifactstagingdirectory)
+  TargetFolder : "" # Required
+  
+  # endregion
+  
+steps:
+- task: CopyFiles@2
+  displayName: ${{ parameters.DisplayName }}
+  inputs:
+    SourceFolder : ${{ parameters.SourceFolder }}
+    Contents : ${{ parameters.Contents }}
+    TargetFolder : ${{ parameters.TargetFolder }}
+    CleanTargetFolder : ${{ parameters.CleanTargetFolder }}
+    OverWrite : ${{ parameters.OverWrite }}
+    flattenFolders : ${{ parameters.flattenFolders }}
+    preserveTimestamp : ${{ parameters.preserveTimestamp }}
+  enabled: ${{ parameters.enabled }}
+  condition: ${{ parameters.condition }}
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  continueOnError: ${{ parameters.continueOnError }}
+...

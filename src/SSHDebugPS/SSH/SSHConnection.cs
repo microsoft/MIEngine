@@ -51,13 +51,22 @@ namespace Microsoft.SSHDebugPS.SSH
                 username = usernameCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'id' command ends with a newline
             }
 
+            string architecture = string.Empty;
+            var architectureCommand = _remoteSystem.Shell.ExecuteCommand("uname -m");
+            if (architectureCommand.ExitCode == 0)
+            {
+                architecture = architectureCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'uname -m' command ends with a newline
+            }
+
+            SystemInformation systemInformation = new SystemInformation(username, architecture);
+
             var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine);
             if (command.ExitCode != 0)
             {
                 throw new CommandFailedException(StringResources.Error_PSFailed);
             }
 
-            return PSOutputParser.Parse(command.Output, username);
+            return PSOutputParser.Parse(command.Output, systemInformation);
         }
 
         public override void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
