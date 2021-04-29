@@ -151,4 +151,20 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// <param name="exitCode">The exit code of the command, assuming one was printed.</param>
         void OnExit(string exitCode);
     };
+
+    /// <summary>
+    /// Interface to query unix process architecture information.
+    /// </summary>
+    [ComImport()]
+    [ComVisible(true)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("61D4C2C4-7CA8-4472-8446-7B1DF5C9D16D")]
+    public interface IDebugUnixProcess
+    {
+        /// <summary>
+        /// Gets the architecture unix process.
+        /// </summary>
+        /// <returns>The string representation of the process's architecture. The format of this is architecture-specific and will match that returned by uname -m. Example: 'x86_64'</returns>
+        string GetProcessArchitecture();
+    };
 }

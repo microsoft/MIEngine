@@ -160,7 +160,10 @@ namespace Microsoft.MIDebugEngine
                 // (the error is sent via an "&" string and hence lost)
                 return new BindResult(errormsg);
             }
-            Debug.Assert(bkpt.FindString("type") == "breakpoint");
+            string bkptType = bkpt.FindString("type");
+
+            // gdb reports breakpoint type "hw breakpoint" for `-break-insert -h` command
+            Debug.Assert(bkptType == "breakpoint" || bkptType == "hw breakpoint");
 
             string number = bkpt.FindString("number");
             string warning = bkpt.TryFindString("warning");

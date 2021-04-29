@@ -170,6 +170,13 @@
               },
               "pipeTransport": {
                 "$ref": "#/definitions/cpp_schema/definitions/pipeTransportOptions"
+              },
+              "stopAtConnect": {
+                "type": "boolean",
+                "description": "If true, the debugger should stop after connecting to the target. If false, the debugger will continue after connecting. \nDefaults to false."
+              },
+              "hardwareBreakpoints": {
+                "$ref": "#/definitions/cpp_schema/definitions/hardwareBreakpointsOptions"
               }
             },
             "definitions": {
@@ -243,6 +250,19 @@
                   "useForBreakpoints": {
                     "type": "boolean",
                     "description": "When setting breakpoints, this source mapping should be used. \nIf 'false', only the filename and line number is used for setting breakpoints. \nIf 'true', breakpoints will be set with the full path to the file and line number only when this source mapping is used. Otherwise just filename and line number will be used when setting breakpoints. \nDefault is 'true'."
+                  }
+                }
+              },
+              "hardwareBreakpointsOptions": {
+                "type": "object",
+                "properties": {
+                  "require": {
+                    "type": "boolean",
+                    "description": "If true, always use hardware breakpoints. \nDefaults to false."
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Optional limit on the number of available hardware breakpoints to use. Only enforced when \"require\" is true and \"limit\" is greater than 0. \nDefaults to 0."
                   }
                 }
               }

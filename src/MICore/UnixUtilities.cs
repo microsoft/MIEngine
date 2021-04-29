@@ -253,7 +253,7 @@ namespace MICore
 
         internal static void Interrupt(int pid)
         {
-            Kill(pid, 2);
+            Kill(pid, 5);
         }
 
         private static void Kill(int pid, int signal)

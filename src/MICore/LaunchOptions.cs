@@ -1126,6 +1126,45 @@ namespace MICore
             }
         }
 
+        private bool _stopAtConnect;
+
+        /// <summary>
+        /// Optional parameter. If true, the debugger should stop after connecting to the target.
+        /// </summary>
+        public bool StopAtConnect
+        {
+            get { return _stopAtConnect; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(StopAtConnect));
+                _stopAtConnect = value;
+            }
+        }
+
+        private bool _requireHardwareBreakpoints = false;
+
+        public bool RequireHardwareBreakpoints
+        {
+            get { return _requireHardwareBreakpoints;  }
+            set
+            {
+                VerifyCanModifyProperty(nameof(RequireHardwareBreakpoints));
+                _requireHardwareBreakpoints = value;
+            }
+        }
+
+        private int _hardwareBreakpointLimit;
+
+        public int HardwareBreakpointLimit
+        {
+            get { return _hardwareBreakpointLimit; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(HardwareBreakpointLimit));
+                _hardwareBreakpointLimit = value;
+            }
+        }
+
         public string GetOptionsString()
         {
             try
@@ -1715,6 +1754,13 @@ namespace MICore
 
             this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
 
+            this.RequireHardwareBreakpoints = options.HardwareBreakpointInfo?.Require ?? false;
+            this.HardwareBreakpointLimit = options.HardwareBreakpointInfo?.Limit ?? 0;
+
+            if (this.RequireHardwareBreakpoints && DebuggerMIMode == MIMode.Lldb)
+            {
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.HardwareBreakpointInfo.Require), nameof(MIMode.Lldb)));
+            }
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
@@ -1907,6 +1953,7 @@ namespace MICore
             }
 
             this.Environment = new ReadOnlyCollection<EnvironmentEntry>(GetEnvironmentEntries(launch.Environment));
+            this.StopAtConnect = launch.StopAtConnect ?? false;
         }
 
         public void InitializeAttachOptions(Json.LaunchOptions.AttachOptions attach)
