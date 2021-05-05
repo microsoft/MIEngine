@@ -1,0 +1,126 @@
+# PublishSymbols
+# 
+# Index your source code and publish symbols to a file share or Azure Artifacts symbol server
+# 
+# Version: 2.172.0
+# 
+# Reference: https://docs.microsoft.com/azure/devops/pipelines/tasks/build/index-sources-publish-symbols
+# Task.json: https://raw.githubusercontent.com/microsoft/azure-pipelines-tasks/master/Tasks/PublishSymbolsV2/task.json
+---
+parameters: 
+  # region Step Configurations
+  
+  displayName: 'Publish symbols path'
+  enabled: true
+  continueOnError: false
+  condition: succeeded()
+  timeoutInMinutes: 0
+  
+  # endregion
+  
+  # region Advanced
+  
+  # Verbose logging
+  # 
+  # Use verbose logging.
+  DetailedLog : true # Optional
+  
+  # Warn if not indexed
+  # 
+  # Indicates whether to warn if sources are not indexed for a PDB file. Otherwise the messages are logged
+  # as normal output.
+  TreatNotIndexedAsWarning : false # Optional
+  
+  # Max wait time (min)
+  # 
+  # The number of minutes to wait before failing this task.
+  SymbolsMaximumWaitTime : "" # Optional
+  
+  # Product
+  # 
+  # Specify the product parameter to symstore.exe.  The default is $(Build.DefinitionName)
+  SymbolsProduct : "" # Optional
+  
+  # Version
+  # 
+  # Specify the version parameter to symstore.exe.  The default is $(Build.BuildNumber)
+  SymbolsVersion : "" # Optional
+  
+  # Artifact name
+  # 
+  # Specify the artifact name to use for the Symbols artifact.  The default is Symbols_$(BuildConfiguration)
+  SymbolsArtifactName : "Symbols_$(BuildConfiguration)" # Optional
+  
+  # endregion
+  
+  # region Ungrouped Configurations
+  
+  # Path to symbols folder
+  # 
+  # The path to the folder that is searched for symbol files.  The default is $(Build.SourcesDirectory).
+  #  Otherwise specify a rooted path, for example: $(Build.BinariesDirectory)/MyProject
+  SymbolsFolder : "$(Build.SourcesDirectory)" # Optional
+  
+  # Search pattern
+  # 
+  # The pattern used to discover the pdb files to publish.
+  SearchPattern : | # Required
+    **/bin/**/*.pdb
+  
+  # Index sources
+  # 
+  # Indicates whether to inject source server information into the PDB files.
+  IndexSources : true # Optional
+  
+  # Publish symbols
+  # 
+  # Indicates whether to publish the symbol files.
+  PublishSymbols : true # Optional
+  
+  # Symbol server type
+  # 
+  # Choose where to publish symbols. Symbols published to the Azure Artifacts symbol server are accessible
+  # by any user with access to the organization/collection. Azure DevOps Server only supports the "File share"
+  # option. Follow [these instructions](https://go.microsoft.com/fwlink/?linkid=846265) to use Symbol Server
+  # in Azure Artifacts.
+  # Options:
+  #    
+  #   TeamServices
+  #   FileShare
+  SymbolServerType : " "  # Used when PublishSymbols = true
+  
+  # Path to publish symbols
+  # 
+  # The file share that hosts your symbols. This value will be used in the call to `symstore.exe add` as
+  # the `/s` parameter.
+  SymbolsPath : "" # Used when PublishSymbols = true && SymbolServerType = FileShare
+  
+  # Compress symbols
+  # 
+  # Compress symbols when publishing to file share.
+  CompressSymbols : false # Used when SymbolServerType = FileShare
+  
+  # endregion
+  
+steps:
+- task: PublishSymbols@2
+  displayName: ${{ parameters.DisplayName }}
+  inputs:
+    SymbolsFolder : ${{ parameters.SymbolsFolder }}
+    SearchPattern : ${{ parameters.SearchPattern }}
+    IndexSources : ${{ parameters.IndexSources }}
+    PublishSymbols : ${{ parameters.PublishSymbols }}
+    SymbolServerType : ${{ parameters.SymbolServerType }}
+    SymbolsPath : ${{ parameters.SymbolsPath }}
+    CompressSymbols : ${{ parameters.CompressSymbols }}
+    DetailedLog : ${{ parameters.DetailedLog }}
+    TreatNotIndexedAsWarning : ${{ parameters.TreatNotIndexedAsWarning }}
+    SymbolsMaximumWaitTime : ${{ parameters.SymbolsMaximumWaitTime }}
+    SymbolsProduct : ${{ parameters.SymbolsProduct }}
+    SymbolsVersion : ${{ parameters.SymbolsVersion }}
+    SymbolsArtifactName : ${{ parameters.SymbolsArtifactName }}
+  enabled: ${{ parameters.enabled }}
+  condition: ${{ parameters.condition }}
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  continueOnError: ${{ parameters.continueOnError }}
+...

@@ -1,7 +1,7 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
 jobs:
-- template: ./jobs/VSEng-MicroBuildVS2019.yml
+- template: ./jobs/VSEng-MicroBuildVS2019.job.yml
   parameters:
     JobName: VS_Release
     BuildTemplate: 'VS-release'
