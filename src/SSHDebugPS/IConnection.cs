@@ -14,8 +14,6 @@ namespace Microsoft.SSHDebugPS
 
         void Close();
 
-        void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand);
-
         int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage);
 
         List<Process> ListProcesses();

@@ -116,6 +116,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return _dockerExecutionManager.ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
         }
 
+        /// <inheritdoc/>
         public override void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
             if (IsClosed)
@@ -123,8 +124,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 throw new ObjectDisposedException(nameof(PipeConnection));
             }
 
-            // Assume in the Begin Async that we are expecting raw output from the process
-            var commandRunner = GetExecCommandRunner(commandText, handleRawOutput: true);
+            var commandRunner = GetExecCommandRunner(commandText, handleRawOutput: runInShell == false);
             asyncCommand = new DockerAsyncCommand(commandRunner, callback);
         }
 
@@ -234,15 +234,12 @@ namespace Microsoft.SSHDebugPS.Docker
         {
             if (OuterConnection == null)
             {
-                if (handleRawOutput)
-                {
-                    return new RawLocalCommandRunner(settings);
-                }
-                else
-                    return new LocalCommandRunner(settings);
+                return LocalCommandRunner.CreateInstance(handleRawOutput, settings);
             }
             else
-                return new RemoteCommandRunner(settings, OuterConnection);
+            {
+                return new RemoteCommandRunner(settings, OuterConnection, handleRawOutput);
+            }
         }
 
         protected override string ProcFSErrorMessage
