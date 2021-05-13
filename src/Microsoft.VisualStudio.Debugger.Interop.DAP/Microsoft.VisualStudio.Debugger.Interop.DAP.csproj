@@ -12,7 +12,7 @@
     <DocumentationFile>$(DropRootDir)\ReferenceAssemblies\$(AssemblyName).xml</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugSymbols>false</DebugSymbols>
-    
+    <DebugType>pdbonly</DebugType>
     <NonShipping>true</NonShipping>
     <EnableSourceLink>false</EnableSourceLink>
     <TargetFramework>net462</TargetFramework>
@@ -29,7 +29,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
     <ErrorReport>prompt</ErrorReport>
