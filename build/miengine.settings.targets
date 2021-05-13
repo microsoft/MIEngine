@@ -45,6 +45,26 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+
+  <!-- Symbol Settings -->
+  <Choose>
+    <When Condition="$(Configuration.Contains('Debug'))">
+      <PropertyGroup>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+        <Optimize>false</Optimize>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <!-- Release Symbol Settings -->
+      <PropertyGroup>
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
   
   <PropertyGroup>
     <SignAssembly>True</SignAssembly>
