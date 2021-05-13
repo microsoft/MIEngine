@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <Microsoft_VisualStudio_Debugger_Interop_Portable_Version>1.0.1</Microsoft_VisualStudio_Debugger_Interop_Portable_Version>
-        <Microsoft_VisualStudio_Interop_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Interop_Version>
+        <Microsoft_VisualStudio_Interop_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Interop_Version>
         <Newtonsoft_Json_VSCode_Version>9.0.1</Newtonsoft_Json_VSCode_Version>
         <Newtonsoft_Json_VS_Version>12.0.2</Newtonsoft_Json_VS_Version>
         <Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version>16.7.40526.2</Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version>
@@ -19,17 +19,17 @@
 
     <PropertyGroup>
         <Microsoft_VisualStudio_ComponentModelHost_Version>17.0.28-g439d20ddd3</Microsoft_VisualStudio_ComponentModelHost_Version>
-        <Microsoft_VisualStudio_Debugger_Engine_Version>17.0.1050604-preview</Microsoft_VisualStudio_Debugger_Engine_Version>
-        <Microsoft_VisualStudio_Debugger_Interop_10_0_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Debugger_Interop_10_0_Version>
-        <Microsoft_VisualStudio_Debugger_Interop_11_0_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Debugger_Interop_11_0_Version>
-        <Microsoft_VisualStudio_Debugger_Interop_12_0_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Debugger_Interop_12_0_Version>
-        <Microsoft_VisualStudio_Debugger_Interop_15_0_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Debugger_Interop_15_0_Version>
-        <Microsoft_VisualStudio_Debugger_Interop_16_0_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Debugger_Interop_16_0_Version>
-        <Microsoft_VisualStudio_Debugger_InteropA_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Debugger_InteropA_Version>
-        <Microsoft_VisualStudio_Shell_15_0_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Shell_15_0_Version>
-        <Microsoft_VisualStudio_Shell_Framework_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Shell_Framework_Version>
+        <Microsoft_VisualStudio_Debugger_Engine_Version>17.0.1051901-preview</Microsoft_VisualStudio_Debugger_Engine_Version>
+        <Microsoft_VisualStudio_Debugger_Interop_10_0_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Debugger_Interop_10_0_Version>
+        <Microsoft_VisualStudio_Debugger_Interop_11_0_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Debugger_Interop_11_0_Version>
+        <Microsoft_VisualStudio_Debugger_Interop_12_0_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Debugger_Interop_12_0_Version>
+        <Microsoft_VisualStudio_Debugger_Interop_15_0_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Debugger_Interop_15_0_Version>
+        <Microsoft_VisualStudio_Debugger_Interop_16_0_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Debugger_Interop_16_0_Version>
+        <Microsoft_VisualStudio_Debugger_InteropA_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Debugger_InteropA_Version>
+        <Microsoft_VisualStudio_Shell_15_0_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Shell_15_0_Version>
+        <Microsoft_VisualStudio_Shell_Framework_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Shell_Framework_Version>
         <Microsoft_VisualStudio_Threading_Version>17.0.15-alpha</Microsoft_VisualStudio_Threading_Version>
-        <Microsoft_VisualStudio_Utilities_Version>17.0.0-previews-1-31317-048</Microsoft_VisualStudio_Utilities_Version>
+        <Microsoft_VisualStudio_Utilities_Version>17.0.0-previews-1-31325-273</Microsoft_VisualStudio_Utilities_Version>
         <Microsoft_VisualStudio_Shell_Interop_15_0_DesignTime_Version>15.0.26932</Microsoft_VisualStudio_Shell_Interop_15_0_DesignTime_Version>
         <Microsoft_VisualStudio_Workspace_Version>15.0.392</Microsoft_VisualStudio_Workspace_Version>
         <Microsoft_VisualStudio_Workspace_VSIntegration_Version>15.0.392</Microsoft_VisualStudio_Workspace_VSIntegration_Version>
