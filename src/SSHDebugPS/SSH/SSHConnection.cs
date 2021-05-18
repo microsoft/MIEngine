@@ -69,6 +69,7 @@ namespace Microsoft.SSHDebugPS.SSH
             return PSOutputParser.Parse(command.Output, systemInformation);
         }
 
+        /// <inheritdoc/>
         public override void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
             if (runInShell)
