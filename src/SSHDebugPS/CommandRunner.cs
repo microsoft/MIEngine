@@ -50,9 +50,9 @@ namespace Microsoft.SSHDebugPS
 
         protected ProcessStartInfo ProcessStartInfo { get; }
         private System.Diagnostics.Process _process;
-        private System.Threading.Tasks.Task _outputReadLoopTask;
-        private System.Threading.Tasks.Task _errorReadLoopTask;
-        private bool _hasExited = false;
+
+        private byte _readerCompleteCount = 0;
+        private bool _processExited = false;
 
         private StreamWriter _stdInWriter;
         private StreamReader _stdOutReader;
@@ -117,8 +117,8 @@ namespace Microsoft.SSHDebugPS
                 _stdOutReader = new StreamReader(_process.StandardOutput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX);
                 _stdErrReader = new StreamReader(_process.StandardError.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX);
 
-                _outputReadLoopTask = ReadStdOutAsync(_stdOutReader);
-                _errorReadLoopTask = ReadLoopAsync(_stdErrReader, false, OnErrorReceived);
+                _ = ReadStdOutAsync(_stdOutReader);
+                _ = ReadLoopAsync(_stdErrReader, OnErrorReceived);
             }
         }
 
@@ -152,14 +152,18 @@ namespace Microsoft.SSHDebugPS
 
         private void OnProcessExited(object sender, EventArgs args)
         {
+            bool shouldClose = false;
+
             lock (_lock)
             {
-                // Make sure that all output has been read before exiting.
-                if (!_hasExited && _outputReadLoopTask.IsCompleted)
-                {
-                    _hasExited = true;
-                    Closed?.Invoke(this, _process.ExitCode);
-                }
+                Debug.Assert(_processExited == false, "ProcessExit shouldn't be set more than once");
+                _processExited = true;
+                shouldClose = _readerCompleteCount == 2;
+            }
+
+            if (shouldClose)
+            {
+                Closed?.Invoke(this, _process.ExitCode);
             }
         }
 
@@ -170,7 +174,7 @@ namespace Microsoft.SSHDebugPS
 
         protected virtual Task ReadStdOutAsync(StreamReader stdOutReader)
         {
-            return ReadLoopAsync(stdOutReader, checkForExitedProcess: true, OnOutputReceived);
+            return ReadLoopAsync(stdOutReader, OnOutputReceived);
         }
 
         protected void OnOutputReceived(string line)
@@ -178,13 +182,13 @@ namespace Microsoft.SSHDebugPS
             OutputReceived?.Invoke(this, line);
         }
 
-        private async Task ReadLoopAsync(StreamReader reader, bool checkForExitedProcess, Action<string> action)
+        private async Task ReadLoopAsync(StreamReader reader, Action<string> action)
         {
             try
             {
                 while (!this.IsDisposeStarted)
                 {
-                    string line = await reader.ReadLineAsync();
+                    string line = await reader.ReadLineAsync().ConfigureAwait(false);
 
                     if (this.IsDisposeStarted)
                     {
@@ -194,10 +198,7 @@ namespace Microsoft.SSHDebugPS
 
                     if (line == null)
                     {
-                        if (checkForExitedProcess)
-                        {
-                            VerifyProcessExitedAndNotify();
-                        }
+                        OnReaderComplete();
                         return; // end of stream
                     }
 
@@ -206,7 +207,7 @@ namespace Microsoft.SSHDebugPS
             }
             catch (Exception e)
             {
-                if (this.IsDisposeStarted) // ignore exceptions if we are disposing
+                if (!this.IsDisposeStarted) // ignore exceptions if we are disposing
                 {
                     ReportException(e);
                     Dispose();
@@ -214,23 +215,21 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        protected void VerifyProcessExitedAndNotify()
+        protected void OnReaderComplete()
         {
             bool shouldClose = false;
+
             lock (_lock)
             {
-                if (!_hasExited && _process.HasExited)
-                {
-                    _hasExited = true;
-                    shouldClose = true;
-                }
+                Debug.Assert(_readerCompleteCount < 2, "OnReaderComplete should not be called more than twice");
+                _readerCompleteCount++;
+                shouldClose = _readerCompleteCount == 2 && _processExited;
             }
 
             if (shouldClose)
             {
                 Closed?.Invoke(this, _process.ExitCode);
             }
-
         }
 
         private void EnsureRunning()
@@ -358,7 +357,7 @@ namespace Microsoft.SSHDebugPS
                     }
                     else
                     {
-                        VerifyProcessExitedAndNotify();
+                        OnReaderComplete();
                         return;
                     }
                 }

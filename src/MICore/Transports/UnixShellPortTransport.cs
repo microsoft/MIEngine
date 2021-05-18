@@ -141,7 +141,7 @@ namespace MICore
 
         public bool Interrupt(int pid)
         {
-            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -5 {0}", pid);
+            string killCmd = string.Format(CultureInfo.InvariantCulture, "/bin/sh -c \"kill -5 {0}\"", pid);
 
             try
             {
