@@ -7,14 +7,18 @@ parameters:
   BasePath: $(Build.StagingDirectory)
 
 steps:
+- script: |
+    for /f "delims=" %%f in ($(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt) do set NugetPackageVersion=%%f
+    echo ##vso[task.setvariable variable=NugetPackageVersion;]%NugetPackageVersion%
+  displayName: 'Get NuGet Version'
+
 - template: ../tasks/NuGetCommand.yml
   parameters:
     displayName: 'NuGet pack'
     command: pack
     searchPatternPack: '$(Build.SourcesDirectory)\MIEngine.mdd.nuspec;$(Build.SourcesDirectory)\MIEngine.UnixPortSupplier.nuspec'
     configurationToPack: Release
-    versioningScheme: byEnvVar
-    versionEnvVar: 'BUILD_BUILDNUMBER'
+    buildProperties: 'version=$(NugetPackageVersion)'
     basePath: ${{ parameters.BasePath }}
 
 - template: ../tasks/NuGetCommand.yml

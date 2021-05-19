@@ -72,9 +72,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
+  <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
+
   <ItemGroup Label="NuGet Packages">
     <!-- TODO: Include in VSIX. (Optional since we don't F5 the DebugAdapterHost.Launch scenario.) -->
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol" Version="$(Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version)" />
@@ -99,7 +100,7 @@
     <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.exe.config" />
     <DropThirdPartySignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.OLE.Interop.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Interop.dll" />
     <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
   </ItemGroup>
   <ItemGroup Label="OpenDebugAD7 Drop Files for XPlat" Condition="'$(IsXPlat)' == 'false'">

@@ -74,8 +74,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
+  <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
+
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <!-- NOTE: MIEngine's usage of Newtonsoft.Json's flows through public interfaces exposed by MICore (IPlatformAppLauncher). So this version needs to be within the binding redirect range used by devenv.exe (currently 4.5.0.0-9.0.0.0) -->
     <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" />
   </ItemGroup>

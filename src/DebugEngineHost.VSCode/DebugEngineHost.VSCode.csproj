@@ -20,7 +20,7 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
     <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -71,8 +71,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
+  <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
+
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>

@@ -54,8 +54,9 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
 
+  <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
+
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>
 

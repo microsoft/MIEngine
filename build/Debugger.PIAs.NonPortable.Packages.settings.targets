@@ -7,12 +7,6 @@
         <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.12.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_12_0_Version)" />
         <PackageReference Include="Microsoft.VisualStudio.Debugger.InteropA" Version="$(Microsoft_VisualStudio_Debugger_InteropA_Version)" />
         
-        <PackageReference Include="Microsoft.VisualStudio.Interop" Version="$(Microsoft_VisualStudio_Interop_Version)">
-            <IncludeAssets>compile</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-
-        <!--This is a forwarder assembly. It will redirect types from OLE.Interop to Microsoft.VisualStudio.Interop -->
-        <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(Microsoft_VisualStudio_OLE_Interop_Version)" NoWarn="NU1605" />
+        <PackageReference Include="Microsoft.VisualStudio.Interop" Version="$(Microsoft_VisualStudio_Interop_Version)" />
     </ItemGroup>
 </Project>
