@@ -12,6 +12,12 @@ steps:
     echo ##vso[task.setvariable variable=NugetPackageVersion;]%NugetPackageVersion%
   displayName: 'Get NuGet Version'
 
+- template: ../tasks/PublishPipelineArtifact.yml
+  parameters:
+    displayName: 'Publish File Version'
+    path: '$(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt' 
+    artifactName: 'PackageVersion'
+
 - template: ../tasks/NuGetCommand.yml
   parameters:
     displayName: 'NuGet pack'
