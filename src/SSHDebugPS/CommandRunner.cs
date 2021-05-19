@@ -46,24 +46,25 @@ namespace Microsoft.SSHDebugPS
     /// </summary>
     internal class LocalCommandRunner : ICommandRunner
     {
-        public static int BUFMAX = 4096;
+        protected const int BUFMAX = 4096;
 
-        private ProcessStartInfo _processStartInfo;
+        protected ProcessStartInfo ProcessStartInfo { get; }
         private System.Diagnostics.Process _process;
-        private CancellationTokenSource _cancellationSource = new CancellationTokenSource();
-        private System.Threading.Tasks.Task _outputReadLoopTask;
-        private System.Threading.Tasks.Task _errorReadLoopTask;
-        private bool _hasExited = false;
+
+        private byte _readerCompleteCount = 0;
+        private bool _processExited = false;
 
         private StreamWriter _stdInWriter;
         private StreamReader _stdOutReader;
         private StreamReader _stdErrReader;
 
-        protected object _lock = new object();
+        private readonly object _lock = new object();
 
         public event EventHandler<string> OutputReceived;
         public event EventHandler<int> Closed;
         public event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
+
+        protected bool IsDisposeStarted => _process == null;
 
         public LocalCommandRunner(IPipeTransportSettings settings)
             : this(settings.Command, settings.CommandArgs)
@@ -71,28 +72,41 @@ namespace Microsoft.SSHDebugPS
 
         public LocalCommandRunner(string command, string commandArgs)
         {
-            _processStartInfo = new ProcessStartInfo(command, commandArgs);
+            ProcessStartInfo = new ProcessStartInfo(command, commandArgs);
 
-            _processStartInfo.RedirectStandardError = true;
-            _processStartInfo.RedirectStandardInput = true;
-            _processStartInfo.RedirectStandardOutput = true;
+            ProcessStartInfo.RedirectStandardError = true;
+            ProcessStartInfo.RedirectStandardInput = true;
+            ProcessStartInfo.RedirectStandardOutput = true;
 
-            _processStartInfo.UseShellExecute = false;
-            _processStartInfo.CreateNoWindow = true;
+            ProcessStartInfo.UseShellExecute = false;
+            ProcessStartInfo.CreateNoWindow = true;
+        }
+
+        public static LocalCommandRunner CreateInstance(bool handleRawOutput, IPipeTransportSettings settings)
+        {
+            return CreateInstance(handleRawOutput, settings.Command, settings.CommandArgs);
+        }
+
+        public static LocalCommandRunner CreateInstance(bool handleRawOutput, string command, string args)
+        {
+            if (handleRawOutput)
+            {
+                return new RawLocalCommandRunner(command, args);
+            }
+            else
+            {
+                return new LocalCommandRunner(command, args);
+            }
         }
 
         public void Start()
         {
             ThrowIfDisposed();
-            if (_processStartInfo == null)
-            {
-                throw new InvalidOperationException("Unable to create process. Process start info does not exist");
-            }
 
             lock (_lock)
             {
                 _process = new System.Diagnostics.Process();
-                _process.StartInfo = _processStartInfo;
+                _process.StartInfo = this.ProcessStartInfo;
 
                 _process.Exited += OnProcessExited;
                 _process.EnableRaisingEvents = true;
@@ -103,8 +117,8 @@ namespace Microsoft.SSHDebugPS
                 _stdOutReader = new StreamReader(_process.StandardOutput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX);
                 _stdErrReader = new StreamReader(_process.StandardError.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), false, BUFMAX);
 
-                _outputReadLoopTask = System.Threading.Tasks.Task.Run(() => ReadLoop(_stdOutReader, _cancellationSource.Token, true, OnOutputReceived));
-                _errorReadLoopTask = System.Threading.Tasks.Task.Run(() => ReadLoop(_stdErrReader, _cancellationSource.Token, false, OnErrorReceived));
+                _ = ReadStdOutAsync(_stdOutReader);
+                _ = ReadLoopAsync(_stdErrReader, OnErrorReceived);
             }
         }
 
@@ -136,16 +150,20 @@ namespace Microsoft.SSHDebugPS
             ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(ex));
         }
 
-        protected virtual void OnProcessExited(object sender, EventArgs args)
+        private void OnProcessExited(object sender, EventArgs args)
         {
+            bool shouldClose = false;
+
             lock (_lock)
             {
-                // Make sure that all output has been written before exiting.
-                if (!_hasExited && _outputReadLoopTask.IsCompleted)
-                {
-                    _hasExited = true;
-                    Closed?.Invoke(this, _process.ExitCode);
-                }
+                Debug.Assert(_processExited == false, "ProcessExit shouldn't be set more than once");
+                _processExited = true;
+                shouldClose = _readerCompleteCount == 2;
+            }
+
+            if (shouldClose)
+            {
+                Closed?.Invoke(this, _process.ExitCode);
             }
         }
 
@@ -154,59 +172,67 @@ namespace Microsoft.SSHDebugPS
             ErrorOccured?.Invoke(this, new ErrorOccuredEventArgs(error));
         }
 
-        protected virtual void OnOutputReceived(string line)
+        protected virtual Task ReadStdOutAsync(StreamReader stdOutReader)
+        {
+            return ReadLoopAsync(stdOutReader, OnOutputReceived);
+        }
+
+        protected void OnOutputReceived(string line)
         {
             OutputReceived?.Invoke(this, line);
         }
 
-        protected virtual void ReadLoop(StreamReader reader, CancellationToken token, bool checkForExitedProcess, Action<string> action)
+        private async Task ReadLoopAsync(StreamReader reader, Action<string> action)
         {
             try
             {
-                while (!token.IsCancellationRequested)
+                while (!this.IsDisposeStarted)
                 {
-                    Task<string> task = reader.ReadLineAsync();
-                    task.Wait(token);
+                    string line = await reader.ReadLineAsync().ConfigureAwait(false);
 
-                    if (task.Result == null || token.IsCancellationRequested)
+                    if (this.IsDisposeStarted)
                     {
-                        if (checkForExitedProcess)
-                        {
-                            VerifyProcessExitedAndNotify();
-                        }
+                        // Dispose was called
+                        return;
+                    }
+
+                    if (line == null)
+                    {
+                        OnReaderComplete();
                         return; // end of stream
                     }
 
-                    action(task.Result);
+                    action(line);
                 }
             }
             catch (Exception e)
             {
-                ReportException(e);
-                Dispose();
+                if (!this.IsDisposeStarted) // ignore exceptions if we are disposing
+                {
+                    ReportException(e);
+                    Dispose();
+                }
             }
         }
 
-        protected void VerifyProcessExitedAndNotify()
+        protected void OnReaderComplete()
         {
             bool shouldClose = false;
+
             lock (_lock)
             {
-                if (!_hasExited && _process.HasExited)
-                {
-                    _hasExited = true;
-                    shouldClose = true;
-                }
+                Debug.Assert(_readerCompleteCount < 2, "OnReaderComplete should not be called more than twice");
+                _readerCompleteCount++;
+                shouldClose = _readerCompleteCount == 2 && _processExited;
             }
 
             if (shouldClose)
             {
                 Closed?.Invoke(this, _process.ExitCode);
             }
-
         }
 
-        protected void EnsureRunning()
+        private void EnsureRunning()
         {
             if (_process == null || _process.HasExited)
             {
@@ -214,27 +240,31 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
-        protected void CleanUpProcess()
+        private void CleanUpProcess()
         {
             if (_process != null)
             {
                 lock (_lock)
                 {
-                    if (_process != null)
+                    System.Diagnostics.Process process = _process;
+                    if (process != null)
                     {
-                        if (!_process.HasExited)
+                        _process = null;
+
+                        if (!process.HasExited)
                         {
-                            _process.Kill();
+                            try
+                            {
+                                process.Kill();
+                            }
+                            catch (Exception)
+                            {
+                                // Process may already be dead
+                            }
                         }
 
                         // clean up event handlers.
-                        _process.Exited -= OnProcessExited;
-                        _process = null;
-
-                        _cancellationSource.Cancel();
-
-                        _outputReadLoopTask = null;
-                        _errorReadLoopTask = null;
+                        process.Exited -= OnProcessExited;
 
                         _stdInWriter.Close();
                         _stdInWriter = null;
@@ -244,6 +274,8 @@ namespace Microsoft.SSHDebugPS
 
                         _stdErrReader.Close();
                         _stdErrReader = null;
+
+                        process.Close();
                     }
                 }
             }
@@ -282,54 +314,68 @@ namespace Microsoft.SSHDebugPS
     }
 
     /// <summary>
-    /// Launches a local command where the output is read in a buffer.
+    /// Launches a local command where the OutputReceived event is fired with the raw line ending characters
     /// </summary>
     internal class RawLocalCommandRunner : LocalCommandRunner
     {
         public RawLocalCommandRunner(string command, string args) : base(command, args) { }
 
-        public RawLocalCommandRunner(IPipeTransportSettings settings) : base(settings) { }
+        protected override Task ReadStdOutAsync(StreamReader stdOutReader)
+        {
+            // Async reads against the stream aren't completing even though data is available, possibly because PineZorro
+            // is using `.Result` on an I/O object. So use a dedicated thread instead.
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
 
-        protected override void ReadLoop(StreamReader reader, CancellationToken token, bool checkForExitedProcess, Action<string> action)
+            // We shouldn't need a full stack for this thread, so reduce the stack size to 256KB
+            const int stackSize = 256 * 1024;
+            var thread = new Thread(() =>
+                {
+                    SyncReadStdOut(stdOutReader);
+                    tcs.SetResult(null);
+                },
+                stackSize);
+
+            thread.Name = string.Concat("SSHDebugPS: ", Path.GetFileNameWithoutExtension(this.ProcessStartInfo.FileName), " stdout reader");
+            thread.Start();
+
+            return tcs.Task;
+        }
+
+        private void SyncReadStdOut(StreamReader stdOutReader)
         {
             try
             {
-                string result = string.Empty;
-                while (!token.IsCancellationRequested)
+                char[] buffer = new char[BUFMAX];
+                while (!this.IsDisposeStarted)
                 {
-                    char[] buffer = new char[BUFMAX];
-                    Task<int> task = reader.ReadAsync(buffer, 0, buffer.Length);
-                    task.Wait(token);
+                    int bytesRead = stdOutReader.Read(buffer, 0, buffer.Length);
 
-                    if (task.Result > 0)
+                    if (bytesRead > 0)
                     {
-                        result += new string(buffer, 0, task.Result);
-                        if (task.Result < BUFMAX)
-                        {
-                            action(result);
-                            result = string.Empty;
-                        }
+                        string result = new string(buffer, 0, bytesRead);
+                        OnOutputReceived(result);
                     }
                     else
                     {
-                        if (!string.IsNullOrEmpty(result))
-                        {
-                            action(result);
-                            result = string.Empty;
-                        }
-                        if (checkForExitedProcess)
-                        {
-                            VerifyProcessExitedAndNotify();
-                        }
+                        OnReaderComplete();
                         return;
                     }
                 }
             }
             catch (Exception ex)
             {
-                ReportException(ex);
-                Dispose();
+                if (!this.IsDisposeStarted)
+                {
+                    ReportException(ex);
+                    Dispose();
+                }
             }
+        }
+
+        protected override void OnErrorReceived(string error)
+        {
+            // stderr doesn't need to be read using raw I/O, but the call back does expect new line characters, so add them
+            base.OnErrorReceived(error + Environment.NewLine);
         }
     }
 
@@ -338,24 +384,26 @@ namespace Microsoft.SSHDebugPS
     /// </summary>
     internal class RemoteCommandRunner : ICommandRunner, IDebugUnixShellCommandCallback
     {
+        private readonly string _commandText;
+        private readonly Connection _remoteConnection;
         private IDebugUnixShellAsyncCommand _asyncCommand;
         private bool _isRunning;
-        private string _commandText;
-        private Connection _remoteConnection;
+        private readonly bool _handleRawOutput;
 
-        public RemoteCommandRunner(IPipeTransportSettings settings, Connection remoteConnection)
-            : this(settings.Command, settings.CommandArgs, remoteConnection)
+        public RemoteCommandRunner(IPipeTransportSettings settings, Connection remoteConnection, bool handleRawOutput)
+            : this(settings.Command, settings.CommandArgs, remoteConnection, handleRawOutput)
         { }
 
-        public RemoteCommandRunner(string command, string arguments, Connection remoteConnection)
+        public RemoteCommandRunner(string command, string arguments, Connection remoteConnection, bool handleRawOutput)
         {
             _remoteConnection = remoteConnection;
             _commandText = string.Concat(command, " ", arguments);
+            _handleRawOutput = handleRawOutput;
         }
 
         public void Start()
         {
-            _remoteConnection.BeginExecuteAsyncCommand(_commandText, runInShell: false, callback: this, asyncCommand: out _asyncCommand);
+            _remoteConnection.BeginExecuteAsyncCommand(_commandText, runInShell: _handleRawOutput == false, callback: this, asyncCommand: out _asyncCommand);
             _isRunning = true;
         }
 

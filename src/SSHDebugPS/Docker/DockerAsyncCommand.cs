@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Text;
+using System.Threading;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS.Docker
@@ -60,13 +61,14 @@ namespace Microsoft.SSHDebugPS.Docker
 
         public void Close()
         {
-            if (_runner != null)
+            // If Close is called more than once, make subsequent calls a nop
+            ICommandRunner runner = Interlocked.Exchange(ref _runner, null);
+            if (runner != null)
             {
-                _runner.Dispose();
-                _runner.OutputReceived -= OnOutputReceived;
-                _runner.ErrorOccured -= OnErrorOccured;
-                _runner.Closed -= OnClose;
-                _runner = null;
+                runner.Dispose();
+                runner.OutputReceived -= OnOutputReceived;
+                runner.ErrorOccured -= OnErrorOccured;
+                runner.Closed -= OnClose;
             }
             _callback = null;
         }
