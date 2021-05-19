@@ -9,6 +9,13 @@ steps:
     TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
     CleanTargetFolder: true
 
+- template: ../tasks/PublishSymbols.yml
+  parameters:
+    IndexSources: false
+    SymbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+    SearchPattern: '**\*.pdb'
+    SymbolServerType: TeamServices
+
 - template: ../tasks/PublishPipelineArtifact.yml
   parameters:
     displayName: 'Publish Symbols'

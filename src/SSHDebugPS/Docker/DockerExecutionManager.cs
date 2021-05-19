@@ -70,7 +70,9 @@ namespace Microsoft.SSHDebugPS.Docker
                 return new LocalCommandRunner(execSettings);
             }
             else
-                return new RemoteCommandRunner(execSettings.Command, execSettings.CommandArgs, _outerConnection);
+            {
+                return new RemoteCommandRunner(execSettings, _outerConnection, handleRawOutput: false);
+            }
         }
 
         public int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage, bool runInShell = true, bool makeInteractive = true)

@@ -108,35 +108,44 @@ namespace Microsoft.SSHDebugPS
             return commandOutput.StartsWith("Linux", StringComparison.OrdinalIgnoreCase);
         }
 
-        public bool TryGetUsername(out string username)
+        /// <summary>
+        /// Retrieves system information such as username and architecture
+        /// </summary>
+        /// <returns>SystemInformation containing username and architecture. If it was unable to obtain any of these, the value will be set to string.Empty.</returns>
+        public SystemInformation GetSystemInformation()
         {
-            username = string.Empty;
-            string command = "id -u -n";
             string commandOutput;
             string errorMessage;
+
+            string username = string.Empty;
+            string command = "id -u -n";
             if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
             {
-
                 username = commandOutput;
-                return true;
             }
 
-            return false;
+            string architecture = string.Empty;
+            command = "uname -m";
+            if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
+            {
+                architecture = commandOutput;
+            }
+
+            return new SystemInformation(username, architecture);
         }
 
         public override List<Process> ListProcesses()
         {
-            string username;
-            TryGetUsername(out username);
+            SystemInformation systemInformation = GetSystemInformation();
 
             List<Process> processes;
             string psErrorMessage;
             // Try using 'ps' first
-            if (!PSListProcess(username, out psErrorMessage, out processes))
+            if (!PSListProcess(systemInformation, out psErrorMessage, out processes))
             {
                 string procErrorMessage;
                 // try using the /proc file system
-                if (!ProcFSListProcess(username, out procErrorMessage, out processes))
+                if (!ProcFSListProcess(systemInformation, out procErrorMessage, out processes))
                 {
                     StringBuilder sb = new StringBuilder();
                     sb.Append(psErrorMessage);
@@ -155,7 +164,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Query 'ps' command for a list of processes
         /// </summary>
-        private bool PSListProcess(string username, out string errorMessage, out List<Process> processes)
+        private bool PSListProcess(SystemInformation systemInformation, out string errorMessage, out List<Process> processes)
         {
             errorMessage = string.Empty;
             string commandOutput;
@@ -182,7 +191,7 @@ namespace Microsoft.SSHDebugPS
                 }
             }
 
-            processes = PSOutputParser.Parse(commandOutput, username);
+            processes = PSOutputParser.Parse(commandOutput, systemInformation);
             return true;
         }
 
@@ -191,7 +200,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Query /proc for a list of processes
         /// </summary>
-        private bool ProcFSListProcess(string username, out string errorMessage, out List<Process> processes)
+        private bool ProcFSListProcess(SystemInformation systemInformation, out string errorMessage, out List<Process> processes)
         {
             errorMessage = string.Empty;
             processes = null;
@@ -204,7 +213,7 @@ namespace Microsoft.SSHDebugPS
                 return false;
             }
 
-            processes = ProcFSOutputParser.Parse(commandOutput, username);
+            processes = ProcFSOutputParser.Parse(commandOutput, systemInformation);
             return true;
         }
 

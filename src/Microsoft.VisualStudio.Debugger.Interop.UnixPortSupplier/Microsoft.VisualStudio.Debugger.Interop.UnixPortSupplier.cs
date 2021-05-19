@@ -36,7 +36,10 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// it.
         /// </summary>
         /// <param name="commandText">Text of the command to execut</param>
-        /// <param name="runInShell">True if a PTY should be allocated and a shell started before executing the command.</param>
+        /// <param name="runInShell">True if the command should be executed in a shell and PTY. It is important to note that callers should pass
+        /// True unless their callback implementation is capable of handling raw output text, as <see cref="IDebugUnixShellCommandCallback.OnOutputLine(string)"/>
+        /// will be sent unbuffered output when this is false, so the implementation must be able to handle partial lines or multiple lines in
+        /// one call to OnOutputLine.</param>
         /// <param name="callback">Callback which will receive the output and events 
         /// from the command</param>
         /// <param name="asyncCommand">Returned command object</param>
@@ -141,8 +144,17 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
     public interface IDebugUnixShellCommandCallback
     {
         /// <summary>
-        /// Fired when a line of text is sent by the command
+        /// Notification fired when the command has output available
         /// </summary>
+        /// <param name="line">Text that the executing command wrote to standard out or error.
+        /// <para>If `false` is passed for `runInShell` when <see cref="IDebugUnixShellPort.BeginExecuteAsyncCommand(string, bool, IDebugUnixShellCommandCallback, out IDebugUnixShellAsyncCommand)"/>
+        /// was called then this text will NOT be buffered, so either partial lines or multiple lines are possible, and this text will include new line
+        /// characters.
+        /// </para>
+        /// <para>
+        /// If `true` is passed for `runInShell` then this will be a single line of output with new line characters removed.
+        /// </para>
+        /// </param>
         void OnOutputLine(string line);
 
         /// <summary>
@@ -150,5 +162,21 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
         /// </summary>
         /// <param name="exitCode">The exit code of the command, assuming one was printed.</param>
         void OnExit(string exitCode);
+    };
+
+    /// <summary>
+    /// Interface to query unix process architecture information.
+    /// </summary>
+    [ComImport()]
+    [ComVisible(true)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("61D4C2C4-7CA8-4472-8446-7B1DF5C9D16D")]
+    public interface IDebugUnixProcess
+    {
+        /// <summary>
+        /// Gets the architecture unix process.
+        /// </summary>
+        /// <returns>The string representation of the process's architecture. The format of this is architecture-specific and will match that returned by uname -m. Example: 'x86_64'</returns>
+        string GetProcessArchitecture();
     };
 }
