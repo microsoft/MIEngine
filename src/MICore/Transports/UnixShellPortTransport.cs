@@ -27,17 +27,17 @@ namespace MICore
 
         private const string ErrorPrefix = "Error:";
 
-        private class UnixShellAsyncCommandCallback: IDebugUnixShellCommandCallback
+        private class KillCommandCallback: IDebugUnixShellCommandCallback
         {
-            UnixShellPortTransport _parent;
-            public UnixShellAsyncCommandCallback(UnixShellPortTransport parent)
+            private readonly Logger _logger;
+            public KillCommandCallback(Logger logger)
             {
-                this._parent = parent;
+                this._logger = logger;
             }
 
             public void OnOutputLine(string line)
             {
-                ((IDebugUnixShellCommandCallback)_parent).OnOutputLine(line);
+                _logger?.WriteLine("[kill] ->" + line);
             }
 
             public void OnExit(string exitCode)
@@ -57,7 +57,7 @@ namespace MICore
             _startRemoteDebuggerCommand = _launchOptions.StartRemoteDebuggerCommand;
 
             _callback.AppendToInitializationLog(string.Format(CultureInfo.CurrentCulture, MICoreResources.Info_StartingUnixCommand, _startRemoteDebuggerCommand));
-            _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, true, this, out _asyncCommand);
+            _launchOptions.UnixPort.BeginExecuteAsyncCommand(_startRemoteDebuggerCommand, runInShell: true, this, out _asyncCommand);
         }
 
         public void Close()
@@ -141,13 +141,13 @@ namespace MICore
 
         public bool Interrupt(int pid)
         {
-            string killCmd = string.Format(CultureInfo.InvariantCulture, "kill -5 {0}", pid);
+            string killCmd = string.Format(CultureInfo.InvariantCulture, "/bin/sh -c \"kill -5 {0}\"", pid);
 
             try
             {
                 IDebugUnixShellAsyncCommand asyncCommand;
-                UnixShellAsyncCommandCallback callbacks = new UnixShellAsyncCommandCallback(this);
-                _launchOptions.UnixPort.BeginExecuteAsyncCommand(killCmd, false, callbacks, out asyncCommand);
+                KillCommandCallback callbacks = new KillCommandCallback(_logger);
+                _launchOptions.UnixPort.BeginExecuteAsyncCommand(killCmd, runInShell: true, callbacks, out asyncCommand);
             }
             catch (Exception e)
             {
