@@ -1,0 +1,19 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
+  <!--
+  Settings file which is used by the debugger testing projects.
+  -->  
+  <Import Project="all_projects.settings.targets"/>
+  <Import Project="package_versions.settings.targets" />
+  <Import Project="version.settings.targets" />
+
+  <PropertyGroup>
+    <OutputPath>$(MIEngineRoot)bin\DebugAdapterProtocolTests\$(Configuration)</OutputPath>
+    <DropDir>$(MIEngineRoot)bin\DebugAdapterProtocolTests\$(Configuration)\drop</DropDir>
+    <DropRootDir>$(DropDir)</DropRootDir>
+
+     <!-- SDK Project Variables -->
+    <Configurations>Debug;Release</Configurations>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+</Project>
