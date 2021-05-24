@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Globalization;
@@ -166,7 +167,16 @@ namespace Microsoft.MIDebugEngine
             string val = null;
             Task eval = Task.Run(async () =>
             {
-                val = await _engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(expr, 0, 0);
+                // thread id, frame
+                Results threadInfo = await _engine.DebuggedProcess.MICommandFactory.ThreadInfo();
+                string currentThreadId = threadInfo.FindString("current-thread-id");
+                int threadId = Convert.ToInt32(currentThreadId,CultureInfo.InvariantCulture); // insert something here
+
+                DebuggedThread thread = await _engine.DebuggedProcess.ThreadCache.GetThread(threadId);
+                System.Collections.Generic.List<ThreadContext> stackFrames = await _engine.DebuggedProcess.ThreadCache.StackFrames(thread);
+
+                uint frame = stackFrames[0].Level;
+                val = await _engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(expr, threadId, frame);
             });
             eval.Wait();
             return val;
