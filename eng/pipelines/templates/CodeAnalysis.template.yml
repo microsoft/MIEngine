@@ -1,0 +1,14 @@
+---
+steps:
+- checkout: self
+
+- template: ../tasks/CredScan.yml
+
+- template: ../tasks/PoliCheck.yml
+
+- template: ../tasks/SdtReport.yml
+
+- template: ../tasks/PublishSecurityAnalysisLogs.yml
+  parameters:
+    ArtifactName: 'CodeAnalysis'
+...

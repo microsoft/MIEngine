@@ -1,0 +1,10 @@
+parameters:
+    ArtifactName: 'logs'
+
+steps:
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@3
+  displayName: 'Publish Security Analysis Logs'
+  inputs:
+    ArtifactName: ${{ parameters.ArtifactName }}
+  continueOnError: true
+  condition: succeededOrFailed()

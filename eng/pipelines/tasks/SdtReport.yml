@@ -1,0 +1,15 @@
+# Creates a security report for:
+# - PoliCheck
+# - CredScan
+---
+steps:
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@2
+  displayName: 'Create Security Analysis Report'
+  inputs:
+    GdnExportTsvFile: true
+    GdnExportHtmlFile: true
+    GdnExportGdnToolPoliCheckSeverity: Warning
+    GdnBreakGdnToolCredScanSeverity: Warning
+  continueOnError: true
+  condition: succeededOrFailed()
+...
