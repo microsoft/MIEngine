@@ -5,6 +5,7 @@
   <Import Project="all_projects.settings.targets"/>
   <Import Project="package_versions.settings.targets" />
   <Import Project="version.settings.targets" />
+  <Import Project="source_link.targets" />
 
   <PropertyGroup>
     <OutputPath>$(MIEngineRoot)bin\DebugAdapterProtocolTests\$(Configuration)</OutputPath>
