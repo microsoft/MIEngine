@@ -1,0 +1,3 @@
+steps:
+- task: ms-vseng.MicroBuildShipTasks.9ef02907-718e-41b7-a57e-b10f86130bb8.MicroBuildPrefastPlugin@2
+  displayName: 'Install Prefast Plugin'
