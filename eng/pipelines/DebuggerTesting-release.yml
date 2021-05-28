@@ -1,0 +1,13 @@
+---
+name: $(Date:yyyMMdd).$(Rev:r)
+variables:
+- name: SignType
+  value: test
+- name: TeamName
+  value: MDDDebugger
+jobs:
+- template: ./jobs/VSEng-MicroBuildVS2019.job.yml
+  parameters:
+    JobName: DebuggerTesting
+    BuildTemplate: 'DebuggerTesting-release'
+...
