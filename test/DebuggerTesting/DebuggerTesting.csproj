@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\build\debuggertesting.settings.targets" />
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup Label="Package References">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_Version)" />
+    <PackageReference Include="xunit" Version="$(xunit_Version)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(xunit_runner_visualstudio_Version)">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Label="Project References">
+    <ProjectReference Include="..\DebugAdapterRunner\DebugAdapterRunner.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Label="Files to Drop">
+    <DropUnsignedFile Include="$(OutputPath)DebuggerTesting.dll" />
+    <DropUnsignedFile Include="$(OutputPath)DebuggerTesting.pdb" />
+  </ItemGroup>
+
+</Project>

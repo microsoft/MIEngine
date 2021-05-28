@@ -1,0 +1,268 @@
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using OpenDebug;
+
+namespace DebugAdapterRunner
+{
+    /// <summary>Represents a command that is sent to the debug adapter</summary>
+    public class DebugAdapterCommand : Command
+    {
+        public dynamic args;
+        private const int REQUEST_BYTES = 4096;
+
+        public DebugAdapterCommand(string cmd, dynamic args, IEnumerable<DebugAdapterResponse> expectedResponses = null)
+        {
+            this.Name = cmd;
+            this.args = args;
+
+            if (expectedResponses == null)
+            {
+                this.ExpectedResponses.Add(new DebugAdapterResponse(new { success = true, command = cmd }));
+            }
+            else
+            {
+                this.ExpectedResponses.AddRange(expectedResponses);
+            }
+        }
+
+        private string CreateDispatcherRequest(DebugAdapterRunner runner)
+        {
+            DispatcherRequest request = new DispatcherRequest(runner.GetNextSequenceNumber(), this.Name, this.args);
+            return runner.SerializeMessage(request);
+        }
+
+        private void VerifyValueOfBuffer(byte[] buffer, string expectedValue)
+        {
+            string actualValue = Encoding.UTF8.GetString(buffer);
+            if (actualValue != expectedValue)
+            {
+                string errorMessage = string.Format(CultureInfo.CurrentCulture, "Unexpected response from debug adapter. Was expecting {0} but got {1}", expectedValue, actualValue);
+                throw new DARException(errorMessage);
+            }
+        }
+
+        private string GetMessage(Stream stdout, int timeout, Process debugAdapter, DebugAdapterRunner runner)
+        {
+            // Read header of message
+            byte[] header = ReadBlockFromStream(stdout, debugAdapter, DAPConstants.ContentLength.Length, timeout);
+            VerifyValueOfBuffer(header, DAPConstants.ContentLength);
+
+            // Read the length (in bytes) of the json message
+            int messageLengthBytes = 0;
+            int nextByte = -1;
+            while (true)
+            {
+                nextByte = stdout.ReadByte();
+                if (nextByte >= '0' && nextByte <= '9')
+                {
+                    messageLengthBytes = messageLengthBytes * 10 + nextByte - '0';
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Read and verify TWO_CRLF
+            byte[] twoCRLF = new byte[DAPConstants.TwoCrLf.Length];
+            twoCRLF[0] = (byte)nextByte;
+
+            // Read one less byte because we have the first byte and copy into twoCRLF byte array
+            byte[] oneMinustwoCRLF = ReadBlockFromStream(stdout, debugAdapter, DAPConstants.TwoCrLf.Length - 1, timeout);
+            Array.Copy(oneMinustwoCRLF, 0, twoCRLF, 1, oneMinustwoCRLF.Length);
+
+            VerifyValueOfBuffer(twoCRLF, DAPConstants.TwoCrLf);
+
+            // Read the message contents
+            byte[] messageBuffer = ReadBlockFromStream(stdout, debugAdapter, messageLengthBytes, timeout);
+
+            return Encoding.UTF8.GetString(messageBuffer, 0, messageLengthBytes);
+        }
+
+        private byte[] ReadBlockFromStream(Stream stream, Process debugAdapter, int length, int timeout)
+        {
+            int bytesRead = 0;
+            byte[] messageBuffer = new byte[length];
+
+            while (bytesRead < length)
+            {
+                // Read as many bytes as we need or as many bytes as we can fit
+                int requestedReadBytes = Math.Min(length - bytesRead, DebugAdapterCommand.REQUEST_BYTES);
+
+                Task<int> readMessageTask = stream.ReadAsync(messageBuffer, bytesRead, requestedReadBytes);
+                if (!readMessageTask.Wait(timeout))
+                {
+                    if (bytesRead == 0)
+                    {
+                        throw new TimeoutException("Timeout waiting for message from Debug Adapter");
+                    }
+                    else
+                    {
+                        throw new DARException(String.Format(CultureInfo.InvariantCulture, "Timeout reading expected bytes. Expected:{0} Actual:{1} Timeout:{2}", length, bytesRead, timeout));
+                    }
+                }
+
+                if (debugAdapter.HasExited && readMessageTask.Result == 0)
+                {
+                    throw new DARException(String.Format(CultureInfo.InvariantCulture, "The debugger process has exited without sending all expected bytes. Expected: {0} Actual:{1}", length, bytesRead));
+                }
+
+                bytesRead += readMessageTask.Result;
+
+                if (length > bytesRead)
+                {
+                    // Give the process some time to fill the stdout buffer again
+                    Thread.Sleep(10);
+                }
+            }
+
+            return messageBuffer;
+        }
+
+        public override void Run(DebugAdapterRunner runner)
+        {
+            // Send the request
+            string request = CreateDispatcherRequest(runner);
+            // VSCode doesn't send /n at the end. If this is writeline, then concord hangs
+            runner.DebugAdapter.StandardInput.Write(request);
+
+            // Process + validate responses
+            List<object> responseList = new List<object>();
+            int currentExpectedResponseIndex = 0;
+
+            // Loop until we have received as many expected responses as expected
+            while (currentExpectedResponseIndex < this.ExpectedResponses.Count)
+            {
+                string receivedMessage = null;
+                Exception getMessageExeception = null;
+                try
+                {
+                    receivedMessage = this.GetMessage(
+                        runner.DebugAdapter.StandardOutput.BaseStream,
+                        runner.ResponseTimeout,
+                        runner.DebugAdapter,
+                        runner);
+                }
+                catch (Exception e)
+                {
+                    getMessageExeception = e;
+                }
+
+                if (getMessageExeception != null)
+                {
+                    if (!runner.DebugAdapter.HasExited)
+                    {
+                        // If it hasn't exited yet, wait a little bit longer to make sure it isn't just about to exit
+                        try
+                        {
+                            runner.DebugAdapter.WaitForExit(500);
+                        }
+                        catch
+                        { }
+                    }
+
+                    string messageStart;
+                    if (runner.DebugAdapter.HasExited)
+                    {
+                        if (runner.HasAsserted())
+                        {
+                            messageStart = string.Format(CultureInfo.CurrentCulture, "The debugger process has asserted and exited with code '{0}' without sending all expected responses. See test log for assert details.", runner.DebugAdapter.ExitCode);
+                        }
+                        else
+                        {
+                            messageStart = string.Format(CultureInfo.CurrentCulture, "The debugger process has exited with code '{0}' without sending all expected responses.", runner.DebugAdapter.ExitCode);
+                        }
+                    }
+                    else if (getMessageExeception is TimeoutException)
+                    {
+                        if (runner.HasAsserted())
+                        {
+                            messageStart = "The debugger process has asserted. See test log for assert details.";
+                        }
+                        else
+                        {
+                            messageStart = "Expected response not found before timeout.";
+                        }
+                    }
+                    else
+                    {
+                        messageStart = "Exception while reading message from debug adpter. " + getMessageExeception.Message;
+                    }
+
+                    string expectedResponseText = JsonConvert.SerializeObject(this.ExpectedResponses[currentExpectedResponseIndex].Response);
+                    string actualResponseText = string.Empty;
+
+                    for (int i = 0; i < responseList.Count; i++)
+                    {
+                        actualResponseText += string.Format(CultureInfo.CurrentCulture, "{0}. {1}\n", (i + 1), JsonConvert.SerializeObject(responseList[i]));
+                    }
+
+                    string errorMessage = string.Format(CultureInfo.CurrentCulture, "{0}\nExpected = {1}\nActual Responses =\n{2}",
+                        messageStart, expectedResponseText, actualResponseText);
+
+                    throw new DARException(errorMessage);
+                }
+
+                try
+                {
+                    DispatcherMessage dispatcherMessage = JsonConvert.DeserializeObject<DispatcherMessage>(receivedMessage);
+
+                    if (dispatcherMessage.type == "event")
+                    {
+                        DispatcherEvent dispatcherEvent = JsonConvert.DeserializeObject<DispatcherEvent>(receivedMessage);
+                        responseList.Add(dispatcherEvent);
+
+                        if (dispatcherEvent.eventType == "stopped")
+                        {
+                            runner.CurrentThreadId = dispatcherEvent.body.threadId;
+                        }
+
+                        var expected = this.ExpectedResponses[currentExpectedResponseIndex];
+                        if (Utils.CompareObjects(expected.Response, dispatcherEvent, expected.IgnoreOrder))
+                        {
+                            expected.Match = dispatcherEvent;
+                            currentExpectedResponseIndex++;
+                        }
+                    }
+                    else if (dispatcherMessage.type == "response")
+                    {
+                        DispatcherResponse dispatcherResponse = JsonConvert.DeserializeObject<DispatcherResponse>(receivedMessage);
+                        responseList.Add(dispatcherResponse);
+
+                        var expected = this.ExpectedResponses[currentExpectedResponseIndex];
+                        if (Utils.CompareObjects(expected.Response, dispatcherResponse, expected.IgnoreOrder))
+                        {
+                            expected.Match = dispatcherResponse;
+                            currentExpectedResponseIndex++;
+                        }
+                    }
+                    else if (dispatcherMessage.type == "request")
+                    {
+                        runner.HandleCallbackRequest(receivedMessage);
+                    }
+                    else
+                    {
+                        throw new DARException(String.Format(CultureInfo.CurrentCulture, "Unknown Dispatcher Message type: '{0}'", dispatcherMessage.type));
+                    }
+                }
+                catch (JsonReaderException)
+                {
+                    runner.AppendLineToDebugAdapterOutput("Response could not be parsed as json. This was the response:");
+                    runner.AppendLineToDebugAdapterOutput(receivedMessage);
+                    throw;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,28 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Source Link -->
+  <PropertyGroup Condition="'$(EnableSourceLink)' == 'true' and '$(BUILD_SOURCEVERSION)' != ''">
+    <SourceLink>$(IntermediateOutputPath)SourceLink.json</SourceLink>
+  </PropertyGroup>
+  
+  <Target Name="CreateSourceLinkJson"
+          Condition="'$(SourceLink)' != ''"
+          BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <EscapedRepositoryRoot>$(MIEngineRoot.Replace("\", "\\"))</EscapedRepositoryRoot>
+      <SourceLinkDir>$([System.IO.Path]::GetDirectoryName('$(SourceLink)'))</SourceLinkDir>
+      
+      <JsonString>
+{
+  "documents": {
+    "$(EscapedRepositoryRoot)*": "https://raw.githubusercontent.com/Microsoft/MIEngine/$(BUILD_SOURCEVERSION)/*"
+  }
+}
+      </JsonString>
+    </PropertyGroup>
+
+    <MakeDir Condition="!Exists('$(SourceLinkDir)')" Directories="$(SourceLinkDir)"/>
+    <WriteLinesToFile File="$(SourceLink)" Lines="$(JsonString)" Overwrite="true"/>
+  </Target>
+
+</Project>
