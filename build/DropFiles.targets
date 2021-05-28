@@ -47,7 +47,7 @@
     <Exec Command="$(NuGetPath) pack @(PackageNuspec->'%(Identity)') $(NuGetArguments)" />
   </Target>
 
-  <Target Name="SignNupkg" AfterTargets="CreateNugetPackage" Condition="'@(NugetPackages)' != ''">
+  <Target Name="SignNupkg" AfterTargets="CreateNugetPackage" Condition="'@(NugetPackages)' != '' AND '$(MicroBuild_SigningEnabled)' == 'true'">
     <ItemGroup>
       <PackagesToSign Include="@(NugetPackages->'$(DropDir)\%(Identity).$(NuGetPackageVersion).nupkg')">
         <Authenticode>NuGet</Authenticode>
