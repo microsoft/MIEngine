@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>MakePIAPortable</RootNamespace>
     <AssemblyName>MakePIAPortable</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
@@ -26,11 +26,12 @@
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
 
+  <Import Project="..\..\build\Debugger.PIAs.NonPortable.Packages.settings.targets" />
+
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
   
   <UsingTask TaskName="FindILDAsm" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
@@ -52,7 +53,7 @@
     </FindILDAsm>
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
     <Error Condition="'$(ILDAsmFileLocation)' == ''" Text="Unable to locate ILDasm.exe" />
-    <Exec Command='$(OutputPath)MakePortableLegacyPIAS.cmd &quot;$(ILDAsmFileLocation)&quot; &quot;$(PIAOutput)&quot;' />
+    <Exec Command="$(OutputPath)MakePortableLegacyPIAS.cmd &quot;$(ILDAsmFileLocation)&quot; &quot;$(PIAOutput)&quot;" />
   </Target>
   <ItemGroup>
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
@@ -61,10 +62,11 @@
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
+    <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Interop.dll" />
   </ItemGroup>
   <Target Name="CopyToVSCodeFolder" AfterTargets="DropFiles">
     <ItemGroup>
-      <VSCodeFolderInteropFile Include="$(DropDir)\Microsoft.VisualStudio.Debugger.InteropA.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
+      <VSCodeFolderInteropFile Include="$(DropDir)\Microsoft.VisualStudio.Debugger.InteropA.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll;$(DropDir)\Microsoft.VisualStudio.Interop.dll" />
     </ItemGroup>
     <Move SourceFiles="@(VSCodeFolderInteropFile)" DestinationFolder="$(DropDir)\vscode\" />
   </Target>

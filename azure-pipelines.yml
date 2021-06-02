@@ -3,8 +3,13 @@ pr:
 - 'main'
 jobs:
 - job: Debug
-  pool: 'Hosted Windows 2019 with VS2019'
+  pool:
+    name: VSEng-MicroBuildVS2019
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -28,8 +33,13 @@ jobs:
       testRunTitle: '$(Build.DefinitionName)_$(Build.BuildNumber)_Debug'
 
 - job: Release
-  pool: 'Hosted Windows 2019 with VS2019'
+  pool:
+    name: VSEng-MicroBuildVS2019
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -53,8 +63,13 @@ jobs:
       testRunTitle: '$(Build.DefinitionName)_$(Build.BuildNumber)_Release'
 
 - job: DesktopDebug
-  pool: 'Hosted Windows 2019 with VS2019'
+  pool:
+    name: VSEng-MicroBuildVS2019
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -66,8 +81,13 @@ jobs:
       configuration: 'Desktop.Debug'
 
 - job: DesktopRelease
-  pool: 'Hosted Windows 2019 with VS2019'
+  pool:
+    name: VSEng-MicroBuildVS2019
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -79,10 +99,15 @@ jobs:
       configuration: 'Desktop.Release'
 
 - job: LabRelease
-  pool: 'Hosted Windows 2019 with VS2019'
+  pool:
+    name: VSEng-MicroBuildVS2019
   variables:
     TEST_LAB_BUILD: 'true'
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -94,10 +119,15 @@ jobs:
       configuration: 'Lab.Release'
 
 - job: LabDebug
-  pool: 'Hosted Windows 2019 with VS2019'
+  pool:
+    name: VSEng-MicroBuildVS2019
   variables:
     TEST_LAB_BUILD: 'true'
   steps:
+  - task: NuGetToolInstaller@1
+  - task: NuGetAuthenticate@0
+    inputs:
+      forceReinstallCredentialProvider: true
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
