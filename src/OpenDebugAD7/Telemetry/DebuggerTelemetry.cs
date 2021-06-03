@@ -42,10 +42,12 @@ namespace OpenDebugAD7
         private const string TelemetryEngineVersion = "EngineVersion";
         private const string TelemetryHostVersion = "HostVersion";
         private const string TelemetryAdapterId = "AdapterId";
+        private const string TelemetryFrameworkVersion = "FrameworkVersion";
         private string _engineName;
         private string _engineVersion;
         private string _hostVersion;
         private string _adapterId;
+        private string _frameworkVersion;
 
         // Specific telemetry properties
         public const string TelemetryIsCoreDump = TelemetryLaunchEventName + ".IsCoreDump";
@@ -65,6 +67,7 @@ namespace OpenDebugAD7
             _engineName = engineType.Namespace;
             _engineVersion = GetVersionAttributeValue(engineType);
             _hostVersion = GetVersionAttributeValue(hostType);
+            _frameworkVersion = GetFrameworkVersionAttributeValue();
             _adapterId = adapterId;
         }
 
@@ -210,6 +213,7 @@ namespace OpenDebugAD7
             properties[TelemetryEngineVersion] = _engineVersion;
             properties[TelemetryHostVersion] = _hostVersion;
             properties[TelemetryAdapterId] = _adapterId;
+            properties[TelemetryFrameworkVersion] = _frameworkVersion;
 
             properties.Merge(eventProperties);
 
@@ -254,6 +258,15 @@ namespace OpenDebugAD7
         private static string GetVersionAttributeValue(TypeInfo engineType)
         {
             var attribute = engineType.Assembly.GetCustomAttribute(typeof(System.Reflection.AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
+            if (attribute == null)
+                return string.Empty;
+
+            return attribute.Version;
+        }
+
+        private static string GetFrameworkVersionAttributeValue()
+        {
+            var attribute = typeof(object).Assembly.GetCustomAttribute(typeof(System.Reflection.AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
             if (attribute == null)
                 return string.Empty;
 
