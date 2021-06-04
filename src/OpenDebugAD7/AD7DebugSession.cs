@@ -141,6 +141,15 @@ namespace OpenDebugAD7
             m_logger.Write(LoggingCategory.Telemetry, eventName, propertiesDictionary);
         }
 
+        private static string GetFrameworkVersionAttributeValue()
+        {
+            var attribute = typeof(object).Assembly.GetCustomAttribute(typeof(System.Reflection.AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
+            if (attribute == null)
+                return string.Empty;
+
+            return attribute.Version;
+        }
+
         private ProtocolException CreateProtocolExceptionAndLogTelemetry(string telemetryEventName, int error, string message)
         {
             DebuggerTelemetry.ReportError(telemetryEventName, error);
@@ -959,6 +968,7 @@ namespace OpenDebugAD7
                 }
 
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
+                properties.Add(DebuggerTelemetry.TelemetryFrameworkVersion, GetFrameworkVersionAttributeValue());
 
                 DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - launchStartTime, properties);
 
@@ -1146,6 +1156,7 @@ namespace OpenDebugAD7
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
+                properties.Add(DebuggerTelemetry.TelemetryFrameworkVersion, GetFrameworkVersionAttributeValue());
 
                 DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - attachStartTime, properties);
                 success = true;
