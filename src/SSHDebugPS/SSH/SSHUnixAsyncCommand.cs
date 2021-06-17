@@ -15,10 +15,10 @@ namespace Microsoft.SSHDebugPS.SSH
         private readonly object _lock = new object();
         private readonly IDebugUnixShellCommandCallback _callback;
 
-        private RemoteSystem _remoteSystem;
+        private readonly RemoteSystemBase _remoteSystem;
         private NonHostedCommand _command;
 
-        public SSHUnixAsyncCommand(RemoteSystem remoteSystem, IDebugUnixShellCommandCallback callback)
+        public SSHUnixAsyncCommand(RemoteSystemBase remoteSystem, IDebugUnixShellCommandCallback callback)
         {
             _remoteSystem = remoteSystem;
             _callback = callback;
@@ -33,7 +33,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
             if (_remoteSystem.IsConnected)
             {
-                _command = ((ICommandingShell)_remoteSystem.Shell).ExecuteCommandAsynchronously(commandText, Timeout.Infinite);
+                _command = _remoteSystem.Shell.ExecuteCommandAsynchronously(commandText, Timeout.Infinite);
                 _command.Finished += (sender, e) => _callback.OnExit(((NonHostedCommand)sender).ExitCode.ToString(CultureInfo.InvariantCulture));
                 _command.OutputReceived += (sender, e) => _callback.OnOutputLine(e.Output);
 
