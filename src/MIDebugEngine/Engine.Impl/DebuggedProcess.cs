@@ -2230,7 +2230,7 @@ namespace Microsoft.MIDebugEngine
                             continue;   // match didn't end at a directory separator, not actually a match
                         }
                         compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
-                        if (compilerSrc.IndexOf('\\') > 0)
+                        if (compilerSrc.IndexOf('\\') >= 0)
                         {
                             compilerSrc = PlatformUtilities.WindowsPathToUnixPath(compilerSrc); // use Unix notation for the compiled path
                         }

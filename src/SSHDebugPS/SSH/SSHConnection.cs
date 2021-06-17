@@ -45,14 +45,14 @@ namespace Microsoft.SSHDebugPS.SSH
         public override List<Process> ListProcesses()
         {
             string username = string.Empty;
-            var usernameCommand = _remoteSystem.Shell.ExecuteCommand("id -u -n");
+            var usernameCommand = _remoteSystem.Shell.ExecuteCommand("id -u -n", 30000);
             if (usernameCommand.ExitCode == 0)
             {
                 username = usernameCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'id' command ends with a newline
             }
 
             string architecture = string.Empty;
-            var architectureCommand = _remoteSystem.Shell.ExecuteCommand("uname -m");
+            var architectureCommand = _remoteSystem.Shell.ExecuteCommand("uname -m", 30000);
             if (architectureCommand.ExitCode == 0)
             {
                 architecture = architectureCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'uname -m' command ends with a newline
@@ -60,7 +60,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
             SystemInformation systemInformation = new SystemInformation(username, architecture);
 
-            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine);
+            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine, 3000);
             if (command.ExitCode != 0)
             {
                 throw new CommandFailedException(StringResources.Error_PSFailed);
@@ -167,7 +167,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
         public override bool IsLinux()
         {
-            var command = _remoteSystem.Shell.ExecuteCommand("uname");
+            var command = _remoteSystem.Shell.ExecuteCommand("uname", 30000);
             if (command.ExitCode != 0)
             {
                 return false;
