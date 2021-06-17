@@ -60,7 +60,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
             SystemInformation systemInformation = new SystemInformation(username, architecture);
 
-            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine, 3000);
+            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine, 30000);
             if (command.ExitCode != 0)
             {
                 throw new CommandFailedException(StringResources.Error_PSFailed);
