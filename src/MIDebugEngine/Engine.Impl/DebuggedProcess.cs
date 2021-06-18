@@ -551,6 +551,9 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 await this.MICommandFactory.EnableTargetAsyncOption();
+
+                await this.CheckCygwin(_launchOptions as LocalLaunchOptions);
+
                 List<LaunchCommand> commands = await GetInitializeCommands();
                 _childProcessHandler?.Enable();
 
@@ -634,7 +637,13 @@ namespace Microsoft.MIDebugEngine
 
             // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
             string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
-            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapeSymbolPath(path, ignoreSpaces: true)));
+            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => {
+                if (IsCygwin)
+                {
+                    path = CygwinFilePathMapper.MapWindowsToCygwin(path);
+                }
+                return EscapeSymbolPath(path, ignoreSpaces: true);
+            }));
             if (!string.IsNullOrWhiteSpace(escapedSearchPath))
             {
                 if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
@@ -699,8 +708,6 @@ namespace Microsoft.MIDebugEngine
                 else if (_launchOptions.ProcessId.HasValue)
                 {
                     // This is an attach
-
-                    CheckCygwin(commands, localLaunchOptions);
 
                     if (this.MICommandFactory.Mode == MIMode.Gdb)
                     {
@@ -767,6 +774,12 @@ namespace Microsoft.MIDebugEngine
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
                         string escapedDir = this.EnsureProperPathSeparators(_launchOptions.WorkingDirectory);
+
+                        if (IsCygwin)
+                        {
+                            escapedDir = CygwinFilePathMapper.MapWindowsToCygwin(escapedDir);
+                        }
+
                         commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
 
@@ -778,8 +791,6 @@ namespace Microsoft.MIDebugEngine
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
-
-                    CheckCygwin(commands, localLaunchOptions);
 
                     this.AddExecutablePathCommand(commands);
 
@@ -853,40 +864,59 @@ namespace Microsoft.MIDebugEngine
             return commands;
         }
 
-        private void CheckCygwin(List<LaunchCommand> commands, LocalLaunchOptions localLaunchOptions)
+        /// <summary>
+        /// Checks to see if we are running Cygwin or not. 
+        /// </summary>
+        /// <param name="localLaunchOptions"></param>
+        /// <returns></returns>
+        private async Task CheckCygwin(LocalLaunchOptions localLaunchOptions)
         {
-            // If running locally on windows, determine if gdb is running from cygwin
-            if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
+            // Checks to see if:
+            // 1. LocalLaunch Debugging
+            // 2. On Windows
+            // 3. With GDB
+            // 4. Does not have custom commands
+            // 5. Is not Android Debugging
+            // 6. Is not Dump Debugging
+            if (localLaunchOptions != null &&
+                PlatformUtilities.IsWindows() &&
+                this.MICommandFactory.Mode == MIMode.Gdb &&
+                localLaunchOptions.CustomLaunchSetupCommands == null &&
+                localLaunchOptions.DeviceAppLauncher == null &&
+                !this.IsCoreDump)
             {
+                string resultString = await ConsoleCmdAsync("show configuration", allowWhileRunning: false, ignoreFailures: true);
+
                 // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
-                LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, (string resStr) =>
+
+                // Look to see if configuration has "cywgin" within a word boundry.
+                // Also look for "msys" since it is a modified version of Cygwin.
+                if (Regex.IsMatch(resultString, "\\bcygwin\\b|\\bmsys\\b"))
                 {
-                    // Look to see if configuration has "cywgin" within a word boundry.
-                    // Also look for "msys" since it is a modified version of Cygwin.
-                    if (Regex.IsMatch(resStr, "\\bcygwin\\b|\\bmsys\\b"))
-                    {
-                        this.IsCygwin = true;
-                        this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
+                    this.IsCygwin = true;
+                    this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
 
-                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
-                    }
-                    else
-                    {
-                        this.IsMinGW = true;
-                        // Gdb on windows and not cygwin implies mingw
-                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
-                    }
-
-                    return Task.FromResult(0);
-                });
-                commands.Add(lc);
+                    _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
+                }
+                else
+                {
+                    this.IsMinGW = true;
+                    // Gdb on windows and not cygwin implies mingw
+                    _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
+                }
             }
         }
 
         private void AddExecutablePathCommand(IList<LaunchCommand> commands)
         {
             string exe = this.EnsureProperPathSeparators(_launchOptions.ExePath);
-            string description = string.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath);
+
+            if (IsCygwin)
+            {
+                exe = CygwinFilePathMapper.MapWindowsToCygwin(exe);
+            }
+
+            string description = string.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingSymbolMessage, exe);
 
             Action<string> failureHandler = (string miError) =>
             {

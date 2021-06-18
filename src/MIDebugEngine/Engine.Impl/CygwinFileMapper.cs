@@ -22,6 +22,14 @@ namespace Microsoft.MIDebugEngine
             _cygwinToWindows = new Dictionary<string, string>();
         }
 
+        /// <summary>
+        /// Maps cygwin paths (/usr/bin) to Windows Paths (C:\User\bin)
+        ///
+        /// We cache these paths because most of the time it comes from callstacks that we need to provide
+        /// source file maps.
+        /// </summary>
+        /// <param name="origCygwinPath">A string representing the cygwin path.</param>
+        /// <returns>A string as a full Windows path</returns>
         public string MapCygwinToWindows(string origCygwinPath)
         {
             if (!(_debuggedProcess.LaunchOptions is LocalLaunchOptions))
@@ -39,7 +47,7 @@ namespace Microsoft.MIDebugEngine
             {
                 if (!_cygwinToWindows.TryGetValue(cygwinPath, out windowsPath))
                 {
-                    if (!LaunchCygPathAndReadResult(cygwinPath, localLaunchOptions.MIDebuggerPath, out windowsPath))
+                    if (!LaunchCygPathAndReadResult(cygwinPath, localLaunchOptions.MIDebuggerPath, convertToWindowsPath: true, out windowsPath))
                     {
                         return origCygwinPath;
                     }
@@ -51,14 +59,40 @@ namespace Microsoft.MIDebugEngine
             return windowsPath;
         }
 
+        /// <summary>
+        /// Maps Windows paths (C:\User\bin) to Cygwin Paths (/usr/bin)
+        ///
+        /// Not cached since we only do this for setting the program, symbol, and working dir.
+        /// </summary>
+        /// <param name="origWindowsPath">A string representing the Windows path.</param>
+        /// <returns>A string as a full unix path</returns>
+        public string MapWindowsToCygwin(string origWindowsPath)
+        {
+            if (!(_debuggedProcess.LaunchOptions is LocalLaunchOptions))
+            {
+                return origWindowsPath;
+            }
+
+            LocalLaunchOptions localLaunchOptions = (LocalLaunchOptions)_debuggedProcess.LaunchOptions;
+
+            string windowsPath = PlatformUtilities.UnixPathToWindowsPath(origWindowsPath);
+
+            if (!LaunchCygPathAndReadResult(windowsPath, localLaunchOptions.MIDebuggerPath, convertToWindowsPath: false, out string cygwinPath))
+            {
+                return origWindowsPath;
+            }
+
+            return cygwinPath;
+        }
+
         // There is an issue launching Cygwin apps that if a process is launched using a bitness mismatched console,
         // process launch will fail. To avoid that, launch cygpath with its own console. This requires calling CreateProcess 
         // directly because the creation flags are not exposed in System.Diagnostics.Process. 
         //
         // Return true if successful. False otherwise.
-        private bool LaunchCygPathAndReadResult(string cygwinPath, string miDebuggerPath, out string windowsPath)
+        private bool LaunchCygPathAndReadResult(string inputPath, string miDebuggerPath, bool convertToWindowsPath, out string outputPath)
         {
-            windowsPath = "";
+            outputPath = "";
 
             if (String.IsNullOrEmpty(miDebuggerPath))
             {
@@ -108,8 +142,19 @@ namespace Microsoft.MIDebugEngine
 
                 const uint DETACHED_PROCESS = 0x00000008;
                 uint flags = DETACHED_PROCESS;
-                // ex: "C:\\cygwin64\\bin\\cygpath.exe -w " + cygwinPath, 
-                string command = String.Concat(cygpathPath, " -w ", cygwinPath);
+                string command = string.Empty;
+                if (convertToWindowsPath)
+                {
+                    //  -w, --windows         print Windows form of NAMEs (C:\WINNT)
+                    // ex: "C:\\cygwin64\\bin\\cygpath.exe -w " + inputPath,
+                    command = String.Concat(cygpathPath, " -w ", inputPath);
+                }
+                else
+                {
+                    // -u, --unix            (default) print Unix form of NAMEs (/cygdrive/c/winnt)
+                    // ex: "C:\\cygwin64\\bin\\cygpath.exe -u " + inputPath,
+                    command = String.Concat(cygpathPath, " -u ", inputPath);
+                }
                 if (!CreateProcess(
                         null,
                         command,
@@ -153,7 +198,7 @@ namespace Microsoft.MIDebugEngine
 
                 FileStream fs = new FileStream(stdoutRead, FileAccess.Read);
                 StreamReader sr = new StreamReader(fs);
-                windowsPath = sr.ReadLine();
+                outputPath = sr.ReadLine();
             }
             finally
             {
