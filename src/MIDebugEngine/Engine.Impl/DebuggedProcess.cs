@@ -635,14 +635,10 @@ namespace Microsoft.MIDebugEngine
                 commands.Add(new LaunchCommand("-gdb-set solib-absolute-prefix " + _launchOptions.AbsolutePrefixSOLibSearchPath));
             }
 
-            // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
-            string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
+            // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix or cygwin envrionments
+            string pathEntrySeperator = (_launchOptions.UseUnixSymbolPaths || IsCygwin) ? ":" : ";";
             string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => {
-                if (IsCygwin)
-                {
-                    path = CygwinFilePathMapper.MapWindowsToCygwin(path);
-                }
-                return EscapeSymbolPath(path, ignoreSpaces: true);
+                return EnsureProperPathSeparators(path, ignoreSpaces: true);
             }));
             if (!string.IsNullOrWhiteSpace(escapedSearchPath))
             {
@@ -700,7 +696,7 @@ namespace Microsoft.MIDebugEngine
                     this.AddGetTargetArchitectureCommand(commands);
 
                     // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
-                    string coreDump = this.UseUnixPathSeparators ? _launchOptions.CoreDumpPath : this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath);
+                    string coreDump = this.UseUnixPathSeparators ? _launchOptions.CoreDumpPath : this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath, true);
                     string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
@@ -773,12 +769,7 @@ namespace Microsoft.MIDebugEngine
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
-                        string escapedDir = this.EnsureProperPathSeparators(_launchOptions.WorkingDirectory);
-
-                        if (IsCygwin)
-                        {
-                            escapedDir = CygwinFilePathMapper.MapWindowsToCygwin(escapedDir);
-                        }
+                        string escapedDir = this.EnsureProperPathSeparators(_launchOptions.WorkingDirectory, true);
 
                         commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
@@ -909,12 +900,7 @@ namespace Microsoft.MIDebugEngine
 
         private void AddExecutablePathCommand(IList<LaunchCommand> commands)
         {
-            string exe = this.EnsureProperPathSeparators(_launchOptions.ExePath);
-
-            if (IsCygwin)
-            {
-                exe = CygwinFilePathMapper.MapWindowsToCygwin(exe);
-            }
+            string exe = this.EnsureProperPathSeparators(_launchOptions.ExePath, true);
 
             string description = string.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingSymbolMessage, exe);
 
@@ -1454,13 +1440,22 @@ namespace Microsoft.MIDebugEngine
             get { return _worker; }
         }
 
+        private readonly char[] RemotePathSeperators = new char[] { ' ', '\'' };
+        private readonly char[] LocalPathSeperators = new char[] { ' ' };
+
         /// <summary>
-        /// Use to ensure path separators are correct for files that exist on the target debugger's machine.
-        /// If you are debugging on Windows to a remote instance of gdb or gdbserver, it will update it to Unix path separators.
+        /// Use to ensure path separators are correct for files we are setting for GDB.
+        /// If you are debugging on Windows to a remote instance of gdb or gdbserver, it will update it to Unix path separators that exist on the target debugger's machine.
+        /// If you are debugging on Windows locally, it will escape the Windows path seperator.
+        /// If you are debugging on Windows locally with Cygwin, we will update it to use unix path seperators and resolve the cygwin path.
         /// </summary>
-        internal string EnsureProperPathSeparators(string path)
+        internal string EnsureProperPathSeparators(string path, bool isRemote = false, bool ignoreSpaces = false)
         {
-            if (this.UseUnixPathSeparators)
+            if (IsCygwin)
+            {
+                path = CygwinFilePathMapper.MapWindowsToCygwin(path);
+            }
+            else if (this.UseUnixPathSeparators)
             {
                 path = PlatformUtilities.WindowsPathToUnixPath(path);
             }
@@ -1470,30 +1465,9 @@ namespace Microsoft.MIDebugEngine
                 path = path.Replace(@"\", @"\\");
             }
 
-            if (path.IndexOfAny(new char[] { ' ', '\'' }) != -1)
-            {
-                path = '"' + path + '"';
-            }
-            return path;
-        }
+            char[] pathSeperator = isRemote ? RemotePathSeperators : LocalPathSeperators;
 
-        /// <summary>
-        /// This method should be used to escape paths that are used by GDB (and NOT gdbserver) locally. 
-        /// Any path that gdbserver would use in remote server scenarios should use EnsureProperPathSeparators instead.
-        /// </summary>
-        internal string EscapeSymbolPath(string path, bool ignoreSpaces = false)
-        {
-            if (this.UseUnixSymbolPaths)
-            {
-                path = PlatformUtilities.WindowsPathToUnixPath(path);
-            }
-            else
-            {
-                path = path.Trim();
-                path = path.Replace(@"\", @"\\");
-            }
-
-            if (!ignoreSpaces && path.IndexOf(' ') != -1)
+            if (!ignoreSpaces && path.IndexOfAny(pathSeperator) != -1)
             {
                 path = '"' + path + '"';
             }
