@@ -55,6 +55,7 @@ namespace OpenDebugAD7
         public const string TelemetryVisualizerFileUsed = "VisualizerFileUsed";
         public const string TelemetrySourceFileMappings = "SourceFileMappings";
         public const string TelemetryMIMode = "MIMode";
+        public const string TelemetryFrameworkVersion = "FrameworkVersion";
         public const string TelemetryStackFrameId = TelemetryExecuteInConsole + ".StackFrameId";
 
         private DebuggerTelemetry(Action<DebugEvent> callback, TypeInfo engineType, TypeInfo hostType, string adapterId)
