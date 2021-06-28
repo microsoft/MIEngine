@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28315.86
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31427.69
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platform Launchers", "Platform Launchers", "{B864C337-1AA8-42B3-BF01-90901F55DE70}"
 EndProject
@@ -85,6 +85,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{4F96DA84
 	ProjectSection(SolutionItems) = preProject
 		..\build\all_projects.settings.targets = ..\build\all_projects.settings.targets
 		..\build\Analyzers.targets = ..\build\Analyzers.targets
+		..\build\Debugger.PIAs.NonPortable.Packages.settings.targets = ..\build\Debugger.PIAs.NonPortable.Packages.settings.targets
+		..\build\Debugger.PIAs.Portable.Packages.settings.targets = ..\build\Debugger.PIAs.Portable.Packages.settings.targets
 		..\build\debuggertesting.settings.targets = ..\build\debuggertesting.settings.targets
 		..\build\DropFiles.targets = ..\build\DropFiles.targets
 		..\build\miengine.csharp.localization.targets = ..\build\miengine.csharp.localization.targets

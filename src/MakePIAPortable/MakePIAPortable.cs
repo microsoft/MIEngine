@@ -76,6 +76,7 @@ namespace MakePIAPortable
             { "System.Runtime.InteropServices.ComTypes.ITypeLib", System_Runtime },
             { "System.Runtime.InteropServices.TypeIdentifierAttribute", System_Runtime },
             { "System.Runtime.InteropServices.TypeLibFuncAttribute", System_Runtime },
+            { "System.Runtime.InteropServices.TypeLibFuncFlags", System_Runtime },
 
             // System.Runtime.InteropServices
             { "System.Runtime.InteropServices.ClassInterfaceAttribute", System_Runtime_InteropServices },
