@@ -20,7 +20,7 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
     <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
     <ErrorReport>prompt</ErrorReport>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.0.31427.69
+VisualStudioVersion = 17.65535.65535.65535
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platform Launchers", "Platform Launchers", "{B864C337-1AA8-42B3-BF01-90901F55DE70}"
 EndProject

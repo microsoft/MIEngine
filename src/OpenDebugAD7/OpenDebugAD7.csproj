@@ -17,7 +17,7 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <AppConfig Condition="'$(IsXPlat)' == 'true'">App.VSCode.config</AppConfig>
     <AppConfig Condition="'$(IsXPlat)' == 'false'">App.VS.config</AppConfig>
   </PropertyGroup>

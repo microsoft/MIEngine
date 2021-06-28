@@ -77,6 +77,7 @@ namespace MakePIAPortable
             { "System.Runtime.InteropServices.TypeIdentifierAttribute", System_Runtime },
             { "System.Runtime.InteropServices.TypeLibFuncAttribute", System_Runtime },
             { "System.Runtime.InteropServices.TypeLibFuncFlags", System_Runtime },
+            { "System.Attribute", System_Runtime },
 
             // System.Runtime.InteropServices
             { "System.Runtime.InteropServices.ClassInterfaceAttribute", System_Runtime_InteropServices },
@@ -288,7 +289,8 @@ namespace MakePIAPortable
             return line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(") ||
                 line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.ComConversionLossAttribute::.ctor()") ||
                 line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.TypeLibTypeAttribute::.ctor(") ||
-                line.Contains(".custom instance void [mscorlib]System.Runtime.CompilerServices.IsReadOnlyAttribute::.ctor(") || 
+                line.Contains(".custom instance void [mscorlib]System.Runtime.CompilerServices.IsReadOnlyAttribute::.ctor(") ||
+                line.Contains(".custom instance void System.Runtime.CompilerServices.IsReadOnlyAttribute::.ctor()") ||
                 line.Contains(".custom instance void [mscorlib]System.Runtime.CompilerServices.DateTimeConstantAttribute::.ctor(");
         }
 
