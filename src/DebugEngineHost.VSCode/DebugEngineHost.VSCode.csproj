@@ -66,8 +66,9 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
+
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <!-- This will pull in the net45 newtonsoft.json, we want the portable-net45+wp80+win8+wpa81 version. Use this to get the install path.  -->
     <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" GeneratePathProperty="true">
       <IncludeAssets>none</IncludeAssets>

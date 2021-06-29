@@ -2,9 +2,9 @@
   <PropertyGroup>    
     <!--SxS: These three properties should be changed at the start of a new version, VersionZeroYear should be the year
     before the start of the project. When updating the version, also update MIEngine\metadata.json.-->
-    <MajorVersion>16</MajorVersion>
-    <MinorVersion>5</MinorVersion>
-    <VersionZeroYear>2019</VersionZeroYear>
+    <MajorVersion>17</MajorVersion>
+    <MinorVersion>0</MinorVersion>
+    <VersionZeroYear>2020</VersionZeroYear>
     <!-- Note: for compatibility, we leave the default assembly version of the repo at 14.0.
     If we ever decide to change this, make sure that you notify partner teams such as C++ IOT -->
     <AssemblyVersion Condition="'$(AssemblyVersion)'==''">14.0.0.0</AssemblyVersion>
@@ -26,4 +26,9 @@
     <BuildVersionExtended>$(BuildVersion)</BuildVersionExtended>
     <BuildVersionExtended Condition="'$(BUILD_SOURCEVERSION)'!=''">$(BuildVersionExtended) commit:$(BUILD_SOURCEVERSION)</BuildVersionExtended>
   </PropertyGroup>
+
+   <Target Name="WriteFileVersionTxt" AfterTargets="Build">
+    <WriteLinesToFile Lines="$(BuildVersion)" File="$(IntermediateOutputPath)\..\NugetPackageVersion.txt" Overwrite="true"/>
+  </Target>
+  
 </Project>
