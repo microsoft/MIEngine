@@ -17,11 +17,13 @@ namespace MakePIAPortable
 
         const string System_Runtime = "System.Runtime";
         const string System_Runtime_InteropServices = "System.Runtime.InteropServices";
+        const string System_Threading = "System.Threading";
 
         static List<Tuple<string, string>> s_contractAssemblies = new List<Tuple<string, string>>
         {
             new Tuple<string, string>(System_Runtime, "4:0:20:0"),
             new Tuple<string, string>(System_Runtime_InteropServices, "4:0:20:0"),
+            new Tuple<string, string>(System_Threading, "4:0:20:0")
         };
 
         static Dictionary<string, string> s_typeToContractAssemblyMap = new Dictionary<string, string> {
@@ -43,40 +45,27 @@ namespace MakePIAPortable
             { "System.Diagnostics.DebuggableAttribute", System_Runtime },
             { "System.Reflection.AssemblyTitleAttribute", System_Runtime },
             { "System.Runtime.Versioning.TargetFrameworkAttribute", System_Runtime },
-            { "System.Resources.SatelliteContractVersionAttribute", System_Runtime },
             { "System.Reflection.AssemblyCompanyAttribute", System_Runtime },
             { "System.Reflection.AssemblyConfigurationAttribute", System_Runtime },
             { "System.Reflection.AssemblyCopyrightAttribute", System_Runtime },
             { "System.Reflection.AssemblyFileVersionAttribute", System_Runtime },
             { "System.Reflection.AssemblyInformationalVersionAttribute", System_Runtime },
             { "System.Reflection.AssemblyProductAttribute", System_Runtime },
-            { "System.Runtime.InteropServices.ComVisibleAttribute", System_Runtime },
-            { "System.Runtime.InteropServices.ComSourceInterfacesAttribute", System_Runtime },
-            { "System.Runtime.InteropServices.ComEventInterfaceAttribute", System_Runtime },
             { "System.Runtime.CompilerServices.CompilerGeneratedAttribute", System_Runtime },
             { "System.MulticastDelegate", System_Runtime },
             { "System.IAsyncResult", System_Runtime },
             { "System.AsyncCallback", System_Runtime },
             { "System.IDisposable", System_Runtime },
-            { "System.Runtime.InteropServices.ComTypes.IConnectionPointContainer", System_Runtime },
-            { "System.Collections.ArrayList", System_Runtime },
-            { "System.Runtime.InteropServices.ComTypes.IConnectionPoint", System_Runtime },
             { "System.Runtime.CompilerServices.RuntimeHelpers", System_Runtime },
             { "System.Array", System_Runtime },
             { "System.RuntimeFieldHandle", System_Runtime },
-            { "System.Threading.Monitor", System_Runtime },
-            { "System.Runtime.InteropServices.Marshal", System_Runtime },
+            { "System.Threading.Monitor", System_Threading },
             { "System.GC", System_Runtime },
             { "System.Exception", System_Runtime },
             { "System.Collections.IEnumerable", System_Runtime },
             { "System.Collections.IEnumerator", System_Runtime },
             { "System.DateTime", System_Runtime },
             { "System.ObsoleteAttribute", System_Runtime },
-            { "System.Runtime.InteropServices.InAttribute", System_Runtime },
-            { "System.Runtime.InteropServices.ComTypes.ITypeLib", System_Runtime },
-            { "System.Runtime.InteropServices.TypeIdentifierAttribute", System_Runtime },
-            { "System.Runtime.InteropServices.TypeLibFuncAttribute", System_Runtime },
-            { "System.Runtime.InteropServices.TypeLibFuncFlags", System_Runtime },
             { "System.Attribute", System_Runtime },
 
             // System.Runtime.InteropServices
@@ -87,6 +76,15 @@ namespace MakePIAPortable
             { "System.Runtime.InteropServices.DispIdAttribute", System_Runtime_InteropServices },
             { "System.Runtime.InteropServices.GuidAttribute", System_Runtime_InteropServices},
             { "System.Runtime.InteropServices.InterfaceTypeAttribute", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.ComVisibleAttribute", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.ComSourceInterfacesAttribute", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.ComEventInterfaceAttribute", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.ComTypes.IConnectionPointContainer", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.ComTypes.IConnectionPoint", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.Marshal", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.InAttribute", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.ComTypes.ITypeLib", System_Runtime_InteropServices },
+            { "System.Runtime.InteropServices.TypeIdentifierAttribute", System_Runtime_InteropServices },
         };
 
         static int Main(string[] args)
@@ -260,11 +258,21 @@ namespace MakePIAPortable
                     // Remove 'import' from the interfaces
                     else if (inputLine.StartsWith(".class ", StringComparison.Ordinal))
                     {
-                        isInterface = inputLine.Contains(" interface");
-
-                        if (inputLine.Contains(" import "))
+                        // Remove '_EventProvider' classes from MS.VS.Interop since they
+                        // use ArrayList which is not in netstandard 1.3
+                        if (inputLine.Contains("_EventProvider"))
                         {
-                            inputLine = inputLine.Replace(" import ", " ");
+                            inputLine = "";
+                            SkipClass(inputFile);
+                        }
+                        else
+                        {
+                            isInterface = inputLine.Contains(" interface");
+
+                            if (inputLine.Contains(" import "))
+                            {
+                                inputLine = inputLine.Replace(" import ", " ");
+                            }
                         }
                     }
                     output.WriteLine(inputLine);
@@ -291,7 +299,52 @@ namespace MakePIAPortable
                 line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.TypeLibTypeAttribute::.ctor(") ||
                 line.Contains(".custom instance void [mscorlib]System.Runtime.CompilerServices.IsReadOnlyAttribute::.ctor(") ||
                 line.Contains(".custom instance void System.Runtime.CompilerServices.IsReadOnlyAttribute::.ctor()") ||
+                line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.TypeLibFuncAttribute::.ctor(") ||
+                line.Contains(".custom instance void [mscorlib]System.Runtime.InteropServices.TypeLibFuncAttribute::.ctor(") ||
+                line.Contains(".custom instance void [mscorlib]System.Resources.SatelliteContractVersionAttribute::.ctor(") ||
                 line.Contains(".custom instance void [mscorlib]System.Runtime.CompilerServices.DateTimeConstantAttribute::.ctor(");
+        }
+
+        private static void SkipClass(InputFile inputFile)
+        {
+            int startLineNumber = inputFile.LineNumber;
+
+            // Find first open brace for class.
+            while (true)
+            {
+                string nextLine = inputFile.ReadLine();
+                if (nextLine == null)
+                {
+                    Error.Emit(Error.Code.BadCustomAttribute, inputFile, "Unexpected end-of-file while looking for start of class brace starting on line {0}", startLineNumber);
+                }
+
+                if (nextLine.IndexOf('{') >= 0)
+                    break;
+            }
+
+            int braceCount = 1;
+
+            // Look for end class brace.
+            while (true)
+            {
+                string nextLine = inputFile.ReadLine();
+                if (nextLine == null)
+                {
+                    Error.Emit(Error.Code.BadCustomAttribute, inputFile, "Unexpected end-of-file while looking for end of class starting on line {0}", startLineNumber);
+                }
+
+                // Count for '{' within inner methods.
+                if (nextLine.IndexOf('{') >= 0)
+                    braceCount++;
+
+                // Decrease count for '{' seen.
+                if (nextLine.IndexOf('}') >= 0)
+                    braceCount--;
+
+                // If we met the name number of '}' as '{', we finished reading the class lines.
+                if (braceCount == 0)
+                    break;
+            }
         }
 
         private static void SkipCustomAttribute(string firstLine, InputFile inputFile)
