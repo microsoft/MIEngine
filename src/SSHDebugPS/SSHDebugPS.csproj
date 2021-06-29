@@ -24,7 +24,6 @@
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="$(Microsoft_VisualStudio_Shell_Framework_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" Version="$(Microsoft_VisualStudio_Threading_Version)" />
-
     <!-- NOTE: MIEngine's usage of Newtonsoft.Json's flows through public interfaces exposed by MICore (IPlatformAppLauncher). So this version needs to be within the binding redirect range used by devenv.exe (d17: 12.0.2) -->
     <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VS_Version)">
       <IncludeAssets>compile</IncludeAssets>

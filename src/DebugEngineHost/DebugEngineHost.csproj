@@ -64,7 +64,6 @@
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="$(Microsoft_VisualStudio_Shell_Framework_Version)" />
-
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Engine" Version="$(Microsoft_VisualStudio_Debugger_Engine_Version)">
       <IncludeAssets>compile</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
