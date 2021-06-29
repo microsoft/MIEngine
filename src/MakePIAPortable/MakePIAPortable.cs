@@ -316,6 +316,7 @@ namespace MakePIAPortable
                 if (nextLine == null)
                 {
                     Error.Emit(Error.Code.BadCustomAttribute, inputFile, "Unexpected end-of-file while looking for start of class brace starting on line {0}", startLineNumber);
+                    return;
                 }
 
                 if (nextLine.IndexOf('{') >= 0)
@@ -331,6 +332,7 @@ namespace MakePIAPortable
                 if (nextLine == null)
                 {
                     Error.Emit(Error.Code.BadCustomAttribute, inputFile, "Unexpected end-of-file while looking for end of class starting on line {0}", startLineNumber);
+                    return;
                 }
 
                 // Count for '{' within inner methods.
@@ -370,6 +372,7 @@ namespace MakePIAPortable
                 if (nextLine == null)
                 {
                     Error.Emit(Error.Code.BadCustomAttribute, inputFile, "Unexpected end-of-file while looking for end of custom attribute starting on line {0}", startLineNumber);
+                    return;
                 }
 
                 if (nextLine.IndexOf(')') >= 0)
