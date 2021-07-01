@@ -7,6 +7,10 @@
 "PortPickerCLSID"="{91BDF293-E6A0-49C4-B033-6F36CFC4FF98}"
 "Name"="Docker (Linux Container)"
 
+[$RootKey$\AD7Metrics\PortSupplier\{267B1341-AC92-44DC-94DF-2EE4205DD17E}]
+"CLSID"="{B8587A49-00BD-4DEE-94B9-6EBF49003E04}"
+"Name"="Windows Subsystem for Linux (WSL)"
+
 [$RootKey$\CLSID\{1326FB0D-EA51-4F90-BEDF-5948588B0FE1}]
 "Assembly"="Microsoft.SSHDebugPS"
 "Class"="Microsoft.SSHDebugPS.SSH.SSHPortSupplier"
@@ -34,6 +38,12 @@
 [$RootKey$\CLSID\{AE75778B-70E8-4F53-B3FE-59E048D3D01B}]
 "Assembly"="Microsoft.SSHDebugPS"
 "Class"="Microsoft.SSHDebugPS.Docker.DockerWindowsPortPicker"
+"InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
+"CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
+
+[$RootKey$\CLSID\{B8587A49-00BD-4DEE-94B9-6EBF49003E04}]
+"Assembly"="Microsoft.SSHDebugPS"
+"Class"="Microsoft.SSHDebugPS.WSL.WSLPortSupplier"
 "InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
 "CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
 

@@ -52,6 +52,8 @@
 "0"="{3FDDF14E-E758-4695-BE0C-7509920432C9}"
 ; Docker Port Supplier
 "1"="{A2BBC114-47E4-473F-A49C-69EE89711243}"
+; WSL Port supplier
+"2"="{267B1341-AC92-44DC-94DF-2EE4205DD17E}"
 
 [$RootKey$\OpenFolder\Settings\VSWorkspaceSettings\{EA6637C6-17DF-45B5-A183-0951C54243BC}]
 @="$PackageFolder$\OpenFolderSchema.json"

@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
-namespace Microsoft.SSHDebugPS.Docker
+namespace Microsoft.SSHDebugPS
 {
-    internal class DockerAsyncCommand : IDebugUnixShellAsyncCommand
+    internal class PipeAsyncCommand : IDebugUnixShellAsyncCommand
     {
         private ICommandRunner _runner;
         private IDebugUnixShellCommandCallback _callback;
-        private StringBuilder _errorBuilder = new StringBuilder();
-        public DockerAsyncCommand(ICommandRunner runner, IDebugUnixShellCommandCallback callback)
+        private readonly StringBuilder _errorBuilder = new StringBuilder();
+        public PipeAsyncCommand(ICommandRunner runner, IDebugUnixShellCommandCallback callback)
         {
             _callback = callback;
             _runner = runner;

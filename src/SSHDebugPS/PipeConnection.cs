@@ -10,34 +10,31 @@ using Microsoft.SSHDebugPS.Utilities;
 
 namespace Microsoft.SSHDebugPS
 {
+    /// <summary>
+    /// Abstract base class for connections based on a pipe connection to a command line tool (docker.exe, wsl.exe, etc)
+    /// </summary>
     internal abstract class PipeConnection : Connection
     {
         private readonly object _lock = new object();
-        private readonly IPipeTransportSettings _settings;
 
         private Connection _outerConnection;
         private bool _isClosed;
-        private string _name;
+        private readonly string _name;
 
         public override string Name => _name;
 
         protected Connection OuterConnection => _outerConnection;
-        protected IPipeTransportSettings TransportSettings => _settings;
         protected bool IsClosed => _isClosed;
 
         /// <summary>
         /// Create a new pipe connection object
         /// </summary>
-        /// <param name="pipeTransportSettings">Settings</param>
         /// <param name="outerConnection">[Optional] the SSH connection (or maybe something else in future) used to connect to the target.</param>
         /// <param name="name">The full name of this connection</param>
-        public PipeConnection(IPipeTransportSettings pipeTransportSettings, Connection outerConnection, string name)
+        public PipeConnection(Connection outerConnection, string name)
         {
-            Debug.Assert(pipeTransportSettings != null);
             Debug.Assert(!string.IsNullOrWhiteSpace(name));
-
             _name = name;
-            _settings = pipeTransportSettings;
             _outerConnection = outerConnection;
         }
 
@@ -59,34 +56,24 @@ namespace Microsoft.SSHDebugPS
                 return string.Empty;
             }
 
-            string errorMessage;
-            string commandOutput;
             string command = "mkdir -p '{0}'".FormatInvariantWithArgs(path); // -p ignores if the directory is already there
-            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput, errorMessage: out errorMessage);
+            ExecuteCommand(command, Timeout.Infinite);
 
             return GetFullPath(path);
         }
 
         private string GetFullPath(string path)
         {
-            string fullpath;
-            string output; // throw away variable
-
-            string pwd;
-            string errorMessage;
-            ExecuteCommand("pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out pwd, errorMessage: out errorMessage);
-            ExecuteCommand($"cd '{path}'; pwd", Timeout.Infinite, throwOnFailure: true, commandOutput: out fullpath, errorMessage: out errorMessage);
-            ExecuteCommand($"cd '{pwd}'", Timeout.Infinite, throwOnFailure: false, commandOutput: out output, errorMessage: out errorMessage); //This might fail in some instances, so ignore a failure and ignore output
+            string pwd = ExecuteCommand("pwd", Timeout.Infinite);
+            string fullpath = ExecuteCommand($"cd '{path}'; pwd", Timeout.Infinite);
+            ExecuteCommand($"cd '{pwd}'", Timeout.Infinite);
 
             return fullpath;
         }
 
         public override string GetUserHomeDirectory()
         {
-            string command = "echo $HOME";
-            string commandOutput;
-            string errorMessage;
-            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput, errorMessage: out errorMessage);
+            string commandOutput = ExecuteCommand("echo $HOME", Timeout.Infinite);
 
             return commandOutput.TrimEnd('\n', '\r');
         }
@@ -98,10 +85,7 @@ namespace Microsoft.SSHDebugPS
 
         public override bool IsLinux()
         {
-            string command = "uname";
-            string commandOutput;
-            string errorMessage;
-            if (!ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
+            if (!ExecuteCommand("uname", Timeout.Infinite, commandOutput: out string commandOutput, errorMessage: out string errorMessage, out _))
             {
                 return false;
             }
@@ -116,17 +100,16 @@ namespace Microsoft.SSHDebugPS
         {
             string commandOutput;
             string errorMessage;
+            int exitCode;
 
             string username = string.Empty;
-            string command = "id -u -n";
-            if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
+            if (ExecuteCommand("id -u -n", Timeout.Infinite, commandOutput: out commandOutput, errorMessage: out errorMessage, exitCode: out exitCode))
             {
                 username = commandOutput;
             }
 
             string architecture = string.Empty;
-            command = "uname -m";
-            if (ExecuteCommand(command, Timeout.Infinite, throwOnFailure: false, commandOutput: out commandOutput, errorMessage: out errorMessage))
+            if (ExecuteCommand("uname -m", Timeout.Infinite, commandOutput: out commandOutput, errorMessage: out errorMessage, exitCode: out exitCode))
             {
                 architecture = commandOutput;
             }
@@ -169,12 +152,12 @@ namespace Microsoft.SSHDebugPS
             errorMessage = string.Empty;
             string commandOutput;
             int exitCode;
-            if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, false, out commandOutput, out errorMessage))
+            if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, out commandOutput, out errorMessage, out exitCode))
             {
                 // Clear output and errorMessage
                 commandOutput = string.Empty;
                 errorMessage = string.Empty;
-                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
+                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, out commandOutput, out errorMessage, out exitCode))
                 {
                     if (exitCode == 127)
                     {
@@ -207,7 +190,7 @@ namespace Microsoft.SSHDebugPS
 
             int exitCode;
             string commandOutput;
-            if (!ExecuteCommand(ProcFSOutputParser.CommandText, Timeout.Infinite, false, out commandOutput, out errorMessage, out exitCode))
+            if (!ExecuteCommand(ProcFSOutputParser.CommandText, Timeout.Infinite, out commandOutput, out errorMessage, out exitCode))
             {
                 errorMessage = ProcFSErrorMessage.FormatCurrentCultureWithArgs(errorMessage);
                 return false;
@@ -215,30 +198,6 @@ namespace Microsoft.SSHDebugPS
 
             processes = ProcFSOutputParser.Parse(commandOutput, systemInformation);
             return true;
-        }
-
-        /// <summary>
-        /// Checks command exit code and if it is non-zero, it will throw a CommandFailedException with an error message if 'throwOnFailure' is true.
-        /// </summary>
-        /// <returns>true if command succeeded.</returns>
-        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput, out string errorMessage, out int exitCode)
-        {
-            commandOutput = string.Empty;
-
-            exitCode = ExecuteCommand(command, timeout, out commandOutput, out errorMessage);
-            if (throwOnFailure && exitCode != 0)
-            {
-                string error = StringResources.CommandFailedMessageFormat.FormatCurrentCultureWithArgs(command, exitCode, errorMessage);
-                throw new CommandFailedException(error);
-            }
-            else
-                return exitCode == 0;
-        }
-
-        protected bool ExecuteCommand(string command, int timeout, bool throwOnFailure, out string commandOutput, out string errorMessage)
-        {
-            int exitCode;
-            return ExecuteCommand(command, timeout, throwOnFailure, out commandOutput, out errorMessage, out exitCode);
         }
     }
 }
