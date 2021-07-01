@@ -16,7 +16,7 @@ namespace Microsoft.SSHDebugPS.SSH
         private readonly IDebugUnixShellCommandCallback _callback;
 
         private IRemoteSystem _remoteSystem;
-        private NonHostedCommand _command;
+        private IStreamableCommand _command;
 
         public SSHUnixAsyncCommand(IRemoteSystem remoteSystem, IDebugUnixShellCommandCallback callback)
         {
@@ -26,24 +26,13 @@ namespace Microsoft.SSHDebugPS.SSH
 
         internal void Start(string commandText)
         {
-            if (!_remoteSystem.IsConnected)
-            {
-                _remoteSystem.Connect(_remoteSystem.ConnectionInfo);
-            }
+            _command = _remoteSystem.CreateStreamableCommand(commandText);
+            _remoteSystem.StartCommand(_command, Timeout.InfiniteTimeSpan);
+            _command.Finished += (sender, e) => _callback.OnExit(((NonHostedCommand)sender).ExitCode.ToString(CultureInfo.InvariantCulture));
+            _command.OutputReceived += (sender, e) => _callback.OnOutputLine(e.Output);
 
-            if (_remoteSystem.IsConnected)
-            {
-                _command = _remoteSystem.Shell.ExecuteCommandAsynchronously(commandText, Timeout.Infinite);
-                _command.Finished += (sender, e) => _callback.OnExit(((NonHostedCommand)sender).ExitCode.ToString(CultureInfo.InvariantCulture));
-                _command.OutputReceived += (sender, e) => _callback.OnOutputLine(e.Output);
-
-                _command.RedirectErrorOutputToOutput = true;
-                _command.BeginOutputRead();
-            }
-            else
-            {
-                Debug.Fail("Remote System not connected.");
-            }
+            _command.RedirectErrorOutputToOutput = true;
+            _command.BeginOutputRead();
         }
 
         void IDebugUnixShellAsyncCommand.Write(string text)
