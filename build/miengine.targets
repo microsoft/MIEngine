@@ -8,17 +8,18 @@
   <Import Project=".\Analyzers.targets" />
   <Import Project=".\source_link.targets" />
 
-  <PropertyGroup>
-    <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
-    <BuildDependsOn>$(BuildDependsOn);GenerateMonoSymbols</BuildDependsOn>
-  </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="Mono.Unofficial.pdb2mdb" Version="4.2.3.4" GeneratePathProperty="true" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+    <BuildDependsOn Condition="'$(CanGenerateMDBFiles)' == 'true'">$(BuildDependsOn);GenerateMonoSymbols</BuildDependsOn>
+  </PropertyGroup>
+
   <Target Name="GenerateMonoSymbols"
-          Condition="'$(IsXPlat)' == 'true' AND '$(ShouldGenerateMonoSymbols)' == 'true'"
+          Condition="'$(ShouldGenerateMonoSymbols)' == 'true' AND '$(CanGenerateMDBFiles)' == 'true'"
           AfterTargets="Build" >
     <!-- If we're building the Desktop config on Windows, run pdb2mdb to generate Mono symbols as well -->
     <Exec Command="&quot;$(PkgMono_Unofficial_pdb2mdb)\tools\pdb2mdb.exe&quot; &quot;$(TargetPath)&quot;" />

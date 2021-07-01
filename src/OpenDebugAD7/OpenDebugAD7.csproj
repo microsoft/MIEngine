@@ -104,7 +104,7 @@
     <DropThirdPartySignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Interop.dll" />
-    <DropUnsignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
+    <DropUnsignedFile Condition="'$(CanGenerateMDBFiles)' == 'true'" Include="$(OutputPath)\OpenDebugAD7.exe.mdb" />
   </ItemGroup>
   <ItemGroup Label="OpenDebugAD7 Drop Files for XPlat" Condition="'$(IsXPlat)' == 'false'">
     <!-- 

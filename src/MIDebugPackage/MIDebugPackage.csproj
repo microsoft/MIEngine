@@ -7,6 +7,8 @@
     <RootNamespace>Microsoft.MIDebugPackage</RootNamespace>
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
+
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,6 +35,8 @@
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="17.0.0-previews-1-31410-258" />
+
+    <PackageReference Include="System.Resources.Extensions" Version="5.0.0"/>
 
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)">
       <IncludeAssets>compile</IncludeAssets>
@@ -138,7 +142,6 @@
   <ItemGroup Label="MIDebugEngine for both VS and XPlat">
     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
   </ItemGroup>
@@ -148,6 +151,7 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
+     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
     <!-- this is the version for Visual Studio -->
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
@@ -165,8 +169,10 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
     <DropUnsignedFile Include="$(OutDir)\OpenFolderSchema.json" />
   </ItemGroup>
-  <ItemGroup Label="Debug Files and Scripts for XPlat" Condition="'$(IsXPlat)' == 'true'">
+  <ItemGroup Label="Scripts for XPlat" Condition="'$(IsXPlat)' == 'true'">
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
+  </ItemGroup>
+  <ItemGroup Label="Debug Files for XPlat" Condition="'$(CanGenerateMDBFiles)' == 'true'">
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
   </ItemGroup>
@@ -241,7 +247,7 @@
   </ItemGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets') AND '$(MSBuildRuntimeType)'!='Core'" />
 
   <Import Project="..\..\build\miengine.targets" />
   <!--

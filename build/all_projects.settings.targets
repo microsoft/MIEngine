@@ -20,6 +20,9 @@
     <DropDir>$(MIEngineRoot)bin\$(Configuration)</DropDir>
     <ToolsHome>$(MIEngineRoot)\tools</ToolsHome>
     <IntermediateOutputPath>$(MIEngineRoot)obj\$(Configuration)\$(MSBuildProjectName)\</IntermediateOutputPath>
+
+    <CanGenerateMDBFiles>false</CanGenerateMDBFiles>
+    <CanGenerateMDBFiles Condition="$(Configuration.Contains('Desktop')) AND $([MSBuild]::IsOSPlatform('windows'))">true</CanGenerateMDBFiles>
   </PropertyGroup>
   
   <!-- Source Link -->
