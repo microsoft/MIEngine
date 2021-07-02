@@ -8,7 +8,7 @@
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
 
-    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <EnableDefaultEmbeddedResourceItems Condition="'$(IsXPlat)'=='true'">false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -36,8 +36,6 @@
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="17.0.0-previews-1-31410-258" />
 
-    <PackageReference Include="System.Resources.Extensions" Version="5.0.0"/>
-
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)">
       <IncludeAssets>compile</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -56,7 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
-  <Content Include="Resources\Package.ico" />
+    <Content Include="Resources\Package.ico" />
     <Content Include="OpenFolderSchema.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -247,7 +245,7 @@
   </ItemGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets') AND '$(MSBuildRuntimeType)'!='Core'" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets') AND '$(IsXPlat)' == 'false'" />
 
   <Import Project="..\..\build\miengine.targets" />
   <!--

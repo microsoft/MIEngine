@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{114039A0-87B5-425B-90C9-6AFC1960A247}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>MakePIAPortable</RootNamespace>
     <AssemblyName>MakePIAPortable</AssemblyName>
     <TargetFramework>net462</TargetFramework>
@@ -65,13 +65,11 @@
     <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('linux'))">$(Pkgruntime_linux-x64_Microsoft_NETCore_ILAsm)\runtimes\linux-x64\native\ilasm</ILAsmFileLocation>
     <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('osx'))">$(Pkgruntime_osx-x64_Microsoft_NETCore_ILAsm)\runtimes\osx-x64\native\ilasm</ILAsmFileLocation>
     
-    <MakePIAPortableExe>MakePIAPortable.exe</MakePIAPortableExe>
-    <!-- Some machines might not have current directory in the PATH, force linux machines to run from current directory. -->
-    <MakePIAPortableExe Condition="$([MSBuild]::IsOsPlatform('linux'))">./MakePIAPortable.exe</MakePIAPortableExe>
+    <MakePIAPortableExe>$(MIDefaultOutputPath)tools\MakePIAPortableTool.dll</MakePIAPortableExe>
     <ILToolsExist Condition="Exists($(ILDAsmFileLocation)) AND Exists($(ILAsmFileLocation))">true</ILToolsExist>
   </PropertyGroup>
   
-  <Target Name="GeneratePortablePIA" BeforeTargets="SignFiles" AfterTargets="Build" Inputs="@(MakePIAPortableFiles)" Outputs="@(MakePIAPortableFiles->'$(PIAOutput)\%(Filename)%(Extension)')">
+  <Target Name="GeneratePortablePIA" BeforeTargets="SignFiles" AfterTargets="Build">
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
     <Message Importance="High" Text="ILAsmFileLocation: $(ILAsmFileLocation)" />
     <Error Condition="'$(ILToolsExist)' != 'true'" Text="Unable to retrieve IL tools needed for MakePIAPortable" />
@@ -85,7 +83,7 @@
 
     <!-- Run ildasm -> MakePIAPortable -> ilasm -->
     <Exec Command="$(ILDAsmFileLocation) ./%(MakePIAPortableFiles.Identity) -OUT=./drop/%(MakePIAPortableFiles.Filename).il" WorkingDirectory="$(OutputPath)" />
-    <Exec Command="$(MakePIAPortableExe) ./drop/%(MakePIAPortableFiles.Filename).il ./drop/%(MakePIAPortableFiles.Filename)-portable.il" WorkingDirectory="$(OutputPath)" />
+    <Exec Command="dotnet $(MakePIAPortableExe) ./drop/%(MakePIAPortableFiles.Filename).il ./drop/%(MakePIAPortableFiles.Filename)-portable.il" WorkingDirectory="$(OutputPath)" />
     <Exec Command="$(ILAsmFileLocation) -nologo -quiet -dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il -output=./drop/%(MakePIAPortableFiles.Identity)" WorkingDirectory="$(OutputPath)" />
   </Target>
 
