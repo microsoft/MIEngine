@@ -87,7 +87,6 @@
 
   <ItemGroup>
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
-    <DropUnsignedFile Condition="'$(CanGenerateMDBFiles)' == 'true'" Include="$(OutDir)\Microsoft.DebugEngineHost.dll.mdb" />
   </ItemGroup>
 
   <Target Name="GetDropFiles" BeforeTargets="DropFiles">

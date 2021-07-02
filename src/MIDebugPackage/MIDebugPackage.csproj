@@ -170,10 +170,6 @@
   <ItemGroup Label="Scripts for XPlat" Condition="'$(IsXPlat)' == 'true'">
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
   </ItemGroup>
-  <ItemGroup Label="Debug Files for XPlat" Condition="'$(CanGenerateMDBFiles)' == 'true'">
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
-  </ItemGroup>
   <ItemGroup Condition="'$(IsXPlat)' == 'false' AND '$(Lab)' == 'false'">
     <!-- Include file for local VS development builds. For Non-VS Builds, it will be dropped by MakePIAPortable project -->
     <DropUnsignedFile Include="$(OutDir)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />

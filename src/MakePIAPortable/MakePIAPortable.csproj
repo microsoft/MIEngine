@@ -74,9 +74,6 @@
     <Message Importance="High" Text="ILAsmFileLocation: $(ILAsmFileLocation)" />
     <Error Condition="'$(ILToolsExist)' != 'true'" Text="Unable to retrieve IL tools needed for MakePIAPortable" />
 
-    <!-- On linux, make MakePIAPortable exe runnable -->
-    <Exec Command="chmod 700 $(MakePIAPortableExe)" WorkingDirectory="$(OutputPath)" Condition="$([MSBuild]::IsOSPlatform('linux'))" />
-
     <!-- Clean and create drop directory -->
     <RemoveDir Directories="$(PIAOutput)" />
     <MakeDir Directories="$(PIAOutput)" />
