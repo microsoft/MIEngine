@@ -14,12 +14,11 @@
     <PropertyGroup>
       <XsdParameters>LaunchOptions.xsd /classes /namespace:$(RootNamespace).Xml.LaunchOptions </XsdParameters>
       <XsdParameters>$(XsdParameters) /out:"$(IntermediateOutputPath)."</XsdParameters>
-      <XsdParameters Condition="'$(IsXPlat)' == 'false'">$(XsdParameters) /fields</XsdParameters>
+      <XsdParameters>$(XsdParameters) /fields</XsdParameters>
 
       <XsdCandidateFile>$(IntermediateOutputPath)LaunchOptions.cs</XsdCandidateFile>
 
-      <XsdCodeFile Condition="'$(IsXPlat)' == 'false'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
-      <XsdCodeFile Condition="'$(IsXPlat)' == 'true'">LaunchOptions.xsd.types.designer.desktop.cs</XsdCodeFile>
+      <XsdCodeFile>LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
     </PropertyGroup>
     <Exec Command="&quot;$(SDK40ToolsPath)xsd.exe&quot; $(XsdParameters)" />
 
@@ -32,8 +31,7 @@
       <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(SerializableRegex), "", RegexOptions.Multiline))</CandidateFileContents>
       <CandidateFileContents>$([System.Text.RegularExpressions.Regex]::Replace($(CandidateFileContents), $(DesignerCategoryRegex), "", RegexOptions.Multiline))</CandidateFileContents>
     </PropertyGroup>
-    <WriteLinesToFile Condition="'$(IsXPlat)' == 'false'"
-                      File="$(XsdCandidateFile)"
+    <WriteLinesToFile File="$(XsdCandidateFile)"
                       Lines="$(CandidateFileContents)"
                       Overwrite="true" />
 

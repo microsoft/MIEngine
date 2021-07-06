@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.Debugger.Interop;
 using System.Globalization;
 using System.Collections.ObjectModel;
 using System.Threading;
+using System.Runtime.Loader;
 
 // Disable: 'Field 'EngineOptions.EngineClass' is never assigned to' since these fields are assigned by reflection
 #pragma warning disable 649
@@ -138,6 +139,8 @@ namespace Microsoft.DebugEngineHost.VSCode
         /// </summary>
         public object LoadEngine()
         {
+            AssemblyResolver.Initialize();
+
             AssemblyName assemblyName = new System.Reflection.AssemblyName(this.EngineAssemblyName);
             Assembly engineAssembly = Assembly.Load(assemblyName);
             Type engineClass = engineAssembly.GetType(this.EngineClassName);

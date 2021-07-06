@@ -162,7 +162,7 @@ namespace OpenDebugAD7
             char directorySeparatorChar = Path.DirectorySeparatorChar;
             char wrongSlashChar = directorySeparatorChar == '\\' ? '/' : '\\';
 
-            if (program.Contains(wrongSlashChar))
+            if (program.Contains(wrongSlashChar, StringComparison.Ordinal))
             {
                 program = program.Replace(wrongSlashChar, directorySeparatorChar);
             }
@@ -832,7 +832,7 @@ namespace OpenDebugAD7
             }
 
             // If program is still in the default state, raise error
-            if (program.EndsWith(">", StringComparison.Ordinal) && program.Contains('<'))
+            if (program.EndsWith(">", StringComparison.Ordinal) && program.Contains('<', StringComparison.Ordinal))
             {
                 responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "launch: launch.json must be configured. Change 'program' to the path to the executable file that you would like to debug."));
                 return;

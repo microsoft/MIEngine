@@ -12,11 +12,6 @@
     <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
   </PropertyGroup>
 
-  <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != ''" AfterTargets="Build">
-    <MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />
-    <Copy SourceFiles="@(GlassDirCopy)" DestinationFolder="$(GlassDir)" />
-  </Target>
-
   <!-- Depends on PrepareForBuild because the latter is responsible for calling MakeDir(IntermediateOutputPath). 
   Without it, if we do a design-time build of a project (e.g. in Workspace.LoadSolution) immediately following
   a tfpt treeclean, WriteCodeFragment may fail because the obj folder doesn't even exist at that time.  -->
