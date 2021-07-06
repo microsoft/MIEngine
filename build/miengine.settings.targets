@@ -5,7 +5,7 @@
 
   <!-- Validate OS -->
   <Target Name="OSPlatformCheck" BeforeTargets="Build" Condition="!$([MSBuild]::IsOSPlatform('windows'))" >
-    <Error Text="'MIDebugEngine' does not build on non-windows platforms." />
+    <Error Text="'MIDebugEngine' does not build non-Desktop on non-windows platforms." Condition="!$(Configuration.Contains('Desktop'))"/>
   </Target>
   
   <Import Project="all_projects.settings.targets"/>

@@ -7,6 +7,8 @@
     <RootNamespace>Microsoft.MIDebugPackage</RootNamespace>
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
+
+    <EnableDefaultEmbeddedResourceItems Condition="'$(IsXPlat)'=='true'">false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -52,7 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
-  <Content Include="Resources\Package.ico" />
+    <Content Include="Resources\Package.ico" />
     <Content Include="OpenFolderSchema.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -138,7 +140,6 @@
   <ItemGroup Label="MIDebugEngine for both VS and XPlat">
     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
   </ItemGroup>
@@ -148,6 +149,7 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
+     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
     <!-- this is the version for Visual Studio -->
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
@@ -165,10 +167,8 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
     <DropUnsignedFile Include="$(OutDir)\OpenFolderSchema.json" />
   </ItemGroup>
-  <ItemGroup Label="Debug Files and Scripts for XPlat" Condition="'$(IsXPlat)' == 'true'">
+  <ItemGroup Label="Scripts for XPlat" Condition="'$(IsXPlat)' == 'true'">
     <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.dll.mdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll.mdb" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsXPlat)' == 'false' AND '$(Lab)' == 'false'">
     <!-- Include file for local VS development builds. For Non-VS Builds, it will be dropped by MakePIAPortable project -->
@@ -241,7 +241,7 @@
   </ItemGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets') AND '$(IsXPlat)' == 'false'" />
 
   <Import Project="..\..\build\miengine.targets" />
   <!--
