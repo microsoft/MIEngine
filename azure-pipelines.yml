@@ -21,9 +21,9 @@ stages:
     - task: VSTest@2
       inputs:
         testAssemblyVer2: |
-          $(Build.SourcesDirectory)\bin\Debug\MICoreUnitTests.dll
-          $(Build.SourcesDirectory)\bin\Debug\JDbgUnitTests.dll
-          $(Build.SourcesDirectory)\bin\Debug\SSHDebugTests.dll
+          $(Build.SourcesDirectory)\bin\Debug\tests\MICoreUnitTests.dll
+          $(Build.SourcesDirectory)\bin\Debug\tests\JDbgUnitTests.dll
+          $(Build.SourcesDirectory)\bin\Debug\tests\SSHDebugTests.dll
     - task: PublishTestResults@2
       inputs:
         testResultsFormat: 'xUnit'
@@ -47,9 +47,9 @@ stages:
     - task: VSTest@2
       inputs:
         testAssemblyVer2: |
-          $(Build.SourcesDirectory)\bin\Release\MICoreUnitTests.dll
-          $(Build.SourcesDirectory)\bin\Release\JDbgUnitTests.dll
-          $(Build.SourcesDirectory)\bin\Release\SSHDebugTests.dll
+          $(Build.SourcesDirectory)\bin\Release\tests\MICoreUnitTests.dll
+          $(Build.SourcesDirectory)\bin\Release\tests\JDbgUnitTests.dll
+          $(Build.SourcesDirectory)\bin\Release\tests\SSHDebugTests.dll
     - task: PublishTestResults@2
       inputs:
         testResultsFormat: 'xUnit'
