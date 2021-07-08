@@ -53,7 +53,7 @@ namespace WindowsDebugLauncher
                 StringBuilder argString = new StringBuilder();
                 foreach (var arg in DbgExeArgs.ToList())
                 {
-#if NET472
+#if NET462
                     if (arg.Contains(' '))
 #else
                     if (arg.Contains(' ', StringComparison.Ordinal))

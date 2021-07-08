@@ -52,7 +52,7 @@ namespace OpenDebug
             {
                 path = path.Substring(1);
             }
-#if NET472
+#if NET462
             int pos = path.IndexOf(Path.DirectorySeparatorChar);
 #else
             int pos = path.IndexOf(Path.DirectorySeparatorChar, StringComparison.Ordinal);
