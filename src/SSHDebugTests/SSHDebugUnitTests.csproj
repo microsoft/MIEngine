@@ -16,12 +16,18 @@
     <TestProjectType>UnitTest</TestProjectType>
     <AssemblyOriginatorKeyFile>..\..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>True</SignAssembly>
-    <OutputPath>$(MIDefaultOutputPath)\tests</OutputPath>
+    <OutputPath>$(MIDefaultOutputPath)</OutputPath>
+
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTest_TestFramework_Version)">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_Version)" />
+    <PackageReference Include="xunit" Version="$(xunit_Version)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(xunit_runner_visualstudio_Version)" />
+    <PackageReference Include="coverlet.collector" Version="$(coverlet_collector_Version)">
       <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
 

@@ -21,15 +21,11 @@ stages:
     - task: VSTest@2
       inputs:
         testAssemblyVer2: |
-          $(Build.SourcesDirectory)\bin\Debug\tests\MICoreUnitTests.dll
-          $(Build.SourcesDirectory)\bin\Debug\tests\JDbgUnitTests.dll
-          $(Build.SourcesDirectory)\bin\Debug\tests\SSHDebugTests.dll
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFormat: 'xUnit'
-        testResultsFiles: 'bin\Debug\TestResults.xml'
-        searchFolder: '$(System.DefaultWorkingDirectory)'
-        testRunTitle: '$(Build.DefinitionName)_$(Build.BuildNumber)_Debug'
+          $(Build.SourcesDirectory)\bin\Debug\MICoreUnitTests.dll
+          $(Build.SourcesDirectory)\bin\Debug\JDbgUnitTests.dll
+          $(Build.SourcesDirectory)\bin\Debug\SSHDebugTests.dll
+        failOnMinTestsNotRun: true
+        minimumExpectedTests: '1'
 
   - job: Release
     pool: 'Hosted Windows 2019 with VS2019'
@@ -47,15 +43,11 @@ stages:
     - task: VSTest@2
       inputs:
         testAssemblyVer2: |
-          $(Build.SourcesDirectory)\bin\Release\tests\MICoreUnitTests.dll
-          $(Build.SourcesDirectory)\bin\Release\tests\JDbgUnitTests.dll
-          $(Build.SourcesDirectory)\bin\Release\tests\SSHDebugTests.dll
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFormat: 'xUnit'
-        testResultsFiles: 'bin\Release\TestResults.xml'
-        searchFolder: '$(System.DefaultWorkingDirectory)'
-        testRunTitle: '$(Build.DefinitionName)_$(Build.BuildNumber)_Release'
+          $(Build.SourcesDirectory)\bin\Release\MICoreUnitTests.dll
+          $(Build.SourcesDirectory)\bin\Release\JDbgUnitTests.dll
+          $(Build.SourcesDirectory)\bin\Release\SSHDebugTests.dll
+        failOnMinTestsNotRun: true
+        minimumExpectedTests: '1'
 
   - job: LabRelease
     pool: 'Hosted Windows 2019 with VS2019'
