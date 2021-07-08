@@ -8,29 +8,29 @@
 
   <Choose>
     <When Condition="'$(Lab)' == 'true'">
-        <PropertyGroup>
-            <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
-            <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
+      <PropertyGroup>
+        <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
 
-            <!-- Use PublicSign when TEST_LAB_BUILD is enabled -->
-            <PublicSign Condition="'$(TEST_LAB_BUILD)'!=''">true</PublicSign>
-            <DelaySign Condition="'$(TEST_LAB_BUILD)'==''">true</DelaySign>
-        </PropertyGroup>
+        <!-- Use PublicSign when TEST_LAB_BUILD is enabled -->
+        <PublicSign Condition="'$(TEST_LAB_BUILD)'!=''">true</PublicSign>
+        <DelaySign Condition="'$(TEST_LAB_BUILD)'==''">true</DelaySign>
+      </PropertyGroup>
     </When>
     <Otherwise>
-        <PropertyGroup>
-            <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
-            <DelaySign>false</DelaySign>
-        </PropertyGroup>
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
+        <DelaySign>false</DelaySign>
+      </PropertyGroup>
     </Otherwise>
   </Choose>
-
+  
   <!-- Symbol Settings -->
   <Choose>
     <When Condition="$(Configuration.Contains('Debug'))">
       <PropertyGroup>
         <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
+        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows'))">full</DebugType>
         <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
         <Optimize>false</Optimize>
       </PropertyGroup>
@@ -38,7 +38,8 @@
     <Otherwise>
       <!-- Release Symbol Settings -->
       <PropertyGroup>
-        <DebugType>pdbonly</DebugType>
+        <DebugType>portable</DebugType>
+        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows'))">pdbonly</DebugType>
         <Optimize>true</Optimize>
         <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
       </PropertyGroup>

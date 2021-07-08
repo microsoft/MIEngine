@@ -13,7 +13,6 @@ using Microsoft.VisualStudio.Debugger.Interop;
 using System.Globalization;
 using System.Collections.ObjectModel;
 using System.Threading;
-using System.Runtime.Loader;
 
 // Disable: 'Field 'EngineOptions.EngineClass' is never assigned to' since these fields are assigned by reflection
 #pragma warning disable 649

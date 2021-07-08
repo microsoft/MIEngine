@@ -1,7 +1,6 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- This is a target file used to generate + validate LaunchOptions.xsd.types.designer.cs. The way this works is that we have a baseline
-  file checked in. This target will create a new one, and if it is different from the baseline, it will update the baseline.
-  NOTE: We skip this step for the lab configuration to ensure that in the lab we build exactly what is checked in.-->
+  file checked in. This target will create a new one, and if it is different from the baseline, it will update the baseline. -->
   <Target Name="BeforeBuild"
           Inputs="LaunchOptions.xsd"
           Outputs="$(IntermediateOutputPath)LaunchOptions.cs">

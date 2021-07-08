@@ -14,7 +14,8 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('windows'))">net472</TargetFramework>
+    <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('windows'))">net5.0</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
 
     <!-- F5 OpenDebugAD7.exe if OpenDebugAD7 is the startup project. -->

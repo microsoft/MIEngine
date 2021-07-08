@@ -13,7 +13,8 @@
     <StartAction>Program</StartAction>
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('windows'))">net472</TargetFramework>
+    <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('windows'))">net5.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>

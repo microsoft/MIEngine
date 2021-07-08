@@ -53,7 +53,11 @@ namespace WindowsDebugLauncher
                 StringBuilder argString = new StringBuilder();
                 foreach (var arg in DbgExeArgs.ToList())
                 {
+#if NET472
+                    if (arg.Contains(' '))
+#else
                     if (arg.Contains(' ', StringComparison.Ordinal))
+#endif
                     {
                         argString.Append("\"" + arg + "\"");
                     }
@@ -233,7 +237,7 @@ namespace WindowsDebugLauncher
                 return null;
             }
         }
-        #region IDisposable Support
+#region IDisposable Support
 
         protected virtual void Dispose(bool disposing)
         {
@@ -268,7 +272,7 @@ namespace WindowsDebugLauncher
         {
             Dispose(true);
         }
-        #endregion
+#endregion
 
     }
 }

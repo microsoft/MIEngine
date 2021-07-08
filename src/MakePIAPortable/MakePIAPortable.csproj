@@ -9,9 +9,8 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <OutputPath>$(MIDefaultOutputPath)\PIA</OutputPath>
     <OutputType>Exe</OutputType>
-    <PIAOutput>$(OutputPath)\drop\</PIAOutput>
+    <PIAOutput>$(MIDefaultOutputPath)\PIA\drop\</PIAOutput>
   </PropertyGroup>
 
   <ItemGroup Label="ILDasm NuGet Package">
@@ -64,19 +63,25 @@
     <ILToolsExist Condition="Exists($(ILDAsmFileLocation)) AND Exists($(ILAsmFileLocation))">true</ILToolsExist>
   </PropertyGroup>
   
-  <Target Name="GeneratePortablePIA" BeforeTargets="SignFiles" AfterTargets="Build">
+  <Target Name="GeneratePortablePIA"
+          Inputs="@(MakePIAPortableFiles)"
+          Outputs="@(MakePIAPortableFiles->'$(PIAOutput)%(Filename)')"
+          BeforeTargets="SignFiles"
+          AfterTargets="Build">
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
     <Message Importance="High" Text="ILAsmFileLocation: $(ILAsmFileLocation)" />
     <Error Condition="'$(ILToolsExist)' != 'true'" Text="Unable to retrieve IL tools needed for MakePIAPortable" />
 
     <!-- Clean and create drop directory -->
+    <RemoveDir Directories="$(OutputPath)/drop" />
+    <MakeDir Directories="$(OutputPath)/drop" />
     <RemoveDir Directories="$(PIAOutput)" />
     <MakeDir Directories="$(PIAOutput)" />
 
     <!-- Run ildasm -> MakePIAPortable -> ilasm -->
     <Exec Command="$(ILDAsmFileLocation) %(MakePIAPortableFiles.Identity) -OUT=./drop/%(MakePIAPortableFiles.Filename).il" WorkingDirectory="$(OutputPath)" />
     <Exec Command="dotnet $(MakePIAPortableExe) ./drop/%(MakePIAPortableFiles.Filename).il ./drop/%(MakePIAPortableFiles.Filename)-portable.il" WorkingDirectory="$(OutputPath)" />
-    <Exec Command="$(ILAsmFileLocation) -nologo -quiet -dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il -output=./drop/%(MakePIAPortableFiles.Filename).dll" WorkingDirectory="$(OutputPath)" />
+    <Exec Command="$(ILAsmFileLocation) -nologo -quiet -dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il -output=$(PIAOutput)%(MakePIAPortableFiles.Filename).dll" WorkingDirectory="$(OutputPath)" />
   </Target>
 
   <ItemGroup>
