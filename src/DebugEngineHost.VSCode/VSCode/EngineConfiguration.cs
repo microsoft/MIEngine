@@ -138,6 +138,8 @@ namespace Microsoft.DebugEngineHost.VSCode
         /// </summary>
         public object LoadEngine()
         {
+            AssemblyResolver.Initialize();
+
             AssemblyName assemblyName = new System.Reflection.AssemblyName(this.EngineAssemblyName);
             Assembly engineAssembly = Assembly.Load(assemblyName);
             Type engineClass = engineAssembly.GetType(this.EngineClassName);

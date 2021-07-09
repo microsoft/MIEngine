@@ -2,8 +2,6 @@
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{54C33AFA-438D-4932-A2F0-D0F2BB2FADC9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -18,40 +16,8 @@
     for all its methods, but it is also not a public assembly, and adding XML documentation for all its methods
     would take a fair amount of work.-->
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
-    <TargetFramework>net462</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
@@ -73,14 +39,12 @@
 
   <ItemGroup Label="NuGet Packages">
     <!-- NOTE: MIEngine's usage of Newtonsoft.Json's flows through public interfaces exposed by MICore (IPlatformAppLauncher). So this version needs to be within the binding redirect range used by devenv.exe (currently 4.5.0.0-9.0.0.0) -->
-    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_Version)" />
   </ItemGroup>
-
-  <ItemGroup Label="References">
-    <Reference Include="System.Net.Http">
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
+  
+  <PropertyGroup>
+    <XsdCodeFile>LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
+  </PropertyGroup>
 
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
@@ -95,39 +59,27 @@
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
-
-  <ItemGroup Label="Generated XML Cs files">
-    <Compile Remove="LaunchOptions.xsd.types.designer.cs" Condition="'$(IsXPlat)' == 'true'" />
-    <Compile Remove="LaunchOptions.xsd.types.designer.desktop.cs" Condition="'$(IsXPlat)' == 'false'" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <XsdCodeFile Condition="'$(IsXPlat)' == 'false'">LaunchOptions.xsd.types.designer.cs</XsdCodeFile>
-    <XsdCodeFile Condition="'$(IsXPlat)' == 'true'">LaunchOptions.xsd.types.designer.desktop.cs</XsdCodeFile>
-  </PropertyGroup>
   
   <ItemGroup>
     <None Include="LaunchOptions.xsd" />
     <None Include="SetMIDebugLogging.cmd" />
     <ContentWithTargetPath Include="osxlaunchhelper.scpt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>osxlaunchhelper.scpt</TargetPath>
+      <TargetPath>vscode\osxlaunchhelper.scpt</TargetPath>
     </ContentWithTargetPath>
-  </ItemGroup>
-
-  <ItemGroup>
-    <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
-    <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" Condition="'$(IsXPlat)' == 'false'" />
-    <GlassDirCopy Include="$(PkgNewtonsoft_Json)\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll" />
   </ItemGroup>
   
   <Import Project="..\..\build\miengine.targets" />
-  <Import Project="GenerateXmlSerializersAssembly.targets" Condition="'$(IsXPlat)' == 'false'"/>
+  <Import Project="GenerateXmlSerializersAssembly.targets" Condition="'$(MSBuildRuntimeType)' != 'Core'" />
+
+  <Target Name="Copy to vscode folder" AfterTargets="Build">
+    <Copy SourceFiles="$(OutDir)$(AssemblyName)$(TargetExt)" DestinationFolder="$(OutDir)\vscode" />
+  </Target>
   <!-- To get the seralization assembly copied to the vsix, and also to the output directory, we have this target
   which adds the XmlSerializers as if it was a source item in our project with a 'CopyToOutputDirectory' child
   node. See the 'GetCopyToOutputDirectoryItems' target in C:\Program Files (x86)\MSBuild\14.0\Bin\Microsoft.Common.CurrentVersion.targets
   for more info. -->
-  <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="'$(IsXPlat)' == 'false'">
+  <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="'$(MSBuildRuntimeType)' != 'Core'">
     <ItemGroup>
       <_GenerateXmlSerializersAssemblyOutput Include="$(IntermediateOutputPath)sgen/$(AssemblyName).XmlSerializers.dll" />
       <_SourceItemsToCopyToOutputDirectoryAlways Include="@(_GenerateXmlSerializersAssemblyOutput->'%(FullPath)')">

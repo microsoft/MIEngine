@@ -2,8 +2,6 @@
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{D582C0B6-032F-4686-B01D-EB55694059CB}</ProjectGuid>
     <RootNamespace>OpenDebugAD7</RootNamespace>
     <AssemblyName>OpenDebugAD7</AssemblyName>
@@ -13,43 +11,16 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <StartAction>Program</StartAction>
-    <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFramework>net462</TargetFramework>
-    <AppConfig Condition="'$(IsXPlat)' == 'true'">App.VSCode.config</AppConfig>
-    <AppConfig Condition="'$(IsXPlat)' == 'false'">App.VS.config</AppConfig>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <TargetFramework>net5.0</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
+
+    <!-- F5 OpenDebugAD7.exe if OpenDebugAD7 is the startup project. -->
+    <StartAction>Program</StartAction>
+    <StartProgram>$(MIDefaultOutputPath)\vscode\OpenDebugAD7.exe</StartProgram>
+    <StartArguments>--server</StartArguments>
   </PropertyGroup>
 
   <ItemGroup>
@@ -74,15 +45,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol" Version="$(Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version)" />
-    <!-- This will pull in the net45 newtonsoft.json, we want the portable-net45+wp80+win8+wpa81 version. Use this to get the install path.  -->
-    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" GeneratePathProperty="true">
-      <IncludeAssets>none</IncludeAssets>
-      <ExcludeAssets>all</ExcludeAssets>
-      <PrivateAssets>none</PrivateAssets>
-    </PackageReference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>$(PkgNewtonsoft_Json)\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_Version)" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
   
@@ -98,34 +61,25 @@
     </ProjectReference>
   </ItemGroup>
   
-  <ItemGroup Label="OpenDebugAD7 Drop Files">
-    <DropSignedFile Include="$(OutputPath)\OpenDebugAD7.exe" />
-    <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.exe.config" />
-    <DropThirdPartySignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
-    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Interop.dll" />
-  </ItemGroup>
-  <ItemGroup Label="OpenDebugAD7 Drop Files for XPlat" Condition="'$(IsXPlat)' == 'false'">
-    <!-- 
-      Any libraries that exist in VS but are needed for VS OpenDebugAD7 
-      scenarios will need to be added via VS Setup files.
-    -->
-    <DropUnsignedFile Include="$(OutputPath)\cppdbg.ad7Engine.json" />
-  </ItemGroup>
-  <Target Name="GetDropFiles" BeforeTargets="DropFiles">
-    <ItemGroup>
-      <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.pdb" />
-    </ItemGroup>
-  </Target>
-  <ItemGroup>
-    <None Include="App.VSCode.config" />
-    <None Include="App.VS.config" />
-  </ItemGroup>
   <ItemGroup>
     <None Include="cppdbg.ad7Engine.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup Label="Drop Files">
+    <DropSignedFile Include="$(MIDefaultOutputPath)\Microsoft.MICore.dll" />
+    <DropUnsignedFile Include="$(MIDefaultOutputPath)\Microsoft.MICore.pdb" />
+    <DropSignedFile Include="$(MIDefaultOutputPath)\Microsoft.MIDebugEngine.dll" />
+    <DropUnsignedFile Include="$(MIDefaultOutputPath)\Microsoft.MIDebugEngine.pdb" />
+    <DropSignedFile Condition="$([MSBuild]::IsOSPlatform('windows'))" Include="$(OutputPath)\OpenDebugAD7.exe" />
+    <!-- We will build OpenDebugAD7 via publish for non-windows -->
+    <DropThirdPartySignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\cppdbg.ad7Engine.json" />
+    <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.pdb" />
+  </ItemGroup>
+
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\DropFiles.targets" />
   <!-- Force the project to be an exe before the compile step. This is used by CoreCLR builds. -->

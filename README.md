@@ -25,14 +25,9 @@ This repo also includes:
 * Debug on any platform that supports GDB, such as Linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
 
 ### Prerequisites
-MIEngine requires [Visual Studio](https://visualstudio.microsoft.com/downloads/) to build.
+MIEngine can be built with either [Visual Studio](https://visualstudio.microsoft.com/downloads/) or with the [.NET CLI](https://dotnet.microsoft.com/download/dotnet).
 
-### Get Started
-* Clone the sources: `git clone https://github.com/Microsoft/MIEngine.git`
-* Open [src/MIDebugEngine.sln](https://github.com/Microsoft/MIEngine/blob/master/src/MIDebugEngine.sln) in Visual Studio.
-* Debug -> Start Debugging (or F5) to to build, deploy, and start debugging the [Experimental Instance of Visual Studio](https://msdn.microsoft.com/en-us/library/bb166560.aspx).
 * See the [wiki](https://github.com/Microsoft/MIEngine/wiki) for more info.
-
 
 ### Contribute!
 Before you contribute, please read through the contributing and developer guides to get an idea of requirements for pull requests. 
