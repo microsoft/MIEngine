@@ -30,7 +30,8 @@
     <When Condition="$(Configuration.Contains('Debug'))">
       <PropertyGroup>
         <DebugSymbols>true</DebugSymbols>
-        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows'))">full</DebugType>
+        <DebugType>portable</DebugType>
+        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows')) AND '$(BUILD_BUILDURI)'==''">full</DebugType>
         <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
         <Optimize>false</Optimize>
       </PropertyGroup>
@@ -39,7 +40,7 @@
       <!-- Release Symbol Settings -->
       <PropertyGroup>
         <DebugType>portable</DebugType>
-        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows'))">pdbonly</DebugType>
+        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows')) AND '$(Lab)' == 'true'">full</DebugType>
         <Optimize>true</Optimize>
         <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
       </PropertyGroup>
