@@ -1,57 +1,37 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
   <!--
   Settings file which is included by all the shipping code projects in the repo.
-  -->
-
-  <!-- Validate OS -->
-  <Target Name="OSPlatformCheck" BeforeTargets="Build" Condition="!$([MSBuild]::IsOSPlatform('windows'))" >
-    <Error Text="'MIDebugEngine' does not build non-Desktop on non-windows platforms." Condition="!$(Configuration.Contains('Desktop'))"/>
-  </Target>
-  
+  -->  
   <Import Project="all_projects.settings.targets"/>
   <Import Project="package_versions.settings.targets" />
   <Import Project="version.settings.targets" />
 
   <Choose>
     <When Condition="'$(Lab)' == 'true'">
-        <PropertyGroup>
-            <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
-            <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
+      <PropertyGroup>
+        <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
 
-            <!-- Use PublicSign when TEST_LAB_BUILD is enabled -->
-            <PublicSign Condition="'$(TEST_LAB_BUILD)'!=''">true</PublicSign>
-            <DelaySign Condition="'$(TEST_LAB_BUILD)'==''">true</DelaySign>
-        </PropertyGroup>
+        <!-- Use PublicSign when TEST_LAB_BUILD is enabled -->
+        <PublicSign Condition="'$(TEST_LAB_BUILD)'!=''">true</PublicSign>
+        <DelaySign Condition="'$(TEST_LAB_BUILD)'==''">true</DelaySign>
+      </PropertyGroup>
     </When>
     <Otherwise>
-        <PropertyGroup>
-            <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
-            <DelaySign>false</DelaySign>
-        </PropertyGroup>
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\ExternalKey.snk</AssemblyOriginatorKeyFile>
+        <DelaySign>false</DelaySign>
+      </PropertyGroup>
     </Otherwise>
   </Choose>
   
-  <Choose>
-    <When Condition="$(Configuration.Contains('Desktop'))">
-      <PropertyGroup>
-        <!-- "Desktop.*" configs are used to build the cross-platform bits that are used in the VS Code C++ extension -->
-        <IsXPlat>true</IsXPlat>
-        <DefineConstants>$(DefineConstants);XPLAT</DefineConstants>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <IsXPlat>false</IsXPlat>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
-
   <!-- Symbol Settings -->
   <Choose>
     <When Condition="$(Configuration.Contains('Debug'))">
       <PropertyGroup>
         <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
+        <DebugType>portable</DebugType>
+        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows')) AND '$(BUILD_BUILDURI)'==''">full</DebugType>
         <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
         <Optimize>false</Optimize>
       </PropertyGroup>
@@ -59,7 +39,8 @@
     <Otherwise>
       <!-- Release Symbol Settings -->
       <PropertyGroup>
-        <DebugType>pdbonly</DebugType>
+        <DebugType>portable</DebugType>
+        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows')) AND '$(Lab)' == 'true'">full</DebugType>
         <Optimize>true</Optimize>
         <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
       </PropertyGroup>
@@ -68,7 +49,6 @@
   
   <PropertyGroup>
     <SignAssembly>True</SignAssembly>
-    <GlassDir>$(MSBuildThisFileDirectory)..\Microsoft.VisualStudio.Glass\</GlassDir>
     <DropConfigurationName>$(Configuration)</DropConfigurationName>
     <DefineConstants Condition="'$(Lab)' == 'true'">$(DefineConstants);LAB</DefineConstants>
     <DropConfigurationName Condition="'$(Lab)' == 'true' AND $(Configuration.Contains('Debug'))">Debug</DropConfigurationName>
@@ -78,7 +58,7 @@
     <DropRootDir Condition="'$(DropRootDir)'==''">$(MIEngineRoot)bin\$(DropConfigurationName)\drop</DropRootDir>
 
     <!-- SDK Project Variables -->
-    <Configurations>Debug;Release;Desktop.Debug;Desktop.Release;Lab.Debug;Lab.Release</Configurations>
+    <Configurations>Debug;Release;Lab.Debug;Lab.Release</Configurations>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>

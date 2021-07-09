@@ -1,29 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{114039A0-87B5-425B-90C9-6AFC1960A247}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>MakePIAPortable</RootNamespace>
     <AssemblyName>MakePIAPortable</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <OutputPath>$(MIDefaultOutputPath)\PIA</OutputPath>
     <OutputType>Exe</OutputType>
-    <PIAOutput>$(OutputPath)\drop\</PIAOutput>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
+    <PIAOutput>$(MIDefaultOutputPath)\PIA\drop\</PIAOutput>
   </PropertyGroup>
 
   <ItemGroup Label="ILDasm NuGet Package">
@@ -37,22 +24,29 @@
     <PackageReference Include="runtime.osx-x64.Microsoft.NETCore.ILAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
   </ItemGroup>
 
-  <Import Project="..\..\build\Debugger.PIAs.NonPortable.Packages.settings.targets" />
+  <!-- Keep in sync with ..\..\build\Debugger.PIAs.NonPortable.Packages.settings.targets -->
 
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_10_0_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.11.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_11_0_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.12.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_12_0_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.InteropA" Version="$(Microsoft_VisualStudio_Debugger_InteropA_Version)" GeneratePathProperty="true" />
+
+    <PackageReference Include="Microsoft.VisualStudio.Interop" Version="$(Microsoft_VisualStudio_Interop_Version)" GeneratePathProperty="true" />    
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" GeneratePathProperty="true" />
+    
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup> 
-    <MakePIAPortableFiles Include="Microsoft.VisualStudio.Debugger.InteropA.dll" />
-    <MakePIAPortableFiles Include="Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
-    <MakePIAPortableFiles Include="Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
-    <MakePIAPortableFiles Include="Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
-    <MakePIAPortableFiles Include="Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
-    <MakePIAPortableFiles Include="Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
-    <MakePIAPortableFiles Include="Microsoft.VisualStudio.Interop.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_InteropA)\lib\net45\Microsoft.VisualStudio.Debugger.InteropA.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_10_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_11_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_12_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_15_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_16_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Interop)\lib\net45\Microsoft.VisualStudio.Interop.dll" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -72,17 +66,23 @@
     <ILToolsExist Condition="Exists($(ILDAsmFileLocation)) AND Exists($(ILAsmFileLocation))">true</ILToolsExist>
   </PropertyGroup>
   
-  <Target Name="GeneratePortablePIA" BeforeTargets="SignFiles" AfterTargets="Build">
+  <Target Name="GeneratePortablePIA"
+          Inputs="@(MakePIAPortableFiles)"
+          Outputs="@(MakePIAPortableFiles->'$(PIAOutput)%(Filename)')"
+          BeforeTargets="SignFiles"
+          AfterTargets="Build">
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
     <Message Importance="High" Text="ILAsmFileLocation: $(ILAsmFileLocation)" />
     <Error Condition="'$(ILToolsExist)' != 'true'" Text="Unable to retrieve IL tools needed for MakePIAPortable" />
 
     <!-- Clean and create drop directory -->
+    <RemoveDir Directories="$(OutputPath)/drop" />
+    <MakeDir Directories="$(OutputPath)/drop" />
     <RemoveDir Directories="$(PIAOutput)" />
     <MakeDir Directories="$(PIAOutput)" />
 
     <!-- Run ildasm -> MakePIAPortable -> ilasm -->
-    <Exec Command="$(ILDAsmFileLocation) ./%(MakePIAPortableFiles.Identity) -OUT=./drop/%(MakePIAPortableFiles.Filename).il" WorkingDirectory="$(OutputPath)" />
+    <Exec Command="$(ILDAsmFileLocation) %(MakePIAPortableFiles.Identity) -OUT=./drop/%(MakePIAPortableFiles.Filename).il" WorkingDirectory="$(OutputPath)" />
     <Exec Command="dotnet $(MakePIAPortableExe) ./drop/%(MakePIAPortableFiles.Filename).il ./drop/%(MakePIAPortableFiles.Filename)-portable.il" WorkingDirectory="$(OutputPath)" />
 
     <!-- Run ilasm -->

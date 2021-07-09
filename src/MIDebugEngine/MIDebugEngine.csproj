@@ -2,8 +2,6 @@
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A8B0230C-7806-407C-AF18-54B2CE21275E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -13,38 +11,8 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
-    <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
-    <TargetFramework>net462</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
@@ -75,10 +43,9 @@
     </Content>
   </ItemGroup>
 
-  <ItemGroup>
-    <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
-    <GlassDirCopy Include="$(OutDir)Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
-  </ItemGroup>
+  <Target Name="Copy to vscode folder" AfterTargets="Build">
+    <Copy SourceFiles="$(OutDir)$(AssemblyName)$(TargetExt)" DestinationFolder="$(OutDir)\vscode" />
+  </Target>
 
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\DebugEngineHost.Stub\DebugEngineHost.Stub.csproj">
