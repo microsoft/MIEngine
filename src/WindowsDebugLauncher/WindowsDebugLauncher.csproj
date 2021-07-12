@@ -18,6 +18,10 @@
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
 
+  <ItemGroup Label="NuGet Packages">
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
+  </ItemGroup>
+
   <ItemGroup>
     <DropSignedFile Include="$(OutputPath)\WindowsDebugLauncher.exe" />
     <DropUnsignedFile Include="$(OutputPath)\WindowsDebugLauncher.pdb" />

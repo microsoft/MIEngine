@@ -94,11 +94,6 @@ stages:
       inputs:
         packageType: sdk
         version: 5.x
-    - task: DotNetCoreCLI@2
-      inputs:
-        projects: |
-          $(Build.SourcesDirectory)/src/MIDebugEngine-Unix.sln
-        arguments: '-c Debug'
     - script: |
         sudo apt-get install gdb g++ -y
         which g++
@@ -109,11 +104,7 @@ stages:
         # ulimit -S -c unlimited
         # sudo sysctl -w kernel.core_pattern=$(Build.SourcesDirectory)/core.%e
     - script: |
-        dotnet publish $(Build.SourcesDirectory)/src/OpenDebugAD7/OpenDebugAD7.csproj -c Debug -r linux-x64 --self-contained
-        mkdir -p $(Build.SourcesDirectory)/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
-        cp -r  $(Build.SourcesDirectory)/bin/Debug/vscode/linux-x64/publish/* $(Build.SourcesDirectory)/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters/.
-        cp $(Build.SourcesDirectory)/bin/Debug/vscode/Microsoft.MIDebugEngine.dll $(Build.SourcesDirectory)/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters/.
-        cp $(Build.SourcesDirectory)/bin/Debug/vscode/Microsoft.MICore.dll $(Build.SourcesDirectory)/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters/.
+        $(Build.SourcesDirectory)/PublishOpenDebugAD7.sh -c Debug -o $(Build.SourcesDirectory)/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
         cp $(Build.SourcesDirectory)/bin/DebugAdapterProtocolTests/Debug/CppTests/TestConfigurations/config_gdb.xml $(Build.SourcesDirectory)/bin/DebugAdapterProtocolTests/Debug/CppTests/config.xml
     - task: DotNetCoreCLI@2
       inputs:

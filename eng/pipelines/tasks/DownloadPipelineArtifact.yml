@@ -1,0 +1,123 @@
+# DownloadPipelineArtifact
+# 
+# Download build and pipeline artifacts
+# 
+# Version: 2.2.0
+# 
+# Reference: https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/download-pipeline-artifact
+# Task.json: https://github.com/microsoft/azure-pipelines-tasks/blob/master/Tasks/DownloadPipelineArtifactV2/task.json
+---
+parameters:
+  # region Step Configurations
+  
+  displayName: 'Download Pipeline Artifact'
+  enabled: true
+  continueOnError: false
+  condition: succeeded()
+  timeoutInMinutes: 0
+  
+  # endregion
+  
+  # region Ungrouped Configurations
+  
+  # Download artifacts produced by
+  # 
+  # Download artifacts produced by the current pipeline run, or from a specific pipeline run.
+  # Options:
+  #   current
+  #   specific
+  source : "current"  # Required
+  
+  # Project
+  # 
+  # The project from which to download the pipeline artifacts.
+  project : ""  # Used when source == specific
+  
+  # Build pipeline
+  # 
+  # Select the build pipeline name.
+  pipeline : ""  # Used when source == specific
+  
+  # When appropriate, download artifacts from the triggering build.
+  # 
+  # If checked, this build task will try to download artifacts from the triggering build. If there is no
+  # triggering build from the specified pipeline, it will download artifacts from the build specified in
+  # the options below.
+  preferTriggeringPipeline : false # Used when source == specific
+  
+  # Build version to download
+  # Options:
+  #   latest
+  #   latestFromBranch
+  #   specific
+  runVersion : "latest"  # Used when source == specific
+  
+  # Branch name
+  # 
+  # Specify to filter on branch/ref name, for example: ```refs/heads/develop```.
+  runBranch : "refs/heads/master" # Used when source == specific && runVersion == latestFromBranch
+  
+  # Build
+  # 
+  # The build from which to download the artifacts.
+  runId : ""  # Used when source == specific && runVersion == specific
+  
+  # Build Tags
+  # 
+  # A comma-delimited list of tags. Only builds with these tags will be returned.
+  tags : "" # Used when source == specific && runVersion != specific
+  
+  # Download artifacts from partially succeeded builds.
+  # 
+  # If checked, this build task will try to download artifacts whether the build is succeeded or partially
+  # succeeded.
+  allowPartiallySucceededBuilds : false # Used when source == specific && runVersion != specific
+  
+  # Download artifacts from failed builds.
+  # 
+  # If checked, this build task will try to download artifacts whether the build is succeeded or failed.
+  allowFailedBuilds : false # Used when source == specific && runVersion != specific
+  
+  # Artifact name
+  # 
+  # The name of the artifact to download. If left empty, it will download all artifacts associated to the
+  # pipeline run.
+  artifact : ""  # Optional
+  
+  # Matching patterns
+  # 
+  # One or more file matching patterns (new line delimited) that limit which files get downloaded.
+  patterns : | # Optional
+    **
+  
+  # Destination directory
+  # 
+  # Directory to download the artifact files to. Can be relative to the pipeline workspace directory or absolute.
+  # If multi-download option is applied (by leaving an empty artifact name), a sub-directory will be created
+  # for each.
+  path : "$(Pipeline.Workspace)" # Required
+  
+  # endregion
+  
+steps:
+- task: DownloadPipelineArtifact@2
+  displayName: ${{ parameters.DisplayName }}
+  inputs:
+    source : ${{ parameters.source }}
+    project : ${{ parameters.project }}
+    pipeline : ${{ parameters.pipeline }}
+    preferTriggeringPipeline : ${{ parameters.preferTriggeringPipeline }}
+    runVersion : ${{ parameters.runVersion }}
+    runBranch : ${{ parameters.runBranch }}
+    runId : ${{ parameters.runId }}
+    tags : ${{ parameters.tags }}
+    allowPartiallySucceededBuilds : ${{ parameters.allowPartiallySucceededBuilds }}
+    allowFailedBuilds : ${{ parameters.allowFailedBuilds }}
+    artifact : ${{ parameters.artifact }}
+    patterns : ${{ parameters.patterns }}
+    path : ${{ parameters.path }}
+  enabled: ${{ parameters.enabled }}
+  condition: ${{ parameters.condition }}
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  continueOnError: ${{ parameters.continueOnError }}
+...

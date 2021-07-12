@@ -1,0 +1,41 @@
+parameters:
+  Configuration: 'Lab.Release'
+  RuntimeID: 'win-x64'
+  SignedBinariesFolder: ''
+
+steps:
+- script: |
+    dotnet publish $(Build.SourcesDirectory)\src\OpenDebugAD7\OpenDebugAD7.csproj -c ${{ parameters.Configuration }} -r ${{ parameters.RuntimeID }} --self-contained -o $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}
+    copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.dll "$(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
+    copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\Microsoft.DebugEngineHost.dll $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
+    copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MIDebugEngine.dll $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
+    copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MICore.dll $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
+  displayName: "Publish OpenDebugAD7 ${{ parameters.RuntimeID }}"
+
+- ${{ if eq(parameters.RuntimeID, 'win-x64')}}:
+  - script: |
+      copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.exe $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
+    displayName: "Copy OpenDebugAD7.exe"
+
+- template: ../tasks/SignVerify.yml
+  parameters:
+    TargetFolders: $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
+    ExcludeSNVerify: true # Ignore CrossGen'ed .NET binaries
+
+- ${{ if eq(parameters.RuntimeID, 'osx-x64')}}:
+  - template: ../tasks/PublishPipelineArtifact.yml
+    parameters:
+      displayName: 'Publish Unsigned ${{ parameters.RuntimeID }}'
+      path: '$(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}'
+      artifactName: 'unsigned_osx-64_binaries'  
+
+- ${{ if ne(parameters.RuntimeID, 'osx-x64')}}:
+  - powershell: |
+      Compress-Archive -Path $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\. -DestinationPath $(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip
+    displayName: "Create ${{ parameters.RuntimeID}}.zip"  
+
+  - template: ../tasks/PublishPipelineArtifact.yml
+    parameters:
+      displayName: 'Publish ${{ parameters.RuntimeID }}'
+      path: '$(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip'
+      artifactName: '${{ parameters.RuntimeID }}_zip'

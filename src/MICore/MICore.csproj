@@ -19,6 +19,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="SGEN_SHA2_SIGNATUREKEY" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="MICoreResources.Designer.cs">

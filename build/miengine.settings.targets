@@ -11,6 +11,7 @@
       <PropertyGroup>
         <!--NOTE:DevDivPublicKey.snk comes from src\\tools\\devdiv\\FinalPublicKey.snk -->
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\Keys\DevDivPublicKey.snk</AssemblyOriginatorKeyFile>
+        <DefineConstants Condition="'$(TargetFrameworkVersion)'!='v2.0' and '$(TargetFrameworkVersion)'!='v3.0' and '$(TargetFrameworkVersion)'!='v3.5' and '$(TargetFrameworkVersion)'!='v4.0'">$(DefineConstants);ENABLESHA2SIGNATUREKEY</DefineConstants>
 
         <!-- Use PublicSign when TEST_LAB_BUILD is enabled -->
         <PublicSign Condition="'$(TEST_LAB_BUILD)'!=''">true</PublicSign>
@@ -62,5 +63,4 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-   
 </Project>

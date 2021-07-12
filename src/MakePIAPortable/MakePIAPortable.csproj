@@ -10,7 +10,8 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <OutputType>Exe</OutputType>
-    <PIAOutput>$(MIDefaultOutputPath)\PIA\drop\</PIAOutput>
+    <PIAOutput>$(MIDefaultOutputPath)PIA\drop\</PIAOutput>
+    <OutputPath>$(MIDefaultOutputPath)PIA\</OutputPath> <!-- Required by FilesToSign -->
   </PropertyGroup>
 
   <ItemGroup Label="ILDasm NuGet Package">
@@ -54,8 +55,12 @@
     <ILDAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('windows'))">$(Pkgruntime_win-x64_Microsoft_NETCore_ILDAsm)\runtimes\win-x64\native\ildasm.exe</ILDAsmFileLocation>
     <ILDAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('linux'))">$(Pkgruntime_linux-x64_Microsoft_NETCore_ILDAsm)\runtimes\linux-x64\native\ildasm</ILDAsmFileLocation>
     <ILDAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('osx'))">$(Pkgruntime_osx-x64_Microsoft_NETCore_ILDAsm)\runtimes\osx-x64\native\ildasm</ILDAsmFileLocation>
-    
-    <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('windows'))">$(Pkgruntime_win-x64_Microsoft_NETCore_ILAsm)\runtimes\win-x64\native\ilasm.exe</ILAsmFileLocation>
+
+    <!--
+      On Windows, we will use the .NET Framework version of ilasm since there is an issue with /RESOURCE and it fails signing using the .NET Core version.
+      Resource Issue: https://github.com/dotnet/runtime/issues/48046
+    -->
+    <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('windows'))">C:\Windows\Microsoft.NET\Framework\v4.0.30319\ilasm.exe</ILAsmFileLocation>
     <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('linux'))">$(Pkgruntime_linux-x64_Microsoft_NETCore_ILAsm)\runtimes\linux-x64\native\ilasm</ILAsmFileLocation>
     <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('osx'))">$(Pkgruntime_osx-x64_Microsoft_NETCore_ILAsm)\runtimes\osx-x64\native\ilasm</ILAsmFileLocation>
     
@@ -63,11 +68,7 @@
     <ILToolsExist Condition="Exists($(ILDAsmFileLocation)) AND Exists($(ILAsmFileLocation))">true</ILToolsExist>
   </PropertyGroup>
   
-  <Target Name="GeneratePortablePIA"
-          Inputs="@(MakePIAPortableFiles)"
-          Outputs="@(MakePIAPortableFiles->'$(PIAOutput)%(Filename)')"
-          BeforeTargets="SignFiles"
-          AfterTargets="Build">
+  <Target Name="GeneratePortablePIA" Inputs="@(MakePIAPortableFiles)" Outputs="@(MakePIAPortableFiles->'$(PIAOutput)%(Filename)')" BeforeTargets="SignFiles" AfterTargets="Build">
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
     <Message Importance="High" Text="ILAsmFileLocation: $(ILAsmFileLocation)" />
     <Error Condition="'$(ILToolsExist)' != 'true'" Text="Unable to retrieve IL tools needed for MakePIAPortable" />
@@ -78,10 +79,13 @@
     <RemoveDir Directories="$(PIAOutput)" />
     <MakeDir Directories="$(PIAOutput)" />
 
-    <!-- Run ildasm -> MakePIAPortable -> ilasm -->
+    <!-- Run ildasm -> MakePIAPortable -->
     <Exec Command="$(ILDAsmFileLocation) %(MakePIAPortableFiles.Identity) -OUT=./drop/%(MakePIAPortableFiles.Filename).il" WorkingDirectory="$(OutputPath)" />
     <Exec Command="dotnet $(MakePIAPortableExe) ./drop/%(MakePIAPortableFiles.Filename).il ./drop/%(MakePIAPortableFiles.Filename)-portable.il" WorkingDirectory="$(OutputPath)" />
-    <Exec Command="$(ILAsmFileLocation) -nologo -quiet -dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il -output=$(PIAOutput)%(MakePIAPortableFiles.Filename).dll" WorkingDirectory="$(OutputPath)" />
+
+    <!-- Run ilasm -->
+    <Exec Condition="$([MSBuild]::IsOSPlatform('windows'))" Command="$(ILAsmFileLocation) /nologo /quiet /dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il /output=$(PIAOutput)%(MakePIAPortableFiles.Filename).dll /RESOURCE=./drop/%(MakePIAPortableFiles.Filename).res" WorkingDirectory="$(OutputPath)" />
+    <Exec Condition="!$([MSBuild]::IsOSPlatform('windows'))" Command="$(ILAsmFileLocation) -nologo -quiet -dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il -output=$(PIAOutput)%(MakePIAPortableFiles.Filename).dll" WorkingDirectory="$(OutputPath)" />
   </Target>
 
   <ItemGroup>
@@ -93,6 +97,7 @@
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Interop.dll" />
   </ItemGroup>
+  
   <Target Name="CopyToVSCodeFolder" AfterTargets="DropFiles">
     <ItemGroup>
       <VSCodeFolderInteropFile Include="$(DropDir)\Microsoft.VisualStudio.Debugger.InteropA.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll;$(DropDir)\Microsoft.VisualStudio.Interop.dll" />
