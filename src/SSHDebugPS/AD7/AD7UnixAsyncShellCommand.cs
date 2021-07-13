@@ -62,7 +62,7 @@ namespace Microsoft.SSHDebugPS
 
                 if (_startCommand != null)
                 {
-                    if (line.EndsWith(_startCommand, StringComparison.Ordinal))
+                    if (line.Contains(_startCommand))
                     {
                         // When logged in as root, shell sends a copy of stdin to stdout.
                         // This ignores the shell command that was used to launch the debugger.
