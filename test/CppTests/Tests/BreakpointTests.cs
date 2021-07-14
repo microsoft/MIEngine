@@ -157,7 +157,8 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
         [RequiresTestSettings]
-        [UnsupportedDebugger(SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        // TODO: Re-enable for Gdb_Gnu
+        [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu | SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void RunModeBreakpoints(ITestSettings settings)
         {
             this.TestPurpose("Tests setting breakpoints while in run mode");
