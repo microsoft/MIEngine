@@ -64,7 +64,8 @@ namespace Microsoft.SSHDebugPS
                 {
                     if (line.Contains(_startCommand))
                     {
-                        // When logged in as root, shell sends a copy of stdin to stdout.
+                        // When logged in as root, shell sends a copy of stdin to stdout. On MacOS
+                        // trailing control characters appear on the line.
                         // This ignores the shell command that was used to launch the debugger.
                         continue;
                     }
