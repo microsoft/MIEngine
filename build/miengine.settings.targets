@@ -40,7 +40,7 @@
       <!-- Release Symbol Settings -->
       <PropertyGroup>
         <DebugType>portable</DebugType>
-        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows')) AND '$(Lab)' == 'true'">full</DebugType>
+        <DebugType Condition="$([MSBuild]::IsOSPlatform('windows')) AND '$(Lab)' == 'true'">pdbonly</DebugType>
         <Optimize>true</Optimize>
         <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
       </PropertyGroup>

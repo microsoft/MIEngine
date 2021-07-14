@@ -177,8 +177,8 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForExecution))]
         [RequiresTestSettings]
-        // TODO: Re-enable for VsDbg
-        [UnsupportedDebugger(SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW | SupportedDebugger.Lldb | SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        // TODO: Re-enable for VsDbg and Gdb_Gnu
+        [UnsupportedDebugger(SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW | SupportedDebugger.Gdb_Gnu | SupportedDebugger.Lldb | SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void ExecutionAsyncBreak(ITestSettings settings)
         {
             this.TestPurpose("Verify break all should work run function");

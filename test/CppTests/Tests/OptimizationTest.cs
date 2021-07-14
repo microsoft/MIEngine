@@ -225,7 +225,8 @@ namespace CppTests.Tests
 
         [Theory]
         [DependsOnTest(nameof(CompileSharedLibDebuggeeWithSymbol))]
-        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        // TODO: Re-enable for Gdb_Gnu
+        [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu | SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         [RequiresTestSettings]
         public void TestOptimizedSharedLib(ITestSettings settings)
         {
