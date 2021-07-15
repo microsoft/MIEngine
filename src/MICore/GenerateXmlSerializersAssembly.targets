@@ -4,8 +4,7 @@
   NOTE: We skip this step for the lab configuration to ensure that in the lab we build exactly what is checked in.-->
   <Target Name="BeforeBuild"
           Inputs="LaunchOptions.xsd"
-          Outputs="$(IntermediateOutputPath)LaunchOptions.cs"
-          Condition="'$(Lab)' == 'false'">
+          Outputs="$(IntermediateOutputPath)LaunchOptions.cs">
     <!-- First validate the tools we need are where we expect -->
     <Error Condition="'$(SDK40ToolsPath)'==''" Text="SDK40ToolsPath msbuild property is undefined." />
     <Error Condition="!Exists('$(SDK40ToolsPath)xsd.exe')" Text="xsd.exe does not exist in the SDK40ToolsPath ($(SDK40ToolsPath)xsd.exe)." />
@@ -69,6 +68,10 @@
     <Copy Condition="'$(ContentsEqual)' == 'false'"
           SourceFiles="$(XsdCandidateFile)"
           DestinationFiles="$(XsdCodeFile)" />
+
+    <!-- If the files dont match on a PR/Release, fail the build. -->
+    <Error Condition="'$(ContentsEqual)' == 'false' AND '$(BUILD_BUILDID)' != ''"
+          Text="$(XsdCodeFile) has changed and the updated version is not checked in. Please check in the updated version of $(XsdCodeFile)."/>
   </Target>
 
   <!-- This target is used to generate an XML serializers assembly for the types in LaunchOptions.xsd. We can't embed these types

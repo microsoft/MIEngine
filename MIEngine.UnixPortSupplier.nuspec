@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>VS.Redist.Debugger.MDD.UnixPortSupplier</id>
-    <version>0.0.0.0</version>
+    <version>$version$</version>
     <authors>VSEng</authors>
     <owners>VSEng</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

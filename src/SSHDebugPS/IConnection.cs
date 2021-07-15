@@ -3,6 +3,8 @@
 
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.DebugEngineHost;
+using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 
 namespace Microsoft.SSHDebugPS
@@ -19,21 +21,26 @@ namespace Microsoft.SSHDebugPS
         List<Process> ListProcesses();
     }
 
-    internal abstract class Connection : IConnection, IDebugUnixShellPort
+    internal abstract class Connection : IConnection
     {
-        #region IDebugUnixShellPort 
-        public abstract void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode);
+        #region Methods for implementing IDebugUnixShellPort 
 
+        /// <inheritdoc cref="IDebugUnixShellPort.BeginExecuteAsyncCommand(string, bool, IDebugUnixShellCommandCallback, out IDebugUnixShellAsyncCommand)"/>
         public abstract void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand);
 
+        /// <inheritdoc cref="IDebugUnixShellPort.CopyFile(string, string)"/>
         public abstract void CopyFile(string sourcePath, string destinationPath);
 
+        /// <inheritdoc cref="IDebugUnixShellPort.MakeDirectory(string)"/>
         public abstract string MakeDirectory(string path);
 
+        /// <inheritdoc cref="IDebugUnixShellPort.GetUserHomeDirectory"/>
         public abstract string GetUserHomeDirectory();
 
+        /// <inheritdoc cref="IDebugUnixShellPort.IsOSX"/>
         public abstract bool IsOSX();
 
+        /// <inheritdoc cref="IDebugUnixShellPort.IsLinux"/>
         public abstract bool IsLinux();
         #endregion
 
@@ -44,8 +51,51 @@ namespace Microsoft.SSHDebugPS
 
         public abstract void Close();
 
+        // TODO: This is wrong. It doesn't show UI but allows an infinite timeout
+
+        /// <summary>
+        /// Exceutes the specified command on the remote system
+        /// </summary>
+        /// <param name="commandText">The shell command text to execute</param>
+        /// <param name="timeout">Timeout to wait for the command to complete before aborting</param>
+        /// <param name="commandOutput">The stdout produced by the command</param>
+        /// <param name="errorMessage">The stderr produced by the command</param>
+        /// <returns>The exit code of the command</returns>
         public abstract int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage);
         #endregion
+
+        /// <summary>
+        /// Executes the specified command, throwing a CommandFailedException if it failed
+        /// </summary>
+        /// <param name="commandText">Text of the command to execute</param>
+        /// <param name="timeout">timeout in milliseconds</param>
+        /// <returns>The stdout text the command produced</returns>
+        public string ExecuteCommand(string commandText, int timeout)
+        {
+            int exitCode = ExecuteCommand(commandText, timeout, out string commandOutput, out string errorMessage);
+            if (exitCode != 0)
+            {
+                string error = StringResources.CommandFailedMessageFormat.FormatCurrentCultureWithArgs(commandText, exitCode, errorMessage);
+                throw new CommandFailedException(error);
+            }
+
+            return commandOutput;
+        }
+
+        /// <summary>
+        /// Executes the specified command, return false if the exit code is non-zero
+        /// </summary>
+        /// <param name="commandText">The shell command text to execute</param>
+        /// <param name="timeout">Timeout to wait for the command to complete before aborting</param>
+        /// <param name="commandOutput">The stdout produced by the command</param>
+        /// <param name="errorMessage">The stderr produced by the command</param>
+        /// <param name="exitCode">The exit code of the command</param>
+        /// <returns>true if command succeeded.</returns>
+        public bool ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage, out int exitCode)
+        {
+            exitCode = ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
+            return exitCode == 0;
+        }
     }
 
     public class Process

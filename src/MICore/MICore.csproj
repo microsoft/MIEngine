@@ -69,10 +69,11 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
+
   <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
     <!-- NOTE: MIEngine's usage of Newtonsoft.Json's flows through public interfaces exposed by MICore (IPlatformAppLauncher). So this version needs to be within the binding redirect range used by devenv.exe (currently 4.5.0.0-9.0.0.0) -->
-    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VS_Version)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" />
   </ItemGroup>
 
   <ItemGroup Label="References">
@@ -116,17 +117,17 @@
 
   <ItemGroup>
     <GlassDirCopy Include="$(OutDir)$(AssemblyName)$(TargetExt)" />
-    <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" />
-    <GlassDirCopy Include="$(PkgNewtonsoft_Json)\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Newtonsoft.Json.dll" />
+    <GlassDirCopy Include="$(OutDir)$(AssemblyName).XmlSerializers.dll" Condition="'$(IsXPlat)' == 'false'" />
+    <GlassDirCopy Include="$(PkgNewtonsoft_Json)\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll" />
   </ItemGroup>
   
   <Import Project="..\..\build\miengine.targets" />
-  <Import Project="GenerateXmlSerializersAssembly.targets" />
+  <Import Project="GenerateXmlSerializersAssembly.targets" Condition="'$(IsXPlat)' == 'false'"/>
   <!-- To get the seralization assembly copied to the vsix, and also to the output directory, we have this target
   which adds the XmlSerializers as if it was a source item in our project with a 'CopyToOutputDirectory' child
   node. See the 'GetCopyToOutputDirectoryItems' target in C:\Program Files (x86)\MSBuild\14.0\Bin\Microsoft.Common.CurrentVersion.targets
   for more info. -->
-  <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems">
+  <Target Name="AddXmlSerializersAssemblyToOutputGroup" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="'$(IsXPlat)' == 'false'">
     <ItemGroup>
       <_GenerateXmlSerializersAssemblyOutput Include="$(IntermediateOutputPath)sgen/$(AssemblyName).XmlSerializers.dll" />
       <_SourceItemsToCopyToOutputDirectoryAlways Include="@(_GenerateXmlSerializersAssemblyOutput->'%(FullPath)')">

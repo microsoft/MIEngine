@@ -290,6 +290,42 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to enumerate installed GNU/Linux distributions. wsl.exe exited with code {0} (0x{0:X8}). More information may be available in the output window..
+        /// </summary>
+        internal static string Error_WSLEnumDistrosFailed_Args1 {
+            get {
+                return ResourceManager.GetString("Error_WSLEnumDistrosFailed_Args1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0} {1}&apos; failed and wrote the following text to standard error:.
+        /// </summary>
+        internal static string Error_WSLExecErrorOut_Args2 {
+            get {
+                return ResourceManager.GetString("Error_WSLExecErrorOut_Args2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to use the Windows Subsystem for Linux (WSL) transport. No GNU/Linux distributions are installed..
+        /// </summary>
+        internal static string Error_WSLNoDistros {
+            get {
+                return ResourceManager.GetString("Error_WSLNoDistros", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Windows Subsystem for Linux (WSL) is not installed on this computer..
+        /// </summary>
+        internal static string Error_WSLNotInstalled {
+            get {
+                return ResourceManager.GetString("Error_WSLNotInstalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enter credentials to connect to {0}.
         /// </summary>
         internal static string HeaderTextFormat {
@@ -326,6 +362,15 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} Transport.
+        /// </summary>
+        internal static string TransportTitle_Args1 {
+            get {
+                return ResourceManager.GetString("TransportTitle_Args1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;username&gt;.
         /// </summary>
         internal static string UserName_PlaceHolder {
@@ -340,6 +385,15 @@ namespace Microsoft.SSHDebugPS {
         internal static string WaitingOp_Connecting {
             get {
                 return ResourceManager.GetString("WaitingOp_Connecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enumerating installed GNU/Linux distributions....
+        /// </summary>
+        internal static string WaitingOp_EnumeratingWSLDistros {
+            get {
+                return ResourceManager.GetString("WaitingOp_EnumeratingWSLDistros", resourceCulture);
             }
         }
         
@@ -376,6 +430,33 @@ namespace Microsoft.SSHDebugPS {
         internal static string WaitingOp_MakeDirectory {
             get {
                 return ResourceManager.GetString("WaitingOp_MakeDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes..
+        /// </summary>
+        internal static string WSL_PSDescription {
+            get {
+                return ResourceManager.GetString("WSL_PSDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Windows Subsystem for Linux (WSL).
+        /// </summary>
+        internal static string WSL_PSName {
+            get {
+                return ResourceManager.GetString("WSL_PSName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio&apos;s attach support. Please upgrade to WSL version 2 or newer..
+        /// </summary>
+        internal static string WSL_V2Required {
+            get {
+                return ResourceManager.GetString("WSL_V2Required", resourceCulture);
             }
         }
     }

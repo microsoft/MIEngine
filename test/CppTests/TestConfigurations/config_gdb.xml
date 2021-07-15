@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TestMachineConfiguration>
+  <TestConfigurations>
+    <TestConfiguration
+      Compiler="Gpp"
+      DebuggeeArchitecture="x64"
+      Debugger="Gdb" />
+  </TestConfigurations>
+  <Compilers>
+    <Compiler
+      Name="Gpp"
+      Type="GPlusPlus"
+      Path="/usr/bin/g++"/>
+  </Compilers>
+  <Debuggers>
+    <Debugger
+      Name="Gdb"
+      Type="Gdb_Gnu"
+      Path="/usr/bin/gdb"/>
+  </Debuggers>
+</TestMachineConfiguration>

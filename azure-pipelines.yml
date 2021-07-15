@@ -78,6 +78,36 @@ jobs:
       solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
       configuration: 'Desktop.Release'
 
+- job: LinuxDesktopDebug
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET Core sdk'
+    inputs:
+      packageType: sdk
+      version: 5.x
+  - task: DotNetCoreCLI@2
+    inputs:
+      projects: |
+        $(Build.SourcesDirectory)/src/MIDebugEngine.sln
+      arguments: '-c Desktop.Debug'
+
+- job: LinuxDesktopRelease
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET Core sdk'
+    inputs:
+      packageType: sdk
+      version: 5.x
+  - task: DotNetCoreCLI@2
+    inputs:
+      projects: |
+        $(Build.SourcesDirectory)/src/MIDebugEngine.sln
+      arguments: '-c Desktop.Release'
+
 - job: LabRelease
   pool: 'Hosted Windows 2019 with VS2019'
   variables:

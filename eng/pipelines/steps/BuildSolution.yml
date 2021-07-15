@@ -10,7 +10,7 @@ steps:
   parameters:
     Command: 'restore'
     solution: ${{ parameters.Solution }}
-    FeedsToUse: 'config'
+    selectOrConfig: 'config'
     NugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
 
 - template: ../tasks/MSBuild.yml

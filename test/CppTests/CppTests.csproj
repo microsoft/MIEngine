@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\build\debuggertesting.settings.targets" />
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+
+    <OutputPath>$(OutputPath)\CppTests</OutputPath>
+  </PropertyGroup>
+  
+  <ItemGroup Label="Package References">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_Version)" />
+    <PackageReference Include="xunit" Version="$(xunit_Version)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(xunit_runner_visualstudio_Version)">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Label="Additional Files">
+    <None Include="debuggees\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="TestConfigurations\**" CopyToOutputDirectory="PreserveNewest" />
+
+    <ContentFiles Include="debuggees\**" />
+    <ContentFiles Include="TestConfigurations\**" />
+  </ItemGroup>
+
+  <ItemGroup Label="Project References">
+    <ProjectReference Include="..\DebugAdapterRunner\DebugAdapterRunner.csproj" />
+    <ProjectReference Include="..\DebuggerTesting\DebuggerTesting.csproj" />
+  </ItemGroup>
+
+  <Target Name="Copy Config and Debuggees" BeforeTargets="DropFiles">
+    <Copy
+        SourceFiles="@(ContentFiles)"
+        DestinationFolder="$(DropDir)\contentFiles\%(RecursiveDir)"
+    />
+  </Target>
+
+  <ItemGroup>
+    <DropSignedFile Include="$(OutputPath)CppTests.dll" />
+    <DropUnsignedFile Include="$(OutputPath)CppTests.pdb" />
+    <DropSignedFile Include="$(OutputPath)DebuggerTesting.dll" />
+    <DropUnsignedFile Include="$(OutputPath)DebuggerTesting.pdb" />
+  </ItemGroup>
+
+  <Import Project="..\..\build\DropFiles.targets" />
+
+</Project>

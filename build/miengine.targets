@@ -6,22 +6,11 @@
   </PropertyGroup>
 
   <Import Project=".\Analyzers.targets" />
+  <Import Project=".\source_link.targets" />
 
   <PropertyGroup>
     <CoreCompileDependsOn>GenerateAssemblyInfoFile;$(CoreCompileDependsOn)</CoreCompileDependsOn>
-    <BuildDependsOn>$(BuildDependsOn);GenerateMonoSymbols</BuildDependsOn>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Mono.Unofficial.pdb2mdb" Version="4.2.3.4" GeneratePathProperty="true" />
-  </ItemGroup>
-
-  <Target Name="GenerateMonoSymbols"
-          Condition="'$(IsXPlat)' == 'true' AND '$(ShouldGenerateMonoSymbols)' == 'true'"
-          AfterTargets="Build" >
-    <!-- If we're building the Desktop config on Windows, run pdb2mdb to generate Mono symbols as well -->
-    <Exec Command="&quot;$(PkgMono_Unofficial_pdb2mdb)\tools\pdb2mdb.exe&quot; &quot;$(TargetPath)&quot;" />
-  </Target>
 
   <Target Name="GlassDirCopy" Condition="'@(GlassDirCopy)' != ''" AfterTargets="Build">
     <MakeDir Condition="!Exists($(GlassDir))" Directories="$(GlassDir)" />
@@ -67,31 +56,6 @@
       <Output TaskParameter="OutputFile" ItemName="Compile" />
       <Output TaskParameter="OutputFile" ItemName="FileWrites" />
     </WriteCodeFragment>
-  </Target>
-  
-  <!-- Source Link -->
-  <PropertyGroup Condition="'$(EnableSourceLink)' == 'true' and '$(BUILD_SOURCEVERSION)' != ''">
-    <SourceLink>$(IntermediateOutputPath)SourceLink.json</SourceLink>
-  </PropertyGroup>
-  
-  <Target Name="CreateSourceLinkJson"
-          Condition="'$(SourceLink)' != ''"
-          BeforeTargets="CoreCompile">
-    <PropertyGroup>
-      <EscapedRepositoryRoot>$(MIEngineRoot.Replace("\", "\\"))</EscapedRepositoryRoot>
-      <SourceLinkDir>$([System.IO.Path]::GetDirectoryName('$(SourceLink)'))</SourceLinkDir>
-      
-      <JsonString>
-{
-  "documents": {
-    "$(EscapedRepositoryRoot)*": "https://raw.githubusercontent.com/Microsoft/MIEngine/$(BUILD_SOURCEVERSION)/*"
-  }
-}
-      </JsonString>
-    </PropertyGroup>
-
-    <MakeDir Condition="!Exists('$(SourceLinkDir)')" Directories="$(SourceLinkDir)"/>
-    <WriteLinesToFile File="$(SourceLink)" Lines="$(JsonString)" Overwrite="true"/>
   </Target>
 
   <!-- ResolveProjectReferences allows us to generate the dll from il before adding them as a reference -->

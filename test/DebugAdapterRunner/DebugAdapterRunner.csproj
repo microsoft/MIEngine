@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\build\debuggertesting.settings.targets" />
+
+  <PropertyGroup>
+    <AssemblyName>dar</AssemblyName>
+    <RootNamespace>DebugAdapterRunner</RootNamespace>
+    <TargetFramework>netcoreapp5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup Label="Package References">
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DropSignedFile Include="$(OutputPath)dar.dll" />
+    <DropUnsignedFile Include="$(OutputPath)dar.pdb" />
+  </ItemGroup>
+
+  <Import Project="..\..\build\DropFiles.targets" />
+
+</Project>
