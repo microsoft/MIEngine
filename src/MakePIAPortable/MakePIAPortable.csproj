@@ -61,7 +61,11 @@
     <ILDAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('linux'))">$(Pkgruntime_linux-x64_Microsoft_NETCore_ILDAsm)\runtimes\linux-x64\native\ildasm</ILDAsmFileLocation>
     <ILDAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('osx'))">$(Pkgruntime_osx-x64_Microsoft_NETCore_ILDAsm)\runtimes\osx-x64\native\ildasm</ILDAsmFileLocation>
     
-    <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('windows'))">$(Pkgruntime_win-x64_Microsoft_NETCore_ILAsm)\runtimes\win-x64\native\ilasm.exe</ILAsmFileLocation>
+    <!--
+      On Windows, we will use the .NET Framework version of ilasm since there is an issue with /RESOURCE and it fails signing using the .NET Core version.
+      Resource Issue: https://github.com/dotnet/runtime/issues/48046
+    -->
+    <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('windows'))">C:\Windows\Microsoft.NET\Framework\v4.0.30319\ilasm.exe</ILAsmFileLocation>
     <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('linux'))">$(Pkgruntime_linux-x64_Microsoft_NETCore_ILAsm)\runtimes\linux-x64\native\ilasm</ILAsmFileLocation>
     <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('osx'))">$(Pkgruntime_osx-x64_Microsoft_NETCore_ILAsm)\runtimes\osx-x64\native\ilasm</ILAsmFileLocation>
     
@@ -81,7 +85,10 @@
     <!-- Run ildasm -> MakePIAPortable -> ilasm -->
     <Exec Command="$(ILDAsmFileLocation) ./%(MakePIAPortableFiles.Identity) -OUT=./drop/%(MakePIAPortableFiles.Filename).il" WorkingDirectory="$(OutputPath)" />
     <Exec Command="dotnet $(MakePIAPortableExe) ./drop/%(MakePIAPortableFiles.Filename).il ./drop/%(MakePIAPortableFiles.Filename)-portable.il" WorkingDirectory="$(OutputPath)" />
-    <Exec Command="$(ILAsmFileLocation) -nologo -quiet -dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il -output=./drop/%(MakePIAPortableFiles.Identity)" WorkingDirectory="$(OutputPath)" />
+    
+    <!-- Run ilasm -->
+    <Exec Condition="$([MSBuild]::IsOSPlatform('windows'))" Command="$(ILAsmFileLocation) /nologo /quiet /dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il /output=$(PIAOutput)%(MakePIAPortableFiles.Filename).dll /RESOURCE=./drop/%(MakePIAPortableFiles.Filename).res" WorkingDirectory="$(OutputPath)" />
+    <Exec Condition="!$([MSBuild]::IsOSPlatform('windows'))" Command="$(ILAsmFileLocation) -nologo -quiet -dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il -output=$(PIAOutput)%(MakePIAPortableFiles.Filename).dll" WorkingDirectory="$(OutputPath)" />
   </Target>
 
   <ItemGroup>
