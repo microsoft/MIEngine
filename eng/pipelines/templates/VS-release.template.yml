@@ -40,7 +40,7 @@ steps:
     SignedBinariesFolder: '$(Build.StagingDirectory)\drop'
 
 - powershell: | 
-    Copy-Item -Recurse '$(Build.StagingDirectory)\debugAdapters\win-x64\*' -Destination '$(Build.StagingDirectory\drop\Release\vscode\.'
+    Copy-Item -Recurse '$(Build.StagingDirectory)\debugAdapters\win-x64\*' -Destination '$(Build.StagingDirectory)\drop\Release\vscode\.'
   displayName: "Copy OpenDebugAD7 to drop"
 
 - template: ../steps/PackAndPublishVSPackages.yml
