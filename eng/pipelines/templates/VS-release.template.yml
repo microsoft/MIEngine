@@ -31,7 +31,7 @@ steps:
 
 - script: |
     mkdir $(Build.StagingDirectory)\zips\
-  displayName: "Create $(Build.StagingDirectory)\zips\ folder"
+  displayName: "Create $(Build.StagingDirectory)/zips/ folder"
 
 - template: ../steps/PublishOpenDebugAD7.yml
   parameters:
