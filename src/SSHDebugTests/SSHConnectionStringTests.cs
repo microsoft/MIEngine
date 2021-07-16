@@ -6,11 +6,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using Microsoft.SSHDebugPS;
 using Microsoft.SSHDebugPS.Utilities;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace SSHDebugTests
 {
-    [TestClass]
     public class SSHConnectionStringTests
     {
         internal struct ConnectionStringTestItem
@@ -21,7 +20,7 @@ namespace SSHDebugTests
             internal int expectedPort;
         }
 
-        [TestMethod]
+        [Fact]
         public void IPv6ConnectionStrings()
         {
             List<ConnectionStringTestItem> ipv6TestStrings = new List<ConnectionStringTestItem>();
@@ -104,7 +103,7 @@ namespace SSHDebugTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Ipv4ConnectionStrings()
         {
             List<ConnectionStringTestItem> ipv4TestStrings = new List<ConnectionStringTestItem>();
@@ -177,9 +176,9 @@ namespace SSHDebugTests
             int port;
             ConnectionManager.ParseSSHConnectionString(item.rawConnectionString, out username, out hostname, out port);
 
-            Assert.IsTrue(item.expectedUsername.Equals(username, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("UserName", item.expectedUsername, username));
-            Assert.IsTrue(item.expectedHostname.Equals(hostname, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("Hostname", item.expectedHostname, hostname));
-            Assert.IsTrue(item.expectedPort == port, _comparisonErrorStringFormat.FormatInvariantWithArgs("Port", item.expectedPort, port));
+            Assert.True(item.expectedUsername.Equals(username, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("UserName", item.expectedUsername, username));
+            Assert.True(item.expectedHostname.Equals(hostname, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("Hostname", item.expectedHostname, hostname));
+            Assert.True(item.expectedPort == port, _comparisonErrorStringFormat.FormatInvariantWithArgs("Port", item.expectedPort, port));
         }
     }
 }

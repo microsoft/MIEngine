@@ -233,7 +233,7 @@ namespace WindowsDebugLauncher
                 return null;
             }
         }
-        #region IDisposable Support
+#region IDisposable Support
 
         protected virtual void Dispose(bool disposing)
         {
@@ -268,7 +268,7 @@ namespace WindowsDebugLauncher
         {
             Dispose(true);
         }
-        #endregion
+#endregion
 
     }
 }

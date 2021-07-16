@@ -10,6 +10,8 @@
   </PropertyGroup>
   
   <ItemGroup Label="Package References">
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
+
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_Version)" />
     <PackageReference Include="xunit" Version="$(xunit_Version)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(xunit_runner_visualstudio_Version)">

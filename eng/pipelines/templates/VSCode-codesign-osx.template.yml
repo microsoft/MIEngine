@@ -1,0 +1,23 @@
+---
+steps:
+- checkout: self
+
+- template: ../tasks/DownloadPipelineArtifact.yml
+  parameters:
+    displayName: 'Downloading unsigned_osx-x64_binaries'
+    path: '$(Pipeline.Workspace)/Artifacts' 
+    artifact: 'unsigned_osx-x64_binaries'
+
+- script: |
+    echo "#[command] codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/OpenDebugAD7"
+    codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/OpenDebugAD7
+
+    echo "#[command] zip -r $(Pipeline.Workspace)/osx-x64.zip $(Pipeline.Workspace)/Artifacts/"
+    zip -r $(Pipeline.Workspace)/osx-x64.zip $(Pipeline.Workspace)/Artifacts/
+
+- template: ../tasks/PublishPipelineArtifact.yml
+  parameters:
+    displayName: 'Publish Binaries'
+    path: '$(Pipeline.Workspace)/osx-x64.zip'
+    artifactName: 'unsigned_osx-x64_zip'
+...

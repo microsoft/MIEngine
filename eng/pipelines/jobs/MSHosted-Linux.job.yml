@@ -1,0 +1,15 @@
+---
+parameters:
+- name: DisplayName
+  type: string
+- name: JobTemplate
+  type: object
+
+jobs:
+- job:
+  displayName: ${{ parameters.DisplayName }}
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - ${{ parameters.JobTemplate }}
+...
