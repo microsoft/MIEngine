@@ -1,5 +1,7 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
+variables:
+  - group: TSDTUSR
 jobs:
 - template: ./jobs/VSEngSS-MicroBuild2019.job.yml
   parameters:
