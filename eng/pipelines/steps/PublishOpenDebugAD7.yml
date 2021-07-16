@@ -12,16 +12,18 @@ steps:
     copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MICore.dll $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
   displayName: "Publish OpenDebugAD7 ${{ parameters.RuntimeID }}"
 
+# Windows Steps for copying over the exe and verify the windows binaries.
 - ${{ if startsWith(parameters.RuntimeID, 'win-') }}:
   - script: |
       copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.exe $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
     displayName: "Copy OpenDebugAD7.exe"
 
-- template: ../tasks/SignVerify.yml
-  parameters:
-    TargetFolders: $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
-    ExcludeSNVerify: true # Ignore CrossGen'ed .NET binaries
+  - template: ../tasks/SignVerify.yml
+    parameters:
+      TargetFolders: $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
+      ExcludeSNVerify: true # Ignore CrossGen'ed .NET binaries
 
+# macOS Steps since we need to harden and sign the binary.
 - ${{ if startsWith(parameters.RuntimeID, 'osx-') }}:
   - template: ../tasks/PublishPipelineArtifact.yml
     parameters:
@@ -29,6 +31,7 @@ steps:
       path: '$(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}'
       artifactName: 'unsigned_${{ parameters.RuntimeID }}_binaries'  
 
+# Publishing for non-macOS
 - ${{ if not(startsWith(parameters.RuntimeID, 'osx-')) }}:
   - powershell: |
       Compress-Archive -Path $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\. -DestinationPath $(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip

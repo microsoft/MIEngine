@@ -119,9 +119,6 @@ steps:
     SymbolsProduct : ${{ parameters.SymbolsProduct }}
     SymbolsVersion : ${{ parameters.SymbolsVersion }}
     SymbolsArtifactName : ${{ parameters.SymbolsArtifactName }}
-    ArtifactServices.Symbol.AccountName: microsoft
-    ArtifactServices.Symbol.PAT: $(System.AccessToken)
-    ArtifactServices.Symbol.UseAAD: false
   enabled: ${{ parameters.enabled }}
   condition: and(${{ parameters.condition }}, eq(variables['SignType'], 'real'))
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}

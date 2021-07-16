@@ -9,6 +9,17 @@ steps:
     TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
     CleanTargetFolder: true
 
+- task: PowerShell@2
+  displayName: 'Set Variables for PublishSymbols'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "##vso[task.setvariable variable=ArtifactServices.Symbol.AccountName]microsoft"
+      Write-Host "##vso[task.setvariable variable=ArtifactServices.Symbol.PAT;issecret=true;]${env:ARTIFACTSERVICES_SYMBOL_PAT}"
+      Write-Host "##vso[task.setvariable variable=ArtifactServices.Symbol.UseAAD]false"
+  env:
+    ARTIFACTSERVICES_SYMBOL_PAT: $(System.AccessToken)
+
 - template: ../tasks/PublishSymbols.yml
   parameters:
     IndexSources: false

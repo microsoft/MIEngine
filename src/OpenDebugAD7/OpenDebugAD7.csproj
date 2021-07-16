@@ -18,7 +18,6 @@
     <Prefer32Bit>false</Prefer32Bit>
 
     <IsPublishable>true</IsPublishable>
-    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
 
     <!-- F5 OpenDebugAD7.exe if OpenDebugAD7 is the startup project. -->
     <StartAction>Program</StartAction>
