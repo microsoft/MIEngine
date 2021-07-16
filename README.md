@@ -1,6 +1,6 @@
 ## Welcome to the Visual Studio MI Debug Engine ("MIEngine")
 
-[![Build Status](https://dev.azure.com/ms/MIEngine/_apis/build/status/Microsoft.MIEngine?branchName=master)](https://dev.azure.com/ms/MIEngine/_build/latest?definitionId=98&branchName=master)
+[![Build Status](https://dev.azure.com/ms/MIEngine/_apis/build/status/Microsoft.MIEngine?branchName=main)](https://dev.azure.com/ms/MIEngine/_build/latest?definitionId=98&branchName=main)
 
 The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with debuggers that support the gdb Machine Interface ("MI")
 specification such as [GDB](http://www.gnu.org/software/gdb/) and [LLDB](http://lldb.llvm.org/).
@@ -44,4 +44,4 @@ You are also encouraged to start a discussion by filing an issue or creating a g
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 ### License
-MIEngine is licensed under the [MIT License](https://github.com/Microsoft/MIEngine/blob/master/License.txt).
+MIEngine is licensed under the [MIT License](https://github.com/Microsoft/MIEngine/blob/main/License.txt).
