@@ -746,6 +746,8 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value.ToString(CultureInfo.InvariantCulture), ignoreFailures: false, failureHandler: failureHandler));
                     }
 
+                    commands.AddRange(_launchOptions.PostRemoteConnectCommands);
+
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
                         // LLDB finishes attach in break mode. Gdb does finishes in run mode. Issue a continue in lldb to match the gdb behavior
@@ -824,7 +826,7 @@ namespace Microsoft.MIDebugEngine
                         if (!string.IsNullOrWhiteSpace(destination))
                         {
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
-
+                            commands.AddRange(_launchOptions.PostRemoteConnectCommands);
                             if (localLaunchOptions.RequireHardwareBreakpoints && localLaunchOptions.HardwareBreakpointLimit > 0) {
                                 commands.Add(new LaunchCommand(string.Format(CultureInfo.InvariantCulture, "-interpreter-exec console \"set remote hardware-breakpoint-limit {0}\"", localLaunchOptions.HardwareBreakpointLimit.ToString(CultureInfo.InvariantCulture))));
                             }
