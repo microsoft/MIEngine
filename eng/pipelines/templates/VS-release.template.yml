@@ -2,6 +2,12 @@
 steps:
 - checkout: self
 
+- task: UseDotNet@2
+  displayName: 'Use .NET Core sdk'
+  inputs:
+    packageType: sdk
+    version: 5.x
+
 - template: ../tasks/NuGetToolInstaller.yml
 
 - template: ../tasks/MicroBuildSigningPlugin.yml

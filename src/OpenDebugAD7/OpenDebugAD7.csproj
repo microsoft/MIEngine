@@ -17,6 +17,8 @@
     <TargetFramework>net5.0</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
 
+    <IsPublishable>true</IsPublishable>
+
     <!-- F5 OpenDebugAD7.exe if OpenDebugAD7 is the startup project. -->
     <StartAction>Program</StartAction>
     <StartProgram>$(MIDefaultOutputPath)\vscode\OpenDebugAD7.exe</StartProgram>
@@ -68,16 +70,13 @@
   </ItemGroup>
 
   <ItemGroup Label="Drop Files">
-    <DropSignedFile Include="$(MIDefaultOutputPath)\Microsoft.MICore.dll" />
-    <DropUnsignedFile Include="$(MIDefaultOutputPath)\Microsoft.MICore.pdb" />
-    <DropSignedFile Include="$(MIDefaultOutputPath)\Microsoft.MIDebugEngine.dll" />
-    <DropUnsignedFile Include="$(MIDefaultOutputPath)\Microsoft.MIDebugEngine.pdb" />
-    <DropSignedFile Condition="$([MSBuild]::IsOSPlatform('windows'))" Include="$(OutputPath)\OpenDebugAD7.exe" />
+    <DropSignedFile Include="$(OutputPath)\OpenDebugAD7.dll" />
+    <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.pdb" />
+    <DropSignedFile Condition="$([MSBuild]::IsOSPlatform('windows')) AND ('$(RuntimeIdentifier)' == '' OR $(RuntimeIdentifier.Contains('win')))" Include="$(OutputPath)\OpenDebugAD7.exe" />
     <!-- We will build OpenDebugAD7 via publish for non-windows -->
     <DropThirdPartySignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
     <DropUnsignedFile Include="$(OutputPath)\cppdbg.ad7Engine.json" />
-    <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.pdb" />
   </ItemGroup>
 
   <Import Project="..\..\build\miengine.targets" />
