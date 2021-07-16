@@ -1,6 +1,6 @@
 ---
 parameters:
-  rids: ["win-x64" , "osx-x64", "linux-x64"]
+  rids: ["win7-x86", "win-x64", "win10-arm64", "osx-x64", "linux-x64", "linux-arm", "linux-arm64", "linux-musl-x64" ]
 
 steps:
 - checkout: self

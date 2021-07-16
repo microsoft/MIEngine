@@ -3,7 +3,7 @@ name: $(Date:yyyMMdd).$(Rev:r)
 jobs:
 - template: ./jobs/VSEngSS-MicroBuild2019.job.yml
   parameters:
-    DisplayName: 'VSCode_Release'
+    DisplayName: 'VS_Release'
     JobTemplate:
     - template: ../templates/VS-release.template.yml
 

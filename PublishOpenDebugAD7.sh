@@ -65,6 +65,10 @@ parse_and_get_arguments()
                 print_help
                 exit 1
                 ;;
+            *)
+                print_help
+                exit 1
+                ;;
         esac
     done
 }

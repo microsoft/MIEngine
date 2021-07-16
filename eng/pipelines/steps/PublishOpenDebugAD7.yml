@@ -12,7 +12,7 @@ steps:
     copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MICore.dll $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
   displayName: "Publish OpenDebugAD7 ${{ parameters.RuntimeID }}"
 
-- ${{ if eq(parameters.RuntimeID, 'win-x64')}}:
+- ${{ if startsWith(parameters.RuntimeID, 'win-') }}:
   - script: |
       copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.exe $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
     displayName: "Copy OpenDebugAD7.exe"
@@ -22,14 +22,14 @@ steps:
     TargetFolders: $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\.
     ExcludeSNVerify: true # Ignore CrossGen'ed .NET binaries
 
-- ${{ if eq(parameters.RuntimeID, 'osx-x64')}}:
+- ${{ if startsWith(parameters.RuntimeID, 'osx-') }}:
   - template: ../tasks/PublishPipelineArtifact.yml
     parameters:
       displayName: 'Publish Unsigned ${{ parameters.RuntimeID }}'
       path: '$(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}'
-      artifactName: 'unsigned_osx-64_binaries'  
+      artifactName: 'unsigned_${{ parameters.RuntimeID }}_binaries'  
 
-- ${{ if ne(parameters.RuntimeID, 'osx-x64')}}:
+- ${{ if not(startsWith(parameters.RuntimeID, 'osx-')) }}:
   - powershell: |
       Compress-Archive -Path $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\. -DestinationPath $(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip
     displayName: "Create ${{ parameters.RuntimeID}}.zip"  

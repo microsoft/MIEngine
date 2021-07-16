@@ -29,20 +29,6 @@ steps:
 
 - template: ../steps/CopyAndPublishSymbols.yml
 
-- script: |
-    mkdir $(Build.StagingDirectory)\zips\
-  displayName: "Create $(Build.StagingDirectory)/zips/ folder"
-
-- template: ../steps/PublishOpenDebugAD7.yml
-  parameters:
-    Configuration: 'Lab.Release'
-    RuntimeID: 'win-x64'
-    SignedBinariesFolder: '$(Build.StagingDirectory)\drop'
-
-- powershell: | 
-    Copy-Item -Recurse '$(Build.StagingDirectory)\debugAdapters\win-x64\*' -Destination '$(Build.StagingDirectory)\drop\Release\vscode\.'
-  displayName: "Copy OpenDebugAD7 to drop"
-
 - template: ../steps/PackAndPublishVSPackages.yml
   parameters:
     BasePath: $(Build.StagingDirectory)

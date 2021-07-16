@@ -20,7 +20,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="SGEN_SHA2_SIGNATUREKEY" />
+    <None Include="SGEN_SHA2_SIGNATUREKEY" />
   </ItemGroup>
 
   <ItemGroup>
