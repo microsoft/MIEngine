@@ -29,18 +29,6 @@ using ProtocolMessages = Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messa
 
 namespace OpenDebugAD7
 {
-    // not in the DAP dll yet
-    internal sealed class CapabilitiesEvent : DebugEvent
-    {
-        internal CapabilitiesEvent()
-            : base("capabilities")
-        {
-        }
-
-        [JsonProperty("capabilities")]
-        internal InitializeResponse Capabilities;
-    }
-
     internal sealed class AD7DebugSession : DebugAdapterBase, IDebugPortNotify2, IDebugEventCallback2
     {
         // This is a general purpose lock. Don't hold it across long operations.
@@ -1044,7 +1032,7 @@ namespace OpenDebugAD7
             m_canReverse = canReverse;
             Protocol.SendEvent(new CapabilitiesEvent()
             {
-                Capabilities = new InitializeResponse()
+                Capabilities = new Capabilities()
                 {
                     SupportsStepBack = canReverse,
                     ExceptionBreakpointFilters = null, // FIXME: this is just to prevent unwanted response entries
