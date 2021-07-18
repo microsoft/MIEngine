@@ -49,6 +49,8 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
             string debugAdapterRelativePath = this.DebuggerSettings.DebuggerAdapterPath ?? "OpenDebugAD7";
             string debugAdapterFullPath = Path.Combine(PathSettings.DebugAdaptersPath, debugAdapterRelativePath);
 
+            this.WriteLine("DebugAdapterPath: " + debugAdapterFullPath);
+
             Assert.True(Directory.Exists(Path.GetDirectoryName(debugAdapterFullPath)), "Debug Adapter Path {0} does not exist.".FormatInvariantWithArgs(debugAdapterFullPath));
 
             // Output engine log to temp folder if requested.

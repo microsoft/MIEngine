@@ -1,0 +1,160 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  windows_vs_build:
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Setup NuGet.exe for use with actions
+      uses: NuGet/setup-nuget@v1.0.5
+
+    - name: Restore the application
+      run: NuGet.exe restore ${{ github.workspace }}\src\MIDebugEngine.sln
+
+    - name: Build the application
+      run: msbuild ${{ github.workspace }}\src\MIDebugEngine.sln /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+
+    - name: Setup VSTest.console.exe
+      uses: darenm/Setup-VSTest@v1
+
+    - name: Run VS Extension tests
+      run: vstest.console.exe ${{ github.workspace }}\bin\${{ matrix.configuration }}\MICoreUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\JDbgUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\SSHDebugTests.dll
+
+  windows_vscode_build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Setup NuGet.exe for use with actions
+      uses: NuGet/setup-nuget@v1.0.5
+
+    - name: Restore the application
+      run: NuGet.exe restore ${{ github.workspace }}\src\MIDebugEngine.sln
+
+    - name: Build the application
+      run: msbuild ${{ github.workspace }}\src\MIDebugEngine.sln /p:Configuration=Debug
+
+    - name: Build OpenDebugAD7
+      run: |
+        dotnet publish ${{ github.workspace }}\src\OpenDebugAD7\OpenDebugAD7.csproj -c Debug -r win-x64 --self-contained -o ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\extension\debugAdapters
+        copy ${{ github.workspace }}\bin\Debug\Microsoft.MIDebugEngine.dll ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\extension\debugAdapters/.
+        copy ${{ github.workspace }}\bin\Debug\Microsoft.MICore.dll ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\extension\debugAdapters\.
+        copy ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\TestConfigurations\config_msys_gdb.xml ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\config.xml
+
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+        update: true
+        install: >-
+          mingw-w64-x86_64-toolchain
+    
+    - shell: msys2 {0}
+      run: |
+        which g++
+        which gdb
+        cygpath -w /mingw64/bin/g++
+        cygpath -w /mingw64/bin/gdb
+      
+    - run: >
+        dotnet test ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\CppTests.dll --logger "trx;LogFileName=${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\results.trx"
+
+    - name: 'Upload Test Results'
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: win_msys2_x64_results
+        path: ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\results.trx
+
+  linux_build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Build
+      run: dotnet build ${{ github.workspace }}/src/MIDebugEngine-Unix.sln
+
+    - run: |
+        sudo apt-get install gdb g++ -y
+        which g++
+        which gdb
+        echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+        # TODO: Try to make core dumps work
+        # echo 1 | sudo tee /proc/sys/kernel/core_uses_pid
+        # ulimit -S -c unlimited
+        # sudo sysctl -w kernel.core_pattern=${{ github.workspace }}/core.%e
+    - run: |
+        ${{ github.workspace }}/PublishOpenDebugAD7.sh -c Debug -o ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
+        cp ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/TestConfigurations/config_gdb.xml ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/config.xml
+
+    - run: |
+        dotnet test ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll  --logger "trx;LogFileName=${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx"
+
+    - name: 'Upload Test Results'
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: linux_x64_results
+        path: ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx
+
+  osx_build:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Build
+      run: dotnet build ${{ github.workspace }}/src/MIDebugEngine-Unix.sln
+
+    - run: |
+        ${{ github.workspace }}/PublishOpenDebugAD7.sh -c Debug -o ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
