@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.VisualStudio.DebuggerTesting.CppTests</id>
+    <version>$version$</version>
+    <title>Microsoft.VisualStudio.DebuggerTesting.CppTests</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <licenseUrl>https://aka.ms/pexunj</licenseUrl>
+    <projectUrl>https://aka.ms/vsextensibility</projectUrl>
+    <iconUrl>https://aka.ms/vsextensibilityicon</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Contains C++ Tests and Debuggees used for testing C++ Debug Adapters. This package should only be used for testing owned by the Microsoft Visual Studio Diagnostics team and isn't supported for other purposes.</description>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+  </metadata>
+  <files>
+    <file src="$binRoot$CppTests.dll" target="lib\net5.0" />
+    <file src="$binRoot$CppTests.pdb" target="lib\net5.0" />
+    <file src="$binRoot$DebuggerTesting.dll" target="lib\net5.0" />
+    <file src="$binRoot$DebuggerTesting.pdb" target="lib\net5.0" />
+    <file src="$binRoot$contentFiles\**\*" target="contentFiles" />
+  </files>
+</package>

@@ -49,7 +49,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
     internal class DockerExecutionManager
     {
-        private DockerAsyncCommand _currentCommand;
+        private PipeAsyncCommand _currentCommand;
 
         private Connection _outerConnection = null;
         private DockerContainerTransportSettings _baseSettings;
@@ -70,7 +70,9 @@ namespace Microsoft.SSHDebugPS.Docker
                 return new LocalCommandRunner(execSettings);
             }
             else
-                return new RemoteCommandRunner(execSettings.Command, execSettings.CommandArgs, _outerConnection);
+            {
+                return new RemoteCommandRunner(execSettings, _outerConnection, handleRawOutput: false);
+            }
         }
 
         public int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage, bool runInShell = true, bool makeInteractive = true)
@@ -86,7 +88,7 @@ namespace Microsoft.SSHDebugPS.Docker
             using (ICommandRunner commandRunner = GetExecCommandRunner(commandText, runInShell, makeInteractive))
             {
                 ShellCommandCallback commandCallback = new ShellCommandCallback(_commandCompleteEvent);
-                DockerAsyncCommand command = new DockerAsyncCommand(commandRunner, commandCallback);
+                PipeAsyncCommand command = new PipeAsyncCommand(commandRunner, commandCallback);
 
                 try
                 {

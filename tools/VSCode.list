@@ -1,7 +1,6 @@
 # filename,source-root,source-dir,install-dir
 # Where 'source-root' is either 'src', or 'bin'
 Microsoft.MICore.dll,bin,,debugAdapters\bin
-Microsoft.MICore.XmlSerializers.dll,bin,,debugAdapters\bin
 Microsoft.MIDebugEngine.dll,bin,,debugAdapters\bin
 OpenDebugAD7.exe,bin,vscode,debugAdapters\bin
 Microsoft.DebugEngineHost.dll,bin,vscode,debugAdapters\bin

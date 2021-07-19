@@ -1,0 +1,38 @@
+---
+name: $(Date:yyyMMdd).$(Rev:r)
+stages:
+- stage: CodeAnalysis
+  dependsOn: []
+  jobs:
+  - template: ./jobs/MSHosted-Windows.job.yml
+    parameters:
+      DisplayName: 'CodeAnalysis'
+      JobTemplate:
+      - template: ../templates/CodeAnalysis.template.yml
+        parameters:
+          Configuration: 'Lab.Debug'
+
+- stage: CI
+  dependsOn: []
+  variables:
+  - name: SignType
+    value: test
+  - name: TeamName
+    value: MDDDebugger
+  jobs:
+  - template: ./jobs/VSEngSS-MicroBuild2019.job.yml
+    parameters:
+      DisplayName: 'Lab.Debug'
+      JobTemplate:
+      - template: ../templates/Build.template.yml
+        parameters:
+          Configuration: 'Lab.Debug'
+
+  - template: ./jobs/VSEngSS-MicroBuild2019.job.yml
+    parameters:
+      DisplayName: 'Lab.Release'
+      JobTemplate:
+      - template: ../templates/Build.template.yml
+        parameters:
+          Configuration: 'Lab.Release'
+...

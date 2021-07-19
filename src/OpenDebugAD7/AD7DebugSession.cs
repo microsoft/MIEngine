@@ -141,6 +141,15 @@ namespace OpenDebugAD7
             m_logger.Write(LoggingCategory.Telemetry, eventName, propertiesDictionary);
         }
 
+        private static string GetFrameworkVersionAttributeValue()
+        {
+            var attribute = typeof(object).Assembly.GetCustomAttribute(typeof(System.Reflection.AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
+            if (attribute == null)
+                return string.Empty;
+
+            return attribute.Version;
+        }
+
         private ProtocolException CreateProtocolExceptionAndLogTelemetry(string telemetryEventName, int error, string message)
         {
             DebuggerTelemetry.ReportError(telemetryEventName, error);
@@ -152,8 +161,7 @@ namespace OpenDebugAD7
             // Make sure the slashes go in the correct direction
             char directorySeparatorChar = Path.DirectorySeparatorChar;
             char wrongSlashChar = directorySeparatorChar == '\\' ? '/' : '\\';
-
-            if (program.Contains(wrongSlashChar))
+            if (program.Contains(wrongSlashChar, StringComparison.Ordinal))
             {
                 program = program.Replace(wrongSlashChar, directorySeparatorChar);
             }
@@ -345,9 +353,9 @@ namespace OpenDebugAD7
             return hr;
         }
 
-        #endregion
+#endregion
 
-        #region AD7EventHandlers helper methods
+#region AD7EventHandlers helper methods
 
         public void BeforeContinue()
         {
@@ -655,9 +663,9 @@ namespace OpenDebugAD7
             }
         }
 
-        #endregion
+#endregion
 
-        #region DebugAdapterBase
+#region DebugAdapterBase
 
         protected override void HandleInitializeRequestAsync(IRequestResponder<InitializeArguments, InitializeResponse> responder)
         {
@@ -823,7 +831,7 @@ namespace OpenDebugAD7
             }
 
             // If program is still in the default state, raise error
-            if (program.EndsWith(">", StringComparison.Ordinal) && program.Contains('<'))
+            if (program.EndsWith(">", StringComparison.Ordinal) && program.Contains('<', StringComparison.Ordinal))
             {
                 responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "launch: launch.json must be configured. Change 'program' to the path to the executable file that you would like to debug."));
                 return;
@@ -959,6 +967,7 @@ namespace OpenDebugAD7
                 }
 
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
+                properties.Add(DebuggerTelemetry.TelemetryFrameworkVersion, GetFrameworkVersionAttributeValue());
 
                 DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - launchStartTime, properties);
 
@@ -1146,6 +1155,7 @@ namespace OpenDebugAD7
 
                 var properties = new Dictionary<string, object>(StringComparer.Ordinal);
                 properties.Add(DebuggerTelemetry.TelemetryMIMode, mimode);
+                properties.Add(DebuggerTelemetry.TelemetryFrameworkVersion, GetFrameworkVersionAttributeValue());
 
                 DebuggerTelemetry.ReportTimedEvent(telemetryEventName, DateTime.Now - attachStartTime, properties);
                 success = true;
@@ -2546,9 +2556,9 @@ namespace OpenDebugAD7
             }
         }
 
-        #endregion
+#endregion
 
-        #region IDebugPortNotify2
+#region IDebugPortNotify2
 
         int IDebugPortNotify2.AddProgramNode(IDebugProgramNode2 programNode)
         {
@@ -2568,9 +2578,9 @@ namespace OpenDebugAD7
             return HRConstants.S_OK;
         }
 
-        #endregion
+#endregion
 
-        #region IDebugEventCallback2
+#region IDebugEventCallback2
 
         private readonly Dictionary<Guid, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2>> m_syncEventHandler = new Dictionary<Guid, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2>>();
         private readonly Dictionary<Guid, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task>> m_asyncEventHandler = new Dictionary<Guid, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task>>();
@@ -3047,7 +3057,7 @@ namespace OpenDebugAD7
             }
         }
 
-        #endregion
+#endregion
 
         private class DebugSettingsCallback : IDebugSettingsCallback110
         {

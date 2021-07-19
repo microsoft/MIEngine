@@ -1,15 +1,24 @@
 ---
+parameters:
+  rids: ["win7-x86", "win-x64", "win10-arm64", "osx-x64", "linux-x64", "linux-arm", "linux-arm64", "linux-musl-x64" ]
+
 steps:
 - checkout: self
+  clean: true
 
 - template: ../tasks/NuGetToolInstaller.yml
 
 - template: ../tasks/MicroBuildSigningPlugin.yml
 
+- task: UseDotNet@2
+  displayName: 'Use .NET Core sdk'
+  inputs:
+    packageType: sdk
+    version: 5.x
+
 - template: ../steps/BuildSolution.yml
   parameters:
-    Configuration: 'Desktop.Release'
-    BuildArguments: '/p:Lab=$(Lab)'
+    Configuration: 'Lab.Release'
 
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
@@ -19,10 +28,20 @@ steps:
 - template: ../tasks/SignVerify.yml
   parameters:
     TargetFolders: '$(Build.StagingDirectory)\bin'
+    ExcludeFolders: '.git MicroBuild'
 
 - template: ../steps/CopyAndPublishSymbols.yml
 
-- template: ../steps/ArchivePublicSymbolsAndUploadToFileShare.yml
+- script: |
+    mkdir $(Build.StagingDirectory)\zips\
+  displayName: "Create $(Build.StagingDirectory)/zips/ folder"
+
+- ${{ each rid in parameters.rids }}:
+  - template: ../steps/PublishOpenDebugAD7.yml
+    parameters:
+      Configuration: 'Lab.Release'
+      RuntimeID: '${{ rid }}'
+      SignedBinariesFolder: '$(Build.StagingDirectory)\bin'
 
 - template: ../tasks/MicroBuildCleanup.yml
 ...

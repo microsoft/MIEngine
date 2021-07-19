@@ -52,31 +52,39 @@
 "0"="{3FDDF14E-E758-4695-BE0C-7509920432C9}"
 ; Docker Port Supplier
 "1"="{A2BBC114-47E4-473F-A49C-69EE89711243}"
+; WSL Port supplier
+"2"="{267B1341-AC92-44DC-94DF-2EE4205DD17E}"
+
+; Registration to use lldb with the port suppliers
+[$RootKey$\AD7Metrics\Engine\{5D630903-189D-4837-9785-699B05BEC2A9}]
+@="MI Debug Engine - lldb"
+"Attach"=dword:00000001
+; "AddressBP"=dword:00000001
+"AlwaysLoadLocal"=dword:00000001
+; "CallStackBP"=dword:00000001
+; "ConditionalBP"=dword:00000001
+"DataBP"=dword:00000000
+"Disassembly"=dword:00000001
+"EnginePriority"=dword:00000050
+"Exceptions"=dword:00000001
+; "FunctionBP"=dword:00000001
+; "HitCountBP"=dword:00000000
+; "JustMyCodeStepping"=dword:00000001
+"Name"="Native (LLDB)"
+"SetNextStatement"=dword:00000001
+; "SuspendThread"=dword:00000001
+"CLSID"="{0fc2f352-2fc1-4f80-8736-51cd1ab28f16}"
+"GlobalVisualizersDirectory"="$PackageFolder$"
+"BreakWhenValueChanges"=dword:00000000
+"DataBPAsString"=dword:00000000
+
+[$RootKey$\AD7Metrics\Engine\{5D630903-189D-4837-9785-699B05BEC2A9}\PortSupplier]
+; SSH Port Supplier
+"0"="{3FDDF14E-E758-4695-BE0C-7509920432C9}"
+
+[$RootKey$\AD7Metrics\Engine\{5D630903-189D-4837-9785-699B05BEC2A9}\IncompatibleList]
+"MI Debug Engine - gdb"="{91744D97-430F-42C1-9779-A5813EBD6AB2}"
+"vsdbg"="{EF9CD3BB-2C0E-41AD-B54C-63006BC09D19}"
 
 [$RootKey$\OpenFolder\Settings\VSWorkspaceSettings\{EA6637C6-17DF-45B5-A183-0951C54243BC}]
 @="$PackageFolder$\OpenFolderSchema.json"
-
-; Registration for DAP version of MIEngine (hosted by OpenDebugAD7)
-[$RootKey$\AD7Metrics\Engine\{F328E937-B412-44AD-905D-90B913C3D098}]
-@="MI Debug Engine"
-"CLSID"="{DAB324E9-7B35-454C-ACA8-F6BB0D5C8673}"
-"Adapter"="$PackageFolder$\vscode\OpenDebugAD7.exe"
-; "AdapterArgs"=""
-"Language"="C++"
-"LanguageId"="{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}"
-; "AddressBP"=dword:00000001
-"AlwaysLoadLocal"=dword:00000001
-"AlwaysLoadProgramProviderLocal"=dword:00000001
-; "CallStackBP"=dword:00000001
-"ConditionalBP"=dword:00000001
-; "DataBP"=dword:00000001
-; "Disassembly"=dword:00000001
-"EnginePriority"=dword:00000050
-; "Exceptions"=dword:00000001
-"FunctionBP"=dword:00000001
-; "HitCountBP"=dword:00000000
-; "JustMyCodeStepping"=dword:00000001
-"Name"="Native (MI-based)"
-; "SetNextStatement"=dword:00000001
-; "SuspendThread"=dword:00000001
-"GlobalVisualizersDirectory"="$PackageFolder$"

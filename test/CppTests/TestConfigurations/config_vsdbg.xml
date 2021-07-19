@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TestMachineConfiguration>
+  <TestConfigurations>
+    <TestConfiguration
+      Compiler="VisualCPlusPlusCompiler_x86"
+      DebuggeeArchitecture="x86"
+      Debugger="VsDebugger" />
+    <TestConfiguration
+      Compiler="VisualCPlusPlusCompiler_x64"
+      DebuggeeArchitecture="x64"
+      Debugger="VsDebugger" />
+  </TestConfigurations>
+  <Compilers>
+    <Compiler
+      Name="VisualCPlusPlusCompiler_x86"
+      Type="VisualCPlusPlus"
+      Path="%PROGRAMFILES(X86)%\Microsoft Visual Studio 14.0\VC\bin\cl.exe">
+      <Properties>
+        <Property Name="Include">
+          %PROGRAMFILES(X86)%\Microsoft Visual Studio 14.0\VC\include;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Include\10.0.10240.0\ucrt;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Include\10.0.10240.0\um;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Include\10.0.10240.0\shared
+        </Property>
+        <Property Name="Lib">
+          %PROGRAMFILES(X86)%\Microsoft Visual Studio 14.0\VC\lib;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Lib\10.0.10240.0\um\x86;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Lib\10.0.10240.0\ucrt\x86
+        </Property>
+      </Properties>
+    </Compiler>
+    <Compiler
+      Name="VisualCPlusPlusCompiler_x64"
+      Type="VisualCPlusPlus"
+      Path="%PROGRAMFILES(X86)%\Microsoft Visual Studio 14.0\VC\bin\amd64\cl.exe">
+      <Properties>
+        <Property Name="Include">
+          %PROGRAMFILES(X86)%\Microsoft Visual Studio 14.0\VC\include;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Include\10.0.10240.0\ucrt;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Include\10.0.10240.0\um;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Include\10.0.10240.0\shared
+        </Property>
+        <Property Name="Lib">
+          %PROGRAMFILES(X86)%\Microsoft Visual Studio 14.0\VC\lib\amd64;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Lib\10.0.10240.0\um\x64;
+          %PROGRAMFILES(X86)%\Windows Kits\10\Lib\10.0.10240.0\ucrt\x64
+        </Property>
+      </Properties>
+    </Compiler>
+  </Compilers>
+  <Debuggers>
+    <Debugger
+      Name="VsDebugger"
+      Type="VsDbg"
+      AdapterPath="vsdbg\bin\vsdbg.exe" />
+  </Debuggers>
+</TestMachineConfiguration>

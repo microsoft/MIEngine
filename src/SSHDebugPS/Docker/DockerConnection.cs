@@ -99,14 +99,14 @@ namespace Microsoft.SSHDebugPS.Docker
 
         #endregion
 
-        private string _containerName;
+        private readonly string _containerName;
         private readonly DockerExecutionManager _dockerExecutionManager;
-
-        internal new DockerContainerTransportSettings TransportSettings => (DockerContainerTransportSettings)base.TransportSettings;
+        private readonly DockerContainerTransportSettings _settings;
 
         public DockerConnection(DockerContainerTransportSettings settings, Connection outerConnection, string name)
-            : base(settings, outerConnection, name)
+            : base(outerConnection, name)
         {
+            _settings = settings;
             _containerName = settings.ContainerName;
             _dockerExecutionManager = new DockerExecutionManager(settings, outerConnection);
         }
@@ -116,6 +116,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return _dockerExecutionManager.ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
         }
 
+        /// <inheritdoc/>
         public override void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
             if (IsClosed)
@@ -123,9 +124,8 @@ namespace Microsoft.SSHDebugPS.Docker
                 throw new ObjectDisposedException(nameof(PipeConnection));
             }
 
-            // Assume in the Begin Async that we are expecting raw output from the process
-            var commandRunner = GetExecCommandRunner(commandText, handleRawOutput: true);
-            asyncCommand = new DockerAsyncCommand(commandRunner, callback);
+            var commandRunner = GetExecCommandRunner(commandText, handleRawOutput: runInShell == false);
+            asyncCommand = new PipeAsyncCommand(commandRunner, callback);
         }
 
         public override void CopyFile(string sourcePath, string destinationPath)
@@ -142,11 +142,11 @@ namespace Microsoft.SSHDebugPS.Docker
             {
                 tmpFile = "/tmp" + "/" + StringResources.CopyFile_TempFilePrefix + Guid.NewGuid();
                 OuterConnection.CopyFile(sourcePath, tmpFile);
-                settings = new DockerCopySettings(TransportSettings, tmpFile, destinationPath);
+                settings = new DockerCopySettings(_settings, tmpFile, destinationPath);
             }
             else
             {
-                settings = new DockerCopySettings(TransportSettings, sourcePath, destinationPath);
+                settings = new DockerCopySettings(_settings, sourcePath, destinationPath);
             }
 
             ICommandRunner runner = GetCommandRunner(settings);
@@ -186,46 +186,12 @@ namespace Microsoft.SSHDebugPS.Docker
         // Base implementation was evaluating '$HOME' on the host machine and not the client machine, causing the home directory to be wrong.
         public override string GetUserHomeDirectory()
         {
-            string command = "eval echo '~'";
-            string commandOutput;
-            string errorMessage;
-            ExecuteCommand(command, Timeout.Infinite, throwOnFailure: true, commandOutput: out commandOutput, errorMessage: out errorMessage);
-
-            return commandOutput;
-        }
-
-        // Execute a command and wait for a response. No more interaction
-        public override void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
-        {
-            int exit = -1;
-            string output = string.Empty;
-
-            var settings = new DockerExecSettings(TransportSettings, commandText, runInShell: false, makeInteractive: false);
-            var runner = GetCommandRunner(settings, true);
-
-            string dockerCommand = "{0} {1}".FormatInvariantWithArgs(settings.Command, settings.CommandArgs);
-            string waitMessage = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
-            string errorMessage;
-            VS.VSOperationWaiter.Wait(waitMessage, true, (cancellationToken) =>
-            {
-                if (OuterConnection != null)
-                {
-                    exit = OuterConnection.ExecuteCommand(dockerCommand, timeout, out output, out errorMessage);
-                }
-                else
-                {
-                    //local exec command
-                    exit = ExecuteCommand(commandText, timeout, out output, out errorMessage);
-                }
-            });
-
-            exitCode = exit;
-            commandOutput = output;
+            return ExecuteCommand("eval echo '~'", Timeout.Infinite);
         }
 
         private ICommandRunner GetExecCommandRunner(string commandText, bool handleRawOutput = false)
         {
-            var execSettings = new DockerExecSettings(this.TransportSettings, commandText, handleRawOutput);
+            var execSettings = new DockerExecSettings(this._settings, commandText, handleRawOutput);
 
             return GetCommandRunner(execSettings, handleRawOutput: handleRawOutput);
         }
@@ -234,15 +200,12 @@ namespace Microsoft.SSHDebugPS.Docker
         {
             if (OuterConnection == null)
             {
-                if (handleRawOutput)
-                {
-                    return new RawLocalCommandRunner(settings);
-                }
-                else
-                    return new LocalCommandRunner(settings);
+                return LocalCommandRunner.CreateInstance(handleRawOutput, settings);
             }
             else
-                return new RemoteCommandRunner(settings, OuterConnection);
+            {
+                return new RemoteCommandRunner(settings, OuterConnection, handleRawOutput);
+            }
         }
 
         protected override string ProcFSErrorMessage

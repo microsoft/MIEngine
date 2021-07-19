@@ -1,66 +1,92 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{114039A0-87B5-425B-90C9-6AFC1960A247}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>MakePIAPortable</RootNamespace>
     <AssemblyName>MakePIAPortable</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <OutputPath>$(MIDefaultOutputPath)\PIA</OutputPath>
     <OutputType>Exe</OutputType>
-    <PIAOutput>$(OutputPath)\drop\</PIAOutput>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
+    <PIAOutput>$(MIDefaultOutputPath)PIA\drop\</PIAOutput>
+    <OutputPath>$(MIDefaultOutputPath)PIA\</OutputPath> <!-- Required by FilesToSign -->
   </PropertyGroup>
 
-  <ItemGroup Label="NuGet Packages">
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.Portable" Version="$(Microsoft_VisualStudio_Debugger_Interop_Portable_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />
-    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
+  <ItemGroup Label="ILDasm NuGet Package">
+    <PackageReference Include="runtime.win-x64.Microsoft.NETCore.ILDAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('windows'))" />
+    <PackageReference Include="runtime.linux-x64.Microsoft.NETCore.ILDAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('linux'))" />
+    <PackageReference Include="runtime.osx-x64.Microsoft.NETCore.ILDAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
   </ItemGroup>
+
+  <ItemGroup Label="ILAsm NuGet Package">
+    <PackageReference Include="runtime.linux-x64.Microsoft.NETCore.ILAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('linux'))" />
+    <PackageReference Include="runtime.osx-x64.Microsoft.NETCore.ILAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
+  </ItemGroup>
+
+  <!-- Keep in sync with ..\..\build\Debugger.PIAs.NonPortable.Packages.settings.targets -->
+
+  <ItemGroup Label="NuGet Packages">
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_10_0_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.11.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_11_0_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.12.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_12_0_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.InteropA" Version="$(Microsoft_VisualStudio_Debugger_InteropA_Version)" GeneratePathProperty="true" />
+
+    <PackageReference Include="Microsoft.VisualStudio.Interop" Version="$(Microsoft_VisualStudio_Interop_Version)" GeneratePathProperty="true" />    
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" GeneratePathProperty="true" />
+    
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <ItemGroup> 
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_InteropA)\lib\net45\Microsoft.VisualStudio.Debugger.InteropA.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_10_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_11_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_12_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_15_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_16_0)\lib\net45\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
+    <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Interop)\lib\net45\Microsoft.VisualStudio.Interop.dll" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <ILDAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('windows'))">$(Pkgruntime_win-x64_Microsoft_NETCore_ILDAsm)\runtimes\win-x64\native\ildasm.exe</ILDAsmFileLocation>
+    <ILDAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('linux'))">$(Pkgruntime_linux-x64_Microsoft_NETCore_ILDAsm)\runtimes\linux-x64\native\ildasm</ILDAsmFileLocation>
+    <ILDAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('osx'))">$(Pkgruntime_osx-x64_Microsoft_NETCore_ILDAsm)\runtimes\osx-x64\native\ildasm</ILDAsmFileLocation>
+    
+    <!--
+      On Windows, we will use the .NET Framework version of ilasm since there is an issue with /RESOURCE and it fails signing using the .NET Core version.
+      Resource Issue: https://github.com/dotnet/runtime/issues/48046
+    -->
+    <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('windows'))">$(windir)\Microsoft.NET\Framework\v4.0.30319\ilasm.exe</ILAsmFileLocation>
+    <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('linux'))">$(Pkgruntime_linux-x64_Microsoft_NETCore_ILAsm)\runtimes\linux-x64\native\ilasm</ILAsmFileLocation>
+    <ILAsmFileLocation Condition="$([MSBuild]::IsOSPlatform('osx'))">$(Pkgruntime_osx-x64_Microsoft_NETCore_ILAsm)\runtimes\osx-x64\native\ilasm</ILAsmFileLocation>
+    
+    <MakePIAPortableExe>$(MIDefaultOutputPath)tools\MakePIAPortableTool.dll</MakePIAPortableExe>
+    <ILToolsExist Condition="Exists($(ILDAsmFileLocation)) AND Exists($(ILAsmFileLocation))">true</ILToolsExist>
+  </PropertyGroup>
   
-  <UsingTask TaskName="FindILDAsm" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <ILDAsmFileLocation ParameterType="System.String" Output="true" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="Microsoft.Build.Utilities" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-          ILDAsmFileLocation = Microsoft.Build.Utilities.ToolLocationHelper.GetPathToDotNetFrameworkSdkFile("ildasm.exe" , TargetDotNetFrameworkVersion.Latest);
-        ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-  <Target Name="GeneratePortablePIA" BeforeTargets="SignFiles" AfterTargets="Build">
-    <FindILDAsm>
-      <Output PropertyName="ILDAsmFileLocation" TaskParameter="ILDAsmFileLocation" />
-    </FindILDAsm>
+  <Target Name="GeneratePortablePIA" Inputs="@(MakePIAPortableFiles)" Outputs="@(MakePIAPortableFiles->'$(PIAOutput)%(Filename)')" BeforeTargets="SignFiles" AfterTargets="Build">
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
-    <Error Condition="'$(ILDAsmFileLocation)' == ''" Text="Unable to locate ILDasm.exe" />
-    <Exec Command='$(OutputPath)MakePortableLegacyPIAS.cmd &quot;$(ILDAsmFileLocation)&quot; &quot;$(PIAOutput)&quot;' />
+    <Message Importance="High" Text="ILAsmFileLocation: $(ILAsmFileLocation)" />
+    <Error Condition="'$(ILToolsExist)' != 'true'" Text="Unable to retrieve IL tools needed for MakePIAPortable" />
+
+    <!-- Clean and create drop directory -->
+    <RemoveDir Directories="$(OutputPath)/drop" />
+    <MakeDir Directories="$(OutputPath)/drop" />
+    <RemoveDir Directories="$(PIAOutput)" />
+    <MakeDir Directories="$(PIAOutput)" />
+
+    <!-- Run ildasm -> MakePIAPortable -->
+    <Exec Command="$(ILDAsmFileLocation) %(MakePIAPortableFiles.Identity) -OUT=./drop/%(MakePIAPortableFiles.Filename).il" WorkingDirectory="$(OutputPath)" />
+    <Exec Command="dotnet $(MakePIAPortableExe) ./drop/%(MakePIAPortableFiles.Filename).il ./drop/%(MakePIAPortableFiles.Filename)-portable.il" WorkingDirectory="$(OutputPath)" />
+
+    <!-- Run ilasm -->
+    <Exec Condition="$([MSBuild]::IsOSPlatform('windows'))" Command="$(ILAsmFileLocation) /nologo /quiet /dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il /output=$(PIAOutput)%(MakePIAPortableFiles.Filename).dll /RESOURCE=./drop/%(MakePIAPortableFiles.Filename).res" WorkingDirectory="$(OutputPath)" />
+    <Exec Condition="!$([MSBuild]::IsOSPlatform('windows'))" Command="$(ILAsmFileLocation) -nologo -quiet -dll ./drop/%(MakePIAPortableFiles.Filename)-portable.il -output=$(PIAOutput)%(MakePIAPortableFiles.Filename).dll" WorkingDirectory="$(OutputPath)" />
   </Target>
+
   <ItemGroup>
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.InteropA.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
@@ -68,18 +94,15 @@
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
     <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
+    <DropSignedFile Include="$(PIAOutput)\Microsoft.VisualStudio.Interop.dll" />
   </ItemGroup>
+  
   <Target Name="CopyToVSCodeFolder" AfterTargets="DropFiles">
     <ItemGroup>
-      <VSCodeFolderInteropFile Include="$(DropDir)\Microsoft.VisualStudio.Debugger.InteropA.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll" />
+      <VSCodeFolderInteropFile Include="$(DropDir)\Microsoft.VisualStudio.Debugger.InteropA.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.10.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.11.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.12.0.dll;$(DropDir)\Microsoft.VisualStudio.Debugger.Interop.16.0.dll;$(DropDir)\Microsoft.VisualStudio.Interop.dll" />
     </ItemGroup>
     <Move SourceFiles="@(VSCodeFolderInteropFile)" DestinationFolder="$(DropDir)\vscode\" />
   </Target>
-  <ItemGroup>
-    <None Include="MakePortableLegacyPIAs.cmd">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\DropFiles.targets" />
 </Project>

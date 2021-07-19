@@ -1,0 +1,21 @@
+---
+parameters:
+    Configuration: 'Debug'
+
+steps:
+- checkout: self
+
+- template: ../tasks/NuGetToolInstaller.yml
+
+- template: ../tasks/MicroBuildSigningPlugin.yml
+
+- template: ../tasks/MicroBuildLocalizationPlugin.yml
+
+- template: ../tasks/MicroBuildPrefastPlugin.yml
+
+- template: ../steps/BuildSolution.yml
+  parameters:
+    Configuration: ${{ parameters.Configuration }}
+
+- template: ../tasks/MicroBuildCleanup.yml
+...

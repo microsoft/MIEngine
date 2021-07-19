@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.Internal.VisualStudio.Shell;
-using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using System.Globalization;
+using Microsoft.Internal.VisualStudio.Shell;
 
 namespace Microsoft.DebugEngineHost
 {

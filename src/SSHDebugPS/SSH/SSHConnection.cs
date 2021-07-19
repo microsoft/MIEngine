@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using liblinux;
 using liblinux.Shell;
 using Microsoft.SSHDebugPS.Utilities;
@@ -45,14 +46,14 @@ namespace Microsoft.SSHDebugPS.SSH
         public override List<Process> ListProcesses()
         {
             string username = string.Empty;
-            var usernameCommand = _remoteSystem.Shell.ExecuteCommand("id -u -n");
+            var usernameCommand = _remoteSystem.Shell.ExecuteCommand("id -u -n", Timeout.InfiniteTimeSpan);
             if (usernameCommand.ExitCode == 0)
             {
                 username = usernameCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'id' command ends with a newline
             }
 
             string architecture = string.Empty;
-            var architectureCommand = _remoteSystem.Shell.ExecuteCommand("uname -m");
+            var architectureCommand = _remoteSystem.Shell.ExecuteCommand("uname -m", Timeout.InfiniteTimeSpan);
             if (architectureCommand.ExitCode == 0)
             {
                 architecture = architectureCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'uname -m' command ends with a newline
@@ -60,7 +61,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
             SystemInformation systemInformation = new SystemInformation(username, architecture);
 
-            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine);
+            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.InfiniteTimeSpan);
             if (command.ExitCode != 0)
             {
                 throw new CommandFailedException(StringResources.Error_PSFailed);
@@ -69,6 +70,7 @@ namespace Microsoft.SSHDebugPS.SSH
             return PSOutputParser.Parse(command.Output, systemInformation);
         }
 
+        /// <inheritdoc/>
         public override void BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
             if (runInShell)
@@ -83,12 +85,6 @@ namespace Microsoft.SSHDebugPS.SSH
                 command.Start(commandText);
                 asyncCommand = command;
             }
-        }
-
-        public override void ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
-        {
-            string errorMessage;
-            exitCode = ExecuteCommand(commandText, timeout, out commandOutput, out errorMessage);
         }
 
         public override int ExecuteCommand(string commandText, int timeout, out string commandOutput, out string errorMessage)
@@ -166,7 +162,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
         public override bool IsLinux()
         {
-            var command = _remoteSystem.Shell.ExecuteCommand("uname");
+            var command = _remoteSystem.Shell.ExecuteCommand("uname", Timeout.InfiniteTimeSpan);
             if (command.ExitCode != 0)
             {
                 return false;

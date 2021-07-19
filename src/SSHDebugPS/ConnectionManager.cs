@@ -118,7 +118,7 @@ namespace Microsoft.SSHDebugPS
                 {
                     // parent to the global VS window
                     DTE dte = (DTE)Package.GetGlobalService(typeof(SDTE));
-                    hwnd = new IntPtr(dte?.MainWindow?.HWnd ?? 0);
+                    hwnd = dte?.MainWindow?.HWnd ?? IntPtr.Zero;
                 }
                 catch // No DTE?
                 {

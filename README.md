@@ -1,17 +1,23 @@
 ## Welcome to the Visual Studio MI Debug Engine ("MIEngine")
 
-[![Build Status](https://dev.azure.com/ms/MIEngine/_apis/build/status/Microsoft.MIEngine?branchName=master)](https://dev.azure.com/ms/MIEngine/_build/latest?definitionId=98&branchName=master)
+[![Build Status](https://dev.azure.com/ms/MIEngine/_apis/build/status/Microsoft.MIEngine?branchName=main)](https://dev.azure.com/ms/MIEngine/_build/latest?definitionId=98&branchName=main)
 
 The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with debuggers that support the gdb Machine Interface ("MI")
-specification such as [GDB](http://www.gnu.org/software/gdb/), [LLDB](http://lldb.llvm.org/), and [CLRDBG](https://github.com/Microsoft/MIEngine/wiki/What-is-CLRDBG).
+specification such as [GDB](http://www.gnu.org/software/gdb/) and [LLDB](http://lldb.llvm.org/).
+
+In Visual Studio Code, MIEngine also powers the 'cppdbg' debug adapter which is part of the [C/C++ Extension](https://github.com/microsoft/vscode-cpptools).
 
 ### What is MIEngine?
 
-MIEngine is a Visual Studio **Debug Engine** that understands **Machine Interface** ("MI"). A Debug Engine is an implementation of the [Core Debug Interfaces](https://msdn.microsoft.com/en-us/library/bb146305.aspx), 
+MIEngine is a Visual Studio **Debug Engine** that understands **Machine Interface** ("MI"). A Debug Engine is an implementation of the [Visual Studio Core Debug Interfaces (IDebug* interfaces)](https://msdn.microsoft.com/en-us/library/bb146305.aspx), 
 enabling the VS UI to drive debugging. Machine Interface is a text-based protocol developed by GDB that allows a debugger to be used as a separate component of a larger system. 
 Additional information:
  - [Visual Studio Debugger Extensibility](https://msdn.microsoft.com/en-us/library/bb161718.aspx)
  - [GDB's Machine Interface](https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI.html)
+
+This repo also includes:
+* [OpenDebugAD7](https://github.com/microsoft/MIEngine/tree/main/src/OpenDebugAD7): An adaptation layer between the [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/) and debug engines. This is what allows MIEngine to be used with Visual Studio Code.
+* [SSHDebugPS](https://github.com/microsoft/MIEngine/tree/main/src/SSHDebugPS): A Visual Studio 'Port Supplier' which enables Visual Studio to attach to processes over SSH or Linux Docker and could be easily extended to support any other exe that provides a shell into a Linux container/machine.
 
 ### Debug Multiple Platforms
 
@@ -19,18 +25,9 @@ Additional information:
 * Debug on any platform that supports GDB, such as Linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
 
 ### Prerequisites
-MIEngine requires [Visual Studio 2015](https://www.visualstudio.com/downloads/download-visual-studio-vs) with the following features installed:
-* Programming Languages -> Visual C++ -> Common Tools for Visual C++
-* Cross Platform Mobile Development -> Visual C++ Mobile Development
-* Cross Platform Mobile Development -> Microsoft Visual Studio Emulator for Android
-* Common Tools -> Visual Studio Extensibility Tools
+MIEngine can be built with either [Visual Studio](https://visualstudio.microsoft.com/downloads/) or with the [.NET CLI](https://dotnet.microsoft.com/download/dotnet).
 
-### Get Started
-* Clone the sources: `git clone https://github.com/Microsoft/MIEngine.git`
-* Open [src/MIDebugEngine.sln](https://github.com/Microsoft/MIEngine/blob/master/src/MIDebugEngine.sln) in Visual Studio.
-* Debug -> Start Debugging (or F5) to to build, deploy, and start debugging the [Experimental Instance of Visual Studio](https://msdn.microsoft.com/en-us/library/bb166560.aspx).
 * See the [wiki](https://github.com/Microsoft/MIEngine/wiki) for more info.
-
 
 ### Contribute!
 Before you contribute, please read through the contributing and developer guides to get an idea of requirements for pull requests. 
@@ -47,4 +44,4 @@ You are also encouraged to start a discussion by filing an issue or creating a g
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 ### License
-MIEngine is licensed under the [MIT License](https://github.com/Microsoft/MIEngine/blob/master/License.txt).
+MIEngine is licensed under the [MIT License](https://github.com/Microsoft/MIEngine/blob/main/License.txt).

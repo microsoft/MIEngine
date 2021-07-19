@@ -17,7 +17,7 @@ namespace Microsoft.SSHDebugPS
 
         public abstract int AddPort(IDebugPortRequest2 request, out IDebugPort2 port);
 
-        public int CanAddPort()
+        public virtual int CanAddPort()
         {
             return HR.S_OK;
         }

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -243,7 +244,7 @@ namespace Microsoft.SSHDebugPS.Docker
             DockerCommandSettings settings = new DockerCommandSettings(hostname, true);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
-            RemoteCommandRunner commandRunner = new RemoteCommandRunner(settings, sshConnection);
+            RemoteCommandRunner commandRunner = new RemoteCommandRunner(settings, sshConnection, handleRawOutput: false);
 
             ManualResetEvent resetEvent = new ManualResetEvent(false);
             int exitCode = 0;
@@ -258,22 +259,19 @@ namespace Microsoft.SSHDebugPS.Docker
                 resetEvent.Set();
             });
 
-            commandRunner.OutputReceived += ((sender, args) =>
+            commandRunner.OutputReceived += ((sender, line) =>
             {
-                if (!string.IsNullOrWhiteSpace(args))
+                if (!string.IsNullOrWhiteSpace(line))
                 {
+                    Debug.Assert(line.IndexOf('\n') < 0, "Why does `line` have embedded newline characters?");
+
                     // If it isn't json, assume its an error message
-                    if (args.Trim()[0] != '{')
+                    if (line.Trim()[0] != '{')
                     {
-                        errorSB.Append(args);
+                        errorSB.Append(line);
                     }
 
-                    // Unix line endings are '\n' so split on that for json items.
-                    foreach (var item in args.Split('\n').ToList())
-                    {
-                        if (!string.IsNullOrWhiteSpace(item))
-                            outputLines.Add(item);
-                    }
+                    outputLines.Add(line);
                 }
             });
 

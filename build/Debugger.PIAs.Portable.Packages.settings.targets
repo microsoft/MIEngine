@@ -1,0 +1,13 @@
+<!-- If you add this file to a project, make sure you add a dependency to MakePIAPortable -->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!--  'package_versions.settings.targets' must have been imported before importing this file. -->
+
+    <ItemGroup Label="Debugger.PIAs.Portable.Packages.props Package References">
+        <Reference Include="$(MIDefaultOutputPath)\PIA\drop\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />
+        <Reference Include="$(MIDefaultOutputPath)\PIA\drop\Microsoft.VisualStudio.Debugger.Interop.11.0.dll" />
+        <Reference Include="$(MIDefaultOutputPath)\PIA\drop\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
+        <Reference Include="$(MIDefaultOutputPath)\PIA\drop\Microsoft.VisualStudio.Debugger.InteropA.dll" />
+        <Reference Include="$(MIDefaultOutputPath)\PIA\drop\Microsoft.VisualStudio.Interop.dll" />
+    </ItemGroup>
+</Project>
