@@ -120,7 +120,7 @@ steps:
     SymbolsVersion : ${{ parameters.SymbolsVersion }}
     SymbolsArtifactName : ${{ parameters.SymbolsArtifactName }}
   enabled: ${{ parameters.enabled }}
-  condition: ${{ parameters.condition }}
+  condition: and(${{ parameters.condition }}, eq(variables['SignType'], 'real'))
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
   continueOnError: ${{ parameters.continueOnError }}
 ...

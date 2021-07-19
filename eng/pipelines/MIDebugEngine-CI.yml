@@ -35,20 +35,4 @@ stages:
       - template: ../templates/Build.template.yml
         parameters:
           Configuration: 'Lab.Release'
-  
-  - template: ./jobs/VSEngSS-MicroBuild2019.job.yml
-    parameters:
-      DisplayName: 'Desktop.Debug'
-      JobTemplate:
-      - template: ../templates/Build.template.yml
-        parameters:
-          Configuration: 'Desktop.Debug'
-
-  - template: ./jobs/VSEngSS-MicroBuild2019.job.yml
-    parameters:
-      DisplayName: 'Desktop.Release'
-      JobTemplate:
-      - template: ../templates/Build.template.yml
-        parameters:
-          Configuration: 'Desktop.Release'
 ...

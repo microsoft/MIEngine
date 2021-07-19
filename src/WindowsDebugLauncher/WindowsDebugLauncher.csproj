@@ -2,8 +2,6 @@
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{AE7F97CA-DFD2-41BC-B581-98C91C83065C}</ProjectGuid>
     <RootNamespace>WindowsDebugLauncher</RootNamespace>
     <AssemblyName>WindowsDebugLauncher</AssemblyName>
@@ -17,39 +15,18 @@
     <DropSubDir>vscode</DropSubDir>
     <TargetFramework>net462</TargetFramework>
     <OutputType>Exe</OutputType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
-  </PropertyGroup>
-  
-  <ItemGroup Label="References">
+
+  <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <DropSignedFile Condition="'$(IsXPlat)' == 'true'" Include="$(OutputPath)\WindowsDebugLauncher.exe" />
+    <DropSignedFile Include="$(OutputPath)\WindowsDebugLauncher.exe" />
+    <DropUnsignedFile Include="$(OutputPath)\WindowsDebugLauncher.pdb" />
   </ItemGroup>
-
-  <Target Name="GetDropFiles" BeforeTargets="DropFiles">
-    <ItemGroup>
-      <DropSignedFile Include="$(OutputPath)\WindowsDebugLauncher.exe" />
-      <DropUnsignedFile Include="$(OutputPath)\WindowsDebugLauncher.pdb" />
-    </ItemGroup>
-  </Target>
-
+  
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\DropFiles.targets" />
-  <!-- Force the project to be an exe before the compile step. This is used by CoreCLR builds. -->
-  <Target Name="BeforeBuild">
-    <PropertyGroup>
-      <OutputType>Exe</OutputType>
-    </PropertyGroup>
-  </Target>
 </Project>
