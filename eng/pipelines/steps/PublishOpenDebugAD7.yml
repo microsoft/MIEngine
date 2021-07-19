@@ -34,7 +34,7 @@ steps:
 # Publishing for non-macOS
 - ${{ if not(startsWith(parameters.RuntimeID, 'osx-')) }}:
   - powershell: |
-      Compress-Archive -Path $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\. -DestinationPath $(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip
+      Compress-Archive -Path $(Build.StagingDirectory)\debugAdapters\${{ parameters.RuntimeID }}\* -DestinationPath $(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip
     displayName: "Create ${{ parameters.RuntimeID}}.zip"  
 
   - template: ../tasks/PublishPipelineArtifact.yml
