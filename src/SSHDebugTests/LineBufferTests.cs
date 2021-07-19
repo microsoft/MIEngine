@@ -93,7 +93,7 @@ namespace SSHDebugTests
 
             for (int i = 0; i < expectedOutput.Length; i++)
             {
-                Assert.Equal<string>(expectedOutput[i], r[i]);
+                Assert.Equal(expectedOutput[i], r[i]);
             }
         }
     }

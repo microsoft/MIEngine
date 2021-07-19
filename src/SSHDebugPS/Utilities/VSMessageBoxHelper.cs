@@ -15,7 +15,7 @@ namespace Microsoft.SSHDebugPS.Utilities
         /// </summary>
         public static void PostUIMessage(string title, string message, OLEMSGICON icon, OLEMSGBUTTON button, OLEMSGDEFBUTTON defaultButton)
         {
-            ThreadingTasks.Task.Run(async () => await PostMessageInternal(title, message, icon, button, defaultButton));
+            _ = ThreadingTasks.Task.Run(async () => await PostMessageInternalAsync(title, message, icon, button, defaultButton));
         }
 
         public static void PostErrorMessage(string title, string message)
@@ -28,7 +28,7 @@ namespace Microsoft.SSHDebugPS.Utilities
                 OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
         }
 
-        private static async ThreadingTasks.Task PostMessageInternal(string title, string message, OLEMSGICON icon, OLEMSGBUTTON button, OLEMSGDEFBUTTON defaultButton)
+        private static async ThreadingTasks.Task PostMessageInternalAsync(string title, string message, OLEMSGICON icon, OLEMSGBUTTON button, OLEMSGDEFBUTTON defaultButton)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider,

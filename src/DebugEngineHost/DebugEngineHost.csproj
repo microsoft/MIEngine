@@ -68,6 +68,8 @@
       <IncludeAssets>compile</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.16-alpha" />
   </ItemGroup>
 
   <ItemGroup Label="Assembly to Generate">

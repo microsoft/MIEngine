@@ -94,11 +94,14 @@ namespace Microsoft.DebugEngineHost
             private static IVsFolderWorkspaceService GetWorkspaceService()
             {
                 IComponentModel componentModel = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel).GUID) as IComponentModel;
-                var workspaceServices = componentModel.DefaultExportProvider.GetExports<IVsFolderWorkspaceService>();
-
-                if (workspaceServices != null && workspaceServices.Any())
+                if (componentModel != null)
                 {
-                    return workspaceServices.First().Value;
+                    var workspaceServices = componentModel.DefaultExportProvider.GetExports<IVsFolderWorkspaceService>();
+
+                    if (workspaceServices != null && workspaceServices.Any())
+                    {
+                        return workspaceServices.First().Value;
+                    }
                 }
                 return null;
             }
