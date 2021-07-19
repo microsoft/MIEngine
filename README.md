@@ -1,6 +1,6 @@
 ## Welcome to the Visual Studio MI Debug Engine ("MIEngine")
 
-[![Build Status](https://dev.azure.com/ms/MIEngine/_apis/build/status/Microsoft.MIEngine?branchName=master)](https://dev.azure.com/ms/MIEngine/_build/latest?definitionId=98&branchName=master)
+[![Build Status](https://dev.azure.com/ms/MIEngine/_apis/build/status/Microsoft.MIEngine?branchName=main)](https://dev.azure.com/ms/MIEngine/_build/latest?definitionId=98&branchName=main)
 
 The Visual Studio MI Debug Engine ("MIEngine") provides an open-source Visual Studio extension that enables debugging with debuggers that support the gdb Machine Interface ("MI")
 specification such as [GDB](http://www.gnu.org/software/gdb/) and [LLDB](http://lldb.llvm.org/).
@@ -25,14 +25,9 @@ This repo also includes:
 * Debug on any platform that supports GDB, such as Linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
 
 ### Prerequisites
-MIEngine requires [Visual Studio](https://visualstudio.microsoft.com/downloads/) to build.
+MIEngine can be built with either [Visual Studio](https://visualstudio.microsoft.com/downloads/) or with the [.NET CLI](https://dotnet.microsoft.com/download/dotnet).
 
-### Get Started
-* Clone the sources: `git clone https://github.com/Microsoft/MIEngine.git`
-* Open [src/MIDebugEngine.sln](https://github.com/Microsoft/MIEngine/blob/master/src/MIDebugEngine.sln) in Visual Studio.
-* Debug -> Start Debugging (or F5) to to build, deploy, and start debugging the [Experimental Instance of Visual Studio](https://msdn.microsoft.com/en-us/library/bb166560.aspx).
 * See the [wiki](https://github.com/Microsoft/MIEngine/wiki) for more info.
-
 
 ### Contribute!
 Before you contribute, please read through the contributing and developer guides to get an idea of requirements for pull requests. 
@@ -49,4 +44,4 @@ You are also encouraged to start a discussion by filing an issue or creating a g
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 ### License
-MIEngine is licensed under the [MIT License](https://github.com/Microsoft/MIEngine/blob/master/License.txt).
+MIEngine is licensed under the [MIT License](https://github.com/Microsoft/MIEngine/blob/main/License.txt).

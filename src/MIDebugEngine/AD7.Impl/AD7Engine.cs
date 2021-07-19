@@ -270,9 +270,12 @@ namespace Microsoft.MIDebugEngine
                 {
                     miMode = MIMode.Gdb;
                 }
+                else if (_engineGuid == EngineConstants.LldbEngine)
+                {
+                    miMode = MIMode.Lldb;
+                }
                 else
                 {
-                    // TODO: LLDB support
                     throw new NotImplementedException();
                 }
 

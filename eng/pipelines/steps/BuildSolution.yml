@@ -11,14 +11,35 @@ steps:
     Command: 'restore'
     solution: ${{ parameters.Solution }}
     selectOrConfig: 'config'
-    NugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
+    NugetConfigPath: '$(Build.SourcesDirectory)/src/.nuget/NuGet.config'
+
+# If running under System.Debug (Enable system diagnostics), enable binlogs
+- script: |
+    if "%SYSTEM_DEBUG%" == "" (
+      echo ##vso[task.setvariable variable=MsBuildArgsBinLog;]
+    ) else (
+      echo ##vso[task.setvariable variable=MsBuildArgsBinLog;]/bl:"$(Build.BinariesDirectory)/build_logs/${{ parameters.Configuration }}.binlog"
+    )
+  displayName: "Set MsBuildArgsBinLog variable"
 
 - template: ../tasks/MSBuild.yml
   parameters:
     solution: ${{ parameters.Solution }}
     configuration: ${{ parameters.Configuration }}
-    msbuildArguments: ${{ parameters.BuildArguments }}
+    msbuildArguments: '${{ parameters.BuildArguments }} $(MsBuildArgsBinLog)'
     env: { 
       "SIGN_TYPE": "$(SignType)" 
     } 
+
+- template: ../tasks/PublishPipelineArtifact.yml
+  parameters:
+    artifactName: '${{ parameters.Configuration }}_binlog'
+    path: '$(Build.BinariesDirectory)/build_logs/'
+    condition: ne(variables['System.Debug'], '')
+
+- template: ../tasks/PublishPipelineArtifact.yml
+  parameters:
+    artifactName: '${{ parameters.Configuration }}_debug_bin'
+    path: '$(Build.SourcesDirectory)\bin\${{ parameters.Configuration }}'
+    condition: ne(variables['System.Debug'], '')
 ...

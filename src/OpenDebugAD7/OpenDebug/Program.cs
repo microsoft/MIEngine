@@ -119,21 +119,6 @@ namespace OpenDebug
                 }
             }
 
-#if XPLAT
-            if (Utilities.IsMono())
-            {
-                // Mono uses the threadpool heavily for its async/await implementation.  Make sure we have an acceptable
-                //  lower limit on the threadpool size to avoid deadlocks.
-                int currentMinWorkerThreads, currentMinIOCThreads;
-                ThreadPool.GetMinThreads(out currentMinWorkerThreads, out currentMinIOCThreads);
-
-                if (currentMinWorkerThreads < 8)
-                {
-                    ThreadPool.SetMinThreads(8, currentMinIOCThreads);
-                }
-            }
-#endif
-
             if (port > 0)
             {
                 // TCP/IP server
@@ -202,6 +187,7 @@ namespace OpenDebug
             AD7DebugSession debugSession = new AD7DebugSession(inputStream, outputStream, loggingCategories);
 
             debugSession.Protocol.Run();
+            debugSession.Protocol.WaitForReader();
         }
 
         public static void DisableInheritance(Socket s)
