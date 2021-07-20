@@ -156,12 +156,7 @@ jobs:
 
     - name: Download LLDB-MI
       run: |
-        # Download the latest version of lldb-ui that vscode-cpptools uses.
-        curl https://download.visualstudio.microsoft.com/download/pr/173e6ced-0717-401d-87fc-169ca3424c72/f1228fd847c140b7f9839612f497bb7a/lldb-mi-10.0.0.zip --output ${{ github.workspace }}/lldb-mi-10.0.0.zip
-        unzip ${{ github.workspace }}/lldb-mi-10.0.0.zip
-
-        # Ensure we can run it or we will get permission denied.
-        sudo chmod 755 /Users/runner/work/MIEngine/MIEngine/debugAdapters/lldb-mi/bin/lldb-mi
+        ${{ github.workspace }}/tools/DownloadLldbMI.sh ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
 
     - run: |
         dotnet test ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll

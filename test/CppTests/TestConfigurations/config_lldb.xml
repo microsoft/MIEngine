@@ -17,7 +17,6 @@
     <Debugger
       Name="Lldb"
       Type="Lldb"
-      MIMode="lldb"
-      Path="/Users/runner/work/MIEngine/MIEngine/debugAdapters/lldb-mi/bin/lldb-mi" />
+      MIMode="lldb" />
   </Debuggers>
 </TestMachineConfiguration>
