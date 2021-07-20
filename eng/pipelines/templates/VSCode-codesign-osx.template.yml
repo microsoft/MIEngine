@@ -11,9 +11,12 @@ steps:
 - script: |
     echo "#[command] codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/OpenDebugAD7"
     codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/OpenDebugAD7
+    
+    echo "#[command] cd $(Pipeline.Workspace)/Artifacts/"
+    cd $(Pipeline.Workspace)/Artifacts/
 
-    echo "#[command] zip -r $(Pipeline.Workspace)/osx-x64.zip $(Pipeline.Workspace)/Artifacts/"
-    zip -r $(Pipeline.Workspace)/osx-x64.zip $(Pipeline.Workspace)/Artifacts/
+    echo "#[command] zip -r $(Pipeline.Workspace)/osx-x64.zip *"
+    zip -r $(Pipeline.Workspace)/osx-x64.zip *
 
 - template: ../tasks/PublishPipelineArtifact.yml
   parameters:
