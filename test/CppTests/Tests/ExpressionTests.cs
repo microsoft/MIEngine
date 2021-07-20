@@ -199,6 +199,9 @@ namespace CppTests.Tests
 
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForExpressionTests))]
+        // TODO: https://github.com/microsoft/MIEngine/issues/1170
+        // - lldb
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         [RequiresTestSettings]
         public void CallStackBasic(ITestSettings settings)
         {
@@ -328,6 +331,9 @@ namespace CppTests.Tests
 
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForExpressionTests))]
+        // TODO: https://github.com/microsoft/MIEngine/issues/1170
+        // - lldb
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         [RequiresTestSettings]
         public void EvaluateInvalidExpression(ITestSettings settings)
         {
