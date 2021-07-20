@@ -12,11 +12,12 @@ steps:
     copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MICore.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
   displayName: "Publish OpenDebugAD7 ${{ parameters.RuntimeID }}"
 
-# Windows Steps for copying over the exe and verify the windows binaries.
+# Windows Steps for copying over OpenDebugAD7.exe, WindowsDebugLauncher.exe, and verify the windows binaries.
 - ${{ if startsWith(parameters.RuntimeID, 'win') }}:
   - script: |
       copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.exe $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
-    displayName: "Copy OpenDebugAD7.exe"
+      copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\WindowsDebugLauncher.exe $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+    displayName: "Copy OpenDebugAD7.exe and WindowsDebugLauncher.exe"
 
   - template: ../tasks/SignVerify.yml
     parameters:
