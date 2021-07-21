@@ -9,11 +9,14 @@ steps:
     artifact: 'unsigned_osx-x64_binaries'
 
 - script: |
-    echo "#[command] codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/OpenDebugAD7"
-    codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/OpenDebugAD7
+    echo "#[command] codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/debugAdapters/bin/OpenDebugAD7"
+    codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/debugAdapters/bin/OpenDebugAD7
 
-    echo "#[command] zip -r $(Pipeline.Workspace)/osx-x64.zip $(Pipeline.Workspace)/Artifacts/"
-    zip -r $(Pipeline.Workspace)/osx-x64.zip $(Pipeline.Workspace)/Artifacts/
+    echo "#[command] cd $(Pipeline.Workspace)/Artifacts/"
+    cd $(Pipeline.Workspace)/Artifacts
+
+    echo "#[command] zip -r $(Pipeline.Workspace)/osx-x64.zip ./debugAdapters"
+    zip -r $(Pipeline.Workspace)/osx-x64.zip ./debugAdapters
 
 - template: ../tasks/PublishPipelineArtifact.yml
   parameters:
