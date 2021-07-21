@@ -23,14 +23,14 @@ if ! `curl $lldbMIDownloadLink --output ./lldb-mi-10.0.0.zip > /dev/null 2>&1` ;
   exit 1
 fi
 
-unzip -o ./lldb-mi-10.0.0.zip > /dev/null 2>&1
+unzip -o ./lldb-mi-10.0.0.zip -d $1/.. > /dev/null 2>&1
 
-if [ ! -f ./debugAdapters/lldb-mi/bin/lldb-mi ]; then
+if [ ! -f $1/lldb-mi/bin/lldb-mi ]; then
   echo "Failed to unzip."
 fi
 
 # Ensure we can run it or we will get permission denied.
-if ! `sudo chmod 755 ./debugAdapters/lldb-mi/bin/lldb-mi` ; then
+if ! `sudo chmod 755 $1/lldb-mi/bin/lldb-mi` ; then
   echo "Failed to change permissions for lldb-mi."
   exit 1
 fi
