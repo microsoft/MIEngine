@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS.SSH
 {
@@ -12,6 +13,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
         protected override Connection GetConnectionInternal()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             return ConnectionManager.GetSSHConnection(Name);
         }
 

@@ -10,6 +10,7 @@ using System.Threading;
 using Microsoft.DebugEngineHost;
 using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
@@ -41,6 +42,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
         internal static bool TryConvertConnectionStringToSettings(string connectionString, out DockerContainerTransportSettings settings, out Connection remoteConnection)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             remoteConnection = null;
             settings = null;
 

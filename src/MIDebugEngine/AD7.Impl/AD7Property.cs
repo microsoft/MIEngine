@@ -100,7 +100,7 @@ namespace Microsoft.MIDebugEngine
                                         propertyInfo.dwAttrib |= (enum_DBG_ATTRIB_FLAGS)DBG_ATTRIB_HAS_DATA_BREAKPOINT;
                                     }
                                 }
-                                catch (Exception e) { }
+                                catch (Exception) { }
                             }
                         }
                     }

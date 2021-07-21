@@ -9,6 +9,7 @@ using Microsoft.SSHDebugPS.UI;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
@@ -35,6 +36,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
         int IDebugPortPicker.DisplayPortPicker(IntPtr hwndParentDialog, out string pbstrPortId)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             // If this is null, then the PortPicker handler shows an error. Set to empty by default
             return ConnectionManager.ShowContainerPickerWindow(hwndParentDialog, SupportSSHConnections, out pbstrPortId) ?
                 VSConstants.S_OK : VSConstants.S_FALSE;
