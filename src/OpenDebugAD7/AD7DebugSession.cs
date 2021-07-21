@@ -238,7 +238,7 @@ namespace OpenDebugAD7
             else
             {
                 // If lldb and there is no miDebuggerPath, set it.
-                bool hasMiDebuggerPath = args.ContainsKey("miDebuggerPath");
+                bool hasMiDebuggerPath = args.ContainsKey("miDebuggerPath") && !string.IsNullOrEmpty(args["miDebuggerPath"].ToString());
                 if (miMode == "lldb" && !hasMiDebuggerPath)
                 {
                     args["miDebuggerPath"] = MILaunchOptions.GetLLDBMIPath();
