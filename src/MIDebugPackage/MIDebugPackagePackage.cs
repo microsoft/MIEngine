@@ -15,6 +15,7 @@ using System.IO;
 using Microsoft.MIDebugEngine;
 using System.Collections.Generic;
 using MICore;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugPackage
 {
@@ -66,14 +67,17 @@ namespace Microsoft.MIDebugPackage
         /// </summary>
         protected override void Initialize()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             base.Initialize();
 
             _packageCommandTarget = GetService(typeof(IOleCommandTarget)) as IOleCommandTarget;
+            Assumes.Present(_packageCommandTarget);
         }
         #endregion
 
         int IOleCommandTarget.Exec(ref Guid cmdGroup, uint nCmdID, uint nCmdExecOpt, IntPtr pvaIn, IntPtr pvaOut)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (cmdGroup == GuidList.guidMIDebugPackageCmdSet)
             {
                 switch (nCmdID)
@@ -98,6 +102,7 @@ namespace Microsoft.MIDebugPackage
 
         int IOleCommandTarget.QueryStatus(ref Guid cmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (cmdGroup == GuidList.guidMIDebugPackageCmdSet)
             {
                 switch (prgCmds[0].cmdID)
@@ -134,6 +139,7 @@ namespace Microsoft.MIDebugPackage
 
         private int LaunchMIDebug(uint nCmdExecOpt, IntPtr pvaIn, IntPtr pvaOut)
         {
+            ThreadHelper.ThrowIfNotOnUIThread("Microsoft.MIDebugPackage.LaunchMIDebug");
             int hr;
 
             if (IsQueryParameterList(pvaIn, pvaOut, nCmdExecOpt))
@@ -148,6 +154,10 @@ namespace Microsoft.MIDebugPackage
                 return hr;
 
             IVsParseCommandLine parseCommandLine = (IVsParseCommandLine)GetService(typeof(SVsParseCommandLine));
+            if (parseCommandLine == null)
+            {
+                throw new InvalidOperationException("Why is IVsParseCommandLine null?");
+            }
             hr = parseCommandLine.ParseCommandTail(arguments, iMaxParams: -1);
             if (ErrorHandler.Failed(hr))
                 return hr;
@@ -226,7 +236,7 @@ namespace Microsoft.MIDebugPackage
             if (string.IsNullOrWhiteSpace(arguments))
                 throw new ArgumentException("Expected an MI command to execute (ex: Debug.MIDebugExec info sharedlibrary)");
 
-            MIDebugExecAsync(arguments);
+            _ = MIDebugExecAsync(arguments);
 
             return VSConstants.S_OK;
         }
@@ -250,6 +260,7 @@ namespace Microsoft.MIDebugPackage
 
         private int MIDebugLog(uint nCmdLogOpt, IntPtr pvaIn, IntPtr pvaOut)
         {
+            ThreadHelper.ThrowIfNotOnUIThread("Microsoft.MIDebugPackage.MIDebugLog");
             int hr;
 
             if (IsQueryParameterList(pvaIn, pvaOut, nCmdLogOpt))
@@ -264,6 +275,10 @@ namespace Microsoft.MIDebugPackage
                 return hr;
 
             IVsParseCommandLine parseCommandLine = (IVsParseCommandLine)GetService(typeof(SVsParseCommandLine));
+            if (parseCommandLine == null)
+            {
+                throw new InvalidOperationException("Why is IVsParseCommandLine null?");
+            }
             hr = parseCommandLine.ParseCommandTail(arguments, iMaxParams: -1);
             if (ErrorHandler.Failed(hr))
                 return hr;
@@ -306,9 +321,14 @@ namespace Microsoft.MIDebugPackage
             return 0;
         }
 
-        private async void MIDebugExecAsync(string command)
+        private async Task MIDebugExecAsync(string command)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             var commandWindow = (IVsCommandWindow)GetService(typeof(SVsCommandWindow));
+            if (commandWindow == null)
+            {
+                throw new InvalidOperationException("Why is IVsCommandWindow null?");
+            }
             bool atBreak = false;
             var debugger = GetService(typeof(SVsShellDebugger)) as IVsDebugger;
             if (debugger != null)
@@ -363,19 +383,29 @@ namespace Microsoft.MIDebugPackage
 
         private void LaunchDebugTarget(string filePath, string options)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             IVsDebugger4 debugger = (IVsDebugger4)GetService(typeof(IVsDebugger));
-            VsDebugTargetInfo4[] debugTargets = new VsDebugTargetInfo4[1];
-            debugTargets[0].dlo = (uint)DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
-            debugTargets[0].bstrExe = filePath;
-            debugTargets[0].bstrOptions = options;
-            debugTargets[0].guidLaunchDebugEngine = Microsoft.MIDebugEngine.EngineConstants.EngineId;
-            VsDebugTargetProcessInfo[] processInfo = new VsDebugTargetProcessInfo[debugTargets.Length];
 
-            debugger.LaunchDebugTargets4(1, debugTargets, processInfo);
+            if (debugger != null)
+            {
+                VsDebugTargetInfo4[] debugTargets = new VsDebugTargetInfo4[1];
+                debugTargets[0].dlo = (uint)DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
+                debugTargets[0].bstrExe = filePath;
+                debugTargets[0].bstrOptions = options;
+                debugTargets[0].guidLaunchDebugEngine = Microsoft.MIDebugEngine.EngineConstants.EngineId;
+                VsDebugTargetProcessInfo[] processInfo = new VsDebugTargetProcessInfo[debugTargets.Length];
+
+                debugger.LaunchDebugTargets4(1, debugTargets, processInfo);
+            }
+            else
+            {
+                throw new InvalidOperationException("Why is IVsDebugger4 null?");
+            }
         }
 
         private void EnableLogging(bool sendToOutputWindow, string logFile)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             try
             {
                 MIDebugCommandDispatcher.EnableLogging(sendToOutputWindow, logFile);
@@ -383,7 +413,14 @@ namespace Microsoft.MIDebugPackage
             catch (Exception e)
             {
                 var commandWindow = (IVsCommandWindow)GetService(typeof(SVsCommandWindow));
-                commandWindow.Print(string.Format(CultureInfo.CurrentCulture, "Error: {0}\r\n", e.Message));
+                if (commandWindow != null)
+                {
+                    commandWindow.Print(string.Format(CultureInfo.CurrentCulture, "Error: {0}\r\n", e.Message));
+                }
+                else
+                {
+                    throw new InvalidOperationException("Why is IVsCommandWindow null?");
+                }
             }
         }
 

@@ -31,6 +31,7 @@ namespace Microsoft.SSHDebugPS
             DockerContainerTransportSettings settings;
             Connection remoteConnection;
 
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (!DockerConnection.TryConvertConnectionStringToSettings(name, out settings, out remoteConnection) || settings == null)
             {
                 string connectionString;
@@ -64,6 +65,7 @@ namespace Microsoft.SSHDebugPS
 
         public static SSHConnection GetSSHConnection(string name)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             ConnectionInfoStore store = new ConnectionInfoStore();
             ConnectionInfo connectionInfo = null;
 
@@ -78,23 +80,30 @@ namespace Microsoft.SSHDebugPS
             if (connectionInfo == null)
             {
                 IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
-                IConnectionManagerResult result;
-                if (string.IsNullOrWhiteSpace(name))
+                if (connectionManager != null)
                 {
-                    result = connectionManager.ShowDialog();
+                    IConnectionManagerResult result;
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        result = connectionManager.ShowDialog();
+                    }
+                    else
+                    {
+                        ParseSSHConnectionString(name, out string userName, out string hostName, out int port);
+
+                        result = connectionManager.ShowDialog(new PasswordConnectionInfo(hostName, port, Timeout.InfiniteTimeSpan, userName, new System.Security.SecureString()));
+                    }
+
+                    if ((result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
+                    {
+                        // Retrieve the newly added connection
+                        store.Load();
+                        connectionInfo = store.Connections.First(info => info.Id == result.StoredConnectionId);
+                    }
                 }
                 else
                 {
-                    ParseSSHConnectionString(name, out string userName, out string hostName, out int port);
-
-                    result = connectionManager.ShowDialog(new PasswordConnectionInfo(hostName, port, Timeout.InfiniteTimeSpan, userName, new System.Security.SecureString()));
-                }
-
-                if ((result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
-                {
-                    // Retrieve the newly added connection
-                    store.Load();
-                    connectionInfo = store.Connections.First(info => info.Id == result.StoredConnectionId);
+                    throw new InvalidOperationException("Why is IVsConnectionManager null?");
                 }
             }
 

@@ -51,7 +51,7 @@ namespace SSHDebugTests
                 "9 0 r /sbin/init";
 
             List<Process> r = PSOutputParser.Parse(input, new SystemInformation(username, architecture));
-            Assert.Equal(1, r.Count);
+            Assert.Single(r);
             Assert.Equal<uint>(9, r[0].Id);
             Assert.Equal("r", r[0].UserName);
             Assert.Equal("/sbin/init", r[0].CommandLine);
