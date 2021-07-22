@@ -26,6 +26,10 @@
     <MicrosoftVisualStudioDebuggerEnginePath>$(VSSDKRoot)VisualStudioIntegration\Common\Assemblies\v4.0\Microsoft.VisualStudio.Debugger.Engine.dll</MicrosoftVisualStudioDebuggerEnginePath>
   </PropertyGroup>
 
+  <ItemGroup Label="Compile Shared Interfaces">
+    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.DAP.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Update="Resource.Designer.cs">
       <DesignTime>True</DesignTime>
