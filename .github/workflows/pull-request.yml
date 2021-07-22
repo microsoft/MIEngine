@@ -159,7 +159,7 @@ jobs:
         ${{ github.workspace }}/tools/DownloadLldbMI.sh ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
 
     - run: |
-        dotnet test ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll --logger "trx;LogFileName=${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\results.trx"
+        dotnet test ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll --logger "trx;LogFileName=${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx"
 
     - name: 'Upload Test Results'
       uses: actions/upload-artifact@v2
