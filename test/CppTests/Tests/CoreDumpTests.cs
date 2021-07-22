@@ -51,7 +51,8 @@ namespace CppTests.Tests
         [Theory]
         [RequiresTestSettings]
         [SupportedPlatform(SupportedPlatform.Linux, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
-        // TODO: Re-enable for Gdb_Gnu
+        // TODO: https://github.com/microsoft/MIEngine/issues/1170
+        // - gdb_gnu
         [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void CoreDumpBasic(ITestSettings settings)
         {
@@ -68,7 +69,8 @@ namespace CppTests.Tests
         [Theory]
         [RequiresTestSettings]
         [SupportedPlatform(SupportedPlatform.Linux, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
-        // TODO: Re-enable for Gdb_Gnu
+        // TODO: https://github.com/microsoft/MIEngine/issues/1170
+        // - gdb_gnu
         [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void CoreDumpBasicMismatchedSourceAndSymbols(ITestSettings settings)
         {
@@ -88,7 +90,8 @@ namespace CppTests.Tests
         [Theory]
         [RequiresTestSettings]
         [SupportedPlatform(SupportedPlatform.Linux, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
-        // TODO: Re-enable for Gdb_Gnu
+        // TODO: https://github.com/microsoft/MIEngine/issues/1170
+        // - gdb_gnu
         [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void CoreDumpVerifyActions(ITestSettings settings)
         {
