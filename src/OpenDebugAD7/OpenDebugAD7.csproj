@@ -17,6 +17,12 @@
     <TargetFramework>net5.0</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
 
+    <!--
+      For non-Windows platforms, .NET Core depends on libicu for data about locales and international settings.
+      GDB does not support localization so neither does OpenDebugAD7 or MICore.
+    -->
+    <InvariantGlobalization Condition="!$([MSBuild]::IsOSPlatform('windows'))">true</InvariantGlobalization>
+
     <IsPublishable>true</IsPublishable>
 
     <!-- F5 OpenDebugAD7.exe if OpenDebugAD7 is the startup project. -->
