@@ -1,0 +1,58 @@
+name: CodeQL Analysis
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: windows-latest
+    steps:
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.301
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          queries: security-and-quality
+          languages: csharp
+
+      - name: Build solution
+        run: |
+          $pathToSolution = "src/MIDebugEngine.sln"
+          $buildConfiguration = "Debug"
+          $useSharedCompilation = "false"
+          $testProjects = "MICoreUnitTests/MICoreUnitTests.csproj", "JDbgUnitTests/JDbgUnitTests.csproj", "SSHDebugTests/SSHDebugUnitTests.csproj", "../test/CppTests/CppTests.csproj", "../test/DebugAdapterRunner/DebugAdapterRunner.csproj", "../test/DebuggerTesting/DebuggerTesting.csproj" # separate paths with comma as in: "test1", "test2"
+
+          dotnet nuget locals all --clear
+
+          # remove one or more test projects,
+          # so that CodeQL only analyzes the source code
+          dotnet sln $pathToSolution remove $testProjects
+
+          dotnet clean $pathToSolution `
+          --configuration $buildConfiguration
+
+          nuget restore $pathToSolution
+
+          msbuild $pathToSolution `
+          -property:Configuration=$buildConfiguration `
+          -property:UseSharedCompilation=$useSharedCompilation `
+          -target:rebuild
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
+
+# Built with ❤ by [Pipeline Foundation](https://pipeline.foundation)
