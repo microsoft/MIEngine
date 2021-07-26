@@ -20,8 +20,10 @@
     <!--
       For non-Windows platforms, .NET Core depends on libicu for data about locales and international settings.
       GDB does not support localization so neither does OpenDebugAD7 or MICore.
+
+      Condition: If we are building on linux, set invariant globalization. If we are publishing for linux (non-Windows and non-macOS), also set invariant globalization.
     -->
-    <InvariantGlobalization Condition="$([MSBuild]::IsOSPlatform('linux'))">true</InvariantGlobalization>
+    <InvariantGlobalization Condition="$([MSBuild]::IsOSPlatform('linux')) OR ('$(RuntimeIdentifier)' != '' AND !$(RuntimeIdentifier.StartsWith('win')) AND !$(RuntimeIdentifier.StartsWith('osx')))">true</InvariantGlobalization>
 
     <IsPublishable>true</IsPublishable>
 
