@@ -13,6 +13,7 @@ namespace Microsoft.SSHDebugPS
         public const int E_NOTIMPL = unchecked((int)0x80004001);
         public const int E_REMOTE_CONNECT_USER_CANCELED = unchecked((int)0x80040758);
         public const int E_FAIL = unchecked((int)0x80004005);
+        public const int E_PROCESS_DESTROYED = unchecked((int)0x80040070);
 
         public static void Check(int hr)
         {
