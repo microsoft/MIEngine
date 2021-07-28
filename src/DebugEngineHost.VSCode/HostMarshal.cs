@@ -145,7 +145,16 @@ namespace Microsoft.DebugEngineHost
         /// <returns>code context object</returns>
         public static IDebugCodeContext2 GetDebugCodeContextForIntPtr(IntPtr contextId)
         {
-            throw new NotImplementedException();
+            lock (s_codeContexts)
+            {
+                IDebugCodeContext2 codeContext;
+                if (!s_codeContexts.TryGet(contextId.ToInt32(), out codeContext))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(contextId));
+                }
+
+                return codeContext;
+            }
         }
 
         public static IDebugEventCallback2 GetThreadSafeEventCallback(IDebugEventCallback2 ad7Callback)

@@ -825,6 +825,7 @@ namespace OpenDebugAD7
                 SupportsDisassembleRequest = true,
                 SupportsValueFormattingOptions = true,
                 SupportsSteppingGranularity = true,
+                SupportsInstructionBreakpoints = m_engine is IDebugMemoryBytesDAP
             };
 
             responder.SetResponse(initializeResponse);
@@ -2572,9 +2573,25 @@ namespace OpenDebugAD7
             }
         }
 
-#endregion
+        protected override void HandleSetInstructionBreakpointsRequestAsync(IRequestResponder<SetInstructionBreakpointsArguments, SetInstructionBreakpointsResponse> responder)
+        {
+            foreach (var instructionBp in responder.Arguments.Breakpoints)
+            {
+                GetMemoryContext(instructionBp.InstructionReference, default, out IDebugMemoryContext2 memoryContext, out _);
 
-#region IDebugPortNotify2
+                IDebugPendingBreakpoint2 pendingBp;
+                AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(memoryContext);
+
+                m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp);
+                pendingBp.Bind();
+            }
+
+            responder.SetResponse(new SetInstructionBreakpointsResponse());
+        }
+
+        #endregion
+
+        #region IDebugPortNotify2
 
         int IDebugPortNotify2.AddProgramNode(IDebugProgramNode2 programNode)
         {
