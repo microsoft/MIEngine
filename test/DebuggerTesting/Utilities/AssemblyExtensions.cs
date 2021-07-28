@@ -19,7 +19,7 @@ namespace DebuggerTesting.Utilities
         {
             Parameter.ThrowIfNull(assembly, nameof(assembly));
 
-            return Uri.UnescapeDataString(new UriBuilder(assembly.Location).Path);
+            return assembly.Location;
         }
 
 #endif

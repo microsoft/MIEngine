@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using liblinux;
 using liblinux.Persistence;
@@ -18,6 +19,7 @@ namespace Microsoft.SSHDebugPS.SSH
     {
         internal static SSHConnection CreateSSHConnectionFromConnectionInfo(ConnectionInfo connectionInfo)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (connectionInfo != null)
             {
                 UnixSystem remoteSystem = new UnixSystem();
@@ -37,15 +39,22 @@ namespace Microsoft.SSHDebugPS.SSH
                     catch (RemoteAuthenticationException)
                     {
                         IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
-                        IConnectionManagerResult result = connectionManager.ShowDialog(StringResources.AuthenticationFailureHeader, StringResources.AuthenticationFailureDescription, connectionInfo);
-
-                        if ((result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
+                        if (connectionManager != null)
                         {
-                            connectionInfo = result.ConnectionInfo;
+                            IConnectionManagerResult result = connectionManager.ShowDialog(StringResources.AuthenticationFailureHeader, StringResources.AuthenticationFailureDescription, connectionInfo);
+
+                            if (result != null && (result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
+                            {
+                                connectionInfo = result.ConnectionInfo;
+                            }
+                            else
+                            {
+                                return null;
+                            }
                         }
                         else
                         {
-                            return null;
+                            throw new InvalidOperationException("Why is IVsConnectionManager null?");
                         }
                     }
                     catch (Exception ex)

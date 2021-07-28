@@ -54,7 +54,9 @@ namespace CppTests.Tests
 
         [Theory]
         [DependsOnTest(nameof(CompileSharedLibDebuggee))]
-        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        // TODO: https://github.com/microsoft/MIEngine/issues/1170
+        // - lldb
+        [UnsupportedDebugger(SupportedDebugger.VsDbg | SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         [RequiresTestSettings]
         public void SharedLibBasic(ITestSettings settings)
         {
@@ -66,7 +68,9 @@ namespace CppTests.Tests
         }
 
         [Theory]
-        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        // TODO: https://github.com/microsoft/MIEngine/issues/1170
+        // - lldb
+        [UnsupportedDebugger(SupportedDebugger.VsDbg | SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         [RequiresTestSettings]
         public void SharedLibMismatchSourceAndSymbols(ITestSettings settings)
         {

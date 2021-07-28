@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TestMachineConfiguration>
+  <TestConfigurations>
+    <TestConfiguration
+      Compiler="GppMingw64"
+      DebuggeeArchitecture="x64"
+      Debugger="GdbMingw64" />
+  </TestConfigurations>
+  <Compilers>
+    <Compiler
+      Name="GppMingw64"
+      Type="GPlusPlus"
+      Path="D:\a\_temp\msys\msys64\mingw64\bin\g++.exe"/>
+  </Compilers>
+  <Debuggers>
+    <Debugger
+      Name="GdbMingw64"
+      Type="Gdb_MinGW"
+      Path="D:\a\_temp\msys\msys64\mingw64\bin\gdb.exe"
+      AdapterPath="OpenDebugAD7.exe"
+      />
+  </Debuggers>
+</TestMachineConfiguration>

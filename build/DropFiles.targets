@@ -3,7 +3,7 @@
   <ItemGroup Condition="'$(SIGN_TYPE)' == 'real'">
     <FilesToSign Include="@(DropSignedFile)">
       <Authenticode>Microsoft400</Authenticode>
-      <StrongName>StrongName</StrongName>
+      <StrongName>StrongNameSHA2</StrongName>
     </FilesToSign>
   </ItemGroup>
 
