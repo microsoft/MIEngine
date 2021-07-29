@@ -7,8 +7,6 @@
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Desktop.Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{81DE2423-FB5E-4069-B3C5-4C13CE76DC0A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -19,37 +17,13 @@
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
-    <ShouldGenerateMonoSymbols>true</ShouldGenerateMonoSymbols>
-    <TargetFramework>net462</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Debug|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Desktop.Release|AnyCPU'">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Debug|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Lab.Release|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+
+  <ItemGroup Label="Compile Shared Interfaces">
+    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.DAP.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="HostResources.Designer.cs">
@@ -69,16 +43,15 @@
   <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
 
   <ItemGroup Label="NuGet Packages">
-    <!-- This will pull in the net45 newtonsoft.json, we want the portable-net45+wp80+win8+wpa81 version. Use this to get the install path.  -->
-    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_VSCode_Version)" GeneratePathProperty="true">
-      <IncludeAssets>none</IncludeAssets>
-      <ExcludeAssets>all</ExcludeAssets>
-      <PrivateAssets>none</PrivateAssets>
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>$(PkgNewtonsoft_Json)\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
+    <PackageReference Include="System.Runtime.Loader" Version="$(System_Runtime_Loader_Version)">
+      <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

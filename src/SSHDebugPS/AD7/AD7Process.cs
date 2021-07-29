@@ -44,6 +44,8 @@ namespace Microsoft.SSHDebugPS
             _flags = psProcess.Flags;
         }
 
+        public uint Id => _processId;
+
         public int Attach(IDebugEventCallback2 pCallback, Guid[] rgguidSpecificEngines, uint celtSpecificEngines, int[] rghrEngineAttach)
         {
             throw new NotImplementedException();

@@ -23,6 +23,7 @@ namespace Microsoft.SSHDebugPS.WSL
             using (var cancellationTokenSource = new CancellationTokenSource())
             {
                 Task<ProcessResult> task = LocalProcessAsyncRunner.ExecuteProcessAsync(WSLCommandLine.GetExecStartInfo(this.Name, commandText), cancellationTokenSource.Token);
+#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
                 if (!task.Wait(timeout))
                 {
                     cancellationTokenSource.Cancel();
@@ -30,6 +31,7 @@ namespace Microsoft.SSHDebugPS.WSL
                 }
 
                 ProcessResult result = task.Result;
+#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
                 commandOutput = string.Join("\n", result.StdOut);
                 errorMessage = string.Join("\n", result.StdErr);
                 return result.ExitCode;

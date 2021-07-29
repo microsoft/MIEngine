@@ -161,8 +161,7 @@ namespace OpenDebugAD7
             // Make sure the slashes go in the correct direction
             char directorySeparatorChar = Path.DirectorySeparatorChar;
             char wrongSlashChar = directorySeparatorChar == '\\' ? '/' : '\\';
-
-            if (program.Contains(wrongSlashChar))
+            if (program.Contains(wrongSlashChar, StringComparison.Ordinal))
             {
                 program = program.Replace(wrongSlashChar, directorySeparatorChar);
             }
@@ -239,7 +238,7 @@ namespace OpenDebugAD7
             else
             {
                 // If lldb and there is no miDebuggerPath, set it.
-                bool hasMiDebuggerPath = args.ContainsKey("miDebuggerPath");
+                bool hasMiDebuggerPath = args.ContainsKey("miDebuggerPath") && !string.IsNullOrEmpty(args["miDebuggerPath"].ToString());
                 if (miMode == "lldb" && !hasMiDebuggerPath)
                 {
                     args["miDebuggerPath"] = MILaunchOptions.GetLLDBMIPath();
@@ -354,9 +353,9 @@ namespace OpenDebugAD7
             return hr;
         }
 
-        #endregion
+#endregion
 
-        #region AD7EventHandlers helper methods
+#region AD7EventHandlers helper methods
 
         public void BeforeContinue()
         {
@@ -619,32 +618,46 @@ namespace OpenDebugAD7
             }
         }
 
-        private void StepInternal(int threadId, enum_STEPKIND stepKind, enum_STEPUNIT stepUnit, string errorMessage)
+        private void StepInternal(int threadId, enum_STEPKIND stepKind, SteppingGranularity granularity, string errorMessage)
         {
             // If we are already running ignore additional step requests
-            if (m_isStopped)
-            {
-                IDebugThread2 thread = null;
-                lock (m_threads)
-                {
-                    if (!m_threads.TryGetValue(threadId, out thread))
-                    {
-                        throw new AD7Exception(errorMessage);
-                    }
-                }
+            if (!m_isStopped)
+                return;
 
-                BeforeContinue();
-                ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
-                m_isStepping = true;
-                try
+            IDebugThread2 thread = null;
+            lock (m_threads)
+            {
+                if (!m_threads.TryGetValue(threadId, out thread))
                 {
-                    builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
+                    throw new AD7Exception(errorMessage);
                 }
-                catch (AD7Exception)
-                {
-                    m_isStopped = true;
-                    throw;
-                }
+            }
+
+            BeforeContinue();
+            ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
+            m_isStepping = true;
+
+            enum_STEPUNIT stepUnit = enum_STEPUNIT.STEP_STATEMENT;
+            switch (granularity)
+            {
+                case SteppingGranularity.Statement:
+                default:
+                    break;
+                case SteppingGranularity.Line:
+                    stepUnit = enum_STEPUNIT.STEP_LINE;
+                    break;
+                case SteppingGranularity.Instruction:
+                    stepUnit = enum_STEPUNIT.STEP_INSTRUCTION;
+                    break;
+            }
+            try
+            {
+                builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
+            }
+            catch (AD7Exception)
+            {
+                m_isStopped = true;
+                throw;
             }
         }
 
@@ -664,9 +677,9 @@ namespace OpenDebugAD7
             }
         }
 
-        #endregion
+#endregion
 
-        #region DebugAdapterBase
+#region DebugAdapterBase
 
         protected override void HandleInitializeRequestAsync(IRequestResponder<InitializeArguments, InitializeResponse> responder)
         {
@@ -811,6 +824,7 @@ namespace OpenDebugAD7
                 SupportsGotoTargetsRequest = true,
                 SupportsDisassembleRequest = true,
                 SupportsValueFormattingOptions = true,
+                SupportsSteppingGranularity = true,
             };
 
             responder.SetResponse(initializeResponse);
@@ -832,7 +846,7 @@ namespace OpenDebugAD7
             }
 
             // If program is still in the default state, raise error
-            if (program.EndsWith(">", StringComparison.Ordinal) && program.Contains('<'))
+            if (program.EndsWith(">", StringComparison.Ordinal) && program.Contains('<', StringComparison.Ordinal))
             {
                 responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "launch: launch.json must be configured. Change 'program' to the path to the executable file that you would like to debug."));
                 return;
@@ -1248,19 +1262,6 @@ namespace OpenDebugAD7
             responder.SetResponse(new ConfigurationDoneResponse());
         }
 
-        protected override void HandleNextRequestAsync(IRequestResponder<NextArguments> responder)
-        {
-            try
-            {
-                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_OVER, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_Next);
-                responder.SetResponse(new NextResponse());
-            }
-            catch (AD7Exception e)
-            {
-                responder.SetError(new ProtocolException(e.Message));
-            }
-        }
-
         protected override void HandleContinueRequestAsync(IRequestResponder<ContinueArguments, ContinueResponse> responder)
         {
             int threadId = responder.Arguments.ThreadId;
@@ -1302,12 +1303,25 @@ namespace OpenDebugAD7
 
         protected override void HandleStepInRequestAsync(IRequestResponder<StepInArguments> responder)
         {
-            StepInResponse response = new StepInResponse();
-
             try
             {
-                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_INTO, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_In);
-                responder.SetResponse(response);
+                var granularity = responder.Arguments.Granularity.GetValueOrDefault();
+                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_INTO, granularity, AD7Resources.Error_Scenario_Step_In);
+                responder.SetResponse(new StepInResponse());
+            }
+            catch (AD7Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+            }
+        }
+
+        protected override void HandleNextRequestAsync(IRequestResponder<NextArguments> responder)
+        {
+            try
+            {
+                var granularity = responder.Arguments.Granularity.GetValueOrDefault();
+                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_OVER, granularity, AD7Resources.Error_Scenario_Step_Next);
+                responder.SetResponse(new NextResponse());
             }
             catch (AD7Exception e)
             {
@@ -1319,7 +1333,8 @@ namespace OpenDebugAD7
         {
             try
             {
-                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_OUT, enum_STEPUNIT.STEP_STATEMENT, AD7Resources.Error_Scenario_Step_Out);
+                var granularity = responder.Arguments.Granularity.GetValueOrDefault();
+                StepInternal(responder.Arguments.ThreadId, enum_STEPKIND.STEP_OUT, granularity, AD7Resources.Error_Scenario_Step_Out);
                 responder.SetResponse(new StepOutResponse());
             }
             catch (AD7Exception e)
@@ -2557,9 +2572,9 @@ namespace OpenDebugAD7
             }
         }
 
-        #endregion
+#endregion
 
-        #region IDebugPortNotify2
+#region IDebugPortNotify2
 
         int IDebugPortNotify2.AddProgramNode(IDebugProgramNode2 programNode)
         {
@@ -2579,9 +2594,9 @@ namespace OpenDebugAD7
             return HRConstants.S_OK;
         }
 
-        #endregion
+#endregion
 
-        #region IDebugEventCallback2
+#region IDebugEventCallback2
 
         private readonly Dictionary<Guid, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2>> m_syncEventHandler = new Dictionary<Guid, Action<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2>>();
         private readonly Dictionary<Guid, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task>> m_asyncEventHandler = new Dictionary<Guid, Func<IDebugEngine2, IDebugProcess2, IDebugProgram2, IDebugThread2, IDebugEvent2, Task>>();
@@ -3058,7 +3073,7 @@ namespace OpenDebugAD7
             }
         }
 
-        #endregion
+#endregion
 
         private class DebugSettingsCallback : IDebugSettingsCallback110
         {

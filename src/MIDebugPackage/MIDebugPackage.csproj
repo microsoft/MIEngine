@@ -1,4 +1,5 @@
 ﻿<Project>
+  <!-- Need to explicitly import Sdk.props and Sdk.targets for VSSDK CreatePkgDef to work. -->
   <Import Project="..\..\build\miengine.settings.targets" />
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
 
@@ -8,7 +9,8 @@
     <AssemblyName>Microsoft.MIDebugPackage</AssemblyName>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
 
-    <EnableDefaultEmbeddedResourceItems Condition="'$(IsXPlat)'=='true'">false</EnableDefaultEmbeddedResourceItems>
+    
+    <EnableDefaultEmbeddedResourceItems Condition="'$(MSBuildRuntimeType)' == 'Core'">false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,6 +37,8 @@
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="17.0.0-previews-1-31410-258" />
+
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.16-alpha" />
 
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)">
       <IncludeAssets>compile</IncludeAssets>
@@ -137,19 +141,17 @@
     <Copy DestinationFiles="@(LocalizedFileToDrop->'$(LocalizedDropDir)%(LCID)\%(filename)%(extension)')" SourceFiles="@(LocalizedFileToDrop)" ContinueOnError="true" />
   </Target>
 
-  <ItemGroup Label="MIDebugEngine for both VS and XPlat">
+  <ItemGroup Label="Drop Files">
     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MICore.pdb" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pdb" />
-  </ItemGroup>
-  <ItemGroup Label="MIDebugEngine for VS" Condition="'$(IsXPlat)' == 'false'">
     <DropUnsignedFile Include="Install.cmd" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugEngine.pkgdef" />
     <DropSignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" />
-     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" />
+    <DropUnsignedFile Include="$(OutDir)\Microsoft.MIDebugPackage.pkgdef" Condition="'$(MSBuildRuntimeType)' != 'Core'" />
+     <DropSignedFile Include="$(OutDir)\Microsoft.MICore.XmlSerializers.dll" Condition="'$(MSBuildRuntimeType)' != 'Core'" />
     <!-- this is the version for Visual Studio -->
     <DropSignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.DebugEngineHost.pdb" />
@@ -167,13 +169,6 @@
     <DropUnsignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.pkgdef" />
     <DropUnsignedFile Include="$(OutDir)\OpenFolderSchema.json" />
   </ItemGroup>
-  <ItemGroup Label="Scripts for XPlat" Condition="'$(IsXPlat)' == 'true'">
-    <DropUnsignedFile Include="$(OutDir)\osxlaunchhelper.scpt" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(IsXPlat)' == 'false' AND '$(Lab)' == 'false'">
-    <!-- Include file for local VS development builds. For Non-VS Builds, it will be dropped by MakePIAPortable project -->
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.VisualStudio.Debugger.Interop.15.0.dll" />
-  </ItemGroup>
 
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\MICore\MICore.csproj">
@@ -190,8 +185,6 @@
       <Private>false</Private>
       <ExcludeAssets>all</ExcludeAssets>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(IsXPlat)' == 'false'">
     <ProjectReference Include="..\SSHDebugPS\SSHDebugPS.csproj">
       <Project>{15bcbef4-1c2b-412b-925b-34a049097e62}</Project>
       <Name>SSHDebugPS</Name>
@@ -222,26 +215,10 @@
       <Project>{78728205-db3e-4b7b-a7d2-5cbe38e9c607}</Project>
       <Name>JDbg</Name>
     </ProjectReference>
-    <ProjectReference Include="..\OpenDebugAD7\OpenDebugAD7.csproj">
-      <Project>{d582c0b6-032f-4686-b01d-eb55694059cb}</Project>
-      <Name>OpenDebugAD7</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <VsixSubPath>vscode</VsixSubPath>
-      <Private>false</Private>
-      <ExcludeAssets>all</ExcludeAssets>
-    </ProjectReference>
-    <ProjectReference Include="..\DebugEngineHost.VSCode\DebugEngineHost.VSCode.csproj">
-      <Project>{81de2423-fb5e-4069-b3c5-4c13ce76dc0a}</Project>
-      <Name>DebugEngineHost.VSCode</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <VsixSubPath>vscode</VsixSubPath>
-      <Private>false</Private>
-      <ExcludeAssets>all</ExcludeAssets>
-    </ProjectReference>
   </ItemGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets') AND '$(IsXPlat)' == 'false'" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets') AND '$(MSBuildRuntimeType)' != 'Core'" />
 
   <Import Project="..\..\build\miengine.targets" />
   <!--

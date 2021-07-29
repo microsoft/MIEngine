@@ -1,32 +1,30 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.SSHDebugPS;
 using System.Collections.Generic;
 using System.Linq;
+using Xunit;
 
 namespace SSHDebugTests
 {
-    [TestClass]
     public class LineBufferTests
     {
-        [TestMethod]
+        [Fact]
         public void LineBuffer_FullLine()
         {
             var lineBuffer = new LineBuffer();
             Verify(lineBuffer, "hello\n", new string[] { "hello" });
         }
 
-        [TestMethod]
+        [Fact]
         public void LineBuffer_FullLineWithCR()
         {
             var lineBuffer = new LineBuffer();
             Verify(lineBuffer, "hello\r\n", new string[] { "hello" });
         }
 
-        [TestMethod]
+        [Fact]
         public void LineBuffer_TwoParts()
         {
             var lineBuffer = new LineBuffer();
@@ -34,14 +32,14 @@ namespace SSHDebugTests
             Verify(lineBuffer, "\n", new string[] { "hello" });
         }
 
-        [TestMethod]
+        [Fact]
         public void LineBuffer_MultiLine()
         {
             var lineBuffer = new LineBuffer();
             Verify(lineBuffer, "hello\nworld\n!\n", new string[] { "hello", "world", "!" });
         }
 
-        [TestMethod]
+        [Fact]
         public void LineBuffer_SplitLine1()
         {
             var lineBuffer = new LineBuffer();
@@ -49,7 +47,7 @@ namespace SSHDebugTests
             Verify(lineBuffer, "comes now\n", new string[] { "more textcomes now" });
         }
 
-        [TestMethod]
+        [Fact]
         public void LineBuffer_SplitLine2()
         {
             var lineBuffer = new LineBuffer();
@@ -57,7 +55,7 @@ namespace SSHDebugTests
             Verify(lineBuffer, "comes now\n", new string[] { "more textcomes now" });
         }
 
-        [TestMethod]
+        [Fact]
         public void LineBuffer_EmptyLine()
         {
             var lineBuffer = new LineBuffer();
@@ -65,7 +63,7 @@ namespace SSHDebugTests
             Verify(lineBuffer, "\n\nworld\n", new string[] { "hello", "", "world" });
         }
 
-        [TestMethod]
+        [Fact]
         public void LineBuffer_EmptyLineCR()
         {
             var lineBuffer = new LineBuffer();
@@ -73,7 +71,7 @@ namespace SSHDebugTests
             Verify(lineBuffer, "\r\n\nworld\r\n", new string[] { "hello", "", "world" });
         }
 
-        [TestMethod]
+        [Fact]
         public void LineBuffer_CharByChar()
         {
             var lineBuffer = new LineBuffer();
@@ -91,11 +89,11 @@ namespace SSHDebugTests
             lineBuffer.ProcessText(textToAdd, out result);
             string[] r = result.ToArray();
 
-            Assert.AreEqual<int>(expectedOutput.Length, r.Length);
+            Assert.Equal<int>(expectedOutput.Length, r.Length);
 
             for (int i = 0; i < expectedOutput.Length; i++)
             {
-                Assert.AreEqual<string>(expectedOutput[i], r[i]);
+                Assert.Equal(expectedOutput[i], r[i]);
             }
         }
     }

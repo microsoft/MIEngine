@@ -1,0 +1,45 @@
+parameters:
+  Configuration: 'Lab.Release'
+  RuntimeID: 'win-x64'
+  SignedBinariesFolder: ''
+
+steps:
+- script: |
+    dotnet publish $(Build.SourcesDirectory)\src\OpenDebugAD7\OpenDebugAD7.csproj -c ${{ parameters.Configuration }} -r ${{ parameters.RuntimeID }} --self-contained -o $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin
+    copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.dll "$(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+    copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\Microsoft.DebugEngineHost.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+    copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MIDebugEngine.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+    copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MICore.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+  displayName: "Publish OpenDebugAD7 ${{ parameters.RuntimeID }}"
+
+# Windows Steps for copying over OpenDebugAD7.exe, WindowsDebugLauncher.exe, and verify the windows binaries.
+- ${{ if startsWith(parameters.RuntimeID, 'win') }}:
+  - script: |
+      copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.exe $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+      copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\WindowsDebugLauncher.exe $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+    displayName: "Copy OpenDebugAD7.exe and WindowsDebugLauncher.exe"
+
+  - template: ../tasks/SignVerify.yml
+    parameters:
+      TargetFolders: $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+      ExcludeSNVerify: true # Ignore CrossGen'ed .NET binaries
+
+# macOS Steps since we need to harden and sign the binary.
+- ${{ if startsWith(parameters.RuntimeID, 'osx-') }}:
+  - template: ../tasks/PublishPipelineArtifact.yml
+    parameters:
+      displayName: 'Publish Unsigned ${{ parameters.RuntimeID }}'
+      path: '$(Build.StagingDirectory)\${{ parameters.RuntimeID }}'
+      artifactName: 'unsigned_${{ parameters.RuntimeID }}_binaries'  
+
+# Publishing for non-macOS
+- ${{ if not(startsWith(parameters.RuntimeID, 'osx-')) }}:
+  - powershell: |
+      Compress-Archive -Path $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters -DestinationPath $(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip
+    displayName: "Create ${{ parameters.RuntimeID}}.zip"  
+
+  - template: ../tasks/PublishPipelineArtifact.yml
+    parameters:
+      displayName: 'Publish ${{ parameters.RuntimeID }}'
+      path: '$(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip'
+      artifactName: '${{ parameters.RuntimeID }}_zip'
