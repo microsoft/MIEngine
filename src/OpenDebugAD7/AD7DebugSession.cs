@@ -50,6 +50,7 @@ namespace OpenDebugAD7
         private int m_nextContextId = 1;
 
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
+        private Dictionary<string, IDebugPendingBreakpoint2> m_instructionBreakpoints;
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
 
         private IDebugProgram2 m_program;
@@ -119,6 +120,7 @@ namespace OpenDebugAD7
             m_frameHandles = new HandleCollection<IDebugStackFrame2>();
             m_breakpoints = new Dictionary<string, Dictionary<int, IDebugPendingBreakpoint2>>();
             m_functionBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
+            m_instructionBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
             m_variableManager = new VariableManager();
         }
 
@@ -413,11 +415,12 @@ namespace OpenDebugAD7
                 Protocol.SendEvent(new OpenDebugStoppedEvent()
                 {
                     Reason = reason,
+                    Text = text,
+                    ThreadId = thread.Id(),
+                    // Additional Breakpoint Information for Testing/Logging
                     Source = textPosition.Source,
                     Line = textPosition.Line,
                     Column = textPosition.Column,
-                    Text = text,
-                    ThreadId = thread.Id()
                 });
             });
 
@@ -2575,18 +2578,109 @@ namespace OpenDebugAD7
 
         protected override void HandleSetInstructionBreakpointsRequestAsync(IRequestResponder<SetInstructionBreakpointsArguments, SetInstructionBreakpointsResponse> responder)
         {
-            foreach (var instructionBp in responder.Arguments.Breakpoints)
+            if (responder.Arguments.Breakpoints == null)
             {
-                GetMemoryContext(instructionBp.InstructionReference, default, out IDebugMemoryContext2 memoryContext, out _);
-
-                IDebugPendingBreakpoint2 pendingBp;
-                AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(memoryContext);
-
-                m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp);
-                pendingBp.Bind();
+                responder.SetError(new ProtocolException("HandleSetInstructionBreakpointsRequest failed: Missing 'breakpoints'."));
+                return;
             }
 
-            responder.SetResponse(new SetInstructionBreakpointsResponse());
+            SetInstructionBreakpointsResponse response = new SetInstructionBreakpointsResponse();
+
+            List<InstructionBreakpoint> breakpoints = responder.Arguments.Breakpoints;
+            Dictionary<string, IDebugPendingBreakpoint2> newBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
+
+            foreach (KeyValuePair<string, IDebugPendingBreakpoint2> b in m_instructionBreakpoints)
+{
+                if (responder.Arguments.Breakpoints.Find((p) => p.InstructionReference == b.Key) != null)
+                {
+                    newBreakpoints[b.Key] = b.Value;    // breakpoint still in new list
+                }
+                else
+                {
+                    b.Value.Delete();   // not in new list so delete it
+                }
+            }
+
+            foreach (var instructionBp in responder.Arguments.Breakpoints)
+            {
+                if (GetMemoryContext(instructionBp.InstructionReference, instructionBp.Offset, out IDebugMemoryContext2 memoryContext, out _) == HRConstants.E_NOTIMPL)
+                {
+                    responder.SetError(new ProtocolException("Debug Engine does not support InstructionBreakpoints."));
+                    return;
+                }
+
+                if (m_instructionBreakpoints.ContainsKey(instructionBp.InstructionReference))
+                {
+                    IDebugBreakpointRequest2 breakpointRequest;
+                    if (m_instructionBreakpoints[instructionBp.InstructionReference].GetBreakpointRequest(out breakpointRequest) == 0 &&
+                                breakpointRequest is AD7BreakPointRequest ad7BPRequest)
+                    {
+                        // Check to see if this breakpoint has a condition that has changed.
+                        if (!StringComparer.Ordinal.Equals(ad7BPRequest.Condition, instructionBp.Condition))
+                        {
+                            // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
+                            var toRemove = m_instructionBreakpoints[instructionBp.InstructionReference];
+                            toRemove.Delete();
+                            m_instructionBreakpoints.Remove(instructionBp.InstructionReference);
+                        }
+                        else
+                        {
+                            if (ad7BPRequest.BindResult != null)
+                            {
+                                response.Breakpoints.Add(ad7BPRequest.BindResult);
+                            }
+                            else
+                            {
+                                response.Breakpoints.Add(new Breakpoint()
+                                {
+                                    Id = (int)ad7BPRequest.Id,
+                                    Verified = true,
+                                    Line = 0
+                                });
+
+                            }
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    IDebugPendingBreakpoint2 pendingBp;
+                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(memoryContext);
+                    int hr = HRConstants.E_FAIL;
+
+                    if (m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp) == HRConstants.S_OK && pendingBp != null)
+                    {
+                        hr = pendingBp.Bind();
+                    }
+
+                    m_instructionBreakpoints.Add(instructionBp.InstructionReference, pendingBp);
+
+                    if (hr == HRConstants.S_OK)
+                    {
+                        newBreakpoints[instructionBp.InstructionReference] = pendingBp;
+                        response.Breakpoints.Add(new Breakpoint()
+                        {
+                            Id = (int)pBPRequest.Id,
+                            Verified = true,
+                            Line = 0
+                        }); // success
+                    }
+                    else
+                    {
+                        response.Breakpoints.Add(new Breakpoint()
+                        {
+                            Id = (int)pBPRequest.Id,
+                            Verified = false,
+                            Line = 0
+                        }); // couldn't create and/or bind
+                    }
+                }
+            }
+
+            m_instructionBreakpoints = newBreakpoints;
+
+            responder.SetResponse(response);
         }
 
         #endregion
@@ -2710,7 +2804,38 @@ namespace OpenDebugAD7
 
         public void HandleIDebugBreakpointEvent2(IDebugEngine2 pEngine, IDebugProcess2 pProcess, IDebugProgram2 pProgram, IDebugThread2 pThread, IDebugEvent2 pEvent)
         {
-            IList<Tracepoint> tracepoints = GetTracepoints(pEvent as IDebugBreakpointEvent2);
+            StoppedEvent.ReasonValue reason = StoppedEvent.ReasonValue.Breakpoint;
+
+            IDebugBreakpointEvent2 breakpointEvent = pEvent as IDebugBreakpointEvent2;
+            if (breakpointEvent != null)
+            {
+                if (breakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 enumBreakpoints) == HRConstants.S_OK)
+                {
+                    IDebugBoundBreakpoint2[] boundBp = new IDebugBoundBreakpoint2[1];
+                    uint fetched = 0;
+
+                    while (enumBreakpoints.Next(1, boundBp, ref fetched) == HRConstants.S_OK)
+                    {
+
+                        if (boundBp[0].GetPendingBreakpoint(out IDebugPendingBreakpoint2 pendingBreakpoint) == HRConstants.S_OK)
+                        {
+                            if (pendingBreakpoint.GetBreakpointRequest(out IDebugBreakpointRequest2 breakpointRequest) == HRConstants.S_OK)
+                            {
+                                AD7BreakPointRequest request = breakpointRequest as AD7BreakPointRequest;
+
+                                if (breakpointRequest != null && request.MemoryContext != null)
+                                {
+                                    reason = StoppedEvent.ReasonValue.InstructionBreakpoint;
+                                    break;
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            IList<Tracepoint> tracepoints = GetTracepoints(breakpointEvent);
             if (tracepoints.Any())
             {
                 ThreadPool.QueueUserWorkItem((o) =>
@@ -2741,13 +2866,13 @@ namespace OpenDebugAD7
                     }
                     else
                     {
-                        FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+                        FireStoppedEvent(pThread, reason);
                     }
                 });
             }
             else
             {
-                FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Breakpoint);
+                FireStoppedEvent(pThread, reason);
             }
         }
 
