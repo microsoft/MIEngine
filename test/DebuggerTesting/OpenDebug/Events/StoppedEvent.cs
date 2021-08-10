@@ -16,7 +16,8 @@ namespace DebuggerTesting.OpenDebug.Events
         Breakpoint,
         Pause,
         Exception,
-        Entry
+        Entry,
+        InstructionBreakpoint
     }
 
     #region StoppedEventValue
@@ -63,6 +64,18 @@ namespace DebuggerTesting.OpenDebug.Events
         private bool verifyLineRange;
         private int startLine;
         private int endLine;
+        private ulong address;
+
+        public StoppedEvent(ulong address)
+            : base("stopped")
+        {
+
+            this.address = address;
+
+            this.ExpectedResponse.body.reason = FromReason(StoppedReason.InstructionBreakpoint);
+
+            this.verifyLineRange = false;
+        }
 
         public StoppedEvent(StoppedReason? reason = null, string fileName = null, int? lineNumber = null, string text = null)
             : base("stopped")
@@ -106,6 +119,12 @@ namespace DebuggerTesting.OpenDebug.Events
                 return null;
 
             Parameter.ThrowIfIsInvalid(reason.Value, StoppedReason.Unknown, nameof(reason));
+
+            if (reason == StoppedReason.InstructionBreakpoint)
+            {
+                return "instruction breakpoint";
+            }
+
             return Enum.GetName(typeof(StoppedReason), reason.Value).ToLowerInvariant();
         }
 
