@@ -12,16 +12,14 @@
 		// GitHub specific
 		"eamodio.gitlens",
 		"cschleiden.vscode-github-actions",
-		"redhat.vscode-yaml",
+		"ms-azure-devops.azure-pipelines",
 		"bierner.markdown-preview-github-styles",
 		"ban.spellright",
 		// .NET specific
 		"ms-dotnettools.csharp",
 		"VisualStudioExptTeam.vscodeintellicode",
 		"ms-vscode.powershell",
-		"jmrog.vscode-nuget-package-manager",
-		// CPP specific
-    		"ms-vscode.cpptools"
+		"jmrog.vscode-nuget-package-manager"
 	],
 	"postCreateCommand": "",
   	"build": {
