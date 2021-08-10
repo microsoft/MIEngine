@@ -75,20 +75,6 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
-        public static IDebugCodeContext2 GetCodeContextForIntPtr(IntPtr codeContextId)
-        {
-            lock (s_codeContexts)
-            {
-                IDebugCodeContext2 codeContext;
-                if (!s_codeContexts.TryGet(codeContextId.ToInt32(), out codeContext))
-                {
-                    throw new ArgumentOutOfRangeException(nameof(codeContextId));
-                }
-
-                return codeContext;
-            }
-        }
-
         public static IDebugDocumentPosition2 GetDocumentPositionForIntPtr(IntPtr documentPositionId)
         {
             lock (s_documentPositions)

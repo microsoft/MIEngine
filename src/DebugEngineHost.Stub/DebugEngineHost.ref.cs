@@ -348,6 +348,16 @@ public sealed class HostLogger
             throw new NotImplementedException();
         }
 
+
+        /// <summary>
+        /// In VS, calls Marshal.ReleaseCodeContextId on IDebugCodeContext2 to derefcount when we are done with object.
+        /// </summary>
+        /// <param name="codeContextId">In VS, the IDebugCodeContext2</param>
+        public static void ReleaseCodeContextId(IntPtr codeContextId)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Obtains an event callback interface that can be used to send events on any threads
         /// </summary>
