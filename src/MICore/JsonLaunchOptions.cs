@@ -97,6 +97,12 @@ namespace MICore.Json.LaunchOptions
         public List<SetupCommand> SetupCommands { get; protected set; }
 
         /// <summary>
+        /// One or more commands to execute in order to setup underlying debugger after debugger has been attached. i.e. flashing and resetting the board
+        /// </summary>
+        [JsonProperty("postRemoteConnectCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<SetupCommand> PostRemoteConnectCommands { get; protected set; }
+
+        /// <summary>
         /// Explicitly control whether hardware breakpoints are used. If an optional limit is provided, additionally restrict the number of hardware breakpoints for remote targets. Example: "hardwareBreakpoints": { "require": true, "limit": 5 }.
         /// </summary>
         [JsonProperty("hardwareBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -360,6 +366,7 @@ namespace MICore.Json.LaunchOptions
         {
             this.Args = new List<string>();
             this.SetupCommands = new List<SetupCommand>();
+            this.PostRemoteConnectCommands = new List<SetupCommand>();
             this.CustomLaunchSetupCommands = new List<SetupCommand>();
             this.Environment = new List<Environment>();
             this.SourceFileMap = new Dictionary<string, object>();
@@ -372,6 +379,7 @@ namespace MICore.Json.LaunchOptions
             string targetArchitecture = null,
             string cwd = null,
             List<SetupCommand> setupCommands = null,
+            List<SetupCommand> postRemoteConnectCommands = null,
             List<SetupCommand> customLaunchSetupCommands = null,
             LaunchCompleteCommand? launchCompleteCommand = null,
             string visualizerFile = null,
@@ -402,6 +410,7 @@ namespace MICore.Json.LaunchOptions
             this.TargetArchitecture = targetArchitecture;
             this.Cwd = cwd;
             this.SetupCommands = setupCommands;
+            this.PostRemoteConnectCommands = postRemoteConnectCommands;
             this.CustomLaunchSetupCommands = customLaunchSetupCommands;
             this.LaunchCompleteCommand = launchCompleteCommand;
             this.VisualizerFile = visualizerFile;

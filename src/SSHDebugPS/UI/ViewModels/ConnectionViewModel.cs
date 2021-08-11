@@ -3,6 +3,7 @@
 
 using liblinux;
 using Microsoft.SSHDebugPS.SSH;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS.UI
 {
@@ -43,6 +44,7 @@ namespace Microsoft.SSHDebugPS.UI
         private SSHConnection sshConnection;
         protected IConnection GetConnection()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (this.sshConnection == null)
             {
                 if (this.connectionInfo != null)
@@ -63,7 +65,14 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        public IConnection Connection { get => GetConnection(); }
+        public IConnection Connection
+        {
+            get
+            {
+                ThreadHelper.ThrowIfNotOnUIThread();
+                return GetConnection();
+            }
+        }
 
         #endregion
     }

@@ -28,6 +28,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
 
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.16-alpha" />
+
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
 

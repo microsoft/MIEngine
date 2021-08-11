@@ -14,6 +14,7 @@ using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
 using System.Globalization;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS.UI
 {
@@ -23,6 +24,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         public ContainerPickerViewModel(bool supportSSHConnections)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             SupportSSHConnections = supportSSHConnections;
             InitializeConnections();
             ContainerInstances = new ObservableCollection<IContainerViewModel>();
@@ -93,6 +95,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         internal void RefreshContainersList()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             IsRefreshEnabled = false;
 
             // Clear everything before retreiving the container list
@@ -107,7 +110,9 @@ namespace Microsoft.SSHDebugPS.UI
             // Render = 7
             // Loaded = 6  - Operations are processed when layout and render has finished but just before items at input priority are serviced. 
             // https://docs.microsoft.com/en-us/dotnet/api/system.windows.threading.dispatcherpriority
-            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Input, (Action)(() => { RefreshContainersListInternal(); }));
+#pragma warning disable VSTHRD001 // Avoid legacy thread switching APIs
+            _ = Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Input, (Action)(() => { RefreshContainersListInternal(); }));
+#pragma warning restore VSTHRD001 // Avoid legacy thread switching APIs
         }
 
         private bool ComputeContainerConnectionString()
@@ -261,6 +266,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         private static void AddSSHConnection(object parameter)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (parameter is ContainerPickerViewModel vm && vm.AddSSHConnectionCommand.CanExecute(parameter))
             {
                 SSHConnection connection = ConnectionManager.GetSSHConnection(string.Empty) as SSHConnection;
@@ -279,6 +285,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         private bool IsLibLinuxAvailable()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             try
             {
                 return SSHPortSupplier.IsLibLinuxAvailable();
@@ -324,6 +331,7 @@ namespace Microsoft.SSHDebugPS.UI
 
         private void ContainerPickerViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (string.Equals(e.PropertyName, nameof(SelectedConnection), StringComparison.Ordinal))
             {
                 RefreshContainersList();

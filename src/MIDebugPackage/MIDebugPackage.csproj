@@ -38,6 +38,8 @@
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="17.0.0-previews-1-31410-258" />
 
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.16-alpha" />
+
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)">
       <IncludeAssets>compile</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
