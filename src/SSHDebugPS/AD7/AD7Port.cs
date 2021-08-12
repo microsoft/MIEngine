@@ -66,25 +66,29 @@ namespace Microsoft.SSHDebugPS
 
         public int EnumProcesses(out IEnumDebugProcesses2 processEnum)
         {
-            IEnumDebugProcesses2 result = null;
-            var connection = GetConnection();
+            IDebugProcess2[] processes = EnumProcessesInternal();
+            processEnum = new AD7ProcessEnum(processes);
 
+            return HR.S_OK;
+        }
+
+        private AD7Process[] EnumProcessesInternal()
+        {
+            var connection = GetConnection();
             if (connection == null)
             {
                 // Don't return a failure to prevent vsdebug.dll from showing an error message
-                processEnum = new AD7ProcessEnum(Array.Empty<IDebugProcess2>());
-                return HR.S_OK;
+                return Array.Empty<AD7Process>();
             }
 
+            AD7Process[] result = null;
             VS.VSOperationWaiter.Wait(StringResources.WaitingOp_ExecutingPS, throwOnCancel: true, action: (cancellationToken) =>
             {
                 List<Process> processList = connection.ListProcesses();
-                IDebugProcess2[] processes = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
-                result = new AD7ProcessEnum(processes);
+                result = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
             });
 
-            processEnum = result;
-            return HR.S_OK;
+            return result;
         }
 
         public int GetPortId(out Guid guidPort)
@@ -110,9 +114,27 @@ namespace Microsoft.SSHDebugPS
             return HR.S_OK;
         }
 
-        public int GetProcess(AD_PROCESS_ID ProcessId, out IDebugProcess2 ppProcess)
+        public int GetProcess(AD_PROCESS_ID ad7ProcessId, out IDebugProcess2 ad7Processs)
         {
-            throw new NotImplementedException();
+            // This method is called if a request is made to attach to a process using LaunchDebugTargets. It is
+            // not used by the attach to process dialog.
+
+            if (ad7ProcessId.ProcessIdType != (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM)
+            {
+                throw new NotImplementedException();
+            }
+            uint processId = ad7ProcessId.dwProcessId;
+
+            AD7Process[] processes = EnumProcessesInternal();
+            AD7Process process = processes.FirstOrDefault((x) => x.Id == processId);
+            if (process == null)
+            {
+                ad7Processs = null;
+                return HR.E_PROCESS_DESTROYED;
+            }
+
+            ad7Processs = process;
+            return HR.S_OK;
         }
 
         void IDebugUnixShellPort.ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)

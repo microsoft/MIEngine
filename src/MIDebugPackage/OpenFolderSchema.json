@@ -120,6 +120,10 @@
                   "$ref": "#/definitions/cpp_schema/definitions/launchSetupCommands"
                 }
               },
+              "postRemoteConnectCommands": {
+                "type": "array",
+                "description": "One or more commands to execute after the connection has been made, in order to set up the remote connection."
+              },
               "customLaunchSetupCommands": {
                 "type": "array",
                 "description": "If provided, this replaces the default commands used to launch a target with some other commands. \nFor example, this can be \"-target-attach\" in order to attach to a target process. \nAn empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. \nExample: \"customLaunchSetupCommands\": [ { \"text\": \"target-run\", \"description\": \"run target\", \"ignoreFailures\": false }].",
