@@ -227,15 +227,6 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set next statement is not supported by the current debugger..
-        /// </summary>
-        internal static string Error_NotImplementedSetNextStatement {
-            get {
-                return ResourceManager.GetString("Error_NotImplementedSetNextStatement", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0}: property &apos;{1}&apos; is invalid..
         /// </summary>
         internal static string Error_PropertyInvalid {
@@ -403,6 +394,17 @@ namespace OpenDebugAD7 {
         internal static string Error_UnableToSetBreakpoint {
             get {
                 return ResourceManager.GetString("Error_UnableToSetBreakpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error setting next statement. {0}.
+        /// </summary>
+        internal static string Error_UnableToSetNextStatement
+        {
+            get
+            {
+                return ResourceManager.GetString("Error_UnableToSetNextStatement", resourceCulture);
             }
         }
         

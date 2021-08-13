@@ -1352,7 +1352,37 @@ namespace OpenDebugAD7
 
         protected override void HandleGotoRequestAsync(IRequestResponder<GotoArguments> responder)
         {
-            responder.SetError(new ProtocolException(AD7Resources.Error_NotImplementedSetNextStatement));
+            var response = new GotoResponse();
+            if (!m_isStopped)
+            {
+                responder.SetResponse(response);
+                return;
+            }
+
+            var builder = new ErrorBuilder(() => AD7Resources.Error_UnableToSetNextStatement);
+            IDebugThread2 thread = null;
+            try
+            {
+                if (m_gotoCodeContexts.TryGetValue(responder.Arguments.TargetId, out IDebugCodeContext2 gotoTarget))
+                {
+                    lock (m_threads)
+                    {
+                        if (!m_threads.TryGetValue(responder.Arguments.ThreadId, out thread))
+                            throw new AD7Exception("Unknown thread id: " + responder.Arguments.ThreadId.ToString(CultureInfo.InvariantCulture));
+                    }
+                    //BeforeContinue();
+                    builder.CheckHR(thread.SetNextStatement(null, gotoTarget));
+                }
+            }
+            catch (AD7Exception e)
+            {
+                m_isStopped = true;
+                responder.SetError(new ProtocolException(e.Message));
+                return;
+            }
+
+            responder.SetResponse(response);
+            FireStoppedEvent(thread, StoppedEvent.ReasonValue.Goto);
         }
 
         protected override void HandleGotoTargetsRequestAsync(IRequestResponder<GotoTargetsArguments, GotoTargetsResponse> responder)
@@ -1362,6 +1392,7 @@ namespace OpenDebugAD7
             var source = responder.Arguments.Source;
 
             // Virtual documents don't have paths
+            // TODO: handle this for disassembly debugging
             if (source.Path == null)
             {
                 responder.SetResponse(response);
@@ -1384,10 +1415,8 @@ namespace OpenDebugAD7
                     while (codeContextsEnum.Next(1, codeContexts, ref nProps) == HRConstants.S_OK)
                     {
                         var codeContext = codeContexts[0];
-
                         string contextName;
                         codeContext.GetName(out contextName);
-
                         line = responder.Arguments.Line;
                         IDebugDocumentContext2 documentContext;
                         if (codeContext.GetDocumentContext(out documentContext) == HRConstants.S_OK)

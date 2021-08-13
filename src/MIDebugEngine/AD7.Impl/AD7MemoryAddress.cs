@@ -198,6 +198,10 @@ namespace Microsoft.MIDebugEngine
                         pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION;
                     }
                 }
+                if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTIONOFFSET) != 0)
+                {
+                    // TODO:
+                }
 
                 return Constants.S_OK;
             }
