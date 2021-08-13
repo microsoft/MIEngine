@@ -74,7 +74,6 @@
   <ItemGroup Label="Drop Files">
     <DropSignedFile Include="$(OutputPath)\OpenDebugAD7.dll" />
     <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.pdb" />
-    <DropSignedFile Condition="$([MSBuild]::IsOSPlatform('windows')) AND ('$(RuntimeIdentifier)' == '' OR $(RuntimeIdentifier.Contains('win')))" Include="$(OutputPath)\OpenDebugAD7.exe" />
     <!-- We will build OpenDebugAD7 via publish for non-windows -->
     <DropThirdPartySignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
