@@ -746,7 +746,11 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value.ToString(CultureInfo.InvariantCulture), ignoreFailures: false, failureHandler: failureHandler));
                     }
 
-                    commands.AddRange(_launchOptions.PostRemoteConnectCommands);
+                    if (_launchOptions.PostRemoteConnectCommands != null) 
+                    {
+                        commands.AddRange(_launchOptions.PostRemoteConnectCommands);
+                    }
+
 
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
@@ -832,7 +836,11 @@ namespace Microsoft.MIDebugEngine
                         }
 
                     }
-                    commands.AddRange(_launchOptions.PostRemoteConnectCommands);
+
+                    if (_launchOptions.PostRemoteConnectCommands != null) 
+                    {
+                        commands.AddRange(_launchOptions.PostRemoteConnectCommands);
+                    }
 
                     // Environment variables are set for the debuggee only with the modes that support that
                     foreach (EnvironmentEntry envEntry in _launchOptions.Environment)
