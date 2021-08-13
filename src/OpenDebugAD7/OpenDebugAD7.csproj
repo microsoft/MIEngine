@@ -15,7 +15,6 @@
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
     <TargetFramework>net5.0</TargetFramework>
-    <Prefer32Bit>false</Prefer32Bit>
 
     <!--
       For non-Windows platforms, .NET Core depends on libicu for data about locales and international settings.
@@ -75,7 +74,6 @@
   <ItemGroup Label="Drop Files">
     <DropSignedFile Include="$(OutputPath)\OpenDebugAD7.dll" />
     <DropUnsignedFile Include="$(OutputPath)\OpenDebugAD7.pdb" />
-    <DropSignedFile Condition="$([MSBuild]::IsOSPlatform('windows')) AND ('$(RuntimeIdentifier)' == '' OR $(RuntimeIdentifier.Contains('win')))" Include="$(OutputPath)\OpenDebugAD7.exe" />
     <!-- We will build OpenDebugAD7 via publish for non-windows -->
     <DropThirdPartySignedFile Include="$(OutputPath)\Newtonsoft.Json.dll" />
     <DropUnsignedFile Include="$(OutputPath)\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll" />
@@ -89,5 +87,41 @@
     <PropertyGroup>
       <OutputType>Exe</OutputType>
     </PropertyGroup>
+  </Target>
+
+  <!-- 
+    Run Target to Sign Published Files if we have:
+    1. The Microbuild Tools 
+    2. On Windows without an RID or targeting Windows RIDs
+
+    This target needs to be run directly with /t and /p:PublishPath needs to be set.
+  -->
+  <Target Name="SignPublishedFiles" BeforeTargets="" AfterTargets="">
+    <Error 
+      Condition="'$(PkgMicrosoft_VisualStudioEng_MicroBuild_Core)'=='' and '$(Lab)'!='false' and '$(TEST_LAB_BUILD)'=='' and '$(BUILD_BUILDURI)'!=''" 
+      Text="Microsoft.VisualStudioEng.MicroBuild.Core needs to be added as a PackageReference for SignFiles." 
+    />
+    <Error Condition="'$(PublishPath)'==''" Text="PublishPath needs to be set for SignPublishedFiles target." />
+
+    <ItemGroup>
+      <PublishFileToSign Include="$(PublishPath)\OpenDebugAD7.exe" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SIGN_TYPE)' == 'real'">
+      <!-- Real Signed -->
+      <PublishedFilesToSign Include="@(PublishFileToSign)">
+        <Authenticode>Microsoft400</Authenticode>
+        <StrongName>StrongNameSHA2</StrongName>
+      </PublishedFilesToSign>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SIGN_TYPE)' != 'real'">
+    <!-- Test Signed -->
+      <PublishedFilesToSign Include="@(PublishFileToSign)">
+        <Authenticode>Microsoft400</Authenticode>
+      </PublishedFilesToSign>
+    </ItemGroup>
+
+    <SignFiles Files="@(PublishedFilesToSign)" Type="$(SIGN_TYPE)" BinariesDirectory="$(PublishPath)" IntermediatesDirectory="$(IntermediateOutputPath)" ESRPSigning="$(ESRPSigning)" UseBearerToken="$(UseBearerToken)" />
   </Target>
 </Project>
