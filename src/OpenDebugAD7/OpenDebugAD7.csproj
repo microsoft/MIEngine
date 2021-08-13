@@ -124,6 +124,6 @@
       </PublishedFilesToSign>
     </ItemGroup>
 
-    <SignFiles Files="@(PublishedFilesToSign)" Type="$(SIGN_TYPE)" BinariesDirectory="$(OutputPath)" IntermediatesDirectory="$(IntermediateOutputPath)" ESRPSigning="$(ESRPSigning)" UseBearerToken="$(UseBearerToken)" />
+    <SignFiles Files="@(PublishedFilesToSign)" Type="$(SIGN_TYPE)" BinariesDirectory="$(PublishPath)" IntermediatesDirectory="$(IntermediateOutputPath)" ESRPSigning="$(ESRPSigning)" UseBearerToken="$(UseBearerToken)" />
   </Target>
 </Project>
