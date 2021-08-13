@@ -18,7 +18,6 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
   <ItemGroup Label="Compile Shared Interfaces">

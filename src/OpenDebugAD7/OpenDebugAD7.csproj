@@ -15,7 +15,6 @@
     <OutputType>Exe</OutputType>
     <DropSubDir>vscode</DropSubDir>
     <TargetFramework>net5.0</TargetFramework>
-    <Prefer32Bit>false</Prefer32Bit>
 
     <!--
       For non-Windows platforms, .NET Core depends on libicu for data about locales and international settings.
