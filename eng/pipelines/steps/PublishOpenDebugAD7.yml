@@ -6,15 +6,17 @@ parameters:
 steps:
 - script: |
     dotnet publish $(Build.SourcesDirectory)\src\OpenDebugAD7\OpenDebugAD7.csproj -c ${{ parameters.Configuration }} -r ${{ parameters.RuntimeID }} --self-contained -o $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin
+    copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.dll "$(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\Microsoft.DebugEngineHost.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MIDebugEngine.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MICore.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
   displayName: "Publish OpenDebugAD7 ${{ parameters.RuntimeID }}"
 
-# Windows Steps for signing OpenDebugAD7.dll and OpenDebugAD7.exe, copying over WindowsDebugLauncher.exe, and verify the windows binaries.
+# Windows Steps for signing OpenDebugAD7.exe, copying over WindowsDebugLauncher.exe, and verify the windows binaries.
 - ${{ if startsWith(parameters.RuntimeID, 'win') }}:
   - template: ../tasks/MSBuild.yml
     parameters:
+      DisplayName: "Sign OpenDebugAD7.exe"
       solution: $(Build.SourcesDirectory)\src\OpenDebugAD7\OpenDebugAD7.csproj
       configuration: ${{ parameters.Configuration }}
       msbuildArguments: '/t:SignPublishedFiles /p:PublishPath=$(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin'
@@ -24,7 +26,7 @@ steps:
 
   - script: |
       copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\WindowsDebugLauncher.exe $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
-    displayName: "Copy OpenDebugAD7.exe and WindowsDebugLauncher.exe"
+    displayName: "Copy WindowsDebugLauncher.exe"
 
   - template: ../tasks/SignVerify.yml
     parameters:

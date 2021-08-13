@@ -105,7 +105,6 @@
     <Error Condition="'$(PublishPath)'==''" Text="PublishPath needs to be set for SignPublishedFiles target." />
 
     <ItemGroup>
-      <PublishFileToSign Include="$(PublishPath)\OpenDebugAD7.dll" />
       <PublishFileToSign Include="$(PublishPath)\OpenDebugAD7.exe" />
     </ItemGroup>
 
