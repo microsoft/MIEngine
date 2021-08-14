@@ -77,7 +77,10 @@ namespace CppTests.Tests
                     this.WriteLine("Main frame: {0}", mainFrame);
                     string ip = mainFrame.InstructionPointerReference;
 
+                    Assert.False(string.IsNullOrEmpty(ip));
+
                     // Send Disassemble Request to get the current instruction and next one.
+                    this.WriteLine("Disassemble to get current and next instruction.");
                     IEnumerable<IDisassemblyInstruction> instructions = runner.Disassemble(ip, 2);
 
                     // Validate that we got two instructions.
@@ -85,8 +88,10 @@ namespace CppTests.Tests
 
                     // Get the next instruction's address
                     string nextIPAddress = instructions.Last().Address;
+                    Assert.False(string.IsNullOrEmpty(nextIPAddress));
 
                     // Set an instruction breakpoint
+                    this.WriteLine("Set Instruction Breakpoint");
                     InstructionBreakpoints instruction = new InstructionBreakpoints(new string[] { nextIPAddress });
                     runner.SetInstructionBreakpoints(instruction);
 

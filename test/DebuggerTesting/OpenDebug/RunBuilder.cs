@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Net;
 using DebuggerTesting.OpenDebug.Commands;
 using DebuggerTesting.OpenDebug.Events;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace DebuggerTesting.OpenDebug
 {

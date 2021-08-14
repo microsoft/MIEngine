@@ -25,6 +25,11 @@ namespace OpenDebugAD7.AD7Impl
 
         public IDebugMemoryContext2 MemoryContext {  get; private set; }
 
+        // Used for Releasing the MemoryContext.
+        // Caller of AD7BreakPointRequest(MemoryContext) is required to
+        // release it with HostMarshal.ReleaseCodeContextId
+        public IntPtr MemoryContextIntPtr { get; private set;  }
+
         // Unique identifier for breakpoint when communicating with VSCode
         public uint Id { get; private set; }
 
@@ -85,7 +90,9 @@ namespace OpenDebugAD7.AD7Impl
                 else if (MemoryContext != null)
                 {
                     pBPRequestInfo[0].bpLocation.bpLocationType = (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT;
-                    pBPRequestInfo[0].bpLocation.unionmember1 = HostMarshal.RegisterCodeContext(MemoryContext as IDebugCodeContext2);
+                    MemoryContextIntPtr = HostMarshal.RegisterCodeContext(MemoryContext as IDebugCodeContext2);
+                    pBPRequestInfo[0].bpLocation.unionmember1 = MemoryContextIntPtr;
+
                 }
             }
             if ((dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0 && !string.IsNullOrWhiteSpace(Condition))

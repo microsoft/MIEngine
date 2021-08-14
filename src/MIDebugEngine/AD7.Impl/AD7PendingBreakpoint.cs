@@ -38,7 +38,6 @@ namespace Microsoft.MIDebugEngine
         private string _condition = null;
         private string _address = null;
         private ulong _codeAddress = 0;
-        private IntPtr _codeContextPtr = IntPtr.Zero;
         private uint _size = 0;
         private IEnumerable<Checksum> _checksums = null;
 
@@ -204,8 +203,7 @@ namespace Microsoft.MIDebugEngine
                                 case enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT:
                                     try
                                     {
-                                        _codeContextPtr = _bpRequestInfo.bpLocation.unionmember1;
-                                        IDebugCodeContext2 codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_codeContextPtr);
+                                        IDebugCodeContext2 codePosition = HostMarshal.GetDebugCodeContextForIntPtr(_bpRequestInfo.bpLocation.unionmember1);
                                         if (!(codePosition is AD7MemoryAddress))
                                         {
                                             goto default;   // context is not from this engine
@@ -458,13 +456,6 @@ namespace Microsoft.MIDebugEngine
                     _bp.Delete(_engine.DebuggedProcess);
                     _bp = null;
                 }
-            }
-
-            if (_codeContextPtr != IntPtr.Zero)
-            {
-                HostMarshal.ReleaseCodeContextId(_codeContextPtr);
-                _codeContextPtr = IntPtr.Zero;
-                _codeAddress = 0;
             }
 
             return Constants.S_OK;

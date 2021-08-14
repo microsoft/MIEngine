@@ -315,8 +315,11 @@ namespace OpenDebugAD7
 
             if (breakpointEvent != null)
             {
-                if (breakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 enumBreakpoints) == HRConstants.S_OK)
+                if (breakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 enumBreakpoints) == HRConstants.S_OK && 
+                    enumBreakpoints.GetCount(out uint bpCount) == HRConstants.S_OK && 
+                    bpCount > 0)
                 {
+
                     bool allInstructionBreakpoints = true;
 
                     IDebugBoundBreakpoint2[] boundBp = new IDebugBoundBreakpoint2[1];
@@ -360,9 +363,9 @@ namespace OpenDebugAD7
             return date / 10000000;
         }
 
-        private int GetMemoryContext(string memoryReference, int? offset, out IDebugMemoryContext2 memoryContext, out ulong address)
+        private ulong ResolveInstructionReference(string memoryReference, int? offset)
         {
-            memoryContext = null;
+            ulong address;
 
             if (memoryReference.StartsWith("0x", StringComparison.Ordinal))
             {
@@ -384,6 +387,15 @@ namespace OpenDebugAD7
                     address -= (ulong)-offset.Value;
                 }
             }
+
+            return address;
+        }
+
+        private int GetMemoryContext(string memoryReference, int? offset, out IDebugMemoryContext2 memoryContext, out ulong address)
+        {
+            memoryContext = null;
+
+            address = ResolveInstructionReference(memoryReference, offset);
 
             int hr = HRConstants.E_NOTIMPL; // Engine does not support IDebugMemoryBytesDAP
 
@@ -2630,24 +2642,33 @@ namespace OpenDebugAD7
 
             List<InstructionBreakpoint> breakpoints = responder.Arguments.Breakpoints;
             Dictionary<ulong, IDebugPendingBreakpoint2> newBreakpoints = new Dictionary<ulong, IDebugPendingBreakpoint2>();
-
-            foreach (KeyValuePair<ulong, IDebugPendingBreakpoint2> b in m_instructionBreakpoints)
-            {
-                if (responder.Arguments.Breakpoints.Find((p) => {
-                    eb.CheckHR(GetMemoryContext(p.InstructionReference, p.Offset, out IDebugMemoryContext2 memoryContext, out ulong address));
-                    return address == b.Key;
-                }) != null)
-                {
-                    newBreakpoints[b.Key] = b.Value;    // breakpoint still in new list
-                }
-                else
-                {
-                    b.Value.Delete();   // not in new list so delete it
-                }
-            }
-
             try
             {
+                HashSet<ulong> requestAddresses = responder.Arguments.Breakpoints.Select(x => ResolveInstructionReference(x.InstructionReference, x.Offset)).ToHashSet();
+
+                foreach (KeyValuePair<ulong, IDebugPendingBreakpoint2> b in m_instructionBreakpoints)
+                {
+                    if (requestAddresses.Contains(b.Key))
+                    {
+                        newBreakpoints[b.Key] = b.Value;    // breakpoint still in new list
+                    }
+                    else
+                    {
+                        IDebugPendingBreakpoint2 pendingBp = b.Value;
+                        if (pendingBp != null &&
+                            pendingBp.GetBreakpointRequest(out IDebugBreakpointRequest2 request) == HRConstants.S_OK &&
+                            request is AD7BreakPointRequest ad7Request)
+                        {
+                            HostMarshal.ReleaseCodeContextId(ad7Request.MemoryContextIntPtr);
+                        }
+                        else
+                        {
+                            Debug.Fail("Why can't we retrieve the MemoryContextIntPtr?");
+                        }
+                        b.Value.Delete();   // not in new list so delete it
+                    }
+                }
+
                 foreach (var instructionBp in responder.Arguments.Breakpoints)
                 {
                     eb.CheckHR(GetMemoryContext(instructionBp.InstructionReference, instructionBp.Offset, out IDebugMemoryContext2 memoryContext, out ulong address));
@@ -2709,7 +2730,8 @@ namespace OpenDebugAD7
                             {
                                 Id = (int)pBPRequest.Id,
                                 Verified = false,
-                                Line = 0
+                                Line = 0,
+                                Message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_UnableToSetInstructionBreakpoint, address)
                             }); // couldn't create and/or bind
                         }
                     }
