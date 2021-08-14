@@ -877,7 +877,7 @@ namespace OpenDebugAD7
                 SupportsModulesRequest = true,
                 AdditionalModuleColumns = additionalModuleColumns,
                 SupportsGotoTargetsRequest = true,
-                SupportsDisassembleRequest = true,
+                SupportsDisassembleRequest = m_engine is IDebugMemoryBytesDAP,
                 SupportsValueFormattingOptions = true,
                 SupportsSteppingGranularity = true,
                 SupportsInstructionBreakpoints = m_engine is IDebugMemoryBytesDAP
