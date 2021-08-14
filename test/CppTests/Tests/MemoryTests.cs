@@ -67,6 +67,8 @@ namespace CppTests.Tests
                 runner.Expects.HitBreakpointEvent(SinkHelper.Main, 33)
                               .AfterConfigurationDone();
 
+                string ip = string.Empty;
+
                 this.Comment("Inspect the stack and try evaluation.");
                 using (IThreadInspector inspector = runner.GetThreadInspector())
                 {
@@ -75,28 +77,40 @@ namespace CppTests.Tests
                     inspector.AssertStackFrameNames(true, "main.*");
 
                     this.WriteLine("Main frame: {0}", mainFrame);
-                    string ip = mainFrame.InstructionPointerReference;
+                    ip = mainFrame?.InstructionPointerReference;
+                }
+
+                Assert.False(string.IsNullOrEmpty(ip));
+
+                // Send Disassemble Request to get the current instruction and next one.
+                this.WriteLine("Disassemble to get current and next instruction.");
+                IEnumerable<IDisassemblyInstruction> instructions = runner.Disassemble(ip, 2);
+
+                // Validate that we got two instructions.
+                Assert.Equal(2, instructions.Count());
+
+                // Get the next instruction's address
+                string nextIPAddress = instructions.Last().Address;
+                Assert.False(string.IsNullOrEmpty(nextIPAddress));
+
+                // Set an instruction breakpoint
+                this.Comment("Set Instruction Breakpoint");
+                InstructionBreakpoints instruction = new InstructionBreakpoints(new string[] { nextIPAddress });
+                runner.SetInstructionBreakpoints(instruction);
+
+                // Expect it to be hit.
+                runner.Expects.HitInstructionBreakpointEvent(nextIPAddress).AfterContinue();
+
+                // Get the Stack Trace to validate the current frame's ipReference is the one set from the InstructionBp
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    this.Comment("Get the instruction bp's stack trace");
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    ip = mainFrame?.InstructionPointerReference;
 
                     Assert.False(string.IsNullOrEmpty(ip));
 
-                    // Send Disassemble Request to get the current instruction and next one.
-                    this.WriteLine("Disassemble to get current and next instruction.");
-                    IEnumerable<IDisassemblyInstruction> instructions = runner.Disassemble(ip, 2);
-
-                    // Validate that we got two instructions.
-                    Assert.Equal(2, instructions.Count());
-
-                    // Get the next instruction's address
-                    string nextIPAddress = instructions.Last().Address;
-                    Assert.False(string.IsNullOrEmpty(nextIPAddress));
-
-                    // Set an instruction breakpoint
-                    this.WriteLine("Set Instruction Breakpoint");
-                    InstructionBreakpoints instruction = new InstructionBreakpoints(new string[] { nextIPAddress });
-                    runner.SetInstructionBreakpoints(instruction);
-
-                    // Expect it to be hit.
-                    runner.Expects.HitInstructionBreakpointEvent(nextIPAddress).AfterContinue();
+                    Assert.Equal(nextIPAddress, ip);
                 }
 
                 this.Comment("Continue until end");
