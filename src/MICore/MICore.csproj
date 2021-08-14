@@ -17,7 +17,6 @@
     would take a fair amount of work.-->
     <NoWarn>$(NoWarn);1591</NoWarn>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <None Include="SGEN_SHA2_SIGNATUREKEY" />
