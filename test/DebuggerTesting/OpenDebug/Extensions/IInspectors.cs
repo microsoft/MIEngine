@@ -67,7 +67,10 @@ namespace DebuggerTesting.OpenDebug.Extensions
         int? SourceReference { get; }
 
         int? Line { get; }
+
         int? Column { get; }
+
+        string InstructionPointerReference {  get; }
 
         /// <summary>
         /// Evaluates an expression on this frame

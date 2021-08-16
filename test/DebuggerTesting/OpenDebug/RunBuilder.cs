@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using DebuggerTesting.OpenDebug.Commands;
 using DebuggerTesting.OpenDebug.Events;
 
@@ -43,6 +44,22 @@ namespace DebuggerTesting.OpenDebug
         public static IRunBuilder StoppedEvent(this IRunBuilder runBuilder, StoppedReason reason, string fileName = null, int? lineNumber = null, string text = null)
         {
             return runBuilder.Event(new StoppedEvent(reason, fileName, lineNumber, text));
+        }
+
+        public static IRunBuilder HitInstructionBreakpointEvent(this IRunBuilder runBuilder, string address)
+        {
+            ulong nextAddress;
+
+            if (address.StartsWith("0x", StringComparison.Ordinal))
+            {
+                nextAddress = Convert.ToUInt64(address.Substring(2), 16);
+            }
+            else
+            {
+                nextAddress = Convert.ToUInt64(address, 10);
+            }
+
+            return runBuilder.Event(new StoppedEvent(nextAddress));
         }
 
         public static IRunBuilder HitBreakpointEvent(this IRunBuilder runBuilder, string fileName = null, int? lineNumber = null, string text = null)

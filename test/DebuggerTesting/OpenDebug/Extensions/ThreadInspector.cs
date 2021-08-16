@@ -65,8 +65,9 @@ namespace DebuggerTesting.OpenDebug.Extensions
                         int? sourceReference = stackFrame.source?.sourceReference;
                         int? line = stackFrame.line;
                         int? column = stackFrame.column;
+                        string instructionPointerReference = stackFrame.instructionPointerReference;
 
-                        FrameInspector frame = new FrameInspector(this.DebuggerRunner, name, id, sourceName, sourcePath, sourceReference, line, column);
+                        FrameInspector frame = new FrameInspector(this.DebuggerRunner, name, id, sourceName, sourcePath, sourceReference, line, column, instructionPointerReference);
                         this.frameInspectors.Add(frame);
                         yield return frame;
                     }

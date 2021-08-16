@@ -23,6 +23,13 @@ namespace OpenDebugAD7.AD7Impl
 
         public AD7FunctionPosition FunctionPosition { get; private set; }
 
+        public IDebugMemoryContext2 MemoryContext {  get; private set; }
+
+        // Used for Releasing the MemoryContext.
+        // Caller of AD7BreakPointRequest(MemoryContext) is required to
+        // release it with HostMarshal.ReleaseCodeContextId
+        public IntPtr MemoryContextIntPtr { get; private set;  }
+
         // Unique identifier for breakpoint when communicating with VSCode
         public uint Id { get; private set; }
 
@@ -41,6 +48,11 @@ namespace OpenDebugAD7.AD7Impl
             FunctionPosition = new AD7FunctionPosition(functionName);
         }
 
+        public AD7BreakPointRequest(IDebugMemoryContext2 memoryContext)
+        {
+            MemoryContext = memoryContext;
+        }
+
         public int GetLocationType(enum_BP_LOCATION_TYPE[] pBPLocationType)
         {
             if (DocumentPosition != null)
@@ -50,6 +62,10 @@ namespace OpenDebugAD7.AD7Impl
             else if (FunctionPosition != null)
             {
                 pBPLocationType[0] = enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET;
+            }
+            else if (MemoryContext != null)
+            {
+                pBPLocationType[0] = enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT;
             }
 
             return 0;
@@ -70,6 +86,13 @@ namespace OpenDebugAD7.AD7Impl
                 {
                     pBPRequestInfo[0].bpLocation.bpLocationType = (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET;
                     pBPRequestInfo[0].bpLocation.unionmember2 = HostMarshal.RegisterFunctionPosition(FunctionPosition);
+                }
+                else if (MemoryContext != null)
+                {
+                    pBPRequestInfo[0].bpLocation.bpLocationType = (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT;
+                    MemoryContextIntPtr = HostMarshal.RegisterCodeContext(MemoryContext as IDebugCodeContext2);
+                    pBPRequestInfo[0].bpLocation.unionmember1 = MemoryContextIntPtr;
+
                 }
             }
             if ((dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0 && !string.IsNullOrWhiteSpace(Condition))
