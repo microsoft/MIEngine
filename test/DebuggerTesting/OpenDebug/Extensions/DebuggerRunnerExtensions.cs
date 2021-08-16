@@ -212,6 +212,12 @@ namespace DebuggerTesting.OpenDebug.Extensions
             return runner.RunCommand(new SetInstructionBreakpointsCommand(breakpoints));
         }
 
+        public static string[] CompletionsRequest(this IDebuggerRunner runner, string text)
+        {
+            CompletionItem[] completionItems = runner.RunCommand(new CompletionsCommand(null, text, 0, null))?.body?.targets;
+            return completionItems?.Select(x => x.label).ToArray();
+        }
+
         public static void Continue(this IDebuggerRunner runner)
         {
             runner.RunCommand(new ContinueCommand(runner.StoppedThreadId));
