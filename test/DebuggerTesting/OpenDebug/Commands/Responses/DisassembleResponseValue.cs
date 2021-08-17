@@ -5,16 +5,24 @@ using Newtonsoft.Json;
 
 namespace DebuggerTesting.OpenDebug.Commands.Responses
 {
-    public sealed class StackTraceResponseValue : CommandResponseValue
+    public sealed class DisassembleResponseValue : CommandResponseValue
     {
         public sealed class Body
         {
-            public sealed class StackFrame
+            public sealed class DisassembledInstruction
             {
-                public string name;
+                public string address;
 
                 [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-                public int? id;
+                public string instructionBytes;
+
+                public string instruction;
+
+                [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+                public string symbol;
+
+                [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+                public Source location;
 
                 [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
                 public int? line;
@@ -23,12 +31,13 @@ namespace DebuggerTesting.OpenDebug.Commands.Responses
                 public int? column;
 
                 [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-                public Source source;
+                public int? endLine;
 
                 [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-                public string instructionPointerReference;
+                public int? endColumn;
             }
-            public StackFrame[] stackFrames;
+
+            public DisassembledInstruction[] instructions;
         }
 
         public Body body = new Body();
