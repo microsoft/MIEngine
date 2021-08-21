@@ -36,7 +36,7 @@ steps:
 # macOS Steps since we need to harden and sign the binary.
 - ${{ if startsWith(parameters.RuntimeID, 'osx-') }}:
   - script:
-      copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\osxlaunchhelper.scpt $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+      copy ${{ parameters.SignedBinariesFolder }}\Release\osxlaunchhelper.scpt $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     displayName: "Copy osxlaunchhelper.scpt"
 
   - template: ../tasks/PublishPipelineArtifact.yml
