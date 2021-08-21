@@ -42,6 +42,7 @@
   <ItemGroup Label="NuGet Packages">
     <!-- NOTE: MIEngine's usage of Newtonsoft.Json's flows through public interfaces exposed by MICore (IPlatformAppLauncher). So this version needs to be within the binding redirect range used by devenv.exe (currently 4.5.0.0-9.0.0.0) -->
     <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_Version)" />
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
   
   <PropertyGroup>
@@ -89,4 +90,11 @@
       </_SourceItemsToCopyToOutputDirectoryAlways>
     </ItemGroup>
   </Target>
+
+  <ItemGroup Label="Drop Files">
+    <DropUnsignedFile Include="$(OutputPath)\vscode\osxlaunchhelper.scpt" />
+  </ItemGroup>
+
+  <Import Project="..\..\build\DropFiles.targets" />
+
 </Project>
