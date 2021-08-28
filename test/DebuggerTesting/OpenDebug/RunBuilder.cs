@@ -106,9 +106,9 @@ namespace DebuggerTesting.OpenDebug
             return runBuilder.Event(new BreakpointEvent(reason, startLine, endLine));
         }
 
-        public static IRunBuilder ConsoleEvent(this IRunBuilder runBuilder, string text)
+        public static IRunBuilder OutputEvent(this IRunBuilder runBuilder, string text, CategoryValue category)
         {
-            return runBuilder.Event(new ConsoleEvent(text));
+            return runBuilder.Event(new OutputEvent(text, category));
         }
 
         #endregion

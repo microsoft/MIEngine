@@ -18,10 +18,12 @@ namespace DebuggerTesting.OpenDebug.Commands
     {
         public sealed class SourceBreakpoint
         {
-            public SourceBreakpoint(int line, int? column, string condition)
+            public SourceBreakpoint(int line, int? column, string condition, string logMessage)
             {
                 this.line = line;
+                this.column = column;
                 this.condition = condition;
+                this.logMessage = logMessage;
             }
 
             public int line;
@@ -31,6 +33,9 @@ namespace DebuggerTesting.OpenDebug.Commands
 
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string condition;
+
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public string logMessage;
         }
 
         public Source source = new Source();
@@ -58,7 +63,7 @@ namespace DebuggerTesting.OpenDebug.Commands
         {
             Parameter.ThrowIfNull(sourceRoot, nameof(sourceRoot));
             Parameter.ThrowIfNull(relativePath, nameof(relativePath));
-            this.Breakpoints = new Dictionary<int, string>();
+            this.Breakpoints = new Dictionary<int, SetBreakpointsCommandArgs.SourceBreakpoint>();
             this.RelativePath = relativePath;
             this.FullPath = Path.Combine(sourceRoot, relativePath);
         }
@@ -67,11 +72,11 @@ namespace DebuggerTesting.OpenDebug.Commands
 
         #region Add/Remove
 
-        public SourceBreakpoints Add(int lineNumber, string condition = null)
+        public SourceBreakpoints Add(int lineNumber, string condition = null, string logMessage = null)
         {
             if (this.Breakpoints.ContainsKey(lineNumber))
                 throw new RunnerException("Breakpoint line {0} already added to file {1}.", lineNumber, this.RelativePath);
-            this.Breakpoints.Add(lineNumber, condition);
+            this.Breakpoints.Add(lineNumber, new SetBreakpointsCommandArgs.SourceBreakpoint(lineNumber, null, condition, logMessage));
             return this;
         }
 
@@ -97,7 +102,7 @@ namespace DebuggerTesting.OpenDebug.Commands
         /// Keep the breakpoint info in a dictionary indexed by line number.
         /// Store the condition as the value.
         /// </summary>
-        public IDictionary<int, string> Breakpoints { get; private set; }
+        public IDictionary<int, SetBreakpointsCommandArgs.SourceBreakpoint> Breakpoints { get; private set; }
     }
 
     #endregion
@@ -112,10 +117,7 @@ namespace DebuggerTesting.OpenDebug.Commands
             this()
         {
             this.Args.source.path = sourceBreakpoints.FullPath;
-            IDictionary<int, string> breakpoints = sourceBreakpoints.Breakpoints;
-            this.Args.breakpoints = breakpoints.Select(x =>
-                    new SetBreakpointsCommandArgs.SourceBreakpoint(x.Key, null, x.Value)
-                ).ToArray();
+            this.Args.breakpoints = sourceBreakpoints.Breakpoints.Select(x => x.Value).ToArray();
             this.Args.lines = this.Args.breakpoints.Select(x => x.line).ToArray();
         }
 

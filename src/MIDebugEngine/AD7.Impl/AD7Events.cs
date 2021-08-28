@@ -541,9 +541,9 @@ namespace Microsoft.MIDebugEngine
     {
         public const string IID = "501C1E21-C557-48B8-BA30-A1EAB0BC4A74";
 
-        private IEnumDebugBoundBreakpoints2 _boundBreakpoints;
+        IDebugBoundBreakpoint2[] _boundBreakpoints;
 
-        public AD7BreakpointEvent(IEnumDebugBoundBreakpoints2 boundBreakpoints)
+        public AD7BreakpointEvent(IDebugBoundBreakpoint2[] boundBreakpoints)
         {
             _boundBreakpoints = boundBreakpoints;
         }
@@ -552,7 +552,7 @@ namespace Microsoft.MIDebugEngine
 
         int IDebugBreakpointEvent2.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 ppEnum)
         {
-            ppEnum = _boundBreakpoints;
+            ppEnum = new AD7BoundBreakpointsEnum(_boundBreakpoints);
             return Constants.S_OK;
         }
 
