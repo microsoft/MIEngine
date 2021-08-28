@@ -17,5 +17,11 @@ steps:
   parameters:
     Configuration: ${{ parameters.Configuration }}
 
+# Used for localization
+- template: ../steps/CollectAndPublishBinaries.yml
+  parameters:
+    TargetFolder: '$(Build.StagingDirectory)\drop'
+    ArtifactName: '${{ parameters.Configuration }}'
+
 - template: ../tasks/MicroBuildCleanup.yml
 ...
