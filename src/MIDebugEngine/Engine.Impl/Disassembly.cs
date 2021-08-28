@@ -323,7 +323,7 @@ namespace Microsoft.MIDebugEngine
         {
             if (file.IndexOf(' ') >= 0) // only needs escaping if filename contains a space
             {
-                file = process.EscapeSymbolPath(file);
+                file = process.EnsureProperPathSeparators(file);
             }
             string cmd = "-data-disassemble -f " + file + " -l " + line.ToString(CultureInfo.InvariantCulture) + " -n " + dwInstructions.ToString(CultureInfo.InvariantCulture) + " -- 1";
             Results results = await process.CmdAsync(cmd, ResultClass.None);
