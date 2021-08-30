@@ -30,11 +30,11 @@ namespace DebuggerTesting.OpenDebug.Events
     {
         public OutputEvent(string text, CategoryValue category) : base("output")
         {
-            this.ExpectedResponse.body.category = GeCategory(category);
+            this.ExpectedResponse.body.category = GetCategory(category);
             this.ExpectedResponse.body.output = text;
         }
 
-        private static string GeCategory(CategoryValue category)
+        private static string GetCategory(CategoryValue category)
         {
             Parameter.ThrowIfIsInvalid(category, CategoryValue.Unknown, nameof(category));
             return category.ToString().ToLowerInvariant();

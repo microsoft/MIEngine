@@ -179,12 +179,14 @@ namespace CppTests.Tests
                 runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 48)
                               .AfterConfigurationDone();
 
-                this.Comment("Set a breakpoint while in break mode");
-                callingBreakpoints.Add(52, null, "Log Message");
+                string logMessage = "Log Message";
+
+                this.Comment("Set a logpoint while in break mode");
+                callingBreakpoints.Add(52, null, logMessage);
                 runner.SetBreakpoints(callingBreakpoints);
 
                 this.Comment("Continue until newly-added breakpoint");
-                runner.Expects.OutputEvent("Log Message\n", CategoryValue.Console)
+                runner.Expects.OutputEvent(logMessage + "(\r\n|\r|\n)", CategoryValue.Console)
                               .AfterContinue();
 
                 this.Comment("Continue until end");
