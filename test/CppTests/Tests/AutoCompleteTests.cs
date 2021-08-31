@@ -33,27 +33,6 @@ namespace CppTests.Tests
 
         #region Methods
 
-        [Fact]
-        public void ValidateSettings()
-        {
-            this.WriteLine(PathSettings.GetDebugPathString());
-            AssertDirectoryExists(PathSettings.TempPath);
-            AssertDirectoryExists(PathSettings.DebugAdaptersPath);
-            AssertDirectoryExists(PathSettings.TestsPath);
-            AssertDirectoryExists(PathSettings.DebuggeesPath);
-            AssertFileExists(PathSettings.TestConfigurationFilePath);
-        }
-
-        private static void AssertDirectoryExists(string path)
-        {
-            Assert.True(Directory.Exists(path), "Directory '{0}' does not exist.".FormatInvariantWithArgs(path));
-        }
-
-        private static void AssertFileExists(string path)
-        {
-            Assert.True(File.Exists(path), "File '{0}' does not exist.".FormatInvariantWithArgs(path));
-        }
-
         private const string HelloName = "hello";
         private const string HelloSourceName = "hello.cpp";
 
@@ -85,10 +64,11 @@ namespace CppTests.Tests
                 this.Comment("Launch the debuggee");
                 runner.Launch(settings.DebuggerSettings, debuggee);
 
-                StoppedEvent stopAtBreak = new StoppedEvent(StoppedReason.Breakpoint);
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, HelloSourceName);
+                callingBreakpoints.Add(9);
+                runner.SetBreakpoints(callingBreakpoints);
 
-                runner.Expects.BreakpointChangedEvent(BreakpointReason.Changed, 9)
-                              .Event(stopAtBreak)
+                runner.Expects.HitBreakpointEvent(HelloSourceName, 9)
                               .AfterConfigurationDone();
 
                 string[] completions = runner.CompletionsRequest("break");

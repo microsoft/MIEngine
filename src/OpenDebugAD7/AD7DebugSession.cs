@@ -2452,22 +2452,31 @@ namespace OpenDebugAD7
             try
             {
                 var debugProgram = (IDebugProgramDAP)m_engine;
-                if (debugProgram.AutoCompleteCommand(command, frame, out string[] results) != HRConstants.S_OK)
+                try
                 {
-                    responder.SetError(new ProtocolException("Couldn't get results for auto-completion!"));
+                    int hr = debugProgram.AutoCompleteCommand(command, frame, out string[] results);
+                    var matchlist = new List<CompletionItem>();
+                    foreach (string result in results)
+                    {
+                        matchlist.Add(new CompletionItem(result)
+                        {
+                            Text = "`" + result, // add cmd prefix for insertion text
+                            Start = 0, // overwrite the whole input string
+                            Length = responder.Arguments.Text.Length
+                        });
+                    }
+                    responder.SetResponse(new CompletionsResponse(matchlist));
+                }
+                catch (NotImplementedException)
+                {
+                    // If MIDebugEngine does not implemented AutoCompleteCommand, just return an empty response.
+                    responder.SetResponse(new CompletionsResponse());
+                }
+                catch (Exception e)
+                {
+                    responder.SetError(new ProtocolException("Couldn't get results for auto-completion: " + e.Message));
                     return;
                 }
-                var matchlist = new List<CompletionItem>();
-                foreach (string result in results)
-                {
-                    matchlist.Add(new CompletionItem(result)
-                    {
-                        Text = "`" + result, // add cmd prefix for insertion text
-                        Start = 0, // overwrite the whole input string
-                        Length = responder.Arguments.Text.Length
-                    });
-                }
-                responder.SetResponse(new CompletionsResponse(matchlist));
             }
             catch (Exception e)
             {

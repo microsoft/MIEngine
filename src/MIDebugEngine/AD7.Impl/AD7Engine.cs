@@ -1159,23 +1159,14 @@ namespace Microsoft.MIDebugEngine
             var frame = stackFrame as AD7StackFrame;
             int threadId = frame?.Thread.Id ?? -1;
             uint frameLevel = frame?.ThreadContext.Level ?? 0;
-            try
-            {
-                string[] matches = null;
-                _debuggedProcess.WorkerThread.RunOperation(async () =>
-                {
-                    matches = await _debuggedProcess.MICommandFactory.AutoComplete(command, threadId, frameLevel);
-                });
-                result = matches;
-                return Constants.S_OK;
-            }
-            catch (Exception e)
-            {
-                _engineCallback.OnError(EngineUtils.GetExceptionDescription(e));
-            }
 
-            result = null;
-            return Constants.E_FAIL;
+            string[] matches = null;
+            _debuggedProcess.WorkerThread.RunOperation(async () =>
+            {
+                matches = await _debuggedProcess.MICommandFactory.AutoComplete(command, threadId, frameLevel);
+            });
+            result = matches;
+            return Constants.S_OK;
         }
         #endregion
 
