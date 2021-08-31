@@ -106,9 +106,9 @@ namespace DebuggerTesting.OpenDebug
             return runBuilder.Event(new BreakpointEvent(reason, startLine, endLine));
         }
 
-        public static IRunBuilder OutputEvent(this IRunBuilder runBuilder, string text, CategoryValue category)
+        public static IRunBuilder OutputEvent(this IRunBuilder runBuilder, string text, CategoryValue category, bool ignoreResponseOrder = false)
         {
-            return runBuilder.Event(new OutputEvent(text, category));
+            return runBuilder.Event(new OutputEvent(text, category, ignoreResponseOrder));
         }
 
         #endregion

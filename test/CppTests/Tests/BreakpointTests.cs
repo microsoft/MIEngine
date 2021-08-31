@@ -186,7 +186,9 @@ namespace CppTests.Tests
                 runner.SetBreakpoints(callingBreakpoints);
 
                 this.Comment("Continue til end with newly-added logpoint");
-                runner.Expects.OutputEvent("^" + logMessage + "\\b", CategoryValue.Console)
+                // ignoringResponseOrder: true here since sometimes the ContinuedResponse occurs after the OutputEvent and
+                // DAR does not look at previous messages unless marked ignoreResponseOrder. 
+                runner.Expects.OutputEvent("^" + logMessage + "\\b", CategoryValue.Console, ignoreResponseOrder: true)
                               .ExitedEvent()
                               .TerminatedEvent()
                               .AfterContinue();

@@ -28,8 +28,9 @@ namespace DebuggerTesting.OpenDebug.Events
 
     public sealed class OutputEvent : Event<OutputEventValue>
     {
-        public OutputEvent(string text, CategoryValue category) : base("output")
+        public OutputEvent(string text, CategoryValue category, bool ignoreResponseOrder) : base("output")
         {
+            this.IgnoreResponseOrder = ignoreResponseOrder;
             this.ExpectedResponse.body.category = GetCategory(category);
             this.ExpectedResponse.body.output = text;
         }
