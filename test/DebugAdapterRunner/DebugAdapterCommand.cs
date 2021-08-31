@@ -130,6 +130,19 @@ namespace DebugAdapterRunner
             return messageBuffer;
         }
 
+        private struct ResponsePair
+        {
+            /// <summary>
+            /// Boolean to indicate if this response has a match.
+            /// </summary>
+            public bool Seen { get; set; }
+
+            /// <summary>
+            /// The response
+            /// </summary>
+            public object Response { get; set; }
+        }
+
         public override void Run(DebugAdapterRunner runner)
         {
             // Send the request
@@ -138,7 +151,7 @@ namespace DebugAdapterRunner
             runner.DebugAdapter.StandardInput.Write(request);
 
             // Process + validate responses
-            List<object> responseList = new List<object>();
+            List<ResponsePair> responseList = new List<ResponsePair>();
             int currentExpectedResponseIndex = 0;
             int previousExpectedResponseIndex = 0;
 
@@ -149,19 +162,22 @@ namespace DebugAdapterRunner
                 if (previousExpectedResponseIndex != currentExpectedResponseIndex)
                 {
                     DebugAdapterResponse expected = this.ExpectedResponses[currentExpectedResponseIndex];
-                    foreach (var response in responseList)
+                    foreach (ResponsePair responsePair in responseList)
                     {
-                        if (Utils.CompareObjects(expected.Response, response, expected.IgnoreOrder))
+                        // Make sure we have not seen this response and check to see if it the response we are expecting.
+                        if (!responsePair.Seen && Utils.CompareObjects(expected.Response, responsePair.Response, expected.IgnoreOrder))
                         {
-                            expected.Match = response;
+                            expected.Match = responsePair.Response;
                             break;
                         }
                     }
 
+                    // We found an expected response from a previous response.
+                    // Continue to next expectedResponse.
                     if (expected.Match != null)
                     {
                         currentExpectedResponseIndex++;
-                        break;
+                        continue;
                     }
                 }
 
@@ -244,7 +260,6 @@ namespace DebugAdapterRunner
                     if (dispatcherMessage.type == "event")
                     {
                         DispatcherEvent dispatcherEvent = JsonConvert.DeserializeObject<DispatcherEvent>(receivedMessage);
-                        responseList.Add(dispatcherEvent);
 
                         if (dispatcherEvent.eventType == "stopped")
                         {
@@ -257,11 +272,16 @@ namespace DebugAdapterRunner
                             expected.Match = dispatcherEvent;
                             currentExpectedResponseIndex++;
                         }
+
+                        responseList.Add(new ResponsePair()
+                        {
+                            Seen = expected.Match != null,
+                            Response = dispatcherEvent
+                        });
                     }
                     else if (dispatcherMessage.type == "response")
                     {
                         DispatcherResponse dispatcherResponse = JsonConvert.DeserializeObject<DispatcherResponse>(receivedMessage);
-                        responseList.Add(dispatcherResponse);
 
                         var expected = this.ExpectedResponses[currentExpectedResponseIndex];
                         if (Utils.CompareObjects(expected.Response, dispatcherResponse, expected.IgnoreOrder))
@@ -269,6 +289,12 @@ namespace DebugAdapterRunner
                             expected.Match = dispatcherResponse;
                             currentExpectedResponseIndex++;
                         }
+
+                        responseList.Add(new ResponsePair()
+                        {
+                            Seen = expected.Match != null,
+                            Response = dispatcherResponse
+                        });
                     }
                     else if (dispatcherMessage.type == "request")
                     {
