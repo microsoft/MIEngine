@@ -301,4 +301,7 @@
   <data name="Error_NotImplementedSetNextStatement" xml:space="preserve">
     <value>Set next statement is not supported by the current debugger.</value>
   </data>
+  <data name="Error_UnableToSetInstructionBreakpoint" xml:space="preserve">
+    <value>Error setting instruction breakpoint: {0}</value>
+  </data>
 </root>
