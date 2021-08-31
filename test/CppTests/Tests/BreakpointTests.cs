@@ -185,12 +185,9 @@ namespace CppTests.Tests
                 callingBreakpoints.Add(52, null, logMessage);
                 runner.SetBreakpoints(callingBreakpoints);
 
-                this.Comment("Continue until newly-added breakpoint");
+                this.Comment("Continue til end with newly-added logpoint");
                 runner.Expects.OutputEvent("^" + logMessage + "\\b", CategoryValue.Console)
-                              .AfterContinue();
-
-                this.Comment("Continue until end");
-                runner.Expects.ExitedEvent()
+                              .ExitedEvent()
                               .TerminatedEvent()
                               .AfterContinue();
 

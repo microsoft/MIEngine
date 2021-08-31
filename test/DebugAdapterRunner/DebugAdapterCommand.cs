@@ -140,10 +140,33 @@ namespace DebugAdapterRunner
             // Process + validate responses
             List<object> responseList = new List<object>();
             int currentExpectedResponseIndex = 0;
+            int previousExpectedResponseIndex = 0;
 
             // Loop until we have received as many expected responses as expected
             while (currentExpectedResponseIndex < this.ExpectedResponses.Count)
             {
+                // Check if previous messages contained the expected response
+                if (previousExpectedResponseIndex != currentExpectedResponseIndex)
+                {
+                    DebugAdapterResponse expected = this.ExpectedResponses[currentExpectedResponseIndex];
+                    foreach (var response in responseList)
+                    {
+                        if (Utils.CompareObjects(expected.Response, response, expected.IgnoreOrder))
+                        {
+                            expected.Match = response;
+                            break;
+                        }
+                    }
+
+                    if (expected.Match != null)
+                    {
+                        currentExpectedResponseIndex++;
+                        break;
+                    }
+                }
+
+                previousExpectedResponseIndex = currentExpectedResponseIndex;
+
                 string receivedMessage = null;
                 Exception getMessageExeception = null;
                 try
