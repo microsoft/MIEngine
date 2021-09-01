@@ -1,4 +1,5 @@
 param(
+[ValidateSet("Debug", "Release")]
 [Alias("c")]
 [string]$Configuration="Debug",
 
@@ -22,7 +23,16 @@ if (!$msbuildPath) {
 }
 
 msbuild /t:Restore $RootPath\src\MIDebugEngine.sln /p:Configuration=$Configuration
+if ($lastexitcode -ne 0)
+{
+    throw "Failed to restore packages for MIDebugEngine.sln"
+}
 msbuild $RootPath\src\MIDebugEngine.sln /p:Configuration=$Configuration
+if ($lastexitcode -ne 0)
+{
+    throw "Failed to build MIDebugEngine.sln"
+}
+
 
 if ($TargetPlatform -eq "vscode")
 {
@@ -33,6 +43,11 @@ if ($TargetPlatform -eq "vscode")
     }
 
     dotnet publish $RootPath\src\OpenDebugAD7\OpenDebugAD7.csproj -c $Configuration -r $RID --self-contained -o $RootPath\bin\DebugAdapterProtocolTests\$Configuration\extension\debugAdapters
+    if ($lastexitcode -ne 0)
+    {
+        throw "Failed to publish OpenDebugAD7"
+    }
+
     Copy-Item $RootPath\bin\$Configuration\Microsoft.MIDebugEngine.dll $RootPath\bin\DebugAdapterProtocolTests\$Configuration\extension\debugAdapters/.
     Copy-Item $RootPath\bin\$Configuration\Microsoft.MICore.dll $RootPath\bin\DebugAdapterProtocolTests\$Configuration\extension\debugAdapters\.
     Copy-Item $RootPath\bin\$Configuration\vscode\WindowsDebugLauncher.exe $RootPath\bin\DebugAdapterProtocolTests\$Configuration\extension\debugAdapters\.
