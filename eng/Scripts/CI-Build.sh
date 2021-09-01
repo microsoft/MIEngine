@@ -8,14 +8,12 @@ if [ "$(which dotnet)" == "" ]; then
     exit 1
 fi
 
-dotnet build "$RootDir"/src/MIDebugEngine-Unix.sln
-if [ $? -ne 0 ]; then
+if dotnet build "$RootDir"/src/MIDebugEngine-Unix.sln; then
     echo "ERROR: Failed to build MIDebugEngine-Unix.sln"
     exit 1
 fi 
 
-"$RootDir"/PublishOpenDebugAD7.sh -c Debug -o "$RootDir"/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
-if [ $? -ne 0 ]; then
+if "$RootDir"/PublishOpenDebugAD7.sh -c Debug -o "$RootDir"/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters; then
     echo "ERROR: Failed to build MIDebugEngine-Unix.sln"
     exit 1
 fi 
