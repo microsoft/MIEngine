@@ -251,7 +251,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to enumerate installed GNU/Linux distributions. wsl.exe exited with code {0} (0x{0:X8}). More information may be available in the output window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Die installierten GNU/Linux-Verteilungen können nicht aufgelistet werden. wsl.exe mit Code {0} beendet (0x{0:X8}). Im Ausgabefenster sind möglicherweise weitere Informationen verfügbar.]]></Val>
+            <Val><![CDATA[Installierte GNU/Linux-Distributionen können nicht aufgelistet werden. "wsl.exe" wurde mit Code {0} (0x{0:X8}) beendet. Weitere Informationen finden Sie möglicherweise im Ausgabefenster.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Fehler bei "{0} {1}", und der folgende Text wurde in den Standardfehler geschrieben:]]></Val>
+            <Val><![CDATA[Fehler bei "{0} {1}" und der folgende Text wurde in den Standardfehler geschrieben:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -322,6 +322,9 @@
       <Item ItemId=";TransportTitle_Args1" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} Transport]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -338,7 +341,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Der WSL-Verbindungstyp für Windows-Subsystem für Linux (WSL) ermöglicht Visual Studio die Anbindung an lokale GNU/Linux-Prozesse.]]></Val>
+            <Val><![CDATA[Der Verbindungstyp Windows-Subsystem für Linux (WSL) ermöglicht Visual Studio das Anfügen an lokale GNU-/Linux-Prozesse.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -346,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Windows-Subsystem für Linux (WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -353,7 +359,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio's attach support. Please upgrade to WSL version 2 or newer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Die installierte Version von Windows-Subsystem für Linux (WSL) ist mit der Anfüge Unterstützung von Visual Studio nicht kompatibel. Führen Sie ein Upgrade auf die WSL-Version 2 oder höher durch.]]></Val>
+            <Val><![CDATA[Die installierte Version von Windows-Subsystem für Linux (WSL) ist mit der Anfügeunterstützung von Visual Studio nicht kompatibel. Führen Sie ein Upgrade auf die WSL-Version 2 oder höher durch.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
