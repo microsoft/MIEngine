@@ -251,7 +251,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to enumerate installed GNU/Linux distributions. wsl.exe exited with code {0} (0x{0:X8}). More information may be available in the output window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[インストールされている GNU/Linux ディストリビューションを列挙できません。wsl.exe コード {0} (0x{0:X8}) で終了しました。詳細については、出力ウィンドウを参照してください。]]></Val>
+            <Val><![CDATA[インストールされている GNU/Linux ディストリビューションを列挙できません。wsl.exe はコード {0} (0x{0:X8}) で終了しました。詳細については、出力ウィンドウを参照してください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[' {0} {1} ' が失敗し、次のテキストが標準エラーに書き込まれました:]]></Val>
+            <Val><![CDATA['{0} {1}' が失敗し、次のテキストが標準エラーに書き込まれました:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -269,7 +269,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to use the Windows Subsystem for Linux (WSL) transport. No GNU/Linux distributions are installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Windows Subsystem for Linux (WSL) トランスポートを使用できません。GNU/Linux ディストリビューションがインストールされていません。]]></Val>
+            <Val><![CDATA[Linux 用 Windows サブシステム (WSL) トランスポートを使用できません。GNU/Linux ディストリビューションがインストールされていません。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -278,7 +278,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL) is not installed on this computer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[このコンピューターには、Windows Subsystem for Linux (WSL) がインストールされていません。]]></Val>
+            <Val><![CDATA[このコンピューターには、Linux 用 Windows サブシステム (WSL) がインストールされていません。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -322,6 +322,9 @@
       <Item ItemId=";TransportTitle_Args1" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} トランスポート]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -338,7 +341,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Windows Subsystem for Linux (WSL) 接続の種類により、ローカルの GNU/Linux プロセスに接続する Visual Studio が可能になります。]]></Val>
+            <Val><![CDATA[Linux 用 Windows サブシステム (WSL) の接続の種類によって、Visual Studio がローカルの GNU/Linux プロセスに接続することが可能になります。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -346,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Linux 用 Windows サブシステム (WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -353,7 +359,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio's attach support. Please upgrade to WSL version 2 or newer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[インストールされている Windows Subsystem for Linux (WSL) には、Visual Studio のアタッチサポートとの互換性がありません。WSL バージョン2以降にアップグレードしてください。]]></Val>
+            <Val><![CDATA[インストールされている Linux 用 Windows サブシステム (WSL) のバージョンには、Visual Studio のアタッチ サポートとの互換性がありません。WSL バージョン 2 以降にアップグレードしてください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
