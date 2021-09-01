@@ -15,6 +15,9 @@
         <Item ItemId=";(...) ription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[Optional limit on the number of available hardware breakpoints to use. Only enforced when "require" is true and "limit" is greater than 0. ]A;Defaults to 0.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[使用可能なハードウェア ブレークポイント数のオプション制限。"必須" が True、"制限" が 0 より大きい場合にのみ適用されます。]A;既定値は 0 です。]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -24,6 +27,9 @@
         <Item ItemId=";(...) scription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[If true, always use hardware breakpoints. ]A;Defaults to false.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[True の場合、常にハードウェア ブレークポイントを使用します。]A;既定値は False です。]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -33,6 +39,9 @@
         <Item ItemId=";(...) pe" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[boolean]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[ブール値]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -259,12 +268,18 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.hardwareBreakpointsOptions.properties.limit.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[integer]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[整数値]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.hardwareBreakpointsOptions.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[オブジェクト]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -677,7 +692,7 @@
         <Str Cat="Text">
           <Val><![CDATA[One or more commands to execute after the connection has been made, in order to set up the remote connection.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[リモート接続をセットアップするために、接続が確立された後に実行する1つ以上のコマンド。]]></Val>
+            <Val><![CDATA[リモート接続をセットアップするために、接続が確立された後に実行する 1 つ以上のコマンド。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -685,6 +700,9 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.postRemoteConnectCommands.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[array]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[配列]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -814,12 +832,18 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.stopAtConnect.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If true, the debugger should stop after connecting to the target. If false, the debugger will continue after connecting. ]A;Defaults to false.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[True の場合、デバッガーはターゲットへの接続後に停止する必要があります。False の場合、デバッガーは接続後も続行します。]A;既定値は False です。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.stopAtConnect.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[boolean]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ブール値]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

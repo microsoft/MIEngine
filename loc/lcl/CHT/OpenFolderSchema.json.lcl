@@ -15,6 +15,9 @@
         <Item ItemId=";(...) ription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[Optional limit on the number of available hardware breakpoints to use. Only enforced when "require" is true and "limit" is greater than 0. ]A;Defaults to 0.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[要使用的硬體中斷點數目的選用限制。只有在 "require" 為 True 且 "limit" 大於 0 時才會強制執行。]A;預設為 0。]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -24,6 +27,9 @@
         <Item ItemId=";(...) scription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[If true, always use hardware breakpoints. ]A;Defaults to false.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[如果為 True，請一律使用硬體中斷點。]A;預設為 False。]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -33,6 +39,9 @@
         <Item ItemId=";(...) pe" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[boolean]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[布林值]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -259,12 +268,18 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.hardwareBreakpointsOptions.properties.limit.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[integer]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[整數]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.hardwareBreakpointsOptions.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[物件]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -677,7 +692,7 @@
         <Str Cat="Text">
           <Val><![CDATA[One or more commands to execute after the connection has been made, in order to set up the remote connection.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[建立連接之後，要執行的一個或多個命令，才可設定遠端連線。]]></Val>
+            <Val><![CDATA[建立連線之後，為了設定遠端連線要執行的一或多個命令。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -685,6 +700,9 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.postRemoteConnectCommands.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[array]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[陣列]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -814,12 +832,18 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.stopAtConnect.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If true, the debugger should stop after connecting to the target. If false, the debugger will continue after connecting. ]A;Defaults to false.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[如果為 True，則偵錯工具應於連線至目標後停止。如果為 False，則偵錯工具將在連線後繼續。]A;預設為 False。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.stopAtConnect.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[boolean]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[布林值]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
