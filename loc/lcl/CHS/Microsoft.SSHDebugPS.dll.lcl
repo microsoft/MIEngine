@@ -251,7 +251,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to enumerate installed GNU/Linux distributions. wsl.exe exited with code {0} (0x{0:X8}). More information may be available in the output window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[无法枚举安装的 GNU/Linux 分发。wsl.exe 已退出，代码为 {0} (0x{0:X8}) 。输出窗口中可能有详细信息。]]></Val>
+            <Val><![CDATA[无法枚举已安装的 GNU/Linux 发行版。wsl.exe 退出，代码为 {0} (0x{0:X8})。输出窗口中可能有详细信息。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA["{0} {1}" 失败，并将以下文本写入标准错误：]]></Val>
+            <Val><![CDATA["{0} {1}" 失败，并将以下文本写入标准错误:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -269,7 +269,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to use the Windows Subsystem for Linux (WSL) transport. No GNU/Linux distributions are installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[无法将 Windows 子系统用于 Linux (WSL) 传输。未安装 GNU/Linux 分发。]]></Val>
+            <Val><![CDATA[无法使用适用于 Linux 的 Windows 子系统(WSL)传输。未安装 GNU/Linux 分发版。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -278,7 +278,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL) is not installed on this computer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[此计算机上未安装 Linux (WSL) 的 Windows 子系统。]]></Val>
+            <Val><![CDATA[此计算机上未安装适用于 Linux 的 Windows 子系统(WSL)。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -322,6 +322,9 @@
       <Item ItemId=";TransportTitle_Args1" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} 传输]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -338,7 +341,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[适用于 Linux 的 Windows 子系统 (WSL) 连接类型允许 Visual Studio 附加到本地 GNU/Linux 进程。]]></Val>
+            <Val><![CDATA[适用于 Linux 的 Windows 子系统(WSL)连接类型允许 Visual Studio 附加到本地 GNU/Linux 进程。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -346,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[适用于 Linux 的 Windows 子系统(WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -353,7 +359,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio's attach support. Please upgrade to WSL version 2 or newer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[用于 Linux (WSL) 的 Windows 子系统的安装版本与 Visual Studio 的连接支持不兼容。请升级到 WSL 版本2或更高版本。]]></Val>
+            <Val><![CDATA[安装的适用于 Linux 的 Windows 子系统(WSL)版本与 Visual Studio 的附加支持不兼容。请升级到 WSL 版本 2 或更高版本。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -371,7 +377,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Enumerating installed GNU/Linux distributions...]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[正在枚举已安装的 GNU/Linux 分发 .。。]]></Val>
+            <Val><![CDATA[正在枚举已安装的 GNU/Linux 发行版...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
