@@ -170,6 +170,8 @@ namespace DebuggerTesting.Compilation
                     return new ClangCompiler(logger, settings);
                 case SupportedCompiler.VisualCPlusPlus:
                     return new VisualCPlusPlusCompiler(logger, settings);
+                case SupportedCompiler.XCodeBuild:
+                    return new XCodeCompiler(logger, settings);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(settings.CompilerType), "Unhandled compiler toolset: " + settings.CompilerType);
             }
@@ -209,6 +211,8 @@ namespace DebuggerTesting.Compilation
                         return Path.ChangeExtension(outputName, "dll");
                     else
                         return Path.ChangeExtension(outputName, "so");
+                case CompilerOutputType.MacOSApp:
+                        return Path.ChangeExtension(outputName, "app");
                 default:
                     throw new NotSupportedException("Support for output type '{0}' has not been implemented.".FormatInvariantWithArgs(outputType));
             }
