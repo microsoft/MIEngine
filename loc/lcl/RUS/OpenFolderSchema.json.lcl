@@ -15,6 +15,9 @@
         <Item ItemId=";(...) ription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[Optional limit on the number of available hardware breakpoints to use. Only enforced when "require" is true and "limit" is greater than 0. ]A;Defaults to 0.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Необязательное ограничение количества доступных аппаратных точек останова для использования. Применяется принудительно, только если "require" имеет значение TRUE, а "limit" больше 0. ]A;Значение по умолчанию — 0.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -24,6 +27,9 @@
         <Item ItemId=";(...) scription" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[If true, always use hardware breakpoints. ]A;Defaults to false.]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Если значение равно TRUE, всегда используйте аппаратные точки останова. ]A;Значение по умолчанию — FALSE.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -33,6 +39,9 @@
         <Item ItemId=";(...) pe" ItemType="0" PsrId="306" Leaf="true">
           <Str Cat="Text">
             <Val><![CDATA[boolean]]></Val>
+            <Tgt Cat="Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[логическое значение]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -253,12 +262,18 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.hardwareBreakpointsOptions.properties.limit.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[integer]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[целое число]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.hardwareBreakpointsOptions.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[object]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[объект]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -560,7 +575,7 @@
         <Str Cat="Text">
           <Val><![CDATA[#/definitions/cpp_schema/definitions/hardwareBreakpointsOptions]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[#/дефинитионс/cpp_schema/Дефинитионс/хардваребреакпоинтсоптионс]]></Val>
+            <Val><![CDATA[#/definitions/cpp_schema/definitions/hardwareBreakpointsOptions]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -638,7 +653,7 @@
         <Str Cat="Text">
           <Val><![CDATA[One or more commands to execute after the connection has been made, in order to set up the remote connection.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Одна или несколько команд для выполнения после подключения, чтобы настроить удаленное подключение.]]></Val>
+            <Val><![CDATA[Одна или несколько команд, которые нужно выполнить после завершения подключения для настройки удаленного подключения.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -646,6 +661,9 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.postRemoteConnectCommands.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[array]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[массив]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -766,12 +784,18 @@
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.stopAtConnect.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If true, the debugger should stop after connecting to the target. If false, the debugger will continue after connecting. ]A;Defaults to false.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Если значение равно TRUE, отладчик должен остановиться после подключения к целевому объекту. Если значение равно FALSE, отладчик продолжит работу после подключения. ]A;Значение по умолчанию — FALSE.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.stopAtConnect.type" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[boolean]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[логическое значение]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
