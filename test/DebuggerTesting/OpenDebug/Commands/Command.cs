@@ -199,7 +199,7 @@ namespace DebuggerTesting.OpenDebug.Commands
         // Create a DAR Response from an expected response
         private static DebugAdapterResponse GetDarResponse(IResponse response)
         {
-            return new DebugAdapterResponse(response.DynamicResponse, response.IgnoreOrder);
+            return new DebugAdapterResponse(response.DynamicResponse, response.IgnoreOrder, response.IgnoreResponseOrder);
         }
 
         #region ActualResponse

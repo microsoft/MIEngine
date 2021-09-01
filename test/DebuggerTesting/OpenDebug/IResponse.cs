@@ -17,5 +17,10 @@ namespace DebuggerTesting.OpenDebug
         /// Set to true if the order of the items in the response is not important (like variable lists)
         /// </summary>
         bool IgnoreOrder { get; }
+
+        /// <summary>
+        /// Set to true if the order of the response is not important (like output events)
+        /// </summary>
+        bool IgnoreResponseOrder { get; }
     }
 }
