@@ -9,7 +9,7 @@ fi
 
 if [ ! -f "$RootDir/bin/DebugAdapterProtocolTests/Debug/CppTests/config.xml" ]; then
     if [ "$(uname)" = "Darwin" ]; then
-        if "$RootDir"/tools/DownloadLldbMI.sh "$RootDir"/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters; then
+        if ! "$RootDir"/tools/DownloadLldbMI.sh "$RootDir"/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters; then
             echo "ERROR: Failed to download lldb-mi"
             exit 1
         fi 
