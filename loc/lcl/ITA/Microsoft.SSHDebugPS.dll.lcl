@@ -251,7 +251,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to enumerate installed GNU/Linux distributions. wsl.exe exited with code {0} (0x{0:X8}). More information may be available in the output window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Non è possibile enumerare le distribuzioni GNU/Linux installate. wsl.exe terminato con il codice {0} (0x{0:X8}). Altre informazioni potrebbero essere disponibili nella finestra di output.]]></Val>
+            <Val><![CDATA[Impossibile enumerare le distribuzioni GNU/Linux installate. wsl.exe è stato chiuso con codice {0} (0x{0:X8}). Altre informazioni potrebbero essere disponibili nella finestra di output.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[' {0} {1}' non è riuscito e ha scritto il testo seguente nell'errore standard:]]></Val>
+            <Val><![CDATA['{0} {1}' non è riuscito e ha scritto il testo seguente nell'errore standard:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -269,7 +269,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to use the Windows Subsystem for Linux (WSL) transport. No GNU/Linux distributions are installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Non è possibile usare il trasporto del sottosistema Windows per Linux (WSL). Nessuna distribuzione GNU/Linux installata.]]></Val>
+            <Val><![CDATA[Impossibile utilizzare il trasporto del sottosistema Windows per Linux (WSL). Non sono installate distribuzioni GNU/Linux.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -322,6 +322,9 @@
       <Item ItemId=";TransportTitle_Args1" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trasporto {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -338,7 +341,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Il tipo di connessione del sottosistema Windows per Linux (WSL) consente Visual Studio di collegarsi a processi GNU/Linux locali.]]></Val>
+            <Val><![CDATA[Il tipo di connessione del sottosistema Windows per Linux (WSL) consente a Visual Studio di collegarsi ai processi GNU/Linux locali.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -346,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[sottosistema Windows per Linux (WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
