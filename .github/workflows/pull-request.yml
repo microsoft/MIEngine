@@ -29,11 +29,9 @@ jobs:
     - name: Setup NuGet.exe for use with actions
       uses: NuGet/setup-nuget@v1.0.5
 
-    - name: Restore the application
-      run: NuGet.exe restore ${{ github.workspace }}\src\MIDebugEngine.sln
-
-    - name: Build the application
-      run: msbuild ${{ github.workspace }}\src\MIDebugEngine.sln /p:Configuration=$env:Configuration
+    - name: Build MIDebugEngine
+      run: |
+        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -c $env:Configuration -t vs
       env:
         Configuration: ${{ matrix.configuration }}
 
@@ -63,17 +61,12 @@ jobs:
     - name: Setup NuGet.exe for use with actions
       uses: NuGet/setup-nuget@v1.0.5
 
-    - name: Restore the application
-      run: NuGet.exe restore ${{ github.workspace }}\src\MIDebugEngine.sln
-
-    - name: Build the application
-      run: msbuild ${{ github.workspace }}\src\MIDebugEngine.sln /p:Configuration=Debug
-
-    - name: Build OpenDebugAD7
+    - name: Build MIDebugEngine
       run: |
-        dotnet publish ${{ github.workspace }}\src\OpenDebugAD7\OpenDebugAD7.csproj -c Debug -r win-x64 --self-contained -o ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\extension\debugAdapters
-        copy ${{ github.workspace }}\bin\Debug\Microsoft.MIDebugEngine.dll ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\extension\debugAdapters/.
-        copy ${{ github.workspace }}\bin\Debug\Microsoft.MICore.dll ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\extension\debugAdapters\.
+        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -t vscode
+
+    - name: Copy Test Configuration
+      run: |
         copy ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\TestConfigurations\config_msys_gdb.xml ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\config.xml
 
     - name: Setup MSYS2
@@ -120,12 +113,12 @@ jobs:
         # echo 1 | sudo tee /proc/sys/kernel/core_uses_pid
         # ulimit -S -c unlimited
         # sudo sysctl -w kernel.core_pattern=${{ github.workspace }}/core.%e
-    - run: |
-        ${{ github.workspace }}/PublishOpenDebugAD7.sh -c Debug -o ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
-        cp ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/TestConfigurations/config_gdb.xml ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/config.xml
 
     - run: |
-        dotnet test ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll  --logger "trx;LogFileName=${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx"
+        ${{ github.workspace }}/eng/Scripts/CI-Build.sh
+
+    - run: |
+        ${{ github.workspace }}/eng/Scripts/CI-Test.sh
 
     - name: 'Upload Test Results'
       uses: actions/upload-artifact@v2
@@ -151,15 +144,10 @@ jobs:
       run: dotnet build ${{ github.workspace }}/src/MIDebugEngine-Unix.sln
 
     - run: |
-        ${{ github.workspace }}/PublishOpenDebugAD7.sh -c Debug -o ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
-        cp ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/TestConfigurations/config_lldb.xml ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/config.xml
-
-    - name: Download LLDB-MI
-      run: |
-        ${{ github.workspace }}/tools/DownloadLldbMI.sh ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters
+        ${{ github.workspace }}/eng/Scripts/CI-Build.sh
 
     - run: |
-        dotnet test ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll --logger "trx;LogFileName=${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx"
+        ${{ github.workspace }}/eng/Scripts/CI-Test.sh
 
     - name: 'Upload Test Results'
       uses: actions/upload-artifact@v2
