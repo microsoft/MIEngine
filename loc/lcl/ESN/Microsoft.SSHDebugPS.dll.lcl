@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Error de ' {0} {1} ' y se escribió el siguiente texto en el error estándar:]]></Val>
+            <Val><![CDATA[Error de "{0} {1}" y se escribió el siguiente texto en el error estándar:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -269,7 +269,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to use the Windows Subsystem for Linux (WSL) transport. No GNU/Linux distributions are installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[No se puede usar el transporte de Windows Subsystem para Linux (WSL). No hay distribuciones GNU/Linux instaladas.]]></Val>
+            <Val><![CDATA[No se puede usar el transporte del Subsistema de Windows para Linux (WSL). No hay distribuciones GNU/Linux instaladas.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -322,6 +322,9 @@
       <Item ItemId=";TransportTitle_Args1" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0}Transporte]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -346,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Subsistema de Windows para Linux (WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -353,7 +359,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio's attach support. Please upgrade to WSL version 2 or newer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[La versión instalada de subsistema de Windows para Linux (WSL) no es compatible con la compatibilidad para adjuntar Visual Studio. Actualice a WSL versión 2 o posterior.]]></Val>
+            <Val><![CDATA[La versión instalada de subsistema de Windows para Linux (WSL) no es compatible con el soporte para adjuntar Visual Studio. Actualice a la versión 2 de WSL o posterior.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
