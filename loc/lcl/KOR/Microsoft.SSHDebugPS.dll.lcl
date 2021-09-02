@@ -251,7 +251,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to enumerate installed GNU/Linux distributions. wsl.exe exited with code {0} (0x{0:X8}). More information may be available in the output window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[설치 된 GNU/Linux 분포를 열거할 수 없습니다. wsl.exe 종료 되었습니다 (0x{0:X8}) {0}. 자세한 내용은 출력 창에서 확인할 수 있습니다.]]></Val>
+            <Val><![CDATA[설치된 GNU/Linux 배포를 열거할 수 없습니다. wsl.exe가 코드 {0}(0x{0:X8})로 종료되었습니다. 자세한 내용은 출력 창에서 확인할 수 있습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[' {0} {1} '이 (가) 실패 하 고 표준 오류에 다음 텍스트가 기록 되었습니다.]]></Val>
+            <Val><![CDATA['{0}{1}'이(가) 실패하고 다음 텍스트를 표준 오류에 기록했습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -269,7 +269,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to use the Windows Subsystem for Linux (WSL) transport. No GNU/Linux distributions are installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Linux 용 Windows 하위 시스템 (WSL) 전송을 사용할 수 없습니다. 설치 된 GNU/Linux 배포판이 없습니다.]]></Val>
+            <Val><![CDATA[WSL(Linux용 Windows 하위 시스템) 전송을 사용할 수 없습니다. GNU/Linux 배포판이 설치되어 있지 않습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -278,7 +278,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL) is not installed on this computer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Linux 용 Windows 하위 시스템 (WSL)이이 컴퓨터에 설치 되어 있지 않습니다.]]></Val>
+            <Val><![CDATA[이 컴퓨터에 WSL(Linux용 Windows 하위 시스템)이 설치되어 있지 않습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -322,6 +322,9 @@
       <Item ItemId=";TransportTitle_Args1" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} 전송]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -338,7 +341,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Linux 용 Windows 하위 시스템 (WSL) 연결 유형을 사용 하면 Visual Studio 로컬 GNU/Linux 프로세스에 연결할 수 있습니다.]]></Val>
+            <Val><![CDATA[WSL(Linux용 Windows 하위 시스템) 연결 형식을 사용하면 Visual Studio 로컬 GNU/Linux 프로세스에 연결할 수 있습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -346,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Linux용 Windows 하위 시스템(WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -353,7 +359,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio's attach support. Please upgrade to WSL version 2 or newer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Linux 용 Windows 하위 시스템의 설치 된 버전 (WSL)이 Visual Studio의 연결 지원과 호환 되지 않습니다. WSL 버전 2 이상으로 업그레이드 하세요.]]></Val>
+            <Val><![CDATA[설치된 WSL(Linux용 Windows 하위 시스템) 버전이 Visual Studio 연결 지원과 호환되지 않습니다. WSL 버전 2 이상으로 업그레이드하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -371,7 +377,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Enumerating installed GNU/Linux distributions...]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[설치 된 GNU/Linux 분포를 열거 하는 중 ...]]></Val>
+            <Val><![CDATA[설치된 GNU/Linux 배포를 열거하는 중...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

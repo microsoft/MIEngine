@@ -251,7 +251,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to enumerate installed GNU/Linux distributions. wsl.exe exited with code {0} (0x{0:X8}). More information may be available in the output window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Не удалось перечислить установленные дистрибутивы GNU/Linux. wsl.exe завершил работу с кодом {0} (0x{0:X8}). Дополнительные сведения могут быть доступны в окне вывода.]]></Val>
+            <Val><![CDATA[Не удается перечислить установленные дистрибутивы GNU/Linux. Команда wsl.exe завершила работу с кодом {0} (0x{0:X8}). Дополнительные сведения можно найти в окне вывода.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Не удалось выполнить "{0} {1}", поэтому следующий текст записан в стандартную ошибку:]]></Val>
+            <Val><![CDATA[Сбой при выполнении "{0} {1}", стандартная ошибка с текстом:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -269,7 +269,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to use the Windows Subsystem for Linux (WSL) transport. No GNU/Linux distributions are installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Не удалось использовать транспорт подсистемы Windows для Linux (ВСЛ). Не установлены дистрибутивы GNU/Linux.]]></Val>
+            <Val><![CDATA[Не удается использовать транспорт подсистемы Windows для Linux (WSL). Не установлены дистрибутивы GNU/Linux.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -278,7 +278,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL) is not installed on this computer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Подсистема Windows для Linux (ВСЛ) не установлена на этом компьютере.]]></Val>
+            <Val><![CDATA[Подсистема Windows для Linux (WSL) не установлена на этом компьютере.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -323,7 +323,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} транспорт]]></Val>
+            <Val><![CDATA[Транспорт {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -341,7 +341,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Тип подключения подсистемы Windows для Linux (ВСЛ) позволяет Visual Studio присоединяться к локальным процессам GNU/Linux.]]></Val>
+            <Val><![CDATA[Тип соединения подсистемы Windows для Linux (WSL) позволяет Visual Studio подключаться к локальным процессам GNU/Linux.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -349,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Подсистема Windows для Linux (WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -356,7 +359,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio's attach support. Please upgrade to WSL version 2 or newer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Установленная версия подсистемы Windows для Linux (ВСЛ) несовместима с поддержкой прикрепления Visual Studio. Выполните обновление до ВСЛ версии 2 или более поздней.]]></Val>
+            <Val><![CDATA[Установленная версия подсистемы Windows для Linux (WSL) несовместима с поддержкой подключения Visual Studio. Обновите до WSL версии 2 или более поздней.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -374,7 +377,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Enumerating installed GNU/Linux distributions...]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Перечисление установленных распределений GNU/Linux...]]></Val>
+            <Val><![CDATA[Перечисление установленных дистрибутивов GNU/Linux…]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
