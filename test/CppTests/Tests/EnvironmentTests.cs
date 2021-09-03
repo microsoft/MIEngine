@@ -51,7 +51,8 @@ namespace CppTests.Tests
         [DependsOnTest(nameof(CompileKitchenSinkForEnvironmentTests))]
         [RequiresTestSettings]
         // Need to support 'runInTerminal' request.
-        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        // Re-enable lldb for test machines
+        [UnsupportedDebugger(SupportedDebugger.VsDbg | SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void EnvironmentVariablesBasicNewTerminal(ITestSettings settings)
         {
             this.TestPurpose("Tests basic operation of environment variables using a new terminal window");
@@ -72,7 +73,8 @@ namespace CppTests.Tests
         [DependsOnTest(nameof(CompileKitchenSinkForEnvironmentTests))]
         [RequiresTestSettings]
         // Need to support 'runInTerminal' request.
-        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        // Re-enable lldb for test machines
+        [UnsupportedDebugger(SupportedDebugger.VsDbg | SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void EnvironmentVariablesUndefinedNewTerminal(ITestSettings settings)
         {
             this.TestPurpose("Tests environment variables that are undefined using a new terminal window");
