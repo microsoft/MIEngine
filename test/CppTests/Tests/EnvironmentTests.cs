@@ -136,7 +136,8 @@ namespace CppTests.Tests
         [DependsOnTest(nameof(CompileKitchenSinkForEnvironmentTests))]
         [RequiresTestSettings]
         // Need to support 'runInTerminal' request.
-        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        // darwin-debug does not support spaces in environment variables
+        [UnsupportedDebugger(SupportedDebugger.VsDbg | SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void EnvironmentVariablesSpacesNewTerminal(ITestSettings settings)
         {
             this.TestPurpose("Tests environment variables that include a space in a new terminal window");
