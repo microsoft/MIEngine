@@ -32,17 +32,19 @@ namespace MICore
 
         private static RuntimePlatform CalculateRuntimePlatform()
         {
-            switch (Environment.OSVersion.Platform)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                case PlatformID.Win32NT:
-                    return RuntimePlatform.Windows;
-                case PlatformID.Unix:
-                    return RuntimePlatform.Unix;
-                case PlatformID.MacOSX:
-                    return RuntimePlatform.MacOSX;
-                default:
-                    return RuntimePlatform.Unknown;
+                return RuntimePlatform.Windows;
             }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return RuntimePlatform.MacOSX;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return RuntimePlatform.Unix;
+            }
+            return RuntimePlatform.Unknown;
         }
 
 
