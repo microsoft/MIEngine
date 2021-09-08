@@ -8,7 +8,7 @@ jobs:
 - job:
   displayName: ${{ parameters.DisplayName }}
   pool:
-    name: VSEngSS-MicroBuild2019
+    name: VSEngSS-MicroBuild2019-1ES
     demands:
     - msbuild
     - visualstudio
