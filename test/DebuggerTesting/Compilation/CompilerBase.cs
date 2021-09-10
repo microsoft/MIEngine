@@ -53,7 +53,15 @@ namespace DebuggerTesting.Compilation
             Assert.True(result, "The compilation failed.");
 
             // If the output file was not created, then error
-            Assert.True(File.Exists(targetFilePath), "The compiler did not create the expected output. " + targetFilePath);
+            if (outputType == CompilerOutputType.MacOSApp)
+            {
+                // .app on macOS is a special folder
+                Assert.True(Directory.Exists(targetFilePath), "The compiler did not create the expected output. " + targetFilePath);
+            }
+            else
+            {
+                Assert.True(File.Exists(targetFilePath), "The compiler did not create the expected output. " + targetFilePath);
+            }
         }
 
         #endregion

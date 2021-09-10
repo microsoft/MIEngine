@@ -16,11 +16,14 @@ namespace DebugAdapterRunner
         public dynamic Match { get; internal set; }
         public bool IgnoreOrder { get; private set; }
 
-        public DebugAdapterResponse(object response, bool ignoreOrder = false)
+        public bool IgnoreResponseOrder { get; private set; }
+
+        public DebugAdapterResponse(object response, bool ignoreOrder = false, bool ignoreResponseOrder = false)
         {
             Response = response;
             Match = null;
             IgnoreOrder = ignoreOrder;
+            IgnoreResponseOrder = ignoreResponseOrder;
         }
     }
 }

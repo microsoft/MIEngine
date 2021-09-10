@@ -130,6 +130,19 @@ namespace DebugAdapterRunner
             return messageBuffer;
         }
 
+        private struct ResponsePair
+        {
+            /// <summary>
+            /// Boolean to indicate if this response has a match.
+            /// </summary>
+            public bool FoundMatch { get; set; }
+
+            /// <summary>
+            /// The response
+            /// </summary>
+            public object Response { get; set; }
+        }
+
         public override void Run(DebugAdapterRunner runner)
         {
             // Send the request
@@ -138,12 +151,44 @@ namespace DebugAdapterRunner
             runner.DebugAdapter.StandardInput.Write(request);
 
             // Process + validate responses
-            List<object> responseList = new List<object>();
+            List<ResponsePair> responseList = new List<ResponsePair>();
             int currentExpectedResponseIndex = 0;
+            int previousExpectedResponseIndex = 0;
 
             // Loop until we have received as many expected responses as expected
             while (currentExpectedResponseIndex < this.ExpectedResponses.Count)
             {
+                // Check if previous messages contained the expected response
+                if (previousExpectedResponseIndex != currentExpectedResponseIndex)
+                {
+                    DebugAdapterResponse expected = this.ExpectedResponses[currentExpectedResponseIndex];
+                    // Only search responses in history list if we can ignore the response order.
+                    if (expected.IgnoreResponseOrder)
+                    {
+                        for (int i = 0; i < responseList.Count; i++)
+                        {
+                            ResponsePair responsePair = responseList[i];
+                            // Make sure we have not seen this response and check to see if it the response we are expecting.
+                            if (!responsePair.FoundMatch && Utils.CompareObjects(expected.Response, responsePair.Response, expected.IgnoreOrder))
+                            {
+                                expected.Match = responsePair.Response;
+                                responsePair.FoundMatch = true;
+                                break;
+                            }
+                        }
+
+                        // We found an expected response from a previous response.
+                        // Continue to next expectedResponse.
+                        if (expected.Match != null)
+                        {
+                            currentExpectedResponseIndex++;
+                            continue;
+                        }
+                    }
+                }
+
+                previousExpectedResponseIndex = currentExpectedResponseIndex;
+
                 string receivedMessage = null;
                 Exception getMessageExeception = null;
                 try
@@ -200,7 +245,19 @@ namespace DebugAdapterRunner
                         messageStart = "Exception while reading message from debug adpter. " + getMessageExeception.Message;
                     }
 
-                    string expectedResponseText = JsonConvert.SerializeObject(this.ExpectedResponses[currentExpectedResponseIndex].Response);
+                    string expectedResponseText = string.Empty;
+                    for (int i = 0; i < ExpectedResponses.Count; i++)
+                    {
+                        string status;
+                        if (i < currentExpectedResponseIndex)
+                            status = "Found";
+                        else if (i == currentExpectedResponseIndex)
+                            status = "Not Found";
+                        else
+                            status = "Not searched yet";
+                        expectedResponseText += string.Format(CultureInfo.CurrentCulture, "{0}. {1}: {2}\n", (i + 1), status, JsonConvert.SerializeObject(ExpectedResponses[i].Response));
+                    }
+
                     string actualResponseText = string.Empty;
 
                     for (int i = 0; i < responseList.Count; i++)
@@ -208,7 +265,7 @@ namespace DebugAdapterRunner
                         actualResponseText += string.Format(CultureInfo.CurrentCulture, "{0}. {1}\n", (i + 1), JsonConvert.SerializeObject(responseList[i]));
                     }
 
-                    string errorMessage = string.Format(CultureInfo.CurrentCulture, "{0}\nExpected = {1}\nActual Responses =\n{2}",
+                    string errorMessage = string.Format(CultureInfo.CurrentCulture, "{0}\nExpected =\n{1}\nActual Responses =\n{2}",
                         messageStart, expectedResponseText, actualResponseText);
 
                     throw new DARException(errorMessage);
@@ -221,7 +278,6 @@ namespace DebugAdapterRunner
                     if (dispatcherMessage.type == "event")
                     {
                         DispatcherEvent dispatcherEvent = JsonConvert.DeserializeObject<DispatcherEvent>(receivedMessage);
-                        responseList.Add(dispatcherEvent);
 
                         if (dispatcherEvent.eventType == "stopped")
                         {
@@ -234,11 +290,16 @@ namespace DebugAdapterRunner
                             expected.Match = dispatcherEvent;
                             currentExpectedResponseIndex++;
                         }
+
+                        responseList.Add(new ResponsePair()
+                        {
+                            FoundMatch = expected.Match != null,
+                            Response = dispatcherEvent
+                        });
                     }
                     else if (dispatcherMessage.type == "response")
                     {
                         DispatcherResponse dispatcherResponse = JsonConvert.DeserializeObject<DispatcherResponse>(receivedMessage);
-                        responseList.Add(dispatcherResponse);
 
                         var expected = this.ExpectedResponses[currentExpectedResponseIndex];
                         if (Utils.CompareObjects(expected.Response, dispatcherResponse, expected.IgnoreOrder))
@@ -246,6 +307,12 @@ namespace DebugAdapterRunner
                             expected.Match = dispatcherResponse;
                             currentExpectedResponseIndex++;
                         }
+
+                        responseList.Add(new ResponsePair()
+                        {
+                            FoundMatch = expected.Match != null,
+                            Response = dispatcherResponse
+                        });
                     }
                     else if (dispatcherMessage.type == "request")
                     {
