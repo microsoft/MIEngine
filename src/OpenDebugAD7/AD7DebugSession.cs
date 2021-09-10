@@ -174,7 +174,7 @@ namespace OpenDebugAD7
                 // On macOS, check to see if we are trying to debug an app bundle (.app).
                 // 'app bundles' contain various resources and executables in a folder.
                 // LLDB understands how to target these bundles.
-                if (Utilities.IsOSX() && program.EndsWith(".app", StringComparison.OrdinalIgnoreCase) && miMode.Equals("lldb", StringComparison.OrdinalIgnoreCase))
+                if (Utilities.IsOSX() && program.EndsWith(".app", StringComparison.OrdinalIgnoreCase) && miMode?.Equals("lldb", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     return Directory.Exists(program);
                 }
