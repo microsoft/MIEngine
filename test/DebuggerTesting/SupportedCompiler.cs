@@ -11,5 +11,6 @@ namespace DebuggerTesting
         ClangPlusPlus = 0x1,
         GPlusPlus = 0x2,
         VisualCPlusPlus = 0x4,
+        XCodeBuild = 0x8
     }
 }
