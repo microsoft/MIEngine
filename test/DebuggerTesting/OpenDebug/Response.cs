@@ -31,9 +31,11 @@ namespace DebuggerTesting.OpenDebug
 
         public bool IgnoreOrder { get; protected set; }
 
-        #endregion
+        public bool IgnoreResponseOrder { get; protected set; }
 
-        public T ExpectedResponse { get; protected set; }
+    #endregion
+
+    public T ExpectedResponse { get; protected set; }
 
         public override string ToString()
         {

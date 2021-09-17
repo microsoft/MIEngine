@@ -6,7 +6,7 @@ stages:
 - stage: Windows
   dependsOn: []
   jobs:
-  - template: ./jobs/VSEngSS-MicroBuild2019.job.yml
+  - template: ./jobs/VSEngSS-MicroBuild2019-1ES.job.yml
     parameters:
       DisplayName: 'VSCode_Release'
       JobTemplate:
@@ -24,7 +24,7 @@ stages:
 - stage: OSX_ESRPSign
   dependsOn: [OSX_CodeSign]
   jobs:
-  - template: ./jobs/VSEngSS-MicroBuild2019.job.yml
+  - template: ./jobs/VSEngSS-MicroBuild2019-1ES.job.yml
     parameters:
       DisplayName: 'OSX Sign/Harden'
       JobTemplate:

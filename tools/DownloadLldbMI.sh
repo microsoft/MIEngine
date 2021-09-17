@@ -42,3 +42,5 @@ mv ./debugAdapters/lldb-mi $1/../.
 rm ./lldb-mi-10.0.0.zip
 
 popd > /dev/null 2>&1 || exit
+
+exit 0

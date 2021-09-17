@@ -251,7 +251,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to enumerate installed GNU/Linux distributions. wsl.exe exited with code {0} (0x{0:X8}). More information may be available in the output window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie można wyliczyć zainstalowanych rozkładów GNU/Linux. wsl.exe zakończono z {0} kodu (0x{0:X8}). W oknie danych wyjściowych może być dostępnych więcej informacji.]]></Val>
+            <Val><![CDATA[Nie można wyliczyć zainstalowanych dystrybucji GNU/Linux. Program wsl.exe zakończył działanie z kodem {0} (0x{0:X8}). Więcej informacji może być dostępnych w oknie danych wyjściowych.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA["{0} {1}" nie powiodło się i zapisano następujący tekst jako błąd standardowy:]]></Val>
+            <Val><![CDATA[Operacja „{0} {1}” nie powiodła się i zapisano następujący tekst błędu standardowego:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -269,7 +269,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to use the Windows Subsystem for Linux (WSL) transport. No GNU/Linux distributions are installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie można użyć transportu podsystemu Windows for Linux (WSL). Nie zainstalowano żadnych rozkładów GNU/Linux.]]></Val>
+            <Val><![CDATA[Nie można użyć transportu podsystemu Windows dla systemu Linux (WSL). Nie zainstalowano dystrybucji GNU/Linux.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -323,7 +323,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Transport {0}]]></Val>
+            <Val><![CDATA[transport {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -341,7 +341,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Typ połączenia z podsystemem Windows for Linux (WSL) umożliwia Visual Studio dołączenia do lokalnych procesów GNU/Linux.]]></Val>
+            <Val><![CDATA[Typ połączenia podsystemu Windows dla systemu Linux (WSL) umożliwia programowi Visual Studio dołączanie do lokalnych procesów GNU/Linux.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -349,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Podsystem Windows dla systemu Linux (WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -356,7 +359,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio's attach support. Please upgrade to WSL version 2 or newer.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Zainstalowana wersja podsystemu Windows dla systemu Linux (WSL) jest niezgodna z obsługą dołączania Visual Studio. Dokonaj uaktualnienia do WSL w wersji 2 lub nowszej.]]></Val>
+            <Val><![CDATA[Zainstalowana wersja podsystemu Windows dla systemu Linux (WSL) jest niezgodna z obsługą dołączania programu Visual Studio. Uaktualnij do wersji WSL 2 lub nowszej.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -374,7 +377,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Enumerating installed GNU/Linux distributions...]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Trwa Wyliczanie zainstalowanych rozkładów GNU/Linux...]]></Val>
+            <Val><![CDATA[Wyliczanie zainstalowanych dystrybucji GNU/Linux...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

@@ -260,7 +260,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0} {1}' failed and wrote the following text to standard error:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[' {0} {1} ' falhou e gravou o seguinte texto no erro padrão:]]></Val>
+            <Val><![CDATA['{0} {1}' falhou e gravou o seguinte texto no erro padrão:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -323,7 +323,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Transport]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Transporte {0}]]></Val>
+            <Val><![CDATA[{0} Transporte]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -341,7 +341,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The Windows Subsystem for Linux (WSL) connection type allows Visual Studio to attach to local GNU/Linux processes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O tipo de conexão do subsistema do Windows para Linux (WSL) permite que Visual Studio seja anexado aos processos locais do GNU/Linux.]]></Val>
+            <Val><![CDATA[O tipo de conexão do subsistema do Windows para Linux (WSL) permite que o Visual Studio seja anexado aos processos locais do GNU/Linux.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -349,6 +349,9 @@
       <Item ItemId=";WSL_PSName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windows Subsystem for Linux (WSL)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Subsistema do Windows para Linux (WSL)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
