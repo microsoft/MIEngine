@@ -1175,7 +1175,7 @@ namespace Microsoft.MIDebugEngine
             }
 
             result = matches;
-            return Constants.S_OK;
+            return matches != null ? Constants.S_OK : Constants.E_FAIL;
         }
         #endregion
 
