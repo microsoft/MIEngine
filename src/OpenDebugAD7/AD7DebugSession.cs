@@ -2466,8 +2466,9 @@ namespace OpenDebugAD7
                         matchlist.Add(new CompletionItem()
                         {
                             Label = result,
-                            Text = result,
-                            Start = 0
+                            Start = 0,
+                            Type = CompletionItemType.Text,
+                            Length = result.Length
                         });
                     }
                 }

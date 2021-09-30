@@ -116,17 +116,20 @@ namespace Microsoft.MIDebugEngine
         /// <param name="command">raw command</param>
         /// <param name="strippedCommand">command stripped of the preface ('-exec ' or '`')</param>
         /// <returns>true if it is a console command</returns>
-        internal static bool IsConsoleExecCmd(string command, out string strippedCommand)
+        internal static bool IsConsoleExecCmd(string command, out string prefix, out string strippedCommand)
         {
+            prefix = string.Empty;
             strippedCommand = string.Empty;
             string execCommandString = "-exec ";
             if (command.StartsWith(execCommandString, StringComparison.Ordinal))
             {
+                prefix = execCommandString;
                 strippedCommand = command.Substring(execCommandString.Length);
                 return true;
             }
             else if (command[0] == '`')
             {
+                prefix = "`";
                 strippedCommand = command.Substring(1).TrimStart(); // remove spaces if any
                 return true;
             }

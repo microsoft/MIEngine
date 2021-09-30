@@ -501,8 +501,7 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                string consoleCommand;
-                if (EngineUtils.IsConsoleExecCmd(_strippedName, out consoleCommand))
+                if (EngineUtils.IsConsoleExecCmd(_strippedName, out string _, out string consoleCommand))
                 {
                     // special case for executing raw mi commands. 
                     string consoleResults = null;
