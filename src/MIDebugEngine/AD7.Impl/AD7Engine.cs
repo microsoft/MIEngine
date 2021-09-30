@@ -1153,6 +1153,21 @@ namespace Microsoft.MIDebugEngine
             }
             return hr;
         }
+
+        int IDebugProgramDAP.AutoCompleteCommand(string command, IDebugStackFrame2 stackFrame, out string[] result)
+        {
+            var frame = stackFrame as AD7StackFrame;
+            int threadId = frame?.Thread.Id ?? -1;
+            uint frameLevel = frame?.ThreadContext.Level ?? 0;
+
+            string[] matches = null;
+            _debuggedProcess.WorkerThread.RunOperation(async () =>
+            {
+                matches = await _debuggedProcess.MICommandFactory.AutoComplete(command, threadId, frameLevel);
+            });
+            result = matches;
+            return Constants.S_OK;
+        }
         #endregion
 
         #region Deprecated interface methods
