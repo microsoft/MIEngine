@@ -278,5 +278,22 @@ namespace MICore
             string command = onlyOnce ? "tcatch " : "catch ";
             await _debugger.ConsoleCmdAsync(command + name, allowWhileRunning: false);
         }
+
+        public override async Task<string[]> AutoComplete(string command, int threadId, uint frameLevel)
+        {
+            command = "-complete \"" + command + "\"";
+            Results res;
+            if (threadId == -1)
+                res = await _debugger.CmdAsync(command, ResultClass.done);
+            else
+                res = await ThreadFrameCmdAsync(command, ResultClass.done, threadId, frameLevel);
+
+            var matchlist = res.Find<ValueListValue>("matches");
+
+            if (int.Parse(res.FindString("max_completions_reached"), CultureInfo.InvariantCulture) != 0)
+                _debugger.Logger.WriteLine("We reached max-completions!");
+
+            return matchlist?.AsStrings;
+        }
     }
 }
