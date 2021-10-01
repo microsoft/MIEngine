@@ -127,10 +127,10 @@ namespace Microsoft.MIDebugEngine
                 strippedCommand = command.Substring(execCommandString.Length);
                 return true;
             }
-            else if (command[0] == '`')
+            else if (command.Length > 0 && command[0] == '`')
             {
                 prefix = "`";
-                strippedCommand = command.Substring(1).TrimStart(); // remove spaces if any
+                strippedCommand = command.Substring(1);
                 return true;
             }
             return false;
