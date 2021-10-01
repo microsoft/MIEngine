@@ -1154,19 +1154,28 @@ namespace Microsoft.MIDebugEngine
             return hr;
         }
 
-        int IDebugProgramDAP.AutoCompleteCommand(string command, IDebugStackFrame2 stackFrame, out string[] result)
+        int IDebugProgramDAP.AutoComplete(string command, IDebugStackFrame2 stackFrame, out string[] result)
         {
             var frame = stackFrame as AD7StackFrame;
             int threadId = frame?.Thread.Id ?? -1;
             uint frameLevel = frame?.ThreadContext.Level ?? 0;
 
             string[] matches = null;
-            _debuggedProcess.WorkerThread.RunOperation(async () =>
+            if (EngineUtils.IsConsoleExecCmd(command, out string prefix, out string consoleCommand))
             {
-                matches = await _debuggedProcess.MICommandFactory.AutoComplete(command, threadId, frameLevel);
-            });
+                _debuggedProcess.WorkerThread.RunOperation(async () =>
+                {
+                    matches = await _debuggedProcess.MICommandFactory.AutoComplete(consoleCommand, threadId, frameLevel);
+                });
+
+                for (int i = 0; i < matches.Length; i++)
+                {
+                    matches[i] = prefix + matches[i];
+                }
+            }
+
             result = matches;
-            return Constants.S_OK;
+            return matches != null ? Constants.S_OK : Constants.E_FAIL;
         }
         #endregion
 
