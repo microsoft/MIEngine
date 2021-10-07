@@ -874,6 +874,7 @@ namespace OpenDebugAD7
             InitializeResponse initializeResponse = new InitializeResponse()
             {
                 SupportsConfigurationDoneRequest = true,
+                SupportsCompletionsRequest = m_engine is IDebugProgramDAP,
                 SupportsEvaluateForHovers = true,
                 SupportsSetVariable = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
@@ -2436,6 +2437,53 @@ namespace OpenDebugAD7
             m_functionBreakpoints = newBreakpoints;
 
             responder.SetResponse(response);
+        }
+
+        protected override void HandleCompletionsRequestAsync(IRequestResponder<CompletionsArguments, CompletionsResponse> responder)
+        {
+            if (!m_isStopped)
+            {
+                responder.SetError(new ProtocolException("Failed to handle CompletionsRequest", new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
+            }
+
+            IDebugStackFrame2 frame = null;
+            int? frameId = responder.Arguments.FrameId;
+            if (frameId != null)
+                _ = m_frameHandles.TryGet(frameId.Value, out frame);
+
+            try
+            {
+                string command = responder.Arguments.Text;
+                var matchlist = new List<CompletionItem>();
+
+                var debugProgram = m_engine as IDebugProgramDAP;
+
+                if (debugProgram.AutoComplete(command, frame, out string[] results) == HRConstants.S_OK)
+                {
+                    foreach (string result in results)
+                    {
+                        matchlist.Add(new CompletionItem()
+                        {
+                            Label = result,
+                            Start = 0,
+                            Type = CompletionItemType.Text,
+                            Length = result.Length
+                        });
+                    }
+                }
+
+                responder.SetResponse(new CompletionsResponse(matchlist));
+            }
+            catch (NotImplementedException)
+            {
+                // If MIDebugEngine does not implemented AutoCompleted, just return an empty response.
+                responder.SetResponse(new CompletionsResponse());
+            }
+            catch (Exception e)
+            {
+                responder.SetError(new ProtocolException("Auto-completion failed!", e));
+            }
         }
 
         protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
