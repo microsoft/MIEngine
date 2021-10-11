@@ -493,29 +493,6 @@ namespace Microsoft.MIDebugEngine
             return val;
         }
 
-        /// <summary>
-        /// This allows console commands to be sent through the eval channel via a '-exec ' or '`' preface
-        /// </summary>
-        /// <param name="command">raw command</param>
-        /// <param name="strippedCommand">command stripped of the preface ('-exec ' or '`')</param>
-        /// <returns>true if it is a console command</returns>
-        private bool IsConsoleExecCmd(string command, out string strippedCommand)
-        {
-            strippedCommand = string.Empty;
-            string execCommandString = "-exec ";
-            if (command.StartsWith(execCommandString, StringComparison.Ordinal))
-            {
-                strippedCommand = command.Substring(execCommandString.Length);
-                return true;
-            }
-            else if (command[0] == '`')
-            {
-                strippedCommand = command.Substring(1).TrimStart(); // remove spaces if any
-                return true;
-            }
-            return false;
-        }
-
         internal async Task Eval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
         {
             this.VerifyNotDisposed();
@@ -524,8 +501,7 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                string consoleCommand;
-                if (IsConsoleExecCmd(_strippedName, out consoleCommand))
+                if (EngineUtils.IsConsoleExecCmd(_strippedName, out string _, out string consoleCommand))
                 {
                     // special case for executing raw mi commands. 
                     string consoleResults = null;

@@ -109,6 +109,33 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
+
+        /// <summary>
+        /// This allows console commands to be sent through the eval channel via a '-exec ' or '`' preface
+        /// </summary>
+        /// <param name="command">raw command</param>
+        /// <param name="strippedCommand">command stripped of the preface ('-exec ' or '`')</param>
+        /// <returns>true if it is a console command</returns>
+        internal static bool IsConsoleExecCmd(string command, out string prefix, out string strippedCommand)
+        {
+            prefix = string.Empty;
+            strippedCommand = string.Empty;
+            string execCommandString = "-exec ";
+            if (command.StartsWith(execCommandString, StringComparison.Ordinal))
+            {
+                prefix = execCommandString;
+                strippedCommand = command.Substring(execCommandString.Length);
+                return true;
+            }
+            else if (command.Length > 0 && command[0] == '`')
+            {
+                prefix = "`";
+                strippedCommand = command.Substring(1);
+                return true;
+            }
+            return false;
+        }
+
         //
         // The RegisterNameMap maps register names to logical group names. The architecture of 
         // the platform is described with all its varients. Any particular target may only contains a subset 
