@@ -1135,6 +1135,10 @@ namespace OpenDebugAD7
             SetCommonDebugSettings(responder.Arguments.ConfigurationProperties);
 
             string program = responder.Arguments.ConfigurationProperties.GetValueAsString("program");
+            if (isLocal && program == null)
+            {
+                program = Process.GetProcessById(pid).MainModule.FileName;
+            }
             string executable = null;
             bool success = false;
             try
