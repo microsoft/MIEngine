@@ -575,19 +575,38 @@ namespace MICore
             //   SBTarget::BreakpointCreateForException
 
             // throw new NotImplementedException();
+
             List<ulong> breakpointNumbers = new List<ulong>();
 
-            string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw {0}", exceptionCategory);
-            Results result = await _debugger.CmdAsync(command, ResultClass.done);
-            var breakpointNumber = result.Find("bkpt").FindUint("number");
-            breakpointNumbers.Add((ulong)breakpointNumber);
+            if (exceptionNames == null)
+            {
+                string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw");
+                Results result = await _debugger.CmdAsync(command, ResultClass.done);
+                var breakpointNumber = result.Find("bkpt").FindUint("number");
+                breakpointNumbers.Add((ulong)breakpointNumber);
+
+            }
+            else
+            {
+                foreach (string exceptionName in exceptionNames)
+                {
+                    string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw {0}", exceptionName);
+                    Results result = await _debugger.CmdAsync(command, ResultClass.done);
+                    var breakpointNumber = result.Find("bkpt").FindUint("number");
+                    breakpointNumbers.Add((ulong)breakpointNumber);
+                }
+            }
 
             return breakpointNumbers;
         }
 
-        public virtual Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        public virtual async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
         {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
+            foreach (ulong breakpointNumber in exceptionBreakpoints)
+            {
+                await BreakDelete(breakpointNumber.ToString(CultureInfo.InvariantCulture));
+            }
         }
 
         /// <summary>
