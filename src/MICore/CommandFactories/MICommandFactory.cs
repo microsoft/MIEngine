@@ -579,6 +579,8 @@ namespace MICore
 
             string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw {0}", exceptionCategory);
             Results result = await _debugger.CmdAsync(command, ResultClass.done);
+            var breakpointNumber = result.Find("bkpt").FindUint("number");
+            breakpointNumbers.Add((ulong)breakpointNumber);
 
             return breakpointNumbers;
         }
