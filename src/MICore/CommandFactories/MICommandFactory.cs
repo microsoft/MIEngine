@@ -592,6 +592,15 @@ namespace MICore
 
         #endregion
 
+        #region Miscellaneous
+
+        public virtual Task<string[]> AutoComplete(string command, int threadId, uint frameLevel)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
         #region Helpers
 
         public abstract string GetTargetArchitectureCommand();

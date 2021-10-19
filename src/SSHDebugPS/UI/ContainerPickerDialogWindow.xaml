@@ -30,14 +30,7 @@
         <Style x:Key="GlyphPathStyle"
                TargetType="{x:Type Path}">
             <Setter Property="Stroke"
-                            Value="{DynamicResource {x:Static platformui:TreeViewColors.GlyphBrushKey}}" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding  RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}, Path=IsSelected}"
-                             Value="True">
-                    <Setter Property="Stroke"
-                            Value="{DynamicResource {x:Static platformui:TreeViewColors.GlyphMouseOverBrushKey}}" />
-                </DataTrigger>
-            </Style.Triggers>
+                            Value="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBoxItem}}" />
         </Style>
         <Style x:Key="ConnectionTypeComboBoxStyle"
                TargetType="{x:Type ComboBox}">
@@ -309,7 +302,7 @@
                               Data="M 5.5,2.5 L 0.5,7.5 L 5.5,7.5 Z"
                               HorizontalAlignment="Center"
                               SnapsToDevicePixels="false"
-                              Fill="{DynamicResource {x:Static platformui:TreeViewColors.GlyphBrushKey}}"
+                              Fill="{StaticResource {x:Static SystemColors.WindowTextBrushKey}}"
                               StrokeThickness="2"
                               VerticalAlignment="Center"
                               Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
