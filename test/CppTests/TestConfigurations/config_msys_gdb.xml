@@ -10,13 +10,13 @@
     <Compiler
       Name="GppMingw64"
       Type="GPlusPlus"
-      Path="D:\a\_temp\msys\msys64\mingw64\bin\g++.exe"/>
+      Path="D:\a\_temp\msys64\mingw64\bin\g++.exe"/>
   </Compilers>
   <Debuggers>
     <Debugger
       Name="GdbMingw64"
       Type="Gdb_MinGW"
-      Path="D:\a\_temp\msys\msys64\mingw64\bin\gdb.exe"
+      Path="D:\a\_temp\msys64\mingw64\bin\g++.exe"
       AdapterPath="OpenDebugAD7.exe"
       />
   </Debuggers>
