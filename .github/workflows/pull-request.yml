@@ -76,7 +76,14 @@ jobs:
         update: true
         install: >-
           mingw-w64-x86_64-toolchain
-      
+    
+    - shell: msys2 {0}
+      name: Gather c++ toolchain paths
+      run: |
+        cygpath -w $(which g++)
+        cygpath -w $(which g++)
+
+
     - run: >
         dotnet test ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\CppTests.dll --logger "trx;LogFileName=${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\results.trx"
 
