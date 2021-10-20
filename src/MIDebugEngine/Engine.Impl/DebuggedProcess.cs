@@ -1255,7 +1255,7 @@ namespace Microsoft.MIDebugEngine
                 if (!string.IsNullOrEmpty(resultVar))
                 {
                     ReturnValue = new VariableInformation("$ReturnValue", resultVar, cxt, Engine, (AD7Thread)thread.Client, isParameter: false);
-                    await ReturnValue.Eval(Engine.CurrentRadix());
+                    await ReturnValue.Eval(radix: 0);
                 }
                 _callback.OnStepComplete(thread);
             }
