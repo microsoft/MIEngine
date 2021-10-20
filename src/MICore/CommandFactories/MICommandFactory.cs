@@ -39,6 +39,8 @@ namespace MICore
     {
         protected Debugger _debugger;
 
+        private Dictionary<string, ulong> _exceptionBreakpointsMap; // test -- need to delete: remember to clean this up when done...
+
         public MIMode Mode { get; private set; }
 
         public abstract string Name { get; }
@@ -59,6 +61,7 @@ namespace MICore
                     throw new ArgumentException(null, nameof(mode));
             }
             commandFactory._debugger = debugger;
+            commandFactory._exceptionBreakpointsMap = new Dictionary<string, ulong>();
             commandFactory.Mode = mode;
             commandFactory.Radix = 10;
             return commandFactory;
@@ -577,6 +580,7 @@ namespace MICore
 
             List<ulong> breakpointNumbers = new List<ulong>();
 
+            // /*
             if (exceptionNames == null)
             {
                 string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw");
@@ -595,6 +599,18 @@ namespace MICore
                     breakpointNumbers.Add((ulong)breakpointNumber);
                 }
             }
+            // */
+
+            /*
+            if (exceptionBreakpointState == ExceptionBreakpointStates.BreakThrown) // set a catchpoint
+            {
+
+            }
+            else // look up the breakpoint number and delete the catchpoint
+            {
+
+            }
+            */
 
             return breakpointNumbers;
         }
