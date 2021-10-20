@@ -473,9 +473,10 @@ namespace Microsoft.MIDebugEngine
 
         public void SyncEval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
         {
+            uint radix = _engine.CurrentRadix();
             Task eval = Task.Run(async () =>
             {
-                await Eval(dwFlags, dwDAPFlags);
+                await Eval(dwFlags, dwDAPFlags, radix);
             });
             eval.Wait();
         }
@@ -493,11 +494,11 @@ namespace Microsoft.MIDebugEngine
             return val;
         }
 
-        internal async Task Eval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
+        internal async Task Eval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0, uint radix = 0)
         {
             this.VerifyNotDisposed();
 
-            await _engine.UpdateRadixAsync(_engine.CurrentRadix());    // ensure the radix value is up-to-date
+            await _engine.UpdateRadixAsync(radix == 0 ? _engine.CurrentRadix() : radix);    // ensure the radix value is up-to-date
 
             try
             {
