@@ -543,7 +543,10 @@ namespace MICore
 
         public virtual IEnumerable<Guid> GetSupportedExceptionCategories()
         {
-            return new Guid[0];
+            // return new Guid[0];
+            List<Guid> categories = new List<Guid>();
+            categories.Add(new Guid("{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}"));
+            return categories;
         }
 
         public abstract Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done);
@@ -556,7 +559,7 @@ namespace MICore
         /// exceptions in the category. Note that this clear all previous exception breakpoints set in this category.</param>
         /// <param name="exceptionBreakpointState">Indicates when the exception breakpoint should fire</param>
         /// <returns>Task containing the exception breakpoint id's for the various set exceptions</returns>
-        public virtual Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
+        public virtual async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
         {
             // NOTES:
             // GDB /MI has no support for exceptions. Though they do have it through the non-MI through a 'catch' command. Example:
@@ -569,12 +572,42 @@ namespace MICore
             //   break set -F std::range_error
             // And they do have it in their API:
             //   SBTarget::BreakpointCreateForException
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
+
+            List<ulong> breakpointNumbers = new List<ulong>();
+
+            // exceptionNames, exceptionBreakpointState
+            if (exceptionBreakpointState == ExceptionBreakpointStates.BreakThrown) // set a catchpoint
+            {
+                if (exceptionNames == null)
+                {
+                    string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw");
+                    Results result = await _debugger.CmdAsync(command, ResultClass.done);
+                    var breakpointNumber = result.Find("bkpt").FindUint("number");
+                    breakpointNumbers.Add((ulong)breakpointNumber);
+                }
+                else
+                {
+                    foreach (string exceptionName in exceptionNames)
+                    {
+                        string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw {0}", exceptionName);
+                        Results result = await _debugger.CmdAsync(command, ResultClass.done);
+                        var breakpointNumber = result.Find("bkpt").FindUint("number");
+                        breakpointNumbers.Add((ulong)breakpointNumber);
+                    }
+                }
+            }
+            else // look up breakpoint number and delete catchpoint (if any) - this should be handled in RemoveExceptionBreakpoint()
+            {
+            }
+
+            return breakpointNumbers;
         }
 
         public virtual Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
         {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
+            return Task.WhenAll(exceptionBreakpoints.Select(id => BreakDelete(id.ToString(CultureInfo.InvariantCulture))));
         }
 
         /// <summary>

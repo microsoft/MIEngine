@@ -427,6 +427,29 @@ namespace Microsoft.MIDebugEngine
 
         private async Task UpdateCatagory(Guid categoryId, ExceptionCategorySettings categorySettings, SettingsUpdates updates)
         {
+            // Calls to RemoveExceptionBreakpoint()
+            /*
+            if (updates.NewCategoryState != ExceptionBreakpointStates.BreakThrown)
+            {
+                List<ulong> breakpointNumbers = new List<ulong>();
+
+                foreach (string exceptionName in updates.RulesToAdd.Keys)
+                {
+                    if (categorySettings.CurrentRules.ContainsKey(exceptionName))
+                    {
+                        breakpointNumbers.Add(categorySettings.CurrentRules[exceptionName]);
+                        categorySettings.CurrentRules.Remove(exceptionName);
+                    }
+                }
+
+                if (breakpointNumbers.Count > 0)
+                {
+                    await _commandFactory.RemoveExceptionBreakpoint(categoryId, breakpointNumbers);
+                }
+            }
+            */
+
+
             // Update the category
             if (updates.NewCategoryState.HasValue && (
                 updates.NewCategoryState.Value != ExceptionBreakpointStates.None || // send down a rule if the category isn't in the default state
@@ -436,12 +459,14 @@ namespace Microsoft.MIDebugEngine
                 categorySettings.CategoryState = newCategoryState;
                 categorySettings.CurrentRules.Clear();
 
+                /*
                 IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
                 if (newCategoryState != ExceptionBreakpointStates.None)
                 {
                     ulong breakpointId = breakpointIds.Single();
                     categorySettings.CurrentRules.Add("*", breakpointId);
                 }
+                */
             }
 
             // Process any removes
@@ -466,31 +491,34 @@ namespace Microsoft.MIDebugEngine
             }
 
             // process any adds
-            foreach (IGrouping<ExceptionBreakpointStates, string> grouping in updates.RulesToAdd.GroupBy((pair) => pair.Value, (pair) => pair.Key))
+            if (updates.NewCategoryState == ExceptionBreakpointStates.BreakThrown)
             {
-                IEnumerable<string> exceptionNames = grouping;
-
-                if (grouping.Key == categorySettings.CategoryState)
+                foreach (IGrouping<ExceptionBreakpointStates, string> grouping in updates.RulesToAdd.GroupBy((pair) => pair.Value, (pair) => pair.Key))
                 {
-                    // A request to set an exception to the same state as the category is redundant unless we have previously changed the state of that exception to something else
-                    exceptionNames = exceptionNames.Intersect(categorySettings.CurrentRules.Keys);
-                    if (!exceptionNames.Any())
+                    IEnumerable<string> exceptionNames = grouping;
+
+                    if (grouping.Key == categorySettings.CategoryState)
                     {
-                        continue; // no exceptions left, so ignore this group
+                        // A request to set an exception to the same state as the category is redundant unless we have previously changed the state of that exception to something else
+                        exceptionNames = exceptionNames.Intersect(categorySettings.CurrentRules.Keys);
+                        if (!exceptionNames.Any())
+                        {
+                            continue; // no exceptions left, so ignore this group
+                        }
                     }
-                }
 
-                IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
+                    IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
 
-                int count = exceptionNames.Zip(breakpointIds, (exceptionName, breakpointId) =>
-                {
-                    categorySettings.CurrentRules[exceptionName] = breakpointId;
-                    return 1;
-                }).Sum();
+                    int count = exceptionNames.Zip(breakpointIds, (exceptionName, breakpointId) =>
+                    {
+                        categorySettings.CurrentRules[exceptionName] = breakpointId;
+                        return 1;
+                    }).Sum();
 
 #if DEBUG
-                Debug.Assert(count == exceptionNames.Count());
+                    Debug.Assert(count == exceptionNames.Count());
 #endif
+                }
             }
         }
 
