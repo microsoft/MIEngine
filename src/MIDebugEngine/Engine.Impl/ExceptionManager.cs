@@ -94,7 +94,7 @@ namespace Microsoft.MIDebugEngine
             public readonly ExceptionBreakpointStates DefaultCategoryState;
             public readonly ReadOnlyDictionary<string, ExceptionBreakpointStates> DefaultRules;
 
-            // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCatagory), and we
+            // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCategory), and we
             // guarantee that there will only be one active FlushSettingsUpdates task at a time
             public ExceptionBreakpointStates CategoryState;
             public readonly Dictionary<string, ulong> CurrentRules = new Dictionary<string, ulong>();
@@ -398,7 +398,7 @@ namespace Microsoft.MIDebugEngine
                             continue;
                         }
 
-                        await UpdateCatagory(categoryPair.Key, categorySettings, settingsUpdate);
+                        await UpdateCategory(categoryPair.Key, categorySettings, settingsUpdate);
                     }
                 }
                 catch (MIException e)
@@ -425,7 +425,7 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        private async Task UpdateCatagory(Guid categoryId, ExceptionCategorySettings categorySettings, SettingsUpdates updates)
+        private async Task UpdateCategory(Guid categoryId, ExceptionCategorySettings categorySettings, SettingsUpdates updates)
         {
             // Update the category
             if (updates.NewCategoryState.HasValue && (
