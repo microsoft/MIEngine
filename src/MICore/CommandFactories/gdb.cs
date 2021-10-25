@@ -278,5 +278,15 @@ namespace MICore
             string command = onlyOnce ? "tcatch " : "catch ";
             await _debugger.ConsoleCmdAsync(command + name, allowWhileRunning: false);
         }
+
+        public override Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
