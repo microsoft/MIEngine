@@ -1138,6 +1138,7 @@ namespace OpenDebugAD7
             if (isLocal && string.IsNullOrWhiteSpace(program))
             {
                 program = Process.GetProcessById(pid).MainModule.FileName;
+                responder.Arguments.ConfigurationProperties["program"] = program;
             }
             string executable = null;
             bool success = false;
