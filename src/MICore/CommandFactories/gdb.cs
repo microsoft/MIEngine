@@ -295,5 +295,21 @@ namespace MICore
 
             return matchlist?.AsStrings;
         }
+
+        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
+        {
+            string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw");
+            Results result = await _debugger.CmdAsync(command, ResultClass.done);
+            var breakpointNumber = result.Find("bkpt").FindUint("number");
+            return new ulong[] { breakpointNumber };
+        }
+
+        public override async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        {
+            foreach (ulong breakpointNumber in exceptionBreakpoints)
+            {
+                await BreakDelete(breakpointNumber.ToString(CultureInfo.InvariantCulture));
+            }
+        }
     }
 }

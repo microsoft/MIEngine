@@ -39,8 +39,6 @@ namespace MICore
     {
         protected Debugger _debugger;
 
-        private Dictionary<string, ulong> _exceptionBreakpointsMap; // test -- need to delete: remember to clean this up when done...
-
         public MIMode Mode { get; private set; }
 
         public abstract string Name { get; }
@@ -61,7 +59,6 @@ namespace MICore
                     throw new ArgumentException(null, nameof(mode));
             }
             commandFactory._debugger = debugger;
-            commandFactory._exceptionBreakpointsMap = new Dictionary<string, ulong>();
             commandFactory.Mode = mode;
             commandFactory.Radix = 10;
             return commandFactory;
@@ -547,10 +544,8 @@ namespace MICore
 
         public virtual IEnumerable<Guid> GetSupportedExceptionCategories()
         {
-            // return new Guid[0];
-            List<Guid> categories = new List<Guid>();
-            categories.Add(new Guid("{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}")); // maybe there is a better way than this...
-            return categories;
+            const string CppExceptionCategoryString = "{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}";
+            return new Guid[] {new Guid(CppExceptionCategoryString)};
         }
 
         public abstract Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done);
@@ -563,7 +558,7 @@ namespace MICore
         /// exceptions in the category. Note that this clear all previous exception breakpoints set in this category.</param>
         /// <param name="exceptionBreakpointState">Indicates when the exception breakpoint should fire</param>
         /// <returns>Task containing the exception breakpoint id's for the various set exceptions</returns>
-        public virtual async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
+        public virtual Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
         {
             // NOTES:
             // GDB /MI has no support for exceptions. Though they do have it through the non-MI through a 'catch' command. Example:
@@ -577,52 +572,12 @@ namespace MICore
             // And they do have it in their API:
             //   SBTarget::BreakpointCreateForException
 
-            // throw new NotImplementedException();
-
-            List<ulong> breakpointNumbers = new List<ulong>();
-
-            // /*
-            if (exceptionNames == null)
-            {
-                string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw");
-                Results result = await _debugger.CmdAsync(command, ResultClass.done);
-                var breakpointNumber = result.Find("bkpt").FindUint("number");
-                breakpointNumbers.Add((ulong)breakpointNumber);
-
-            }
-            else
-            {
-                foreach (string exceptionName in exceptionNames)
-                {
-                    string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw {0}", exceptionName);
-                    Results result = await _debugger.CmdAsync(command, ResultClass.done);
-                    var breakpointNumber = result.Find("bkpt").FindUint("number");
-                    breakpointNumbers.Add((ulong)breakpointNumber);
-                }
-            }
-            // */
-
-            /*
-            if (exceptionBreakpointState == ExceptionBreakpointStates.BreakThrown) // set a catchpoint
-            {
-
-            }
-            else // look up the breakpoint number and delete the catchpoint
-            {
-
-            }
-            */
-
-            return breakpointNumbers;
+            throw new NotImplementedException();
         }
 
-        public virtual async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        public virtual Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
         {
-            // throw new NotImplementedException();
-            foreach (ulong breakpointNumber in exceptionBreakpoints)
-            {
-                await BreakDelete(breakpointNumber.ToString(CultureInfo.InvariantCulture));
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
