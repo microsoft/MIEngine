@@ -484,14 +484,7 @@ namespace Microsoft.MIDebugEngine
 
                 int count = exceptionNames.Zip(breakpointIds, (exceptionName, breakpointId) =>
                 {
-                    if (grouping.Key == ExceptionBreakpointStates.BreakThrown)
-                    {
-                        categorySettings.CurrentRules[exceptionName] = breakpointId;
-                    }
-                    else
-                    {
-                        categorySettings.CurrentRules.Remove(exceptionName);
-                    }
+                    categorySettings.CurrentRules[exceptionName] = breakpointId;
                     return 1;
                 }).Sum();
 
