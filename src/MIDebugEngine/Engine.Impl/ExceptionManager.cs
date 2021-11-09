@@ -436,11 +436,20 @@ namespace Microsoft.MIDebugEngine
                 categorySettings.CategoryState = newCategoryState;
                 categorySettings.CurrentRules.Clear();
 
-                IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
-                if (newCategoryState != ExceptionBreakpointStates.None)
+                // IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
+                if (newCategoryState == ExceptionBreakpointStates.BreakThrown) // only set catchpoint on BreakThrown
                 {
+                    IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
                     ulong breakpointId = breakpointIds.Single();
                     categorySettings.CurrentRules.Add("*", breakpointId);
+                }
+                else
+                {
+                    ulong breakpointId;
+                    if (categorySettings.CurrentRules.TryGetValue("*", out breakpointId))
+                    {
+                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] {breakpointId});
+                    }
                 }
             }
 
@@ -480,17 +489,28 @@ namespace Microsoft.MIDebugEngine
                     }
                 }
 
-                IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
-
-                int count = exceptionNames.Zip(breakpointIds, (exceptionName, breakpointId) =>
+                if (grouping.Key == ExceptionBreakpointStates.BreakThrown) // only set catchpoints on BreakThrown
                 {
-                    categorySettings.CurrentRules[exceptionName] = breakpointId;
-                    return 1;
-                }).Sum();
+                    IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
+
+                    int count = exceptionNames.Zip(breakpointIds, (exceptionName, breakpointId) =>
+                    {
+                        categorySettings.CurrentRules[exceptionName] = breakpointId;
+                        return 1;
+                    }).Sum();
 
 #if DEBUG
-                Debug.Assert(count == exceptionNames.Count());
+                    Debug.Assert(count == exceptionNames.Count());
 #endif
+                }
+                else
+                {
+                    ulong breakpointId;
+                    if (categorySettings.CurrentRules.TryGetValue("*", out breakpointId))
+                    {
+                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
+                    }
+                }
             }
         }
 
