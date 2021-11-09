@@ -122,6 +122,68 @@ namespace CppTests.Tests
             }
         }
 
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        public void DisassemblySourceBasic(ITestSettings settings)
+        {
+            this.TestPurpose("Tests basic operation of instruction breakpoints");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                SourceBreakpoints mainBreakpoints = debuggee.Breakpoints(SinkHelper.Main, 33);
+
+                this.Comment("Set initial breakpoints");
+                runner.SetBreakpoints(mainBreakpoints);
+
+                this.Comment("Launch and run until first breakpoint");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Main, 33)
+                              .AfterConfigurationDone();
+
+                string ip = string.Empty;
+
+                this.Comment("Inspect the stack and try evaluation.");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    this.Comment("Get the stack trace");
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    inspector.AssertStackFrameNames(true, "main.*");
+
+                    this.WriteLine("Main frame: {0}", mainFrame);
+                    ip = mainFrame?.InstructionPointerReference;
+                }
+
+                Assert.False(string.IsNullOrEmpty(ip));
+
+                // Send Disassemble Request to get the current instruction
+                this.WriteLine("Disassemble to get current and next instruction.");
+                IEnumerable<IDisassemblyInstruction> instructions = runner.Disassemble(ip, 1);
+
+                // Validate that we got one instructions.
+                Assert.Single(instructions);
+
+                // Test Source Information for Disasembly
+                IDisassemblyInstruction dismInstr = instructions.First();
+                Assert.Equal(33, dismInstr.Line);
+                Assert.NotNull(dismInstr.Location);
+                Assert.Contains(SinkHelper.Main, dismInstr.Location.path);
+
+                this.Comment("Continue until end");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
         #endregion
     }
 }

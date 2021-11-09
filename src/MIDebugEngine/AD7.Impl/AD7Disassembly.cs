@@ -89,6 +89,20 @@ namespace Microsoft.MIDebugEngine
                 dis.dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_OPCODE;
                 dis.bstrOpcode = "??";
             }
+
+            if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_DOCUMENTURL) != 0)
+            {
+                dis.dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_DOCUMENTURL;
+                dis.bstrDocumentUrl = string.Empty;
+            }
+
+            if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION) != 0)
+            {
+                dis.dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION;
+                dis.posBeg = new TEXT_POSITION();
+                dis.posEnd = new TEXT_POSITION();
+            }
+
             return dis;
         }
 
@@ -159,6 +173,28 @@ namespace Microsoft.MIDebugEngine
                     {
                         prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_CODEBYTES;
                         prgDisassembly[iOp].bstrCodeBytes = instruction.CodeBytes;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(instruction.File))
+                {
+                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_DOCUMENTURL) != 0)
+                    {
+                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_DOCUMENTURL;
+                        prgDisassembly[iOp].bstrDocumentUrl = instruction.File;
+                    }
+
+                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION) != 0)
+                    {
+                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION;
+                        prgDisassembly[iOp].posBeg = new TEXT_POSITION()
+                        {
+                            dwLine = instruction.Line
+                        };
+                        prgDisassembly[iOp].posEnd = new TEXT_POSITION()
+                        {
+                            dwLine = instruction.Line
+                        };
                     }
                 }
 

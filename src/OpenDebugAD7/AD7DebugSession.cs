@@ -2076,6 +2076,16 @@ namespace OpenDebugAD7
                         Instruction = data.bstrOpcode,
                         Symbol = data.bstrSymbol
                     };
+
+                    if (!string.IsNullOrWhiteSpace(data.bstrDocumentUrl))
+                    {
+                        instruction.Location = new Source()
+                        {
+                            Path = data.bstrDocumentUrl
+                        };
+                        instruction.Line = (int)data.posBeg.dwLine;
+                    }
+
                     response.Instructions.Add(instruction);
                 }
                 responder.SetResponse(response);
