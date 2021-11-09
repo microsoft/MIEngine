@@ -489,7 +489,7 @@ namespace Microsoft.MIDebugEngine
                     }
                 }
 
-                if (grouping.Key == ExceptionBreakpointStates.BreakThrown) // only set catchpoints on BreakThrown
+                if (grouping.Key.ToString().Contains(ExceptionBreakpointStates.BreakThrown.ToString())) // only set catchpoints on BreakThrown - problematic when grouping.Key is BreakThrown | something
                 {
                     IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
 
