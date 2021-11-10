@@ -2064,12 +2064,9 @@ namespace OpenDebugAD7
                 DisassemblyData[] prgDisassembly = new DisassemblyData[disassembleArguments.InstructionCount];
                 eb.CheckHR(disassemblyStream.Read((uint)disassembleArguments.InstructionCount, enum_DISASSEMBLY_STREAM_FIELDS.DSF_ALL, out uint pdwInstructionsRead, prgDisassembly));
                 Debug.Assert(disassembleArguments.InstructionCount == pdwInstructionsRead);
+
                 foreach (DisassemblyData data in prgDisassembly)
                 {
-                    if (data.dwFlags.HasFlag(enum_DISASSEMBLY_FLAGS.DF_HASSOURCE))
-                    {
-                        Debug.Fail("Warning: engine supports mixed instruction/source disassembly, but OpenDebugAD7 does not.");
-                    }
                     DisassembledInstruction instruction = new DisassembledInstruction() {
                         Address = data.bstrAddress,
                         InstructionBytes = data.bstrCodeBytes,
@@ -2082,8 +2079,15 @@ namespace OpenDebugAD7
                         instruction.Location = new Source()
                         {
                             Path = data.bstrDocumentUrl
-                        };
-                        instruction.Line = (int)data.posBeg.dwLine;
+                    };
+                    }
+
+                    if (data.dwFlags.HasFlag(enum_DISASSEMBLY_FLAGS.DF_HASSOURCE))
+                    {
+                        instruction.Line = m_pathConverter.ConvertDebuggerLineToClient((int)data.posBeg.dwLine);
+                        instruction.Column = m_pathConverter.ConvertDebuggerColumnToClient((int)data.posBeg.dwColumn);
+                        instruction.EndLine = m_pathConverter.ConvertDebuggerLineToClient((int)data.posEnd.dwLine);
+                        instruction.EndColumn = m_pathConverter.ConvertDebuggerColumnToClient((int)data.posEnd.dwColumn);
                     }
 
                     response.Instructions.Add(instruction);

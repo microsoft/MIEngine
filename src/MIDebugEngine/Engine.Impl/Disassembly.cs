@@ -307,15 +307,17 @@ namespace Microsoft.MIDebugEngine
 
         private class DisasmAddressRange
         {
+            public readonly string Symbol;
             public ulong StartAddress;
             public ulong EndAddress;
-            Dictionary<ulong, DisasmInstruction> AddressToInstruction;
+            private readonly Dictionary<ulong, DisasmInstruction> _AddressToInstruction;
 
             public DisasmAddressRange(DisasmInstruction instruction)
             {
+                Symbol = instruction.Symbol;
                 StartAddress = instruction.Addr;
-                EndAddress = instruction.Addr;
-                AddressToInstruction = new Dictionary<ulong, DisasmInstruction>()
+                EndAddress = instruction.Addr + 1;
+                _AddressToInstruction = new Dictionary<ulong, DisasmInstruction>()
                 {
                     {instruction.Addr, instruction}
                 };
@@ -323,8 +325,8 @@ namespace Microsoft.MIDebugEngine
 
             public void UpdateEndAddress(DisasmInstruction instruction)
             {
-                EndAddress = instruction.Addr;
-                AddressToInstruction.Add(instruction.Addr, instruction);
+                EndAddress = instruction.Addr + 1;
+                _AddressToInstruction.Add(instruction.Addr, instruction);
             }
 
             public void MapSourceToInstructions(DebuggedProcess process, TupleValue[] src_and_asm_lines)
@@ -362,8 +364,8 @@ namespace Microsoft.MIDebugEngine
                     foreach (ResultValue line_asm_insn in line_asm_instructions.Content)
                     {
                         ulong address = line_asm_insn.FindAddr("address");
-                        AddressToInstruction[address].File = file;
-                        AddressToInstruction[address].Line = line;
+                        _AddressToInstruction[address].File = file;
+                        _AddressToInstruction[address].Line = line;
                     }
                 }
             }
@@ -387,65 +389,55 @@ namespace Microsoft.MIDebugEngine
 
             if (instructions != null && instructions.Length != 0)
             {
+                IList<DisasmAddressRange> ranges = new List<DisasmAddressRange>();
                 // Map 'Symbol' (Function Name) to Address Range
-                Dictionary<string, DisasmAddressRange> funcToAddressRange = new Dictionary<string, DisasmAddressRange>();
-                for (int i = 0; i < instructions.Length; i++)
+                DisasmAddressRange currentRange = new DisasmAddressRange(instructions[0]);
+                for (int i = 1; i < instructions.Length; i++)
                 {
-                    string functionName = instructions[i].Symbol;
-                    if (funcToAddressRange.ContainsKey(functionName))
+                    if (currentRange.Symbol == instructions[i].Symbol)
                     {
-                        // Update the end address with this current instruction.
-                        funcToAddressRange[functionName].UpdateEndAddress(instructions[i]);
+                        currentRange.UpdateEndAddress(instructions[i]);
                     }
                     else
                     {
-                        // Insert new function to keep track of.
-                        funcToAddressRange.Add(functionName, new DisasmAddressRange(instructions[i]));
-                    }
+                        ranges.Add(currentRange);
 
-                    // endAddr will not show up in instructions, so make the last instruction we get to get the range til the end.
-                    if (i == instructions.Length - 1)
-                    {
-                        funcToAddressRange[functionName].EndAddress = endAddr;
+                        // Start new range
+                        currentRange = new DisasmAddressRange(instructions[i]);
                     }
                 }
 
-                foreach (string functionName in funcToAddressRange.Keys)
-                {
-                    DisasmAddressRange range = funcToAddressRange[functionName];
+                // Add the last range
+                ranges.Add(currentRange);
 
+                foreach (DisasmAddressRange dismAddressRange in ranges)
+                {
                     // Mode 5 - mixed source and disassembly with raw opcodes
-                    cmd = "-data-disassemble -s " + EngineUtils.AsAddr(range.StartAddress, process.Is64BitArch) + " -e " + EngineUtils.AsAddr(range.EndAddress, process.Is64BitArch) + " -- 5";
+                    cmd = "-data-disassemble -s " + EngineUtils.AsAddr(dismAddressRange.StartAddress, process.Is64BitArch) + " -e " + EngineUtils.AsAddr(dismAddressRange.EndAddress, process.Is64BitArch) + " -- 5";
                     results = await process.CmdAsync(cmd, ResultClass.None);
                     if (results.ResultClass != ResultClass.done)
                     {
                         return null;
                     }
-                    try
+
+                    /* Example response
+                    * asm_insns=[
+                    *  src_and_asm_line={
+                    *      line="15",
+                    *      file="main.cpp",
+                    *      fullname="/home/cpp/main.cpp",
+                    *      line_asm_insn=[ ... ]
+                    *  }
+                    * ]
+                    */
+                    ResultListValue asm_insns = results.TryFind<ResultListValue>("asm_insns");
+                    if (asm_insns != null)
                     {
-                        /* Example response
-                         * asm_insns=[
-                         *  src_and_asm_line={
-                         *      line="15",
-                         *      file="main.cpp",
-                         *      fullname="/home/cpp/main.cpp",
-                         *      line_asm_insn=[ ... ]
-                         *  }
-                         * ]
-                         */
-                        ResultListValue asm_insns = results.Find<ResultListValue>("asm_insns");
-                        if (asm_insns != null)
+                        TupleValue[] values = asm_insns.FindAll<TupleValue>("src_and_asm_line");
+                        if (values != null)
                         {
-                            TupleValue[] values = asm_insns.FindAll<TupleValue>("src_and_asm_line");
-                            if (values != null)
-                            {
-                                range.MapSourceToInstructions(process, values);
-                            }
+                            dismAddressRange.MapSourceToInstructions(process, values);
                         }
-                    }
-                    catch
-                    {
-                        // asm_insns can be ValueListValue if it does not contain source information.
                     }
                 }
             }
