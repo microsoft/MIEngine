@@ -434,6 +434,20 @@ namespace Microsoft.MIDebugEngine
             {
                 ExceptionBreakpointStates newCategoryState = updates.NewCategoryState.Value;
                 categorySettings.CategoryState = newCategoryState;
+
+                if (newCategoryState != ExceptionBreakpointStates.BreakThrown)
+                {
+                    ulong breakpointId;
+                    if (categorySettings.CurrentRules.TryGetValue("*", out breakpointId))
+                    {
+                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
+                    }
+                    if (categorySettings.CurrentRules.TryGetValue("winrt::hresult_error", out breakpointId))
+                    {
+                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
+                    }
+                }
+
                 categorySettings.CurrentRules.Clear();
 
                 // IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
@@ -442,14 +456,6 @@ namespace Microsoft.MIDebugEngine
                     IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
                     ulong breakpointId = breakpointIds.Single();
                     categorySettings.CurrentRules.Add("*", breakpointId);
-                }
-                else
-                {
-                    ulong breakpointId;
-                    if (categorySettings.CurrentRules.TryGetValue("*", out breakpointId))
-                    {
-                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] {breakpointId});
-                    }
                 }
             }
 
@@ -507,6 +513,10 @@ namespace Microsoft.MIDebugEngine
                 {
                     ulong breakpointId;
                     if (categorySettings.CurrentRules.TryGetValue("*", out breakpointId))
+                    {
+                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
+                    }
+                    if (categorySettings.CurrentRules.TryGetValue("winrt::hresult_error", out breakpointId))
                     {
                         await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
                     }
