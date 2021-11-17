@@ -296,6 +296,12 @@ namespace MICore
             return matchlist?.AsStrings;
         }
 
+        public override IEnumerable<Guid> GetSupportedExceptionCategories()
+        {
+            const string CppExceptionCategoryString = "{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}";
+            return new Guid[] { new Guid(CppExceptionCategoryString) };
+        }
+
         public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
         {
             string command = string.Format(CultureInfo.InvariantCulture, "-catch-throw");

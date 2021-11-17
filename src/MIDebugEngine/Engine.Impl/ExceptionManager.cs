@@ -278,6 +278,17 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
+        public int TryGetExceptionBreakpoint(string bkptno, out EXCEPTION_INFO exceptionInfo)
+        {
+            exceptionInfo = new EXCEPTION_INFO();
+            // test -- need to delete; these are placeholder values
+            exceptionInfo.bstrExceptionName = "C++ Exceptions";
+            exceptionInfo.dwCode = Convert.ToUInt32(bkptno, CultureInfo.InvariantCulture);
+            exceptionInfo.dwState = enum_EXCEPTION_STATE.EXCEPTION_NONE;
+            exceptionInfo.guidType = new Guid("{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}");
+            return Constants.S_OK;
+        }
+
         private static void SetCategory(ExceptionCategorySettings categorySettings, ExceptionBreakpointStates newState)
         {
             using (var settingsUpdateHolder = categorySettings.GetSettingsUpdate())
@@ -435,17 +446,10 @@ namespace Microsoft.MIDebugEngine
                 ExceptionBreakpointStates newCategoryState = updates.NewCategoryState.Value;
                 categorySettings.CategoryState = newCategoryState;
 
-                if (newCategoryState != ExceptionBreakpointStates.BreakThrown)
+                if (categorySettings.CurrentRules.TryGetValue("*", out _) ||
+                    categorySettings.CurrentRules.TryGetValue("winrt::hresult_error", out _))
                 {
-                    ulong breakpointId;
-                    if (categorySettings.CurrentRules.TryGetValue("*", out breakpointId))
-                    {
-                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
-                    }
-                    if (categorySettings.CurrentRules.TryGetValue("winrt::hresult_error", out breakpointId))
-                    {
-                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
-                    }
+                    await _commandFactory.RemoveExceptionBreakpoint(categoryId, categorySettings.CurrentRules.Values);
                 }
 
                 categorySettings.CurrentRules.Clear();
@@ -454,8 +458,8 @@ namespace Microsoft.MIDebugEngine
                 if (newCategoryState == ExceptionBreakpointStates.BreakThrown) // only set catchpoint on BreakThrown
                 {
                     IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
-                    ulong breakpointId = breakpointIds.Single();
-                    categorySettings.CurrentRules.Add("*", breakpointId);
+                    ulong singleBreakpointId = breakpointIds.Single();
+                    categorySettings.CurrentRules.Add("*", singleBreakpointId);
                 }
             }
 
@@ -511,14 +515,10 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    ulong breakpointId;
-                    if (categorySettings.CurrentRules.TryGetValue("*", out breakpointId))
+                    if (categorySettings.CurrentRules.TryGetValue("*", out _) ||
+                        categorySettings.CurrentRules.TryGetValue("winrt::hresult_error", out _))
                     {
-                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
-                    }
-                    if (categorySettings.CurrentRules.TryGetValue("winrt::hresult_error", out breakpointId))
-                    {
-                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
+                        await _commandFactory.RemoveExceptionBreakpoint(categoryId, categorySettings.CurrentRules.Values);
                     }
                 }
             }

@@ -544,8 +544,7 @@ namespace MICore
 
         public virtual IEnumerable<Guid> GetSupportedExceptionCategories()
         {
-            const string CppExceptionCategoryString = "{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}";
-            return new Guid[] {new Guid(CppExceptionCategoryString)};
+            return new Guid[0];
         }
 
         public abstract Task Catch(string name, bool onlyOnce = false, ResultClass resultClass = ResultClass.done);

@@ -1162,8 +1162,16 @@ namespace Microsoft.MIDebugEngine
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
 
+                EXCEPTION_INFO exceptionInfo;
                 bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
+
+                // test -- need to delete
+                if (ExceptionManager.TryGetExceptionBreakpoint(bkptno, out exceptionInfo) == Constants.S_OK)
+                {
+                    _callback.OnException(thread, exceptionInfo.bstrExceptionName, "", exceptionInfo.dwCode,exceptionInfo.guidType);
+                }
+
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
                 await _breakpointManager.DeleteBreakpointsPendingDeletion();
 
