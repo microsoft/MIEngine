@@ -280,13 +280,23 @@ namespace Microsoft.MIDebugEngine
 
         public int TryGetExceptionBreakpoint(string bkptno, out EXCEPTION_INFO exceptionInfo)
         {
+            const string CppExceptionCategoryString = "{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}";
             exceptionInfo = new EXCEPTION_INFO();
-            // test -- need to delete; these are placeholder values
-            exceptionInfo.bstrExceptionName = "C++ Exceptions";
-            exceptionInfo.dwCode = Convert.ToUInt32(bkptno, CultureInfo.InvariantCulture);
-            exceptionInfo.dwState = enum_EXCEPTION_STATE.EXCEPTION_NONE;
-            exceptionInfo.guidType = new Guid("{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}");
-            return Constants.S_OK;
+            ExceptionCategorySettings categorySettings;
+            if (_categoryMap.TryGetValue(new Guid(CppExceptionCategoryString), out categorySettings))
+            {
+                ulong breakpointNumber = Convert.ToUInt32(bkptno, CultureInfo.InvariantCulture);
+                if (categorySettings.CurrentRules.ContainsValue(breakpointNumber))
+                {
+                    // test -- need to delete; these are placeholder values
+                    exceptionInfo.bstrExceptionName = categorySettings.CategoryName;
+                    exceptionInfo.dwCode = (uint)breakpointNumber;
+                    exceptionInfo.dwState = categorySettings.CategoryState == ExceptionBreakpointStates.BreakThrown ? enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE : enum_EXCEPTION_STATE.EXCEPTION_NONE;
+                    exceptionInfo.guidType = new Guid(CppExceptionCategoryString);
+                    return Constants.S_OK;
+                }
+            }
+            return Constants.E_FAIL;
         }
 
         private static void SetCategory(ExceptionCategorySettings categorySettings, ExceptionBreakpointStates newState)
