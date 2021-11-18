@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Security;
 using Microsoft.SSHDebugPS;
 using Microsoft.SSHDebugPS.Utilities;
 using Xunit;
@@ -174,7 +175,7 @@ namespace SSHDebugTests
             string username;
             string hostname;
             int port;
-            ConnectionManager.ParseSSHConnectionString(item.rawConnectionString, out username, out hostname, out port);
+            ConnectionManager.ParseSSHConnectionString(item.rawConnectionString, out username, out SecureString password, out hostname, out port);
 
             Assert.True(item.expectedUsername.Equals(username, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("UserName", item.expectedUsername, username));
             Assert.True(item.expectedHostname.Equals(hostname, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("Hostname", item.expectedHostname, hostname));
