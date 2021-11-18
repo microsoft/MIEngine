@@ -46,9 +46,9 @@ namespace SSHDebugTests
             ipv6TestStrings.Add(
                 new ConnectionStringTestItem()
                 {
-                    // valid with custom username
+                    // valid with username:password
                     rawConnectionString = "test:user@[1234::6:7:8]",
-                    expectedUsername = "test:user",
+                    expectedUsername = "test",
                     expectedHostname = "[1234::6:7:8]",
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -144,6 +144,15 @@ namespace SSHDebugTests
                     expectedHostname = "10.10.10.10",
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
+            ipv4TestStrings.Add(
+                 new ConnectionStringTestItem()
+                 {
+                     // valid username no port with password
+                     rawConnectionString = "user:pass@10.10.10.10",
+                     expectedUsername = "user",
+                     expectedHostname = "10.10.10.10",
+                     expectedPort = ConnectionManager.DefaultSSHPort
+                 });
             ipv4TestStrings.Add(
                 new ConnectionStringTestItem()
                 {
