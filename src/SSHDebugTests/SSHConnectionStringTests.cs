@@ -17,6 +17,7 @@ namespace SSHDebugTests
         {
             internal string rawConnectionString;
             internal string expectedUsername;
+            internal string expectedPassword;
             internal string expectedHostname;
             internal int expectedPort;
         }
@@ -31,6 +32,7 @@ namespace SSHDebugTests
                     // valid
                     rawConnectionString = "testuser@[1:2:3:4:5:6:7:8]:24",
                     expectedUsername = "testuser",
+                    expectedPassword = null,
                     expectedHostname = "[1:2:3:4:5:6:7:8]",
                     expectedPort = 24
                 });
@@ -40,6 +42,7 @@ namespace SSHDebugTests
                     // valid with no port
                     rawConnectionString = "testuser@[1:2:3:4:5:6:7:8]",
                     expectedUsername = "testuser",
+                    expectedPassword = null,
                     expectedHostname = "[1:2:3:4:5:6:7:8]",
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -49,6 +52,7 @@ namespace SSHDebugTests
                     // valid with username:password
                     rawConnectionString = "test:user@[1234::6:7:8]",
                     expectedUsername = "test",
+                    expectedPassword = "user",
                     expectedHostname = "[1234::6:7:8]",
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -58,6 +62,7 @@ namespace SSHDebugTests
                     // Valid with large port
                     rawConnectionString = "[1:2:3:4:5:6:7:8]:12345",
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = "[1:2:3:4:5:6:7:8]",
                     expectedPort = 12345
                 });
@@ -67,6 +72,7 @@ namespace SSHDebugTests
                     // Invalid format
                     rawConnectionString = "testuser@:8",
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = StringResources.HostName_PlaceHolder,
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -76,6 +82,7 @@ namespace SSHDebugTests
                     // Invalid string (just port)
                     rawConnectionString = ":8",
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = StringResources.HostName_PlaceHolder,
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -85,6 +92,7 @@ namespace SSHDebugTests
                     // Empty String
                     rawConnectionString = string.Empty,
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = StringResources.HostName_PlaceHolder,
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -94,6 +102,7 @@ namespace SSHDebugTests
                     // Invalid port
                     rawConnectionString = "[1:2:3:4:5:6:7:8]:123456",
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = StringResources.HostName_PlaceHolder,
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -114,6 +123,7 @@ namespace SSHDebugTests
                     // valid no username
                     rawConnectionString = "192.168.1.1:156",
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = "192.168.1.1",
                     expectedPort = 156
                 });
@@ -123,6 +133,7 @@ namespace SSHDebugTests
                     // valid username with port
                     rawConnectionString = "customUser@192.168.1.1:65354",
                     expectedUsername = "customUser",
+                    expectedPassword = null,
                     expectedHostname = "192.168.1.1",
                     expectedPort = 65354
                 });
@@ -132,6 +143,7 @@ namespace SSHDebugTests
                     // valid no username, Large port
                     rawConnectionString = "192.168.1.1:" + (ushort.MaxValue).ToString("d", CultureInfo.InvariantCulture),
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = "192.168.1.1",
                     expectedPort = ushort.MaxValue
                 });
@@ -141,6 +153,7 @@ namespace SSHDebugTests
                     // valid username no port
                     rawConnectionString = "user@10.10.10.10",
                     expectedUsername = "user",
+                    expectedPassword = null,
                     expectedHostname = "10.10.10.10",
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -150,6 +163,7 @@ namespace SSHDebugTests
                      // valid username no port with password
                      rawConnectionString = "user:pass@10.10.10.10",
                      expectedUsername = "user",
+                     expectedPassword = "pass",
                      expectedHostname = "10.10.10.10",
                      expectedPort = ConnectionManager.DefaultSSHPort
                  });
@@ -159,6 +173,7 @@ namespace SSHDebugTests
                     // Invalid port
                     rawConnectionString = "192.168.1.1:123456",
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = StringResources.HostName_PlaceHolder,
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -168,6 +183,7 @@ namespace SSHDebugTests
                     // Invalid address
                     rawConnectionString = "1%92.168.1.1:23",
                     expectedUsername = StringResources.UserName_PlaceHolder,
+                    expectedPassword = null,
                     expectedHostname = StringResources.HostName_PlaceHolder,
                     expectedPort = ConnectionManager.DefaultSSHPort
                 });
@@ -189,6 +205,28 @@ namespace SSHDebugTests
             Assert.True(item.expectedUsername.Equals(username, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("UserName", item.expectedUsername, username));
             Assert.True(item.expectedHostname.Equals(hostname, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("Hostname", item.expectedHostname, hostname));
             Assert.True(item.expectedPort == port, _comparisonErrorStringFormat.FormatInvariantWithArgs("Port", item.expectedPort, port));
+            if (item.expectedPassword == null)
+            {
+                Assert.True(password == null);
+            }
+            else
+            {
+                string passwordString = StringFromSecureString(password);
+                Assert.True(item.expectedPassword.Equals(passwordString, StringComparison.Ordinal), _comparisonErrorStringFormat.FormatInvariantWithArgs("Password", item.expectedPassword, passwordString)); 
+            }
+        }
+
+        private static string StringFromSecureString(SecureString secString)
+        {
+            if (secString == null)
+            {
+                return null;
+            }
+
+            IntPtr bstr = System.Runtime.InteropServices.Marshal.SecureStringToBSTR(secString);
+            string value = System.Runtime.InteropServices.Marshal.PtrToStringBSTR(bstr);
+            System.Runtime.InteropServices.Marshal.FreeBSTR(bstr);
+            return value;
         }
     }
 }
