@@ -1161,16 +1161,8 @@ namespace Microsoft.MIDebugEngine
             {
                 string bkptno = results.Results.FindString("bkptno");
                 ulong addr = cxt.pc ?? 0;
-
-                EXCEPTION_INFO exceptionInfo;
                 bool fContinue;
                 TupleValue frame = results.Results.TryFind<TupleValue>("frame");
-
-                // test -- need to delete
-                if (ExceptionManager.TryGetExceptionBreakpoint(bkptno, out exceptionInfo) == Constants.S_OK)
-                {
-                    _callback.OnException(thread, exceptionInfo.bstrExceptionName, "", exceptionInfo.dwCode,exceptionInfo.guidType);
-                }
 
                 AD7BoundBreakpoint[] bkpt = _breakpointManager.FindHitBreakpoints(bkptno, addr, frame, out fContinue);
                 await _breakpointManager.DeleteBreakpointsPendingDeletion();
@@ -1196,6 +1188,12 @@ namespace Microsoft.MIDebugEngine
                     List<object> bplist = new List<object>();
                     bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
+                }
+                else if (ExceptionManager.TryGetExceptionBreakpoint(bkptno, out EXCEPTION_INFO exceptionInfo) == Constants.S_OK)
+                {
+                    ExceptionBreakpointStates exceptionBreakpointStates = ExceptionManager.ToExceptionBreakpointState(exceptionInfo.dwState);
+                    // test -- need to delete; why should code be 0 and not dwCode?
+                    _callback.OnException(thread, exceptionInfo.bstrExceptionName, "", exceptionInfo.dwCode, exceptionInfo.guidType, exceptionBreakpointStates);
                 }
                 else if (!this.EntrypointHit)
                 {

@@ -570,7 +570,6 @@ namespace MICore
             //   break set -F std::range_error
             // And they do have it in their API:
             //   SBTarget::BreakpointCreateForException
-
             throw new NotImplementedException();
         }
 

@@ -291,7 +291,8 @@ namespace Microsoft.MIDebugEngine
                     // test -- need to delete; these are placeholder values
                     exceptionInfo.bstrExceptionName = categorySettings.CategoryName;
                     exceptionInfo.dwCode = (uint)breakpointNumber;
-                    exceptionInfo.dwState = categorySettings.CategoryState == ExceptionBreakpointStates.BreakThrown ? enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE : enum_EXCEPTION_STATE.EXCEPTION_NONE;
+                    bool isBreakThrown = categorySettings.CategoryState == ExceptionBreakpointStates.BreakThrown; // this is true, but why is dwState still NONE?
+                    exceptionInfo.dwState = isBreakThrown ? (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE) : enum_EXCEPTION_STATE.EXCEPTION_NONE;
                     exceptionInfo.guidType = new Guid(CppExceptionCategoryString);
                     return Constants.S_OK;
                 }
@@ -563,7 +564,7 @@ namespace Microsoft.MIDebugEngine
             return new ReadOnlyDictionary<Guid, ExceptionCategorySettings>(categoryMap);
         }
 
-        private static ExceptionBreakpointStates ToExceptionBreakpointState(enum_EXCEPTION_STATE ad7ExceptionState)
+        public static ExceptionBreakpointStates ToExceptionBreakpointState(enum_EXCEPTION_STATE ad7ExceptionState)
         {
             ExceptionBreakpointStates returnValue = ExceptionBreakpointStates.None;
 
