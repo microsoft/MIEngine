@@ -295,5 +295,46 @@ namespace MICore
 
             return matchlist?.AsStrings;
         }
+
+        public override IEnumerable<Guid> GetSupportedExceptionCategories()
+        {
+            const string CppExceptionCategoryString = "{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}";
+            return new Guid[] { new Guid(CppExceptionCategoryString) };
+        }
+
+        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointStates)
+        {
+            string command;
+            Results result;
+            List<ulong> breakpointNumbers = new List<ulong>();
+
+            if (exceptionNames == null) // set breakpoint for all exceptions in exceptionCategory
+            {
+                command = string.Format(CultureInfo.InvariantCulture, "-catch-throw");
+                result = await _debugger.CmdAsync(command, ResultClass.done);
+                var breakpointNumber = result.Find("bkpt").FindUint("number");
+                breakpointNumbers.Add(breakpointNumber);
+            }
+            else // set breakpoint for each exceptionName in exceptionNames
+            {
+                command = string.Format(CultureInfo.InvariantCulture, "-catch-throw -r ");
+                foreach (string exceptionName in exceptionNames)
+                {
+                    result = await _debugger.CmdAsync(command + exceptionName, ResultClass.done);
+                    var breakpointNumber = result.Find("bkpt").FindUint("number");
+                    breakpointNumbers.Add(breakpointNumber);
+                }
+            }
+
+            return breakpointNumbers;
+        }
+
+        public override async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        {
+            foreach (ulong breakpointNumber in exceptionBreakpoints)
+            {
+                await BreakDelete(breakpointNumber.ToString(CultureInfo.InvariantCulture));
+            }
+        }
     }
 }
