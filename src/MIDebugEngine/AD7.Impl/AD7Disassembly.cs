@@ -213,11 +213,15 @@ namespace Microsoft.MIDebugEngine
 
                     if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION) != 0 && currentLine != 0)
                     {
+                        // If we have a new line and the current line is greater than the previously seen source line.
+                        // Try to grab the last seen source line + 1 and show a group of source code.
+                        // Else, just show the single line.
+                        uint startLine = isNewLine && currentLine > _dwLastSourceLine ? _dwLastSourceLine + 1 : currentLine;
 
                         prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION;
                         prgDisassembly[iOp].posBeg = new TEXT_POSITION()
                         {
-                            dwLine = currentLine,
+                            dwLine = startLine,
                             dwColumn = 0
                         };
                         prgDisassembly[iOp].posEnd = new TEXT_POSITION()
