@@ -15,9 +15,9 @@ namespace Microsoft.MIDebugEngine
         private ulong _addr;
         private enum_DISASSEMBLY_STREAM_SCOPE _scope;
         private string _pLastDocument;
-        private int m_dwLastSourceLine;
-        private bool m_lastSourceInfoStale;
-        private bool m_skipNextInstruction;
+        private uint _dwLastSourceLine;
+        private bool _lastSourceInfoStale;
+        private bool _skipNextInstruction;
 
         internal AD7DisassemblyStream(AD7Engine engine, enum_DISASSEMBLY_STREAM_SCOPE scope, IDebugCodeContext2 pCodeContext)
         {
@@ -26,8 +26,8 @@ namespace Microsoft.MIDebugEngine
             AD7MemoryAddress addr = pCodeContext as AD7MemoryAddress;
             _addr = addr.Address;
             _pLastDocument = null;
-            m_dwLastSourceLine = -1;
-            m_lastSourceInfoStale = true;
+            _dwLastSourceLine = 0;
+            _lastSourceInfoStale = true;
         }
 
         #region IDebugDisassemblyStream2 Members
@@ -102,12 +102,12 @@ namespace Microsoft.MIDebugEngine
 
         public int Read(uint dwInstructions, enum_DISASSEMBLY_STREAM_FIELDS dwFields, out uint pdwInstructionsRead, DisassemblyData[] prgDisassembly)
         {
-            if (m_lastSourceInfoStale && !m_skipNextInstruction)
+            if (_lastSourceInfoStale && !_skipNextInstruction)
             {
                 SeekBack(1);
             }
 
-            if (m_skipNextInstruction)
+            if (_skipNextInstruction)
             {
                 dwInstructions += 1;
             }
@@ -124,8 +124,17 @@ namespace Microsoft.MIDebugEngine
                 // bad address range, return '??'
                 for (iOp = 0; iOp < dwInstructions; _addr++, ++iOp)
                 {
+                    if (_skipNextInstruction)
+                    {
+                        _addr++;
+                        dwInstructions--;
+                        _skipNextInstruction = false;
+                    }
                     prgDisassembly[iOp] = FetchBadInstruction(dwFields);
                 }
+                _lastSourceInfoStale = false;
+                _dwLastSourceLine = 0;
+                _pLastDocument = null;
                 pdwInstructionsRead = iOp;
                 return Constants.S_OK;
             }
@@ -139,26 +148,25 @@ namespace Microsoft.MIDebugEngine
             using (IEnumerator<DisasmInstruction> instructionEnumerator = instructions.GetEnumerator())
             {
                 int idx = 0;
-                if (m_skipNextInstruction)
+                if (_skipNextInstruction)
                 {
+                    _skipNextInstruction = false;
+
                     instructionEnumerator.MoveNext();
                     DisasmInstruction instruction = instructionEnumerator.Current;
 
-                    m_dwLastSourceLine = (int)instruction.Line - 1;
-                    _pLastDocument = string.Concat("file://", instruction.File);
+                    _dwLastSourceLine = instruction.Line != 0 ? instruction.Line - 1 : 0;
+                    _pLastDocument = instruction.File;
 
+                    dwInstructions--;
                     idx++;
                 }
 
-                for (; idx < dwInstructions; idx++)
+                for (; idx < dwInstructions + 1 && iOp < dwInstructions; idx++)
                 {
                     instructionEnumerator.MoveNext();
                     DisasmInstruction instruction = instructionEnumerator.Current;
 
-                    if (iOp >= dwInstructions)
-                    {
-                        break;
-                    }
                     _addr = instruction.Addr;
 
                     if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_ADDRESS) != 0)
@@ -197,45 +205,59 @@ namespace Microsoft.MIDebugEngine
                         }
                     }
 
-                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION) != 0 && instruction.Line != 0)
-                    {
-                        uint startLine = instruction.Line - 1;
 
+                    string currentFile = instruction.File;
+                    uint currentLine = instruction.Line - 1;
+                    bool isNewDocument = string.IsNullOrEmpty(_pLastDocument) || !_pLastDocument.Equals(currentFile, StringComparison.Ordinal);
+                    bool isNewLine = currentLine != _dwLastSourceLine;
+
+                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION) != 0 && currentLine != 0)
+                    {
+
+                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION;
                         prgDisassembly[iOp].posBeg = new TEXT_POSITION()
                         {
-                            dwLine = startLine,
+                            dwLine = currentLine,
                             dwColumn = 0
                         };
                         prgDisassembly[iOp].posEnd = new TEXT_POSITION()
                         {
-                            dwLine = instruction.Line,
+                            dwLine = currentLine,
                             dwColumn = 0
                         };
 
-                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION;
-
-                        if (m_dwLastSourceLine != instruction.Line && instruction.Line != 0)
-                        {
-                            prgDisassembly[iOp].dwFlags |= enum_DISASSEMBLY_FLAGS.DF_HASSOURCE;
-                        }
+                        // Update last seen source line.
+                        _dwLastSourceLine = currentLine;
                     }
 
-                    bool newDocument = string.IsNullOrEmpty(_pLastDocument) || !_pLastDocument.Equals(instruction.File, StringComparison.Ordinal);
+                    // Show source if we have line and file information and if there is a new line.
+                    if (currentLine != 0 && currentFile != null && isNewLine)
+                    {
+                        prgDisassembly[iOp].dwFlags |= enum_DISASSEMBLY_FLAGS.DF_HASSOURCE;
+                    }
 
-                    if (!string.IsNullOrWhiteSpace(instruction.File))
+                    if (!string.IsNullOrWhiteSpace(currentFile))
                     {
                         if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_DOCUMENTURL) != 0)
                         {
-                            if (newDocument || idx == 0)
+                            // idx 0 is the previous instruction. The first requested instruction
+                            // is at idx 1.
+                            if (isNewDocument || idx == 1)
                             {
                                 prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_DOCUMENTURL;
-                                prgDisassembly[iOp].bstrDocumentUrl = string.Concat("file://", instruction.File);
+                                prgDisassembly[iOp].bstrDocumentUrl = string.Concat("file://", currentFile);
                             }
                         }
                     }
 
-                    m_dwLastSourceLine = (int)instruction.Line;
-                    if (newDocument)
+                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_BYTEOFFSET) != 0)
+                    {
+                        prgDisassembly[iOp].dwFields |= enum_DISASSEMBLY_STREAM_FIELDS.DSF_BYTEOFFSET;
+                        // For the disassembly window, offset should be set to 0 to show source and non-zero to hide it.
+                        prgDisassembly[iOp].dwByteOffset = isNewLine ? 0 : uint.MaxValue;
+                    }
+
+                    if (isNewDocument)
                     {
                         prgDisassembly[iOp].dwFlags |= enum_DISASSEMBLY_FLAGS.DF_DOCUMENTCHANGE;
                         _pLastDocument = instruction.File;
@@ -288,10 +310,10 @@ namespace Microsoft.MIDebugEngine
 
         private int SeekBack(long iInstructions)
         {
-            if (m_lastSourceInfoStale)
+            if (_lastSourceInfoStale)
             {
                 iInstructions += 1;
-                m_skipNextInstruction = true;
+                _skipNextInstruction = true;
             }
             _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
@@ -303,8 +325,8 @@ namespace Microsoft.MIDebugEngine
         public int Seek(enum_SEEK_START dwSeekStart, IDebugCodeContext2 pCodeContext, ulong uCodeLocationId, long iInstructions)
         {
             _pLastDocument = null;
-            m_lastSourceInfoStale = true;
-            m_dwLastSourceLine = -1;
+            _lastSourceInfoStale = true;
+            _dwLastSourceLine = 0;
 
             if (dwSeekStart == enum_SEEK_START.SEEK_START_CODECONTEXT)
             {
