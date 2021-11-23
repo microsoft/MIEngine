@@ -310,17 +310,17 @@ namespace MICore
 
             if (exceptionNames == null) // set breakpoint for all exceptions in exceptionCategory
             {
-                command = string.Format(CultureInfo.InvariantCulture, "-catch-throw");
+                command = "-catch-throw";
                 result = await _debugger.CmdAsync(command, ResultClass.done);
                 var breakpointNumber = result.Find("bkpt").FindUint("number");
                 breakpointNumbers.Add(breakpointNumber);
             }
             else // set breakpoint for each exceptionName in exceptionNames
             {
-                command = string.Format(CultureInfo.InvariantCulture, "-catch-throw -r ");
+                command = "-catch-throw -r ^";
                 foreach (string exceptionName in exceptionNames)
                 {
-                    result = await _debugger.CmdAsync(command + exceptionName, ResultClass.done);
+                    result = await _debugger.CmdAsync(command + exceptionName + "$", ResultClass.done);
                     var breakpointNumber = result.Find("bkpt").FindUint("number");
                     breakpointNumbers.Add(breakpointNumber);
                 }
