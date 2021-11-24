@@ -96,7 +96,7 @@ namespace Microsoft.MIDebugEngine
             public readonly ExceptionBreakpointStates DefaultCategoryState;
             public readonly ReadOnlyDictionary<string, ExceptionBreakpointStates> DefaultRules;
 
-            // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCategory), and we
+            // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCategory) and TryGetExceptionBreakpoint, and we
             // guarantee that there will only be one active FlushSettingsUpdates task at a time
             public ExceptionBreakpointStates CategoryState;
             public readonly Dictionary<string, ulong> CurrentRules = new Dictionary<string, ulong>();
@@ -231,7 +231,6 @@ namespace Microsoft.MIDebugEngine
 
                 using (var settingsUpdateHolder = categorySettings.GetSettingsUpdate())
                 {
-                    settingsUpdateHolder.Value.RulesToAdd.Remove(exceptionName);
                     settingsUpdateHolder.Value.RulesToRemove.Add(exceptionName);
                 }
             }
@@ -452,23 +451,6 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        private bool IsCppExceptionsCategoryChecked(SettingsUpdates updates)
-        {
-            // C++ exceptions category is checked when NewCategoryState is BreakThrown and all RulesToAdd contain BreakThrown
-            if (updates.NewCategoryState == ExceptionBreakpointStates.BreakThrown)
-            {
-                foreach (string rule in updates.RulesToAdd.Keys)
-                {
-                    if (!updates.RulesToAdd[rule].HasFlag(ExceptionBreakpointStates.BreakThrown))
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
-
         private async Task UpdateCategory(Guid categoryId, ExceptionCategorySettings categorySettings, SettingsUpdates updates)
         {
             // Update the category
@@ -540,7 +522,7 @@ namespace Microsoft.MIDebugEngine
 
                 bool isBreakThrown = grouping.Key.HasFlag(ExceptionBreakpointStates.BreakThrown);
 
-                if (!IsCppExceptionsCategoryChecked(updates) && isBreakThrown)
+                if (!categorySettings.CategoryState.HasFlag(ExceptionBreakpointStates.BreakThrown) && isBreakThrown)
                 {
                     IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
 
@@ -561,6 +543,11 @@ namespace Microsoft.MIDebugEngine
                         Debug.Assert(count == exceptionNames.Count());
 #endif
                     }
+                }
+                else if (grouping.Key != categorySettings.CategoryState && !isBreakThrown)
+                {
+                    // Send warning when there are unchecked exceptions in a checked exceptions category
+                    HostOutputWindow.WriteLaunchError("There are unchecked exceptions in a checked exceptions category.");
                 }
                 if (!isBreakThrown)
                 {
