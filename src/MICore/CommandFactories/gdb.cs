@@ -317,10 +317,10 @@ namespace MICore
             }
             else // set breakpoint for each exceptionName in exceptionNames
             {
-                command = "-catch-throw -r ^";
+                command = "-catch-throw -r \\b";
                 foreach (string exceptionName in exceptionNames)
                 {
-                    result = await _debugger.CmdAsync(command + exceptionName + "$", ResultClass.done);
+                    result = await _debugger.CmdAsync(command + exceptionName + "\\b", ResultClass.done);
                     var breakpointNumber = result.Find("bkpt").FindUint("number");
                     breakpointNumbers.Add(breakpointNumber);
                 }

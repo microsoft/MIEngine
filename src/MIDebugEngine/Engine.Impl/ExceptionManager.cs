@@ -280,9 +280,10 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        public bool TryGetExceptionBreakpoint(string bkptno, out EXCEPTION_INFO exceptionInfo)
+        public bool TryGetExceptionBreakpoint(string bkptno, out string exceptionName, out Guid exceptionCategoryGuid)
         {
-            exceptionInfo = new EXCEPTION_INFO();
+            exceptionName = null;
+            exceptionCategoryGuid = Guid.Empty;
             ExceptionCategorySettings categorySettings;
             if (_categoryMap.TryGetValue(CppExceptionCategoryGuid, out categorySettings))
             {
@@ -291,12 +292,12 @@ namespace Microsoft.MIDebugEngine
                 {
                     if (categorySettings.CurrentRules.ContainsValue(breakpointNumber))
                     {
-                        // test -- need to delete; these are placeholder values
-                        string exceptionName = categorySettings.CurrentRules.First(pair => pair.Value == breakpointNumber).Key;
-                        exceptionInfo.bstrExceptionName = exceptionName.Length > 0 && exceptionName != "*" ?  exceptionName : categorySettings.CategoryName; // if exceptionName is "*", the exceptions category is selected
-                        bool isBreakThrown = categorySettings.CategoryState == ExceptionBreakpointStates.BreakThrown;
-                        exceptionInfo.dwState = isBreakThrown ? (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE) : enum_EXCEPTION_STATE.EXCEPTION_NONE;
-                        exceptionInfo.guidType = CppExceptionCategoryGuid;
+                        exceptionName = categorySettings.CurrentRules.First(pair => pair.Value == breakpointNumber).Key;
+                        if (exceptionName.Length < 1 || exceptionName == "*") // if exceptionName is "*", the exceptions category is selected
+                        {
+                            exceptionName = categorySettings.CategoryName;
+                        }
+                        exceptionCategoryGuid = CppExceptionCategoryGuid;
                         return true;
                     }
                 }
@@ -486,7 +487,7 @@ namespace Microsoft.MIDebugEngine
                     categorySettings.CurrentRules.Clear();
 
                     // only do a generic catch throw if C++ exceptions category is checked
-                    if (IsCppExceptionsCategoryChecked(updates))
+                    if (newCategoryState != ExceptionBreakpointStates.None)
                     {
                         IEnumerable<ulong> breakpointIds = _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState).Result;
                         ulong breakpointId = breakpointIds.Single();
@@ -539,7 +540,6 @@ namespace Microsoft.MIDebugEngine
 
                 bool isBreakThrown = grouping.Key.HasFlag(ExceptionBreakpointStates.BreakThrown);
 
-                // test -- need to delete; remove old breakpoint if exceptionName is in categorySettings.CurrentRules.Keys
                 if (!IsCppExceptionsCategoryChecked(updates) && isBreakThrown)
                 {
                     IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
@@ -548,6 +548,11 @@ namespace Microsoft.MIDebugEngine
                     {
                         int count = exceptionNames.Zip(breakpointIds, (exceptionName, breakpointId) =>
                         {
+                            // remove old breakpoint if exceptionName is in categorySettings.CurrentRules.Keys
+                            if (categorySettings.CurrentRules.ContainsKey(exceptionName))
+                            {
+                                _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { categorySettings.CurrentRules[exceptionName] });
+                            }
                             categorySettings.CurrentRules[exceptionName] = breakpointId;
                             return 1;
                         }).Sum();
@@ -605,7 +610,7 @@ namespace Microsoft.MIDebugEngine
             return new ReadOnlyDictionary<Guid, ExceptionCategorySettings>(categoryMap);
         }
 
-        public static ExceptionBreakpointStates ToExceptionBreakpointState(enum_EXCEPTION_STATE ad7ExceptionState)
+        private static ExceptionBreakpointStates ToExceptionBreakpointState(enum_EXCEPTION_STATE ad7ExceptionState)
         {
             ExceptionBreakpointStates returnValue = ExceptionBreakpointStates.None;
 
