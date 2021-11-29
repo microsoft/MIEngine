@@ -289,15 +289,16 @@ namespace Microsoft.MIDebugEngine
                 ulong breakpointNumber = Convert.ToUInt32(bkptno, CultureInfo.InvariantCulture);
                 lock (categorySettings.CurrentRules)
                 {
-                    if (categorySettings.CurrentRules.ContainsValue(breakpointNumber))
+                    exceptionName = categorySettings.CurrentRules.FirstOrDefault(pair => pair.Value == breakpointNumber).Key;
+                    if (exceptionName != null)
                     {
-                        exceptionName = categorySettings.CurrentRules.First(pair => pair.Value == breakpointNumber).Key;
                         if (exceptionName.Length < 1 || exceptionName == "*") // if exceptionName is "*", the exceptions category is selected
                         {
                             exceptionName = categorySettings.CategoryName;
                         }
                         exceptionCategoryGuid = CppExceptionCategoryGuid;
                         return true;
+
                     }
                 }
             }
@@ -547,7 +548,7 @@ namespace Microsoft.MIDebugEngine
                 else if (grouping.Key != categorySettings.CategoryState && !isBreakThrown)
                 {
                     // Send warning when there are unchecked exceptions in a checked exceptions category
-                    HostOutputWindow.WriteLaunchError("There are unchecked exceptions in a checked exceptions category.");
+                    _callback.OnOutputMessage(new OutputMessage(ResourceStrings.Warning_UncheckedExceptionsInCheckedCategory, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
                 }
                 if (!isBreakThrown)
                 {
