@@ -419,7 +419,8 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: One or more C++ exceptions are unchecked while &apos;&lt;All C++ Exceptions not in this list&gt;&apos; is enabled. This is unsupported for GDB and the debugger will break on all C++ exceptions..
+        ///   Looks up a localized string similar to Warning: One or more C++ exceptions are unchecked while &apos;&lt;All C++ Exceptions not in this list&gt;&apos; is enabled. This is unsupported for GDB and the debugger will break on all C++ exceptions.
+        ///.
         /// </summary>
         internal static string Warning_UncheckedExceptionsInCheckedCategory {
             get {

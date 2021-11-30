@@ -254,6 +254,7 @@ See https://aka.ms/miengine-gdb-troubleshooting for details.</value>
     <value>Debugging will now abort.</value>
   </data>
   <data name="Warning_UncheckedExceptionsInCheckedCategory" xml:space="preserve">
-    <value>Warning: One or more C++ exceptions are unchecked while '&lt;All C++ Exceptions not in this list&gt;' is enabled. This is unsupported for GDB and the debugger will break on all C++ exceptions.</value>
+    <value>Warning: One or more C++ exceptions are unchecked while '&lt;All C++ Exceptions not in this list&gt;' is enabled. This is unsupported for GDB and the debugger will break on all C++ exceptions.
+</value>
   </data>
 </root>
