@@ -96,8 +96,10 @@ namespace Microsoft.MIDebugEngine
             public readonly ExceptionBreakpointStates DefaultCategoryState;
             public readonly ReadOnlyDictionary<string, ExceptionBreakpointStates> DefaultRules;
 
-            // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCategory) and TryGetExceptionBreakpoint, and we
-            // guarantee that there will only be one active FlushSettingsUpdates task at a time
+            // Threading note: these are only read or updated by the FlushSettingsUpdates thread (in UpdateCategory) and TryGetExceptionBreakpoint. 
+            // The following rules apply:
+            // 1. Writes and reads when *NOT* on the FlushSettingsUpdates thread - collection should be locked on itself
+            // 2. Reads on the FlushSettingsUpdates thread - no locking is needed
             public ExceptionBreakpointStates CategoryState;
             public readonly Dictionary<string, ulong> CurrentRules = new Dictionary<string, ulong>();
 
@@ -455,25 +457,28 @@ namespace Microsoft.MIDebugEngine
         private async Task UpdateCategory(Guid categoryId, ExceptionCategorySettings categorySettings, SettingsUpdates updates)
         {
             // Update the category
-            lock (categorySettings.CurrentRules)
+            if (updates.NewCategoryState.HasValue && (
+                updates.NewCategoryState.Value != ExceptionBreakpointStates.None || // send down a rule if the category isn't in the default state
+                categorySettings.CurrentRules.Count != 0)) // Or if we have other rules for the category that we need to blow away
             {
-                if (updates.NewCategoryState.HasValue && (
-                    updates.NewCategoryState.Value != ExceptionBreakpointStates.None || // send down a rule if the category isn't in the default state
-                    categorySettings.CurrentRules.Count != 0)) // Or if we have other rules for the category that we need to blow away
+                ExceptionBreakpointStates newCategoryState = updates.NewCategoryState.Value;
+                categorySettings.CategoryState = newCategoryState;
+
+                // remove exception breakpoints before categorySettings.CurrentRules is cleared
+                await _commandFactory.RemoveExceptionBreakpoint(categoryId, categorySettings.CurrentRules.Values);
+
+                lock (categorySettings.CurrentRules)
                 {
-                    ExceptionBreakpointStates newCategoryState = updates.NewCategoryState.Value;
-                    categorySettings.CategoryState = newCategoryState;
-
-                    // remove exception breakpoints before categorySettings.CurrentRules is cleared
-                    _commandFactory.RemoveExceptionBreakpoint(categoryId, categorySettings.CurrentRules.Values);
-
                     categorySettings.CurrentRules.Clear();
+                }
 
-                    // only do a generic catch throw if C++ exceptions category is checked
-                    if (newCategoryState != ExceptionBreakpointStates.None)
+                // only do a generic catch throw if C++ exceptions category is checked
+                if (newCategoryState != ExceptionBreakpointStates.None)
+                {
+                    IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
+                    ulong breakpointId = breakpointIds.Single();
+                    lock (categorySettings.CurrentRules)
                     {
-                        IEnumerable<ulong> breakpointIds = _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState).Result;
-                        ulong breakpointId = breakpointIds.Single();
                         categorySettings.CurrentRules.Add("*", breakpointId);
                     }
                 }
