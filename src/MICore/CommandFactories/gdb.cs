@@ -311,11 +311,6 @@ namespace MICore
             if (exceptionNames == null) // set breakpoint for all exceptions in exceptionCategory
             {
                 command = "-catch-throw";
-                /*
-                result = await _debugger.CmdAsync(command, ResultClass.done);
-                var breakpointNumber = result.Find("bkpt").FindUint("number");
-                breakpointNumbers.Add(breakpointNumber);
-                */
                 result = await _debugger.CmdAsync(command, ResultClass.None);
                 switch (result.ResultClass)
                 {
@@ -326,7 +321,6 @@ namespace MICore
                     case ResultClass.error:
                     default:
                         throw new NotSupportedException();
-
                 }
             }
             else // set breakpoint for each exceptionName in exceptionNames
@@ -334,11 +328,17 @@ namespace MICore
                 command = "-catch-throw -r \\b";
                 foreach (string exceptionName in exceptionNames)
                 {
-                    /*
-                    result = await _debugger.CmdAsync(command + exceptionName + "\\b", ResultClass.done);
-                    var breakpointNumber = result.Find("bkpt").FindUint("number");
-                    breakpointNumbers.Add(breakpointNumber
-                    */
+                    result = await _debugger.CmdAsync(command + exceptionName + "\\b", ResultClass.None);
+                    switch (result.ResultClass)
+                    {
+                        case ResultClass.done:
+                            var breakpointNumber = result.Find("bkpt").FindUint("number");
+                            breakpointNumbers.Add(breakpointNumber);
+                            break;
+                        case ResultClass.error:
+                        default:
+                            throw new NotSupportedException();
+                    }
                 }
             }
 
