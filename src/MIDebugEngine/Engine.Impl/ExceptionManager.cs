@@ -475,11 +475,19 @@ namespace Microsoft.MIDebugEngine
                 // only do a generic catch throw if C++ exceptions category is checked
                 if (newCategoryState != ExceptionBreakpointStates.None)
                 {
-                    IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
-                    ulong breakpointId = breakpointIds.Single();
-                    lock (categorySettings.CurrentRules)
+                    try
                     {
-                        categorySettings.CurrentRules.Add("*", breakpointId);
+                        IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
+                        ulong breakpointId = breakpointIds.Single();
+                        lock (categorySettings.CurrentRules)
+                        {
+                            categorySettings.CurrentRules.Add("*", breakpointId);
+                        }
+                    }
+                    catch (NotSupportedException ex)
+                    {
+                        _callback.OnOutputMessage(new OutputMessage(ResourceStrings.Warning_ExceptionsNotSupported, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
+                        return;
                     }
                 }
             }
@@ -530,24 +538,32 @@ namespace Microsoft.MIDebugEngine
 
                 if (!categorySettings.CategoryState.HasFlag(ExceptionBreakpointStates.BreakThrown) && isBreakThrown)
                 {
-                    IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
-
-                    lock (categorySettings.CurrentRules)
+                    try
                     {
-                        int count = exceptionNames.Zip(breakpointIds, (exceptionName, breakpointId) =>
+                        IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
+
+                        lock (categorySettings.CurrentRules)
                         {
+                            int count = exceptionNames.Zip(breakpointIds, (exceptionName, breakpointId) =>
+                            {
                             // remove old breakpoint if exceptionName is in categorySettings.CurrentRules.Keys
                             if (categorySettings.CurrentRules.ContainsKey(exceptionName))
-                            {
-                                _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { categorySettings.CurrentRules[exceptionName] });
-                            }
-                            categorySettings.CurrentRules[exceptionName] = breakpointId;
-                            return 1;
-                        }).Sum();
+                                {
+                                    _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { categorySettings.CurrentRules[exceptionName] });
+                                }
+                                categorySettings.CurrentRules[exceptionName] = breakpointId;
+                                return 1;
+                            }).Sum();
 
 #if DEBUG
-                        Debug.Assert(count == exceptionNames.Count());
+                            Debug.Assert(count == exceptionNames.Count());
 #endif
+                        }
+                    }
+                    catch (NotSupportedException ex)
+                    {
+                        _callback.OnOutputMessage(new OutputMessage(ResourceStrings.Warning_ExceptionsNotSupported, enum_MESSAGETYPE.MT_OUTPUTSTRING, OutputMessage.Severity.Warning));
+                        return;
                     }
                 }
                 else if (grouping.Key != categorySettings.CategoryState && !isBreakThrown)

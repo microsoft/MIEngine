@@ -410,6 +410,16 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Warning: Exceptions are not supported in this scenario.
+        ///.
+        /// </summary>
+        internal static string Warning_ExceptionsNotSupported {
+            get {
+                return ResourceManager.GetString("Warning_ExceptionsNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: Source file &apos;{0}&apos; is newer than module file &apos;{1}&apos;..
         /// </summary>
         internal static string Warning_SourceFileOutOfDate_Arg2 {
