@@ -1189,10 +1189,6 @@ namespace Microsoft.MIDebugEngine
                     bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
-                else if (ExceptionManager.TryGetExceptionBreakpoint(bkptno, out string exceptionName, out Guid exceptionCategoryGuid)) // exception breakpoint hit
-                {
-                    _callback.OnException(thread, exceptionName, "", 0, exceptionCategoryGuid, ExceptionBreakpointStates.BreakThrown);
-                }
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
@@ -1259,7 +1255,7 @@ namespace Microsoft.MIDebugEngine
                 if (!string.IsNullOrEmpty(resultVar))
                 {
                     ReturnValue = new VariableInformation("$ReturnValue", resultVar, cxt, Engine, (AD7Thread)thread.Client, isParameter: false);
-                    await ReturnValue.Eval(radix: 0);
+                    await ReturnValue.Eval();
                 }
                 _callback.OnStepComplete(thread);
             }

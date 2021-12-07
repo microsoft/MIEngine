@@ -19,7 +19,7 @@ namespace Microsoft.SSHDebugPS {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class StringResources {
@@ -335,33 +335,11 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Accept Host Key.
-        /// </summary>
-        internal static string HostKeyCaption {
-            get {
-                return ResourceManager.GetString("HostKeyCaption", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &lt;hostname&gt;.
         /// </summary>
         internal static string HostName_PlaceHolder {
             get {
                 return ResourceManager.GetString("HostName_PlaceHolder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The authenticity of the host &apos;{0}&apos; needs to be established.
-        ///
-        ///&apos;{1}&apos; key fingerprint is &apos;{2}&apos;. 
-        ///
-        ///Would you like to continue connecting?.
-        /// </summary>
-        internal static string NewHostKeyMessage {
-            get {
-                return ResourceManager.GetString("NewHostKeyMessage", resourceCulture);
             }
         }
         

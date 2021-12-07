@@ -60,7 +60,7 @@ namespace Microsoft.MIDebugEngine
         internal async Task<VariableInformation> CreateMIDebuggerVariable(ThreadContext ctx, AD7Engine engine, AD7Thread thread)
         {
             VariableInformation vi = new VariableInformation(Name, Name, ctx, engine, thread, IsParameter);
-            await vi.Eval(engine.CurrentRadix());
+            await vi.Eval();
             return vi;
         }
     }
@@ -446,10 +446,9 @@ namespace Microsoft.MIDebugEngine
                 engineCallback = _engine.Callback;
             }
 
-            uint radix = _engine.CurrentRadix();
             Task evalTask = Task.Run(async () =>
             {
-                await Eval(radix);
+                await Eval();
             });
 
             Action<Task> onComplete = (Task t) =>
@@ -474,10 +473,9 @@ namespace Microsoft.MIDebugEngine
 
         public void SyncEval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
         {
-            uint radix = _engine.CurrentRadix();
             Task eval = Task.Run(async () =>
             {
-                await Eval(radix, dwFlags, dwDAPFlags);
+                await Eval(dwFlags, dwDAPFlags);
             });
             eval.Wait();
         }
@@ -495,14 +493,11 @@ namespace Microsoft.MIDebugEngine
             return val;
         }
 
-        internal async Task Eval(uint radix, enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
+        internal async Task Eval(enum_EVALFLAGS dwFlags = 0, DAPEvalFlags dwDAPFlags = 0)
         {
             this.VerifyNotDisposed();
 
-            if (radix != 0)
-            {
-                await _engine.UpdateRadixAsync(radix);    // ensure the radix value is up-to-date
-            }
+            await _engine.UpdateRadixAsync(_engine.CurrentRadix());    // ensure the radix value is up-to-date
 
             try
             {

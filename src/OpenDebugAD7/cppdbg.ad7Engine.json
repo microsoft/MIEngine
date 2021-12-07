@@ -3,13 +3,5 @@
   "engineClassName": "Microsoft.MIDebugEngine.AD7Engine",
   "conditionalBP": true,
   "functionBP": true,
-  "clipboardContext": true,
-  "exceptionSettings": {
-    "categories": [
-      {
-        "name": "CppExceptionCategory",
-        "id": "3A12D0B7-C26C-11D0-B442-00A0244A1DD2"
-      }
-    ]
-  }
+  "clipboardContext": true
 }
