@@ -389,6 +389,9 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
         [RequiresTestSettings]
+        // lldb-mi returns the condition without escaping the quotes.
+        // >=breakpoint-modified,bkpt={..., cond="str == "hello, world"", ...}
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void ConditionalStringBreakpoints(ITestSettings settings)
         {
             this.TestPurpose("Tests that conditional breakpoints on strings work");
