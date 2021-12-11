@@ -423,7 +423,7 @@ namespace MICore
             if (condition != null)
             {
                 cmd.Append("-c \"");
-                cmd.Append(condition);
+                cmd.Append(EscapeQuotes(condition));
                 cmd.Append("\" ");
             }
             if (!enabled)
