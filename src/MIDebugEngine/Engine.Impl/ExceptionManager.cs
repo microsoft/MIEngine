@@ -294,9 +294,10 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        public bool TryGetExceptionBreakpoint(string bkptno, out string exceptionName, out Guid exceptionCategoryGuid)
+        public bool TryGetExceptionBreakpoint(string bkptno, ulong address, TupleValue frame, out string exceptionName, out string exceptionDescription, out Guid exceptionCategoryGuid)
         {
-            exceptionName = null;
+            exceptionName = string.Empty;
+            exceptionDescription = string.Empty;
             exceptionCategoryGuid = Guid.Empty;
             ExceptionCategorySettings categorySettings;
             if (_categoryMap.TryGetValue(CppExceptionCategoryGuid, out categorySettings))
@@ -311,6 +312,17 @@ namespace Microsoft.MIDebugEngine
                         {
                             exceptionName = categorySettings.CategoryName;
                         }
+
+                        string functionName = frame?.TryFindString("func");
+                        if (string.IsNullOrWhiteSpace(functionName))
+                        {
+                            exceptionDescription = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Exception_Thrown, address);
+                        }
+                        else
+                        {
+                            exceptionDescription = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Exception_Thrown_with_Source, address, functionName);
+                        }
+
                         exceptionCategoryGuid = CppExceptionCategoryGuid;
                         return true;
 

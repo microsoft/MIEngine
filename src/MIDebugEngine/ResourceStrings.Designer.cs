@@ -158,6 +158,24 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exception thrown at 0x{0:X}..
+        /// </summary>
+        internal static string Exception_Thrown {
+            get {
+                return ResourceManager.GetString("Exception_Thrown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exception thrown at 0x{0:X} in {1}..
+        /// </summary>
+        internal static string Exception_Thrown_with_Source {
+            get {
+                return ResourceManager.GetString("Exception_Thrown_with_Source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while updating exception settings. {0}.
         /// </summary>
         internal static string ExceptionSettingsError {
