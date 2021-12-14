@@ -211,7 +211,22 @@ namespace Microsoft.MIDebugEngine
                     bool isNewDocument = string.IsNullOrEmpty(_pLastDocument) || !_pLastDocument.Equals(currentFile, StringComparison.Ordinal);
                     bool isNewLine = currentLine != _dwLastSourceLine;
 
-                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION) != 0 && currentLine != 0)
+                    /* GDB will return a lines of sources not in sequential order.
+                     * We ignore lines with lower line numbers and have it captured in a different group of source. 
+                     * 
+                     *  Example MI Response:
+                     *       src_and_asm_line={line="22",file="main.cpp",fullname="/home/waan/cpp/main.cpp",line_asm_insn=[
+                     *          {address="0x00007fc4b52b54c5",func-name="main(int, char**)",offset="124",opcodes="48 8d 95 40 ff ff ff",inst="lea    -0xc0(%rbp),%rdx" }
+                     *       ]
+                     *       },src_and_asm_line={line="21",file="main.cpp",fullname="/home/waan/cpp/main.cpp",line_asm_insn=[
+                     *          {address="0x00007fc4b52b54df",func-name="main(int, char**)",offset="150",opcodes="c7 85 48 ff ff ff 02 00 00 00",inst="movl   $0x2,-0xb8(%rbp)"}
+                     *       ]
+                     *       },src_and_asm_line={line="22",file="main.cpp",fullname="/home/waan/cpp/main.cpp",line_asm_insn=[
+                     *          {address="0x00007fc4b52b54e9",func-name="main(int, char**)",offset="160",opcodes="48 8d 85 48 ff ff ff",inst="lea    -0xb8(%rbp),%rax"}
+                     *       }
+                    */
+
+                    if ((dwFields & enum_DISASSEMBLY_STREAM_FIELDS.DSF_POSITION) != 0 && currentLine != 0 && currentLine >= _dwLastSourceLine)
                     {
                         // If we have a new line and the current line is greater than the previously seen source line.
                         // Try to grab the last seen source line + 1 and show a group of source code.
