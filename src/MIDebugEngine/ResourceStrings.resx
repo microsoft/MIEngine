@@ -263,11 +263,11 @@ See https://aka.ms/miengine-gdb-troubleshooting for details.</value>
 </value>
   </data>
   <data name="Exception_Thrown" xml:space="preserve">
-    <value>Exception thrown at 0x{0:X}.</value>
-    <comment>0 = address</comment>
+    <value>Exception{0} thrown at 0x{1:X}.</value>
+    <comment>0 = optional exception name, 1 = address</comment>
   </data>
   <data name="Exception_Thrown_with_Source" xml:space="preserve">
-    <value>Exception thrown at 0x{0:X} in {1}.</value>
-    <comment>0 = address, 1 = exception file</comment>
+    <value>Exception{0} thrown at 0x{1:X} in {2}.</value>
+    <comment>0 = optional exception name, 1 = address, 2 = exception file</comment>
   </data>
 </root>

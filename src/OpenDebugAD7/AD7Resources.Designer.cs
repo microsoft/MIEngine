@@ -117,6 +117,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a supported exception filter..
+        /// </summary>
+        internal static string Error_FilterOption_Not_Supported {
+            get {
+                return ResourceManager.GetString("Error_FilterOption_Not_Supported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Breakpoint Error: function &quot;{0}&quot;, {1}.
         /// </summary>
         internal static string Error_FunctionBreakpoint {

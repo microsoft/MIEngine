@@ -304,4 +304,8 @@
   <data name="Error_UnableToSetInstructionBreakpoint" xml:space="preserve">
     <value>Error setting instruction breakpoint: {0}</value>
   </data>
+  <data name="Error_FilterOption_Not_Supported" xml:space="preserve">
+    <value>'{0}' is not a supported exception filter.</value>
+    <comment>{0} is the name of the exception filter.</comment>
+  </data>
 </root>

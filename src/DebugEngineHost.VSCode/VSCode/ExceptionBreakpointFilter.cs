@@ -46,6 +46,12 @@ namespace Microsoft.DebugEngineHost.VSCode
             }
         }
 
+        [JsonRequired]
+        public bool supportsCondition { get; set; }
+
+        [JsonRequired]
+        public string conditionDescription { get; set; }
+
         /// <summary>
         /// The default state for the button
         /// </summary>

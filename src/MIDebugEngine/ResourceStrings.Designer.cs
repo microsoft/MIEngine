@@ -158,7 +158,7 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception thrown at 0x{0:X}..
+        ///   Looks up a localized string similar to Exception{0} thrown at 0x{1:X}..
         /// </summary>
         internal static string Exception_Thrown {
             get {
@@ -167,7 +167,7 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception thrown at 0x{0:X} in {1}..
+        ///   Looks up a localized string similar to Exception{0} thrown at 0x{1:X} in {2}..
         /// </summary>
         internal static string Exception_Thrown_with_Source {
             get {

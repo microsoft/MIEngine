@@ -13,8 +13,10 @@
     ],
     "exceptionBreakpointFilters": [
       {
-        "label": "All Exceptions",
-        "filter": "all"
+        "label": "All C++ Exceptions",
+        "filter": "all",
+        "supportsCondition": true,
+        "conditionDescription": "std::out_of_range,std::invalid_argument"
       }
     ]
   }

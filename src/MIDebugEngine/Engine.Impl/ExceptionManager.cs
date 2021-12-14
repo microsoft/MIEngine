@@ -308,19 +308,27 @@ namespace Microsoft.MIDebugEngine
                     exceptionName = categorySettings.CurrentRules.FirstOrDefault(pair => pair.Value == breakpointNumber).Key;
                     if (exceptionName != null)
                     {
+                        // The string to use when displaying which exception caused the breakpoint to hit.
+                        // It is empty if it uses the category name
+                        string displayException = string.Empty;
+
                         if (exceptionName.Length < 1 || exceptionName == "*") // if exceptionName is "*", the exceptions category is selected
                         {
                             exceptionName = categorySettings.CategoryName;
+                        }
+                        else
+                        {
+                            displayException = string.Format(CultureInfo.InvariantCulture, " '{0}'", exceptionName);
                         }
 
                         string functionName = frame?.TryFindString("func");
                         if (string.IsNullOrWhiteSpace(functionName))
                         {
-                            exceptionDescription = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Exception_Thrown, address);
+                            exceptionDescription = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Exception_Thrown, displayException, address);
                         }
                         else
                         {
-                            exceptionDescription = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Exception_Thrown_with_Source, address, functionName);
+                            exceptionDescription = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Exception_Thrown_with_Source, displayException, address, functionName);
                         }
 
                         exceptionCategoryGuid = CppExceptionCategoryGuid;
