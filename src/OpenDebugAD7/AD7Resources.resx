@@ -308,4 +308,8 @@
     <value>'{0}' is not a supported exception filter.</value>
     <comment>{0} is the name of the exception filter.</comment>
   </data>
+  <data name="Error_Invalid_Exception_Condition" xml:space="preserve">
+    <value>ERROR: '{0}' is an invalid exception condition</value>
+    <comment>{0} is the exception condition</comment>
+  </data>
 </root>

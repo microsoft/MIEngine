@@ -281,6 +281,94 @@ namespace CppTests.Tests
             }
         }
 
+        [Theory]
+        [DependsOnTest(nameof(CompileExceptionDebuggee))]
+        [RequiresTestSettings]
+        public void SetAllExceptionBreakpointTest(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks to see if we can hit an exception breakpoint.");
+            this.WriteSettings(settings);
+
+            this.Comment("Set initial debuggee for application");
+            IDebuggee debuggee = OpenDebuggee(this, settings, DebuggeeMonikers.Exception.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Launch the application");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-CallRaisedHandledException");
+
+                this.Comment("Set line breakpoints to the lines with entry of try block and catch block");
+                SourceBreakpoints bps = debuggee.Breakpoints(srcClassName, 20);
+                runner.SetBreakpoints(bps);
+
+                List<ExceptionFilterOptions> filterOptions = new List<ExceptionFilterOptions>()
+                {
+                    new ExceptionFilterOptions()
+                    {
+                        condition = string.Empty,
+                        filterId = "all"
+                    }
+                };
+                this.Comment("Set all exception breakpoint");
+                runner.SetExceptionBreakpoints(null, filterOptions.ToArray());
+
+                this.Comment("Start debugging and hit the breakpoint in the try block");
+                runner.Expects.HitBreakpointEvent(srcClassName, 20).AfterConfigurationDone();
+
+                this.Comment("Hit the exception");
+                runner.Expects.StoppedEvent(StoppedReason.Exception).AfterContinue();
+
+                this.Comment("Continue to run at the end of the application");
+                runner.Expects.TerminatedEvent().AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileExceptionDebuggee))]
+        [RequiresTestSettings]
+        public void SetConditionExceptionBreakpointTest(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks to see if we can hit a conditional exception breakpoint.");
+            this.WriteSettings(settings);
+
+            this.Comment("Set initial debuggee for application");
+            IDebuggee debuggee = OpenDebuggee(this, settings, DebuggeeMonikers.Exception.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Launch the application");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-CallRaisedHandledException");
+
+                this.Comment("Set line breakpoints to the lines with entry of try block and catch block");
+                SourceBreakpoints bps = debuggee.Breakpoints(srcClassName, 20);
+                runner.SetBreakpoints(bps);
+
+                List<ExceptionFilterOptions> filterOptions = new List<ExceptionFilterOptions>()
+                {
+                    new ExceptionFilterOptions()
+                    {
+                        condition = "std::exception",
+                        filterId = "all"
+                    }
+                };
+                this.Comment("Set conditional exception breakpoint");
+                runner.SetExceptionBreakpoints(null, filterOptions.ToArray());
+
+                this.Comment("Start debugging and hit the breakpoint in the try block");
+                runner.Expects.HitBreakpointEvent(srcClassName, 20).AfterConfigurationDone();
+
+                // We expect the program to terminate because the exception is caught.
+                // and we only want to stop on std::exception.
+
+                this.Comment("Continue to run at the end of the application");
+                runner.Expects.TerminatedEvent().AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
         #endregion
 
         #region Function Helper

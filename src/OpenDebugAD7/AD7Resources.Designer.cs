@@ -207,6 +207,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ERROR: &apos;{0}&apos; is an invalid exception condition.
+        /// </summary>
+        internal static string Error_Invalid_Exception_Condition {
+            get {
+                return ResourceManager.GetString("Error_Invalid_Exception_Condition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DNX runtime process exited unexpectedly with error code {0}..
         /// </summary>
         internal static string Error_LaunchFailedNoError {

@@ -883,7 +883,6 @@ namespace OpenDebugAD7
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
                 ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label, SupportsCondition = item.supportsCondition, ConditionDescription = item.conditionDescription }).ToList(),
                 SupportsExceptionConditions = true,
-                SupportsExceptionOptions = true,
                 SupportsExceptionFilterOptions = true,
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
                 SupportsLogPoints = true,
@@ -2312,21 +2311,34 @@ namespace OpenDebugAD7
             {
                 foreach (ExceptionFilterOptions filterOption in filterOptions)
                 {
-                    if (filterOption.FilterId == ExceptionBreakpointFilter.Filter_All)
-                    {
+                    ExceptionBreakpointFilter filter = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.FirstOrDefault(x => x.filter == filterOption.FilterId);
+
+                    if (filter != null)
+                    { 
                         if (!string.IsNullOrWhiteSpace(filterOption.Condition))
                         {
                             string[] conditions = filterOption.Condition.Split(',');
-                            ExceptionSettings.CategoryConfiguration category = m_engineConfiguration.ExceptionSettings.Categories.First(); // How to map filterOption.FilterId to Category Name / Guid.
 
-                            enum_EXCEPTION_STATE state = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE;
+                            // Validate condition strings
+                            List<string> validConditions = new List<string>();
+                            foreach (string condition in conditions)
+                            {
+                                if (LanguageUtilities.IsValidIdentifier(condition))
+                                {
+                                    validConditions.Add(condition);
+                                }
+                                else
+                                {
+                                    m_logger.WriteLine(LoggingCategory.StdErr, string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_Invalid_Exception_Condition, condition));
+                                }
+                            }
 
                             IEnumerable<string> toAdd = conditions.Except(m_exceptionBreakpoints);
                             foreach (string condition in toAdd)
                             {
                                 var exceptionInfo = new EXCEPTION_INFO[1];
-                                exceptionInfo[0].dwState = state;
-                                exceptionInfo[0].guidType = category.Id;
+                                exceptionInfo[0].dwState = filter.State;
+                                exceptionInfo[0].guidType = filter.categoryId;
                                 exceptionInfo[0].bstrExceptionName = condition;
                                 m_engine.SetException(exceptionInfo);
 
@@ -2336,23 +2348,18 @@ namespace OpenDebugAD7
                             IEnumerable<string> toRemove = m_exceptionBreakpoints.Except(conditions).ToList();
                             foreach (string condition in toRemove)
                             {
-                                if (m_exceptionBreakpoints.Contains(condition))
-                                {
-                                    var exceptionInfo = new EXCEPTION_INFO[1];
-                                    exceptionInfo[0].dwState = state;
-                                    exceptionInfo[0].guidType = category.Id;
-                                    exceptionInfo[0].bstrExceptionName = condition;
+                                var exceptionInfo = new EXCEPTION_INFO[1];
+                                exceptionInfo[0].dwState = filter.State;
+                                exceptionInfo[0].guidType = filter.categoryId;
+                                exceptionInfo[0].bstrExceptionName = condition;
 
-                                    m_engine.RemoveSetException(exceptionInfo);
-                                    m_exceptionBreakpoints.Remove(condition);
-                                }
+                                m_engine.RemoveSetException(exceptionInfo);
+                                m_exceptionBreakpoints.Remove(condition);
                             }
                         }
                         else
                         {
-                            enum_EXCEPTION_STATE state = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE;
-
-                            SetAllExceptions(state);
+                            SetAllExceptions(filter.State);
                         }
                     }
                     else
@@ -2363,34 +2370,23 @@ namespace OpenDebugAD7
             }
             else
             {
-                List<string> filter = responder.Arguments.Filters;
-                if (m_engineConfiguration.ExceptionSettings.Categories.Count > 0)
+                List<string> filters = responder.Arguments.Filters;
+                if (filters == null || filters.Count == 0)
                 {
-                    if (filter == null || filter.Count == 0)
+                    SetAllExceptions(enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE);
+                }
+                else
+                {
+                    foreach (string filter in filters)
                     {
-                        SetAllExceptions(enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE);
-                    }
-                    else if (filter.Contains(ExceptionBreakpointFilter.Filter_All))
-                    {
-                        enum_EXCEPTION_STATE state = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE;
-
-                        if (filter.Contains(ExceptionBreakpointFilter.Filter_UserUnhandled))
+                        ExceptionBreakpointFilter breakpointFilter = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.FirstOrDefault(ebf => ebf.filter == filter);
+                        if (breakpointFilter != null)
                         {
-                            state |= enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
-                        }
-
-                        SetAllExceptions(state);
-                    }
-                    else
-                    {
-                        if (filter.Contains(ExceptionBreakpointFilter.Filter_UserUnhandled))
-                        {
-                            SetAllExceptions(enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT);
+                            SetAllExceptions(breakpointFilter.State);
                         }
                         else
                         {
-                            // TODO: once VS Code has UI to break on more than just 'uncaught' and 'all' we will need to enhance this with more features
-                            Debug.Fail("Unexpected exception filter string");
+                            Debug.Fail("Unknown exception filter " + filter);
                         }
                     }
                 }
