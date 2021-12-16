@@ -207,7 +207,7 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ERROR: &apos;{0}&apos; is an invalid exception condition.
+        ///   Looks up a localized string similar to ERROR: &apos;{0}&apos; is an invalid exception condition. See https://aka.ms/VSCode-Cpp-ExceptionSettings for more information..
         /// </summary>
         internal static string Error_Invalid_Exception_Condition {
             get {

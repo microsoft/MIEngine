@@ -671,15 +671,22 @@ namespace OpenDebugAD7
             return flags;
         }
 
-        private void SetAllExceptions(enum_EXCEPTION_STATE state)
+        private void SetAllExceptions(Guid categoryId, enum_EXCEPTION_STATE state)
         {
-            foreach (ExceptionSettings.CategoryConfiguration category in m_engineConfiguration.ExceptionSettings.Categories)
+            ExceptionSettings.CategoryConfiguration category = m_engineConfiguration.ExceptionSettings.Categories.FirstOrDefault(x => x.Id == categoryId);
+
+            if (category != null)
             {
                 var exceptionInfo = new EXCEPTION_INFO[1];
                 exceptionInfo[0].dwState = state;
-                exceptionInfo[0].guidType = category.Id;
+                exceptionInfo[0].guidType = categoryId;
                 exceptionInfo[0].bstrExceptionName = category.Name;
+
                 m_engine.SetException(exceptionInfo);
+            }
+            else
+            {
+                Debug.Fail(categoryId + " is a referencing a non-existant category. This should have been caught in ExceptionSettings.ValidateExceptionFilters.");
             }
         }
 
@@ -873,6 +880,13 @@ namespace OpenDebugAD7
                 });
             }
 
+            // -catch-throw is not supported in lldb-mi
+            List<ExceptionBreakpointsFilter> filters = new List<ExceptionBreakpointsFilter>();
+            if (!Utilities.IsOSX())
+            {
+                filters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label, SupportsCondition = item.supportsCondition, ConditionDescription = item.conditionDescription }).ToList();
+            }
+
             InitializeResponse initializeResponse = new InitializeResponse()
             {
                 SupportsConfigurationDoneRequest = true,
@@ -881,9 +895,8 @@ namespace OpenDebugAD7
                 SupportsSetVariable = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
-                ExceptionBreakpointFilters = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.Select(item => new ExceptionBreakpointsFilter() { Default = item.@default, Filter = item.filter, Label = item.label, SupportsCondition = item.supportsCondition, ConditionDescription = item.conditionDescription }).ToList(),
-                SupportsExceptionConditions = true,
-                SupportsExceptionFilterOptions = true,
+                ExceptionBreakpointFilters = filters,
+                SupportsExceptionFilterOptions = filters.Any(),
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
                 SupportsLogPoints = true,
                 SupportsReadMemoryRequest = m_engine is IDebugMemoryBytesDAP, // TODO: Read from configuration or query engine for capabilities.
@@ -2323,17 +2336,18 @@ namespace OpenDebugAD7
                             List<string> validConditions = new List<string>();
                             foreach (string condition in conditions)
                             {
-                                if (LanguageUtilities.IsValidIdentifier(condition))
+                                string conditionTrimmed = condition.Trim();
+                                if (LanguageUtilities.IsValidIdentifier(conditionTrimmed))
                                 {
-                                    validConditions.Add(condition);
+                                    validConditions.Add(conditionTrimmed);
                                 }
                                 else
                                 {
-                                    m_logger.WriteLine(LoggingCategory.StdErr, string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_Invalid_Exception_Condition, condition));
+                                    m_logger.WriteLine(LoggingCategory.StdErr, string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_Invalid_Exception_Condition, conditionTrimmed));
                                 }
                             }
 
-                            IEnumerable<string> toAdd = conditions.Except(m_exceptionBreakpoints);
+                            IEnumerable<string> toAdd = validConditions.Except(m_exceptionBreakpoints).ToList().Distinct();
                             foreach (string condition in toAdd)
                             {
                                 var exceptionInfo = new EXCEPTION_INFO[1];
@@ -2345,7 +2359,7 @@ namespace OpenDebugAD7
                                 m_exceptionBreakpoints.Add(condition);
                             }
 
-                            IEnumerable<string> toRemove = m_exceptionBreakpoints.Except(conditions).ToList();
+                            IEnumerable<string> toRemove = m_exceptionBreakpoints.Except(validConditions).ToList().Distinct();
                             foreach (string condition in toRemove)
                             {
                                 var exceptionInfo = new EXCEPTION_INFO[1];
@@ -2359,7 +2373,7 @@ namespace OpenDebugAD7
                         }
                         else
                         {
-                            SetAllExceptions(filter.State);
+                            SetAllExceptions(filter.categoryId, filter.State);
                         }
                     }
                     else
@@ -2373,7 +2387,10 @@ namespace OpenDebugAD7
                 List<string> filters = responder.Arguments.Filters;
                 if (filters == null || filters.Count == 0)
                 {
-                    SetAllExceptions(enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE);
+                    foreach (ExceptionSettings.CategoryConfiguration category in m_engineConfiguration.ExceptionSettings.Categories)
+                    {
+                        SetAllExceptions(category.Id, enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE);
+                    }
                 }
                 else
                 {
@@ -2382,7 +2399,7 @@ namespace OpenDebugAD7
                         ExceptionBreakpointFilter breakpointFilter = m_engineConfiguration.ExceptionSettings.ExceptionBreakpointFilters.FirstOrDefault(ebf => ebf.filter == filter);
                         if (breakpointFilter != null)
                         {
-                            SetAllExceptions(breakpointFilter.State);
+                            SetAllExceptions(breakpointFilter.categoryId, breakpointFilter.State);
                         }
                         else
                         {

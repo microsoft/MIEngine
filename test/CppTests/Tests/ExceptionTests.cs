@@ -284,6 +284,7 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileExceptionDebuggee))]
         [RequiresTestSettings]
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void SetAllExceptionBreakpointTest(ITestSettings settings)
         {
             this.TestPurpose("This test checks to see if we can hit an exception breakpoint.");
@@ -327,6 +328,7 @@ namespace CppTests.Tests
 
         [Theory]
         [DependsOnTest(nameof(CompileExceptionDebuggee))]
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         [RequiresTestSettings]
         public void SetConditionExceptionBreakpointTest(ITestSettings settings)
         {
@@ -349,7 +351,7 @@ namespace CppTests.Tests
                 {
                     new ExceptionFilterOptions()
                     {
-                        condition = "std::exception",
+                        condition = "std::out_of_range",
                         filterId = "all"
                     }
                 };

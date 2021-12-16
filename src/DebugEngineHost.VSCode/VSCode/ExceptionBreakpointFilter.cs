@@ -45,12 +45,13 @@ namespace Microsoft.DebugEngineHost.VSCode
         [JsonRequired]
         public string conditionDescription { get; set; }
 
+        [JsonRequired]
+        public Guid categoryId { get; set; }
+
         /// <summary>
         /// The default state for the button
         /// </summary>
         public bool @default { get; set; }
-
-        public Guid categoryId { get; set; }
 
         [JsonIgnore]
         public enum_EXCEPTION_STATE State { get; set; } = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE;
