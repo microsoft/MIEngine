@@ -21,8 +21,6 @@ namespace OpenDebugAD7
                 return false;
             }
 
-            string[] parts = identifier.Split();
-
             /*
              * Most languages require the first character in the indentifier not be a number.
              * 
@@ -33,7 +31,7 @@ namespace OpenDebugAD7
              * - Python
              */
             string digits = "0123456789";
-            if (digits.Contains(parts[0], StringComparison.Ordinal))
+            if (digits.Contains(identifier[0], StringComparison.Ordinal))
             {
                 return false;
             }
