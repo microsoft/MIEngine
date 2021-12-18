@@ -294,9 +294,10 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        public bool TryGetExceptionBreakpoint(string bkptno, out string exceptionName, out Guid exceptionCategoryGuid)
+        public bool TryGetExceptionBreakpoint(string bkptno, ulong address, TupleValue frame, out string exceptionName, out string exceptionDescription, out Guid exceptionCategoryGuid)
         {
-            exceptionName = null;
+            exceptionName = string.Empty;
+            exceptionDescription = string.Empty;
             exceptionCategoryGuid = Guid.Empty;
             ExceptionCategorySettings categorySettings;
             if (_categoryMap.TryGetValue(CppExceptionCategoryGuid, out categorySettings))
@@ -307,10 +308,29 @@ namespace Microsoft.MIDebugEngine
                     exceptionName = categorySettings.CurrentRules.FirstOrDefault(pair => pair.Value == breakpointNumber).Key;
                     if (exceptionName != null)
                     {
+                        // The string to use when displaying which exception caused the breakpoint to hit.
+                        // It is empty if it uses the category name
+                        string displayException = string.Empty;
+
                         if (exceptionName.Length < 1 || exceptionName == "*") // if exceptionName is "*", the exceptions category is selected
                         {
                             exceptionName = categorySettings.CategoryName;
                         }
+                        else
+                        {
+                            displayException = string.Format(CultureInfo.InvariantCulture, " '{0}'", exceptionName);
+                        }
+
+                        string functionName = frame?.TryFindString("func");
+                        if (string.IsNullOrWhiteSpace(functionName))
+                        {
+                            exceptionDescription = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Exception_Thrown, displayException, address);
+                        }
+                        else
+                        {
+                            exceptionDescription = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Exception_Thrown_with_Source, displayException, address, functionName);
+                        }
+
                         exceptionCategoryGuid = CppExceptionCategoryGuid;
                         return true;
 

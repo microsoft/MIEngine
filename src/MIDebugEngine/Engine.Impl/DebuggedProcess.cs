@@ -1189,9 +1189,9 @@ namespace Microsoft.MIDebugEngine
                     bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
-                else if (ExceptionManager.TryGetExceptionBreakpoint(bkptno, out string exceptionName, out Guid exceptionCategoryGuid)) // exception breakpoint hit
+                else if (ExceptionManager.TryGetExceptionBreakpoint(bkptno, addr, frame, out string exceptionName, out string description, out Guid exceptionCategoryGuid)) // exception breakpoint hit
                 {
-                    _callback.OnException(thread, exceptionName, "", 0, exceptionCategoryGuid, ExceptionBreakpointStates.BreakThrown);
+                    _callback.OnException(thread, exceptionName, description, 0, exceptionCategoryGuid, ExceptionBreakpointStates.BreakThrown);
                 }
                 else if (!this.EntrypointHit)
                 {
