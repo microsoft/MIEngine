@@ -304,4 +304,12 @@
   <data name="Error_UnableToSetInstructionBreakpoint" xml:space="preserve">
     <value>Error setting instruction breakpoint: {0}</value>
   </data>
+  <data name="Error_FilterOption_Not_Supported" xml:space="preserve">
+    <value>'{0}' is not a supported exception filter.</value>
+    <comment>{0} is the name of the exception filter.</comment>
+  </data>
+  <data name="Error_Invalid_Exception_Condition" xml:space="preserve">
+    <value>ERROR: '{0}' is an invalid exception condition. See https://aka.ms/VSCode-Cpp-ExceptionSettings for more information.</value>
+    <comment>{0} is the exception condition</comment>
+  </data>
 </root>

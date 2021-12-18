@@ -262,4 +262,12 @@ See https://aka.ms/miengine-gdb-troubleshooting for details.</value>
     <value>Warning: Exceptions are not supported in this scenario.
 </value>
   </data>
+  <data name="Exception_Thrown" xml:space="preserve">
+    <value>Exception{0} thrown at 0x{1:X}.</value>
+    <comment>0 = optional exception name, 1 = address</comment>
+  </data>
+  <data name="Exception_Thrown_with_Source" xml:space="preserve">
+    <value>Exception{0} thrown at 0x{1:X} in {2}.</value>
+    <comment>0 = optional exception name, 1 = address, 2 = exception file</comment>
+  </data>
 </root>
