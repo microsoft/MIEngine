@@ -905,6 +905,7 @@ namespace OpenDebugAD7
                 SupportsSetVariable = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
+                SupportsDataBreakpoints = true,
                 ExceptionBreakpointFilters = filters,
                 SupportsExceptionFilterOptions = filters.Any(),
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
