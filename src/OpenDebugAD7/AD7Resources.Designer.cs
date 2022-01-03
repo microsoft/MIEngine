@@ -19,7 +19,7 @@ namespace OpenDebugAD7 {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class AD7Resources {
@@ -117,6 +117,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a supported exception filter..
+        /// </summary>
+        internal static string Error_FilterOption_Not_Supported {
+            get {
+                return ResourceManager.GetString("Error_FilterOption_Not_Supported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Breakpoint Error: function &quot;{0}&quot;, {1}.
         /// </summary>
         internal static string Error_FunctionBreakpoint {
@@ -194,6 +203,15 @@ namespace OpenDebugAD7 {
         internal static string Error_InterpolateVariableMissingProperties {
             get {
                 return ResourceManager.GetString("Error_InterpolateVariableMissingProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ERROR: &apos;{0}&apos; is an invalid exception condition. See https://aka.ms/VSCode-Cpp-ExceptionSettings for more information..
+        /// </summary>
+        internal static string Error_Invalid_Exception_Condition {
+            get {
+                return ResourceManager.GetString("Error_Invalid_Exception_Condition", resourceCulture);
             }
         }
         
@@ -403,6 +421,15 @@ namespace OpenDebugAD7 {
         internal static string Error_UnableToSetBreakpoint {
             get {
                 return ResourceManager.GetString("Error_UnableToSetBreakpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error setting instruction breakpoint: {0}.
+        /// </summary>
+        internal static string Error_UnableToSetInstructionBreakpoint {
+            get {
+                return ResourceManager.GetString("Error_UnableToSetInstructionBreakpoint", resourceCulture);
             }
         }
         

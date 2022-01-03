@@ -12,7 +12,6 @@
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputPath>$(MIDefaultOutputPath)</OutputPath>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,11 +55,6 @@
     <ProjectReference Include="..\MICore\MICore.csproj">
       <Project>{54c33afa-438d-4932-a2f0-d0f2bb2fadc9}</Project>
       <Name>MICore</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.DAP\Microsoft.VisualStudio.Debugger.Interop.DAP.csproj">
-      <Project>{23DE943C-1F84-4E23-9490-50FE1DEDE858}</Project>
-      <Name>Microsoft.VisualStudio.Debugger.Interop.DAP</Name>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
     </ProjectReference>
     <ProjectReference Include="..\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.csproj">
       <Project>{7654cfbb-30db-4c20-bde3-a960cba2036c}</Project>

@@ -18,8 +18,11 @@
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+
+  <ItemGroup Label="Compile Shared Interfaces">
+    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.DAP.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="HostResources.Designer.cs">

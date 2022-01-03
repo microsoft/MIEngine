@@ -332,7 +332,7 @@ namespace MICore
         // Calls to VarCreate will change the current debugger thread and frame selection to what is passed in. This is because it needs to be queried in the context of a thread/frame id.
         public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
-            string quoteEscapedExpression = EscapeQuotes(expression);
+            string quoteEscapedExpression = EscapeQuotes(HandleInvalidChars(expression));
             string command = string.Format(CultureInfo.InvariantCulture, "-var-create - * \"{0}\"", quoteEscapedExpression);
             Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
 
@@ -366,7 +366,8 @@ namespace MICore
 
         public virtual async Task<string> VarAssign(string variableName, string expression, int threadId, uint frameLevel)
         {
-            string command = string.Format(CultureInfo.InvariantCulture, "-var-assign {0} \"{1}\"", variableName, expression);
+            string quoteEscapedExpression = EscapeQuotes(HandleInvalidChars(expression));
+            string command = string.Format(CultureInfo.InvariantCulture, "-var-assign {0} \"{1}\"", variableName, quoteEscapedExpression);
             Results results = await _debugger.CmdAsync(command, ResultClass.done);
             return results.FindString("value");
         }
@@ -422,7 +423,7 @@ namespace MICore
             if (condition != null)
             {
                 cmd.Append("-c \"");
-                cmd.Append(condition);
+                cmd.Append(EscapeQuotes(condition));
                 cmd.Append("\" ");
             }
             if (!enabled)
@@ -591,6 +592,15 @@ namespace MICore
 
         #endregion
 
+        #region Miscellaneous
+
+        public virtual Task<string[]> AutoComplete(string command, int threadId, uint frameLevel)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
         #region Helpers
 
         public abstract string GetTargetArchitectureCommand();
@@ -607,6 +617,18 @@ namespace MICore
         internal string EscapeQuotes(string str)
         {
             return str.Replace("\"", "\\\"");
+        }
+
+        internal string HandleInvalidChars(string str)
+        {
+            char[] invalidChars = { '\r', '\n' };
+            StringBuilder builder = new StringBuilder();
+            foreach (char c in str)
+            {
+
+                builder.Append(invalidChars.Contains(c) ? ' ' : c);
+            }
+            return builder.ToString();
         }
 
         #endregion

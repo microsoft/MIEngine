@@ -5,8 +5,10 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Security;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows;
 using System.Windows.Interop;
 using EnvDTE;
 using liblinux;
@@ -31,6 +33,7 @@ namespace Microsoft.SSHDebugPS
             DockerContainerTransportSettings settings;
             Connection remoteConnection;
 
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (!DockerConnection.TryConvertConnectionStringToSettings(name, out settings, out remoteConnection) || settings == null)
             {
                 string connectionString;
@@ -64,6 +67,7 @@ namespace Microsoft.SSHDebugPS
 
         public static SSHConnection GetSSHConnection(string name)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             ConnectionInfoStore store = new ConnectionInfoStore();
             ConnectionInfo connectionInfo = null;
 
@@ -78,23 +82,59 @@ namespace Microsoft.SSHDebugPS
             if (connectionInfo == null)
             {
                 IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
-                IConnectionManagerResult result;
-                if (string.IsNullOrWhiteSpace(name))
+                if (connectionManager != null)
                 {
-                    result = connectionManager.ShowDialog();
+                    IConnectionManagerResult result = null;
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        result = connectionManager.ShowDialog();
+                    }
+                    else
+                    {
+                        ParseSSHConnectionString(name, out string userName, out SecureString password, out string hostName, out int port);
+
+                        if (password == null)
+                        {
+                            result = connectionManager.ShowDialog(new PasswordConnectionInfo(hostName, port, Timeout.InfiniteTimeSpan, userName, new SecureString()));
+                        }
+                        else
+                        {
+                            connectionInfo = new PasswordConnectionInfo(hostName, port, Timeout.InfiniteTimeSpan, userName, password);
+
+                            // Attempt to open the temp connection so that the host key can be verified.
+                            try
+                            {
+                                using (var system = new UnixSystem())
+                                {
+                                    system.Connect(connectionInfo);
+                                }
+                            }
+                            catch (RemoteConnectivityException e) when (!String.IsNullOrEmpty(e.Fingerprint))
+                            {
+                                var answer = MessageBox.Show(string.Format(CultureInfo.CurrentCulture, StringResources.NewHostKeyMessage, connectionInfo.HostNameOrAddress, e.HostKeyName, e.Fingerprint), StringResources.HostKeyCaption, MessageBoxButton.YesNo);
+
+                                if (answer == MessageBoxResult.Yes)
+                                {
+                                    connectionInfo.Fingerprint = e.Fingerprint;
+                                }
+                                else
+                                {
+                                    throw;
+                                }
+                            }
+                        }
+                    }
+
+                    if (result != null && (result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
+                    {
+                        // Retrieve the newly added connection
+                        store.Load();
+                        connectionInfo = store.Connections.First(info => info.Id == result.StoredConnectionId);
+                    }
                 }
                 else
                 {
-                    ParseSSHConnectionString(name, out string userName, out string hostName, out int port);
-
-                    result = connectionManager.ShowDialog(new PasswordConnectionInfo(hostName, port, Timeout.InfiniteTimeSpan, userName, new System.Security.SecureString()));
-                }
-
-                if ((result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
-                {
-                    // Retrieve the newly added connection
-                    store.Load();
-                    connectionInfo = store.Connections.First(info => info.Id == result.StoredConnectionId);
+                    throw new InvalidOperationException("Why is IVsConnectionManager null?");
                 }
             }
 
@@ -145,14 +185,33 @@ namespace Microsoft.SSHDebugPS
 
         // Default SSH port is 22
         internal const int DefaultSSHPort = 22;
+
         /// <summary>
-        /// Parses the SSH connection string. Expected format is some permutation of username@hostname:portnumber.
+        /// Converts a string to a SecureString.
+        /// </summary>
+        /// <param name="str">The raw string to convert.</param>
+        /// <returns>The SecureString, which the client must dispose of.</returns>
+        /// <remarks>This function is generally unsafe to use, as it defeats the purpose of
+        /// a SecureString to have its unsecured copy floating in memory. This is used to
+        /// shim two APIs.</remarks>
+        private static SecureString ToSecureString(string str)
+        {
+            var ss = new SecureString();
+            foreach (var c in str)
+                ss.AppendChar(c);
+            ss.MakeReadOnly();
+            return ss;
+        }
+
+        /// <summary>
+        /// Parses the SSH connection string. Expected format is some permutation of username[:password]@hostname:portnumber.
         /// If not defined, will provide default values.
         /// </summary>
-        internal static void ParseSSHConnectionString(string connectionString, out string userName, out string hostName, out int port)
+        internal static void ParseSSHConnectionString(string connectionString, out string userName, out SecureString password, out string hostName, out int port)
         {
             userName = StringResources.UserName_PlaceHolder;
             hostName = StringResources.HostName_PlaceHolder;
+            password = null;
             port = DefaultSSHPort;
 
             const string TempUriPrefix = "ssh://";
@@ -163,7 +222,18 @@ namespace Microsoft.SSHDebugPS
                 Uri connectionUri = new Uri(TempUriPrefix + connectionString);
 
                 if (!string.IsNullOrWhiteSpace(connectionUri.UserInfo))
+                {
                     userName = connectionUri.UserInfo;
+                    if (userName.Contains(':'))
+                    {
+                        var userAndPassword = userName.Split(':');
+                        if (userAndPassword.Length == 2)
+                        {
+                            userName = userAndPassword[0];
+                            password = ToSecureString(userAndPassword[1]);
+                        }
+                    }
+                }
 
                 if (!string.IsNullOrWhiteSpace(connectionUri.Host))
                     hostName = connectionUri.Host;

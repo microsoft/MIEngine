@@ -8,6 +8,7 @@ namespace DebuggerTesting.Compilation
         Unspecified = 0,
         ObjectFile,
         SharedLibrary,
-        Executable
+        Executable,
+        MacOSApp
     }
 }

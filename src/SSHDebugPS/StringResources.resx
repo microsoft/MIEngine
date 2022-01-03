@@ -273,4 +273,15 @@ Error:
   <data name="WSL_V2Required" xml:space="preserve">
     <value>The installed version of Windows Subsystem for Linux (WSL) is incompatible with Visual Studio's attach support. Please upgrade to WSL version 2 or newer.</value>
   </data>
+  <data name="HostKeyCaption" xml:space="preserve">
+    <value>Accept Host Key</value>
+  </data>
+  <data name="NewHostKeyMessage" xml:space="preserve">
+    <value>The authenticity of the host '{0}' needs to be established.
+
+'{1}' key fingerprint is '{2}'. 
+
+Would you like to continue connecting?</value>
+    <comment>{0} is a hostname, {1} is a key name, {2} is a fingerprint key value</comment>
+  </data>
 </root>

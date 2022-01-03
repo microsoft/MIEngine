@@ -1060,6 +1060,24 @@ namespace MICore
             }
         }
 
+        private ReadOnlyCollection<LaunchCommand> _postRemoteConnectCommands;
+
+        /// <summary>
+        /// [Required] Additional commands used to setup debugging once the remote connection has been made. May be an empty collection
+        /// </summary>
+        public ReadOnlyCollection<LaunchCommand> PostRemoteConnectCommands
+        {
+            get { return _postRemoteConnectCommands; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("PostRemoteConnectCommands");
+
+                VerifyCanModifyProperty(nameof(PostRemoteConnectCommands));
+                _postRemoteConnectCommands = value;
+            }
+        }
+
 
         private ReadOnlyCollection<LaunchCommand> _customLaunchSetupCommands;
 
@@ -1416,6 +1434,7 @@ namespace MICore
 
             options.ProcessId = processId;
             options.SetupCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
+            options.PostRemoteConnectCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
             if (attachOptions != null)
             {
                 options.Merge(attachOptions);
@@ -1753,6 +1772,7 @@ namespace MICore
             }
 
             this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
+            this.PostRemoteConnectCommands = LaunchCommand.CreateCollection(options.PostRemoteConnectCommands);
 
             this.RequireHardwareBreakpoints = options.HardwareBreakpointInfo?.Require ?? false;
             this.HardwareBreakpointLimit = options.HardwareBreakpointInfo?.Limit ?? 0;

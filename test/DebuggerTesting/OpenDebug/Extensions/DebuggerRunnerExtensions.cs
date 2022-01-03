@@ -7,7 +7,9 @@ using System.Linq;
 using DebuggerTesting.OpenDebug.Commands;
 using DebuggerTesting.OpenDebug.Commands.Responses;
 using DebuggerTesting.OpenDebug.Events;
+using Newtonsoft.Json;
 using Xunit;
+using static DebuggerTesting.OpenDebug.Commands.Responses.DisassembleResponseValue.Body;
 
 namespace DebuggerTesting.OpenDebug.Extensions
 {
@@ -16,6 +18,19 @@ namespace DebuggerTesting.OpenDebug.Extensions
         int Id { get; }
         string Name { get; }
         IThreadInspector GetThreadInspector();
+    }
+
+    public interface IDisassemblyInstruction
+    {
+        public string Address { get; }
+        public string InstructionBytes { get; }
+        public string Instruction { get; }
+        public string Symbol { get; }
+        public Source Location { get; }
+        public int? Line { get; }
+        public int? Column { get; }
+        public int? EndLine { get; }
+        public int? EndColumn { get; }
     }
 
     public static class DebuggerRunnerExtensions
@@ -141,6 +156,36 @@ namespace DebuggerTesting.OpenDebug.Extensions
 
         #endregion
 
+        #region DisassembleInstruction
+
+        internal class DisassemblyInstruction: IDisassemblyInstruction
+        {
+            public string Address { get; private set; }
+            public string InstructionBytes { get; private set; }
+            public string Instruction { get; private set; }
+            public string Symbol { get; private set; }
+            public Source Location { get; private set; }
+            public int? Line { get; private set; }
+            public int? Column { get; private set; }
+            public int? EndLine { get; private set; }
+            public int? EndColumn { get; private set; }
+
+            public DisassemblyInstruction(DisassembledInstruction disassembledInstruction)
+            {
+                this.Address = disassembledInstruction.address;
+                this.InstructionBytes = disassembledInstruction.instructionBytes;
+                this.Instruction = disassembledInstruction.instruction;
+                this.Symbol = disassembledInstruction.symbol;
+                this.Location = disassembledInstruction.location;
+                this.Line = disassembledInstruction.line;
+                this.Column = disassembledInstruction.column;
+                this.EndLine = disassembledInstruction.endLine;
+                this.EndColumn = disassembledInstruction.endColumn;
+            }
+        }
+
+        #endregion
+
         public static void RunCommandExpectFailure(this IDebuggerRunner runner, ICommand command)
         {
             command.ExpectsSuccess = false;
@@ -152,14 +197,25 @@ namespace DebuggerTesting.OpenDebug.Extensions
             return runner.RunCommand(new SetBreakpointsCommand(sourceBreakpoints));
         }
 
-        public static void SetExceptionBreakpoints(this IDebuggerRunner runner, params string[] filters)
+        public static void SetExceptionBreakpoints(this IDebuggerRunner runner, string[] filters, ExceptionFilterOptions[] filterOptions)
         {
-                runner.RunCommand(new SetExceptionBreakpointsCommand(filters));
+            runner.RunCommand(new SetExceptionBreakpointsCommand(filters, filterOptions));
         }
 
         public static SetBreakpointsResponseValue SetFunctionBreakpoints(this IDebuggerRunner runner, FunctionBreakpoints breakpoints)
         {
             return runner.RunCommand(new SetFunctionBreakpointsCommand(breakpoints));
+        }
+
+        public static SetBreakpointsResponseValue SetInstructionBreakpoints(this IDebuggerRunner runner, InstructionBreakpoints breakpoints)
+        {
+            return runner.RunCommand(new SetInstructionBreakpointsCommand(breakpoints));
+        }
+
+        public static string[] CompletionsRequest(this IDebuggerRunner runner, string text)
+        {
+            CompletionItem[] completionItems = runner.RunCommand(new CompletionsCommand(null, text, 0, null))?.body?.targets;
+            return completionItems?.Select(x => x.label).ToArray();
         }
 
         public static void Continue(this IDebuggerRunner runner)
@@ -170,6 +226,18 @@ namespace DebuggerTesting.OpenDebug.Extensions
         public static void ConfigurationDone(this IDebuggerRunner runner)
         {
             runner.RunCommand(new ConfigurationDoneCommand());
+        }
+
+        public static ReadMemoryResponseValue ReadMemory(this IDebuggerRunner runner, string reference, int? offset, int count)
+        {
+            ReadMemoryResponseValue response = runner.RunCommand(new ReadMemoryCommand(reference, offset, count));
+            return response;
+        }
+
+        public static IEnumerable<IDisassemblyInstruction> Disassemble(this IDebuggerRunner runner, string memoryReference, int instructionCount)
+        {
+            DisassembleResponseValue response = runner.RunCommand(new DisassembleCommand(memoryReference, 0, 0, instructionCount, false));
+            return response?.body?.instructions.Select(i => new DisassemblyInstruction(i));
         }
 
         /// <summary>

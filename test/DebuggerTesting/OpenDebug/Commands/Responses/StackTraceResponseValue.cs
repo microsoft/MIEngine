@@ -24,6 +24,9 @@ namespace DebuggerTesting.OpenDebug.Commands.Responses
 
                 [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
                 public Source source;
+
+                [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+                public string instructionPointerReference;
             }
             public StackFrame[] stackFrames;
         }

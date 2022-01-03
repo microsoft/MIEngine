@@ -1,0 +1,225 @@
+name: Build and Test
+
+on:
+  # Run a build on Pull Requests
+  pull_request:
+    branches: [ main ]
+
+  # Run this build every night
+  schedule:
+  - cron: "0 0 * * *"
+
+  # Run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows_vs_build:
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Setup NuGet.exe for use with actions
+      uses: NuGet/setup-nuget@v1.0.5
+
+    - name: Build MIDebugEngine
+      run: |
+        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -c $env:Configuration -t vs
+      env:
+        Configuration: ${{ matrix.configuration }}
+
+    - name: Setup VSTest.console.exe
+      uses: darenm/Setup-VSTest@v1
+
+    - name: Run VS Extension tests
+      run: vstest.console.exe ${{ github.workspace }}\bin\${{ matrix.configuration }}\MICoreUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\JDbgUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\SSHDebugTests.dll
+
+  windows_vscode_build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Setup NuGet.exe for use with actions
+      uses: NuGet/setup-nuget@v1.0.5
+
+    - name: Build MIDebugEngine
+      run: |
+        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -t vscode
+
+    - name: Copy Test Configuration
+      run: |
+        copy ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\TestConfigurations\config_msys_gdb.xml ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\config.xml
+
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+        update: true
+        install: >-
+          mingw-w64-x86_64-toolchain
+
+    # As of Nov 8, 2021, mingw-w64-x86_64-toolchain-11.1.x
+    # causes GDB to return "During startup program exited with code 0xc0000139"
+    # Downgrade to working toolchain (04-May-2021)
+    # TODO: Remove this task when there is a newer version of toolchain than 11.1.x
+    - shell: msys2 {0}
+      name: Downgrade toolchain to 10.x
+      run: |
+        # Download GDB
+        DOWNLOAD_DOWNGRADED_GDB_PATH='${{ github.workspace }}/mingw-w64-x86_64-gdb-10.2-2-any.pkg.tar.zst'
+        DOWNLOAD_DOWNGRADED_GDB_PATH=${DOWNLOAD_DOWNGRADED_GDB_PATH//\\//}
+        wget -O ${DOWNLOAD_DOWNGRADED_GDB_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gdb-10.2-2-any.pkg.tar.zst
+
+        # Download GCC
+        DOWNLOAD_DOWNGRADED_GCC_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-10.3.0-8-any.pkg.tar.zst'
+        DOWNLOAD_DOWNGRADED_GCC_PATH=${DOWNLOAD_DOWNGRADED_GCC_PATH//\\//}
+        wget -O ${DOWNLOAD_DOWNGRADED_GCC_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-10.3.0-8-any.pkg.tar.zst
+
+        # Download GCC Lib
+        DOWNLOAD_DOWNGRADED_GCCLIB_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-libs-10.3.0-8-any.pkg.tar.zst'
+        DOWNLOAD_DOWNGRADED_GCCLIB_PATH=${DOWNLOAD_DOWNGRADED_GCCLIB_PATH//\\//}
+        wget -O ${DOWNLOAD_DOWNGRADED_GCCLIB_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-libs-10.3.0-8-any.pkg.tar.zst
+
+        # Download GCC Ada
+        DOWNLOAD_DOWNGRADED_ADA_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-ada-10.3.0-8-any.pkg.tar.zst'
+        DOWNLOAD_DOWNGRADED_ADA_PATH=${DOWNLOAD_DOWNGRADED_ADA_PATH//\\//}
+        wget -O ${DOWNLOAD_DOWNGRADED_ADA_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-ada-10.3.0-8-any.pkg.tar.zst
+
+        # Download GCC Fortran
+        DOWNLOAD_DOWNGRADED_FORTRAN_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-fortran-10.3.0-8-any.pkg.tar.zst'
+        DOWNLOAD_DOWNGRADED_FORTRAN_PATH=${DOWNLOAD_DOWNGRADED_FORTRAN_PATH//\\//}
+        wget -O ${DOWNLOAD_DOWNGRADED_FORTRAN_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-fortran-10.3.0-8-any.pkg.tar.zst
+
+        # Download GCC Libfortran
+        DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-libgfortran-10.3.0-8-any.pkg.tar.zst'
+        DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH=${DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH//\\//}
+        wget -O ${DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-libgfortran-10.3.0-8-any.pkg.tar.zst
+
+        # Download GCC Obj-C
+        DOWNLOAD_DOWNGRADED_OBJC_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-objc-10.3.0-8-any.pkg.tar.zst'
+        DOWNLOAD_DOWNGRADED_OBJC_PATH=${DOWNLOAD_DOWNGRADED_OBJC_PATH//\\//}
+        wget -O ${DOWNLOAD_DOWNGRADED_OBJC_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-objc-10.3.0-8-any.pkg.tar.zst
+
+        # Download GCC libgccjit
+        DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH='${{ github.workspace }}/mingw-w64-x86_64-libgccjit-10.3.0-8-any.pkg.tar.zst'
+        DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH=${DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH//\\//}
+        wget -O ${DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-libgccjit-10.3.0-8-any.pkg.tar.zst
+
+        # Install
+        pacman -U --noconfirm $DOWNLOAD_DOWNGRADED_GDB_PATH $DOWNLOAD_DOWNGRADED_GCC_PATH $DOWNLOAD_DOWNGRADED_GCCLIB_PATH $DOWNLOAD_DOWNGRADED_ADA_PATH $DOWNLOAD_DOWNGRADED_FORTRAN_PATH $DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH $DOWNLOAD_DOWNGRADED_OBJC_PATH $DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH
+
+    
+    - shell: msys2 {0}
+      name: Gather c++ toolchain paths
+      run: |
+        cygpath -w $(which g++)
+        g++ --version
+        cygpath -w $(which gdb)
+        gdb --version
+
+
+    - run: >
+        dotnet test ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\CppTests.dll --logger "trx;LogFileName=${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\results.trx"
+
+    - name: 'Upload Test Results'
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: win_msys2_x64_results
+        path: ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\results.trx
+
+  linux_build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Build
+      run: dotnet build ${{ github.workspace }}/src/MIDebugEngine-Unix.sln
+
+    - run: |
+        sudo apt-get install gdb g++ -y
+        which g++
+        which gdb
+        echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+        # TODO: Try to make core dumps work
+        # Related CoreDump Tests: https://github.com/microsoft/MIEngine/issues/1170
+        # echo 1 | sudo tee /proc/sys/kernel/core_uses_pid
+        # ulimit -S -c unlimited
+        # sudo sysctl -w kernel.core_pattern=${{ github.workspace }}/core.%e
+
+    - run: |
+        ${{ github.workspace }}/eng/Scripts/CI-Build.sh
+
+    - run: |
+        ${{ github.workspace }}/eng/Scripts/CI-Test.sh
+
+    - name: 'Upload Test Results'
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: linux_x64_results
+        path: ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx
+
+  osx_build:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: Build
+      run: dotnet build ${{ github.workspace }}/src/MIDebugEngine-Unix.sln
+
+    - run: |
+        ${{ github.workspace }}/eng/Scripts/CI-Build.sh
+
+    - run: |
+        ${{ github.workspace }}/eng/Scripts/CI-Test.sh
+
+    - name: 'Upload Test Results'
+      uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: osx_x64_results
+        path: ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx

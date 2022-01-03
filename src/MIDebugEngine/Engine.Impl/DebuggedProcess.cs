@@ -746,6 +746,12 @@ namespace Microsoft.MIDebugEngine
                         commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value.ToString(CultureInfo.InvariantCulture), ignoreFailures: false, failureHandler: failureHandler));
                     }
 
+                    if (_launchOptions.PostRemoteConnectCommands != null) 
+                    {
+                        commands.AddRange(_launchOptions.PostRemoteConnectCommands);
+                    }
+
+
                     if (this.MICommandFactory.Mode == MIMode.Lldb)
                     {
                         // LLDB finishes attach in break mode. Gdb does finishes in run mode. Issue a continue in lldb to match the gdb behavior
@@ -824,12 +830,16 @@ namespace Microsoft.MIDebugEngine
                         if (!string.IsNullOrWhiteSpace(destination))
                         {
                             commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
-
                             if (localLaunchOptions.RequireHardwareBreakpoints && localLaunchOptions.HardwareBreakpointLimit > 0) {
                                 commands.Add(new LaunchCommand(string.Format(CultureInfo.InvariantCulture, "-interpreter-exec console \"set remote hardware-breakpoint-limit {0}\"", localLaunchOptions.HardwareBreakpointLimit.ToString(CultureInfo.InvariantCulture))));
                             }
                         }
 
+                    }
+
+                    if (_launchOptions.PostRemoteConnectCommands != null) 
+                    {
+                        commands.AddRange(_launchOptions.PostRemoteConnectCommands);
                     }
 
                     // Environment variables are set for the debuggee only with the modes that support that
@@ -1179,6 +1189,10 @@ namespace Microsoft.MIDebugEngine
                     bplist.AddRange(bkpt);
                     _callback.OnBreakpoint(thread, bplist.AsReadOnly());
                 }
+                else if (ExceptionManager.TryGetExceptionBreakpoint(bkptno, addr, frame, out string exceptionName, out string description, out Guid exceptionCategoryGuid)) // exception breakpoint hit
+                {
+                    _callback.OnException(thread, exceptionName, description, 0, exceptionCategoryGuid, ExceptionBreakpointStates.BreakThrown);
+                }
                 else if (!this.EntrypointHit)
                 {
                     this.EntrypointHit = true;
@@ -1245,7 +1259,7 @@ namespace Microsoft.MIDebugEngine
                 if (!string.IsNullOrEmpty(resultVar))
                 {
                     ReturnValue = new VariableInformation("$ReturnValue", resultVar, cxt, Engine, (AD7Thread)thread.Client, isParameter: false);
-                    await ReturnValue.Eval();
+                    await ReturnValue.Eval(radix: 0);
                 }
                 _callback.OnStepComplete(thread);
             }

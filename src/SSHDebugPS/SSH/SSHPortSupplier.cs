@@ -62,6 +62,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
         public override int GetPortSupplierId(out Guid guidPortSupplier)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             guidPortSupplier = Guid.Empty;
 
             // Check if liblinux exists in user's installation, if not, don't enable SSH port supplier
@@ -88,6 +89,7 @@ namespace Microsoft.SSHDebugPS.SSH
         /// <returns>True if LibLinux is available, false otherwise.</returns>
         internal static bool IsLibLinuxAvailable()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             IVsShell shell = Package.GetGlobalService(typeof(SVsShell)) as IVsShell;
 
             if (shell == null)

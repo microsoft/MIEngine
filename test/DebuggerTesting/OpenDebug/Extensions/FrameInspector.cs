@@ -20,10 +20,11 @@ namespace DebuggerTesting.OpenDebug.Extensions
         private int? line;
         private int? column;
         private int? sourceReference;
+        private string instructionPointerReference;
 
         #region Constructor/Dispose
 
-        public FrameInspector(IDebuggerRunner runner, string name, int id, string sourceName, string sourcePath, int? sourceReference, int? line, int? column)
+        public FrameInspector(IDebuggerRunner runner, string name, int id, string sourceName, string sourcePath, int? sourceReference, int? line, int? column, string instructionPointerReference)
         {
             Parameter.ThrowIfNull(runner, nameof(runner));
             this.DebuggerRunner = runner;
@@ -34,6 +35,7 @@ namespace DebuggerTesting.OpenDebug.Extensions
             this.sourceReference = sourceReference;
             this.line = line;
             this.column = column;
+            this.instructionPointerReference = instructionPointerReference;
         }
 
         protected override void Dispose(bool isDisposing)
@@ -113,6 +115,15 @@ namespace DebuggerTesting.OpenDebug.Extensions
             {
                 this.VerifyNotDisposed();
                 return this.column;
+            }
+        }
+
+        public string InstructionPointerReference
+        {
+            get
+            {
+                this.VerifyNotDisposed();
+                return this.instructionPointerReference;
             }
         }
 

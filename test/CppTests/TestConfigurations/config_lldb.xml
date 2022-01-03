@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TestMachineConfiguration>
+  <TestConfigurations>
+    <TestConfiguration
+      Compiler="Clang"
+      DebuggeeArchitecture="x64"
+      Debugger="Lldb" />
+    <TestConfiguration
+        Compiler="xcoderun"
+        DebuggeeArchitecture="x64"
+        Debugger="Lldb" />
+  </TestConfigurations>
+  <Compilers>
+    <Compiler
+      Name="Clang"
+      Type="ClangPlusPlus"
+      Path="/usr/bin/clang++" />
+    <Compiler
+      Name="xcoderun"
+      Type="XCodeBuild"
+      Path="/usr/bin/xcodebuild" />
+  </Compilers>
+  <Debuggers>
+    <!-- By not specifying the Path, LLDB that ships with the extension will be used. -->
+    <Debugger
+      Name="Lldb"
+      Type="Lldb"
+      MIMode="lldb" />
+  </Debuggers>
+</TestMachineConfiguration>

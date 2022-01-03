@@ -157,8 +157,53 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
         [RequiresTestSettings]
-        // TODO: Re-enable for Gdb_Gnu
-        [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu | SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        public void LineLogBreakpointsBasic(ITestSettings settings)
+        {
+            this.TestPurpose("Tests basic operation of line breakpoints with a LogPoint");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                // These keep track of all the breakpoints in a source file
+                SourceBreakpoints callingBreakpoints = debuggee.Breakpoints(SinkHelper.Calling, 48);
+
+                this.Comment("Set initial breakpoints");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Launch and run until first breakpoint");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 48)
+                              .AfterConfigurationDone();
+
+                string logMessage = "Log Message";
+
+                this.Comment("Set a logpoint while in break mode");
+                callingBreakpoints.Add(52, null, logMessage);
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Continue til end with newly-added logpoint");
+                // ignoringResponseOrder: true here since sometimes the ContinuedResponse occurs after the OutputEvent and
+                // DAR does not look at previous messages unless marked ignoreResponseOrder. 
+                runner.Expects.OutputEvent("^" + logMessage + "\\b", CategoryValue.Console, ignoreResponseOrder: true)
+                              .ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        // TODO: https://github.com/microsoft/MIEngine/issues/1170
+        // - gdb_gnu
+        // - lldb
+        [UnsupportedDebugger(SupportedDebugger.Lldb | SupportedDebugger.Gdb_Gnu | SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void RunModeBreakpoints(ITestSettings settings)
         {
             this.TestPurpose("Tests setting breakpoints while in run mode");
@@ -331,6 +376,44 @@ namespace CppTests.Tests
                     IFrameInspector mainFrame = inspector.Stack.First();
                     mainFrame.AssertVariables("i", "5");
                 }
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        // lldb-mi returns the condition without escaping the quotes.
+        // >=breakpoint-modified,bkpt={..., cond="str == "hello, world"", ...}
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        public void ConditionalStringBreakpoints(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that conditional breakpoints on strings work");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fExpression");
+
+                this.Comment("Set a conditional line with string comparison breakpoint");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Expression);
+                callingBreakpoints.Add(69, "str == \"hello, world\"");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run to conditional breakpoint");
+                runner.Expects.HitBreakpointEvent(null, 69)
+                              .AfterConfigurationDone();
+
+                // Skip verifying variable since strings result in "{ ... }"
 
                 this.Comment("Run to completion");
                 runner.Expects.ExitedEvent()

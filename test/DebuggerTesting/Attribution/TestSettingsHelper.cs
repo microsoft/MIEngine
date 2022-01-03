@@ -36,11 +36,25 @@ namespace DebuggerTesting
             IReadOnlyCollection<SupportedDebuggerAttribute> supportedDebuggers = methodInfo.GetCustomAttributes<SupportedDebuggerAttribute>().ToArray();
             IReadOnlyCollection<UnsupportedDebuggerAttribute> unsupportedDebuggers = methodInfo.GetCustomAttributes<UnsupportedDebuggerAttribute>().ToArray();
 
+            // Remove XCodeBuild from default list of SupportedCompilers since its special cased for .xcodeproj.
+            if (supportedCompilers.Count == 0)
+            {
+                supportedCompilers = new List<SupportedCompilerAttribute>()
+                {
+                    new SupportedCompilerAttribute(SupportedCompiler.GPlusPlus, SupportedArchitecture.x86),
+                    new SupportedCompilerAttribute(SupportedCompiler.GPlusPlus, SupportedArchitecture.x64),
+                    new SupportedCompilerAttribute(SupportedCompiler.ClangPlusPlus, SupportedArchitecture.x86),
+                    new SupportedCompilerAttribute(SupportedCompiler.ClangPlusPlus, SupportedArchitecture.x64),
+                    new SupportedCompilerAttribute(SupportedCompiler.VisualCPlusPlus, SupportedArchitecture.x86),
+                    new SupportedCompilerAttribute(SupportedCompiler.VisualCPlusPlus, SupportedArchitecture.x64)
+                };
+            }
+
             // Get the subset of test settings that match the requirements of the test.
             // The test will be run for each test setting in the set. If an empty set is returned,
             // the test is not run.
             return settings.Where(s =>
-                (supportedCompilers.Count == 0 || supportedCompilers.Matches(s.CompilerSettings)) &&
+                supportedCompilers.Matches(s.CompilerSettings) &&
                 (supportedDebuggers.Count == 0 || supportedDebuggers.Matches(s.DebuggerSettings)) &&
                 !unsupportedDebuggers.Matches(s.DebuggerSettings))
                 .Select(x => TestSettings.CloneWithName(x, methodInfo.Name))
