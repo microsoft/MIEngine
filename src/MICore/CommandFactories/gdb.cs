@@ -183,11 +183,18 @@ namespace MICore
             return addresses;
         }
 
-        public override Task EnableTargetAsyncOption()
+        public override async Task EnableTargetAsyncOption()
         {
             // Linux attach TODO: GDB will fail this command when attaching. This is worked around
             // by using signals for that case.
-            return _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
+            Results result = await _debugger.CmdAsync("-gdb-set mi-async on", ResultClass.None);
+
+            // 'set mi-async on' will error on older versions of gdb (older than 11.x)
+            // Try enabling with the older 'target-async' keyword.
+            if (result.ResultClass == ResultClass.error)
+            {
+                await _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
+            }
         }
 
         public override async Task Terminate()
