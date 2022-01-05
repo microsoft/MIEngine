@@ -2342,22 +2342,58 @@ namespace OpenDebugAD7
                 return;
             }
 
-            if (!TryEvaluate(responder.Arguments.Name, EvaluateArguments.ContextValue.Unknown, out Variable variable, out string errorMessage))
+            string name = responder.Arguments.Name;
+            string expression = null;
+            IDebugStackFrame2 frame = null;
+
+            if (responder.Arguments.VariablesReference.HasValue)
             {
-                response.DataId = null;
-                response.Description = errorMessage;
+                // includes a parent object
+                m_variableManager.TryGet(responder.Arguments.VariablesReference.Value, out object var);
+                if (var is VariableScope varScope)
+                {
+                    // just a local variable: get the value of the address of the variable we want to set the data bp on
+                    frame = varScope.StackFrame;
+                }
+                else if (var is VariableEvaluationData varEvalData)
+                {
+                    // We have a parent object. Determine the expression by finding the child's FullName.
+                    IDebugProperty2 debugProp = varEvalData.DebugProperty;
+                    if (debugProp.EnumChildren(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME, 0, Guid.Empty, 0, name, 0, out IEnumDebugPropertyInfo2 children) == HRConstants.S_OK)
+                    {
+                        if (children.GetCount(out uint childrenCount) == HRConstants.S_OK && childrenCount == 1)
+                        {
+                            DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
+                            if (children.Next(childrenCount, propertyInfo, out _) == HRConstants.S_OK)
+                            {
+                                expression = "&(" + propertyInfo[0].bstrFullName + ")";
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(expression))
+            {
+                expression = "&(" + responder.Arguments.Name + ")";
+            }
+            if (frame == null)
+            {
+                m_frameHandles.TryGetFirst(out frame);
+            }
+
+            if (TryEvaluate(expression, EvaluateArguments.ContextValue.Unknown, frame, out Variable variable, out string errorMessage))
+            {
+                // The DataID format that MIEngine expects is "Address,Name"
+                string dataId = variable.MemoryReference + "," + variable.Name;
+                response.DataId = dataId;
+                response.Description = "We can set a data breakpoint on this address.";
+                response.AccessTypes = new List<DataBreakpointAccessType>() { DataBreakpointAccessType.Write };
             }
             else
             {
-                //TODO
-                // The DataID format that MIEngine expects is "Address,FullName"
-                string dataId = variable.MemoryReference + "," + variable.EvaluateName;
-                response.DataId = dataId;
-                response.Description = "We can set a data breakpoint on this address.";
-                /*if (m_dataBreakpoints.TryGetValue(dataId, out var bp) && bp is )
-                {
-                    
-                }*/
+                response.DataId = null;
+                response.Description = errorMessage;
             }
 
             responder.SetResponse(response);
@@ -2719,46 +2755,19 @@ namespace OpenDebugAD7
             }
         }
 
-        private bool TryEvaluate(/* required: */ string expression, EvaluateArguments.ContextValue context,
-                                   /* out: */ out Variable variable, out string errorMessage,
-                                   /* optional: */ int frameId = -2, uint radix = Constants.EvaluationRadix)
+        private bool TryEvaluate(/* required: */ string expression, EvaluateArguments.ContextValue context, IDebugStackFrame2 frame,
+                                 /* out: */ out Variable variable, out string errorMessage,
+                                 /* optional: */ uint radix = Constants.EvaluationRadix, bool isExecInConsole = false)
         {
             DateTime evaluationStartTime = DateTime.Now;
             errorMessage = null;
             variable = null;
-
-            bool isExecInConsole = false;
-            // If the expression isn't empty and its a Repl request, do additional checking
-            if (!String.IsNullOrEmpty(expression) && context == EvaluateArguments.ContextValue.Repl)
-            {
-                // If this is an -exec command (or starts with '`') treat it as a console command and log telemetry
-                if (expression.StartsWith("-exec", StringComparison.Ordinal) || expression[0] == '`')
-                    isExecInConsole = true;
-            }
-
             int hr;
             ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Evaluate);
-            IDebugStackFrame2 frame;
 
-            bool success = false;
-            if ((frameId == -1 && isExecInConsole) || frameId == -2)
+            if (frame == null)
             {
-                // If exec in console and no stack frame, evaluate off the top frame.
-                // If the frameId was not passed in (value == -2), then use top frame.
-                success = m_frameHandles.TryGetFirst(out frame);
-            }
-            else
-            {
-                success = m_frameHandles.TryGet(frameId, out frame);
-            }
-
-            if (!success)
-            {
-                Dictionary<string, object> properties = new Dictionary<string, object>();
-                properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
-                properties.Add(DebuggerTelemetry.TelemetryExecuteInConsole, isExecInConsole);
-                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
-                errorMessage = "Cannot evaluate expression on the specified stack frame.";
+                errorMessage = "Not a valid frame";
                 return false;
             }
 
@@ -2875,7 +2884,36 @@ namespace OpenDebugAD7
                 }
             }
 
-            if (!TryEvaluate(expression, context, out Variable variable, out string errorMessage, frameId, radix))
+            bool isExecInConsole = false;
+            // If the expression isn't empty and its a Repl request, do additional checking
+            if (!String.IsNullOrEmpty(expression) && context == EvaluateArguments.ContextValue.Repl)
+            {
+                // If this is an -exec command (or starts with '`') treat it as a console command and log telemetry
+                if (expression.StartsWith("-exec", StringComparison.Ordinal) || expression[0] == '`')
+                    isExecInConsole = true;
+            }
+
+            IDebugStackFrame2 frame = null;
+            if (frameId == -1 && isExecInConsole)
+            {
+                m_frameHandles.TryGetFirst(out frame);
+            }
+            else
+            {
+                m_frameHandles.TryGet(frameId, out frame);
+            }
+
+            if (frame == null)
+            {
+                Dictionary<string, object> properties = new Dictionary<string, object>();
+                properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
+                properties.Add(DebuggerTelemetry.TelemetryExecuteInConsole, isExecInConsole);
+                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
+                responder.SetError(new ProtocolException("Cannot evaluate expression on the specified stack frame."));
+                return;
+            }
+
+            if (!TryEvaluate(expression, context, frame, out Variable variable, out string errorMessage, radix, isExecInConsole))
             {
                 responder.SetError(new ProtocolException(errorMessage));
                 return;

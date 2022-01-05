@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using EnvDTE;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Diagnostics;
@@ -141,10 +142,31 @@ namespace Microsoft.MIDebugEngine
                 {
                     _engine.DebuggedProcess.Natvis.WaitDialog.ShowWaitDialog(_variableInformation.Name);
                     var children = _engine.DebuggedProcess.Natvis.Expand(_variableInformation);
-                    DEBUG_PROPERTY_INFO[] properties = new DEBUG_PROPERTY_INFO[children.Length];
+
+                    // Count number of children that fit filter (results saved in "fitsFilter")
+                    int propertyCount = children.Length;
+                    bool[] fitsFilter = null;
+                    if (!string.IsNullOrEmpty(pszNameFilter))
+                    {
+                        fitsFilter = new bool[children.Length];
+                        for (int i = 0; i < children.Length; i++)
+                        {
+                            fitsFilter[i] = string.Compare(children[i].Name, pszNameFilter, StringComparison.Ordinal) == 0;
+                            if (!fitsFilter[i])
+                            {
+                                propertyCount--;
+                            }
+                        }
+                    }
+
+                    // Create property array
+                    DEBUG_PROPERTY_INFO[] properties = new DEBUG_PROPERTY_INFO[propertyCount];
                     for (int i = 0; i < children.Length; i++)
                     {
-                        properties[i] = (new AD7Property(_engine, children[i])).ConstructDebugPropertyInfo(dwFields);
+                        if (fitsFilter == null || fitsFilter[i])
+                        {
+                            properties[i] = (new AD7Property(_engine, children[i])).ConstructDebugPropertyInfo(dwFields);
+                        }
                     }
                     ppEnum = new AD7PropertyEnum(properties);
                     return Constants.S_OK;

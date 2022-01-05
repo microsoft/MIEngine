@@ -54,6 +54,7 @@ namespace OpenDebugAD7.AD7Impl
         public AD7BreakPointRequest(string dataId)
         {
             DataId = dataId;
+            DataSize = 
         }
 
         public AD7BreakPointRequest(IDebugMemoryContext2 memoryContext)
