@@ -2334,66 +2334,115 @@ namespace OpenDebugAD7
 
         protected override void HandleDataBreakpointInfoRequestAsync(IRequestResponder<DataBreakpointInfoArguments, DataBreakpointInfoResponse> responder)
         {
-            DataBreakpointInfoResponse response = new DataBreakpointInfoResponse();
-
             if (responder.Arguments.Name == null)
             {
                 responder.SetError(new ProtocolException("SetDataBreakpointRequest failed: Missing 'breakpoints'."));
                 return;
             }
 
+            DataBreakpointInfoResponse response = new DataBreakpointInfoResponse();
             string name = responder.Arguments.Name;
-            string expression = null;
             IDebugStackFrame2 frame = null;
+            IDebugProperty2 property = null;
+            string errorMessage = null;
 
+            // Did our request come with a parent object?
             if (responder.Arguments.VariablesReference.HasValue)
             {
-                // includes a parent object
-                m_variableManager.TryGet(responder.Arguments.VariablesReference.Value, out object var);
-                if (var is VariableScope varScope)
+                m_variableManager.TryGet(responder.Arguments.VariablesReference.Value, out object variableObj);
+                if (variableObj is VariableScope varScope)
                 {
-                    // just a local variable: get the value of the address of the variable we want to set the data bp on
+                    // We have a scope object. We can grab a frame for evaluation from this
                     frame = varScope.StackFrame;
                 }
-                else if (var is VariableEvaluationData varEvalData)
+                else if (variableObj is VariableEvaluationData varEvalData)
                 {
-                    // We have a parent object. Determine the expression by finding the child's FullName.
-                    IDebugProperty2 debugProp = varEvalData.DebugProperty;
-                    if (debugProp.EnumChildren(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME, 0, Guid.Empty, 0, name, 0, out IEnumDebugPropertyInfo2 children) == HRConstants.S_OK)
+                    // We have a parent object.
+                    IDebugProperty2 parentProperty = varEvalData.DebugProperty;
+
+                    // Get children properties with Name == name
+                    if (parentProperty.EnumChildren(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 0, Guid.Empty, 0, name, 0, out IEnumDebugPropertyInfo2 children) == HRConstants.S_OK)
                     {
                         if (children.GetCount(out uint childrenCount) == HRConstants.S_OK && childrenCount == 1)
                         {
                             DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
                             if (children.Next(childrenCount, propertyInfo, out _) == HRConstants.S_OK)
                             {
-                                expression = "&(" + propertyInfo[0].bstrFullName + ")";
+                                property = propertyInfo[0].pProperty;
                             }
                         }
+                        else
+                        {
+                            errorMessage = $"Unable to get property from parent: there are {childrenCount} children properties with name {name}";
+                        }
+                    }
+                    else
+                    {
+                        errorMessage = "ParentProperty.EnumChildren failed";
                     }
                 }
             }
 
-            if (string.IsNullOrEmpty(expression))
+            if (errorMessage != null)
             {
-                expression = "&(" + responder.Arguments.Name + ")";
-            }
-            if (frame == null)
-            {
-                m_frameHandles.TryGetFirst(out frame);
+                response.Description = errorMessage;
+                responder.SetResponse(response);
+                return;
             }
 
-            if (TryEvaluate(expression, EvaluateArguments.ContextValue.Unknown, frame, out Variable variable, out string errorMessage))
+            // If we don't have a property for what we're trying to set the data bp on yet, attempt to get it by evaluating the variable name.
+            if (property == null)
             {
-                // The DataID format that MIEngine expects is "Address,Name"
-                string dataId = variable.MemoryReference + "," + variable.Name;
-                response.DataId = dataId;
-                response.Description = "We can set a data breakpoint on this address.";
-                response.AccessTypes = new List<DataBreakpointAccessType>() { DataBreakpointAccessType.Write };
+                // If we don't have a frame, just use top frame.
+                if (frame == null)
+                {
+                    m_frameHandles.TryGetFirst(out frame);
+                }
+                TryEvaluate(responder.Arguments.Name, EvaluateArguments.ContextValue.Unknown, frame, out _, out property, out errorMessage);
+            }
+
+            if (errorMessage != null)
+            {
+                response.Description = errorMessage;
+                responder.SetResponse(response);
+                return;
+            }
+
+            if (property != null && property is IDebugProperty160 property160)
+            {
+                // If we have a property that we can get the address/size from
+                if (property160.GetDataBreakpointInfo160(out string address, out uint size, out string displayName, out errorMessage) == HRConstants.S_OK)
+                {
+                    // Test to see if we can set a data bp
+                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(address, size);
+                    int hr = m_engine.CreatePendingBreakpoint(pBPRequest, out IDebugPendingBreakpoint2 pendingBp);
+                    if (hr == HRConstants.S_OK && pendingBp != null)
+                    {
+                        hr = pendingBp.Bind();
+                    }
+                    pendingBp?.Delete();
+
+                    if (hr == HRConstants.S_OK)
+                    {
+                        // If we succeeded, return response that we can set a data bp.
+                        string dataId = $"{address},{size.ToString(CultureInfo.InvariantCulture)}";
+                        response.DataId = dataId;
+                        response.Description = $"{address}, {displayName}";
+                        response.AccessTypes = new List<DataBreakpointAccessType>() { DataBreakpointAccessType.Write };
+                    }
+                    else
+                    {
+                        response.Description = "Data breakpoint is at invalid location or has invalid size.";
+                    }
+                }
+                else
+                {
+                    response.Description = errorMessage;
+                }
             }
             else
             {
-                response.DataId = null;
-                response.Description = errorMessage;
+                response.Description = "Property could not be found or does not implement IDebugProperty160.";
             }
 
             responder.SetResponse(response);
@@ -2465,10 +2514,14 @@ namespace OpenDebugAD7
                 // Bind the new data bp
                 if (!m_dataBreakpoints.ContainsKey(b.DataId))
                 {
-                    IDebugPendingBreakpoint2 pendingBp;
-                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(b.DataId);
+                    int hr = HRConstants.S_OK;
 
-                    int hr = m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp);
+                    string[] splits = b.DataId.Split(',');
+                    string address = splits[0];
+                    uint size = uint.Parse(splits[1], CultureInfo.InvariantCulture);
+
+                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(address, size);
+                    hr = m_engine.CreatePendingBreakpoint(pBPRequest, out IDebugPendingBreakpoint2 pendingBp);
 
                     if (hr == HRConstants.S_OK && pendingBp != null)
                     {
@@ -2756,12 +2809,13 @@ namespace OpenDebugAD7
         }
 
         private bool TryEvaluate(/* required: */ string expression, EvaluateArguments.ContextValue context, IDebugStackFrame2 frame,
-                                 /* out: */ out Variable variable, out string errorMessage,
+                                 /* out: */ out Variable variable, out IDebugProperty2 property, out string errorMessage,
                                  /* optional: */ uint radix = Constants.EvaluationRadix, bool isExecInConsole = false)
         {
             DateTime evaluationStartTime = DateTime.Now;
             errorMessage = null;
             variable = null;
+            property = null;
             int hr;
             ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Evaluate);
 
@@ -2803,7 +2857,6 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
-            IDebugProperty2 property;
             if (expressionObject is IDebugExpressionDAP expressionDapObject)
             {
                 DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
@@ -2913,7 +2966,7 @@ namespace OpenDebugAD7
                 return;
             }
 
-            if (!TryEvaluate(expression, context, frame, out Variable variable, out string errorMessage, radix, isExecInConsole))
+            if (!TryEvaluate(expression, context, frame, out Variable variable, out IDebugProperty2 _, out string errorMessage, radix, isExecInConsole))
             {
                 responder.SetError(new ProtocolException(errorMessage));
                 return;

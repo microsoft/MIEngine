@@ -3,6 +3,7 @@
 
 using MICore;
 using Microsoft.DebugEngineHost;
+using Microsoft.MIDebugEngine.Natvis;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Collections.Generic;
@@ -292,6 +293,9 @@ namespace Microsoft.MIDebugEngine
             {
                 if (e.GetBaseException() is InvalidCoreDumpOperationException)
                     return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
+                else if (e.GetBaseException() is ArgumentException && (enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_DATA_STRING)
+                    // handle invalid data bp address/size
+                    return Constants.E_FAIL;
                 else
                     return EngineUtils.UnexpectedException(e);
             }

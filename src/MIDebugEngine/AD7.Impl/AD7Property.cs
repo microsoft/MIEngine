@@ -161,11 +161,12 @@ namespace Microsoft.MIDebugEngine
 
                     // Create property array
                     DEBUG_PROPERTY_INFO[] properties = new DEBUG_PROPERTY_INFO[propertyCount];
-                    for (int i = 0; i < children.Length; i++)
+                    for (int i = 0, j = 0; i < children.Length; i++)
                     {
                         if (fitsFilter == null || fitsFilter[i])
                         {
-                            properties[i] = (new AD7Property(_engine, children[i])).ConstructDebugPropertyInfo(dwFields);
+                            properties[j] = (new AD7Property(_engine, children[i])).ConstructDebugPropertyInfo(dwFields);
+                            ++j; // increment j if we fit filter, this allows us to traverse "properties" array properly.
                         }
                     }
                     ppEnum = new AD7PropertyEnum(properties);
@@ -466,7 +467,7 @@ namespace Microsoft.MIDebugEngine
         {
             try
             {
-                pbstrAddress = _variableInformation.Address() + "," + _variableInformation.FullName();
+                pbstrAddress = _variableInformation.Address();
                 pSize = _variableInformation.Size();
                 pbstrDisplayName = _variableInformation.FullName();
                 pbstrError = "";

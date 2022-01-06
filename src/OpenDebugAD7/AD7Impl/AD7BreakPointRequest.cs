@@ -25,7 +25,7 @@ namespace OpenDebugAD7.AD7Impl
 
         public IDebugMemoryContext2 MemoryContext {  get; private set; }
 
-        public string DataId { get; private set; }
+        public string DataAddress { get; private set; }
         public uint DataSize { get; private set; }
 
         // Used for Releasing the MemoryContext.
@@ -51,10 +51,11 @@ namespace OpenDebugAD7.AD7Impl
             FunctionPosition = functionPosition;
         }
 
-        public AD7BreakPointRequest(string dataId)
+        // Data breakpoint constructor
+        public AD7BreakPointRequest(string address, uint size)
         {
-            DataId = dataId;
-            DataSize = 
+            DataAddress = address;
+            DataSize = size;
         }
 
         public AD7BreakPointRequest(IDebugMemoryContext2 memoryContext)
@@ -76,7 +77,7 @@ namespace OpenDebugAD7.AD7Impl
             {
                 pBPLocationType[0] = enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT;
             }
-            else if (DataId != null)
+            else if (DataAddress != null)
             {
                 pBPLocationType[0] = enum_BP_LOCATION_TYPE.BPLT_DATA_STRING;
             }
@@ -105,10 +106,10 @@ namespace OpenDebugAD7.AD7Impl
                     MemoryContextIntPtr = HostMarshal.RegisterCodeContext(MemoryContext as IDebugCodeContext2);
                     pBPRequestInfo[0].bpLocation.unionmember1 = MemoryContextIntPtr;
                 }
-                else if (DataId != null)
+                else if (DataAddress != null)
                 {
                     pBPRequestInfo[0].bpLocation.bpLocationType = (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING;
-                    pBPRequestInfo[0].bpLocation.unionmember3 = HostMarshal.GetIntPtrForDataBreakpointAddress(DataId);
+                    pBPRequestInfo[0].bpLocation.unionmember3 = HostMarshal.GetIntPtrForDataBreakpointAddress(DataAddress);
                     pBPRequestInfo[0].bpLocation.unionmember4 = (IntPtr)DataSize;
                 }
             }
