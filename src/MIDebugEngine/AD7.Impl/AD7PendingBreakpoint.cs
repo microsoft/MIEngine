@@ -3,7 +3,6 @@
 
 using MICore;
 using Microsoft.DebugEngineHost;
-using Microsoft.MIDebugEngine.Natvis;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Collections.Generic;

@@ -1,5 +1,4 @@
-﻿
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -2724,8 +2723,7 @@ namespace OpenDebugAD7
                 if (!m_functionBreakpoints.ContainsKey(b.Name))
                 {
                     IDebugPendingBreakpoint2 pendingBp;
-                    AD7FunctionPosition functionPosition = new AD7FunctionPosition(b.Name);
-                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(functionPosition);
+                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(b.Name);
 
                     int hr = m_engine.CreatePendingBreakpoint(pBPRequest, out pendingBp);
 

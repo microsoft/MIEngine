@@ -46,9 +46,9 @@ namespace OpenDebugAD7.AD7Impl
             Id = GetNextBreakpointId();
         }
 
-        public AD7BreakPointRequest(AD7FunctionPosition functionPosition)
+        public AD7BreakPointRequest(string functionName)
         {
-            FunctionPosition = functionPosition;
+            FunctionPosition = new AD7FunctionPosition(functionName);
         }
 
         // Data breakpoint constructor
