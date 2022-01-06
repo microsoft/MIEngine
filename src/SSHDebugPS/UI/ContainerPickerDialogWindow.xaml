@@ -195,7 +195,7 @@
             <Setter Property="Background"
                     Value="Transparent" />
             <Setter Property="Foreground"
-                    Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                    Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextBrushKey}}" />
             <Setter Property="Margin"
                     Value="0" />
             <Setter Property="Padding"
@@ -225,12 +225,12 @@
                             <Trigger Property="IsFocused"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextBrushKey}}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextBrushKey}}" />
                                 <Setter TargetName="accessText"
                                         Property="TextDecorations"
                                         Value="Underline" />
@@ -240,13 +240,13 @@
                             <Trigger Property="IsPressed"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextBrushKey}}" />
                             </Trigger>
                             <!-- None of our links should be disabled, but keep the style just in case -->
                             <Trigger Property="IsEnabled"
                                      Value="False">
                                 <Setter Property="Foreground"
-                                        Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.PanelHyperlinkDisabledBrushKey}}" />
                                 <!--
                                 When more than one active trigger set the same property,
                                 the last trigger wins.  Thus, we also set the decoration
