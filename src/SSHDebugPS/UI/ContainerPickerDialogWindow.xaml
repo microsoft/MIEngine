@@ -225,12 +225,12 @@
                             <Trigger Property="IsFocused"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextHoverBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextBrushKey}}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextHoverBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextBrushKey}}" />
                                 <Setter TargetName="accessText"
                                         Property="TextDecorations"
                                         Value="Underline" />
@@ -240,7 +240,7 @@
                             <Trigger Property="IsPressed"
                                      Value="True">
                                 <Setter Property="Foreground"
-                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextPressedBrushKey}}" />
+                                        Value="{DynamicResource {x:Static platformui:EnvironmentColors.ControlLinkTextBrushKey}}" />
                             </Trigger>
                             <!-- None of our links should be disabled, but keep the style just in case -->
                             <Trigger Property="IsEnabled"
