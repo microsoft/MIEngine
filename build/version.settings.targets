@@ -1,9 +1,9 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
   <PropertyGroup>    
     <!--SxS: These three properties should be changed at the start of a new version, VersionZeroYear should be the year
-    before the start of the project. When updating the version, also update MIEngine\metadata.json.-->
+    before the start of the project.-->
     <MajorVersion>17</MajorVersion>
-    <MinorVersion>0</MinorVersion>
+    <MinorVersion>1</MinorVersion>
     <VersionZeroYear>2020</VersionZeroYear>
     <!-- Note: for compatibility, we leave the default assembly version of the repo at 14.0.
     If we ever decide to change this, make sure that you notify partner teams such as C++ IOT -->

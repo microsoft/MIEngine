@@ -197,9 +197,9 @@ namespace DebuggerTesting.OpenDebug.Extensions
             return runner.RunCommand(new SetBreakpointsCommand(sourceBreakpoints));
         }
 
-        public static void SetExceptionBreakpoints(this IDebuggerRunner runner, params string[] filters)
+        public static void SetExceptionBreakpoints(this IDebuggerRunner runner, string[] filters, ExceptionFilterOptions[] filterOptions)
         {
-                runner.RunCommand(new SetExceptionBreakpointsCommand(filters));
+            runner.RunCommand(new SetExceptionBreakpointsCommand(filters, filterOptions));
         }
 
         public static SetBreakpointsResponseValue SetFunctionBreakpoints(this IDebuggerRunner runner, FunctionBreakpoints breakpoints)
@@ -210,6 +210,12 @@ namespace DebuggerTesting.OpenDebug.Extensions
         public static SetBreakpointsResponseValue SetInstructionBreakpoints(this IDebuggerRunner runner, InstructionBreakpoints breakpoints)
         {
             return runner.RunCommand(new SetInstructionBreakpointsCommand(breakpoints));
+        }
+
+        public static string[] CompletionsRequest(this IDebuggerRunner runner, string text)
+        {
+            CompletionItem[] completionItems = runner.RunCommand(new CompletionsCommand(null, text, 0, null))?.body?.targets;
+            return completionItems?.Select(x => x.label).ToArray();
         }
 
         public static void Continue(this IDebuggerRunner runner)

@@ -6,6 +6,9 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
 
 namespace Microsoft.DebugEngineHost.VSCode
 {
@@ -52,8 +55,25 @@ namespace Microsoft.DebugEngineHost.VSCode
         {
         }
 
+#if DEBUG
+        internal void ValidateExceptionFilters()
+        {
+            foreach (ExceptionBreakpointFilter filter in _exceptionFilters)
+            {
+                // Make sure that the category GUID was listed in the config file. 
+                if (!_categories.Where(c => c.Id == filter.categoryId).Any())
+                {
+                    Debug.Fail(string.Format(CultureInfo.InvariantCulture, "Missing category '{0}' from configuration file.", filter.categoryId));
+                }
+            }
+        }
+#endif
+
         internal void MakeReadOnly()
         {
+#if DEBUG
+            ValidateExceptionFilters();
+#endif
             _categories = new ReadOnlyCollection<CategoryConfiguration>(_categories);
             _exceptionFilters = new ReadOnlyCollection<ExceptionBreakpointFilter>(_exceptionFilters);
         }
