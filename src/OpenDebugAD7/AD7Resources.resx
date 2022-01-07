@@ -312,4 +312,7 @@
     <value>ERROR: '{0}' is an invalid exception condition. See https://aka.ms/VSCode-Cpp-ExceptionSettings for more information.</value>
     <comment>{0} is the exception condition</comment>
   </data>
+  <data name="Error_InvalidAmountOfDataBreakpoints" xml:space="preserve">
+    <value>You may have requested too many hardware breakpoints/watchpoints.</value>
+  </data>
 </root>
