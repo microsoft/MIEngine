@@ -52,8 +52,6 @@ namespace OpenDebugAD7
         private Dictionary<string, IDebugPendingBreakpoint2> m_functionBreakpoints;
         private Dictionary<ulong, IDebugPendingBreakpoint2> m_instructionBreakpoints;
         private Dictionary<string, IDebugPendingBreakpoint2> m_dataBreakpoints;
-        private static string s_errorInvalidAmountOfDataBreakpointsMessage = "You may have requested too many hardware breakpoints/watchpoints";
-        private bool m_tooManyDataBreakpoints = false;
 
         private List<string> m_exceptionBreakpoints;
         private readonly HandleCollection<IDebugStackFrame2> m_frameHandles;
@@ -226,12 +224,7 @@ namespace OpenDebugAD7
                 {
                     m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, engineLogging.Value);
                     HostLogger.EnableHostLogging();
-                    HostLogger.Instance.LogCallback = (s) =>
-                    {
-                        if (s.Contains(s_errorInvalidAmountOfDataBreakpointsMessage, StringComparison.InvariantCulture))
-                            m_tooManyDataBreakpoints = true;
-                        m_logger.WriteLine(LoggingCategory.EngineLogging, s);
-                    };
+                    HostLogger.Instance.LogCallback = s => m_logger.WriteLine(LoggingCategory.EngineLogging, s);
                 }
 
                 bool? trace = logging.GetValueAsBool("trace");
@@ -3324,11 +3317,6 @@ namespace OpenDebugAD7
 
             string exceptionDescription;
             exceptionEvent.GetExceptionDescription(out exceptionDescription);
-            if (m_tooManyDataBreakpoints)
-            {
-                exceptionDescription += " " + string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_InvalidAmountOfDataBreakpoints);
-                m_tooManyDataBreakpoints = false;
-            }
 
             FireStoppedEvent(pThread, StoppedEvent.ReasonValue.Exception, exceptionDescription);
         }

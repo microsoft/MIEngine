@@ -216,15 +216,6 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You may have requested too many hardware breakpoints/watchpoints..
-        /// </summary>
-        internal static string Error_InvalidAmountOfDataBreakpoints {
-            get {
-                return ResourceManager.GetString("Error_InvalidAmountOfDataBreakpoints", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to DNX runtime process exited unexpectedly with error code {0}..
         /// </summary>
         internal static string Error_LaunchFailedNoError {
