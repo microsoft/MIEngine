@@ -3478,14 +3478,14 @@ namespace OpenDebugAD7
                         }
                         else // data bp
                         {
+                            string outputMsg = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_InvalidDataBreakpoint, errorMsg);
                             bp = new Breakpoint()
                             {
                                 Verified = false,
                                 Id = (int)ad7BPRequest.Id,
                                 Line = 0,
-                                Message = errorMsg
+                                Message = outputMsg
                             };
-                            string outputMsg = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, errorMsg);
                             m_logger.WriteLine(LoggingCategory.DebuggerError, outputMsg);
                         }
 

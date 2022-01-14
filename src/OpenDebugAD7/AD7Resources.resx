@@ -327,4 +327,8 @@
   <data name="Error_ChildPropertyNotFound" xml:space="preserve">
     <value>Unable to find child property.</value>
   </data>
+  <data name="Error_InvalidDataBreakpoint" xml:space="preserve">
+    <value>Unable to set data breakpoint: {0}</value>
+    <comment>{0} is the reason</comment>
+  </data>
 </root>

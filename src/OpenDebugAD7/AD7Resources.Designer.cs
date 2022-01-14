@@ -243,6 +243,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to set data breakpoint: {0}.
+        /// </summary>
+        internal static string Error_InvalidDataBreakpoint {
+            get {
+                return ResourceManager.GetString("Error_InvalidDataBreakpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DNX runtime process exited unexpectedly with error code {0}..
         /// </summary>
         internal static string Error_LaunchFailedNoError {
