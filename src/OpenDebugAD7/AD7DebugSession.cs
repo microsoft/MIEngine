@@ -652,6 +652,7 @@ namespace OpenDebugAD7
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
                     response.Variables.Add(m_variableManager.CreateVariable(props[0].pProperty, GetDefaultPropertyInfoFlags()));
+                    m_variableManager.AddFrameVariable(frame, props[0].pProperty);
                 }
             }
 
@@ -908,7 +909,7 @@ namespace OpenDebugAD7
                 SupportsSetVariable = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
-                SupportsDataBreakpoints = true,
+                SupportsDataBreakpoints = m_engineConfiguration.DataBP,
                 ExceptionBreakpointFilters = filters,
                 SupportsExceptionFilterOptions = filters.Any(),
                 SupportsClipboardContext = m_engineConfiguration.ClipboardContext,
@@ -1823,6 +1824,7 @@ namespace OpenDebugAD7
                         {
                             string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
                             var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
+                            m_variableManager.AddChildVariable(reference, childProperties[c].pProperty);
                             int uniqueCounter = 2;
                             string variableName = variable.Name;
                             string variableNameFormat = "{0} #{1}";
@@ -2335,116 +2337,87 @@ namespace OpenDebugAD7
         {
             if (responder.Arguments.Name == null)
             {
-                responder.SetError(new ProtocolException("SetDataBreakpointRequest failed: Missing 'breakpoints'."));
+                responder.SetError(new ProtocolException("DataBreakpointInfo failed: Missing 'Name'."));
                 return;
             }
 
             DataBreakpointInfoResponse response = new DataBreakpointInfoResponse();
-            string name = responder.Arguments.Name;
-            IDebugStackFrame2 frame = null;
-            IDebugProperty2 property = null;
-            string errorMessage = null;
 
-            // Did our request come with a parent object?
-            if (responder.Arguments.VariablesReference.HasValue)
+            try
             {
-                m_variableManager.TryGet(responder.Arguments.VariablesReference.Value, out object variableObj);
-                if (variableObj is VariableScope varScope)
+                string name = responder.Arguments.Name;
+                IDebugProperty2 property = null;
+                string errorMessage = null;
+                ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_DataBreakpointInfoFail);
+                int hr = HRConstants.S_OK;
+
+                // Did our request come with a parent object?
+                if (responder.Arguments.VariablesReference.HasValue)
                 {
-                    // We have a scope object. We can grab a frame for evaluation from this
-                    frame = varScope.StackFrame;
-                }
-                else if (variableObj is VariableEvaluationData varEvalData)
-                {
-                    // We have a parent object.
-                    IDebugProperty2 parentProperty = varEvalData.DebugProperty;
-
-                    // Get children properties with Name == name
-                    if (parentProperty.EnumChildren(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP, 0, Guid.Empty, 0, name, 0, out IEnumDebugPropertyInfo2 children) == HRConstants.S_OK)
+                    int variableReference = responder.Arguments.VariablesReference.Value;
+                    if (!m_variableManager.TryGet(variableReference, out object variableObj))
                     {
-                        if (children.GetCount(out uint childrenCount) == HRConstants.S_OK && childrenCount == 1)
-                        {
-                            DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
-                            if (children.Next(childrenCount, propertyInfo, out _) == HRConstants.S_OK)
-                            {
-                                property = propertyInfo[0].pProperty;
-                            }
-                        }
-                        else
-                        {
-                            errorMessage = $"Unable to get property from parent: there are {childrenCount} children properties with name {name}";
-                        }
+                        responder.SetError(new ProtocolException("DataBreakpointInfo failed: Invalid 'VariableReference'."));
+                        return;
                     }
-                    else
+
+                    if (variableObj is VariableScope varScope)
                     {
-                        errorMessage = "ParentProperty.EnumChildren failed";
+                        // We have a scope object. We can grab a frame for evaluation from this
+                        IDebugStackFrame2 frame = varScope.StackFrame;
+                        m_variableManager.TryGetProperty((frame, name), out property);
                     }
-                }
-            }
-
-            if (errorMessage != null)
-            {
-                response.Description = errorMessage;
-                responder.SetResponse(response);
-                return;
-            }
-
-            // If we don't have a property for what we're trying to set the data bp on yet, attempt to get it by evaluating the variable name.
-            if (property == null)
-            {
-                // If we don't have a frame, just use top frame.
-                if (frame == null)
-                {
-                    m_frameHandles.TryGetFirst(out frame);
-                }
-                TryEvaluate(responder.Arguments.Name, EvaluateArguments.ContextValue.Unknown, frame, out _, out property, out errorMessage);
-            }
-
-            if (errorMessage != null)
-            {
-                response.Description = errorMessage;
-                responder.SetResponse(response);
-                return;
-            }
-
-            if (property != null && property is IDebugProperty160 property160)
-            {
-                // If we have a property that we can get the address/size from
-                if (property160.GetDataBreakpointInfo160(out string address, out uint size, out string displayName, out errorMessage) == HRConstants.S_OK)
-                {
-                    // Test to see if we can set a data bp
-                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(address, size);
-                    int hr = m_engine.CreatePendingBreakpoint(pBPRequest, out IDebugPendingBreakpoint2 pendingBp);
-                    if (hr == HRConstants.S_OK && pendingBp != null)
+                    else if (variableObj is VariableEvaluationData varEvalData)
                     {
-                        hr = pendingBp.Bind();
-                    }
-                    pendingBp?.Delete();
-
-                    if (hr == HRConstants.S_OK)
-                    {
-                        // If we succeeded, return response that we can set a data bp.
-                        string dataId = $"{address},{size.ToString(CultureInfo.InvariantCulture)}";
-                        response.DataId = dataId;
-                        response.Description = $"{address}, {displayName}";
-                        response.AccessTypes = new List<DataBreakpointAccessType>() { DataBreakpointAccessType.Write };
-                    }
-                    else
-                    {
-                        response.Description = "Data breakpoint is at invalid location or has invalid size.";
+                        // We have a variable parent object.
+                        IDebugProperty2 parentProperty = varEvalData.DebugProperty;
+                        m_variableManager.TryGetProperty((variableReference, name), out property);
                     }
                 }
                 else
                 {
-                    response.Description = errorMessage;
+                    // We don't have a parent object. Default to using top stack frame
+                    if (m_frameHandles == null || !m_frameHandles.TryGetFirst(out IDebugStackFrame2 frame))
+                    {
+                        response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_NoParentObject);
+                    }
+                    else
+                    {
+                        m_variableManager.TryGetProperty((frame, name), out property);
+                    }
+                }
+
+                // If we've found a valid child property to set the data breakpoint on, get the address/size and return the DataId.
+                if (property != null && property is IDebugProperty160 property160)
+                {
+                    hr = property160.GetDataBreakpointInfo160(out string address, out uint size, out string displayName, out errorMessage);
+                    eb.CheckHR(hr);
+                    if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, errorMessage);
+                    }
+                    else
+                    {
+                        // If we succeeded, return response that we can set a data bp.
+                        string sSize = size.ToString(CultureInfo.InvariantCulture);
+                        response.DataId = $"{address},{sSize}";
+                        response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.DataBreakpointDisplayString, displayName, sSize);
+                        response.AccessTypes = new List<DataBreakpointAccessType>() { DataBreakpointAccessType.Write };
+                    }
+                }
+                else if (response.Description == null)
+                {
+                    response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_ChildPropertyNotFound);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                response.Description = "Property could not be found or does not implement IDebugProperty160.";
+                response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, "");
             }
-
-            responder.SetResponse(response);
+            finally
+            {
+                responder.SetResponse(response);
+            }
         }
 
         protected override void HandleSetDataBreakpointsRequestAsync(IRequestResponder<SetDataBreakpointsArguments, SetDataBreakpointsResponse> responder)
@@ -2458,99 +2431,97 @@ namespace OpenDebugAD7
 
             List<DataBreakpoint> breakpoints = responder.Arguments.Breakpoints;
             SetDataBreakpointsResponse response = new SetDataBreakpointsResponse();
-
             Dictionary<string, IDebugPendingBreakpoint2> newBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
+            ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_DataBreakpointInfoFail);
 
-            foreach (KeyValuePair<string, IDebugPendingBreakpoint2> b in m_dataBreakpoints)
+            try
             {
-                if (breakpoints.Find((p) => p.DataId == b.Key) != null)
+                foreach (KeyValuePair<string, IDebugPendingBreakpoint2> b in m_dataBreakpoints)
                 {
-                    newBreakpoints[b.Key] = b.Value;    // breakpoint still in new list
-                }
-                else
-                {
-                    b.Value.Delete();   // not in new list so delete it
-                }
-            }
-
-            foreach (DataBreakpoint b in breakpoints)
-            {
-                if (m_dataBreakpoints.ContainsKey(b.DataId))
-                {   // already created
-                    IDebugBreakpointRequest2 breakpointRequest;
-                    if (m_dataBreakpoints[b.DataId].GetBreakpointRequest(out breakpointRequest) == 0 &&
-                                breakpointRequest is AD7BreakPointRequest ad7BPRequest)
+                    if (breakpoints.Find((p) => p.DataId == b.Key) != null)
                     {
-                        // Check to see if this breakpoint has a condition that has changed.
-                        if (!StringComparer.Ordinal.Equals(ad7BPRequest.Condition, b.Condition))
-                        {
-                            // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
-                            var toRemove = m_dataBreakpoints[b.DataId];
-                            toRemove.Delete();
-                            m_dataBreakpoints.Remove(b.DataId);
-                        }
-                        else
-                        {
-                            if (ad7BPRequest.BindResult != null)
-                            {
-                                response.Breakpoints.Add(ad7BPRequest.BindResult);
-                            }
-                            else
-                            {
-                                response.Breakpoints.Add(new Breakpoint()
-                                {
-                                    Id = (int)ad7BPRequest.Id,
-                                    Verified = true,
-                                    Line = 0
-                                });
-
-                            }
-                            continue;
-                        }
-                    }
-                }
-
-                // Bind the new data bp
-                if (!m_dataBreakpoints.ContainsKey(b.DataId))
-                {
-                    int hr = HRConstants.S_OK;
-
-                    string[] splits = b.DataId.Split(',');
-                    string address = splits[0];
-                    uint size = uint.Parse(splits[1], CultureInfo.InvariantCulture);
-
-                    AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(address, size);
-                    hr = m_engine.CreatePendingBreakpoint(pBPRequest, out IDebugPendingBreakpoint2 pendingBp);
-
-                    if (hr == HRConstants.S_OK && pendingBp != null)
-                    {
-                        hr = pendingBp.Bind();
-                    }
-
-                    if (hr == HRConstants.S_OK)
-                    {
-                        newBreakpoints[b.DataId] = pendingBp;
-                        response.Breakpoints.Add(new Breakpoint()
-                        {
-                            Id = (int)pBPRequest.Id,
-                            Verified = true,
-                            Line = 0
-                        }); // success
+                        newBreakpoints[b.Key] = b.Value;    // breakpoint still in new list
                     }
                     else
                     {
-                        response.Breakpoints.Add(new Breakpoint()
+                        b.Value.Delete();   // not in new list so delete it
+                    }
+                }
+
+                foreach (DataBreakpoint b in breakpoints)
+                {
+                    if (m_dataBreakpoints.ContainsKey(b.DataId))
+                    {   // already created
+                        IDebugBreakpointRequest2 breakpointRequest;
+                        if (m_dataBreakpoints[b.DataId].GetBreakpointRequest(out breakpointRequest) == 0 &&
+                                    breakpointRequest is AD7BreakPointRequest ad7BPRequest)
                         {
-                            Id = (int)pBPRequest.Id,
-                            Verified = false,
-                            Line = 0
-                        }); // couldn't create and/or bind
+                            // Check to see if this breakpoint has a condition that has changed.
+                            if (!StringComparer.Ordinal.Equals(ad7BPRequest.Condition, b.Condition))
+                            {
+                                // Condition has been modified. Delete breakpoint so it will be recreated with the updated condition.
+                                var toRemove = m_dataBreakpoints[b.DataId];
+                                toRemove.Delete();
+                                m_dataBreakpoints.Remove(b.DataId);
+                            }
+                            else
+                            {
+                                if (ad7BPRequest.BindResult != null)
+                                {
+                                    response.Breakpoints.Add(ad7BPRequest.BindResult);
+                                }
+                                else
+                                {
+                                    response.Breakpoints.Add(new Breakpoint()
+                                    {
+                                        Id = (int)ad7BPRequest.Id,
+                                        Verified = false,
+                                        Line = 0
+                                    });
+
+                                }
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Bind the new data bp
+                    if (!m_dataBreakpoints.ContainsKey(b.DataId))
+                    {
+                        int hr = HRConstants.S_OK;
+
+                        int lastCommaIdx = b.DataId.LastIndexOf(',');
+                        if (lastCommaIdx == -1)
+                        {
+                            eb.ThrowHR(HRConstants.E_FAIL);
+                        }
+
+                        // format is "{dataId},{size}" where dataId = "{address},{displayName}"
+                        string strSize = b.DataId.Substring(lastCommaIdx + 1);
+                        string address = b.DataId.Substring(0, lastCommaIdx);
+                        uint size = uint.Parse(strSize, CultureInfo.InvariantCulture);
+
+                        AD7BreakPointRequest pBPRequest = new AD7BreakPointRequest(address, size);
+                        hr = m_engine.CreatePendingBreakpoint(pBPRequest, out IDebugPendingBreakpoint2 pendingBp);
+                        eb.CheckHR(hr);
+
+                        hr = pendingBp.Bind();
+                        if (hr == HRConstants.S_OK)
+                        {
+                            newBreakpoints[b.DataId] = pendingBp;
+                        }
+                        response.Breakpoints.Add(pBPRequest.BindResult);
                     }
                 }
             }
-
-            m_dataBreakpoints = newBreakpoints;
-            responder.SetResponse(response);
+            catch (Exception ex)
+            {
+            }
+            finally
+            {
+                m_dataBreakpoints = newBreakpoints;
+                responder.SetResponse(response);
+            }
         }
 
 
@@ -2806,21 +2777,70 @@ namespace OpenDebugAD7
             }
         }
 
-        private bool TryEvaluate(/* required: */ string expression, EvaluateArguments.ContextValue context, IDebugStackFrame2 frame,
-                                 /* out: */ out Variable variable, out IDebugProperty2 property, out string errorMessage,
-                                 /* optional: */ uint radix = Constants.EvaluationRadix, bool isExecInConsole = false)
+        protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
         {
+            EvaluateArguments.ContextValue context = responder.Arguments.Context.GetValueOrDefault(EvaluateArguments.ContextValue.Unknown);
+            int frameId = responder.Arguments.FrameId.GetValueOrDefault(-1);
+            string expression = responder.Arguments.Expression;
+
+            if (expression == null)
+            {
+                responder.SetError(new ProtocolException("Failed to handle EvaluateRequest: Missing 'expression'"));
+                return;
+            }
+
+            // if we are not stopped, return evaluation failure
+            if (!m_isStopped)
+            {
+                responder.SetError(new ProtocolException("Failed to handle EvaluateRequest", new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
+            }
             DateTime evaluationStartTime = DateTime.Now;
-            errorMessage = null;
-            variable = null;
-            property = null;
+
+            bool isExecInConsole = false;
+            // If the expression isn't empty and its a Repl request, do additional checking
+            if (!String.IsNullOrEmpty(expression) && context == EvaluateArguments.ContextValue.Repl)
+            {
+                // If this is an -exec command (or starts with '`') treat it as a console command and log telemetry
+                if (expression.StartsWith("-exec", StringComparison.Ordinal) || expression[0] == '`')
+                    isExecInConsole = true;
+            }
+
             int hr;
             ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Evaluate);
+            IDebugStackFrame2 frame;
 
-            if (frame == null)
+            bool success = false;
+            if (frameId == -1 && isExecInConsole)
             {
-                errorMessage = "Not a valid frame";
-                return false;
+                // If exec in console and no stack frame, evaluate off the top frame.
+                success = m_frameHandles.TryGetFirst(out frame);
+            }
+            else
+            {
+                success = m_frameHandles.TryGet(frameId, out frame);
+            }
+
+            if (!success)
+            {
+                Dictionary<string, object> properties = new Dictionary<string, object>();
+                properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
+                properties.Add(DebuggerTelemetry.TelemetryExecuteInConsole, isExecInConsole);
+                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
+                responder.SetError(new ProtocolException("Cannot evaluate expression on the specified stack frame."));
+                return;
+            }
+
+            uint radix = Constants.EvaluationRadix;
+
+            if (responder.Arguments.Format != null)
+            {
+                ValueFormat format = responder.Arguments.Format;
+
+                if (format.Hex == true)
+                {
+                    radix = 16;
+                }
             }
 
             if (m_settingsCallback != null)
@@ -2834,13 +2854,15 @@ namespace OpenDebugAD7
             eb.CheckHR(hr);
 
             IDebugExpression2 expressionObject;
+            string error;
             uint errorIndex;
-            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out errorMessage, out errorIndex);
-            if (!string.IsNullOrEmpty(errorMessage))
+            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
+            if (!string.IsNullOrEmpty(error))
             {
                 // TODO: Is this how errors should be returned?
                 DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
-                return false;
+                responder.SetError(new ProtocolException(error));
+                return;
             }
             eb.CheckHR(hr);
             eb.CheckOutput(expressionObject);
@@ -2855,6 +2877,7 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
+            IDebugProperty2 property;
             if (expressionObject is IDebugExpressionDAP expressionDapObject)
             {
                 DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
@@ -2886,13 +2909,13 @@ namespace OpenDebugAD7
             // return a failure result so that VS code won't display the error message in data tips
             if (((propertyInfo[0].dwAttrib & enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) == enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR) && context == EvaluateArguments.ContextValue.Hover)
             {
-                errorMessage = "Evaluation error";
-                return false;
+                responder.SetError(new ProtocolException("Evaluation error"));
+                return;
             }
 
             string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
 
-            variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
+            Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
 
             if (context != EvaluateArguments.ContextValue.Hover)
             {
@@ -2902,80 +2925,12 @@ namespace OpenDebugAD7
                     isExecInConsole ? new Dictionary<string, object>() { { DebuggerTelemetry.TelemetryExecuteInConsole, true } } : null);
             }
 
-            return true;
-        }
-
-        protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
-        {
-            EvaluateArguments.ContextValue context = responder.Arguments.Context.GetValueOrDefault(EvaluateArguments.ContextValue.Unknown);
-            int frameId = responder.Arguments.FrameId.GetValueOrDefault(-1);
-            string expression = responder.Arguments.Expression;
-
-            if (expression == null)
-            {
-                responder.SetError(new ProtocolException("Failed to handle EvaluateRequest: Missing 'expression'"));
-                return;
-            }
-
-            // if we are not stopped, return evaluation failure
-            if (!m_isStopped)
-            {
-                responder.SetError(new ProtocolException("Failed to handle EvaluateRequest", new Message(1105, AD7Resources.Error_TargetNotStopped)));
-                return;
-            }
-
-            uint radix = Constants.EvaluationRadix;
-            if (responder.Arguments.Format != null)
-            {
-                ValueFormat format = responder.Arguments.Format;
-
-                if (format.Hex == true)
-                {
-                    radix = 16;
-                }
-            }
-
-            bool isExecInConsole = false;
-            // If the expression isn't empty and its a Repl request, do additional checking
-            if (!String.IsNullOrEmpty(expression) && context == EvaluateArguments.ContextValue.Repl)
-            {
-                // If this is an -exec command (or starts with '`') treat it as a console command and log telemetry
-                if (expression.StartsWith("-exec", StringComparison.Ordinal) || expression[0] == '`')
-                    isExecInConsole = true;
-            }
-
-            IDebugStackFrame2 frame = null;
-            if (frameId == -1 && isExecInConsole)
-            {
-                m_frameHandles.TryGetFirst(out frame);
-            }
-            else
-            {
-                m_frameHandles.TryGet(frameId, out frame);
-            }
-
-            if (frame == null)
-            {
-                Dictionary<string, object> properties = new Dictionary<string, object>();
-                properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
-                properties.Add(DebuggerTelemetry.TelemetryExecuteInConsole, isExecInConsole);
-                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
-                responder.SetError(new ProtocolException("Cannot evaluate expression on the specified stack frame."));
-                return;
-            }
-
-            if (!TryEvaluate(expression, context, frame, out Variable variable, out IDebugProperty2 _, out string errorMessage, radix, isExecInConsole))
-            {
-                responder.SetError(new ProtocolException(errorMessage));
-                return;
-            }
-
             responder.SetResponse(new EvaluateResponse()
             {
                 Result = variable.Value,
                 Type = variable.Type,
                 VariablesReference = variable.VariablesReference,
-                MemoryReference = variable.MemoryReference
+                MemoryReference = memoryReference
             });
         }
 
@@ -3507,7 +3462,7 @@ namespace OpenDebugAD7
                                 };
                             }
                         }
-                        else
+                        else if (ad7BPRequest.FunctionPosition != null)
                         {
                             bp = new Breakpoint()
                             {
@@ -3519,6 +3474,18 @@ namespace OpenDebugAD7
 
                             // TODO: currently VSCode will ignore the error message from "breakpoint" event, the workaround is to log the error to output window
                             string outputMsg = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_FunctionBreakpoint, ad7BPRequest.FunctionPosition.Name, errorMsg);
+                            m_logger.WriteLine(LoggingCategory.DebuggerError, outputMsg);
+                        }
+                        else // data bp
+                        {
+                            bp = new Breakpoint()
+                            {
+                                Verified = false,
+                                Id = (int)ad7BPRequest.Id,
+                                Line = 0,
+                                Message = errorMsg
+                            };
+                            string outputMsg = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, errorMsg);
                             m_logger.WriteLine(LoggingCategory.DebuggerError, outputMsg);
                         }
 

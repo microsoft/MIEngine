@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using EnvDTE;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Diagnostics;
@@ -151,7 +150,7 @@ namespace Microsoft.MIDebugEngine
                         fitsFilter = new bool[children.Length];
                         for (int i = 0; i < children.Length; i++)
                         {
-                            fitsFilter[i] = string.Compare(children[i].Name, pszNameFilter, StringComparison.Ordinal) == 0;
+                            fitsFilter[i] = string.Equals(children[i].Name, pszNameFilter, StringComparison.Ordinal);
                             if (!fitsFilter[i])
                             {
                                 propertyCount--;
@@ -467,7 +466,7 @@ namespace Microsoft.MIDebugEngine
         {
             try
             {
-                pbstrAddress = _variableInformation.Address();
+                pbstrAddress = _variableInformation.Address() + "," + _variableInformation.FullName();
                 pSize = _variableInformation.Size();
                 pbstrDisplayName = _variableInformation.FullName();
                 pbstrError = "";

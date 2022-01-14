@@ -292,9 +292,6 @@ namespace Microsoft.MIDebugEngine
             {
                 if (e.GetBaseException() is InvalidCoreDumpOperationException)
                     return AD7_HRESULT.E_CRASHDUMP_UNSUPPORTED;
-                else if (e.GetBaseException() is ArgumentException && (enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_DATA_STRING)
-                    // handle invalid data bp address/size
-                    return Constants.E_FAIL;
                 else
                     return EngineUtils.UnexpectedException(e);
             }
@@ -323,6 +320,11 @@ namespace Microsoft.MIDebugEngine
                 //replaced by the real mi debugger error text
                 this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.LongBind, enum_BP_ERROR_TYPE.BPET_SEV_LOW | enum_BP_ERROR_TYPE.BPET_TYPE_WARNING), true);
                 return Constants.S_FALSE;
+            }
+            else if (this._BPError != null)
+            {
+                // Ran into some sort of error
+                return Constants.E_FAIL;
             }
             else
             {
@@ -367,7 +369,16 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    bindResult = await PendingBreakpoint.Bind(_address, _size, _engine.DebuggedProcess, _condition, this);
+                    try
+                    {
+                        bindResult = await PendingBreakpoint.Bind(_address, _size, _engine.DebuggedProcess, _condition, this);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        // There was an error binding at the address with the specified size. This could happen if the size is greater
+                        // than the max size a data bp can watch.
+                        bindResult = new PendingBreakpoint.BindResult(ex.Message);
+                    }
                 }
 
                 lock (_boundBreakpoints)
