@@ -183,11 +183,18 @@ namespace MICore
             return addresses;
         }
 
-        public override Task EnableTargetAsyncOption()
+        public override async Task EnableTargetAsyncOption()
         {
             // Linux attach TODO: GDB will fail this command when attaching. This is worked around
             // by using signals for that case.
-            return _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
+            Results result = await _debugger.CmdAsync("-gdb-set mi-async on", ResultClass.None);
+
+            // 'set mi-async on' will error on older versions of gdb (older than 11.x)
+            // Try enabling with the older 'target-async' keyword.
+            if (result.ResultClass == ResultClass.error)
+            {
+                await _debugger.CmdAsync("-gdb-set target-async on", ResultClass.None);
+            }
         }
 
         public override async Task Terminate()
@@ -294,6 +301,63 @@ namespace MICore
                 _debugger.Logger.WriteLine("We reached max-completions!");
 
             return matchlist?.AsStrings;
+        }
+
+        public override IEnumerable<Guid> GetSupportedExceptionCategories()
+        {
+            const string CppExceptionCategoryString = "{3A12D0B7-C26C-11D0-B442-00A0244A1DD2}";
+            return new Guid[] { new Guid(CppExceptionCategoryString) };
+        }
+
+        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointStates)
+        {
+            string command;
+            Results result;
+            List<ulong> breakpointNumbers = new List<ulong>();
+
+            if (exceptionNames == null) // set breakpoint for all exceptions in exceptionCategory
+            {
+                command = "-catch-throw";
+                result = await _debugger.CmdAsync(command, ResultClass.None);
+                switch (result.ResultClass)
+                {
+                    case ResultClass.done:
+                        var breakpointNumber = result.Find("bkpt").FindUint("number");
+                        breakpointNumbers.Add(breakpointNumber);
+                        break;
+                    case ResultClass.error:
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+            else // set breakpoint for each exceptionName in exceptionNames
+            {
+                command = "-catch-throw -r \\b";
+                foreach (string exceptionName in exceptionNames)
+                {
+                    result = await _debugger.CmdAsync(command + exceptionName + "\\b", ResultClass.None);
+                    switch (result.ResultClass)
+                    {
+                        case ResultClass.done:
+                            var breakpointNumber = result.Find("bkpt").FindUint("number");
+                            breakpointNumbers.Add(breakpointNumber);
+                            break;
+                        case ResultClass.error:
+                        default:
+                            throw new NotSupportedException();
+                    }
+                }
+            }
+
+            return breakpointNumbers;
+        }
+
+        public override async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        {
+            foreach (ulong breakpointNumber in exceptionBreakpoints)
+            {
+                await BreakDelete(breakpointNumber.ToString(CultureInfo.InvariantCulture));
+            }
         }
     }
 }

@@ -197,9 +197,9 @@ namespace DebuggerTesting.OpenDebug.Extensions
             return runner.RunCommand(new SetBreakpointsCommand(sourceBreakpoints));
         }
 
-        public static void SetExceptionBreakpoints(this IDebuggerRunner runner, params string[] filters)
+        public static void SetExceptionBreakpoints(this IDebuggerRunner runner, string[] filters, ExceptionFilterOptions[] filterOptions)
         {
-                runner.RunCommand(new SetExceptionBreakpointsCommand(filters));
+            runner.RunCommand(new SetExceptionBreakpointsCommand(filters, filterOptions));
         }
 
         public static SetBreakpointsResponseValue SetFunctionBreakpoints(this IDebuggerRunner runner, FunctionBreakpoints breakpoints)

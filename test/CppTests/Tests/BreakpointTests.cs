@@ -389,6 +389,44 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
         [RequiresTestSettings]
+        // lldb-mi returns the condition without escaping the quotes.
+        // >=breakpoint-modified,bkpt={..., cond="str == "hello, world"", ...}
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        public void ConditionalStringBreakpoints(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that conditional breakpoints on strings work");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fExpression");
+
+                this.Comment("Set a conditional line with string comparison breakpoint");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Expression);
+                callingBreakpoints.Add(69, "str == \"hello, world\"");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run to conditional breakpoint");
+                runner.Expects.HitBreakpointEvent(null, 69)
+                              .AfterConfigurationDone();
+
+                // Skip verifying variable since strings result in "{ ... }"
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
         public void BreakpointSettingsVerification(ITestSettings settings)
         {
             this.TestPurpose("Tests supported breakpoint settings");

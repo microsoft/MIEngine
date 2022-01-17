@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.Debugger.Interop;
 using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
@@ -13,9 +14,6 @@ namespace Microsoft.DebugEngineHost.VSCode
     /// </summary>
     sealed public class ExceptionBreakpointFilter
     {
-        public const string Filter_All = "all";
-        public const string Filter_UserUnhandled = "user-unhandled";
-
         private string _filter;
 
         /// <summary>
@@ -25,7 +23,7 @@ namespace Microsoft.DebugEngineHost.VSCode
         public string label { get; set; }
 
         /// <summary>
-        /// The identifier for this filter. Currently this should be 'all' or 'user-unhandled'
+        /// The identifier for this filter.
         /// </summary>
         [JsonRequired]
         public string filter
@@ -37,18 +35,26 @@ namespace Microsoft.DebugEngineHost.VSCode
 
             set
             {
-                if (value != Filter_All && value != Filter_UserUnhandled)
-                {
-                    Debug.Fail("Invalid ExceptionBreakpointFilter");
-                    throw new ArgumentOutOfRangeException("filter");
-                }
                 _filter = value;
             }
         }
+
+        [JsonRequired]
+        public bool supportsCondition { get; set; }
+
+        [JsonRequired]
+        public string conditionDescription { get; set; }
+
+        [JsonRequired]
+        public Guid categoryId { get; set; }
 
         /// <summary>
         /// The default state for the button
         /// </summary>
         public bool @default { get; set; }
+
+        [JsonIgnore]
+        public enum_EXCEPTION_STATE State { get; set; } = enum_EXCEPTION_STATE.EXCEPTION_STOP_SECOND_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_FIRST_CHANCE;
+
     }
 }
