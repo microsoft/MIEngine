@@ -92,7 +92,7 @@ namespace Microsoft.MIDebugEngine
         }
         private async Task<SourceLineMap> LinesForFile(string file)
         {
-            string cmd = "-symbol-list-lines " + _process.EscapeSymbolPath(file);
+            string cmd = "-symbol-list-lines " + _process.EnsureProperPathSeparators(file);
             Results results = await _process.CmdAsync(cmd, ResultClass.None);
 
             if (results.ResultClass != ResultClass.done)
