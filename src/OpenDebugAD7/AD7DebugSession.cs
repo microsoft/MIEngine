@@ -2413,7 +2413,7 @@ namespace OpenDebugAD7
             catch (Exception ex)
             {
                 if (ex is AD7Exception ad7ex)
-                    response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, ad7ex.Message);
+                    response.Description = ad7ex.Message;
                 else
                     response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, "");
             }
