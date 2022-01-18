@@ -77,22 +77,14 @@ namespace OpenDebugAD7
             return m_variableHandles.Create(scope);
         }
 
-        public void AddChildVariable(int parentHandle, IDebugProperty2 prop)
+        public void AddChildVariable(int parentHandle, DEBUG_PROPERTY_INFO propInfo)
         {
-            var propInfo = new DEBUG_PROPERTY_INFO[1];
-            prop.GetPropertyInfo(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propInfo);
-            string name = propInfo[0].bstrName;
-
-            m_variablesChildren.Add(Tuple.Create(parentHandle, name), prop);
+            m_variablesChildren.Add(Tuple.Create(parentHandle, propInfo.bstrName), propInfo.pProperty);
         }
 
-        public void AddFrameVariable(IDebugStackFrame2 frame, IDebugProperty2 prop)
+        public void AddFrameVariable(IDebugStackFrame2 frame, DEBUG_PROPERTY_INFO propInfo)
         {
-            var propInfo = new DEBUG_PROPERTY_INFO[1];
-            prop.GetPropertyInfo(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME, Constants.EvaluationRadix, Constants.EvaluationTimeout, null, 0, propInfo);
-            string name = propInfo[0].bstrName;
-
-            m_framesVariables.Add(Tuple.Create(frame, name), prop);
+            m_framesVariables.Add(Tuple.Create(frame, propInfo.bstrName), propInfo.pProperty);
         }
 
         internal Variable CreateVariable(IDebugProperty2 property, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)

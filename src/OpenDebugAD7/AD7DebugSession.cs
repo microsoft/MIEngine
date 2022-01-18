@@ -652,7 +652,7 @@ namespace OpenDebugAD7
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
                     response.Variables.Add(m_variableManager.CreateVariable(props[0].pProperty, GetDefaultPropertyInfoFlags()));
-                    m_variableManager.AddFrameVariable(frame, props[0].pProperty);
+                    m_variableManager.AddFrameVariable(frame, props[0]);
                 }
             }
 
@@ -1824,7 +1824,7 @@ namespace OpenDebugAD7
                         {
                             string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
                             var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
-                            m_variableManager.AddChildVariable(reference, childProperties[c].pProperty);
+                            m_variableManager.AddChildVariable(reference, childProperties[c]);
                             int uniqueCounter = 2;
                             string variableName = variable.Name;
                             string variableNameFormat = "{0} #{1}";
@@ -2412,7 +2412,10 @@ namespace OpenDebugAD7
             }
             catch (Exception ex)
             {
-                response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, "");
+                if (ex is AD7Exception ad7ex)
+                    response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, ad7ex.Message);
+                else
+                    response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, "");
             }
             finally
             {
@@ -2422,7 +2425,6 @@ namespace OpenDebugAD7
 
         protected override void HandleSetDataBreakpointsRequestAsync(IRequestResponder<SetDataBreakpointsArguments, SetDataBreakpointsResponse> responder)
         {
-            // Mostly copied from HandleSetFunctionBreakpointsRequestAsync
             if (responder.Arguments.Breakpoints == null)
             {
                 responder.SetError(new ProtocolException("SetDataBreakpointRequest failed: Missing 'breakpoints'."));
@@ -2513,14 +2515,15 @@ namespace OpenDebugAD7
                         response.Breakpoints.Add(pBPRequest.BindResult);
                     }
                 }
+                responder.SetResponse(response);
             }
             catch (Exception ex)
             {
+                responder.SetError(new ProtocolException(ex.Message));
             }
             finally
             {
                 m_dataBreakpoints = newBreakpoints;
-                responder.SetResponse(response);
             }
         }
 

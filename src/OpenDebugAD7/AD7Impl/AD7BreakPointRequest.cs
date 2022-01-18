@@ -34,7 +34,7 @@ namespace OpenDebugAD7.AD7Impl
         public IntPtr MemoryContextIntPtr { get; private set;  }
 
         // Unique identifier for breakpoint when communicating with VSCode
-        public uint Id { get; private set; } = GetNextBreakpointId();
+        public uint Id { get; } = GetNextBreakpointId();
 
         // Bind result from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
         public Breakpoint BindResult { get; set; }
