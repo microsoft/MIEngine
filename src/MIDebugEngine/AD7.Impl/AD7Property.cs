@@ -141,10 +141,32 @@ namespace Microsoft.MIDebugEngine
                 {
                     _engine.DebuggedProcess.Natvis.WaitDialog.ShowWaitDialog(_variableInformation.Name);
                     var children = _engine.DebuggedProcess.Natvis.Expand(_variableInformation);
-                    DEBUG_PROPERTY_INFO[] properties = new DEBUG_PROPERTY_INFO[children.Length];
-                    for (int i = 0; i < children.Length; i++)
+
+                    // Count number of children that fit filter (results saved in "fitsFilter")
+                    int propertyCount = children.Length;
+                    bool[] fitsFilter = null;
+                    if (!string.IsNullOrEmpty(pszNameFilter))
                     {
-                        properties[i] = (new AD7Property(_engine, children[i])).ConstructDebugPropertyInfo(dwFields);
+                        fitsFilter = new bool[children.Length];
+                        for (int i = 0; i < children.Length; i++)
+                        {
+                            fitsFilter[i] = string.Equals(children[i].Name, pszNameFilter, StringComparison.Ordinal);
+                            if (!fitsFilter[i])
+                            {
+                                propertyCount--;
+                            }
+                        }
+                    }
+
+                    // Create property array
+                    DEBUG_PROPERTY_INFO[] properties = new DEBUG_PROPERTY_INFO[propertyCount];
+                    for (int i = 0, j = 0; i < children.Length; i++)
+                    {
+                        if (fitsFilter == null || fitsFilter[i])
+                        {
+                            properties[j] = (new AD7Property(_engine, children[i])).ConstructDebugPropertyInfo(dwFields);
+                            ++j; // increment j if we fit filter, this allows us to traverse "properties" array properly.
+                        }
                     }
                     ppEnum = new AD7PropertyEnum(properties);
                     return Constants.S_OK;

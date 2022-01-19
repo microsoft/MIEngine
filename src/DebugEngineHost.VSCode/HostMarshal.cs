@@ -4,6 +4,7 @@
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -110,7 +111,7 @@ namespace Microsoft.DebugEngineHost
         /// <returns></returns>
         public static string GetDataBreakpointStringForIntPtr(IntPtr stringId)
         {
-            throw new NotImplementedException();
+            return Marshal.PtrToStringBSTR(stringId);
         }
 
         /// <summary>
@@ -120,7 +121,7 @@ namespace Microsoft.DebugEngineHost
         /// <returns>IntPtr to a BSTR which can be returned to VS.</returns>
         public static IntPtr GetIntPtrForDataBreakpointAddress(string address)
         {
-            throw new NotImplementedException();
+            return Marshal.StringToBSTR(address);
         }
 
         /// <summary>
