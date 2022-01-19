@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
@@ -31,19 +32,39 @@ namespace OpenDebugAD7
         // NOTE: The value being stored can be a VariableScope or a VariableEvaluationData
         private readonly HandleCollection<Object> m_variableHandles;
 
+        // NOTE: (VariableReference, ChildName) -> IDebugProperty2
+        private readonly Dictionary<Tuple<int, string>, IDebugProperty2> m_variablesChildren;
+
+        // NOTE: (Frame, Name) -> IDebugProperty2
+        private readonly Dictionary<Tuple<IDebugStackFrame2, string>, IDebugProperty2> m_framesVariables;
+
         internal VariableManager()
         {
             m_variableHandles = new HandleCollection<Object>();
+            m_variablesChildren = new Dictionary<Tuple<int, string>, IDebugProperty2>();
+            m_framesVariables = new Dictionary<Tuple<IDebugStackFrame2, string>, IDebugProperty2>();
         }
 
         internal void Reset()
         {
             m_variableHandles.Reset();
+            m_variablesChildren.Clear();
+            m_framesVariables.Clear();
         }
 
         internal Boolean IsEmpty()
         {
             return m_variableHandles.IsEmpty;
+        }
+
+        internal bool TryGetProperty((int, string) key, out IDebugProperty2 prop)
+        {
+            return m_variablesChildren.TryGetValue(Tuple.Create(key.Item1, key.Item2), out prop);
+        }
+
+        internal bool TryGetProperty((IDebugStackFrame2, string) key, out IDebugProperty2 prop)
+        {
+            return m_framesVariables.TryGetValue(Tuple.Create(key.Item1, key.Item2), out prop);
         }
 
         internal bool TryGet(int handle, out object value)
@@ -54,6 +75,16 @@ namespace OpenDebugAD7
         internal int Create(VariableScope scope)
         {
             return m_variableHandles.Create(scope);
+        }
+
+        public void AddChildVariable(int parentHandle, DEBUG_PROPERTY_INFO propInfo)
+        {
+            m_variablesChildren.Add(Tuple.Create(parentHandle, propInfo.bstrName), propInfo.pProperty);
+        }
+
+        public void AddFrameVariable(IDebugStackFrame2 frame, DEBUG_PROPERTY_INFO propInfo)
+        {
+            m_framesVariables.Add(Tuple.Create(frame, propInfo.bstrName), propInfo.pProperty);
         }
 
         internal Variable CreateVariable(IDebugProperty2 property, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)

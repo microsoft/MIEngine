@@ -61,6 +61,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to When &apos;{0}&apos; changes ({1} bytes).
+        /// </summary>
+        internal static string DataBreakpointDisplayString {
+            get {
+                return ResourceManager.GetString("DataBreakpointDisplayString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Execute debugger commands using &quot;-exec &lt;command&gt;&quot;, for example &quot;-exec info registers&quot; will list registers in use (when GDB is the debugger).
         /// </summary>
         internal static string DebugConsoleStartMessage {
@@ -75,6 +84,15 @@ namespace OpenDebugAD7 {
         internal static string DebuggerDisconnectMessage {
             get {
                 return ResourceManager.GetString("DebuggerDisconnectMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find child property..
+        /// </summary>
+        internal static string Error_ChildPropertyNotFound {
+            get {
+                return ResourceManager.GetString("Error_ChildPropertyNotFound", resourceCulture);
             }
         }
         
@@ -104,6 +122,15 @@ namespace OpenDebugAD7 {
         internal static string Error_CorruptingException {
             get {
                 return ResourceManager.GetString("Error_CorruptingException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get info for data breakpoint. {0}.
+        /// </summary>
+        internal static string Error_DataBreakpointInfoFail {
+            get {
+                return ResourceManager.GetString("Error_DataBreakpointInfoFail", resourceCulture);
             }
         }
         
@@ -216,6 +243,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to set data breakpoint: {0}.
+        /// </summary>
+        internal static string Error_InvalidDataBreakpoint {
+            get {
+                return ResourceManager.GetString("Error_InvalidDataBreakpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DNX runtime process exited unexpectedly with error code {0}..
         /// </summary>
         internal static string Error_LaunchFailedNoError {
@@ -241,6 +277,15 @@ namespace OpenDebugAD7 {
         internal static string Error_MissingOutParam {
             get {
                 return ResourceManager.GetString("Error_MissingOutParam", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get parent object: No scope or variable found..
+        /// </summary>
+        internal static string Error_NoParentObject {
+            get {
+                return ResourceManager.GetString("Error_NoParentObject", resourceCulture);
             }
         }
         
