@@ -728,9 +728,11 @@ namespace Microsoft.MIDebugEngine
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
                     if (!string.IsNullOrWhiteSpace(destination))
                     {
-                        commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
+                        commands.Add(new LaunchCommand("-target-select extended-remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                     }
-                    else // gdbserver is already attached when using LocalLaunchOptions
+
+                    string processId = localLaunchOptions?.ProcessId.Value.ToString(CultureInfo.InvariantCulture);
+                    if (!string.IsNullOrWhiteSpace(processId))
                     {
                         Action<string> failureHandler = (string miError) =>
                         {
@@ -746,7 +748,7 @@ namespace Microsoft.MIDebugEngine
                             }
                         };
 
-                        commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value.ToString(CultureInfo.InvariantCulture), ignoreFailures: false, failureHandler: failureHandler));
+                        commands.Add(new LaunchCommand("-target-attach " + processId, ignoreFailures: false, failureHandler: failureHandler));
                     }
 
                     if (_launchOptions.PostRemoteConnectCommands != null) 
@@ -831,7 +833,7 @@ namespace Microsoft.MIDebugEngine
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
                         if (!string.IsNullOrWhiteSpace(destination))
                         {
-                            commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
+                            commands.Add(new LaunchCommand("-target-select extended-remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                             if (localLaunchOptions.RequireHardwareBreakpoints && localLaunchOptions.HardwareBreakpointLimit > 0) {
                                 commands.Add(new LaunchCommand(string.Format(CultureInfo.InvariantCulture, "-interpreter-exec console \"set remote hardware-breakpoint-limit {0}\"", localLaunchOptions.HardwareBreakpointLimit.ToString(CultureInfo.InvariantCulture))));
                             }

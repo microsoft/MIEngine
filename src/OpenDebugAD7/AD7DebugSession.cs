@@ -1142,12 +1142,7 @@ namespace OpenDebugAD7
             {
                 string propertyCausingRemote = !string.IsNullOrEmpty(miDebuggerServerAddress) ? "miDebuggerServerAddress" : "pipeTransport";
 
-                if (!string.IsNullOrEmpty(miDebuggerServerAddress) && !string.IsNullOrEmpty(processId))
-                {
-                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1002, "attach: 'processId' cannot be used with " + propertyCausingRemote));
-                    return;
-                }
-                else if (isPipeTransport && (string.IsNullOrEmpty(processId) || string.IsNullOrEmpty(pipeTransport.GetValueAsString("debuggerPath"))))
+                if (isPipeTransport && (string.IsNullOrEmpty(processId) || string.IsNullOrEmpty(pipeTransport.GetValueAsString("debuggerPath"))))
                 {
                     responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1001, "attach: properties 'processId' and 'debuggerPath' needs to be specified with " + propertyCausingRemote));
                     return;
