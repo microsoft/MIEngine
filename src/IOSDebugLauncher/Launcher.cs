@@ -92,7 +92,7 @@ namespace IOSDebugLauncher
                     return _client.ServerCertificateValidationCallback(sender, (X509Certificate)certificate, (X509Chain)chain, sslPolicyErrors);
                 };
             }
-            
+
             debuggerLaunchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
             debuggerLaunchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
             debuggerLaunchOptions.DebuggerMIMode = MIMode.Lldb;
@@ -115,7 +115,7 @@ namespace IOSDebugLauncher
                 fileCommand = string.Format(CultureInfo.InvariantCulture, "-file-exec-and-symbols \"{0}\" -p ios-simulator", _launchOptions.ExePath);
             }
 
-            string targetCommand = string.Format(CultureInfo.InvariantCulture, "-target-select extended-remote localhost:{0}", _remotePorts.IDeviceDebugServerProxyPort.ToString(CultureInfo.InvariantCulture));
+            string targetCommand = string.Format(CultureInfo.InvariantCulture, "-target-select remote localhost:{0}", _remotePorts.IDeviceDebugServerProxyPort.ToString(CultureInfo.InvariantCulture));
             string breakInMainCommand = string.Format(CultureInfo.InvariantCulture, "-break-insert main");
 
             commands.Add(new LaunchCommand(fileCommand, LauncherResources.DefinePlatform));

@@ -726,29 +726,34 @@ namespace Microsoft.MIDebugEngine
 
                     // check for remote
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
+                    bool useExtendedRemote = localLaunchOptions?.UseExtendedRemote ?? false;
                     if (!string.IsNullOrWhiteSpace(destination))
                     {
-                        commands.Add(new LaunchCommand("-target-select extended-remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
+                        string remoteMode = useExtendedRemote ? "extended-remote" : "remote";
+                        commands.Add(new LaunchCommand($"-target-select {remoteMode} {destination}", string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                     }
-
-                    string processId = localLaunchOptions?.ProcessId.Value.ToString(CultureInfo.InvariantCulture);
-                    if (!string.IsNullOrWhiteSpace(processId))
+                    // Allow attach after connection only in extended-remote mode
+                    if (useExtendedRemote || (!useExtendedRemote && string.IsNullOrWhiteSpace(destination)))
                     {
-                        Action<string> failureHandler = (string miError) =>
+                        string processId = localLaunchOptions?.ProcessId.Value.ToString(CultureInfo.InvariantCulture);
+                        if (!string.IsNullOrWhiteSpace(processId))
                         {
-                            if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
+                            Action<string> failureHandler = (string miError) =>
                             {
-                                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
-                                throw new LaunchErrorException(message);
-                            }
-                            else
-                            {
-                                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
-                                throw new LaunchErrorException(message);
-                            }
-                        };
+                                if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
+                                    throw new LaunchErrorException(message);
+                                }
+                                else
+                                {
+                                    string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                                    throw new LaunchErrorException(message);
+                                }
+                            };
 
-                        commands.Add(new LaunchCommand("-target-attach " + processId, ignoreFailures: false, failureHandler: failureHandler));
+                            commands.Add(new LaunchCommand("-target-attach " + processId, ignoreFailures: false, failureHandler: failureHandler));
+                        }
                     }
 
                     if (_launchOptions.PostRemoteConnectCommands != null) 
@@ -833,7 +838,8 @@ namespace Microsoft.MIDebugEngine
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
                         if (!string.IsNullOrWhiteSpace(destination))
                         {
-                            commands.Add(new LaunchCommand("-target-select extended-remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
+                            string remoteMode = localLaunchOptions.UseExtendedRemote ? "extended-remote" : "remote";
+                            commands.Add(new LaunchCommand($"-target-select {remoteMode} {destination}", string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                             if (localLaunchOptions.RequireHardwareBreakpoints && localLaunchOptions.HardwareBreakpointLimit > 0) {
                                 commands.Add(new LaunchCommand(string.Format(CultureInfo.InvariantCulture, "-interpreter-exec console \"set remote hardware-breakpoint-limit {0}\"", localLaunchOptions.HardwareBreakpointLimit.ToString(CultureInfo.InvariantCulture))));
                             }

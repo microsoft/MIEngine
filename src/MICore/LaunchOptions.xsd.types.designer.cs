@@ -575,7 +575,11 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string MIDebuggerServerAddress;
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool UseExtendedRemote;
+
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string DebugServer;
