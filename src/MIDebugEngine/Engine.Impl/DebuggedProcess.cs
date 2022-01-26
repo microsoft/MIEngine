@@ -735,25 +735,21 @@ namespace Microsoft.MIDebugEngine
                     // Allow attach after connection only in extended-remote mode
                     if (useExtendedRemote || (!useExtendedRemote && string.IsNullOrWhiteSpace(destination)))
                     {
-                        string processId = localLaunchOptions?.ProcessId.Value.ToString(CultureInfo.InvariantCulture);
-                        if (!string.IsNullOrWhiteSpace(processId))
+                        Action<string> failureHandler = (string miError) =>
                         {
-                            Action<string> failureHandler = (string miError) =>
+                            if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
                             {
-                                if (miError.Trim().StartsWith("ptrace:", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
-                                    throw new LaunchErrorException(message);
-                                }
-                                else
-                                {
-                                    string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
-                                    throw new LaunchErrorException(message);
-                                }
-                            };
+                                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_PTraceFailure, _launchOptions.ProcessId, MICommandFactory.Name, miError);
+                                throw new LaunchErrorException(message);
+                            }
+                            else
+                            {
+                                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, _launchOptions.ExePath, MICommandFactory.Name, miError);
+                                throw new LaunchErrorException(message);
+                            }
+                        };
 
-                            commands.Add(new LaunchCommand("-target-attach " + processId, ignoreFailures: false, failureHandler: failureHandler));
-                        }
+                        commands.Add(new LaunchCommand("-target-attach " + _launchOptions.ProcessId.Value.ToString(CultureInfo.InvariantCulture), ignoreFailures: false, failureHandler: failureHandler));
                     }
 
                     if (_launchOptions.PostRemoteConnectCommands != null) 
