@@ -1129,6 +1129,7 @@ namespace OpenDebugAD7
             bool isPipeTransport = (pipeTransport != null);
             bool isLocal = string.IsNullOrEmpty(miDebuggerServerAddress) && !isPipeTransport;
             string mimode = responder.Arguments.ConfigurationProperties.GetValueAsString("MIMode");
+            bool useExtendedRemote = responder.Arguments.ConfigurationProperties.GetValueAsBool("useExtendedRemote").GetValueOrDefault(false);
 
             if (isLocal)
             {
@@ -1142,9 +1143,9 @@ namespace OpenDebugAD7
             {
                 string propertyCausingRemote = !string.IsNullOrEmpty(miDebuggerServerAddress) ? "miDebuggerServerAddress" : "pipeTransport";
 
-                if (!string.IsNullOrEmpty(miDebuggerServerAddress) && !string.IsNullOrEmpty(processId))
+                if (!string.IsNullOrEmpty(miDebuggerServerAddress) && !string.IsNullOrEmpty(processId) && !useExtendedRemote)
                 {
-                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1002, "attach: 'processId' cannot be used with " + propertyCausingRemote));
+                    responder.SetError(CreateProtocolExceptionAndLogTelemetry(telemetryEventName, 1002, "attach: 'useExtendedRemote' needs to be set to true when 'processId' is used with " + propertyCausingRemote));
                     return;
                 }
                 else if (isPipeTransport && (string.IsNullOrEmpty(processId) || string.IsNullOrEmpty(pipeTransport.GetValueAsString("debuggerPath"))))
