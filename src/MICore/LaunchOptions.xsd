@@ -230,6 +230,11 @@
               <xs:documentation>Network address of the MI Debugger Server to connect to (example: localhost:1234).</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="UseExtendedRemote" type="xs:boolean" use="optional">
+            <xs:annotation>
+              <xs:documentation>If true, use gdb extended-remote mode to connect to gdbserver.</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="DebugServer" type="xs:string" use="optional">
             <xs:annotation>
               <xs:documentation>Full path to the server executable. If non-null then the MIEngine will start the server.</xs:documentation>

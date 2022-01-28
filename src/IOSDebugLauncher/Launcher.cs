@@ -92,7 +92,7 @@ namespace IOSDebugLauncher
                     return _client.ServerCertificateValidationCallback(sender, (X509Certificate)certificate, (X509Chain)chain, sslPolicyErrors);
                 };
             }
-            
+
             debuggerLaunchOptions.TargetArchitecture = _launchOptions.TargetArchitecture;
             debuggerLaunchOptions.AdditionalSOLibSearchPath = _launchOptions.AdditionalSOLibSearchPath;
             debuggerLaunchOptions.DebuggerMIMode = MIMode.Lldb;
