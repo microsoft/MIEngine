@@ -443,6 +443,18 @@ namespace MICore
             this.MIDebuggerArgs = MIDebuggerArgs;
         }
 
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, bool UseExtendedRemote) :
+            this(MIDebuggerPath, MIDebuggerServerAddress)
+        {
+            this.UseExtendedRemote = UseExtendedRemote;
+        }
+
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs, bool UseExtendedRemote) :
+            this(MIDebuggerPath, MIDebuggerServerAddress, MIDebuggerArgs)
+        {
+            this.UseExtendedRemote = UseExtendedRemote;
+        }
+
         private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
         {
             if (!String.IsNullOrWhiteSpace(launchOptions.DebugServerPath))
@@ -533,7 +545,8 @@ namespace MICore
 
             LocalLaunchOptions localLaunchOptions = new LocalLaunchOptions(RequireAttribute(miDebuggerPath, nameof(miDebuggerPath)),
                 launchOptions.MiDebuggerServerAddress,
-                launchOptions.MiDebuggerArgs
+                launchOptions.MiDebuggerArgs,
+                launchOptions.UseExtendedRemote.GetValueOrDefault(false)
                 );
 
             // Load up common options
@@ -561,7 +574,8 @@ namespace MICore
             var options = new LocalLaunchOptions(
                 RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
                 source.MIDebuggerServerAddress,
-                source.MIDebuggerArgs);
+                source.MIDebuggerArgs,
+                source.UseExtendedRemote);
             options.InitializeCommonOptions(source);
             options.InitializeServerOptions(source);
             options._useExternalConsole = source.ExternalConsole;
@@ -665,6 +679,11 @@ namespace MICore
         /// [Optional] Server address that MI Debugger server is listening to
         /// </summary>
         public string MIDebuggerServerAddress { get; private set; }
+
+        /// <summary>
+        /// [Optional] If true, use gdb extended-remote mode to connect to gdbserver.
+        /// </summary>
+        public bool UseExtendedRemote { get; private set; }
 
         /// <summary>
         /// [Optional] MI Debugger Server exe, if non-null then the MIEngine will start the debug server before starting the debugger

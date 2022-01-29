@@ -73,6 +73,12 @@ namespace MICore.Json.LaunchOptions
         public string MiDebuggerServerAddress { get; set; }
 
         /// <summary>
+        /// If true, use gdb extended-remote mode to connect to gdbserver.
+        /// </summary>
+        [JsonProperty("useExtendedRemote", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? UseExtendedRemote { get; set; }
+
+        /// <summary>
         /// Optional source file mappings passed to the debug engine. Example: '{ "/original/source/path":"/current/source/path" }'
         /// </summary>
         [JsonProperty("sourceFileMap", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -137,6 +143,7 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerPath = null,
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
+            bool? useExtendedRemote = null,
             HardwareBreakpointInfo hardwareBreakpointInfo = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null,
@@ -152,6 +159,7 @@ namespace MICore.Json.LaunchOptions
             this.MiDebuggerPath = miDebuggerPath;
             this.MiDebuggerArgs = miDebuggerArgs;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
+            this.UseExtendedRemote = useExtendedRemote;
             this.ProcessId = processId;
             this.HardwareBreakpointInfo = hardwareBreakpointInfo;
             this.SourceFileMap = sourceFileMap;
@@ -390,6 +398,7 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerPath = null,
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
+            bool? useExtendedRemote = null,
             bool? stopAtEntry = null,
             string debugServerPath = null,
             string debugServerArgs = null,
@@ -421,6 +430,7 @@ namespace MICore.Json.LaunchOptions
             this.MiDebuggerPath = miDebuggerPath;
             this.MiDebuggerArgs = miDebuggerArgs;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
+            this.UseExtendedRemote = useExtendedRemote;
             this.StopAtEntry = stopAtEntry;
             this.DebugServerPath = debugServerPath;
             this.DebugServerArgs = debugServerArgs;

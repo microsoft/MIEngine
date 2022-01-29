@@ -551,6 +551,9 @@ namespace Microsoft.MIDebugEngine
             try
             {
                 await this.MICommandFactory.EnableTargetAsyncOption();
+
+                await this.CheckCygwin(_launchOptions as LocalLaunchOptions);
+
                 List<LaunchCommand> commands = await GetInitializeCommands();
                 _childProcessHandler?.Enable();
 
@@ -632,9 +635,11 @@ namespace Microsoft.MIDebugEngine
                 commands.Add(new LaunchCommand("-gdb-set solib-absolute-prefix " + _launchOptions.AbsolutePrefixSOLibSearchPath));
             }
 
-            // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix
-            string pathEntrySeperator = _launchOptions.UseUnixSymbolPaths ? ":" : ";";
-            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => EscapeSymbolPath(path, ignoreSpaces: true)));
+            // On Windows ';' appears to correctly works as a path seperator and from the documentation, it is ':' on unix or cygwin envrionments
+            string pathEntrySeperator = (_launchOptions.UseUnixSymbolPaths || IsCygwin) ? ":" : ";";
+            string escapedSearchPath = string.Join(pathEntrySeperator, _launchOptions.GetSOLibSearchPath().Select(path => {
+                return EnsureProperPathSeparators(path, ignoreSpaces: true);
+            }));
             if (!string.IsNullOrWhiteSpace(escapedSearchPath))
             {
                 if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
@@ -691,7 +696,7 @@ namespace Microsoft.MIDebugEngine
                     this.AddGetTargetArchitectureCommand(commands);
 
                     // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
-                    string coreDump = this.UseUnixPathSeparators ? _launchOptions.CoreDumpPath : this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath);
+                    string coreDump = this.UseUnixPathSeparators ? _launchOptions.CoreDumpPath : this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath, true);
                     string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
                     string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
                     commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
@@ -699,8 +704,6 @@ namespace Microsoft.MIDebugEngine
                 else if (_launchOptions.ProcessId.HasValue)
                 {
                     // This is an attach
-
-                    CheckCygwin(commands, localLaunchOptions);
 
                     if (this.MICommandFactory.Mode == MIMode.Gdb)
                     {
@@ -723,11 +726,14 @@ namespace Microsoft.MIDebugEngine
 
                     // check for remote
                     string destination = localLaunchOptions?.MIDebuggerServerAddress;
+                    bool useExtendedRemote = localLaunchOptions?.UseExtendedRemote ?? false;
                     if (!string.IsNullOrWhiteSpace(destination))
                     {
-                        commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
+                        string remoteMode = useExtendedRemote ? "extended-remote" : "remote";
+                        commands.Add(new LaunchCommand($"-target-select {remoteMode} {destination}", string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                     }
-                    else // gdbserver is already attached when using LocalLaunchOptions
+                    // Allow attach after connection only in extended-remote mode
+                    if (useExtendedRemote || (!useExtendedRemote && string.IsNullOrWhiteSpace(destination)))
                     {
                         Action<string> failureHandler = (string miError) =>
                         {
@@ -766,7 +772,8 @@ namespace Microsoft.MIDebugEngine
 
                     if (!string.IsNullOrWhiteSpace(_launchOptions.WorkingDirectory))
                     {
-                        string escapedDir = this.EnsureProperPathSeparators(_launchOptions.WorkingDirectory);
+                        string escapedDir = this.EnsureProperPathSeparators(_launchOptions.WorkingDirectory, true);
+
                         commands.Add(new LaunchCommand("-environment-cd " + escapedDir));
                     }
 
@@ -778,8 +785,6 @@ namespace Microsoft.MIDebugEngine
                     {
                         commands.Add(new LaunchCommand("-gdb-set new-console on", ignoreFailures: true));
                     }
-
-                    CheckCygwin(commands, localLaunchOptions);
 
                     this.AddExecutablePathCommand(commands);
 
@@ -829,7 +834,8 @@ namespace Microsoft.MIDebugEngine
                         string destination = localLaunchOptions.MIDebuggerServerAddress;
                         if (!string.IsNullOrWhiteSpace(destination))
                         {
-                            commands.Add(new LaunchCommand("-target-select remote " + destination, string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
+                            string remoteMode = localLaunchOptions.UseExtendedRemote ? "extended-remote" : "remote";
+                            commands.Add(new LaunchCommand($"-target-select {remoteMode} {destination}", string.Format(CultureInfo.CurrentCulture, ResourceStrings.ConnectingMessage, destination)));
                             if (localLaunchOptions.RequireHardwareBreakpoints && localLaunchOptions.HardwareBreakpointLimit > 0) {
                                 commands.Add(new LaunchCommand(string.Format(CultureInfo.InvariantCulture, "-interpreter-exec console \"set remote hardware-breakpoint-limit {0}\"", localLaunchOptions.HardwareBreakpointLimit.ToString(CultureInfo.InvariantCulture))));
                             }
@@ -853,40 +859,54 @@ namespace Microsoft.MIDebugEngine
             return commands;
         }
 
-        private void CheckCygwin(List<LaunchCommand> commands, LocalLaunchOptions localLaunchOptions)
+        /// <summary>
+        /// Checks to see if we are running Cygwin or not. 
+        /// </summary>
+        /// <param name="localLaunchOptions"></param>
+        /// <returns></returns>
+        private async Task CheckCygwin(LocalLaunchOptions localLaunchOptions)
         {
-            // If running locally on windows, determine if gdb is running from cygwin
-            if (localLaunchOptions != null && PlatformUtilities.IsWindows() && this.MICommandFactory.Mode == MIMode.Gdb)
+            // Checks to see if:
+            // 1. LocalLaunch Debugging
+            // 2. On Windows
+            // 3. With GDB
+            // 4. Does not have custom commands
+            // 5. Is not Android Debugging
+            // 6. Is not Dump Debugging
+            if (localLaunchOptions != null &&
+                PlatformUtilities.IsWindows() &&
+                this.MICommandFactory.Mode == MIMode.Gdb &&
+                localLaunchOptions.CustomLaunchSetupCommands == null &&
+                localLaunchOptions.DeviceAppLauncher == null &&
+                !this.IsCoreDump)
             {
+                string resultString = await ConsoleCmdAsync("show configuration", allowWhileRunning: false, ignoreFailures: true);
+
                 // mingw will not implement this command, but to be safe, also check if the results contains the string cygwin.
-                LaunchCommand lc = new LaunchCommand("show configuration", null, true, null, (string resStr) =>
+
+                // Look to see if configuration has "cywgin" within a word boundry.
+                // Also look for "msys" since it is a modified version of Cygwin.
+                if (Regex.IsMatch(resultString, "\\bcygwin\\b|\\bmsys\\b"))
                 {
-                    // Look to see if configuration has "cywgin" within a word boundry.
-                    // Also look for "msys" since it is a modified version of Cygwin.
-                    if (Regex.IsMatch(resStr, "\\bcygwin\\b|\\bmsys\\b"))
-                    {
-                        this.IsCygwin = true;
-                        this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
+                    this.IsCygwin = true;
+                    this.CygwinFilePathMapper = new CygwinFilePathMapper(this);
 
-                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
-                    }
-                    else
-                    {
-                        this.IsMinGW = true;
-                        // Gdb on windows and not cygwin implies mingw
-                        _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
-                    }
-
-                    return Task.FromResult(0);
-                });
-                commands.Add(lc);
+                    _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.Cygwin);
+                }
+                else
+                {
+                    this.IsMinGW = true;
+                    // Gdb on windows and not cygwin implies mingw
+                    _engineTelemetry.SendWindowsRuntimeEnvironment(EngineTelemetry.WindowsRuntimeEnvironment.MinGW);
+                }
             }
         }
 
         private void AddExecutablePathCommand(IList<LaunchCommand> commands)
         {
-            string exe = this.EnsureProperPathSeparators(_launchOptions.ExePath);
-            string description = string.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingSymbolMessage, _launchOptions.ExePath);
+            string exe = this.EnsureProperPathSeparators(_launchOptions.ExePath, true);
+
+            string description = string.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingSymbolMessage, exe);
 
             Action<string> failureHandler = (string miError) =>
             {
@@ -1424,13 +1444,22 @@ namespace Microsoft.MIDebugEngine
             get { return _worker; }
         }
 
+        private readonly char[] RemotePathSeperators = new char[] { ' ', '\'' };
+        private readonly char[] LocalPathSeperators = new char[] { ' ' };
+
         /// <summary>
-        /// Use to ensure path separators are correct for files that exist on the target debugger's machine.
-        /// If you are debugging on Windows to a remote instance of gdb or gdbserver, it will update it to Unix path separators.
+        /// Use to ensure path separators are correct for files we are setting for GDB.
+        /// If you are debugging on Windows to a remote instance of gdb or gdbserver, it will update it to Unix path separators that exist on the target debugger's machine.
+        /// If you are debugging on Windows locally, it will escape the Windows path seperator.
+        /// If you are debugging on Windows locally with Cygwin, we will update it to use unix path seperators and resolve the cygwin path.
         /// </summary>
-        internal string EnsureProperPathSeparators(string path)
+        internal string EnsureProperPathSeparators(string path, bool isRemote = false, bool ignoreSpaces = false)
         {
-            if (this.UseUnixPathSeparators)
+            if (IsCygwin)
+            {
+                path = CygwinFilePathMapper.MapWindowsToCygwin(path);
+            }
+            else if (this.UseUnixPathSeparators)
             {
                 path = PlatformUtilities.WindowsPathToUnixPath(path);
             }
@@ -1440,30 +1469,9 @@ namespace Microsoft.MIDebugEngine
                 path = path.Replace(@"\", @"\\");
             }
 
-            if (path.IndexOfAny(new char[] { ' ', '\'' }) != -1)
-            {
-                path = '"' + path + '"';
-            }
-            return path;
-        }
+            char[] pathSeperator = isRemote ? RemotePathSeperators : LocalPathSeperators;
 
-        /// <summary>
-        /// This method should be used to escape paths that are used by GDB (and NOT gdbserver) locally. 
-        /// Any path that gdbserver would use in remote server scenarios should use EnsureProperPathSeparators instead.
-        /// </summary>
-        internal string EscapeSymbolPath(string path, bool ignoreSpaces = false)
-        {
-            if (this.UseUnixSymbolPaths)
-            {
-                path = PlatformUtilities.WindowsPathToUnixPath(path);
-            }
-            else
-            {
-                path = path.Trim();
-                path = path.Replace(@"\", @"\\");
-            }
-
-            if (!ignoreSpaces && path.IndexOf(' ') != -1)
+            if (!ignoreSpaces && path.IndexOfAny(pathSeperator) != -1)
             {
                 path = '"' + path + '"';
             }
@@ -2244,7 +2252,7 @@ namespace Microsoft.MIDebugEngine
                             continue;   // match didn't end at a directory separator, not actually a match
                         }
                         compilerSrc = Path.Combine(e.CompileTimePath, file);    // map to the compiled location
-                        if (compilerSrc.IndexOf('\\') > 0)
+                        if (compilerSrc.IndexOf('\\') != -1)
                         {
                             compilerSrc = PlatformUtilities.WindowsPathToUnixPath(compilerSrc); // use Unix notation for the compiled path
                         }
