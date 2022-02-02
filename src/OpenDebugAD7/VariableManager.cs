@@ -84,7 +84,6 @@ namespace OpenDebugAD7
 
         public void AddFrameVariable(IDebugStackFrame2 frame, DEBUG_PROPERTY_INFO propInfo)
         {
-
             m_framesVariables.TryAdd(Tuple.Create(frame, propInfo.bstrName), propInfo.pProperty);
         }
 
