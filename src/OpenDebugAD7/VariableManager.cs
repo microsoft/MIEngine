@@ -35,7 +35,7 @@ namespace OpenDebugAD7
         // NOTE: ((VariablesReference | IDebugStackFrame2), Name) -> IDebugProperty2
         private readonly Dictionary<Tuple<object, string>, IDebugProperty2> m_variableProperties;
 
-        public static string VariableNameFormat = "{0} #{1}";
+        public const string VariableNameFormat = "{0} #{1}";
 
         internal VariableManager()
         {
