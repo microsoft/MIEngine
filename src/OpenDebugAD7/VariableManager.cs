@@ -32,24 +32,21 @@ namespace OpenDebugAD7
         // NOTE: The value being stored can be a VariableScope or a VariableEvaluationData
         private readonly HandleCollection<Object> m_variableHandles;
 
-        // NOTE: (VariableReference, ChildName) -> IDebugProperty2
-        private readonly Dictionary<Tuple<int, string>, IDebugProperty2> m_variablesChildren;
+        // NOTE: ((VariablesReference | IDebugStackFrame2), Name) -> IDebugProperty2
+        private readonly Dictionary<Tuple<object, string>, IDebugProperty2> m_variableProperties;
 
-        // NOTE: (Frame, Name) -> IDebugProperty2
-        private readonly Dictionary<Tuple<IDebugStackFrame2, string>, IDebugProperty2> m_framesVariables;
+        public const string VariableNameFormat = "{0} #{1}";
 
         internal VariableManager()
         {
             m_variableHandles = new HandleCollection<Object>();
-            m_variablesChildren = new Dictionary<Tuple<int, string>, IDebugProperty2>();
-            m_framesVariables = new Dictionary<Tuple<IDebugStackFrame2, string>, IDebugProperty2>();
+            m_variableProperties = new Dictionary<Tuple<object, string>, IDebugProperty2>();
         }
 
         internal void Reset()
         {
             m_variableHandles.Reset();
-            m_variablesChildren.Clear();
-            m_framesVariables.Clear();
+            m_variableProperties.Clear();
         }
 
         internal Boolean IsEmpty()
@@ -57,14 +54,9 @@ namespace OpenDebugAD7
             return m_variableHandles.IsEmpty;
         }
 
-        internal bool TryGetProperty((int, string) key, out IDebugProperty2 prop)
+        internal bool TryGetProperty((object, string) key, out IDebugProperty2 prop)
         {
-            return m_variablesChildren.TryGetValue(Tuple.Create(key.Item1, key.Item2), out prop);
-        }
-
-        internal bool TryGetProperty((IDebugStackFrame2, string) key, out IDebugProperty2 prop)
-        {
-            return m_framesVariables.TryGetValue(Tuple.Create(key.Item1, key.Item2), out prop);
+            return m_variableProperties.TryGetValue(Tuple.Create(key.Item1, key.Item2), out prop);
         }
 
         internal bool TryGet(int handle, out object value)
@@ -77,14 +69,9 @@ namespace OpenDebugAD7
             return m_variableHandles.Create(scope);
         }
 
-        public void AddChildVariable(int parentHandle, DEBUG_PROPERTY_INFO propInfo)
+        public void AddVariableProperty((object, string) key, IDebugProperty2 prop)
         {
-            m_variablesChildren.Add(Tuple.Create(parentHandle, propInfo.bstrName), propInfo.pProperty);
-        }
-
-        public void AddFrameVariable(IDebugStackFrame2 frame, DEBUG_PROPERTY_INFO propInfo)
-        {
-            m_framesVariables.Add(Tuple.Create(frame, propInfo.bstrName), propInfo.pProperty);
+            m_variableProperties[Tuple.Create(key.Item1, key.Item2)] = prop;
         }
 
         internal Variable CreateVariable(IDebugProperty2 property, enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags)
