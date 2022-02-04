@@ -649,11 +649,21 @@ namespace OpenDebugAD7
             {
                 var props = new DEBUG_PROPERTY_INFO[1];
                 uint nProps;
+                var variablesDictionary = new Dictionary<string, Variable>();
                 while (varEnum.Next(1, props, out nProps) == HRConstants.S_OK)
                 {
-                    response.Variables.Add(m_variableManager.CreateVariable(props[0].pProperty, GetDefaultPropertyInfoFlags()));
-                    m_variableManager.AddFrameVariable(frame, props[0]);
+                    Variable variable = m_variableManager.CreateVariable(props[0].pProperty, GetDefaultPropertyInfoFlags());
+                    int uniqueCounter = 2;
+                    string variableName = variable.Name;
+                    while (variablesDictionary.ContainsKey(variableName))
+                    {
+                        variableName = String.Format(CultureInfo.InvariantCulture, VariableManager.VariableNameFormat, variable.Name, uniqueCounter++);
+                    }
+                    variable.Name = variableName;
+                    variablesDictionary[variableName] = variable;
+                    m_variableManager.AddVariableProperty((frame, variableName), props[0].pProperty);
                 }
+                response.Variables.AddRange(variablesDictionary.Values);
             }
 
             return response;
@@ -1871,17 +1881,15 @@ namespace OpenDebugAD7
                         {
                             string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[c].pProperty);
                             var variable = m_variableManager.CreateVariable(ref childProperties[c], variableEvaluationData.propertyInfoFlags, memoryReference);
-                            m_variableManager.AddChildVariable(reference, childProperties[c]);
                             int uniqueCounter = 2;
                             string variableName = variable.Name;
-                            string variableNameFormat = "{0} #{1}";
                             while (variablesDictionary.ContainsKey(variableName))
                             {
-                                variableName = String.Format(CultureInfo.InvariantCulture, variableNameFormat, variable.Name, uniqueCounter++);
+                                variableName = String.Format(CultureInfo.InvariantCulture, VariableManager.VariableNameFormat, variable.Name, uniqueCounter++);
                             }
-
                             variable.Name = variableName;
                             variablesDictionary[variableName] = variable;
+                            m_variableManager.AddVariableProperty((reference, variableName), childProperties[c].pProperty);
                         }
 
                         response.Variables.AddRange(variablesDictionary.Values);
@@ -1890,7 +1898,9 @@ namespace OpenDebugAD7
                     {
                         string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(childProperties[0].pProperty);
                         // Shortcut when no duplicate can exist
-                        response.Variables.Add(m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference));
+                        Variable variable = m_variableManager.CreateVariable(ref childProperties[0], variableEvaluationData.propertyInfoFlags, memoryReference);
+                        response.Variables.Add(variable);
+                        m_variableManager.AddVariableProperty((reference, variable.Name), childProperties[0].pProperty);
                     }
                 }
             }
@@ -2414,10 +2424,9 @@ namespace OpenDebugAD7
                         IDebugStackFrame2 frame = varScope.StackFrame;
                         m_variableManager.TryGetProperty((frame, name), out property);
                     }
-                    else if (variableObj is VariableEvaluationData varEvalData)
+                    else if (variableObj is VariableEvaluationData)
                     {
                         // We have a variable parent object.
-                        IDebugProperty2 parentProperty = varEvalData.DebugProperty;
                         m_variableManager.TryGetProperty((variableReference, name), out property);
                     }
                 }
