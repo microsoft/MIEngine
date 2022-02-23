@@ -58,7 +58,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\Package.ico" />
     <Content Include="OpenFolderSchema.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
