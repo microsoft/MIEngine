@@ -168,6 +168,8 @@ namespace MICore
                 {
                     // Ignore errors if logout couldn't be written
                 }
+
+                _writer.Close();
             }
 
             base.Close();
