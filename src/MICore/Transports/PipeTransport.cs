@@ -158,6 +158,12 @@ namespace MICore
 
         public override void Close()
         {
+            if (_process != null)
+            {
+                _process.EnableRaisingEvents = false;
+                _process.Exited -= OnProcessExit;
+            }
+
             if (_writer != null)
             {
                 try
@@ -183,8 +189,6 @@ namespace MICore
 
             if (_process != null)
             {
-                _process.EnableRaisingEvents = false;
-                _process.Exited -= OnProcessExit;
                 if (_killOnClose && !_process.HasExited)
                 {
                     try
