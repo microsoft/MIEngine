@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -74,7 +75,7 @@ namespace Microsoft.MIDebugEngine.Natvis
     internal class VisualizerWrapper : SimpleWrapper
     {
         public readonly Natvis.VisualizerInfo Visualizer;
-        private bool _isVisualizerView;
+        private readonly bool _isVisualizerView;
 
         public VisualizerWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView)
             : base(name, engine, underlyingVariable)
@@ -118,6 +119,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             public List<TypeInfo> Visualizers { get; private set; }
             public List<AliasInfo> Aliases { get; private set; }
+            public List<UIVisualizerType> UIVisualizers { get; set; } = null;
             public readonly AutoVisualizer Environment;
 
             public FileInfo(AutoVisualizer env)
@@ -132,6 +134,15 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             public VisualizerType Visualizer { get; private set; }
             public Dictionary<string, string> ScopedNames { get; private set; }
+
+            public IEnumerable<(string,int)> GetUIVisualizers()
+            {
+                return this.Visualizer.Items.Where((i) => i is UIVisualizerItemType).Select(i =>
+                  {
+                      var visualizer = (UIVisualizerItemType)i;
+                      return (visualizer.ServiceId, visualizer.Id);
+                  });
+            }
 
             public VisualizerInfo(VisualizerType viz, TypeName name)
             {
@@ -184,6 +195,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             try
             {
                 HostNatvisProject.FindNatvisInSolution((s) => LoadFile(s));
+                HostNatvisProject.FindNatvisInVSIX((s) => LoadFile(s));
             }
             catch (FileNotFoundException)
             {
@@ -315,6 +327,12 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 }
                             }
                         }
+
+                        if (autoVis.UIVisualizer != null)
+                        {
+                            f.UIVisualizers = autoVis.UIVisualizer.ToList();
+                        }
+
                         _typeVisualizers.Add(f);
                     }
                     return autoVis != null;
@@ -328,8 +346,9 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
-        internal string FormatDisplayString(IVariableInformation variable)
+        internal (string value, IEnumerable<(string, int)> uiVisualizers) FormatDisplayString(IVariableInformation variable)
         {
+            VisualizerInfo visualizer = null;
             try
             {
                 _depth++;
@@ -340,10 +359,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                         || (ShowDisplayStrings == DisplayStringsState.ForVisualizedItems && variable.IsVisualized)) &&
                         !variable.IsPreformatted)
                     {
-                        VisualizerInfo visualizer = FindType(variable);
+                        visualizer = FindType(variable);
                         if (visualizer == null)
                         {
-                            return variable.Value;
+                            return (variable.Value, null);
                         }
 
                         Cache.Add(variable);    // vizualized value has been displayed
@@ -357,7 +376,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 {
                                     continue;
                                 }
-                                return FormatValue(display.Value, variable, visualizer.ScopedNames);
+                                return (FormatValue(display.Value, variable, visualizer.ScopedNames), visualizer.GetUIVisualizers());
                             }
                         }
                     }
@@ -373,7 +392,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 _depth--;
             }
-            return variable.Value;
+            return (variable.Value, visualizer?.GetUIVisualizers());
         }
 
         private IVariableInformation GetVisualizationWrapper(IVariableInformation variable)
@@ -442,6 +461,21 @@ namespace Microsoft.MIDebugEngine.Natvis
                 variable = new VariableInformation(expr, expr, frame.ThreadContext, frame.Engine, frame.Thread);
             }
             return variable;
+        }
+
+        internal string GetUIVisualizerName(string serviceId, int id)
+        {
+            string result = string.Empty;
+            this._typeVisualizers.ForEach((f)=>
+            {
+                UIVisualizerType uiViz;
+                if ((uiViz = f.UIVisualizers?.FirstOrDefault((u) => u.ServiceId == serviceId && u.Id == id)) != null)
+                {
+                    result = uiViz.MenuName;
+                }
+            });
+
+            return result;
         }
 
         private delegate IVariableInformation Traverse(IVariableInformation node);
@@ -1080,7 +1114,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames);
             IVariableInformation expressionVariable = new VariableInformation(processedExpr, variable, _process.Engine, null);
             expressionVariable.SyncEval();
-            return FormatDisplayString(expressionVariable);
+            return FormatDisplayString(expressionVariable).value;
         }
     }
 }

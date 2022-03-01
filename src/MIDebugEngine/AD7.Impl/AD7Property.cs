@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.Debugger.Interop;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
+using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.MI;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -13,10 +16,11 @@ namespace Microsoft.MIDebugEngine
     // The property is usually the result of an expression evaluation. 
     //
     // The sample engine only supports locals and parameters for functions that have symbols loaded.
-    internal class AD7Property : IDebugProperty3, IDebugProperty160
+    internal class AD7Property : IDebugProperty3, IDebugProperty160, IDebugMIEngineProperty
     {
         private static uint s_maxChars = 1000000;
         private byte[] _bytes;
+        private IEnumerable<(string, int)> _uiVisualizers = null;
 
         private AD7Engine _engine;
         private IVariableInformation _variableInformation;
@@ -67,7 +71,7 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE) != 0)
             {
-                propertyInfo.bstrValue = _engine.DebuggedProcess.Natvis.FormatDisplayString(variable);
+                (propertyInfo.bstrValue, _uiVisualizers) = _engine.DebuggedProcess.Natvis.FormatDisplayString(variable);
                 propertyInfo.dwFields |= enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE;
             }
 
@@ -111,6 +115,15 @@ namespace Microsoft.MIDebugEngine
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_RAW_STRING;
                 }
                 propertyInfo.dwAttrib |= variable.Access;
+
+                if (_uiVisualizers != null && _uiVisualizers.Any())
+                {
+                    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_CUSTOM_VIEWER;
+                    if (_uiVisualizers.Count() > 1)
+                    {
+                        propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_MULTI_CUSTOM_VIEWERS;
+                    }
+                }
             }
 
             // If the debugger has asked for the property, or the property has children (meaning it is a pointer in the sample)
@@ -199,7 +212,8 @@ namespace Microsoft.MIDebugEngine
         // Returns the memory bytes for a property value.
         public int GetMemoryBytes(out IDebugMemoryBytes2 ppMemoryBytes)
         {
-            throw new NotImplementedException();
+            ppMemoryBytes = _engine;
+            return Constants.S_OK;
         }
 
         // Returns the memory context for a property value.
@@ -303,13 +317,32 @@ namespace Microsoft.MIDebugEngine
 
         public int GetCustomViewerCount(out uint pcelt)
         {
-            pcelt = 0;
+            pcelt = this._uiVisualizers == null ? 0 : (uint)this._uiVisualizers.Count();
             return Constants.S_OK;
         }
 
         public int GetCustomViewerList(uint celtSkip, uint celtRequested, DEBUG_CUSTOM_VIEWER[] rgViewers, out uint pceltFetched)
         {
-            throw new NotImplementedException();
+            pceltFetched = 0;
+            if (this._uiVisualizers == null || (int)celtSkip >= this._uiVisualizers.Count())
+            {
+                return Constants.S_OK;
+            }
+
+            int numleft = this._uiVisualizers.Count() - (int)celtSkip;
+            var viewers = this._uiVisualizers.Skip((int)celtSkip).Take(Math.Min((int)celtRequested, numleft));
+
+            int i = 0;
+            foreach (var v in viewers)
+            {
+                rgViewers[i].bstrMetric = v.Item1;
+                rgViewers[i].dwID = (uint)v.Item2;
+                rgViewers[i].bstrMenuName = _engine.DebuggedProcess.Natvis.GetUIVisualizerName(v.Item1, v.Item2);
+                i++;
+            }
+
+            pceltFetched = (uint)viewers.Count();
+            return Constants.S_OK;
         }
 
         private void InitializeBytes()
@@ -480,6 +513,12 @@ namespace Microsoft.MIDebugEngine
                 pbstrError = e.Message;
             }
             return Constants.E_FAIL;
+        }
+
+        public int GetExpressionContext([MarshalAs(UnmanagedType.Interface), Out] out IDebugExpressionContext2 ppExpressionContext)
+        {
+            ppExpressionContext = new AD7StackFrame(_engine, _variableInformation.Client, _variableInformation.ThreadContext);
+            return Constants.S_OK;
         }
     }
 

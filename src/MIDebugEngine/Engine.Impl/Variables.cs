@@ -88,6 +88,8 @@ namespace Microsoft.MIDebugEngine
         public enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
+        public List<(string, int)> UIVisualizers { get; } = null;
+
 
         static readonly Lazy<Regex> s_addressPattern = new Lazy<Regex>(() => new Regex(@"^(0x[0-9a-fA-F]+)\b"));
 

@@ -14,6 +14,11 @@ namespace Microsoft.DebugEngineHost
             // In-solution natvis is not supported for VS Code now, so do nothing.
         }
 
+        public static void FindNatvisInVSIX(NatvisLoader loader)
+        {
+            // VSIX natvis is not supported for VS Code now, so do nothing.
+        }
+
         public static string FindSolutionRoot()
         {
             // This was added in MIEngine to support breakpoint sourcefile mapping. 
