@@ -172,6 +172,7 @@ jobs:
       run: dotnet build ${{ github.workspace }}/src/MIDebugEngine-Unix.sln
 
     - run: |
+        sudo apt update
         sudo apt-get install gdb g++ -y
         which g++
         which gdb
