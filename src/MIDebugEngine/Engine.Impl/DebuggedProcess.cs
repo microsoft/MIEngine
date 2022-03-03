@@ -1234,8 +1234,10 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
-                        // not one of our breakpoints, so stop with a message
-                        _callback.OnException(thread, "Unknown breakpoint", "", 0);
+                        // This is not one of our breakpoints, so stop with a message. Possibly it
+                        // was set by the user via "-exec break ...", so display the available
+                        // information.
+                        _callback.OnException(thread, $"Hit breakpoint {bkptno} at 0x{addr:x}.", "", 0);
                     }
                 }
             }
@@ -1263,8 +1265,27 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
-                        // not one of our breakpoints, so stop with a message
-                        _callback.OnException(thread, "Unknown watchpoint", "", 0);
+                        // This is not one of our watchpoints, so stop with a message. Possibly it
+                        // was set by the user via "-exec watch ...", so display the available
+                        // information.
+                        string desc = $"Hit watchpoint {bkptno}";
+                        string exp = wpt.TryFindString("exp");
+                        if (!string.IsNullOrEmpty(exp)) {
+                            desc += $": {exp}";
+                        }
+                        desc += $" at 0x{addr:x}";
+                        var value = results.Results.TryFind<TupleValue>("value");
+                        if (value != null) {
+                            string oldValue = value.TryFindString("old");
+                            if (!string.IsNullOrEmpty(oldValue)) {
+                                desc += $"\nOld value = {oldValue}";
+                            }
+                            string newValue = value.TryFindString("new");
+                            if (!string.IsNullOrEmpty(newValue)) {
+                                desc += $"\nNew value = {newValue}";
+                            }
+                        }
+                        _callback.OnException(thread, desc, "", 0);
                     }
                 }
             }
