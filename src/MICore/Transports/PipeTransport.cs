@@ -175,7 +175,14 @@ namespace MICore
                     // Ignore errors if logout couldn't be written
                 }
 
-                _writer.Close();
+                try
+                {
+                    _writer.Close();
+                }
+                catch (IOException)
+                {
+                    // There are IO Issues with the writer, ignore since its shutting down.
+                }
             }
 
             base.Close();
