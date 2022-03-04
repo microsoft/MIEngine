@@ -368,6 +368,12 @@ namespace Microsoft.MIDebugEngine
         private string StripFormatSpecifier(string exp, out string formatSpecifier)
         {
             formatSpecifier = null; // will be used with -var-set-format
+
+            if (EngineUtils.IsConsoleExecCmd(exp, out string _, out string _))
+            {
+                return exp;
+            }
+
             int lastComma = exp.LastIndexOf(',');
             if (lastComma <= 0)
                 return exp;
