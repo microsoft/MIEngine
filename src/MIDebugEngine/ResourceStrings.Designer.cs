@@ -356,11 +356,56 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hit breakpoint {0} at 0x{1:x}..
+        /// </summary>
+        internal static string UnknownBreakpoint {
+            get {
+                return ResourceManager.GetString("UnknownBreakpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [Unknown/Just-In-Time compiled code].
         /// </summary>
         internal static string UnknownCode {
             get {
                 return ResourceManager.GetString("UnknownCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit watchpoint {0} at 0x{1:x}..
+        /// </summary>
+        internal static string UnknownWatchpoint {
+            get {
+                return ResourceManager.GetString("UnknownWatchpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New value = {0}.
+        /// </summary>
+        internal static string UnknownWatchpointNewValue {
+            get {
+                return ResourceManager.GetString("UnknownWatchpointNewValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Old value = {0}.
+        /// </summary>
+        internal static string UnknownWatchpointOldValue {
+            get {
+                return ResourceManager.GetString("UnknownWatchpointOldValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit watchpoint {0}: {1} at 0x{2:x}..
+        /// </summary>
+        internal static string UnknownWatchpointWithExpression {
+            get {
+                return ResourceManager.GetString("UnknownWatchpointWithExpression", resourceCulture);
             }
         }
         

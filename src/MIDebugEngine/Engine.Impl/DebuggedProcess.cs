@@ -1237,7 +1237,10 @@ namespace Microsoft.MIDebugEngine
                         // This is not one of our breakpoints, so stop with a message. Possibly it
                         // was set by the user via "-exec break ...", so display the available
                         // information.
-                        _callback.OnException(thread, $"Hit breakpoint {bkptno} at 0x{addr:x}.", "", 0);
+                        string desc = String.Format(CultureInfo.CurrentCulture,
+                                                    ResourceStrings.UnknownBreakpoint,
+                                                    bkptno, addr);
+                        _callback.OnException(thread, desc, "", 0);
                     }
                 }
             }
@@ -1268,21 +1271,34 @@ namespace Microsoft.MIDebugEngine
                         // This is not one of our watchpoints, so stop with a message. Possibly it
                         // was set by the user via "-exec watch ...", so display the available
                         // information.
-                        string desc = $"Hit watchpoint {bkptno}";
+                        string desc = string.Empty;
                         string exp = wpt.TryFindString("exp");
-                        if (!string.IsNullOrEmpty(exp)) {
-                            desc += $": {exp}";
+                        if (string.IsNullOrEmpty(exp)) {
+                            desc = String.Format(CultureInfo.CurrentCulture,
+                                                 ResourceStrings.UnknownWatchpoint,
+                                                 bkptno, addr);
                         }
-                        desc += $" at 0x{addr:x}";
+                        else
+                        {
+                            desc = String.Format(CultureInfo.CurrentCulture,
+                                                 ResourceStrings.UnknownWatchpointWithExpression,
+                                                 bkptno, exp, addr);
+                        }
                         var value = results.Results.TryFind<TupleValue>("value");
                         if (value != null) {
                             string oldValue = value.TryFindString("old");
                             if (!string.IsNullOrEmpty(oldValue)) {
-                                desc += $"\nOld value = {oldValue}";
+                                desc += "\n";
+                                desc += String.Format(CultureInfo.CurrentCulture,
+                                                      ResourceStrings.UnknownWatchpointOldValue,
+                                                      oldValue);
                             }
                             string newValue = value.TryFindString("new");
                             if (!string.IsNullOrEmpty(newValue)) {
-                                desc += $"\nNew value = {newValue}";
+                                desc += "\n";
+                                desc += String.Format(CultureInfo.CurrentCulture,
+                                                      ResourceStrings.UnknownWatchpointNewValue,
+                                                      newValue);
                             }
                         }
                         _callback.OnException(thread, desc, "", 0);
