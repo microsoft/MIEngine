@@ -1234,8 +1234,13 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
-                        // not one of our breakpoints, so stop with a message
-                        _callback.OnException(thread, "Unknown breakpoint", "", 0);
+                        // This is not one of our breakpoints, so stop with a message. Possibly it
+                        // was set by the user via "-exec break ...", so display the available
+                        // information.
+                        string desc = String.Format(CultureInfo.CurrentCulture,
+                                                    ResourceStrings.UnknownBreakpoint,
+                                                    bkptno, addr);
+                        _callback.OnException(thread, desc, "", 0);
                     }
                 }
             }
@@ -1263,8 +1268,40 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
-                        // not one of our breakpoints, so stop with a message
-                        _callback.OnException(thread, "Unknown watchpoint", "", 0);
+                        // This is not one of our watchpoints, so stop with a message. Possibly it
+                        // was set by the user via "-exec watch ...", so display the available
+                        // information.
+                        string desc = string.Empty;
+                        string exp = wpt.TryFindString("exp");
+                        if (string.IsNullOrEmpty(exp)) {
+                            desc = String.Format(CultureInfo.CurrentCulture,
+                                                 ResourceStrings.UnknownWatchpoint,
+                                                 bkptno, addr);
+                        }
+                        else
+                        {
+                            desc = String.Format(CultureInfo.CurrentCulture,
+                                                 ResourceStrings.UnknownWatchpointWithExpression,
+                                                 bkptno, exp, addr);
+                        }
+                        var value = results.Results.TryFind<TupleValue>("value");
+                        if (value != null) {
+                            string oldValue = value.TryFindString("old");
+                            if (!string.IsNullOrEmpty(oldValue)) {
+                                desc += "\n";
+                                desc += String.Format(CultureInfo.CurrentCulture,
+                                                      ResourceStrings.UnknownWatchpointOldValue,
+                                                      oldValue);
+                            }
+                            string newValue = value.TryFindString("new");
+                            if (!string.IsNullOrEmpty(newValue)) {
+                                desc += "\n";
+                                desc += String.Format(CultureInfo.CurrentCulture,
+                                                      ResourceStrings.UnknownWatchpointNewValue,
+                                                      newValue);
+                            }
+                        }
+                        _callback.OnException(thread, desc, "", 0);
                     }
                 }
             }
