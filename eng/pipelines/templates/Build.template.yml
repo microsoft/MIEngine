@@ -5,6 +5,8 @@ parameters:
 steps:
 - checkout: self
 
+- template: ../tasks/UseDotNet.yml
+
 - template: ../tasks/NuGetToolInstaller.yml
 
 - template: ../tasks/MicroBuildSigningPlugin.yml
