@@ -6,7 +6,7 @@ steps:
   displayName: 'Use .NET Core sdk'
   inputs:
     packageType: sdk
-    version: 5.x
+    version: 6.x
 
 - template: ../tasks/NuGetToolInstaller.yml
 
