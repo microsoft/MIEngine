@@ -10,11 +10,7 @@ steps:
 
 - template: ../tasks/MicroBuildSigningPlugin.yml
 
-- task: UseDotNet@2
-  displayName: 'Use .NET Core sdk'
-  inputs:
-    packageType: sdk
-    version: 6.x
+- template: ../tasks/UseDotNet.yml
 
 - template: ../steps/BuildSolution.yml
   parameters:
