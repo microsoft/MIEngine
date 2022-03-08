@@ -15,14 +15,14 @@
   </PropertyGroup>
 
   <ItemGroup Label="ILDasm NuGet Package">
-    <PackageReference Include="runtime.win-x64.Microsoft.NETCore.ILDAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('windows'))" />
-    <PackageReference Include="runtime.linux-x64.Microsoft.NETCore.ILDAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('linux'))" />
-    <PackageReference Include="runtime.osx-x64.Microsoft.NETCore.ILDAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
+    <PackageReference Include="runtime.win-x64.Microsoft.NETCore.ILDAsm" Version="6.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('windows'))" />
+    <PackageReference Include="runtime.linux-x64.Microsoft.NETCore.ILDAsm" Version="6.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('linux'))" />
+    <PackageReference Include="runtime.osx-x64.Microsoft.NETCore.ILDAsm" Version="6.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
   </ItemGroup>
 
   <ItemGroup Label="ILAsm NuGet Package">
-    <PackageReference Include="runtime.linux-x64.Microsoft.NETCore.ILAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('linux'))" />
-    <PackageReference Include="runtime.osx-x64.Microsoft.NETCore.ILAsm" Version="5.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
+    <PackageReference Include="runtime.linux-x64.Microsoft.NETCore.ILAsm" Version="6.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('linux'))" />
+    <PackageReference Include="runtime.osx-x64.Microsoft.NETCore.ILAsm" Version="6.0.0" GeneratePathProperty="true" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
   </ItemGroup>
 
   <!-- Keep in sync with ..\..\build\Debugger.PIAs.NonPortable.Packages.settings.targets -->
