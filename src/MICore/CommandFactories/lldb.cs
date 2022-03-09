@@ -190,7 +190,7 @@ namespace MICore
             {
                 return await base.VarAssign(variableName, expression, threadId, frameLevel);
             }
-            catch (UnexpectedMIResultException)
+            catch (UnexpectedMIResultException e)
             {
                 Results results = await VarCreate(expression, threadId, frameLevel, 0, ResultClass.done);
                 string value = results.FindString("value");

@@ -189,6 +189,7 @@ namespace DebuggerTesting.OpenDebug.Extensions
         public static void RunCommandExpectFailure(this IDebuggerRunner runner, ICommand command)
         {
             command.ExpectsSuccess = false;
+            command.Timeout = TimeSpan.FromSeconds(240);
             runner.RunCommand(command);
         }
 
