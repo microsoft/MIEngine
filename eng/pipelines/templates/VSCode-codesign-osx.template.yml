@@ -1,26 +1,30 @@
 ---
+parameters:
+  rids: ["osx-x64", "osx-arm64"]
+
 steps:
 - checkout: self
 
-- template: ../tasks/DownloadPipelineArtifact.yml
-  parameters:
-    displayName: 'Downloading unsigned_osx-x64_binaries'
-    path: '$(Pipeline.Workspace)/Artifacts' 
-    artifact: 'unsigned_osx-x64_binaries'
+- ${{ each rid in parameters.rids }}:
+  - template: ../tasks/DownloadPipelineArtifact.yml
+    parameters:
+      displayName: 'Downloading unsigned_${{ rid }}_binaries'
+      path: '$(Pipeline.Workspace)/Artifacts/${{ rid }}' 
+      artifact: 'unsigned_${{ rid }}_binaries'
 
-- script: |
-    echo "#[command] codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/debugAdapters/bin/OpenDebugAD7"
-    codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/debugAdapters/bin/OpenDebugAD7
+  - script: |
+      echo "#[command] codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/${{ rid }}/debugAdapters/bin/OpenDebugAD7"
+      codesign -s - -f --entitlements $(Build.SourcesDirectory)/eng/Signing/macOS/debugger-entitlements.plist $(Pipeline.Workspace)/Artifacts/${{ rid }}/debugAdapters/bin/OpenDebugAD7
 
-    echo "#[command] cd $(Pipeline.Workspace)/Artifacts/"
-    cd $(Pipeline.Workspace)/Artifacts
+      echo "#[command] cd $(Pipeline.Workspace)/Artifacts/${{ rid }}"
+      cd $(Pipeline.Workspace)/Artifacts/${{ rid }}
 
-    echo "#[command] zip -r $(Pipeline.Workspace)/osx-x64.zip ./debugAdapters"
-    zip -r $(Pipeline.Workspace)/osx-x64.zip ./debugAdapters
+      echo "#[command] zip -r $(Pipeline.Workspace)/${{ rid }}.zip ./debugAdapters"
+      zip -r $(Pipeline.Workspace)/${{ rid }}.zip ./debugAdapters
 
-- template: ../tasks/PublishPipelineArtifact.yml
-  parameters:
-    displayName: 'Publish Binaries'
-    path: '$(Pipeline.Workspace)/osx-x64.zip'
-    artifactName: 'unsigned_osx-x64_zip'
+  - template: ../tasks/PublishPipelineArtifact.yml
+    parameters:
+      displayName: 'Publish Binaries'
+      path: '$(Pipeline.Workspace)/${{ rid }}.zip'
+      artifactName: 'unsigned_${{ rid }}_zip'
 ...
