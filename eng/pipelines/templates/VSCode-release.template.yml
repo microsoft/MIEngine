@@ -1,6 +1,6 @@
 ---
 parameters:
-  rids: ["win-x86", "win10-arm64", "osx-x64", "linux-x64", "linux-arm", "linux-arm64", "linux-musl-x64", "linux-musl-arm64" ]
+  rids: ["win-x86", "win10-arm64", "osx-x64", "osx-arm64", "linux-x64", "linux-arm", "linux-arm64", "linux-musl-x64", "linux-musl-arm64" ]
 
 steps:
 - checkout: self
@@ -10,11 +10,7 @@ steps:
 
 - template: ../tasks/MicroBuildSigningPlugin.yml
 
-- task: UseDotNet@2
-  displayName: 'Use .NET Core sdk'
-  inputs:
-    packageType: sdk
-    version: 5.x
+- template: ../tasks/UseDotNet.yml
 
 - template: ../steps/BuildSolution.yml
   parameters:

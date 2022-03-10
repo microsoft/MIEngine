@@ -1,22 +1,26 @@
 ---
+parameters:
+  rids: ["osx-x64", "osx-arm64"]
+
 steps:
 - checkout: none
 
-- template: ../tasks/DownloadPipelineArtifact.yml
-  parameters:
-    displayName: 'Downloading unsigned_osx-64_zip'
-    path: '$(Pipeline.Workspace)/Artifacts' 
-    artifact: 'unsigned_osx-x64_zip'
+- ${{ each rid in parameters.rids }}:
+  - template: ../tasks/DownloadPipelineArtifact.yml
+    parameters:
+      displayName: 'Downloading unsigned_${{ rid }}_zip'
+      path: '$(Pipeline.Workspace)/Artifacts' 
+      artifact: 'unsigned_${{ rid }}_zip'
 
-- task: MicroBuildSignMacFiles@1
-  displayName: 'ESRP Sign'
-  inputs:
-    SigningTarget: '$(Pipeline.Workspace)\Artifacts\osx-x64.zip'
-    SigningCert: 8023
+  - task: MicroBuildSignMacFiles@1
+    displayName: 'ESRP Sign'
+    inputs:
+      SigningTarget: '$(Pipeline.Workspace)\Artifacts\${{ rid }}.zip'
+      SigningCert: 8023
 
-- template: ../tasks/PublishPipelineArtifact.yml
-  parameters:
-    displayName: 'Publish Binaries'
-    path: '$(Pipeline.Workspace)\Artifacts\osx-x64.zip'
-    artifactName: 'osx-x64_zip'
+  - template: ../tasks/PublishPipelineArtifact.yml
+    parameters:
+      displayName: 'Publish Binaries'
+      path: '$(Pipeline.Workspace)\Artifacts\${{ rid }}.zip'
+      artifactName: '${{ rid }}_zip'
 ...

@@ -426,7 +426,8 @@ namespace Microsoft.MIDebugEngine.Natvis
         internal IVariableInformation GetVariable(string expr, AD7StackFrame frame)
         {
             IVariableInformation variable;
-            if (expr.EndsWith(",viz", StringComparison.Ordinal))
+            if (!EngineUtils.IsConsoleExecCmd(expr, out string _, out string _)
+                && expr.EndsWith(",viz", StringComparison.Ordinal))
             {
                 expr = expr.Substring(0, expr.Length - 4);
                 variable = new VariableInformation(expr, expr, frame.ThreadContext, frame.Engine, frame.Thread);
