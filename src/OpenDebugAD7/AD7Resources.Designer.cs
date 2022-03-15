@@ -407,6 +407,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to set expression &apos;{0}&apos; to value &apos;{1}&apos;.
+        /// </summary>
+        internal static string Error_SetExpression {
+            get {
+                return ResourceManager.GetString("Error_SetExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not set variable.
         /// </summary>
         internal static string Error_SetVariableFailed {

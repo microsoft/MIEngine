@@ -331,4 +331,8 @@
     <value>Unable to set data breakpoint: {0}</value>
     <comment>{0} is the reason</comment>
   </data>
+  <data name="Error_SetExpression" xml:space="preserve">
+    <value>Unable to set expression '{0}' to value '{1}'</value>
+    <comment>{0} is the expression, {1} is the value the user wants to set.</comment>
+  </data>
 </root>

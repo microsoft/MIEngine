@@ -918,6 +918,7 @@ namespace OpenDebugAD7
                 SupportsCompletionsRequest = m_engine is IDebugProgramDAP,
                 SupportsEvaluateForHovers = true,
                 SupportsSetVariable = true,
+                SupportsSetExpression = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
                 SupportsDataBreakpoints = m_engineConfiguration.DataBP,
@@ -3175,6 +3176,105 @@ namespace OpenDebugAD7
             {
                 responder.SetError(new ProtocolException(e.Message));
             }
+        }
+
+        protected override void HandleSetExpressionRequestAsync(IRequestResponder<SetExpressionArguments, SetExpressionResponse> responder)
+        {
+            string expression = responder.Arguments.Expression;
+            string value = responder.Arguments.Value;
+            int frameId = responder.Arguments.FrameId.GetValueOrDefault(-1);
+
+            // if we are not stopped don't try to set
+            if (!m_isStopped)
+            {
+                responder.SetError(new ProtocolException(AD7Resources.Error_TargetNotStopped, new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
+            }
+
+            bool success;
+            IDebugStackFrame2 frame;
+
+            if (frameId == -1)
+            {
+                // If exec in console and no stack frame, evaluate off the top frame.
+                success = m_frameHandles.TryGetFirst(out frame);
+            }
+            else
+            {
+                success = m_frameHandles.TryGet(frameId, out frame);
+            }
+
+            if (!success)
+            {
+                Dictionary<string, object> properties = new Dictionary<string, object>();
+                properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
+                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
+                responder.SetError(new ProtocolException("Cannot evaluate expression on the specified stack frame."));
+                return;
+            }
+
+            uint radix = Constants.EvaluationRadix;
+
+            if (responder.Arguments.Format != null)
+            {
+                ValueFormat format = responder.Arguments.Format;
+
+                if (format.Hex == true)
+                {
+                    radix = 16;
+                }
+            }
+
+            if (m_settingsCallback != null)
+            {
+                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                m_settingsCallback.Radix = radix;
+            }
+
+            var eb = new ErrorBuilder(() => string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_SetExpression, expression, value));
+
+            try
+            {
+
+                IDebugExpressionContext2 expressionContext;
+                int hr = frame.GetExpressionContext(out expressionContext);
+
+                IDebugExpression2 expressionObject;
+                string error;
+                uint errorIndex;
+                hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
+                eb.CheckHR(hr);
+                if (!string.IsNullOrEmpty(error))
+                {
+                    DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
+                    responder.SetError(new ProtocolException(error));
+                    return;
+                }
+
+                // NOTE: This is the same as what vssdebug normally passes for the watch window
+                enum_EVALFLAGS flags = enum_EVALFLAGS.EVAL_RETURNVALUE |
+                    enum_EVALFLAGS.EVAL_NOEVENTS |
+                    (enum_EVALFLAGS)enum_EVALFLAGS110.EVAL110_FORCE_REAL_FUNCEVAL;
+
+                IDebugProperty2 property;
+                hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
+                eb.CheckHR(hr);
+                eb.CheckOutput(property);
+
+                hr = property.SetValueAsString(value, radix, Constants.EvaluationTimeout);
+                eb.CheckHR(hr);
+
+
+                responder.SetResponse(new SetExpressionResponse
+                {
+                    Value = value
+                });
+            }
+            catch (Exception ex)
+            {
+                responder.SetError(new ProtocolException(ex.Message));
+            }
+            
         }
 
         #endregion
