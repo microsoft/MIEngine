@@ -2046,22 +2046,32 @@ namespace OpenDebugAD7
             // iterate over the collection asking the engine for the name
             foreach ((int id, IDebugThread2 thread) in threads)
             {
-                string name = null;
-
-                if (thread != null && thread.GetName(out name) == HRConstants.S_OK)
+                if (thread != null)
                 {
-                    // Append the thread id as a suffix unless the engine is already including it
-                    if (thread.GetThreadId(out uint threadId) == HRConstants.S_OK)
+                    if (thread.GetName(out string name) == HRConstants.S_OK)
                     {
-                        string threadIdDecimal = threadId.ToString(CultureInfo.InvariantCulture);
-                        if (!Regex.IsMatch(name, string.Concat("\b", threadIdDecimal, "\b")))
+                        // Append the thread id as a suffix unless the engine is already including it
+                        if (thread.GetThreadId(out uint threadId) == HRConstants.S_OK)
                         {
-                            name = string.Concat(name, " [", threadIdDecimal, "]");
+                            string threadIdDecimal = threadId.ToString(CultureInfo.InvariantCulture);
+                            if (!Regex.IsMatch(name, string.Concat("\b", threadIdDecimal, "\b")))
+                            {
+                                name = string.Concat(name, " [", threadIdDecimal, "]");
+                            }
+                        }
+                        else
+                        {
+                            // We did not get a thread id. Skip adding to list.
+                            continue;
                         }
                     }
-                }
+                    else
+                    {
+                        name = null;
+                    }
 
-                response.Threads.Add(new OpenDebugThread(id, name));
+                    response.Threads.Add(new OpenDebugThread(id, name));
+                }
             }
 
             responder.SetResponse(response);
