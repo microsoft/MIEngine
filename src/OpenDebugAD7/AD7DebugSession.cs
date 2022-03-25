@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DebugEngineHost;
@@ -2043,11 +2044,24 @@ namespace OpenDebugAD7
             }
 
             // iterate over the collection asking the engine for the name
-            foreach (var pair in threads)
+            foreach ((int id, IDebugThread2 thread) in threads)
             {
-                string name;
-                pair.Value.GetName(out name);
-                response.Threads.Add(new OpenDebugThread(pair.Key, name));
+                string name = null;
+
+                if (thread != null && thread.GetName(out name) == HRConstants.S_OK)
+                {
+                    // Append the thread id as a suffix unless the engine is already including it
+                    if (thread.GetThreadId(out uint threadId) == HRConstants.S_OK)
+                    {
+                        string threadIdDecimal = threadId.ToString(CultureInfo.InvariantCulture);
+                        if (!Regex.IsMatch(name, string.Concat("\b", threadIdDecimal, "\b")))
+                        {
+                            name = string.Concat(name, " [", threadIdDecimal, "]");
+                        }
+                    }
+                }
+
+                response.Threads.Add(new OpenDebugThread(id, name));
             }
 
             responder.SetResponse(response);
