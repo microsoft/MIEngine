@@ -427,6 +427,62 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
         [RequiresTestSettings]
+        // lldb-mi does not support -break-watch
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        public void DataBreakpointTest(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that data breakpoints work");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                SourceBreakpoints callingBreakpoints = debuggee.Breakpoints(SinkHelper.Calling, 15);
+                runner.SetBreakpoints(callingBreakpoints);
+
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 15)
+                            .AfterConfigurationDone();
+
+
+                this.Comment("Verify breakpoint condition is met");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.GetVariable("total");
+
+                    this.Comment("Get DataBreakpointInfo on 'total'");
+                    var response = runner.DataBreakpointInfo("total");
+
+                    this.Comment("SetDataBreakpoint on 'total' Info");
+                    DataBreakpoints dataBreakpoints = new DataBreakpoints();
+                    dataBreakpoints.Add(response.body.dataId);
+                    runner.SetDataBreakpoints(dataBreakpoints);
+                }
+
+                this.Comment("Run to statement after data breakpoint");
+                // Note this is going to be source line 15 for `i++`.
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 15)
+                              .AfterContinue();
+
+                // Delete data breakpoint
+                this.Comment("Clear data breakpoint");
+                runner.SetDataBreakpoints(new DataBreakpoints());
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
         public void BreakpointSettingsVerification(ITestSettings settings)
         {
             this.TestPurpose("Tests supported breakpoint settings");
