@@ -446,8 +446,6 @@ namespace CppTests.Tests
                 runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 15)
                             .AfterConfigurationDone();
 
-
-                this.Comment("Verify breakpoint condition is met");
                 using (IThreadInspector inspector = runner.GetThreadInspector())
                 {
                     IFrameInspector mainFrame = inspector.Stack.First();
@@ -455,6 +453,11 @@ namespace CppTests.Tests
 
                     this.Comment("Get DataBreakpointInfo on 'total'");
                     var response = runner.DataBreakpointInfo("total");
+                    Assert.NotNull(response?.body);
+                    Assert.Contains("write", response.body.accessTypes); // Validate access type is "write"
+                    Assert.Equal("When 'total' changes (8 bytes)", response.body.description, true, true, true); // Validate description matches DataBreakpointDisplayString
+                    Assert.False(string.IsNullOrEmpty(response.body.dataId));
+                    Assert.EndsWith("total,8", response.body.dataId); // Validate dataId matches format <Address>,<Id>,<Size>
 
                     this.Comment("SetDataBreakpoint on 'total' Info");
                     DataBreakpoints dataBreakpoints = new DataBreakpoints();
@@ -467,10 +470,18 @@ namespace CppTests.Tests
                 runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 15)
                               .AfterContinue();
 
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    Assert.Equal("1.0", mainFrame.GetVariable("total").Value);
+                }
+
                 // Delete data breakpoint
                 this.Comment("Clear data breakpoint");
                 runner.SetDataBreakpoints(new DataBreakpoints());
 
+                // Ensures that disabling the data bp works if it does not hit another
+                // stopping bp event but ends the program.
                 this.Comment("Run to completion");
                 runner.Expects.ExitedEvent()
                               .TerminatedEvent()
