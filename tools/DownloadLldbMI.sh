@@ -1,6 +1,16 @@
 #! /bin/bash
-lldbMIDownloadLink="https://download.visualstudio.microsoft.com/download/pr/173e6ced-0717-401d-87fc-169ca3424c72/f1228fd847c140b7f9839612f497bb7a/lldb-mi-10.0.0.zip"
+lldbMIx8664DownloadLink="https://download.visualstudio.microsoft.com/download/pr/6d406764-8d41-49f3-a0e7-81ff0612be30/445b0b4489b5fd0eefae30f644dbc68a/lldb-mi_13.x_x86_64.zip"
+lldbMIARM64DownloadLink="https://download.visualstudio.microsoft.com/download/pr/6d406764-8d41-49f3-a0e7-81ff0612be30/123a33b78e99601a187c44fe57db03c0/lldb-mi_13.x_arm64.zip"
 toolsDirectory=$(dirname "$0")
+
+arch=$(uname -m)
+echo $arch
+
+if [ $arch = "arm64" ]; then
+    lldbMIDownloadLink=$lldbMIARM64DownloadLink
+else
+    lldbMIDownloadLink=$lldbMIx8664DownloadLink
+fi
 
 # Go to root project folder
 pushd "$toolsDirectory/.." > /dev/null 2>&1 || exit 1
@@ -11,35 +21,32 @@ if [ -z "$1" ] || [ "$1" == "-h" ]; then
     exit 1
 fi
 
-if [ ! -f "$1/OpenDebugAD7" ]; then
-    echo "Please build MIDebugEngine-Unix.sln and run PublishOpenDebugAD7.sh before running DownloadLldbMI.sh"
-    popd || exit
-    exit 1
-fi
+echo $lldbMIDownloadLink
 
 # Download the latest version of lldb-ui that vscode-cpptools uses.
-if ! `curl $lldbMIDownloadLink --output ./lldb-mi-10.0.0.zip > /dev/null 2>&1` ; then
+if ! `curl $lldbMIDownloadLink --output ./lldb-mi_13.x_${arch}.zip > /dev/null 2>&1` ; then
   echo "Failed to download lldb-mi."
   exit 1
 fi
 
-unzip -o ./lldb-mi-10.0.0.zip > /dev/null 2>&1
+unzip -o ./lldb-mi_13.x_${arch}.zip > /dev/null 2>&1
 
-if [ ! -f ./debugAdapters/lldb-mi/bin/lldb-mi ]; then
+if [ ! -f ./debugAdapters/lldb-mi_$arch/bin/lldb-mi ]; then
   echo "Failed to unzip."
+  exit 1
 fi
 
 # Ensure we can run it or we will get permission denied.
-if ! `sudo chmod 755 ./debugAdapters/lldb-mi/bin/lldb-mi` ; then
+if ! `sudo chmod 755 ./debugAdapters/lldb-mi_$arch/bin/lldb-mi` ; then
   echo "Failed to change permissions for lldb-mi."
   exit 1
 fi
 
 # place lldb-mi folder in output's debugAdapters folder
-mv ./debugAdapters/lldb-mi $1/../.
+mv ./debugAdapters/lldb-mi_$arch $1/../lldb-mi
 
 # Clean up unused zip
-rm ./lldb-mi-10.0.0.zip
+rm ./lldb-mi_13.x_$arch.zip
 
 popd > /dev/null 2>&1 || exit
 
