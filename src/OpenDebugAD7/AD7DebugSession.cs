@@ -2459,7 +2459,7 @@ namespace OpenDebugAD7
                     // We don't have a parent object. Default to using top stack frame
                     if (m_frameHandles == null || !m_frameHandles.TryGetFirst(out IDebugStackFrame2 frame))
                     {
-                        response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_NoParentObject);
+                        throw new ProtocolException(string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_NoParentObject));
                     }
                     else
                     {
@@ -2474,7 +2474,7 @@ namespace OpenDebugAD7
                     eb.CheckHR(hr);
                     if (!string.IsNullOrEmpty(errorMessage))
                     {
-                        response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, errorMessage);
+                        throw new ProtocolException(string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, errorMessage));
                     }
                     else
                     {
@@ -2485,21 +2485,21 @@ namespace OpenDebugAD7
                         response.AccessTypes = new List<DataBreakpointAccessType>() { DataBreakpointAccessType.Write };
                     }
                 }
-                else if (response.Description == null)
+                else
                 {
-                    response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_ChildPropertyNotFound);
+                    throw new ProtocolException(string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_ChildPropertyNotFound));
                 }
+
+                responder.SetResponse(response);
             }
             catch (Exception ex)
             {
                 if (ex is AD7Exception ad7ex)
                     response.Description = ad7ex.Message;
+                else if (ex is ProtocolException peEx)
+                    responder.SetError(peEx);
                 else
-                    response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, "");
-            }
-            finally
-            {
-                responder.SetResponse(response);
+                    responder.SetError(new ProtocolException(string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, "")));
             }
         }
 
