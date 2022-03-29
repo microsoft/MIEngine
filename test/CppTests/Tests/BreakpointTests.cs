@@ -473,7 +473,15 @@ namespace CppTests.Tests
                 using (IThreadInspector inspector = runner.GetThreadInspector())
                 {
                     IFrameInspector mainFrame = inspector.Stack.First();
-                    Assert.Equal("1.0", mainFrame.GetVariable("total").Value);
+                    string value = mainFrame.GetVariable("total").Value;
+                    if (double.TryParse(value, out double result))
+                    {
+                        Assert.Equal(1.0, result);
+                    }
+                    else
+                    {
+                        Assert.Fail("Unable to get a valid value of type double.");
+                    }
                 }
 
                 // Delete data breakpoint
