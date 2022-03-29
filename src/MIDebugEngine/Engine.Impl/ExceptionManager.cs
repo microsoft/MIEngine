@@ -384,7 +384,7 @@ namespace Microsoft.MIDebugEngine
                     // If we are still delaying our processing, stop delaying it
                     _updateDelayCancelSource.Cancel();
 
-                    return _updateTask;
+                    return _updateTask ?? Task.CompletedTask;
                 }
                 else if (!_initialSettingssSent && _categoryMap.Count > 0)
                 {
