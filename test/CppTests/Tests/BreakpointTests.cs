@@ -474,14 +474,8 @@ namespace CppTests.Tests
                 {
                     IFrameInspector mainFrame = inspector.Stack.First();
                     string value = mainFrame.GetVariable("total").Value;
-                    if (double.TryParse(value, out double result))
-                    {
-                        Assert.Equal(1.0, result);
-                    }
-                    else
-                    {
-                        Assert.Fail("Unable to get a valid value of type double.");
-                    }
+                    Assert.True(double.TryParse(value, out double result));
+                    Assert.Equal(1.0, result);
                 }
 
                 // Delete data breakpoint
