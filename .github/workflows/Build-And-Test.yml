@@ -85,57 +85,6 @@ jobs:
         install: >-
           mingw-w64-x86_64-toolchain
 
-    # As of Nov 8, 2021, mingw-w64-x86_64-toolchain-11.1.x
-    # causes GDB to return "During startup program exited with code 0xc0000139"
-    # Downgrade to working toolchain (04-May-2021)
-    # TODO: Remove this task when there is a newer version of toolchain than 11.1.x
-    - shell: msys2 {0}
-      name: Downgrade toolchain to 10.x
-      run: |
-        # Download GDB
-        DOWNLOAD_DOWNGRADED_GDB_PATH='${{ github.workspace }}/mingw-w64-x86_64-gdb-10.2-2-any.pkg.tar.zst'
-        DOWNLOAD_DOWNGRADED_GDB_PATH=${DOWNLOAD_DOWNGRADED_GDB_PATH//\\//}
-        wget -O ${DOWNLOAD_DOWNGRADED_GDB_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gdb-10.2-2-any.pkg.tar.zst
-
-        # Download GCC
-        DOWNLOAD_DOWNGRADED_GCC_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-10.3.0-8-any.pkg.tar.zst'
-        DOWNLOAD_DOWNGRADED_GCC_PATH=${DOWNLOAD_DOWNGRADED_GCC_PATH//\\//}
-        wget -O ${DOWNLOAD_DOWNGRADED_GCC_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-10.3.0-8-any.pkg.tar.zst
-
-        # Download GCC Lib
-        DOWNLOAD_DOWNGRADED_GCCLIB_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-libs-10.3.0-8-any.pkg.tar.zst'
-        DOWNLOAD_DOWNGRADED_GCCLIB_PATH=${DOWNLOAD_DOWNGRADED_GCCLIB_PATH//\\//}
-        wget -O ${DOWNLOAD_DOWNGRADED_GCCLIB_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-libs-10.3.0-8-any.pkg.tar.zst
-
-        # Download GCC Ada
-        DOWNLOAD_DOWNGRADED_ADA_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-ada-10.3.0-8-any.pkg.tar.zst'
-        DOWNLOAD_DOWNGRADED_ADA_PATH=${DOWNLOAD_DOWNGRADED_ADA_PATH//\\//}
-        wget -O ${DOWNLOAD_DOWNGRADED_ADA_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-ada-10.3.0-8-any.pkg.tar.zst
-
-        # Download GCC Fortran
-        DOWNLOAD_DOWNGRADED_FORTRAN_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-fortran-10.3.0-8-any.pkg.tar.zst'
-        DOWNLOAD_DOWNGRADED_FORTRAN_PATH=${DOWNLOAD_DOWNGRADED_FORTRAN_PATH//\\//}
-        wget -O ${DOWNLOAD_DOWNGRADED_FORTRAN_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-fortran-10.3.0-8-any.pkg.tar.zst
-
-        # Download GCC Libfortran
-        DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-libgfortran-10.3.0-8-any.pkg.tar.zst'
-        DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH=${DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH//\\//}
-        wget -O ${DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-libgfortran-10.3.0-8-any.pkg.tar.zst
-
-        # Download GCC Obj-C
-        DOWNLOAD_DOWNGRADED_OBJC_PATH='${{ github.workspace }}/mingw-w64-x86_64-gcc-objc-10.3.0-8-any.pkg.tar.zst'
-        DOWNLOAD_DOWNGRADED_OBJC_PATH=${DOWNLOAD_DOWNGRADED_OBJC_PATH//\\//}
-        wget -O ${DOWNLOAD_DOWNGRADED_OBJC_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-gcc-objc-10.3.0-8-any.pkg.tar.zst
-
-        # Download GCC libgccjit
-        DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH='${{ github.workspace }}/mingw-w64-x86_64-libgccjit-10.3.0-8-any.pkg.tar.zst'
-        DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH=${DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH//\\//}
-        wget -O ${DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH} http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-libgccjit-10.3.0-8-any.pkg.tar.zst
-
-        # Install
-        pacman -U --noconfirm $DOWNLOAD_DOWNGRADED_GDB_PATH $DOWNLOAD_DOWNGRADED_GCC_PATH $DOWNLOAD_DOWNGRADED_GCCLIB_PATH $DOWNLOAD_DOWNGRADED_ADA_PATH $DOWNLOAD_DOWNGRADED_FORTRAN_PATH $DOWNLOAD_DOWNGRADED_LIBFORTRAN_PATH $DOWNLOAD_DOWNGRADED_OBJC_PATH $DOWNLOAD_DOWNGRADED_LIBGCCJIT_PATH
-
-    
     - shell: msys2 {0}
       name: Gather c++ toolchain paths
       run: |
