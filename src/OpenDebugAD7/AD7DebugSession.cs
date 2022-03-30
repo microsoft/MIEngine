@@ -421,6 +421,88 @@ namespace OpenDebugAD7
             return hr;
         }
 
+        /// <summary>
+        /// Given 'expression', it will query the engine for an IDebugProperty2
+        /// </summary>
+        /// <param name="eb">Error handler to use in this method.</param>
+        /// <param name="expression">The expression to evaluate.</param>
+        /// <param name="frameId">Which frame to use and evaluate the expression on.</param>
+        /// <param name="isExecInConsole">If the current expression is from a console exec.</param>
+        /// <param name="flags">Flags used for EvaluateSync</param>
+        /// <param name="dapEvalFlags">EvaluationFlags used for DAPEvaluateSync</param>
+        /// <param name="property">The IDebugProperty2 of the 'expression'</param>
+        /// <exception cref="ProtocolException">In any step of the method that fails, it will throw a protocol execption using the ErrorBuilder.</exception>
+        private void GetDebugPropertyFromExpression(ErrorBuilder eb, string expression, int frameId, bool isExecInConsole, enum_EVALFLAGS flags, DAPEvalFlags dapEvalFlags, out IDebugProperty2 property)
+        {
+            property = null;
+
+            IDebugStackFrame2 frame;
+            bool success;
+            if (frameId == -1 && isExecInConsole)
+            {
+                // If exec in console and no stack frame, evaluate off the top frame.
+                success = m_frameHandles.TryGetFirst(out frame);
+            }
+            else
+            {
+                success = m_frameHandles.TryGet(frameId, out frame);
+            }
+
+            if (!success)
+            {
+                throw new ProtocolException("Cannot evaluate expression on the specified stack frame.");
+            }
+
+            IDebugExpressionContext2 expressionContext;
+            int hr = frame.GetExpressionContext(out expressionContext);
+            eb.CheckHR(hr);
+
+            IDebugExpression2 expressionObject;
+            string error;
+            uint errorIndex;
+            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
+            if (!string.IsNullOrEmpty(error))
+            {
+                // TODO: Is this how errors should be returned?
+                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
+                throw new ProtocolException(error);
+            }
+            eb.CheckHR(hr);
+            eb.CheckOutput(expressionObject);
+
+            if (expressionObject is IDebugExpressionDAP expressionDapObject)
+            {
+                hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
+            }
+            else
+            {
+                hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
+            }
+
+            eb.CheckHR(hr);
+            eb.CheckOutput(property);
+        }
+
+        private uint GetRadixFromValueForamt(ValueFormat format)
+        {
+            uint radix = Constants.EvaluationRadix;
+
+            if (format != null)
+            {
+                if (format.Hex == true)
+                {
+                    radix = 16;
+                }
+            }
+
+            if (m_settingsCallback != null)
+            {
+                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                m_settingsCallback.Radix = radix;
+            }
+
+            return radix;
+        }
 #endregion
 
 #region AD7EventHandlers helper methods
@@ -1826,23 +1908,7 @@ namespace OpenDebugAD7
                 return;
             }
 
-            uint radix = Constants.EvaluationRadix;
-
-            if (responder.Arguments.Format != null)
-            {
-                ValueFormat format = responder.Arguments.Format;
-
-                if (format.Hex == true)
-                {
-                    radix = 16;
-                }
-            }
-
-            if (m_settingsCallback != null)
-            {
-                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
-                m_settingsCallback.Radix = radix;
-            }
+            uint radix = GetRadixFromValueForamt(responder.Arguments.Format);
 
             Object container;
             if (!m_variableManager.TryGet(reference, out container))
@@ -2890,66 +2956,9 @@ namespace OpenDebugAD7
                     isExecInConsole = true;
             }
 
-            int hr;
             ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Evaluate);
-            IDebugStackFrame2 frame;
 
-            bool success = false;
-            if (frameId == -1 && isExecInConsole)
-            {
-                // If exec in console and no stack frame, evaluate off the top frame.
-                success = m_frameHandles.TryGetFirst(out frame);
-            }
-            else
-            {
-                success = m_frameHandles.TryGet(frameId, out frame);
-            }
-
-            if (!success)
-            {
-                Dictionary<string, object> properties = new Dictionary<string, object>();
-                properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
-                properties.Add(DebuggerTelemetry.TelemetryExecuteInConsole, isExecInConsole);
-                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
-                responder.SetError(new ProtocolException("Cannot evaluate expression on the specified stack frame."));
-                return;
-            }
-
-            uint radix = Constants.EvaluationRadix;
-
-            if (responder.Arguments.Format != null)
-            {
-                ValueFormat format = responder.Arguments.Format;
-
-                if (format.Hex == true)
-                {
-                    radix = 16;
-                }
-            }
-
-            if (m_settingsCallback != null)
-            {
-                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
-                m_settingsCallback.Radix = radix;
-            }
-
-            IDebugExpressionContext2 expressionContext;
-            hr = frame.GetExpressionContext(out expressionContext);
-            eb.CheckHR(hr);
-
-            IDebugExpression2 expressionObject;
-            string error;
-            uint errorIndex;
-            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
-            if (!string.IsNullOrEmpty(error))
-            {
-                // TODO: Is this how errors should be returned?
-                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
-                responder.SetError(new ProtocolException(error));
-                return;
-            }
-            eb.CheckHR(hr);
-            eb.CheckOutput(expressionObject);
+            uint radix = GetRadixFromValueForamt(responder.Arguments.Format);
 
             // NOTE: This is the same as what vssdebug normally passes for the watch window
             enum_EVALFLAGS flags = enum_EVALFLAGS.EVAL_RETURNVALUE |
@@ -2961,23 +2970,11 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
-            IDebugProperty2 property;
-            if (expressionObject is IDebugExpressionDAP expressionDapObject)
+            DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
+            if (context == EvaluateArguments.ContextValue.Clipboard)
             {
-                DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
-                if (context == EvaluateArguments.ContextValue.Clipboard)
-                {
-                    dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
-                }
-                hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
+                dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
             }
-            else
-            {
-                hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
-            }
-
-            eb.CheckHR(hr);
-            eb.CheckOutput(property);
 
             DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
             enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags = GetDefaultPropertyInfoFlags();
@@ -2986,6 +2983,8 @@ namespace OpenDebugAD7
             {
                 propertyInfoFlags |= (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_NOSIDEEFFECTS;
             }
+
+            GetDebugPropertyFromExpression(eb, expression, frameId, isExecInConsole, flags, dapEvalFlags, out IDebugProperty2 property);
 
             property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo);
 
@@ -3191,83 +3190,60 @@ namespace OpenDebugAD7
                 return;
             }
 
-            bool success;
-            IDebugStackFrame2 frame;
-
-            if (frameId == -1)
-            {
-                // If exec in console and no stack frame, evaluate off the top frame.
-                success = m_frameHandles.TryGetFirst(out frame);
-            }
-            else
-            {
-                success = m_frameHandles.TryGet(frameId, out frame);
-            }
-
-            if (!success)
-            {
-                Dictionary<string, object> properties = new Dictionary<string, object>();
-                properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
-                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
-                responder.SetError(new ProtocolException("Cannot evaluate expression on the specified stack frame."));
-                return;
-            }
-
-            uint radix = Constants.EvaluationRadix;
-
-            if (responder.Arguments.Format != null)
-            {
-                ValueFormat format = responder.Arguments.Format;
-
-                if (format.Hex == true)
-                {
-                    radix = 16;
-                }
-            }
-
-            if (m_settingsCallback != null)
-            {
-                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
-                m_settingsCallback.Radix = radix;
-            }
+            uint radix = GetRadixFromValueForamt(responder.Arguments.Format);
 
             var eb = new ErrorBuilder(() => string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_SetExpression, expression, value));
 
             try
             {
+                // Create variable
+                GetDebugPropertyFromExpression(
+                    eb,
+                    expression,
+                    frameId,
+                    false,
+                    enum_EVALFLAGS.EVAL_RETURNVALUE | enum_EVALFLAGS.EVAL_NOEVENTS | (enum_EVALFLAGS)enum_EVALFLAGS110.EVAL110_FORCE_REAL_FUNCEVAL,
+                    DAPEvalFlags.NONE,
+                    out IDebugProperty2 property
+                );
 
-                IDebugExpressionContext2 expressionContext;
-                int hr = frame.GetExpressionContext(out expressionContext);
-
-                IDebugExpression2 expressionObject;
-                string error;
-                uint errorIndex;
-                hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
-                eb.CheckHR(hr);
-                if (!string.IsNullOrEmpty(error))
+                // Assign value
+                string error = null;
+                int hr;
+                if (property is IDebugProperty3 prop3)
                 {
-                    DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
-                    responder.SetError(new ProtocolException(error));
-                    return;
+                    hr = prop3.SetValueAsStringWithError(value, Constants.EvaluationRadix, Constants.EvaluationTimeout, out error);
+                }
+                else
+                {
+                    hr = property.SetValueAsString(value, Constants.EvaluationRadix, Constants.EvaluationTimeout);
                 }
 
-                // NOTE: This is the same as what vssdebug normally passes for the watch window
-                enum_EVALFLAGS flags = enum_EVALFLAGS.EVAL_RETURNVALUE |
-                    enum_EVALFLAGS.EVAL_NOEVENTS |
-                    (enum_EVALFLAGS)enum_EVALFLAGS110.EVAL110_FORCE_REAL_FUNCEVAL;
+                if (hr != HRConstants.S_OK)
+                {
+                    string message = error ?? AD7Resources.Error_SetVariableFailed;
+                    throw new ProtocolException(message, new Message(1107, message));
+                }
 
-                IDebugProperty2 property;
-                hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
-                eb.CheckHR(hr);
-                eb.CheckOutput(property);
+                // Query for new value
+                GetDebugPropertyFromExpression(
+                    eb,
+                    expression,
+                    frameId,
+                    false,
+                    enum_EVALFLAGS.EVAL_RETURNVALUE | enum_EVALFLAGS.EVAL_NOEVENTS | (enum_EVALFLAGS)enum_EVALFLAGS110.EVAL110_FORCE_REAL_FUNCEVAL,
+                    DAPEvalFlags.NONE,
+                    out property
+                );
 
-                hr = property.SetValueAsString(value, radix, Constants.EvaluationTimeout);
-                eb.CheckHR(hr);
+                DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
+                enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags = GetDefaultPropertyInfoFlags();
 
+                eb.CheckHR(property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo));
 
                 responder.SetResponse(new SetExpressionResponse
                 {
-                    Value = value
+                    Value = propertyInfo[0].bstrValue
                 });
             }
             catch (Exception ex)
