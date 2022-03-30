@@ -177,7 +177,7 @@ namespace MICore
 
                 try
                 {
-                    _writer.Close();
+                    _writer?.Close();
                 }
                 catch (IOException)
                 {
