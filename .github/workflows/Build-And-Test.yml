@@ -210,6 +210,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
+    # BSD grep will fail on -o and -P. Install GNU Grep
     - run: |
         brew install grep
         echo 'export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"' >> .bash_profile
