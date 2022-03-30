@@ -94,7 +94,8 @@ jobs:
         gdb --version
 
 
-    - run: >
+    - shell: msys2 {0}
+      run:
         dotnet test ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\CppTests.dll --logger "trx;LogFileName=${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\results.trx"
 
     - name: 'Upload Test Results'
