@@ -41,12 +41,11 @@ counter=0
 while [ $counter -lt 3 ]
 do
     echo -e "Retry $counter for $filter"
-    dotnet test "$RootDir"/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll --logger "trx;LogFileName=$RootDir/bin/DebugAdapterProtocolTests/Debug/CppTests/results-$counter.trx" --filter "$filter" > /dev/null 2>&1
-    if [ "$exitcode" != 0 ]
+    if [ ! "$(dotnet test "$RootDir"/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll --logger "trx;LogFileName=$RootDir/bin/DebugAdapterProtocolTests/Debug/CppTests/results-$counter.trx" --filter "$filter" > /dev/null 2>&1)" ]
     then
         echo "Tests failed on rerun #$counter".
-        exit "$exitcode"
+        exit $exitcode
     fi
     ((counter++))
 done
-exit "$exitcode"
+exit 0
