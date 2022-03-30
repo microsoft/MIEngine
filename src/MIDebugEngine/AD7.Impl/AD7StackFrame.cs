@@ -399,6 +399,15 @@ namespace Microsoft.MIDebugEngine
                     guidFilter == AD7Guids.guidFilterLocals ||
                     guidFilter == AD7Guids.guidFilterLocalsPlusArgs)
                 {
+                    /*
+                    Question: do we want to filter on guidFilter?
+
+                    if (guidFilter == AD7Guids.guidFilterLocalsPlusArgs)
+                    {
+                        _hasGottenLocalsAndParams = false;
+                    }
+                    */
+                    _hasGottenLocalsAndParams = false;
                     EnsureLocalsAndParameters();
                 }
 
