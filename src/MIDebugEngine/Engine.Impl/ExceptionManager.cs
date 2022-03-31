@@ -379,12 +379,13 @@ namespace Microsoft.MIDebugEngine
         {
             lock (_updateLock)
             {
-                if (_updateTask != null)
+                Task updateTask = _updateTask;
+                if (updateTask != null)
                 {
                     // If we are still delaying our processing, stop delaying it
-                    _updateDelayCancelSource.Cancel();
+                    _updateDelayCancelSource?.Cancel();
 
-                    return _updateTask;
+                    return updateTask;
                 }
                 else if (!_initialSettingssSent && _categoryMap.Count > 0)
                 {
@@ -395,7 +396,7 @@ namespace Microsoft.MIDebugEngine
                     // immediately cancel the delay since we don't want one
                     _updateDelayCancelSource = new CancellationTokenSource();
                     _updateDelayCancelSource.Cancel();
-                    Task updateTask = FlushSettingsUpdates();
+                    updateTask = FlushSettingsUpdates();
                     if (!updateTask.IsCompleted)
                     {
                         _updateTask = updateTask;
@@ -405,7 +406,7 @@ namespace Microsoft.MIDebugEngine
                 else
                 {
                     // No task is running, so just return an already signaled task
-                    return Task.FromResult<object>(null);
+                    return Task.CompletedTask;
                 }
             }
         }
