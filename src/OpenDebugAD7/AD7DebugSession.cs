@@ -450,7 +450,7 @@ namespace OpenDebugAD7
 
             if (!success)
             {
-                throw new ProtocolException("Cannot evaluate expression on the specified stack frame.");
+                throw new ProtocolException(AD7Resources.Error_InvalidStackFrameOnEvaluateExpression);
             }
 
             IDebugExpressionContext2 expressionContext;
@@ -463,7 +463,6 @@ namespace OpenDebugAD7
             hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
             if (!string.IsNullOrEmpty(error))
             {
-                // TODO: Is this how errors should be returned?
                 DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
                 throw new ProtocolException(error);
             }
@@ -3230,7 +3229,7 @@ namespace OpenDebugAD7
                     eb,
                     expression,
                     frameId,
-                    false,
+                    true, // Treat SetExpression like expressions from the top frame.
                     enum_EVALFLAGS.EVAL_RETURNVALUE | enum_EVALFLAGS.EVAL_NOEVENTS | (enum_EVALFLAGS)enum_EVALFLAGS110.EVAL110_FORCE_REAL_FUNCEVAL,
                     DAPEvalFlags.NONE,
                     out property

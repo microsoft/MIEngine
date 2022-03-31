@@ -252,6 +252,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot evaluate expression on the specified stack frame..
+        /// </summary>
+        internal static string Error_InvalidStackFrameOnEvaluateExpression {
+            get {
+                return ResourceManager.GetString("Error_InvalidStackFrameOnEvaluateExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DNX runtime process exited unexpectedly with error code {0}..
         /// </summary>
         internal static string Error_LaunchFailedNoError {
