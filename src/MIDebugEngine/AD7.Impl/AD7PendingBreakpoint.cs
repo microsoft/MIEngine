@@ -321,11 +321,6 @@ namespace Microsoft.MIDebugEngine
                 this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.LongBind, enum_BP_ERROR_TYPE.BPET_SEV_LOW | enum_BP_ERROR_TYPE.BPET_TYPE_WARNING), true);
                 return Constants.S_FALSE;
             }
-            else if (this._BPError != null)
-            {
-                // Ran into some sort of error
-                return Constants.E_FAIL;
-            }
             else
             {
                 if ((enum_BP_LOCATION_TYPE)_bpRequestInfo.bpLocation.bpLocationType == enum_BP_LOCATION_TYPE.BPLT_DATA_STRING)
