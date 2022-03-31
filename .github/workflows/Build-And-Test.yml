@@ -195,7 +195,7 @@ jobs:
       if: ${{ always() }}
       with:
         name: linux_x64_results
-        path: ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results*.trx
+        path: ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx
 
   osx_build:
     runs-on: macos-latest
@@ -210,11 +210,6 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
-    # BSD grep will fail on -o and -P. Install GNU Grep
-    - run: |
-        brew install grep
-        echo 'export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"' >> .bash_profile
-
     - name: Build
       run: dotnet build ${{ github.workspace }}/src/MIDebugEngine-Unix.sln
 
@@ -222,7 +217,6 @@ jobs:
         ${{ github.workspace }}/eng/Scripts/CI-Build.sh
 
     - run: |
-        [ -f .bash_profile ] && source .bash_profile
         ${{ github.workspace }}/eng/Scripts/CI-Test.sh
 
     - name: 'Upload Test Results'
@@ -230,4 +224,4 @@ jobs:
       if: ${{ always() }}
       with:
         name: osx_x64_results
-        path: ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results*.trx
+        path: ${{ github.workspace }}/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx
