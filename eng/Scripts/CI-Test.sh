@@ -30,7 +30,7 @@ then
     exit 0
 fi
 # Get failed test names, join as DisplayName=TEST with |, remove trailing |.
-filter=$(grep -o -P '(?<=\sFailed\s)\w*' < ./output.log | awk 'BEGIN { ORS="|" } { print("DisplayName=" $0) }' | grep -o -P '.*(?=\|$)')
+filter=$(grep -o -P '(?<=\sFailed\sCppTests.Tests.)\w*' < ./output.log | awk 'BEGIN { ORS="|" } { print("DisplayName~" $0) }' | grep -o -P '.*(?=\|$)')
 if [ -z "$filter" ] && [ "$(uname)" = "Darwin" ]; then
     echo -e "Failed to set a filter. Make sure you are using GNU grep from homebrew."
     exit 1
