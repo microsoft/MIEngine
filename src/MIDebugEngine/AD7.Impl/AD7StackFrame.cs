@@ -244,29 +244,27 @@ namespace Microsoft.MIDebugEngine
                     await Engine.UpdateRadixAsync(radix);
                 });
             }
-            //if (_textPosition != null && radix != _radix)
-            //{
-            _radix = radix;
-            List<VariableInformation> localsAndParameters = null;
-            Engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+            if (_textPosition != null)
             {
-                localsAndParameters = await Engine.DebuggedProcess.GetLocalsAndParameters(Thread, ThreadContext);
-            });
+                _radix = radix;
+                List<VariableInformation> localsAndParameters = null;
+                Engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
+                {
+                    localsAndParameters = await Engine.DebuggedProcess.GetLocalsAndParameters(Thread, ThreadContext);
+                });
 
-            parameters.Clear();
-            locals.Clear();
-            foreach (VariableInformation vi in localsAndParameters)
-            {
-                if (vi.IsParameter)
+                foreach (VariableInformation vi in localsAndParameters)
                 {
-                    parameters.Add(vi);
-                }
-                else
-                {
-                    locals.Add(vi);
+                    if (vi.IsParameter)
+                    {
+                        parameters.Add(vi);
+                    }
+                    else
+                    {
+                        locals.Add(vi);
+                    }
                 }
             }
-            //}
         }
 
         // Construct an instance of IEnumDebugPropertyInfo2 for the combined locals and parameters.
@@ -286,7 +284,7 @@ namespace Microsoft.MIDebugEngine
 
             if (parameters  != null)
             {
-                elementsReturned += (uint)parameters .Count;
+                elementsReturned += (uint)parameters.Count;
             }
             DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[elementsReturned];
 
@@ -301,7 +299,7 @@ namespace Microsoft.MIDebugEngine
 
             if (parameters  != null)
             {
-                for (int i = 0; i < parameters .Count; i++)
+                for (int i = 0; i < parameters.Count; i++)
                 {
                     AD7Property property = new AD7Property(Engine, parameters [i]);
                     propInfo[localsLength + i] = property.ConstructDebugPropertyInfo(dwFields);
@@ -314,7 +312,7 @@ namespace Microsoft.MIDebugEngine
         // Construct an instance of IEnumDebugPropertyInfo2 for the locals collection only.
         private void CreateLocalProperties(enum_DEBUGPROP_INFO_FLAGS dwFields, out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject)
         {
-            GetLocalsAndParameters(out List<VariableInformation> locals, out List<VariableInformation> parameters);
+            GetLocalsAndParameters(out List<VariableInformation> locals, out _);
 
             elementsReturned = (uint)locals.Count;
             DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[locals.Count];
@@ -331,10 +329,10 @@ namespace Microsoft.MIDebugEngine
         // Construct an instance of IEnumDebugPropertyInfo2 for the parameters collection only.
         private void CreateParameterProperties(enum_DEBUGPROP_INFO_FLAGS dwFields, out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject)
         {
-            GetLocalsAndParameters(out List<VariableInformation> locals, out List<VariableInformation> parameters);
+            GetLocalsAndParameters(out _, out List<VariableInformation> parameters);
 
-            elementsReturned = (uint)parameters .Count;
-            DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[parameters .Count];
+            elementsReturned = (uint)parameters.Count;
+            DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[parameters.Count];
 
             for (int i = 0; i < propInfo.Length; i++)
             {
@@ -392,15 +390,6 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                if (guidFilter == AD7Guids.guidFilterAllLocals ||
-                    guidFilter == AD7Guids.guidFilterAllLocalsPlusArgs ||
-                    guidFilter == AD7Guids.guidFilterArgs ||
-                    guidFilter == AD7Guids.guidFilterLocals ||
-                    guidFilter == AD7Guids.guidFilterLocalsPlusArgs)
-                {
-                    GetLocalsAndParameters(out List<VariableInformation> locals, out List<VariableInformation> parameters);
-                }
-
                 if (guidFilter == AD7Guids.guidFilterLocalsPlusArgs ||
                         guidFilter == AD7Guids.guidFilterAllLocalsPlusArgs ||
                         guidFilter == AD7Guids.guidFilterAllLocals)
