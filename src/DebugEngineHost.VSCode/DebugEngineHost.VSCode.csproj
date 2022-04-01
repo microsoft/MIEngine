@@ -22,6 +22,7 @@
 
   <ItemGroup Label="Compile Shared Interfaces">
     <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.DAP.cs" />
+    <Compile Include="..\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.MI.cs" Link="Microsoft.VisualStudio.Debugger.Interop.MI.cs" />
   </ItemGroup>
 
   <ItemGroup>
