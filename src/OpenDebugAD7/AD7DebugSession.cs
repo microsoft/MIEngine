@@ -3240,9 +3240,21 @@ namespace OpenDebugAD7
 
                 eb.CheckHR(property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo));
 
+                if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
+                {
+                    string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, expression);
+                    responder.SetError(new ProtocolException(message, new Message(1107, message)));
+                    return;
+                }
+
+                string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
+                Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
+
                 responder.SetResponse(new SetExpressionResponse
                 {
-                    Value = propertyInfo[0].bstrValue
+                    Value = variable.Value,
+                    Type = variable.Type,
+                    VariablesReference = variable.VariablesReference
                 });
             }
             catch (Exception ex)

@@ -486,9 +486,16 @@ namespace CppTests.Tests
                 {
                     IFrameInspector currentFrame = threadInspector.Stack.First();
 
-                    string val = runner.SetExpression("myint", "9000", currentFrame.Id);
-                    Assert.Equal("9000", val);
+                    this.Comment("Set myint=9000 as decimal.");
+                    string setExpressionValue = runner.SetExpression("myint", "9000", currentFrame.Id);
+                    Assert.Equal("9000", setExpressionValue);
 
+
+                    this.Comment("Validate SetExpression affected locals");
+                    string myIntStr = currentFrame.GetVariable("myint").Value;
+                    Assert.Equal(setExpressionValue, myIntStr);
+
+                    this.Comment("Set myint=9000 as hex.");
                     string hexVal = runner.SetExpression("myint", "9000", currentFrame.Id, new ValueFormat { hex = true });
                     Assert.Equal("0x2328", hexVal);
                 }
