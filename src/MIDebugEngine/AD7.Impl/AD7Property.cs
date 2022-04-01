@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.MIDebugEngine.Natvis;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.MI;
 
@@ -20,7 +21,7 @@ namespace Microsoft.MIDebugEngine
     {
         private static uint s_maxChars = 1000000;
         private byte[] _bytes;
-        private IEnumerable<(string, int)> _uiVisualizers = null;
+        private VisualizerId[] _uiVisualizers = null;
 
         private AD7Engine _engine;
         private IVariableInformation _variableInformation;
@@ -116,10 +117,10 @@ namespace Microsoft.MIDebugEngine
                 }
                 propertyInfo.dwAttrib |= variable.Access;
 
-                if (_uiVisualizers != null && _uiVisualizers.Any())
+                if (_uiVisualizers != null && _uiVisualizers.Length > 0)
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_CUSTOM_VIEWER;
-                    if (_uiVisualizers.Count() > 1)
+                    if (_uiVisualizers.Length > 1)
                     {
                         propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_MULTI_CUSTOM_VIEWERS;
                     }
@@ -317,27 +318,27 @@ namespace Microsoft.MIDebugEngine
 
         public int GetCustomViewerCount(out uint pcelt)
         {
-            pcelt = this._uiVisualizers == null ? 0 : (uint)this._uiVisualizers.Count();
+            pcelt = this._uiVisualizers == null ? 0 : (uint)this._uiVisualizers.Length;
             return Constants.S_OK;
         }
 
         public int GetCustomViewerList(uint celtSkip, uint celtRequested, DEBUG_CUSTOM_VIEWER[] rgViewers, out uint pceltFetched)
         {
             pceltFetched = 0;
-            if (this._uiVisualizers == null || (int)celtSkip >= this._uiVisualizers.Count())
+            if (this._uiVisualizers == null || (int)celtSkip >= this._uiVisualizers.Length)
             {
                 return Constants.S_OK;
             }
 
-            int numleft = this._uiVisualizers.Count() - (int)celtSkip;
+            int numleft = this._uiVisualizers.Length - (int)celtSkip;
             var viewers = this._uiVisualizers.Skip((int)celtSkip).Take(Math.Min((int)celtRequested, numleft));
 
             int i = 0;
             foreach (var v in viewers)
             {
-                rgViewers[i].bstrMetric = v.Item1;
-                rgViewers[i].dwID = (uint)v.Item2;
-                rgViewers[i].bstrMenuName = _engine.DebuggedProcess.Natvis.GetUIVisualizerName(v.Item1, v.Item2);
+                rgViewers[i].bstrMetric = v.Name;
+                rgViewers[i].dwID = (uint)v.Id;
+                rgViewers[i].bstrMenuName = _engine.DebuggedProcess.Natvis.GetUIVisualizerName(v.Name, v.Id);
                 i++;
             }
 

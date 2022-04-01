@@ -30,41 +30,24 @@ namespace Microsoft.DebugEngineHost
         public delegate void NatvisLoader(string path);
 
         /// <summary>
-        /// Searches the solution for natvis files, invoking the loader on any which are found.
+        /// Searches the solution and VSIXs for natvis files, invoking the loader on any which are found.
         /// </summary>
         /// <param name="loader">Natvis loader method to invoke</param>
-        public static void FindNatvisInSolution(NatvisLoader loader)
+        public static void FindNatvis(NatvisLoader loader)
         {
             List<string> paths = new List<string>();
             try
             {
-                ThreadHelper.JoinableTaskFactory.Run(async () =>
-                    await Internal.FindNatvisInSolutionImplAsync(paths)
-                );
+                ThreadHelper.JoinableTaskFactory.Run(async () => {
+                    await Internal.FindNatvisInSolutionImplAsync(paths);
+                    Internal.FindNatvisInVSIXImpl(paths);
+                });
             }
             catch (Exception)
             {
             }
             paths.ForEach((s) => loader(s));
         }
-
-        /// <summary>
-        /// Queries the extension manager for natvis files, invoking the loader on any which are found.
-        /// </summary>
-        /// <param name="loader">Natvis loader method to invoke</param>
-        public static void FindNatvisInVSIX(NatvisLoader loader)
-        {
-            List<string> paths = new List<string>();
-            try
-            {
-                Internal.FindNatvisInVSIXImpl(paths);
-            }
-            catch (Exception)
-            {
-            }
-            paths.ForEach((s) => loader(s));
-        }
-
 
         public static string FindSolutionRoot()
         {

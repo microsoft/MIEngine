@@ -385,21 +385,11 @@ public sealed class HostLogger
         public delegate void NatvisLoader(string path);
 
         /// <summary>
-        /// Searches the solution for natvis files, invoking the loader on any which are found.
+        /// Searches the solution and VSIXs for natvis files, invoking the loader on any which are found.
         /// </summary>
         /// <param name="loader">Natvis loader method to invoke</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Natvis")]
-        public static void FindNatvisInSolution(NatvisLoader loader)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Searches the extension manager for natvis files, invoking the loader on any which are found.
-        /// </summary>
-        /// <param name="loader">Natvis loader method to invoke</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Natvis")]
-        public static void FindNatvisInVSIX(NatvisLoader loader)
+        public static void FindNatvis(NatvisLoader loader)
         {
             throw new NotImplementedException();
         }

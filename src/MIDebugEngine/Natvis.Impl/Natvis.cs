@@ -91,6 +91,18 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     }
 
+    internal struct VisualizerId
+    {
+        public string Name { get; }
+        public int Id { get; }
+
+        public VisualizerId(string name,int id)
+        {
+            this.Name = name;
+            this.Id = id;
+        }
+    };
+
     public class Natvis
     {
         private class AliasInfo
@@ -135,13 +147,13 @@ namespace Microsoft.MIDebugEngine.Natvis
             public VisualizerType Visualizer { get; private set; }
             public Dictionary<string, string> ScopedNames { get; private set; }
 
-            public IEnumerable<(string,int)> GetUIVisualizers()
+            public VisualizerId[] GetUIVisualizers()
             {
                 return this.Visualizer.Items.Where((i) => i is UIVisualizerItemType).Select(i =>
                   {
                       var visualizer = (UIVisualizerItemType)i;
-                      return (visualizer.ServiceId, visualizer.Id);
-                  });
+                      return new VisualizerId(visualizer.ServiceId, visualizer.Id);
+                  }).ToArray();
             }
 
             public VisualizerInfo(VisualizerType viz, TypeName name)
@@ -194,8 +206,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             try
             {
-                HostNatvisProject.FindNatvisInSolution((s) => LoadFile(s));
-                HostNatvisProject.FindNatvisInVSIX((s) => LoadFile(s));
+                HostNatvisProject.FindNatvis((s) => LoadFile(s));
             }
             catch (FileNotFoundException)
             {
@@ -346,7 +357,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
-        internal (string value, IEnumerable<(string, int)> uiVisualizers) FormatDisplayString(IVariableInformation variable)
+        internal (string value, VisualizerId[] uiVisualizers) FormatDisplayString(IVariableInformation variable)
         {
             VisualizerInfo visualizer = null;
             try
