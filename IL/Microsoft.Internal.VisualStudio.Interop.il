@@ -918,4 +918,64 @@
 			.get instance class [mscorlib]System.Array Microsoft.Internal.VisualStudio.Shell.Interop.IVsTelemetryPropertyBag::get_AllPropertyNames()
 		}
 	}
+	.class public interface abstract import IVsExtensionManagerPrivate
+	{
+		.custom instance void [mscorlib]System.Runtime.InteropServices.GuidAttribute::.ctor(string) = { string('753E55C6-E779-4A7A-BCD1-FD87181D52C0') }
+		.custom instance void [mscorlib]System.Runtime.InteropServices.InterfaceTypeAttribute::.ctor(valuetype [mscorlib]System.Runtime.InteropServices.ComInterfaceType) = { int32(1) }
+		.method public virtual hidebysig newslot abstract 
+			instance int32 GetEnabledExtensionContentLocations([in] string marshal(lpwstr) szContentTypeName, [in] uint32 cContentLocations, [out] string[] marshal(bstr[ + 1]) rgbstrContentLocations, [out] string[] marshal(bstr[ + 1]) rgbstrUniqueExtensionStrings, [out] uint32& pcContentLocations)
+			preservesig internalcall 
+		{
+			.param [1]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.LPCWSTR') }
+			.param [2]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.ULONG') }
+			.param [5]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.ULONG') }
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance int32 GetEnabledExtensionContentLocationsWithNames([in] string marshal(lpwstr) szContentTypeName, [in] uint32 cContentLocations, [out] string[] marshal(bstr[ + 1]) rgbstrContentLocations, [out] string[] marshal(bstr[ + 1]) rgbstrUniqueExtensionStrings, [out] string[] marshal(bstr[ + 1]) rgbstrExtensionNames, [out] uint32& pcContentLocations)
+			preservesig internalcall 
+		{
+			.param [1]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.LPCWSTR') }
+			.param [2]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.ULONG') }
+			.param [6]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.ULONG') }
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance int32 GetDisabledExtensionContentLocations([in] string marshal(lpwstr) szContentTypeName, [in] uint32 cContentLocations, [out] string[] marshal(bstr[ + 1]) rgbstrContentLocations, [out] string[] marshal(bstr[ + 1]) rgbstrUniqueExtensionStrings, [out] uint32& pcContentLocations)
+			preservesig internalcall 
+		{
+			.param [1]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.LPCWSTR') }
+			.param [2]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.ULONG') }
+			.param [5]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.ULONG') }
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance int32 GetLastConfigurationChange([out] valuetype [mscorlib]System.DateTime[] marshal([]) pTimestamp)
+			preservesig internalcall 
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance int32 LogAllInstalledExtensions()
+			preservesig internalcall 
+		{
+		}
+		.method public virtual hidebysig newslot abstract 
+			instance int32 GetUniqueExtensionString([in] string marshal(lpwstr) szExtensionIdentifier, [out] string& marshal(bstr) pbstrUniqueString)
+			preservesig internalcall 
+		{
+			.param [1]
+			.custom instance void [mscorlib]System.Runtime.InteropServices.ComAliasNameAttribute::.ctor(string) = { string('OLE.LPCWSTR') }
+		}
+	}
+	.class public interface abstract import SVsExtensionManager
+	{
+		.custom instance void [mscorlib]System.Runtime.InteropServices.GuidAttribute::.ctor(string) = { string('316F4DE6-3CA4-4F0D-B003-962D28F65238') }
+		.custom instance void [mscorlib]System.Runtime.InteropServices.InterfaceTypeAttribute::.ctor(valuetype [mscorlib]System.Runtime.InteropServices.ComInterfaceType) = { int32(1) }
+	}
 }

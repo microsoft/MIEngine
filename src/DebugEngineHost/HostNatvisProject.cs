@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -29,17 +30,18 @@ namespace Microsoft.DebugEngineHost
         public delegate void NatvisLoader(string path);
 
         /// <summary>
-        /// Searches the solution for natvis files, invoking the loader on any which are found.
+        /// Searches the solution and VSIXs for natvis files, invoking the loader on any which are found.
         /// </summary>
         /// <param name="loader">Natvis loader method to invoke</param>
-        public static void FindNatvisInSolution(NatvisLoader loader)
+        public static void FindNatvis(NatvisLoader loader)
         {
             List<string> paths = new List<string>();
             try
             {
-                ThreadHelper.JoinableTaskFactory.Run(async () =>
-                    await Internal.FindNatvisInSolutionImplAsync(paths)
-                );
+                ThreadHelper.JoinableTaskFactory.Run(async () => {
+                    await Internal.FindNatvisInSolutionImplAsync(paths);
+                    Internal.FindNatvisInVSIXImpl(paths);
+                });
             }
             catch (Exception)
             {
@@ -193,6 +195,17 @@ namespace Microsoft.DebugEngineHost
                 }
             }
 
+            public static void FindNatvisInVSIXImpl(List<string> paths)
+            {
+                var extManager = (IVsExtensionManagerPrivate)Package.GetGlobalService(typeof(SVsExtensionManager));
+                if (extManager == null)
+                {
+                    return; // failed to find the extension manager
+                }
+
+                BuildEnvironmentPath("NativeCrossPlatformVisualizer", extManager, paths);
+            }
+
             public static string FindSolutionRootImpl()
             {
                 string root = null;
@@ -205,6 +218,23 @@ namespace Microsoft.DebugEngineHost
                 }
                 solution.GetSolutionInfo(out root, out slnFile, out slnUserFile);
                 return root;
+            }
+
+            private static void BuildEnvironmentPath(string name, IVsExtensionManagerPrivate pem, List<string> paths)
+            {
+                pem.GetEnabledExtensionContentLocations(name, 0, null, null, out var contentLocations);
+                if (contentLocations > 0)
+                {
+                    var rgStrings = new string[contentLocations];
+                    var rgbstrContentLocations = new string[contentLocations];
+                    var rgbstrUniqueStrings = new string[contentLocations];
+
+                    var hr = pem.GetEnabledExtensionContentLocations(name, contentLocations, rgbstrContentLocations, rgbstrUniqueStrings, out var actualContentLocations);
+                    if (hr == VSConstants.S_OK && actualContentLocations > 0)
+                    {
+                        paths.AddRange(rgbstrContentLocations);
+                    }
+                }
             }
 
             private static void LoadNatvisFromProject(IVsHierarchy hier, List<string> paths, bool solutionLevel)
