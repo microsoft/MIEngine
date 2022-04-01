@@ -22,7 +22,6 @@ namespace Microsoft.MIDebugEngine
 
         private string _functionName;
         private MITextPosition _textPosition;
-        private bool _hasGottenLocalsAndParams = false;
         private uint _radix;
         private AD7MemoryAddress _codeCxt;
         private AD7DocumentContext _documentCxt;
@@ -249,7 +248,7 @@ namespace Microsoft.MIDebugEngine
                     await Engine.UpdateRadixAsync(radix);
                 });
             }
-            if (_textPosition != null && (!_hasGottenLocalsAndParams || radix != _radix))
+            if (_textPosition != null && radix != _radix)
             {
                 _radix = radix;
                 List<VariableInformation> localsAndParameters = null;
@@ -271,8 +270,6 @@ namespace Microsoft.MIDebugEngine
                         _locals.Add(vi);
                     }
                 }
-
-                _hasGottenLocalsAndParams = true;
             }
         }
 
@@ -399,15 +396,6 @@ namespace Microsoft.MIDebugEngine
                     guidFilter == AD7Guids.guidFilterLocals ||
                     guidFilter == AD7Guids.guidFilterLocalsPlusArgs)
                 {
-                    /*
-                    Question: do we want to filter on guidFilter?
-
-                    if (guidFilter == AD7Guids.guidFilterLocalsPlusArgs)
-                    {
-                        _hasGottenLocalsAndParams = false;
-                    }
-                    */
-                    _hasGottenLocalsAndParams = false;
                     EnsureLocalsAndParameters();
                 }
 
