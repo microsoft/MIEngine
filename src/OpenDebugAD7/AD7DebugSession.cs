@@ -3206,6 +3206,16 @@ namespace OpenDebugAD7
                     out IDebugProperty2 property
                 );
 
+                // Get property information to make sure it is not read-only.
+                DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
+                eb.CheckHR(property.GetPropertyInfo(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB, radix, Constants.EvaluationTimeout, null, 0, propertyInfo));
+                if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
+                {
+                    string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, expression);
+                    responder.SetError(new ProtocolException(message, new Message(1107, message)));
+                    return;
+                }
+
                 // Assign value
                 string error = null;
                 int hr;
@@ -3235,17 +3245,8 @@ namespace OpenDebugAD7
                     out property
                 );
 
-                DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
                 enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags = GetDefaultPropertyInfoFlags();
-
                 eb.CheckHR(property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo));
-
-                if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
-                {
-                    string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, expression);
-                    responder.SetError(new ProtocolException(message, new Message(1107, message)));
-                    return;
-                }
 
                 string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
                 Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
