@@ -232,10 +232,7 @@ namespace Microsoft.DebugEngineHost
                     var hr = pem.GetEnabledExtensionContentLocations(name, contentLocations, rgbstrContentLocations, rgbstrUniqueStrings, out var actualContentLocations);
                     if (hr == VSConstants.S_OK && actualContentLocations > 0)
                     {
-                        for (var i = 0; i < actualContentLocations; ++i)
-                        {
-                            paths.Add(rgbstrContentLocations[i]);
-                        }
+                        paths.AddRange(rgbstrContentLocations);
                     }
                 }
             }
