@@ -222,6 +222,11 @@ namespace DebuggerTesting.OpenDebug.Extensions
             return runner.RunCommand(new SetDataBreakpointsCommand(breakpoints));
         }
 
+        public static string SetExpression(this IDebuggerRunner runner, string expression, string value, int frameId, ValueFormat format = null)
+        {
+            return runner.RunCommand(new SetExpressionCommand(expression, value, frameId, format))?.body?.value;
+        }
+
         public static string[] CompletionsRequest(this IDebuggerRunner runner, string text)
         {
             CompletionItem[] completionItems = runner.RunCommand(new CompletionsCommand(null, text, 0, null))?.body?.targets;
