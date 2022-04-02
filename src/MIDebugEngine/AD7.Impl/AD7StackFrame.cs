@@ -22,17 +22,9 @@ namespace Microsoft.MIDebugEngine
 
         private string _functionName;
         private MITextPosition _textPosition;
-        private bool _hasGottenLocalsAndParams = false;
         private uint _radix;
         private AD7MemoryAddress _codeCxt;
         private AD7DocumentContext _documentCxt;
-
-        // An array of this frame's parameters
-        private readonly List<VariableInformation> _parameters = new List<VariableInformation>();
-
-        // An array of this frame's locals
-        private readonly List<VariableInformation> _locals = new List<VariableInformation>();
-
 
         public AD7StackFrame(AD7Engine engine, AD7Thread thread, ThreadContext threadContext)
         {
@@ -239,8 +231,11 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        private void EnsureLocalsAndParameters()
+        private void GetLocalsAndParameters(out List<VariableInformation> locals, out List<VariableInformation> parameters)
         {
+            parameters = new List<VariableInformation>();
+            locals = new List<VariableInformation>();
+
             uint radix = Engine.CurrentRadix();
             if (radix != Engine.DebuggedProcess.MICommandFactory.Radix)
             {
@@ -249,7 +244,7 @@ namespace Microsoft.MIDebugEngine
                     await Engine.UpdateRadixAsync(radix);
                 });
             }
-            if (_textPosition != null && (!_hasGottenLocalsAndParams || radix != _radix))
+            if (_textPosition != null)
             {
                 _radix = radix;
                 List<VariableInformation> localsAndParameters = null;
@@ -258,21 +253,17 @@ namespace Microsoft.MIDebugEngine
                     localsAndParameters = await Engine.DebuggedProcess.GetLocalsAndParameters(Thread, ThreadContext);
                 });
 
-                _parameters.Clear();
-                _locals.Clear();
                 foreach (VariableInformation vi in localsAndParameters)
                 {
                     if (vi.IsParameter)
                     {
-                        _parameters.Add(vi);
+                        parameters.Add(vi);
                     }
                     else
                     {
-                        _locals.Add(vi);
+                        locals.Add(vi);
                     }
                 }
-
-                _hasGottenLocalsAndParams = true;
             }
         }
 
@@ -283,32 +274,34 @@ namespace Microsoft.MIDebugEngine
 
             int localsLength = 0;
 
-            if (_locals != null)
+            GetLocalsAndParameters(out List<VariableInformation> locals, out List<VariableInformation> parameters);
+
+            if (locals != null)
             {
-                localsLength = _locals.Count;
+                localsLength = locals.Count;
                 elementsReturned += (uint)localsLength;
             }
 
-            if (_parameters != null)
+            if (parameters  != null)
             {
-                elementsReturned += (uint)_parameters.Count;
+                elementsReturned += (uint)parameters.Count;
             }
             DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[elementsReturned];
 
-            if (_locals != null)
+            if (locals != null)
             {
-                for (int i = 0; i < _locals.Count; i++)
+                for (int i = 0; i < locals.Count; i++)
                 {
-                    AD7Property property = new AD7Property(Engine, _locals[i]);
+                    AD7Property property = new AD7Property(Engine, locals[i]);
                     propInfo[i] = property.ConstructDebugPropertyInfo(dwFields);
                 }
             }
 
-            if (_parameters != null)
+            if (parameters  != null)
             {
-                for (int i = 0; i < _parameters.Count; i++)
+                for (int i = 0; i < parameters.Count; i++)
                 {
-                    AD7Property property = new AD7Property(Engine, _parameters[i]);
+                    AD7Property property = new AD7Property(Engine, parameters [i]);
                     propInfo[localsLength + i] = property.ConstructDebugPropertyInfo(dwFields);
                 }
             }
@@ -319,12 +312,14 @@ namespace Microsoft.MIDebugEngine
         // Construct an instance of IEnumDebugPropertyInfo2 for the locals collection only.
         private void CreateLocalProperties(enum_DEBUGPROP_INFO_FLAGS dwFields, out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject)
         {
-            elementsReturned = (uint)_locals.Count;
-            DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[_locals.Count];
+            GetLocalsAndParameters(out List<VariableInformation> locals, out _);
+
+            elementsReturned = (uint)locals.Count;
+            DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[locals.Count];
 
             for (int i = 0; i < propInfo.Length; i++)
             {
-                AD7Property property = new AD7Property(Engine, _locals[i]);
+                AD7Property property = new AD7Property(Engine, locals[i]);
                 propInfo[i] = property.ConstructDebugPropertyInfo(dwFields);
             }
 
@@ -334,12 +329,14 @@ namespace Microsoft.MIDebugEngine
         // Construct an instance of IEnumDebugPropertyInfo2 for the parameters collection only.
         private void CreateParameterProperties(enum_DEBUGPROP_INFO_FLAGS dwFields, out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject)
         {
-            elementsReturned = (uint)_parameters.Count;
-            DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[_parameters.Count];
+            GetLocalsAndParameters(out _, out List<VariableInformation> parameters);
+
+            elementsReturned = (uint)parameters.Count;
+            DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[parameters.Count];
 
             for (int i = 0; i < propInfo.Length; i++)
             {
-                AD7Property property = new AD7Property(Engine, _parameters[i]);
+                AD7Property property = new AD7Property(Engine, parameters [i]);
                 propInfo[i] = property.ConstructDebugPropertyInfo(dwFields);
             }
 
@@ -393,15 +390,6 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                if (guidFilter == AD7Guids.guidFilterAllLocals ||
-                    guidFilter == AD7Guids.guidFilterAllLocalsPlusArgs ||
-                    guidFilter == AD7Guids.guidFilterArgs ||
-                    guidFilter == AD7Guids.guidFilterLocals ||
-                    guidFilter == AD7Guids.guidFilterLocalsPlusArgs)
-                {
-                    EnsureLocalsAndParameters();
-                }
-
                 if (guidFilter == AD7Guids.guidFilterLocalsPlusArgs ||
                         guidFilter == AD7Guids.guidFilterAllLocalsPlusArgs ||
                         guidFilter == AD7Guids.guidFilterAllLocals)
