@@ -158,6 +158,12 @@ namespace MICore
 
         public override void Close()
         {
+            if (_process != null)
+            {
+                _process.EnableRaisingEvents = false;
+                _process.Exited -= OnProcessExit;
+            }
+
             if (_writer != null)
             {
                 try
@@ -167,6 +173,15 @@ namespace MICore
                 catch (Exception)
                 {
                     // Ignore errors if logout couldn't be written
+                }
+
+                try
+                {
+                    _writer?.Close();
+                }
+                catch (IOException)
+                {
+                    // There are IO Issues with the writer, ignore since its shutting down.
                 }
             }
 
@@ -181,8 +196,6 @@ namespace MICore
 
             if (_process != null)
             {
-                _process.EnableRaisingEvents = false;
-                _process.Exited -= OnProcessExit;
                 if (_killOnClose && !_process.HasExited)
                 {
                     try

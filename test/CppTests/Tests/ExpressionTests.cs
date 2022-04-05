@@ -460,6 +460,53 @@ namespace CppTests.Tests
             }
         }
 
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForExpressionTests))]
+        [RequiresTestSettings]
+        public void SetExpressionOnVariable(ITestSettings settings)
+        {
+            this.TestPurpose("Call set expression on a variable.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Expression);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch.");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fExpression");
+
+                this.Comment("Set a breakpoint so that we can stop at a line.");
+                runner.SetBreakpoints(debuggee.Breakpoints(SinkHelper.Expression, 31));
+
+                this.Comment("Start debugging and hit breakpoint.");
+                runner.Expects.HitBreakpointEvent().AfterConfigurationDone();
+
+                this.Comment("Start setting expressions on variable in frame");
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Set myint=9000 as decimal.");
+                    string setExpressionValue = runner.SetExpression("myint", "9000", currentFrame.Id);
+                    Assert.Equal("9000", setExpressionValue);
+
+
+                    this.Comment("Validate SetExpression affected locals");
+                    string myIntStr = currentFrame.GetVariable("myint").Value;
+                    Assert.Equal(setExpressionValue, myIntStr);
+
+                    this.Comment("Set myint=9000 as hex.");
+                    string hexVal = runner.SetExpression("myint", "9000", currentFrame.Id, new ValueFormat { hex = true });
+                    Assert.Equal("0x2328", hexVal);
+                }
+
+                this.Comment("Continue to run to exist.");
+                runner.Expects.TerminatedEvent().AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
         #endregion
 
         #endregion
