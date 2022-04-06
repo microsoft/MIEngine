@@ -32,5 +32,29 @@
     <MakeDir Condition="!Exists($(DropDir))" Directories="$(DropDir)" />
     <Copy DestinationFolder="$(DropDir)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile);@(DropThirdPartySignedFile)" />
   </Target>
+
+   <Target Name="CreateNugetPackage" AfterTargets="Build;SignFiles" Condition="'@(PackageNuspec)' != '' AND '$(BUILD_BUILDURI)'!=''" >
+    <PropertyGroup>
+      <NuGetPath Condition="'$(NuGetPath)' == ''">$(NuGetExePath)</NuGetPath>
+      <TimeStamp>$([System.DateTime]::Now.TimeOfDay.ToString("hhmmss"))</TimeStamp>
+      <NuGetPrerelease Condition="'$(NuGetPrerelease)'==''">true</NuGetPrerelease>
+      <NuGetVersionPrereleaseTag Condition="'$(NuGetPrerelease)'=='true'">-dev-$(TimeStamp)</NuGetVersionPrereleaseTag>
+      <NuGetPackageVersion Condition="'$(NuGetPackageVersion)'==''">$(BuildVersion)$(NuGetVersionPrereleaseTag)</NuGetPackageVersion>
+      <NuGetPackageSuffix Condition="$(Configuration.Contains('Debug'))">.dev</NuGetPackageSuffix>
+      <NuGetArguments>-NoPackageAnalysis -NonInteractive -BasePath $(DropDir) -OutputDirectory $(DropDir) -Version $(NuGetPackageVersion) -Properties suffix=$(NuGetPackageSuffix)</NuGetArguments>
+    </PropertyGroup>
+    <MakeDir Directories="$(DropDir)" Condition="!Exists('$(DropDir)')" />
+    <Exec Command="$(NuGetPath) pack @(PackageNuspec->'%(Identity)') $(NuGetArguments)" />
+  </Target>
+
+  <Target Name="SignNupkg" AfterTargets="CreateNugetPackage" Condition="'@(NugetPackages)' != '' AND '$(MicroBuild_SigningEnabled)' == 'true'">
+    <ItemGroup>
+      <PackagesToSign Include="@(NugetPackages->'$(DropDir)\%(Identity).$(NuGetPackageVersion).nupkg')">
+        <Authenticode>NuGet</Authenticode>
+      </PackagesToSign>
+    </ItemGroup>
+    <Message Importance="normal" Text="SignNugetPackage for '@(PackagesToSign)'." />
+    <SignFiles Files="@(PackagesToSign)" Type="$(SignType)" BinariesDirectory="$(DropDir)" IntermediatesDirectory="$(IntermediateOutputPath)" ESRPSigning="$(ESRPSigning)" UseBearerToken="$(UseBearerToken)" />
+  </Target>
   
 </Project>

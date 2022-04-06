@@ -20,6 +20,11 @@
     <DropUnsignedFile Include="$(OutputPath)dar.pdb" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageNuspec Include="$(MSBuildThisFileDirectory)\DebugAdapterRunner.nuspec" />
+    <NugetPackages Include="Microsoft.VisualStudio.DebugAdapterRunner" />
+  </ItemGroup>
+
   <Import Project="..\..\build\DropFiles.targets" />
 
 </Project>
