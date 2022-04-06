@@ -256,6 +256,18 @@ namespace Microsoft.MIDebugEngine
             else
             {
                 CountChildren = results.FindUint("numchild");
+
+                int value = 0;
+                // Detect if it is a pointer and has value NULL
+                if (CountChildren != 0 &&
+                    TypeName != null && !string.IsNullOrEmpty(Value) &&
+                    TypeName.EndsWith("*", StringComparison.OrdinalIgnoreCase) &&
+                    (Value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(Value.Substring(2), System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value) ||
+                    int.TryParse(Value, System.Globalization.NumberStyles.Integer, CultureInfo.InvariantCulture, out value)) &&
+                    value == 0)
+                {
+                    CountChildren = 0;
+                }
             }
             if (results.Contains("displayhint"))
             {
