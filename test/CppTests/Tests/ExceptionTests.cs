@@ -285,6 +285,7 @@ namespace CppTests.Tests
         [DependsOnTest(nameof(CompileExceptionDebuggee))]
         [RequiresTestSettings]
         [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void SetAllExceptionBreakpointTest(ITestSettings settings)
         {
             this.TestPurpose("This test checks to see if we can hit an exception breakpoint.");
@@ -332,6 +333,7 @@ namespace CppTests.Tests
         // Current issue is that it reports "did not find exception probe (does libstdcxx have SDT probes)?" and does not evaluate
         // the condition.
         [UnsupportedDebugger(SupportedDebugger.Lldb | SupportedDebugger.Gdb_MinGW, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         [RequiresTestSettings]
         public void SetConditionExceptionBreakpointTest(ITestSettings settings)
         {
