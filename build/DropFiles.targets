@@ -33,7 +33,7 @@
     <Copy DestinationFolder="$(DropDir)" SourceFiles="@(DropUnsignedFile);@(DropSignedFile);@(DropThirdPartySignedFile)" />
   </Target>
 
-   <Target Name="CreateNugetPackage" AfterTargets="Build;SignFiles" Condition="'@(PackageNuspec)' != ''" >
+   <Target Name="CreateNugetPackage" AfterTargets="Build;SignFiles" Condition="'@(PackageNuspec)' != '' AND '$(BUILD_BUILDURI)'!=''" >
     <PropertyGroup>
       <NuGetPath Condition="'$(NuGetPath)' == ''">$(NuGetExePath)</NuGetPath>
       <TimeStamp>$([System.DateTime]::Now.TimeOfDay.ToString("hhmmss"))</TimeStamp>
