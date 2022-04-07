@@ -1,0 +1,40 @@
+---
+steps:
+- checkout: self
+
+- template: ../tasks/UseDotNet.yml
+
+- template: ../tasks/NuGetToolInstaller.yml
+
+- template: ../tasks/MicroBuildSigningPlugin.yml
+
+- template: ../tasks/NuGetCommand.yml
+  parameters:
+    Command: 'restore'
+    solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
+    FeedsToUse: 'config'
+    NugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
+
+- template: ../tasks/MSBuild.yml
+  parameters:
+    solution: '$(Build.SourcesDirectory)\test\CppTests\CppTests.csproj'
+    configuration: 'Release'
+    msbuildArguments: /p:NuGetPath=$(NuGetExeToolPath) /p:NuGetPrerelease=false
+    env: { 
+        "SIGN_TYPE": "$(SignType)" 
+    } 
+
+- template: ../tasks/SignVerify.yml
+  parameters:
+    TargetFolders: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop'
+
+- template: ../steps/CopyAndPublishSymbols.yml
+
+- template: ../tasks/PublishPipelineArtifact.yml
+  parameters:
+    displayName: 'Publish Nupkgs'
+    path: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop'
+    artifactName: 'nupkgs'
+
+- template: ../tasks/MicroBuildCleanup.yml
+...
