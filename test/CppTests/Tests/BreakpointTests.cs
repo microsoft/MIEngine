@@ -157,6 +157,7 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
         [RequiresTestSettings]
+        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void LineLogBreakpointsBasic(ITestSettings settings)
         {
             this.TestPurpose("Tests basic operation of line breakpoints with a LogPoint");
@@ -429,6 +430,7 @@ namespace CppTests.Tests
         [RequiresTestSettings]
         // lldb-mi does not support -break-watch
         [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void DataBreakpointTest(ITestSettings settings)
         {
             this.TestPurpose("Tests that data breakpoints work");
