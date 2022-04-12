@@ -3,7 +3,7 @@ steps:
   displayName: Download Windows Files (Release)
   inputs:
     downloadType: single
-    artifactName: Lab.Release
+    artifactName: ${{ parameters.artifactName }}
     downloadPath: $(Build.ArtifactStagingDirectory)
 
 - task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@3
