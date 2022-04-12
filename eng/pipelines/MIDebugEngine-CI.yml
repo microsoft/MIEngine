@@ -2,7 +2,7 @@
 name: $(Date:yyyMMdd).$(Rev:r)
 stages:
 - stage: CodeAnalysis
-  dependsOn: []
+  dependsOn: [CI]
   jobs:
   - template: ./jobs/MSHosted-Windows.job.yml
     parameters:

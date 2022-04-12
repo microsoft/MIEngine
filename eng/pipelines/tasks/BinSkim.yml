@@ -1,0 +1,3 @@
+steps:
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@4
+  displayName: 'Run BinSkim'

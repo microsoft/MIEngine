@@ -4,6 +4,8 @@ steps:
 
 - template: ../tasks/CredScan.yml
 
+- template: ../tasks/BinSkim.yml
+
 - template: ../tasks/PoliCheck.yml
 
 - template: ../tasks/SdtReport.yml
