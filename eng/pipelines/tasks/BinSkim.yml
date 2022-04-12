@@ -1,3 +1,16 @@
 steps:
-- task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@4
+- task: DownloadBuildArtifacts@0
+  displayName: Download Windows Files (Release)
+  inputs:
+    downloadType: single
+    artifactName: Lab.Release
+    downloadPath: $(Build.ArtifactStagingDirectory)
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@3
   displayName: 'Run BinSkim'
+  inputs:
+    InputType: Basic
+    AnalyzeTarget: '$(Build.ArtifactStagingDirectory)\**\*.dll;$(Build.ArtifactStagingDirectory)\**\*.exe'
+    AnalyzeVerbose: true
+    AnalyzeHashes: true
+    AnalyzeEnvironment: true
