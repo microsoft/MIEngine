@@ -3,7 +3,7 @@ steps:
   displayName: Download Pipeline Artifact
   inputs:
     source: "current"
-    path: "$(Pipeline.Workspace)"
+    path: "$(Pipeline.Workspace)/temp"
 
 - task: securedevelopmentteam.vss-secure-development-tools.build-task-apiscan.APIScan@2
   displayName: 'Run APIScan'
@@ -11,7 +11,7 @@ steps:
     softwareFolder: '$(Pipeline.Workspace)'
     softwareName: MIEngine
     softwareVersionNum: '$(Build.BuildNumber)'
-    symbolsFolder: 'SRV*http://symweb;$(Pipeline.Workspace)'
+    symbolsFolder: 'SRV*http://symweb;$(Pipeline.Workspace)/temp'
     isLargeApp: false
     verbosityLevel: none
   continueOnError: true
