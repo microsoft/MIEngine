@@ -1,0 +1,19 @@
+steps:
+- task: DownloadPipelineArtifact@2
+  displayName: Download Pipeline Artifact
+  inputs:
+    source: "current"
+    path: "$(Pipeline.Workspace)"
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-apiscan.APIScan@2
+  displayName: 'Run APIScan'
+  inputs:
+    softwareFolder: '$(Pipeline.Workspace)'
+    softwareName: MIEngine
+    # softwareVersionNum: '$(Build.BuildNumber)'
+    symbolsFolder: 'SRV*http://symweb;$(Pipeline.Workspace)'
+    isLargeApp: false
+    verbosityLevel: none
+  continueOnError: true
+  env:
+    AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(TenantId);AppKey=$(AppKey)
