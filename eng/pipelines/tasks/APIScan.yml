@@ -10,7 +10,7 @@ steps:
   inputs:
     SourceFolder: '$(Pipeline.Workspace)\Lab.Release'
     Contents: |
-    **\**@(*.dll|*.pdb|*.exe)
+    **\@(*.dll|*.pdb|*.exe)
     !**\*.resources.dll
     TargetFolder: '$(Pipeline.Workspace)\ApiScanFiles'
     CleanTargetFolder: true
