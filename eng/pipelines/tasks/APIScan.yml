@@ -10,7 +10,7 @@ steps:
   inputs:
     softwareFolder: '$(Pipeline.Workspace)'
     softwareName: MIEngine
-    # softwareVersionNum: '$(Build.BuildNumber)'
+    softwareVersionNum: '$(Build.BuildNumber)'
     symbolsFolder: 'SRV*http://symweb;$(Pipeline.Workspace)'
     isLargeApp: false
     verbosityLevel: none
