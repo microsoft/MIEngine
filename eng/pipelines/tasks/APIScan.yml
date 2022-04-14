@@ -1,5 +1,3 @@
-timeoutInMinutes: 360
-
 steps:
 - task: DownloadPipelineArtifact@2
   displayName: Download Pipeline Artifact
