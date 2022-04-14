@@ -1,7 +1,4 @@
-jobs:
-- job: CodeAnaysis_APIScan
-  displayName: Code Analysis - APIScan
-  timeoutInMinutes: 360
+timeoutInMinutes: 360
 
 steps:
 - task: DownloadPipelineArtifact@2
