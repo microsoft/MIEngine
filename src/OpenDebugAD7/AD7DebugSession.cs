@@ -128,6 +128,8 @@ namespace OpenDebugAD7
             m_dataBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
             m_exceptionBreakpoints = new List<string>();
             m_variableManager = new VariableManager();
+
+            ProgressEventManager.SetEventHandler(Protocol.SendEvent);
         }
 
         #endregion

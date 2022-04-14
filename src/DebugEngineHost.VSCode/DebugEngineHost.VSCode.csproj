@@ -43,6 +43,7 @@
   <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
 
   <ItemGroup Label="NuGet Packages">
+    <PackageReference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol" Version="$(Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_Version)">
       <IncludeAssets>compile</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
