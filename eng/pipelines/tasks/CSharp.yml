@@ -10,4 +10,4 @@ steps:
     setupCommandLine: |
       "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsMSBuildCmd.bat"
     msBuildCommandline: |
-      msbuild $(Build.SourcesDirectory)\src\MIDebugEngine.sln /p:Platform="$(Platform)" /p:Configuration=$(Configuration)
+      msbuild $(Build.SourcesDirectory)\src\MIDebugEngine.sln # /p:Platform="$(Platform)" /p:Configuration=$(Configuration)
