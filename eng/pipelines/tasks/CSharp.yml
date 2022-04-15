@@ -1,4 +1,8 @@
 steps:
+- task: NuGetToolInstaller@0
+  inputs:
+    versionSpec: '5.8.0'
+
 - task: NuGetCommand@2
   displayName: 'Restore MIEngine'
   inputs:
