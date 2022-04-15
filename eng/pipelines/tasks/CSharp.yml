@@ -1,4 +1,11 @@
 steps:
+- task: NuGetCommand@2
+  displayName: 'Restore MIEngine'
+  inputs:
+    restoreSolution: $(Build.SourcesDirectory)\src\MIDebugEngine.sln
+    feedsToUse: config
+    nugetConfigPath: NuGet.config
+
 - task: securedevelopmentteam.vss-secure-development-tools.build-task-roslynanalyzers.RoslynAnalyzers@3
   displayName: 'Run Roslyn Analyzers'
   inputs:
