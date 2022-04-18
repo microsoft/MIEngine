@@ -3,10 +3,8 @@ steps:
   displayName: 'Run Roslyn Analyzers'
   inputs:
     continueOnError: true
-    rulesetName: Custom
     msBuildVersion: 17.0
     msBuildArchitecture: amd64
-    customRuleset: $(Build.SourcesDirectory)\build\yaml\steps\codeanalysis\DevDivRoslynRequired.ruleset
     setupCommandLine: |
       "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsMSBuildCmd.bat"
     msBuildCommandline: |
