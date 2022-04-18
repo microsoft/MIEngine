@@ -15,10 +15,6 @@ steps:
 
 - template: ../tasks/MicroBuildPrefastPlugin.yml
 
-- template: ../tasks/APIScan.yml
-
-- template: ../tasks/BinSkim.yml
-
 - template: ../tasks/CSharp.yml
 
 - template: ../steps/BuildSolution.yml

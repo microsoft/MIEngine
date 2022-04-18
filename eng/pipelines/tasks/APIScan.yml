@@ -27,7 +27,6 @@ steps:
     softwareVersionNum: '$(Build.BuildNumber)'
     symbolsFolder: 'SRV*http://symweb;$(Pipeline.Workspace)\ApiScanFiles'
     isLargeApp: false
-    verbosityLevel: none
   continueOnError: true
   env:
     AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(MIEngineApiScan)

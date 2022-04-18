@@ -1,17 +1,6 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
 stages:
-- stage: CodeAnalysis
-  dependsOn: [CI]
-  jobs:
-  - template: ./jobs/MSHosted-Windows.job.yml
-    parameters:
-      DisplayName: 'CodeAnalysis'
-      JobTemplate:
-      - template: ../templates/CodeAnalysis.template.yml
-        parameters:
-          Configuration: 'Lab.Debug'
-
 - stage: CI
   dependsOn: []
   variables:
@@ -35,4 +24,15 @@ stages:
       - template: ../templates/Build.template.yml
         parameters:
           Configuration: 'Lab.Release'
+
+- stage: CodeAnalysis
+  dependsOn: [CI]
+  jobs:
+  - template: ./jobs/MSHosted-Windows.job.yml
+    parameters:
+      DisplayName: 'CodeAnalysis'
+      JobTemplate:
+      - template: ../templates/CodeAnalysis.template.yml
+        parameters:
+          Configuration: 'Lab.Debug'
 ...
