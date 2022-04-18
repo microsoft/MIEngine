@@ -4,11 +4,11 @@ steps:
 
 - template: ../tasks/CredScan.yml
 
-- template: ../tasks/BinSkim.yml
+# - template: ../tasks/APIScan.yml
 
-- template: ../tasks/CSharp.yml
+# - template: ../tasks/BinSkim.yml
 
-- template: ../tasks/APIScan.yml
+# - template: ../tasks/CSharp.yml
 
 - template: ../tasks/PoliCheck.yml
 
