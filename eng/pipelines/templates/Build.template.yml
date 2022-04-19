@@ -15,11 +15,11 @@ steps:
 
 - template: ../tasks/MicroBuildPrefastPlugin.yml
 
-- template: ../tasks/CSharp.yml
-
 - template: ../steps/BuildSolution.yml
   parameters:
     Configuration: ${{ parameters.Configuration }}
+
+- template: ../tasks/CSharp.yml
 
 # Used for localization
 - template: ../steps/CollectAndPublishBinaries.yml
