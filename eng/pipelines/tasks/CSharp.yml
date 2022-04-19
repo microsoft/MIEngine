@@ -8,8 +8,6 @@ steps:
     msBuildArchitecture: amd64
     # customRuleset: $(Build.SourcesDirectory)\build\yaml\steps\codeanalysis\DevDivRoslynRequired.ruleset # create this file
     setupCommandLine: |
-      "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsMSBuild.cmd"
+      "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsMSBuildCmd.bat"
     msBuildCommandline: |
       msbuild $(Build.SourcesDirectory)\src\MIDebugEngine.sln /p:Platform="Any CPU" /p:Configuration="Release"
-
-# "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsMSBuildCmd.bat"
