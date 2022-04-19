@@ -4,6 +4,12 @@ steps:
 
 - template: ../tasks/CredScan.yml
 
+- task: DownloadPipelineArtifact@2
+  displayName: Download Pipeline Artifact
+  inputs:
+    source: "current"
+    path: "$(Pipeline.Workspace)"
+
 - template: ../tasks/APIScan.yml
 
 - template: ../tasks/BinSkim.yml
