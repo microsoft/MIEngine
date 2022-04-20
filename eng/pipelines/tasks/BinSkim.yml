@@ -1,0 +1,9 @@
+steps:
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@3
+  displayName: 'Run BinSkim'
+  inputs:
+    InputType: Basic
+    AnalyzeTarget: '$(Pipeline.Workspace)\**\*.dll;$(Pipeline.Workspace)\**\*.exe'
+    AnalyzeVerbose: true
+    AnalyzeHashes: true
+    AnalyzeEnvironment: true
