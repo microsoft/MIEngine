@@ -1,8 +1,11 @@
+paraeters:
+  FolderToScan: '$(Pipeline.Workspace)\Lab.Release'
+
 steps:
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(Pipeline.Workspace)\ApiScanFiles'
   inputs:
-    SourceFolder: '$(Pipeline.Workspace)\Lab.Release'
+    SourceFolder: ${{ parameters.FolderToScan }}
     Contents: |
       **\*Microsoft@(*.dll|*.pdb|*.exe)
       **\*Newtonsoft@(*.dll|*.pdb|*.exe)

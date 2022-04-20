@@ -10,7 +10,9 @@ steps:
     source: "current"
     path: "$(Pipeline.Workspace)"
 
-- template: ../tasks/APIScan.yml
+- template: ../steps/APIScan.yml
+  parameters:
+    FolderToScan: ${{ parameters.FolderToScan }}
 
 - template: ../tasks/BinSkim.yml
 
