@@ -1,4 +1,4 @@
-paraeters:
+parameters:
   FolderToScan: '$(Pipeline.Workspace)\Lab.Release'
 
 steps:
