@@ -12,7 +12,7 @@ steps:
 
 - template: ../steps/APIScan.yml
   parameters:
-    FolderToScan: ${{ parameters.FolderToScan }}
+    FolderToScan: $(Pipeline.Workspace)\Lab.Release
 
 - template: ../tasks/BinSkim.yml
 
