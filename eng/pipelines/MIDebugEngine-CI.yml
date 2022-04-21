@@ -1,17 +1,6 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
 stages:
-- stage: CodeAnalysis
-  dependsOn: []
-  jobs:
-  - template: ./jobs/MSHosted-Windows.job.yml
-    parameters:
-      DisplayName: 'CodeAnalysis'
-      JobTemplate:
-      - template: ../templates/CodeAnalysis.template.yml
-        parameters:
-          Configuration: 'Lab.Debug'
-
 - stage: CI
   dependsOn: []
   variables:
@@ -20,7 +9,7 @@ stages:
   - name: TeamName
     value: MDDDebugger
   jobs:
-  - template: ./jobs/VSEngSS-MicroBuild2019-1ES.job.yml
+  - template: ./jobs/VSEngSS-MicroBuild2022-1ES.job.yml
     parameters:
       DisplayName: 'Lab.Debug'
       JobTemplate:
@@ -28,11 +17,22 @@ stages:
         parameters:
           Configuration: 'Lab.Debug'
 
-  - template: ./jobs/VSEngSS-MicroBuild2019-1ES.job.yml
+  - template: ./jobs/VSEngSS-MicroBuild2022-1ES.job.yml
     parameters:
       DisplayName: 'Lab.Release'
       JobTemplate:
       - template: ../templates/Build.template.yml
         parameters:
           Configuration: 'Lab.Release'
+
+- stage: CodeAnalysis
+  dependsOn: [CI]
+  jobs:
+  - template: ./jobs/MSHosted-Windows.job.yml
+    parameters:
+      DisplayName: 'CodeAnalysis'
+      JobTemplate:
+      - template: ../templates/CodeAnalysis.template.yml
+        parameters:
+          Configuration: 'Lab.Debug'
 ...

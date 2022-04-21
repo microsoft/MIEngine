@@ -6,7 +6,7 @@ variables:
 - name: TeamName
   value: MDDDebugger
 jobs:
-- template: ./jobs/VSEngSS-MicroBuild2019-1ES.job.yml
+- template: ./jobs/VSEngSS-MicroBuild2022-1ES.job.yml
   parameters:
     DisplayName: DebuggerTesting
     JobTemplate:

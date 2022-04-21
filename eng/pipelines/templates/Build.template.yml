@@ -19,6 +19,8 @@ steps:
   parameters:
     Configuration: ${{ parameters.Configuration }}
 
+- template: ../tasks/CSharp.yml
+
 # Used for localization
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
