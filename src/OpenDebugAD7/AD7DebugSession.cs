@@ -246,7 +246,7 @@ namespace OpenDebugAD7
         {
             string miMode = args.GetValueAsString("MIMode");
 
-            // If MIMode is not provided, set default to GDB. 
+            // If MIMode is not provided, set default to GDB.
             if (string.IsNullOrEmpty(miMode))
             {
                 args["MIMode"] = "gdb";
@@ -329,8 +329,8 @@ namespace OpenDebugAD7
 
             if (breakpointEvent != null)
             {
-                if (breakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 enumBreakpoints) == HRConstants.S_OK && 
-                    enumBreakpoints.GetCount(out uint bpCount) == HRConstants.S_OK && 
+                if (breakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 enumBreakpoints) == HRConstants.S_OK &&
+                    enumBreakpoints.GetCount(out uint bpCount) == HRConstants.S_OK &&
                     bpCount > 0)
                 {
 
@@ -1651,83 +1651,84 @@ namespace OpenDebugAD7
                         responder.SetError(new ProtocolException(String.Format(CultureInfo.CurrentCulture, AD7Resources.Error_PropertyInvalid, StackTraceRequest.RequestType, "threadId")));
                         return;
                     }
+                }
 
-                    enum_FRAMEINFO_FLAGS flags = enum_FRAMEINFO_FLAGS.FIF_FUNCNAME | // need a function name
-                                                    enum_FRAMEINFO_FLAGS.FIF_FRAME | // need a frame object
-                                                    enum_FRAMEINFO_FLAGS.FIF_FLAGS |
-                                                    enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
+                enum_FRAMEINFO_FLAGS flags = enum_FRAMEINFO_FLAGS.FIF_FUNCNAME | // need a function name
+                                                enum_FRAMEINFO_FLAGS.FIF_FRAME | // need a frame object
+                                                enum_FRAMEINFO_FLAGS.FIF_FLAGS |
+                                                enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
 
-                    uint radix = Constants.EvaluationRadix;
+                uint radix = Constants.EvaluationRadix;
 
-                    if (responder.Arguments.Format != null)
+                if (responder.Arguments.Format != null)
+                {
+                    StackFrameFormat format = responder.Arguments.Format;
+
+                    if (format.Hex == true)
                     {
-                        StackFrameFormat format = responder.Arguments.Format;
-
-                        if (format.Hex == true)
-                        {
-                            radix = 16;
-                        }
-
-                        if (format.Line == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
-                        }
-
-                        if (format.Module == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
-                        }
-
-                        if (format.Parameters == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS;
-                        }
-
-                        if (format.ParameterNames == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
-                        }
-
-                        if (format.ParameterTypes == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES;
-                        }
-
-                        if (format.ParameterValues == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES;
-                        }
-                    }
-                    else
-                    {
-                        // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types
-                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE |
-                                    enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
-                                    enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
-                                    enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                        radix = 16;
                     }
 
-                    if (m_settingsCallback != null)
+                    if (format.Line == true)
                     {
-                        // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
-                        m_settingsCallback.Radix = radix;
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
                     }
 
-                    ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_StackTrace);
-
-                    try
+                    if (format.Module == true)
                     {
-                        eb.CheckHR(thread.EnumFrameInfo(flags, radix, out IEnumDebugFrameInfo2 frameEnum));
-                        eb.CheckHR(frameEnum.GetCount(out uint totalFrames));
-
-                        frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
                     }
-                    catch (AD7Exception ex)
+
+                    if (format.Parameters == true)
                     {
-                        responder.SetError(new ProtocolException(ex.Message, ex));
-                        return;
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS;
+                    }
+
+                    if (format.ParameterNames == true)
+                    {
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                    }
+
+                    if (format.ParameterTypes == true)
+                    {
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES;
+                    }
+
+                    if (format.ParameterValues == true)
+                    {
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES;
                     }
                 }
+                else
+                {
+                    // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types
+                    flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE |
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                }
+
+                if (m_settingsCallback != null)
+                {
+                    // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                    m_settingsCallback.Radix = radix;
+                }
+
+                ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_StackTrace);
+
+                try
+                {
+                    eb.CheckHR(thread.EnumFrameInfo(flags, radix, out IEnumDebugFrameInfo2 frameEnum));
+                    eb.CheckHR(frameEnum.GetCount(out uint totalFrames));
+
+                    frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                }
+                catch (AD7Exception ex)
+                {
+                    responder.SetError(new ProtocolException(ex.Message, ex));
+                    return;
+                }
+
 
                 if (startFrame >= frameEnumInfo.TotalFrames)
                 {
@@ -2351,7 +2352,7 @@ namespace OpenDebugAD7
                         {
                             // already created
                             IDebugBreakpointRequest2 breakpointRequest;
-                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0 && 
+                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0 &&
                                 breakpointRequest is AD7BreakPointRequest ad7BPRequest)
                             {
                                 // Check to see if this breakpoint has a condition that has changed.
@@ -3262,7 +3263,7 @@ namespace OpenDebugAD7
             {
                 responder.SetError(new ProtocolException(ex.Message));
             }
-            
+
         }
 
         #endregion
@@ -3407,8 +3408,8 @@ namespace OpenDebugAD7
                         }
                     }
 
-                    // Need to check to see if the previous continuation of the debuggee was a step. 
-                    // If so, we need to send a stopping event to the UI to signal the step completed successfully. 
+                    // Need to check to see if the previous continuation of the debuggee was a step.
+                    // If so, we need to send a stopping event to the UI to signal the step completed successfully.
                     if (!m_isStepping)
                     {
                         ThreadPool.QueueUserWorkItem((obj) =>
@@ -3748,7 +3749,7 @@ namespace OpenDebugAD7
         {
             IDebugProcessInfoUpdatedEvent158 debugProcessInfoUpdated = pEvent as IDebugProcessInfoUpdatedEvent158;
 
-            if (debugProcessInfoUpdated != null && 
+            if (debugProcessInfoUpdated != null &&
                 debugProcessInfoUpdated.GetUpdatedProcessInfo(out string name, out uint systemProcessId) == HRConstants.S_OK)
             {
                 // Update Process Name and Id
