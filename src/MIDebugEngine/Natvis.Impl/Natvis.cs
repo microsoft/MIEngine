@@ -516,25 +516,237 @@ namespace Microsoft.MIDebugEngine.Natvis
                     IVariableInformation expr = GetExpression(item.Value, variable, visualizer.ScopedNames, item.Name);
                     children.Add(expr);
                 }
-                else if (i is ArrayItemsType arrayItemsType)
+                else if (i is ArrayItemsType)
                 {
-                    ParseArrayItemsType(arrayItemsType, variable, visualizer, children);
+                    ArrayItemsType item = (ArrayItemsType)i;
+                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                    {
+                        continue;
+                    }
+                    uint size = 0;
+                    string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                    size = MICore.Debugger.ParseUint(val, throwOnError: true);
+                    size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
+                    ValuePointerType[] vptrs = item.ValuePointer;
+                    foreach (var vp in vptrs)
+                    {
+                        if (EvalCondition(vp.Condition, variable, visualizer.ScopedNames))
+                        {
+                            IVariableInformation ptrExpr = GetExpression("*(" + vp.Value + ")", variable, visualizer.ScopedNames);
+                            string typename = ptrExpr.TypeName;
+                            if (String.IsNullOrWhiteSpace(typename))
+                            {
+                                continue;
+                            }
+                            StringBuilder arrayBuilder = new StringBuilder();
+                            arrayBuilder.Append('(');
+                            arrayBuilder.Append(typename);
+                            arrayBuilder.Append('[');
+                            arrayBuilder.Append(size);
+                            arrayBuilder.Append("])*(");
+                            arrayBuilder.Append(vp.Value);
+                            arrayBuilder.Append(')');
+                            string arrayStr = arrayBuilder.ToString();
+                            IVariableInformation arrayExpr = GetExpression(arrayStr, variable, visualizer.ScopedNames);
+                            arrayExpr.EnsureChildren();
+                            if (arrayExpr.CountChildren != 0)
+                            {
+                                children.AddRange(arrayExpr.Children);
+                            }
+                            break;
+                        }
+                    }
                 }
-                else if (i is TreeItemsType treeItemsType)
+                else if (i is TreeItemsType)
                 {
-                    ParseTreeItemsType(treeItemsType, variable, visualizer, children);
+                    TreeItemsType item = (TreeItemsType)i;
+                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                    {
+                        continue;
+                    }
+                    if (String.IsNullOrWhiteSpace(item.Size) || String.IsNullOrWhiteSpace(item.HeadPointer) || String.IsNullOrWhiteSpace(item.LeftPointer) ||
+                        String.IsNullOrWhiteSpace(item.RightPointer))
+                    {
+                        continue;
+                    }
+                    if (item.ValueNode == null || String.IsNullOrWhiteSpace(item.ValueNode.Value))
+                    {
+                        continue;
+                    }
+                    string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                    uint size = MICore.Debugger.ParseUint(val, throwOnError: true);
+                    size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
+                    IVariableInformation headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
+                    ulong head = MICore.Debugger.ParseAddr(headVal.Value);
+                    var content = new List<IVariableInformation>();
+                    if (head != 0 && size != 0)
+                    {
+                        headVal.EnsureChildren();
+                        Traverse goLeft = GetTraverse(item.LeftPointer, headVal);
+                        Traverse goRight = GetTraverse(item.RightPointer, headVal);
+                        Traverse getValue = null;
+                        if (item.ValueNode.Value == "this") // TODO: handle condition
+                        {
+                            getValue = (v) => v;
+                        }
+                        else if (headVal.FindChildByName(item.ValueNode.Value) != null)
+                        {
+                            getValue = (v) => v.FindChildByName(item.ValueNode.Value);
+                        }
+                        else if (GetExpression(item.ValueNode.Value, headVal, visualizer.ScopedNames) != null)
+                        {
+                            getValue = (v) => GetExpression(item.ValueNode.Value, v, visualizer.ScopedNames);
+                        }
+                        if (goLeft == null || goRight == null || getValue == null)
+                        {
+                            continue;
+                        }
+                        TraverseTree(headVal, goLeft, goRight, getValue, children, size);
+                    }
                 }
-                else if (i is LinkedListItemsType linkedListItemsType)
+                else if (i is LinkedListItemsType)
                 {
-                    ParseLinkedListItemsType(linkedListItemsType, variable, visualizer, children);
+                    // example:
+                    //    <LinkedListItems>
+                    //      <Size>m_nElements</Size>    -- optional, will go until NextPoint is 0 or == HeadPointer
+                    //      <HeadPointer>m_pHead</HeadPointer>
+                    //      <NextPointer>m_pNext</NextPointer>
+                    //      <ValueNode>m_element</ValueNode>
+                    //    </LinkedListItems>
+                    LinkedListItemsType item = (LinkedListItemsType)i;
+                    if (String.IsNullOrWhiteSpace(item.Condition))
+                    {
+                        if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                            continue;
+                    }
+                    if (String.IsNullOrWhiteSpace(item.HeadPointer) || String.IsNullOrWhiteSpace(item.NextPointer))
+                    {
+                        continue;
+                    }
+                    if (String.IsNullOrWhiteSpace(item.ValueNode))
+                    {
+                        continue;
+                    }
+                    uint size = MAX_EXPAND;
+                    if (!String.IsNullOrWhiteSpace(item.Size))
+                    {
+                        string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                        size = MICore.Debugger.ParseUint(val);
+                        size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
+                    }
+                    IVariableInformation headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
+                    ulong head = MICore.Debugger.ParseAddr(headVal.Value);
+                    var content = new List<IVariableInformation>();
+                    if (head != 0 && size != 0)
+                    {
+                        headVal.EnsureChildren();
+                        Traverse goNext = GetTraverse(item.NextPointer, headVal);
+                        Traverse getValue = null;
+                        if (item.ValueNode == "this")
+                        {
+                            getValue = (v) => v;
+                        }
+                        else if (headVal.FindChildByName(item.ValueNode) != null)
+                        {
+                            getValue = (v) => v.FindChildByName(item.ValueNode);
+                        }
+                        else
+                        {
+                            var value = GetExpression(item.ValueNode, headVal, visualizer.ScopedNames);
+                            if (value != null && !value.Error)
+                            {
+                                getValue = (v) => GetExpression(item.ValueNode, v, visualizer.ScopedNames);
+                            }
+                        }
+                        if (goNext == null || getValue == null)
+                        {
+                            continue;
+                        }
+                        TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer);
+                    }
                 }
-                else if (i is IndexListItemsType indexListItemType)
+                else if (i is IndexListItemsType)
                 {
-                    ParseIndexListItemsType(indexListItemType, variable, visualizer, children);
+                    // example:
+                    //     <IndexListItems>
+                    //      <Size>_M_vector._M_index</Size>
+                    //      <ValueNode>*(_M_vector._M_array[$i])</ValueNode>
+                    //    </IndexListItems>
+                    IndexListItemsType item = (IndexListItemsType)i;
+                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                    {
+                        continue;
+                    }
+                    var sizes = item.Size;
+                    uint size = 0;
+                    if (sizes == null)
+                    {
+                        continue;
+                    }
+                    foreach (var s in sizes)
+                    {
+                        if (string.IsNullOrWhiteSpace(s.Value))
+                            continue;
+                        if (EvalCondition(s.Condition, variable, visualizer.ScopedNames))
+                        {
+                            string val = GetExpressionValue(s.Value, variable, visualizer.ScopedNames);
+                            size = MICore.Debugger.ParseUint(val);
+                            size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
+                            break;
+                        }
+                    }
+                    var values = item.ValueNode;
+                    if (values == null)
+                    {
+                        continue;
+                    }
+                    foreach (var v in values)
+                    {
+                        if (string.IsNullOrWhiteSpace(v.Value))
+                            continue;
+                        if (EvalCondition(v.Condition, variable, visualizer.ScopedNames))
+                        {
+                            string processedExpr = ReplaceNamesInExpression(v.Value, variable, visualizer.ScopedNames);
+                            Dictionary<string, string> indexDic = new Dictionary<string, string>();
+                            for (uint index = 0; index < size; ++index)
+                            {
+                                indexDic["$i"] = index.ToString(CultureInfo.InvariantCulture);
+                                string finalExpr = ReplaceNamesInExpression(processedExpr, null, indexDic);
+                                IVariableInformation expressionVariable = new VariableInformation(finalExpr, variable, _process.Engine, "[" + indexDic["$i"] + "]");
+                                expressionVariable.SyncEval();
+                                children.Add(expressionVariable);
+                            }
+                            break;
+                        }
+                    }
                 }
-                else if (i is ExpandedItemType expandedItemType)
+                else if (i is ExpandedItemType)
                 {
-                    ParseExpandedItemType(expandedItemType, variable, visualizer, children);
+                    ExpandedItemType item = (ExpandedItemType)i;
+                    // example:
+                    // <Type Name="std::auto_ptr&lt;*&gt;">
+                    //   <DisplayString>auto_ptr {*_Myptr}</DisplayString>
+                    //   <Expand>
+                    //     <ExpandedItem>_Myptr</ExpandedItem>
+                    //   </Expand>
+                    // </Type>
+                    if (item.Condition != null)
+                    {
+                        if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                        {
+                            continue;
+                        }
+                    }
+                    if (String.IsNullOrWhiteSpace(item.Value))
+                    {
+                        continue;
+                    }
+                    var expand = GetExpression(item.Value, variable, visualizer.ScopedNames);
+                    var eChildren = Expand(expand);
+                    if (eChildren != null)
+                    {
+                        children.AddRange(eChildren);
+                    }
                 }
             }
             if (!(variable is VisualizerWrapper)) // don't stack wrappers
@@ -544,238 +756,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                 children.Add(rawView);
             }
             return children.ToArray();
-        }
-
-        private void ParseArrayItemsType(ArrayItemsType arrayItemsType, IVariableInformation variable, VisualizerInfo visualizer, List<IVariableInformation> children)
-        {
-            if (!EvalCondition(arrayItemsType.Condition, variable, visualizer.ScopedNames))
-            {
-                return;
-            }
-            uint size = 0;
-            string val = GetExpressionValue(arrayItemsType.Size, variable, visualizer.ScopedNames);
-            size = MICore.Debugger.ParseUint(val, throwOnError: true);
-            size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
-            ValuePointerType[] vptrs = arrayItemsType.ValuePointer;
-            foreach (var vp in vptrs)
-            {
-                if (EvalCondition(vp.Condition, variable, visualizer.ScopedNames))
-                {
-                    IVariableInformation ptrExpr = GetExpression("*(" + vp.Value + ")", variable, visualizer.ScopedNames);
-                    string typename = ptrExpr.TypeName;
-                    if (String.IsNullOrWhiteSpace(typename))
-                    {
-                        continue;
-                    }
-                    StringBuilder arrayBuilder = new StringBuilder();
-                    arrayBuilder.Append('(');
-                    arrayBuilder.Append(typename);
-                    arrayBuilder.Append('[');
-                    arrayBuilder.Append(size);
-                    arrayBuilder.Append("])*(");
-                    arrayBuilder.Append(vp.Value);
-                    arrayBuilder.Append(')');
-                    string arrayStr = arrayBuilder.ToString();
-                    IVariableInformation arrayExpr = GetExpression(arrayStr, variable, visualizer.ScopedNames);
-                    arrayExpr.EnsureChildren();
-                    if (arrayExpr.CountChildren != 0)
-                    {
-                        children.AddRange(arrayExpr.Children);
-                    }
-                    break;
-                }
-            }
-        }
-
-        private void ParseTreeItemsType(TreeItemsType treeItemsType, IVariableInformation variable, VisualizerInfo visualizer, List<IVariableInformation> children)
-        {
-            if (!EvalCondition(treeItemsType.Condition, variable, visualizer.ScopedNames))
-            {
-                return;
-            }
-            if (String.IsNullOrWhiteSpace(treeItemsType.Size) || String.IsNullOrWhiteSpace(treeItemsType.HeadPointer) || String.IsNullOrWhiteSpace(treeItemsType.LeftPointer) ||
-                String.IsNullOrWhiteSpace(treeItemsType.RightPointer))
-            {
-                return;
-            }
-            if (treeItemsType.ValueNode == null || String.IsNullOrWhiteSpace(treeItemsType.ValueNode.Value))
-            {
-                return;
-            }
-            string val = GetExpressionValue(treeItemsType.Size, variable, visualizer.ScopedNames);
-            uint size = MICore.Debugger.ParseUint(val, throwOnError: true);
-            size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
-            IVariableInformation headVal = GetExpression(treeItemsType.HeadPointer, variable, visualizer.ScopedNames);
-            ulong head = MICore.Debugger.ParseAddr(headVal.Value);
-            var content = new List<IVariableInformation>();
-            if (head != 0 && size != 0)
-            {
-                headVal.EnsureChildren();
-                Traverse goLeft = GetTraverse(treeItemsType.LeftPointer, headVal);
-                Traverse goRight = GetTraverse(treeItemsType.RightPointer, headVal);
-                Traverse getValue = null;
-                if (treeItemsType.ValueNode.Value == "this") // TODO: handle condition
-                {
-                    getValue = (v) => v;
-                }
-                else if (headVal.FindChildByName(treeItemsType.ValueNode.Value) != null)
-                {
-                    getValue = (v) => v.FindChildByName(treeItemsType.ValueNode.Value);
-                }
-                else if (GetExpression(treeItemsType.ValueNode.Value, headVal, visualizer.ScopedNames) != null)
-                {
-                    getValue = (v) => GetExpression(treeItemsType.ValueNode.Value, v, visualizer.ScopedNames);
-                }
-                if (goLeft == null || goRight == null || getValue == null)
-                {
-                    return;
-                }
-                TraverseTree(headVal, goLeft, goRight, getValue, children, size);
-            }
-        }
-
-        private void ParseLinkedListItemsType(LinkedListItemsType linkedListItemsType, IVariableInformation variable, VisualizerInfo visualizer, List<IVariableInformation> children)
-        {
-            // example:
-            //    <LinkedListItems>
-            //      <Size>m_nElements</Size>    -- optional, will go until NextPoint is 0 or == HeadPointer
-            //      <HeadPointer>m_pHead</HeadPointer>
-            //      <NextPointer>m_pNext</NextPointer>
-            //      <ValueNode>m_element</ValueNode>
-            //    </LinkedListItems>
-            if (String.IsNullOrWhiteSpace(linkedListItemsType.Condition))
-            {
-                if (!EvalCondition(linkedListItemsType.Condition, variable, visualizer.ScopedNames))
-                    return;
-            }
-            if (String.IsNullOrWhiteSpace(linkedListItemsType.HeadPointer) || String.IsNullOrWhiteSpace(linkedListItemsType.NextPointer))
-            {
-                return;
-            }
-            if (String.IsNullOrWhiteSpace(linkedListItemsType.ValueNode))
-            {
-                return;
-            }
-            uint size = MAX_EXPAND;
-            if (!String.IsNullOrWhiteSpace(linkedListItemsType.Size))
-            {
-                string val = GetExpressionValue(linkedListItemsType.Size, variable, visualizer.ScopedNames);
-                size = MICore.Debugger.ParseUint(val);
-                size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
-            }
-            IVariableInformation headVal = GetExpression(linkedListItemsType.HeadPointer, variable, visualizer.ScopedNames);
-            ulong head = MICore.Debugger.ParseAddr(headVal.Value);
-            var content = new List<IVariableInformation>();
-            if (head != 0 && size != 0)
-            {
-                headVal.EnsureChildren();
-                Traverse goNext = GetTraverse(linkedListItemsType.NextPointer, headVal);
-                Traverse getValue = null;
-                if (linkedListItemsType.ValueNode == "this")
-                {
-                    getValue = (v) => v;
-                }
-                else if (headVal.FindChildByName(linkedListItemsType.ValueNode) != null)
-                {
-                    getValue = (v) => v.FindChildByName(linkedListItemsType.ValueNode);
-                }
-                else
-                {
-                    var value = GetExpression(linkedListItemsType.ValueNode, headVal, visualizer.ScopedNames);
-                    if (value != null && !value.Error)
-                    {
-                        getValue = (v) => GetExpression(linkedListItemsType.ValueNode, v, visualizer.ScopedNames);
-                    }
-                }
-                if (goNext == null || getValue == null)
-                {
-                    return;
-                }
-                TraverseList(headVal, goNext, getValue, children, size, linkedListItemsType.NoValueHeadPointer);
-            }
-        }
-
-        private void ParseIndexListItemsType(IndexListItemsType indexListItemType, IVariableInformation variable, VisualizerInfo visualizer, List<IVariableInformation> children)
-        {
-            // example:
-            //     <IndexListItems>
-            //      <Size>_M_vector._M_index</Size>
-            //      <ValueNode>*(_M_vector._M_array[$i])</ValueNode>
-            //    </IndexListItems>
-            if (!EvalCondition(indexListItemType.Condition, variable, visualizer.ScopedNames))
-            {
-                return;
-            }
-            var sizes = indexListItemType.Size;
-            uint size = 0;
-            if (sizes == null)
-            {
-                return;
-            }
-            foreach (var s in sizes)
-            {
-                if (string.IsNullOrWhiteSpace(s.Value))
-                    continue;
-                if (EvalCondition(s.Condition, variable, visualizer.ScopedNames))
-                {
-                    string val = GetExpressionValue(s.Value, variable, visualizer.ScopedNames);
-                    size = MICore.Debugger.ParseUint(val);
-                    size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
-                    break;
-                }
-            }
-            var values = indexListItemType.ValueNode;
-            if (values == null)
-            {
-                return;
-            }
-            foreach (var v in values)
-            {
-                if (string.IsNullOrWhiteSpace(v.Value))
-                    continue;
-                if (EvalCondition(v.Condition, variable, visualizer.ScopedNames))
-                {
-                    string processedExpr = ReplaceNamesInExpression(v.Value, variable, visualizer.ScopedNames);
-                    Dictionary<string, string> indexDic = new Dictionary<string, string>();
-                    for (uint index = 0; index < size; ++index)
-                    {
-                        indexDic["$i"] = index.ToString(CultureInfo.InvariantCulture);
-                        string finalExpr = ReplaceNamesInExpression(processedExpr, null, indexDic);
-                        IVariableInformation expressionVariable = new VariableInformation(finalExpr, variable, _process.Engine, "[" + indexDic["$i"] + "]");
-                        expressionVariable.SyncEval();
-                        children.Add(expressionVariable);
-                    }
-                    break;
-                }
-            }
-        }
-
-        private void ParseExpandedItemType(ExpandedItemType expandedItemType, IVariableInformation variable, VisualizerInfo visualizer, List<IVariableInformation> children)
-        {
-            // example:
-            // <Type Name="std::auto_ptr&lt;*&gt;">
-            //   <DisplayString>auto_ptr {*_Myptr}</DisplayString>
-            //   <Expand>
-            //     <ExpandedItem>_Myptr</ExpandedItem>
-            //   </Expand>
-            // </Type>
-            if (expandedItemType.Condition != null)
-            {
-                if (!EvalCondition(expandedItemType.Condition, variable, visualizer.ScopedNames))
-                {
-                    return;
-                }
-            }
-            if (String.IsNullOrWhiteSpace(expandedItemType.Value))
-            {
-                return;
-            }
-            var expand = GetExpression(expandedItemType.Value, variable, visualizer.ScopedNames);
-            var eChildren = Expand(expand);
-            if (eChildren != null)
-            {
-                children.AddRange(eChildren);
-            }
         }
 
         private Traverse GetTraverse(string direction, IVariableInformation node)
