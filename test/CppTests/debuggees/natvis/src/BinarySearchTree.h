@@ -9,7 +9,8 @@ private:
     Node* left;
     Node* right;
 
-    Node(int value) {
+    Node(int value)
+    {
       data = value;
       left = NULL;
       right = NULL;
@@ -31,22 +32,23 @@ public:
     numElements++;
   }
 
-  Node* InsertNode(Node *root, int value)
+  Node* InsertNode(Node *node, int value)
   {
-    if (root == NULL)
+    if (node == NULL)
     {
       return new Node(value);
     }
     else
     {
-      if (root->data > value)
+      if (node->data > value)
       {
-        root->left = InsertNode(root->left, value);
+        node->left = InsertNode(node->left, value);
       }
       else
       {
-        root->right = InsertNode(root->right, value);
+        node->right = InsertNode(node->right, value);
       }
+      return node;
     }
   }
 };
