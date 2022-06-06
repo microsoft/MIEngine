@@ -16,6 +16,16 @@
    </Expand>
   </Type>
 
+  <Type Name="SimpleArray">
+  <DisplayString>{{ size={_size} }}</DisplayString>
+  <Expand>
+    <IndexListItems>
+      <Size>_size</Size>
+      <ValueNode>_array[$i]</ValueNode>
+    </IndexListItems>
+  </Expand>
+  </Type>
+
   <Type Name="SimpleLinkedList">
    <DisplayString>{{ size={numElements} }}</DisplayString>
    <Expand>

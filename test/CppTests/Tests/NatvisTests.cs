@@ -36,7 +36,7 @@ namespace CppTests.Tests
 
         private const string NatvisName = "natvis";
         private const string NatvisSourceName = "main.cpp";
-        private const int ReturnSourceLine = 33;
+        private const int ReturnSourceLine = 40;
 
         [Theory]
         [RequiresTestSettings]
@@ -53,7 +53,6 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
-        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestDisplayString(ITestSettings settings)
         {
             this.TestPurpose("This test checks if DisplayString are visualized.");
@@ -92,6 +91,52 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
+        public void TestIndexListItems(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks if IndexListItems are visualized.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying IndexListItems natvis");
+                    var arr = currentFrame.GetVariable("arr");
+                    Assert.Equal("{ size=15 }", arr.Value);
+
+                    // Index element for IndexListItems
+                    Assert.Equal("100", arr.GetVariable("[10]").Value);
+                    // TODO: Add test below when we can support the [More..] expansion to handle >50 elements
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        // Disable on macOS
+        // Error:
+        //   C-style cast from 'int' to 'int [10]' is not allowed
+        //   (int[10])*(((vec)._start))
         [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestArrayItems(ITestSettings settings)
         {
@@ -138,7 +183,6 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
-        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestLinkedListItems(ITestSettings settings)
         {
             this.TestPurpose("This test checks if LinkedListItems are visualized.");
@@ -185,7 +229,6 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
-        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestTreeItems(ITestSettings settings)
         {
             this.TestPurpose("This test checks if TreeItems are visualized.");

@@ -1,6 +1,7 @@
 #include "SimpleLinkedList.h"
 #include "BinarySearchTree.h"
 #include "SimpleVector.h"
+#include "SimpleArray.h"
 
 class SimpleDisplayObject
 {
@@ -29,6 +30,12 @@ int main(int argc, char** argv)
     map.Insert(-35);
     map.Insert(4);
     map.Insert(-72);
+
+    SimpleArray arr(15);
+    for (int i = 0 ; i < 15; i++)
+    {
+        arr[i] = i * i;
+    }
 
     return 0;
 }
