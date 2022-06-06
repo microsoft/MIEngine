@@ -55,5 +55,10 @@ namespace CppTests.Tests
         {
             public const int Default = 1;
         }
+
+        internal static class Natvis
+        {
+            public const int Default = 1;
+        }
     }
 }
