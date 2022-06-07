@@ -15,10 +15,15 @@ using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
+    public interface ILogger
+    {
+        void WriteLine(string line);
+    }
+
     /// <summary>
     /// Class which implements logging. The logging is control by a registry key. If enabled, logging goes to %TMP%\Microsoft.MIDebug.log
     /// </summary>
-    public class Logger
+    public class Logger : ILogger
     {
         private static bool s_isInitialized;
         private static bool s_isEnabled;
