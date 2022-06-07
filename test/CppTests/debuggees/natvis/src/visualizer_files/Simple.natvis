@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="SimpleDisplayObject">
+   <DisplayString>Hello DisplayString</DisplayString>
+  </Type>
+
+  <Type Name="SimpleVector">
+   <DisplayString>{{ size={_size} }}</DisplayString>
+   <Expand>
+    <Item Name="Size">_size</Item>
+    <ArrayItems>
+      <Size>_size</Size>
+      <ValuePointer>_start</ValuePointer>
+    </ArrayItems>
+   </Expand>
+  </Type>
+
+  <Type Name="SimpleArray">
+  <DisplayString>{{ size={_size} }}</DisplayString>
+  <Expand>
+    <IndexListItems>
+      <Size>_size</Size>
+      <ValueNode>_array[_size - 1 - $i]</ValueNode>
+    </IndexListItems>
+  </Expand>
+  </Type>
+
+  <Type Name="SimpleLinkedList">
+   <DisplayString>{{ size={numElements} }}</DisplayString>
+   <Expand>
+    <Item Name="Count">numElements</Item>
+    <LinkedListItems>
+      <Size>numElements</Size>
+      <HeadPointer>head</HeadPointer>
+      <NextPointer>next</NextPointer>
+      <ValueNode>data</ValueNode>
+    </LinkedListItems>
+   </Expand>
+  </Type>
+
+  <Type Name="BinarySearchTree">
+   <DisplayString>{{ size={numElements} }}</DisplayString>
+   <Expand>
+    <Item Name="Count">numElements</Item>
+    <TreeItems>
+      <Size>numElements</Size>
+      <HeadPointer>root</HeadPointer>
+      <LeftPointer>left</LeftPointer>
+      <RightPointer>right</RightPointer>
+      <ValueNode>data</ValueNode>
+    </TreeItems>
+   </Expand>
+  </Type>
+</AutoVisualizer>

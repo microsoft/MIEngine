@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using DebuggerTesting;
 using DebuggerTesting.Compilation;
@@ -497,7 +498,11 @@ namespace CppTests.Tests
 
                     this.Comment("Set myint=9000 as hex.");
                     string hexVal = runner.SetExpression("myint", "9000", currentFrame.Id, new ValueFormat { hex = true });
-                    Assert.Equal("0x2328", hexVal);
+                    // Validate that it starts with 0x
+                    Assert.StartsWith("0x", hexVal);
+                    // Convert hex value back to decimal and compare they are equal.
+                    Assert.True(int.TryParse(hexVal.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int result));
+                    Assert.Equal(9000, result);
                 }
 
                 this.Comment("Continue to run to exist.");

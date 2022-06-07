@@ -10,8 +10,9 @@
   </PropertyGroup>
   
   <ItemGroup Label="Package References">
-    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
-
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_Version)" />
     <PackageReference Include="xunit" Version="$(xunit_Version)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(xunit_runner_visualstudio_Version)">
@@ -45,6 +46,11 @@
     <DropUnsignedFile Include="$(OutputPath)CppTests.pdb" />
     <DropSignedFile Include="$(OutputPath)DebuggerTesting.dll" />
     <DropUnsignedFile Include="$(OutputPath)DebuggerTesting.pdb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageNuspec Include="$(MSBuildThisFileDirectory)\CppTests.nuspec" />
+    <NugetPackages Include="Microsoft.VisualStudio.DebuggerTesting.CppTests" />
   </ItemGroup>
 
   <Import Project="..\..\build\DropFiles.targets" />
