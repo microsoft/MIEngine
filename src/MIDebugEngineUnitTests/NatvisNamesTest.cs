@@ -3,6 +3,7 @@ using Xunit;
 using Microsoft.MIDebugEngine.Natvis;
 using MICore;
 using Xunit.Abstractions;
+using System.Globalization;
 
 namespace MIDebugEngineUnitTests
 {
@@ -35,6 +36,11 @@ namespace MIDebugEngineUnitTests
         public void WriteLine(string line)
         {
             _output?.WriteLine(line);
+        }
+
+        public void WriteLine(string format, params object[] args)
+        {
+            _output?.WriteLine(string.Format(CultureInfo.InvariantCulture, format, args));
         }
     }
 

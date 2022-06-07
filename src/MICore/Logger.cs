@@ -18,6 +18,8 @@ namespace MICore
     public interface ILogger
     {
         void WriteLine(string line);
+
+        void WriteLine(string format, params object[] args);
     }
 
     /// <summary>

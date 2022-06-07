@@ -146,7 +146,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             TypeName t = MatchTypeName(fullyQualifiedName.Trim(), out rest);
             if (!String.IsNullOrWhiteSpace(rest))
             {
-                logger.WriteLine("Natvis failed to parse typename: " + fullyQualifiedName);
+                logger.WriteLine("Natvis failed to parse typename: {0}", fullyQualifiedName);
                 return null;
             }
             return t;
