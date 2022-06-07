@@ -32,6 +32,12 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string MIMode;
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string VisualizerFile;
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool ShowDisplayString;
     }
 
     #endregion
@@ -44,7 +50,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         /// <param name="program">The full path to the program to launch</param>
         /// <param name="architecture">The architecture of the program</param>
         /// <param name="args">[OPTIONAL] Args to pass to the program</param>
-        public LaunchCommand(IDebuggerSettings settings, string program, bool isAttach = false, params string[] args)
+        public LaunchCommand(IDebuggerSettings settings, string program, string visualizerFile = null, bool isAttach = false, params string[] args)
         {
             this.Timeout = TimeSpan.FromSeconds(15);
 
@@ -68,6 +74,8 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 this.Args.miDebuggerPath = settings.DebuggerPath;
                 this.Args.targetArchitecture = settings.DebuggeeArchitecture.ToArchitectureString();
                 this.Args.MIMode = settings.MIMode;
+                this.Args.VisualizerFile = visualizerFile;
+                this.Args.ShowDisplayString = !string.IsNullOrEmpty(visualizerFile);
             }
         }
 
