@@ -21,7 +21,7 @@
   <Expand>
     <IndexListItems>
       <Size>_size</Size>
-      <ValueNode>_array[$i]</ValueNode>
+      <ValueNode>_array[_size - 1 - $i]</ValueNode>
     </IndexListItems>
   </Expand>
   </Type>

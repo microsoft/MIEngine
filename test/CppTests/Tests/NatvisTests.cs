@@ -121,7 +121,10 @@ namespace CppTests.Tests
                     Assert.Equal("{ size=15 }", arr.Value);
 
                     // Index element for IndexListItems
-                    Assert.Equal("100", arr.GetVariable("[10]").Value);
+                    // Natvis retrieves items in reverse order.
+                    Assert.Equal("196", arr.GetVariable("[0]").Value);
+                    Assert.Equal("16", arr.GetVariable("[10]").Value);
+                    Assert.Equal("0", arr.GetVariable("[14]").Value);
                     // TODO: Add test below when we can support the [More..] expansion to handle >50 elements
                 }
 
