@@ -831,7 +831,8 @@ namespace OpenDebugAD7
             }
             try
             {
-                ((IDebugReversibleEngineProgram160)m_engine).SetExecuteDirection(stepDirection);
+                if (m_program is IDebugReversibleEngineProgram160 rprog)
+                    rprog.SetExecuteDirection(stepDirection);
                 builder.CheckHR(m_program.Step(thread, stepKind, stepUnit));
             }
             catch (AD7Exception)
@@ -1025,7 +1026,10 @@ namespace OpenDebugAD7
         private bool m_canReverse = false;
         private void UpdateCapabilities()
         {
-            bool canReverse = ((IDebugReversibleEngineProgram160)m_engine).CanReverse() == HRConstants.S_OK;
+            if (m_program !is IDebugReversibleEngineProgram160)
+                return;
+
+            bool canReverse = (m_program as IDebugReversibleEngineProgram160).CanReverse() == HRConstants.S_OK;
             if (canReverse == m_canReverse)
                 return;
 
@@ -1170,8 +1174,6 @@ namespace OpenDebugAD7
 
                     eb.ThrowHR(hr);
                 }
-
-                UpdateCapabilities();
 
                 hr = m_engineLaunch.ResumeProcess(m_process);
                 if (hr < 0)
@@ -1368,8 +1370,6 @@ namespace OpenDebugAD7
                     eb.ThrowHR(hr);
                 }
 
-                UpdateCapabilities();
-
                 hr = m_engineLaunch.ResumeProcess(m_process);
                 if (hr < 0)
                 {
@@ -1500,7 +1500,8 @@ namespace OpenDebugAD7
             bool succeeded = false;
             try
             {
-                ((IDebugReversibleEngineProgram160)m_engine).SetExecuteDirection(direction);
+                if (m_program is IDebugReversibleEngineProgram160 rprog)
+                    rprog.SetExecuteDirection(direction);
                 builder.CheckHR(m_program.Continue(thread));
                 succeeded = true;
             }
@@ -3514,6 +3515,7 @@ namespace OpenDebugAD7
             {
                 m_program = pProgram;
                 Protocol.SendEvent(new InitializedEvent());
+                UpdateCapabilities();
             }
 
             return m_configurationDoneTCS.Task;
