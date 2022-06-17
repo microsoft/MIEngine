@@ -5,6 +5,11 @@
    <DisplayString>Hello DisplayString</DisplayString>
   </Type>
 
+  <Type Name="SimpleClass">
+   <DisplayString Condition="this == 0">Null Class</DisplayString>
+   <DisplayString Condition="this != 0">Non-null Class</DisplayString>
+  </Type>
+
   <Type Name="SimpleVector">
    <DisplayString>{{ size={_size} }}</DisplayString>
    <Expand>
