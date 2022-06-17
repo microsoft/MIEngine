@@ -1026,10 +1026,11 @@ namespace OpenDebugAD7
         private bool m_canReverse = false;
         private void UpdateCapabilities()
         {
-            if (m_program !is IDebugReversibleEngineProgram160)
+            var revProgram = m_program as IDebugReversibleEngineProgram160;
+            if (revProgram == null)
                 return;
 
-            bool canReverse = (m_program as IDebugReversibleEngineProgram160).CanReverse() == HRConstants.S_OK;
+            bool canReverse = revProgram.CanReverse() == HRConstants.S_OK;
             if (canReverse == m_canReverse)
                 return;
 

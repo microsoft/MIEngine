@@ -559,7 +559,8 @@ namespace Microsoft.MIDebugEngine
         private async Task UpdateTargetFeatures()
         {
             TargetFeatures = await MICommandFactory.GetTargetFeatures();
-            // TODO: notify OpenDebugAD7 to run AD7DebugSession.UpdateCapabilities
+            // NOTE: Currently OpenDebugAD7 polls if we can reverse execute on every stop.
+            // It would be better to notify it instead from here so it can update the Capabilities
         }
 
         public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
