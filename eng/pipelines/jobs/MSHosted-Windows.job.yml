@@ -8,6 +8,7 @@ parameters:
 jobs:
 - job:
   displayName: ${{ parameters.DisplayName }}
+  timeoutInMinutes: 360
   pool:
     vmImage: 'windows-latest'
   steps:

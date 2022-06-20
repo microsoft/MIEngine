@@ -1,0 +1,29 @@
+parameters:
+  FolderToScan: '$(Pipeline.Workspace)\Lab.Release'
+
+steps:
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(Pipeline.Workspace)\ApiScanFiles'
+  inputs:
+    SourceFolder: ${{ parameters.FolderToScan }}
+    Contents: |
+      **\*Microsoft@(*.dll|*.pdb|*.exe)
+      **\*Newtonsoft@(*.dll|*.pdb|*.exe)
+      **\*OpenDebugAD7@(*.dll|*.pdb|*.exe)
+      **\*WindowsDebugLauncher@(*.dll|*.pdb|*.exe)
+      !**\*.resources.dll
+    TargetFolder: '$(Pipeline.Workspace)\ApiScanFiles'
+    CleanTargetFolder: true
+    OverWrite: true
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-apiscan.APIScan@2
+  displayName: 'Run APIScan'
+  inputs:
+    softwareFolder: '$(Pipeline.Workspace)\ApiScanFiles'
+    softwareName: MIEngine
+    softwareVersionNum: '$(Build.BuildNumber)'
+    symbolsFolder: 'SRV*http://symweb;$(Pipeline.Workspace)\ApiScanFiles'
+    isLargeApp: false
+  continueOnError: true
+  env:
+    AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(MIEngineApiScan)

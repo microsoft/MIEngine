@@ -47,7 +47,7 @@ jobs:
       uses: darenm/Setup-VSTest@v1
 
     - name: Run VS Extension tests
-      run: vstest.console.exe ${{ github.workspace }}\bin\${{ matrix.configuration }}\MICoreUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\JDbgUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\SSHDebugTests.dll
+      run: vstest.console.exe ${{ github.workspace }}\bin\${{ matrix.configuration }}\MICoreUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\JDbgUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\SSHDebugTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\MIDebugEngineUnitTests.dll
 
   windows_vscode_build:
     runs-on: windows-latest
@@ -145,7 +145,8 @@ jobs:
         gdb --version
 
 
-    - run: >
+    - run: |
+        set PATH="%PATH%;D:\a\_temp\msys64\mingw64\bin\"
         dotnet test ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\CppTests.dll --logger "trx;LogFileName=${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\results.trx"
 
     - name: 'Upload Test Results'

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using DebuggerTesting;
 using DebuggerTesting.Compilation;
@@ -451,6 +452,57 @@ namespace CppTests.Tests
 
                     this.Comment("Check the value of the variable hasn't been updated.");
                     Assert.Equal("100", currentFrame.GetVariable("myint").Value);
+                }
+
+                this.Comment("Continue to run to exist.");
+                runner.Expects.TerminatedEvent().AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForExpressionTests))]
+        [RequiresTestSettings]
+        public void SetExpressionOnVariable(ITestSettings settings)
+        {
+            this.TestPurpose("Call set expression on a variable.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Expression);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch.");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fExpression");
+
+                this.Comment("Set a breakpoint so that we can stop at a line.");
+                runner.SetBreakpoints(debuggee.Breakpoints(SinkHelper.Expression, 31));
+
+                this.Comment("Start debugging and hit breakpoint.");
+                runner.Expects.HitBreakpointEvent().AfterConfigurationDone();
+
+                this.Comment("Start setting expressions on variable in frame");
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Set myint=9000 as decimal.");
+                    string setExpressionValue = runner.SetExpression("myint", "9000", currentFrame.Id);
+                    Assert.Equal("9000", setExpressionValue);
+
+
+                    this.Comment("Validate SetExpression affected locals");
+                    string myIntStr = currentFrame.GetVariable("myint").Value;
+                    Assert.Equal(setExpressionValue, myIntStr);
+
+                    this.Comment("Set myint=9000 as hex.");
+                    string hexVal = runner.SetExpression("myint", "9000", currentFrame.Id, new ValueFormat { hex = true });
+                    // Validate that it starts with 0x
+                    Assert.StartsWith("0x", hexVal);
+                    // Convert hex value back to decimal and compare they are equal.
+                    Assert.True(int.TryParse(hexVal.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int result));
+                    Assert.Equal(9000, result);
                 }
 
                 this.Comment("Continue to run to exist.");

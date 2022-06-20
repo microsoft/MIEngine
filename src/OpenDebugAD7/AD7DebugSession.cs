@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DebugEngineHost;
@@ -245,7 +246,7 @@ namespace OpenDebugAD7
         {
             string miMode = args.GetValueAsString("MIMode");
 
-            // If MIMode is not provided, set default to GDB. 
+            // If MIMode is not provided, set default to GDB.
             if (string.IsNullOrEmpty(miMode))
             {
                 args["MIMode"] = "gdb";
@@ -328,8 +329,8 @@ namespace OpenDebugAD7
 
             if (breakpointEvent != null)
             {
-                if (breakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 enumBreakpoints) == HRConstants.S_OK && 
-                    enumBreakpoints.GetCount(out uint bpCount) == HRConstants.S_OK && 
+                if (breakpointEvent.EnumBreakpoints(out IEnumDebugBoundBreakpoints2 enumBreakpoints) == HRConstants.S_OK &&
+                    enumBreakpoints.GetCount(out uint bpCount) == HRConstants.S_OK &&
                     bpCount > 0)
                 {
 
@@ -420,6 +421,87 @@ namespace OpenDebugAD7
             return hr;
         }
 
+        /// <summary>
+        /// Given 'expression', it will query the engine for an IDebugProperty2
+        /// </summary>
+        /// <param name="eb">Error handler to use in this method.</param>
+        /// <param name="expression">The expression to evaluate.</param>
+        /// <param name="frameId">Which frame to use and evaluate the expression on.</param>
+        /// <param name="isExecInConsole">If the current expression is from a console exec.</param>
+        /// <param name="flags">Flags used for EvaluateSync</param>
+        /// <param name="dapEvalFlags">EvaluationFlags used for DAPEvaluateSync</param>
+        /// <param name="property">The IDebugProperty2 of the 'expression'</param>
+        /// <exception cref="ProtocolException">In any step of the method that fails, it will throw a protocol execption using the ErrorBuilder.</exception>
+        private void GetDebugPropertyFromExpression(ErrorBuilder eb, string expression, int frameId, bool isExecInConsole, enum_EVALFLAGS flags, DAPEvalFlags dapEvalFlags, out IDebugProperty2 property)
+        {
+            property = null;
+
+            IDebugStackFrame2 frame;
+            bool success;
+            if (frameId == -1 && isExecInConsole)
+            {
+                // If exec in console and no stack frame, evaluate off the top frame.
+                success = m_frameHandles.TryGetFirst(out frame);
+            }
+            else
+            {
+                success = m_frameHandles.TryGet(frameId, out frame);
+            }
+
+            if (!success)
+            {
+                throw new ProtocolException(AD7Resources.Error_InvalidStackFrameOnEvaluateExpression);
+            }
+
+            IDebugExpressionContext2 expressionContext;
+            int hr = frame.GetExpressionContext(out expressionContext);
+            eb.CheckHR(hr);
+
+            IDebugExpression2 expressionObject;
+            string error;
+            uint errorIndex;
+            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
+            if (!string.IsNullOrEmpty(error))
+            {
+                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
+                throw new ProtocolException(error);
+            }
+            eb.CheckHR(hr);
+            eb.CheckOutput(expressionObject);
+
+            if (expressionObject is IDebugExpressionDAP expressionDapObject)
+            {
+                hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
+            }
+            else
+            {
+                hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
+            }
+
+            eb.CheckHR(hr);
+            eb.CheckOutput(property);
+        }
+
+        private uint GetRadixFromValueForamt(ValueFormat format)
+        {
+            uint radix = Constants.EvaluationRadix;
+
+            if (format != null)
+            {
+                if (format.Hex == true)
+                {
+                    radix = 16;
+                }
+            }
+
+            if (m_settingsCallback != null)
+            {
+                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                m_settingsCallback.Radix = radix;
+            }
+
+            return radix;
+        }
 #endregion
 
 #region AD7EventHandlers helper methods
@@ -917,6 +999,7 @@ namespace OpenDebugAD7
                 SupportsCompletionsRequest = m_engine is IDebugProgramDAP,
                 SupportsEvaluateForHovers = true,
                 SupportsSetVariable = true,
+                SupportsSetExpression = true,
                 SupportsFunctionBreakpoints = m_engineConfiguration.FunctionBP,
                 SupportsConditionalBreakpoints = m_engineConfiguration.ConditionalBP,
                 SupportsDataBreakpoints = m_engineConfiguration.DataBP,
@@ -1568,83 +1651,84 @@ namespace OpenDebugAD7
                         responder.SetError(new ProtocolException(String.Format(CultureInfo.CurrentCulture, AD7Resources.Error_PropertyInvalid, StackTraceRequest.RequestType, "threadId")));
                         return;
                     }
+                }
 
-                    enum_FRAMEINFO_FLAGS flags = enum_FRAMEINFO_FLAGS.FIF_FUNCNAME | // need a function name
-                                                    enum_FRAMEINFO_FLAGS.FIF_FRAME | // need a frame object
-                                                    enum_FRAMEINFO_FLAGS.FIF_FLAGS |
-                                                    enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
+                enum_FRAMEINFO_FLAGS flags = enum_FRAMEINFO_FLAGS.FIF_FUNCNAME | // need a function name
+                                                enum_FRAMEINFO_FLAGS.FIF_FRAME | // need a frame object
+                                                enum_FRAMEINFO_FLAGS.FIF_FLAGS |
+                                                enum_FRAMEINFO_FLAGS.FIF_DEBUG_MODULEP;
 
-                    uint radix = Constants.EvaluationRadix;
+                uint radix = Constants.EvaluationRadix;
 
-                    if (responder.Arguments.Format != null)
+                if (responder.Arguments.Format != null)
+                {
+                    StackFrameFormat format = responder.Arguments.Format;
+
+                    if (format.Hex == true)
                     {
-                        StackFrameFormat format = responder.Arguments.Format;
-
-                        if (format.Hex == true)
-                        {
-                            radix = 16;
-                        }
-
-                        if (format.Line == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
-                        }
-
-                        if (format.Module == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
-                        }
-
-                        if (format.Parameters == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS;
-                        }
-
-                        if (format.ParameterNames == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
-                        }
-
-                        if (format.ParameterTypes == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES;
-                        }
-
-                        if (format.ParameterValues == true)
-                        {
-                            flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES;
-                        }
-                    }
-                    else
-                    {
-                        // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types
-                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE |
-                                    enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
-                                    enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
-                                    enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                        radix = 16;
                     }
 
-                    if (m_settingsCallback != null)
+                    if (format.Line == true)
                     {
-                        // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
-                        m_settingsCallback.Radix = radix;
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
                     }
 
-                    ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_StackTrace);
-
-                    try
+                    if (format.Module == true)
                     {
-                        eb.CheckHR(thread.EnumFrameInfo(flags, radix, out IEnumDebugFrameInfo2 frameEnum));
-                        eb.CheckHR(frameEnum.GetCount(out uint totalFrames));
-
-                        frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
                     }
-                    catch (AD7Exception ex)
+
+                    if (format.Parameters == true)
                     {
-                        responder.SetError(new ProtocolException(ex.Message, ex));
-                        return;
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS;
+                    }
+
+                    if (format.ParameterNames == true)
+                    {
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                    }
+
+                    if (format.ParameterTypes == true)
+                    {
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES;
+                    }
+
+                    if (format.ParameterValues == true)
+                    {
+                        flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES;
                     }
                 }
+                else
+                {
+                    // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types
+                    flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE |
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
+                }
+
+                if (m_settingsCallback != null)
+                {
+                    // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
+                    m_settingsCallback.Radix = radix;
+                }
+
+                ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_StackTrace);
+
+                try
+                {
+                    eb.CheckHR(thread.EnumFrameInfo(flags, radix, out IEnumDebugFrameInfo2 frameEnum));
+                    eb.CheckHR(frameEnum.GetCount(out uint totalFrames));
+
+                    frameEnumInfo = new ThreadFrameEnumInfo(frameEnum, totalFrames);
+                }
+                catch (AD7Exception ex)
+                {
+                    responder.SetError(new ProtocolException(ex.Message, ex));
+                    return;
+                }
+
 
                 if (startFrame >= frameEnumInfo.TotalFrames)
                 {
@@ -1824,23 +1908,7 @@ namespace OpenDebugAD7
                 return;
             }
 
-            uint radix = Constants.EvaluationRadix;
-
-            if (responder.Arguments.Format != null)
-            {
-                ValueFormat format = responder.Arguments.Format;
-
-                if (format.Hex == true)
-                {
-                    radix = 16;
-                }
-            }
-
-            if (m_settingsCallback != null)
-            {
-                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
-                m_settingsCallback.Radix = radix;
-            }
+            uint radix = GetRadixFromValueForamt(responder.Arguments.Format);
 
             Object container;
             if (!m_variableManager.TryGet(reference, out container))
@@ -2043,11 +2111,34 @@ namespace OpenDebugAD7
             }
 
             // iterate over the collection asking the engine for the name
-            foreach (var pair in threads)
+            foreach ((int id, IDebugThread2 thread) in threads)
             {
-                string name;
-                pair.Value.GetName(out name);
-                response.Threads.Add(new OpenDebugThread(pair.Key, name));
+                if (thread != null)
+                {
+                    if (thread.GetName(out string name) == HRConstants.S_OK)
+                    {
+                        // Append the thread id as a suffix unless the engine is already including it
+                        if (thread.GetThreadId(out uint threadId) == HRConstants.S_OK)
+                        {
+                            string threadIdDecimal = threadId.ToString(CultureInfo.InvariantCulture);
+                            if (!Regex.IsMatch(name, string.Concat("\b", threadIdDecimal, "\b")))
+                            {
+                                name = string.Concat(name, " [", threadIdDecimal, "]");
+                            }
+                        }
+                        else
+                        {
+                            // We did not get a thread id. Skip adding to list.
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        name = null;
+                    }
+
+                    response.Threads.Add(new OpenDebugThread(id, name));
+                }
             }
 
             responder.SetResponse(response);
@@ -2261,7 +2352,7 @@ namespace OpenDebugAD7
                         {
                             // already created
                             IDebugBreakpointRequest2 breakpointRequest;
-                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0 && 
+                            if (dict[bp.Line].GetBreakpointRequest(out breakpointRequest) == 0 &&
                                 breakpointRequest is AD7BreakPointRequest ad7BPRequest)
                             {
                                 // Check to see if this breakpoint has a condition that has changed.
@@ -2435,7 +2526,7 @@ namespace OpenDebugAD7
                     // We don't have a parent object. Default to using top stack frame
                     if (m_frameHandles == null || !m_frameHandles.TryGetFirst(out IDebugStackFrame2 frame))
                     {
-                        response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_NoParentObject);
+                        throw new ProtocolException(string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_NoParentObject));
                     }
                     else
                     {
@@ -2450,7 +2541,7 @@ namespace OpenDebugAD7
                     eb.CheckHR(hr);
                     if (!string.IsNullOrEmpty(errorMessage))
                     {
-                        response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, errorMessage);
+                        throw new ProtocolException(string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, errorMessage));
                     }
                     else
                     {
@@ -2461,21 +2552,21 @@ namespace OpenDebugAD7
                         response.AccessTypes = new List<DataBreakpointAccessType>() { DataBreakpointAccessType.Write };
                     }
                 }
-                else if (response.Description == null)
+                else
                 {
-                    response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_ChildPropertyNotFound);
+                    throw new ProtocolException(string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, AD7Resources.Error_ChildPropertyNotFound));
                 }
+
+                responder.SetResponse(response);
             }
             catch (Exception ex)
             {
                 if (ex is AD7Exception ad7ex)
                     response.Description = ad7ex.Message;
+                else if (ex is ProtocolException peEx)
+                    responder.SetError(peEx);
                 else
-                    response.Description = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, "");
-            }
-            finally
-            {
-                responder.SetResponse(response);
+                    responder.SetError(new ProtocolException(string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_DataBreakpointInfoFail, "")));
             }
         }
 
@@ -2865,66 +2956,9 @@ namespace OpenDebugAD7
                     isExecInConsole = true;
             }
 
-            int hr;
             ErrorBuilder eb = new ErrorBuilder(() => AD7Resources.Error_Scenario_Evaluate);
-            IDebugStackFrame2 frame;
 
-            bool success = false;
-            if (frameId == -1 && isExecInConsole)
-            {
-                // If exec in console and no stack frame, evaluate off the top frame.
-                success = m_frameHandles.TryGetFirst(out frame);
-            }
-            else
-            {
-                success = m_frameHandles.TryGet(frameId, out frame);
-            }
-
-            if (!success)
-            {
-                Dictionary<string, object> properties = new Dictionary<string, object>();
-                properties.Add(DebuggerTelemetry.TelemetryStackFrameId, frameId);
-                properties.Add(DebuggerTelemetry.TelemetryExecuteInConsole, isExecInConsole);
-                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 1108, "Invalid frameId", properties);
-                responder.SetError(new ProtocolException("Cannot evaluate expression on the specified stack frame."));
-                return;
-            }
-
-            uint radix = Constants.EvaluationRadix;
-
-            if (responder.Arguments.Format != null)
-            {
-                ValueFormat format = responder.Arguments.Format;
-
-                if (format.Hex == true)
-                {
-                    radix = 16;
-                }
-            }
-
-            if (m_settingsCallback != null)
-            {
-                // MIEngine generally gets the radix from IDebugSettingsCallback110 rather than using the radix passed
-                m_settingsCallback.Radix = radix;
-            }
-
-            IDebugExpressionContext2 expressionContext;
-            hr = frame.GetExpressionContext(out expressionContext);
-            eb.CheckHR(hr);
-
-            IDebugExpression2 expressionObject;
-            string error;
-            uint errorIndex;
-            hr = expressionContext.ParseText(expression, enum_PARSEFLAGS.PARSE_EXPRESSION, Constants.ParseRadix, out expressionObject, out error, out errorIndex);
-            if (!string.IsNullOrEmpty(error))
-            {
-                // TODO: Is this how errors should be returned?
-                DebuggerTelemetry.ReportError(DebuggerTelemetry.TelemetryEvaluateEventName, 4001, "Error parsing expression");
-                responder.SetError(new ProtocolException(error));
-                return;
-            }
-            eb.CheckHR(hr);
-            eb.CheckOutput(expressionObject);
+            uint radix = GetRadixFromValueForamt(responder.Arguments.Format);
 
             // NOTE: This is the same as what vssdebug normally passes for the watch window
             enum_EVALFLAGS flags = enum_EVALFLAGS.EVAL_RETURNVALUE |
@@ -2936,23 +2970,11 @@ namespace OpenDebugAD7
                 flags |= enum_EVALFLAGS.EVAL_NOSIDEEFFECTS;
             }
 
-            IDebugProperty2 property;
-            if (expressionObject is IDebugExpressionDAP expressionDapObject)
+            DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
+            if (context == EvaluateArguments.ContextValue.Clipboard)
             {
-                DAPEvalFlags dapEvalFlags = DAPEvalFlags.NONE;
-                if (context == EvaluateArguments.ContextValue.Clipboard)
-                {
-                    dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
-                }
-                hr = expressionDapObject.EvaluateSync(flags, dapEvalFlags, Constants.EvaluationTimeout, null, out property);
+                dapEvalFlags |= DAPEvalFlags.CLIPBOARD_CONTEXT;
             }
-            else
-            {
-                hr = expressionObject.EvaluateSync(flags, Constants.EvaluationTimeout, null, out property);
-            }
-
-            eb.CheckHR(hr);
-            eb.CheckOutput(property);
 
             DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
             enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags = GetDefaultPropertyInfoFlags();
@@ -2961,6 +2983,8 @@ namespace OpenDebugAD7
             {
                 propertyInfoFlags |= (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_NOSIDEEFFECTS;
             }
+
+            GetDebugPropertyFromExpression(eb, expression, frameId, isExecInConsole, flags, dapEvalFlags, out IDebugProperty2 property);
 
             property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo);
 
@@ -3153,6 +3177,95 @@ namespace OpenDebugAD7
             }
         }
 
+        protected override void HandleSetExpressionRequestAsync(IRequestResponder<SetExpressionArguments, SetExpressionResponse> responder)
+        {
+            string expression = responder.Arguments.Expression;
+            string value = responder.Arguments.Value;
+            int frameId = responder.Arguments.FrameId.GetValueOrDefault(-1);
+
+            // if we are not stopped don't try to set
+            if (!m_isStopped)
+            {
+                responder.SetError(new ProtocolException(AD7Resources.Error_TargetNotStopped, new Message(1105, AD7Resources.Error_TargetNotStopped)));
+                return;
+            }
+
+            uint radix = GetRadixFromValueForamt(responder.Arguments.Format);
+
+            var eb = new ErrorBuilder(() => string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_SetExpression, expression, value));
+
+            try
+            {
+                // Create variable
+                GetDebugPropertyFromExpression(
+                    eb,
+                    expression,
+                    frameId,
+                    false,
+                    enum_EVALFLAGS.EVAL_RETURNVALUE | enum_EVALFLAGS.EVAL_NOEVENTS | (enum_EVALFLAGS)enum_EVALFLAGS110.EVAL110_FORCE_REAL_FUNCEVAL,
+                    DAPEvalFlags.NONE,
+                    out IDebugProperty2 property
+                );
+
+                // Get property information to make sure it is not read-only.
+                DEBUG_PROPERTY_INFO[] propertyInfo = new DEBUG_PROPERTY_INFO[1];
+                eb.CheckHR(property.GetPropertyInfo(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB, radix, Constants.EvaluationTimeout, null, 0, propertyInfo));
+                if (propertyInfo[0].dwAttrib.HasFlag(enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY))
+                {
+                    string message = string.Format(CultureInfo.CurrentCulture, AD7Resources.Error_VariableIsReadonly, expression);
+                    responder.SetError(new ProtocolException(message, new Message(1107, message)));
+                    return;
+                }
+
+                // Assign value
+                string error = null;
+                int hr;
+                if (property is IDebugProperty3 prop3)
+                {
+                    hr = prop3.SetValueAsStringWithError(value, Constants.EvaluationRadix, Constants.EvaluationTimeout, out error);
+                }
+                else
+                {
+                    hr = property.SetValueAsString(value, Constants.EvaluationRadix, Constants.EvaluationTimeout);
+                }
+
+                if (hr != HRConstants.S_OK)
+                {
+                    string message = error ?? AD7Resources.Error_SetVariableFailed;
+                    throw new ProtocolException(message, new Message(1107, message));
+                }
+
+                // Query for new value
+                GetDebugPropertyFromExpression(
+                    eb,
+                    expression,
+                    frameId,
+                    true, // Treat SetExpression like expressions from the top frame.
+                    enum_EVALFLAGS.EVAL_RETURNVALUE | enum_EVALFLAGS.EVAL_NOEVENTS | (enum_EVALFLAGS)enum_EVALFLAGS110.EVAL110_FORCE_REAL_FUNCEVAL,
+                    DAPEvalFlags.NONE,
+                    out property
+                );
+
+                enum_DEBUGPROP_INFO_FLAGS propertyInfoFlags = GetDefaultPropertyInfoFlags();
+                eb.CheckHR(property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo));
+
+                string memoryReference = AD7Utils.GetMemoryReferenceFromIDebugProperty(property);
+                Variable variable = m_variableManager.CreateVariable(ref propertyInfo[0], propertyInfoFlags, memoryReference);
+
+                responder.SetResponse(new SetExpressionResponse
+                {
+                    Value = variable.Value,
+                    Type = variable.Type,
+                    VariablesReference = variable.VariablesReference
+                });
+            }
+            catch (Exception ex)
+            {
+                responder.SetError(new ProtocolException(ex.Message));
+            }
+
+        }
+
         #endregion
 
         #region IDebugPortNotify2
@@ -3295,8 +3408,8 @@ namespace OpenDebugAD7
                         }
                     }
 
-                    // Need to check to see if the previous continuation of the debuggee was a step. 
-                    // If so, we need to send a stopping event to the UI to signal the step completed successfully. 
+                    // Need to check to see if the previous continuation of the debuggee was a step.
+                    // If so, we need to send a stopping event to the UI to signal the step completed successfully.
                     if (!m_isStepping)
                     {
                         ThreadPool.QueueUserWorkItem((obj) =>
@@ -3636,7 +3749,7 @@ namespace OpenDebugAD7
         {
             IDebugProcessInfoUpdatedEvent158 debugProcessInfoUpdated = pEvent as IDebugProcessInfoUpdatedEvent158;
 
-            if (debugProcessInfoUpdated != null && 
+            if (debugProcessInfoUpdated != null &&
                 debugProcessInfoUpdated.GetUpdatedProcessInfo(out string name, out uint systemProcessId) == HRConstants.S_OK)
             {
                 // Update Process Name and Id
