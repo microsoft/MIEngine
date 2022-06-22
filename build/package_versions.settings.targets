@@ -2,7 +2,7 @@
     <PropertyGroup>
         <Microsoft_VisualStudio_Debugger_Interop_Portable_Version>1.0.1</Microsoft_VisualStudio_Debugger_Interop_Portable_Version>
         <Microsoft_VisualStudio_Interop_Version>17.0.0-previews-1-31410-258</Microsoft_VisualStudio_Interop_Version>
-        <Newtonsoft_Json_Version>12.0.2</Newtonsoft_Json_Version>
+        <Newtonsoft_Json_Version>13.0.1</Newtonsoft_Json_Version>
         <Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version>17.0.50801.1</Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version>
 
         <!-- Test Packages -->
