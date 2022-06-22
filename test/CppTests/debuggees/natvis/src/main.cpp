@@ -2,6 +2,7 @@
 #include "BinarySearchTree.h"
 #include "SimpleVector.h"
 #include "SimpleArray.h"
+#include "SimpleClass.h"
 
 class SimpleDisplayObject
 {
@@ -36,6 +37,9 @@ int main(int argc, char** argv)
     {
         arr[i] = i * i;
     }
+
+    SimpleClass *simpleClass = nullptr;    
+    simpleClass = new SimpleClass();
 
     return 0;
 }
