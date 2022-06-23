@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using MICore;
+using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -98,7 +99,7 @@ namespace Microsoft.MIDebugEngine
             Logger.Reset();
         }
 
-        public static void WriteLogToOutput(string line)
+        public static void WriteLogToOutput(LogLevel level, string line)
         {
             lock (s_processes)
             {

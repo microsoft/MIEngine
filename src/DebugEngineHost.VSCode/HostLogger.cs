@@ -2,88 +2,145 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Globalization;
+using System.IO;
 
 namespace Microsoft.DebugEngineHost
 {
-    public sealed class HostLogger
+    public enum LogLevel
     {
-        public delegate void OutputCallback(string outputMessage);
+        /// <summary>
+        /// Logs that contain the most detailed messages.
+        /// These messages may contain sensitive application data.
+        /// These messages are disabled by default and should never be enabled in a production environment.
+        /// </summary>
+        Trace,
+        /// <summary>
+        /// Logs that are used for interactive investigation during development.
+        /// These logs should primarily contain information useful for debugging and have no long-term value.
+        /// </summary>
+        Debug,
+        /// <summary>
+        /// Logs that track the general flow of the application.
+        /// These logs should have long-term value.
+        /// </summary>
+        Information,
+        /// <summary>
+        /// Logs that highlight an abnormal or unexpected event in the application flow, but do not otherwise cause the application execution to stop.
+        /// </summary>
+        Warning,
+        /// <summary>
+        /// Logs that highlight when the current flow of execution is stopped due to a failure.
+        /// These should indicate a failure in the current activity, not an application-wide failure.
+        /// </summary>
+        Error,
+        /// <summary>
+        /// Logs that describe an unrecoverable application or system crash, or a catastrophic failure that requires immediate attention.
+        /// </summary>
+        Critical,
+        /// <summary>
+        /// Not used for writing log messages.
+        /// Specifies that a logging category should not write any messages.
+        /// </summary>
+        None
+    }
 
-        private static HostLogger s_instance;
-        private static readonly object s_lock = new object();
+    public class HostLogChannel
+    {
+        private readonly Action<LogLevel, string> _log;
+        private readonly StreamWriter _logFile;
 
-        /// <summary>[Optional] VSCode-only host logger instance.</summary>
-        public static HostLogger Instance { get { return s_instance; } }
-
-        /// <summary>[Optional] VSCode-only method for obtaining the current host logger instance.</summary>
-        public static void EnableHostLogging()
+        public HostLogChannel(Action<LogLevel, string> logAction, string file)
         {
-            if (s_instance == null)
+            _log = logAction;
+
+            if (!string.IsNullOrEmpty(file))
             {
-                lock (s_lock)
-                {
-                    if (s_instance == null)
-                    {
-                        s_instance = new HostLogger();
-                    }
-                }
+                _logFile = File.CreateText(file);
             }
         }
 
-        private string _logFilePath = null;
-        private System.IO.StreamWriter _logFile = null;
-
-        /// <summary>Callback for logging text to the desired output stream.</summary>
-        public Action<string> LogCallback { get; set; } = null;
-
-        /// <summary>The path to the log file.</summary>
-        public string LogFilePath
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="verbosity"></param>
+        /// <param name="message"></param>
+        public void WriteLine(LogLevel verbosity, string message)
         {
-            get
-            {
-                return _logFilePath;
-            }
-            set
-            {
-                _logFile?.Dispose();
-                _logFilePath = value;
-
-                if (!String.IsNullOrEmpty(_logFilePath))
-                {
-                    _logFile = System.IO.File.CreateText(_logFilePath);
-                }
-            }
+            _log?.Invoke(verbosity, message);
+            _logFile?.WriteLine(message);
+            _logFile?.Flush();
         }
 
-        private HostLogger() { }
-
-        public void WriteLine(string line)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="verbosity"></param>
+        /// <param name="format"></param>
+        /// <param name="values"></param>
+        public void WriteLine(LogLevel verbosity, string format, params object[] values)
         {
-            lock (s_lock)
-            {
-                _logFile?.WriteLine(line);
-                _logFile?.Flush();
-                LogCallback?.Invoke(line);
-            }
+            string message = string.Format(CultureInfo.InvariantCulture, format, values);
+            _log?.Invoke(verbosity, message);
+            _logFile?.WriteLine(message);
+            _logFile?.Flush();
         }
 
         public void Flush()
         {
+            _logFile?.Flush();
         }
 
         public void Close()
         {
+            _logFile?.Close();
+        }
+    }
+
+    public sealed class HostLogger
+    {
+        private static HostLogChannel s_natvisLogChannel;
+        public static HostLogChannel s_engineLogChannel;
+
+        public static void InitalizeNatvisLogger(Action<LogLevel, string> callback)
+        {
+            if (s_natvisLogChannel == null)
+            {
+                // TODO: Support writing natvis logs to a file.
+                s_natvisLogChannel = new HostLogChannel(callback, null);
+            }
+        }
+
+        public static void InitalizeEngineLogger(Action<LogLevel, string> callback, string logFile)
+        {
+            if (s_engineLogChannel == null)
+            {
+                s_engineLogChannel = new HostLogChannel(callback, logFile);
+            }
         }
 
         /// <summary>
-        /// Get a logger after the user has explicitly configured a log file/callback
+        /// 
         /// </summary>
-        /// <param name="logFileName"></param>
-        /// <param name="callback"></param>
-        /// <returns>The host logger object</returns>
-        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
+        /// <returns></returns>
+        public static HostLogChannel GetEngineLogChannel()
         {
-            throw new NotImplementedException();
+            return s_engineLogChannel;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static HostLogChannel GetNatvisLogChannel()
+        {
+            return s_natvisLogChannel;
+        }
+
+        public static void Reset()
+        {
+            s_natvisLogChannel = null;
+            s_engineLogChannel = null;
         }
     }
 }

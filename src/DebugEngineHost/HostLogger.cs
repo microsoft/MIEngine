@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,94 +11,143 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DebugEngineHost
 {
-    public sealed class HostLogger
+    public enum LogLevel
     {
         /// <summary>
-        /// Callback for programmatic display of log messages
+        /// Logs that contain the most detailed messages.
+        /// These messages may contain sensitive application data.
+        /// These messages are disabled by default and should never be enabled in a production environment.
         /// </summary>
-        /// <param name="outputString"></param>
-        public delegate void OutputCallback(string outputString);
+        Trace,
+        /// <summary>
+        /// Logs that are used for interactive investigation during development.
+        /// These logs should primarily contain information useful for debugging and have no long-term value.
+        /// </summary>
+        Debug,
+        /// <summary>
+        /// Logs that track the general flow of the application.
+        /// These logs should have long-term value.
+        /// </summary>
+        Information,
+        /// <summary>
+        /// Logs that highlight an abnormal or unexpected event in the application flow, but do not otherwise cause the application execution to stop.
+        /// </summary>
+        Warning,
+        /// <summary>
+        /// Logs that highlight when the current flow of execution is stopped due to a failure.
+        /// These should indicate a failure in the current activity, not an application-wide failure.
+        /// </summary>
+        Error,
+        /// <summary>
+        /// Logs that describe an unrecoverable application or system crash, or a catastrophic failure that requires immediate attention.
+        /// </summary>
+        Critical,
+        /// <summary>
+        /// Not used for writing log messages.
+        /// Specifies that a logging category should not write any messages.
+        /// </summary>
+        None
+    }
 
-        private StreamWriter _streamWriter;
-        private OutputCallback _callback;
-        private readonly object _locker = new object();
+    public class HostLogChannel
+    {
+        private readonly Action<LogLevel, string> _log;
+        private readonly StreamWriter _logFile;
 
-        internal HostLogger(StreamWriter streamWriter = null, OutputCallback callback = null)
+        private readonly object _lock = new object();
+
+        public HostLogChannel(Action<LogLevel, string> logAction, string file)
         {
-            _streamWriter = streamWriter;
-            _callback = callback;
+            _log = logAction;
+
+            if (!string.IsNullOrEmpty(file))
+            {
+                _logFile = File.CreateText(file);
+            }
         }
 
-        public void WriteLine(string line)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="verbosity"></param>
+        /// <param name="message"></param>
+        public void WriteLine(LogLevel verbosity, string message)
         {
-            lock (_locker)
-            {
-                if (_streamWriter != null)
-                    _streamWriter.WriteLine(line);
-                _callback?.Invoke(line);
-            }
+            _log?.Invoke(verbosity, message);
+            _logFile?.WriteLine(message);
+            _logFile?.Flush();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="verbosity"></param>
+        /// <param name="format"></param>
+        /// <param name="values"></param>
+        public void WriteLine(LogLevel verbosity, string format, params object[] values)
+        {
+            string message = string.Format(CultureInfo.InvariantCulture, format, values);
+            _log?.Invoke(verbosity, message);
+            _logFile?.WriteLine(message);
+            _logFile?.Flush();
         }
 
         public void Flush()
         {
-            lock (_locker)
-            {
-                if (_streamWriter != null)
-                    _streamWriter.Flush();
-            }
+            _logFile?.Flush();
         }
 
         public void Close()
         {
-            lock (_locker)
+            _logFile?.Close();
+        }
+    }
+
+    public sealed class HostLogger
+    {
+        private static HostLogChannel s_natvisLogChannel;
+        public static HostLogChannel s_engineLogChannel;
+
+        public static void InitalizeNatvisLogger(Action<LogLevel, string> callback)
+        {
+            if (s_natvisLogChannel == null)
             {
-                if (_streamWriter != null)
-                    _streamWriter.Close();
-                _streamWriter = null;
+                // TODO: Support writing natvis logs to a file.
+                s_natvisLogChannel = new HostLogChannel(callback, null);
             }
         }
 
-        internal static StreamWriter GetStreamForName(string logFileName, bool throwInUseError)
+        public static void InitalizeEngineLogger(Action<LogLevel, string> callback, string logFile)
         {
-            if (string.IsNullOrEmpty(logFileName))
+            if (s_engineLogChannel == null)
             {
-                return null;
+                s_engineLogChannel = new HostLogChannel(callback, logFile);
             }
-            string tempDirectory = Path.GetTempPath();
-            StreamWriter writer = null;
-            if (Path.IsPathRooted(logFileName) || (!string.IsNullOrEmpty(tempDirectory) && Directory.Exists(tempDirectory)))
-            {
-                string filePath = Path.Combine(tempDirectory, logFileName);
-
-                try
-                {
-                    FileStream stream = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-                    writer = new StreamWriter(stream);
-                }
-                catch (IOException)
-                {
-                    if (throwInUseError)
-                        throw;
-                    // ignore failures from the log being in use by another process
-                }
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(logFileName));
-            }
-            return writer;
         }
 
         /// <summary>
-        /// Get a logger after the user has explicitly configured a log file/callback
+        /// 
         /// </summary>
-        /// <param name="logFileName"></param>
-        /// <param name="callback"></param>
-        /// <returns>The host logger object</returns>
-        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
+        /// <returns></returns>
+        public static HostLogChannel GetEngineLogChannel()
         {
-            StreamWriter writer = HostLogger.GetStreamForName(logFileName, throwInUseError: true);
-            return new HostLogger(writer, callback);
+            return s_engineLogChannel;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static HostLogChannel GetNatvisLogChannel()
+        {
+            return s_natvisLogChannel;
+        }
+
+        public static void Reset()
+        {
+            s_natvisLogChannel = null;
+            s_engineLogChannel = null;
+        }
+
     }
 }

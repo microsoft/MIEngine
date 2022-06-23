@@ -163,21 +163,6 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Checks if logging is enabled, and if so returns a logger object.
-        ///
-        /// In VS, this is wired up to read from the registry and return a logger which writes a log file to %TMP%\log-file-name.
-        /// In VS Code, this will check if the '--engineLogging' switch is enabled, and if so return a logger that will write to the Console.
-        /// </summary>
-        /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled.
-        /// If not specified, this will check 'EnableLogging' in the AD7 Metrics.</param>
-        /// <param name="logFileName">[Required] name of the log file to open if logging is enabled.</param>
-        /// <returns>[Optional] If logging is enabled, the logging object.</returns>
-        public HostLogger GetLogger(string enableLoggingSettingName, string logFileName)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Read the debugger setting
         ///
         /// In VS, this is wired up to read setting value from RegistryRoot\\Debugger\\
@@ -197,29 +182,71 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
-}
+    }
 
-/// <summary>
-/// The host logger returned from HostConfigurationStore.GetLogger.
-/// </summary>
-public sealed class HostLogger
+    /// <summary>
+    /// 
+    /// </summary>
+    public enum LogLevel
     {
         /// <summary>
-        /// Callback for programmatic display of log messages
+        /// Logs that contain the most detailed messages.
+        /// These messages may contain sensitive application data.
+        /// These messages are disabled by default and should never be enabled in a production environment.
         /// </summary>
-        /// <param name="outputMessage"></param>
-        public delegate void OutputCallback(string outputMessage);
+        Trace,
+        /// <summary>
+        /// Logs that are used for interactive investigation during development.
+        /// These logs should primarily contain information useful for debugging and have no long-term value.
+        /// </summary>
+        Debug,
+        /// <summary>
+        /// Logs that track the general flow of the application.
+        /// These logs should have long-term value.
+        /// </summary>
+        Information,
+        /// <summary>
+        /// Logs that highlight an abnormal or unexpected event in the application flow, but do not otherwise cause the application execution to stop.
+        /// </summary>
+        Warning,
+        /// <summary>
+        /// Logs that highlight when the current flow of execution is stopped due to a failure.
+        /// These should indicate a failure in the current activity, not an application-wide failure.
+        /// </summary>
+        Error,
+        /// <summary>
+        /// Logs that describe an unrecoverable application or system crash, or a catastrophic failure that requires immediate attention.
+        /// </summary>
+        Critical,
+        /// <summary>
+        /// Not used for writing log messages.
+        /// Specifies that a logging category should not write any messages.
+        /// </summary>
+        None
+    }
 
-        private HostLogger()
+    /// <summary>
+    /// 
+    /// </summary>
+    public class HostLogChannel
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="verbosity"></param>
+        /// <param name="message"></param>
+        public void WriteLine(LogLevel verbosity, string message)
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Writes a line to the log
+        /// 
         /// </summary>
-        /// <param name="line">Line to write.</param>
-        public void WriteLine(string line)
+        /// <param name="verbosity"></param>
+        /// <param name="format"></param>
+        /// <param name="values"></param>
+        public void WriteLine(LogLevel verbosity, string format, params object[] values)
         {
             throw new NotImplementedException();
         }
@@ -239,14 +266,54 @@ public sealed class HostLogger
         {
             throw new NotImplementedException();
         }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public sealed class HostLogger
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
+        public static void InitalizeNatvisLogger(Action<LogLevel, string> callback)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
-        /// Get a logger after the user has explicitly configured a log file/callback
+        /// 
         /// </summary>
-        /// <param name="logFileName"></param>
         /// <param name="callback"></param>
-        /// <returns>The host logger object</returns>
-        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
+        /// <param name="logFile"></param>
+        public static void InitalizeEngineLogger(Action<LogLevel, string> callback, string logFile)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static HostLogChannel GetEngineLogChannel()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static HostLogChannel GetNatvisLogChannel()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void Reset()
         {
             throw new NotImplementedException();
         }

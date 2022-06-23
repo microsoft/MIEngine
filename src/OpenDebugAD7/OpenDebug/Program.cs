@@ -65,7 +65,10 @@ namespace OpenDebug
                         break;
                     case "--engineLogging":
                         loggingCategories.Add(LoggingCategory.EngineLogging);
-                        HostLogger.EnableHostLogging();
+                        HostLogger.InitalizeEngineLogger((logLevel, msg) =>
+                        {
+                            Console.WriteLine(msg);
+                        }, null);
                         break;
                     case "--server":
                         port = DEFAULT_PORT;
@@ -89,10 +92,14 @@ namespace OpenDebug
                         }
                         else if (a.StartsWith("--engineLogging=", StringComparison.Ordinal))
                         {
-                            HostLogger.EnableHostLogging();
+                            loggingCategories.Add(LoggingCategory.EngineLogging);
                             try
                             {
-                                HostLogger.Instance.LogFilePath = a.Substring("--engineLogging=".Length);
+                                string logFilePath = a.Substring("--engineLogging=".Length);
+                                HostLogger.InitalizeEngineLogger((logLevel, msg) =>
+                                {
+                                    Console.WriteLine(msg);
+                                }, logFilePath);
                             }
                             catch (Exception e)
                             {

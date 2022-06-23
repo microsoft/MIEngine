@@ -31,18 +31,24 @@ namespace MICore
         private static bool s_isEnabled;
         private static DateTime s_initTime;
         // NOTE: We never clean this up
-        private static HostLogger s_logger;
+        private static HostLogChannel s_engineLogger;
+        private static HostLogChannel s_natvisLogger;
         private static int s_count;
-        private int _id;
+        private readonly int _id;
+
+        #region Command Window
+
         public class LogInfo
         {
             public string logFile;
-            public HostLogger.OutputCallback logToOutput;
+            public Action<LogLevel, string> logToOutput;
             public bool enabled;
         };
-        private static LogInfo s_cmdLogInfo = new LogInfo();
+
+        private readonly static LogInfo s_cmdLogInfo = new LogInfo();
         public static LogInfo CmdLogInfo { get { return s_cmdLogInfo; } }
 
+        #endregion
 
         private Logger()
         {
@@ -72,32 +78,40 @@ namespace MICore
 
         public static void LoadMIDebugLogger(HostConfigurationStore configStore)
         {
-            if (s_logger == null)
+            if (s_engineLogger == null)
             { 
                 if (CmdLogInfo.enabled)
                 {   // command configured log file
-                    s_logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
+                    HostLogger.InitalizeEngineLogger(CmdLogInfo.logToOutput, CmdLogInfo.logFile);
+                    s_engineLogger = HostLogger.GetEngineLogChannel();
                 }
                 else
                 {   // use default logging
-                    s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
+                    s_engineLogger = HostLogger.GetEngineLogChannel();
+                    s_natvisLogger = HostLogger.GetNatvisLogChannel();
                 }
-                if (s_logger != null)
+
+                if (s_engineLogger != null)
                 {
                     s_isEnabled = true;
                 }
             }
         }
 
+        public HostLogChannel GetNatvisChannelLog()
+        {
+            return s_natvisLogger;
+        }
+
         public static void Reset()
         {
-            HostLogger logger;
+            HostLogChannel logger;
             if (CmdLogInfo.enabled)
             {
-                logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
-                logger = Interlocked.Exchange(ref s_logger, logger);
+                logger = HostLogger.GetEngineLogChannel();
+                logger = Interlocked.Exchange(ref s_engineLogger, logger);
                 logger?.Close();
-                if (s_logger != null)
+                if (s_engineLogger != null)
                 {
                     s_isEnabled = true;
                 }
@@ -162,7 +176,7 @@ namespace MICore
         private void WriteLineImpl(string line)
         {
             string fullLine = String.Format(CultureInfo.CurrentCulture, "{2}: ({0}) {1}", (int)(DateTime.Now - s_initTime).TotalMilliseconds, line, _id);
-            s_logger?.WriteLine(fullLine);
+            HostLogger.GetEngineLogChannel()?.WriteLine(LogLevel.Trace, fullLine);
 #if DEBUG
             Debug.WriteLine("MS_MIDebug: " + fullLine);
 #endif
@@ -171,7 +185,7 @@ namespace MICore
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
         private static void FlushImpl()
         {
-            s_logger?.Flush();
+            HostLogger.GetEngineLogChannel()?.Flush();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
