@@ -10,6 +10,16 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
+  <!-- 
+    This ItemGroup is to override the packages that being depended on for the PackageReferences above. 
+    The issue is that Microsoft.NET.Test.Sdk ->
+                      Newtonsoft.Json v12.0.2
+    Delete this explicit override when we update 'Microsoft_VisualStudio_Shell_Framework_Version' away from v17.2.32505.113
+  -->
+  <ItemGroup Label="Component Governance Override"> 
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_Version)" />
+  </ItemGroup>
+
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_Version)" />
     <PackageReference Include="xunit" Version="$(xunit_Version)" />
