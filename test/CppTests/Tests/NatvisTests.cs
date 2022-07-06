@@ -36,7 +36,7 @@ namespace CppTests.Tests
 
         private const string NatvisName = "natvis";
         private const string NatvisSourceName = "main.cpp";
-        private const int ReturnSourceLine = 40;
+        private const int ReturnSourceLine = 44;
 
         [Theory]
         [RequiresTestSettings]
@@ -270,6 +270,59 @@ namespace CppTests.Tests
                     Assert.Equal("-100", map.GetVariable("[0]").Value);
                     Assert.Equal("0", map.GetVariable("[3]").Value);
                     Assert.Equal("15", map.GetVariable("[5]").Value);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestThisConditional(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks if 'this' in conditional expressions are evaluated.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint before assigning 'simpleClass' and end of method.");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, new int[] { 42, ReturnSourceLine });
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying SimpleClass natvis with condition before initialization");
+                    var simpleClass = currentFrame.GetVariable("simpleClass");
+
+                    // Custom Item in natvis
+                    Assert.Equal("Null Class", simpleClass.Value);
+                }
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterContinue();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying SimpleClass natvis with condition after initialization");
+                    var simpleClass = currentFrame.GetVariable("simpleClass");
+
+                    // Custom Item in natvis
+                    Assert.Equal("Non-null Class", simpleClass.Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();

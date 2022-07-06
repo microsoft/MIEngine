@@ -30,10 +30,7 @@ MIEngine can be built with either [Visual Studio](https://visualstudio.microsoft
 * See the [wiki](https://github.com/Microsoft/MIEngine/wiki) for more info.
 
 ### Contribute!
-Before you contribute, please read through the contributing and developer guides to get an idea of requirements for pull requests. 
-
-* [Contributing Guide](https://github.com/Microsoft/MIEngine/wiki/Contributing-Code)
-* [Developer Guide](https://github.com/Microsoft/MIEngine/wiki/Building-Testing-and-Debugging)
+Before you contribute, please read through the [Contributing Guide](https://github.com/Microsoft/MIEngine/wiki/Contributing-Code) to get an idea of requirements for pull requests. 
 
 Want to get more familiar with what's going on in the code?
 * [Pull requests](https://github.com/Microsoft/MIEngine/pulls): [Open](https://github.com/Microsoft/MIEngine/pulls?q=is%3Aopen+is%3Apr)/[Closed](https://github.com/Microsoft/MIEngine/pulls?q=is%3Apr+is%3Aclosed)

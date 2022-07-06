@@ -2675,7 +2675,7 @@ namespace OpenDebugAD7
         }
 
 
-        protected override void HandleSetExceptionBreakpointsRequestAsync(IRequestResponder<SetExceptionBreakpointsArguments> responder)
+        protected override void HandleSetExceptionBreakpointsRequestAsync(IRequestResponder<SetExceptionBreakpointsArguments, SetExceptionBreakpointsResponse> responder)
         {
             HashSet<Guid> activeExceptionCategories = new HashSet<Guid>();
 
