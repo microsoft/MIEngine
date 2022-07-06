@@ -48,6 +48,19 @@
 
   <Import Project="..\..\build\Debugger.PIAs.NonPortable.Packages.settings.targets" />
 
+  
+  <!-- 
+    This ItemGroup is to override the packages that being depended on for the PackageReferences above. 
+    The issue is that Microsoft.VisualStudio.Shell.Framework v17.2.32505.113 -> 
+                      Microsoft.ServiceHub.[Client|Framework] ->
+                      StreamJsonRpc v2.7.70 ->
+                      Newtonsoft.Json v12.0.2
+    Delete this explicit override when we update 'Microsoft_VisualStudio_Shell_Framework_Version' away from v17.2.32505.113
+  -->
+  <ItemGroup Label="Component Governance Override"> 
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_Version)" />
+  </ItemGroup>
+
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)">
       <IncludeAssets>compile</IncludeAssets>

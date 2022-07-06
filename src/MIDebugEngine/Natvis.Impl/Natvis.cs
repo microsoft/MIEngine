@@ -72,7 +72,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     }
 
-    internal class VisualizerWrapper : SimpleWrapper
+    internal sealed class VisualizerWrapper : SimpleWrapper
     {
         public readonly Natvis.VisualizerInfo Visualizer;
         private readonly bool _isVisualizerView;
@@ -1090,12 +1090,19 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             return ProcessNamesInString(expression, new Substitute[] {
                 (m)=>
-                    {   // finds children of this structure and sub's in the fullname of the child
-                        IVariableInformation var = variable == null ? null : variable.FindChildByName(m.Value);
-                        if (var != null)  // found a child
-                        {
-                            return "(" + var.FullName() + ")";
-                        }
+                    {
+                        if (variable == null)
+                            return null;
+
+                        // replace explicit this references
+                        if (m.Value == "this")
+                            return (variable.TypeName.EndsWith("*", StringComparison.Ordinal) ? "(" : "(&") + variable.FullName() + ")";
+
+                        // finds children of this structure and sub's in the fullname of the child
+                        IVariableInformation child = variable.FindChildByName(m.Value);
+                        if (child != null)
+                            return "(" + child.FullName() + ")";
+
                         return null;
                     },
                 (m)=>
