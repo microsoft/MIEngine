@@ -431,7 +431,9 @@ namespace Microsoft.MIDebugEngine
             // TODO: could return '(T(*)[n])(exp)' but requires T
             var m = Regex.Match(trimmed, @"^\[?(\d+)\]?$");
             if (m.Success)
-                return exp.Substring(0, lastComma);
+                // return exp.Substring(0, lastComma);
+                return "*" + exp.Substring(0, lastComma) + "@" + trimmed;
+
 
             // array with dynamic size
             if (Regex.Match(trimmed, @"^\[([a-zA-Z_][a-zA-Z_\d]*)\]$").Success)
