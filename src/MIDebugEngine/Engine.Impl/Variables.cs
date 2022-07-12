@@ -431,8 +431,12 @@ namespace Microsoft.MIDebugEngine
             // TODO: could return '(T(*)[n])(exp)' but requires T
             var m = Regex.Match(trimmed, @"^\[?(\d+)\]?$");
             if (m.Success)
-                // return exp.Substring(0, lastComma);
-                return "*" + exp.Substring(0, lastComma) + "@" + trimmed;
+            {
+                if (_engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb)
+                    return "*" + exp.Substring(0, lastComma) + "@" + trimmed;  // this does not work for lldb
+
+                return exp.Substring(0, lastComma);
+            }
 
 
             // array with dynamic size
