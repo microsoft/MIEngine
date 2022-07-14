@@ -330,7 +330,6 @@ namespace CppTests.Tests
             }
         }
 
-        /*
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
@@ -338,11 +337,12 @@ namespace CppTests.Tests
         [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestArrayPointer(ITestSettings settings)
         {
-            this.TestPurpose("This test checks if ArrayPointerItems are visualized.");
+            this.TestPurpose("This test checks if ArrayPointer is visualized.");
             this.WriteSettings(settings);
 
             IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
 
+            this.Comment("Run the debuggee, check argument count");
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure launch");
@@ -361,18 +361,15 @@ namespace CppTests.Tests
                 {
                     IFrameInspector currentFrame = threadInspector.Stack.First();
 
-                    this.Comment("Verifying ArrayPointerItems natvis");
-                    var ap = currentFrame.GetVariable("arrPointer");
-
-                    // Custom Item in natvis
-                    // Assert.Equal("[0,1,4,9]", ap.GetVariable(4).Value);
+                    this.Comment("Verifying 'ArrayPointer' natvis");
+                    int[] expected = { 0, 1, 4, 9 };
+                    currentFrame.AssertEvaluateAsIntArray("arr._array,4", EvaluateContext.Watch, expected);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
                 runner.DisconnectAndVerify();
             }
         }
-        */
 
         #endregion
     }
