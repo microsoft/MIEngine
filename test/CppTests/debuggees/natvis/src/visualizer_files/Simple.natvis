@@ -31,16 +31,6 @@
   </Expand>
   </Type>
 
-  <Type Name="SimpleArrayPointer">
-    <DisplayString>{{ array={_simpleArray} }}</DisplayString>
-    <Expand>
-      <IndexListItems>
-        <Size>_simpleArray._size</Size>
-        <ValueNode>_simpleArray[_simpleArray._size - 1 - $i]</ValueNode>
-      </IndexListItems>
-    </Expand>
-  </Type>
-
   <Type Name="SimpleLinkedList">
    <DisplayString>{{ size={numElements} }}</DisplayString>
    <Expand>

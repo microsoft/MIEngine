@@ -2,7 +2,6 @@
 #include "BinarySearchTree.h"
 #include "SimpleVector.h"
 #include "SimpleArray.h"
-#include "SimpleArrayPointer.h"
 #include "SimpleClass.h"
 
 class SimpleDisplayObject
