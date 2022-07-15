@@ -346,9 +346,7 @@ namespace CppTests.Tests
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure launch");
-                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
-
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath);
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
