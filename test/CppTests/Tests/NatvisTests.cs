@@ -337,7 +337,7 @@ namespace CppTests.Tests
         [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestArrayPointer(ITestSettings settings)
         {
-            this.TestPurpose("This test checks if ArrayPointer is visualized.");
+            this.TestPurpose("This test checks if the comma format specifier is visualized.");
             this.WriteSettings(settings);
 
             IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
