@@ -361,7 +361,7 @@ namespace CppTests.Tests
                 {
                     IFrameInspector currentFrame = threadInspector.Stack.First();
 
-                    this.Comment("Verifying 'ArrayPointer' natvis");
+                    this.Comment("Verifying comma format specifier");
                     int[] expected = { 0, 1, 4, 9 };
                     currentFrame.AssertEvaluateAsIntArray("arr._array,4", EvaluateContext.Watch, expected);
                 }
