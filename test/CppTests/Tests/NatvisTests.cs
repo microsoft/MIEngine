@@ -330,6 +330,45 @@ namespace CppTests.Tests
             }
         }
 
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        // Disable on macOS
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        public void TestArrayPointer(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks if the comma format specifier is visualized.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            this.Comment("Run the debuggee, check argument count");
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying comma format specifier");
+                    int[] expected = { 0, 1, 4, 9 };
+                    currentFrame.AssertEvaluateAsIntArray("arr._array,4", EvaluateContext.Watch, expected);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
         #endregion
     }
 }
