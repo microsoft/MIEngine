@@ -165,7 +165,7 @@ namespace CppTests.Tests
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure launch");
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, null, false, "-fEnvironment") { StopAtEntry = false };
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, null, false, false, "-fEnvironment") { StopAtEntry = false };
                 if (variableValue != null)
                 {
                     launch.Args.environment = new EnvironmentEntry[] {
