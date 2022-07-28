@@ -694,7 +694,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             string val = GetExpressionValue(s.Value, variable, visualizer.ScopedNames);
                             size = MICore.Debugger.ParseUint(val);
-                            // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
                             break;
                         }
                     }
@@ -711,10 +710,9 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             string processedExpr = ReplaceNamesInExpression(v.Value, variable, visualizer.ScopedNames);
                             Dictionary<string, string> indexDic = new Dictionary<string, string>();
-                            // for (uint index = 0; index < size; ++index)
-                            // for (uint index = 0; index < MAX_EXPAND; ++index) // limit expansion to first 50 elements
                             uint currentIndex = (variable as VisualizerWrapper).StartIndex;
-                            for (uint index = currentIndex; index < currentIndex + 3; ++index) // limit expansion to first 3 elements
+                            uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
+                            for (uint index = currentIndex; index < maxIndex; ++index) // limit expansion to first 50 elements
                             {
                                 indexDic["$i"] = index.ToString(CultureInfo.InvariantCulture);
                                 string finalExpr = ReplaceNamesInExpression(processedExpr, null, indexDic);
@@ -723,10 +721,11 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 children.Add(expressionVariable);
                             }
 
+                            currentIndex += MAX_EXPAND;
                             if (size > currentIndex)
                             {
-                                IVariableInformation testVariable = new VisualizerWrapper("[More...]", _process.Engine, variable, visualizer, isVisualizerView: true, currentIndex+3);
-                                children.Add(testVariable);
+                                IVariableInformation moreVariable = new VisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, visualizer, isVisualizerView: true, currentIndex);
+                                children.Add(moreVariable);
                             }
 
                             break;
