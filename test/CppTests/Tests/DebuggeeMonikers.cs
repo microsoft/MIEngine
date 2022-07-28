@@ -60,5 +60,10 @@ namespace CppTests.Tests
         {
             public const int Default = 1;
         }
+
+        internal static class Cwd
+        {
+            public const int Default = 1;
+        }
     }
 }

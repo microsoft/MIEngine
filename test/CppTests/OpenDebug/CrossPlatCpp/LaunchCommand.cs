@@ -50,7 +50,12 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         /// <param name="program">The full path to the program to launch</param>
         /// <param name="architecture">The architecture of the program</param>
         /// <param name="args">[OPTIONAL] Args to pass to the program</param>
-        public LaunchCommand(IDebuggerSettings settings, string program, string visualizerFile = null, bool isAttach = false, params string[] args)
+        public LaunchCommand(IDebuggerSettings settings, string program, string visualizerFile = null, bool isAttach = false, params string[] args) :
+            this(settings, program, null, visualizerFile, isAttach, args)
+        {
+        }
+
+        public LaunchCommand(IDebuggerSettings settings, string program, string cwd, string visualizerFile = null, bool isAttach = false, params string[] args)
         {
             this.Timeout = TimeSpan.FromSeconds(15);
 
@@ -58,7 +63,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
             this.Args.program = program;
             this.Args.args = args ?? new string[] { };
             this.Args.request = "launch";
-            this.Args.cwd = Path.GetDirectoryName(program);
+            this.Args.cwd = string.IsNullOrEmpty(cwd) ? Path.GetDirectoryName(program) : cwd;
             this.Args.environment = new EnvironmentEntry[] { };
             this.Args.launchOptionType = "Local";
             this.Args.symbolSearchPath = String.Empty;
