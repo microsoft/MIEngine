@@ -76,14 +76,17 @@ namespace Microsoft.MIDebugEngine.Natvis
     {
         public readonly Natvis.VisualizerInfo Visualizer;
         private readonly bool _isVisualizerView;
+        private readonly uint _startIndex;
 
-        public VisualizerWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView)
+        public VisualizerWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, uint startIndex = 0)
             : base(name, engine, underlyingVariable)
         {
             Visualizer = viz;
             _isVisualizerView = isVisualizerView;
+            _startIndex = startIndex;
         }
         public override bool IsVisualized { get { return _isVisualizerView; } }
+        public uint StartIndex { get { return _startIndex; } }
         public override string TypeName { get { return String.Empty; } }
         public override string FullName()
         {
@@ -691,7 +694,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             string val = GetExpressionValue(s.Value, variable, visualizer.ScopedNames);
                             size = MICore.Debugger.ParseUint(val);
-                            size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
+                            // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
                             break;
                         }
                     }
@@ -708,7 +711,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             string processedExpr = ReplaceNamesInExpression(v.Value, variable, visualizer.ScopedNames);
                             Dictionary<string, string> indexDic = new Dictionary<string, string>();
-                            for (uint index = 0; index < size; ++index)
+                            // for (uint index = 0; index < size; ++index)
+                            // for (uint index = 0; index < MAX_EXPAND; ++index) // limit expansion to first 50 elements
+                            uint currentIndex = (variable as VisualizerWrapper).StartIndex;
+                            for (uint index = currentIndex; index < currentIndex + 3; ++index) // limit expansion to first 3 elements
                             {
                                 indexDic["$i"] = index.ToString(CultureInfo.InvariantCulture);
                                 string finalExpr = ReplaceNamesInExpression(processedExpr, null, indexDic);
@@ -716,6 +722,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 expressionVariable.SyncEval();
                                 children.Add(expressionVariable);
                             }
+
+                            if (size > currentIndex)
+                            {
+                                IVariableInformation testVariable = new VisualizerWrapper("[More...]", _process.Engine, variable, visualizer, isVisualizerView: true, currentIndex+3);
+                                children.Add(testVariable);
+                            }
+
                             break;
                         }
                     }
