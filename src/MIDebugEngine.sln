@@ -104,6 +104,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MakePIAPortableTool", "tool
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MIDebugEngineUnitTests", "MIDebugEngineUnitTests\MIDebugEngineUnitTests.csproj", "{7F98435A-526E-41DC-9F9A-BFD55CC991DE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DAREditor", "..\test\DAREditor\DAREditor.csproj", "{2A07F35D-6CE3-43F1-A2FA-100AC935482D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -288,6 +290,14 @@ Global
 		{7F98435A-526E-41DC-9F9A-BFD55CC991DE}.Lab.Release|Any CPU.Build.0 = Lab.Release|Any CPU
 		{7F98435A-526E-41DC-9F9A-BFD55CC991DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F98435A-526E-41DC-9F9A-BFD55CC991DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D}.Lab.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D}.Lab.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D}.Lab.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D}.Lab.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -304,6 +314,7 @@ Global
 		{6B26CBAE-38A1-47E6-BFF1-F4A626C9A5B5} = {9D97EF1A-BCD5-4932-BBCC-98194CF8A841}
 		{4F96DA84-CCBA-4ADE-8D7D-BC15D566A329} = {CF02407C-BF37-4D51-83F4-845A7F36C101}
 		{CC5BDD33-7EB1-4FB9-BC67-806773018989} = {20B91EF1-0CE0-4E6D-A122-319BF9B68E94}
+		{2A07F35D-6CE3-43F1-A2FA-100AC935482D} = {9D97EF1A-BCD5-4932-BBCC-98194CF8A841}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6099AC71-DA1D-4578-A8A3-376EB3C602E6}
