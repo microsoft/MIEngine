@@ -529,7 +529,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     uint size = 0;
                     string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
                     size = MICore.Debugger.ParseUint(val, throwOnError: true);
-                    size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
+                    // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
                     ValuePointerType[] vptrs = item.ValuePointer;
                     foreach (var vp in vptrs)
                     {
@@ -578,7 +578,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                     string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
                     uint size = MICore.Debugger.ParseUint(val, throwOnError: true);
-                    size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
+                    // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
                     IVariableInformation headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
                     ulong head = MICore.Debugger.ParseAddr(headVal.Value);
                     var content = new List<IVariableInformation>();
@@ -635,7 +635,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
                         size = MICore.Debugger.ParseUint(val);
-                        size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
+                        // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
                     }
                     IVariableInformation headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
                     ulong head = MICore.Debugger.ParseAddr(headVal.Value);
