@@ -72,7 +72,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     }
 
-    internal sealed class VisualizerWrapper : SimpleWrapper
+    internal class VisualizerWrapper : SimpleWrapper
     {
         public readonly Natvis.VisualizerInfo Visualizer;
         private readonly bool _isVisualizerView;
@@ -91,6 +91,16 @@ namespace Microsoft.MIDebugEngine.Natvis
         public override string FullName()
         {
             return _isVisualizerView ? Parent.Name + ",viz" : Name;
+        }
+    }
+
+    internal sealed class LinkedListContinueWrapper: VisualizerWrapper
+    {
+        public readonly IVariableInformation ContinueNode;
+        public LinkedListContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, IVariableInformation continueNode, uint startIndex = 0)
+            : base(name, engine, underlyingVariable, viz, isVisualizerView, startIndex)
+        {
+            ContinueNode = continueNode;
         }
     }
 
@@ -607,7 +617,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         TraverseTree(headVal, goLeft, goRight, getValue, children, size);
                     }
                 }
-                else if (i is LinkedListItemsType)
+                else if (i is LinkedListItemsType) // pass in variable to Traverse call and see what it entails, use it to create subset of LinkedList
                 {
                     // example:
                     //    <LinkedListItems>
@@ -637,7 +647,15 @@ namespace Microsoft.MIDebugEngine.Natvis
                         size = MICore.Debugger.ParseUint(val);
                         // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
                     }
-                    IVariableInformation headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
+                    IVariableInformation headVal;
+                    if (variable is LinkedListContinueWrapper llcw)
+                    {
+                        headVal = llcw.ContinueNode;
+                    }
+                    else
+                    {
+                        headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
+                    }
                     ulong head = MICore.Debugger.ParseAddr(headVal.Value);
                     var content = new List<IVariableInformation>();
                     if (head != 0 && size != 0)
@@ -665,7 +683,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             continue;
                         }
-                        TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer);
+                        TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, (variable as SimpleWrapper).Parent);
                     }
                 }
                 else if (i is IndexListItemsType)
@@ -861,13 +879,16 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
-        private void TraverseList(IVariableInformation root, Traverse goNext, Traverse getValue, List<IVariableInformation> content, uint size, bool noValueInRoot)
+        private void TraverseList(IVariableInformation root, Traverse goNext, Traverse getValue, List<IVariableInformation> content, uint size, bool noValueInRoot, IVariableInformation parent)
         {
             uint i = 0;
             IVariableInformation node = root;
             ulong rootAddr = MICore.Debugger.ParseAddr(node.Value);
             ulong nextAddr = rootAddr;
-            while (node != null && nextAddr != 0 && i < size)
+            // while (node != null && nextAddr != 0 && i < size)
+
+            uint maxIndex = size < MAX_EXPAND ? size : MAX_EXPAND;
+            while (node != null && nextAddr != 0 && i < maxIndex)
             {
                 if (!noValueInRoot || nextAddr != rootAddr)
                 {
@@ -878,7 +899,8 @@ namespace Microsoft.MIDebugEngine.Natvis
                         i++;
                     }
                 }
-                if (i < size)
+                // if (i < size)
+                if (i < maxIndex)
                 {
                     node = goNext(node);
                 }
@@ -888,6 +910,18 @@ namespace Microsoft.MIDebugEngine.Natvis
                     // circular link, exit the loop
                     break;
                 }
+            }
+            if (size > i)
+            {
+                /*
+                IVariableInformation newLinkedList = parent;
+                node = goNext(node);
+                IVariableInformation tempVariable = new VisualizerWrapper("[More...]", _process.Engine, newLinkedList, FindType(newLinkedList), isVisualizerView: true);
+                content.Add(tempVariable);
+                */
+
+                IVariableInformation llcw = new LinkedListContinueWrapper("[More...]", _process.Engine, parent, FindType(parent), isVisualizerView: true, goNext(node), i);
+                content.Add(llcw);
             }
         }
 
