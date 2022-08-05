@@ -683,7 +683,8 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             continue;
                         }
-                        TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, (variable as SimpleWrapper).Parent);
+                        uint startIndex = (variable as VisualizerWrapper).StartIndex;
+                        TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, (variable as SimpleWrapper).Parent, startIndex);
                     }
                 }
                 else if (i is IndexListItemsType)
@@ -879,15 +880,15 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
-        private void TraverseList(IVariableInformation root, Traverse goNext, Traverse getValue, List<IVariableInformation> content, uint size, bool noValueInRoot, IVariableInformation parent)
+        private void TraverseList(IVariableInformation root, Traverse goNext, Traverse getValue, List<IVariableInformation> content, uint size, bool noValueInRoot, IVariableInformation parent, uint startIndex=0)
         {
-            uint i = 0;
+            uint i = startIndex;
             IVariableInformation node = root;
             ulong rootAddr = MICore.Debugger.ParseAddr(node.Value);
             ulong nextAddr = rootAddr;
             // while (node != null && nextAddr != 0 && i < size)
 
-            uint maxIndex = size < MAX_EXPAND ? size : MAX_EXPAND;
+            uint maxIndex = i + MAX_EXPAND > size ? size : i + MAX_EXPAND;
             while (node != null && nextAddr != 0 && i < maxIndex)
             {
                 if (!noValueInRoot || nextAddr != rootAddr)
