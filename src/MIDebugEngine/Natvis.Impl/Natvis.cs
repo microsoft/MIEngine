@@ -564,7 +564,21 @@ namespace Microsoft.MIDebugEngine.Natvis
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
-                                children.AddRange(arrayExpr.Children);
+                                // modify this such that first 50 elements are visualized, add a "More" node, and recurse
+                                // children.AddRange(arrayExpr.Children);
+                                uint currentIndex = (variable as VisualizerWrapper).StartIndex;
+                                uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
+                                for (uint index = currentIndex; index < maxIndex; ++index)
+                                {
+                                    children.Add(arrayExpr.Children[index]);
+                                }
+
+                                currentIndex += MAX_EXPAND;
+                                if (size > currentIndex)
+                                {
+                                    IVariableInformation moreVariable = new VisualizerWrapper("[More...]", _process.Engine, variable, FindType(variable), isVisualizerView: true, currentIndex);
+                                    children.Add(moreVariable);
+                                }
                             }
                             break;
                         }
