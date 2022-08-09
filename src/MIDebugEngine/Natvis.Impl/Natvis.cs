@@ -94,13 +94,40 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     }
 
-    internal sealed class LinkedListContinueWrapper: VisualizerWrapper
+    internal sealed class LinkedListContinueWrapper : VisualizerWrapper
     {
         public readonly IVariableInformation ContinueNode;
         public LinkedListContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, IVariableInformation continueNode, uint startIndex = 0)
             : base(name, engine, underlyingVariable, viz, isVisualizerView, startIndex)
         {
             ContinueNode = continueNode;
+        }
+    }
+
+    internal class Node
+    {
+        public enum ScanState
+        {
+            left, value, right
+        }
+        public ScanState State { get; set; }
+        public IVariableInformation Content { get; private set; }
+        public Node(IVariableInformation v)
+        {
+            Content = v;
+            State = ScanState.left;
+        }
+    }
+
+    internal sealed class TreeContinueWrapper : VisualizerWrapper
+    {
+        public readonly Node ContinueNode;
+        public readonly Stack<Node> Nodes;
+        public TreeContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, Node continueNode, Stack<Node> nodes, uint startIndex = 0)
+            : base (name, engine, underlyingVariable, viz, isVisualizerView, startIndex)
+        {
+            ContinueNode = continueNode;
+            Nodes = nodes;
         }
     }
 
@@ -519,7 +546,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             foreach (var i in expandType.Items)
             {
-                if (i is ItemType && !(variable is LinkedListContinueWrapper))
+                if (i is ItemType && !(variable is LinkedListContinueWrapper) && !(variable is TreeContinueWrapper))
                 {
                     ItemType item = (ItemType)i;
                     if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
@@ -603,7 +630,16 @@ namespace Microsoft.MIDebugEngine.Natvis
                     string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
                     uint size = MICore.Debugger.ParseUint(val, throwOnError: true);
                     // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
-                    IVariableInformation headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
+                    // IVariableInformation headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames); // variable is a VisualizerWrapper, children are (1) root and (2) numElements, parent is map (type BinarySearchTree)
+                    IVariableInformation headVal;
+                    if (variable is TreeContinueWrapper tcw)
+                    {
+                        headVal = tcw.ContinueNode.Content;
+                    }
+                    else
+                    {
+                        headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
+                    }
                     ulong head = MICore.Debugger.ParseAddr(headVal.Value);
                     var content = new List<IVariableInformation>();
                     if (head != 0 && size != 0)
@@ -628,7 +664,8 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             continue;
                         }
-                        TraverseTree(headVal, goLeft, goRight, getValue, children, size);
+                        uint startIndex = (variable as VisualizerWrapper).StartIndex;
+                        TraverseTree(headVal, goLeft, goRight, getValue, children, size, (variable as SimpleWrapper).Parent, startIndex);
                     }
                 }
                 else if (i is LinkedListItemsType) // pass in variable to Traverse call and see what it entails, use it to create subset of LinkedList
@@ -833,6 +870,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             return go;
         }
 
+        /*
         private class Node
         {
             public enum ScanState
@@ -847,13 +885,16 @@ namespace Microsoft.MIDebugEngine.Natvis
                 State = ScanState.left;
             }
         }
+        */
 
-        private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size)
+        private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size, IVariableInformation parent, uint startIndex=0)
         {
-            uint i = 0;
+            uint i = startIndex;
             var nodes = new Stack<Node>();
             nodes.Push(new Node(root));
-            while (nodes.Count > 0 && i < size)
+
+            uint maxIndex = i + MAX_EXPAND > size ? size : i + MAX_EXPAND;
+            while (nodes.Count > 0 && i < maxIndex)
             {
                 switch (nodes.Peek().State)
                 {
@@ -891,6 +932,11 @@ namespace Microsoft.MIDebugEngine.Natvis
                         }
                         break;
                 }
+            }
+            if (size > i)
+            {
+                IVariableInformation tcw = new TreeContinueWrapper("[More...]", _process.Engine, parent, FindType(parent), isVisualizerView: true, nodes.Peek(), nodes, i);
+                content.Add(tcw);
             }
         }
 
