@@ -546,7 +546,8 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             foreach (var i in expandType.Items)
             {
-                if (i is ItemType && variable.Name != ResourceStrings.MoreView)
+                // if (i is ItemType && variable.Name != ResourceStrings.MoreView)
+                if (i is ItemType) // testing why Size/Count tests are failing...might be because of this line.
                 {
                     ItemType item = (ItemType)i;
                     if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
