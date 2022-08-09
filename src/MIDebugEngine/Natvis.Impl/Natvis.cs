@@ -546,7 +546,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             foreach (var i in expandType.Items)
             {
-                if (i is ItemType && !(variable is LinkedListContinueWrapper) && !(variable is TreeContinueWrapper))
+                if (i is ItemType && variable.Name != ResourceStrings.MoreView)
                 {
                     ItemType item = (ItemType)i;
                     if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
@@ -566,7 +566,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                     uint size = 0;
                     string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
                     size = MICore.Debugger.ParseUint(val, throwOnError: true);
-                    // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
                     ValuePointerType[] vptrs = item.ValuePointer;
                     foreach (var vp in vptrs)
                     {
@@ -591,8 +590,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
-                                // modify this such that first 50 elements are visualized, add a "More" node, and recurse
-                                // children.AddRange(arrayExpr.Children);
                                 uint currentIndex = (variable as VisualizerWrapper).StartIndex;
                                 uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
                                 for (uint index = currentIndex; index < maxIndex; ++index)
@@ -603,7 +600,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 currentIndex += MAX_EXPAND;
                                 if (size > currentIndex)
                                 {
-                                    IVariableInformation moreVariable = new VisualizerWrapper("[More...]", _process.Engine, variable, FindType(variable), isVisualizerView: true, currentIndex);
+                                    IVariableInformation moreVariable = new VisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, FindType(variable), isVisualizerView: true, currentIndex);
                                     children.Add(moreVariable);
                                 }
                             }
@@ -629,8 +626,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                     string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
                     uint size = MICore.Debugger.ParseUint(val, throwOnError: true);
-                    // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
-                    // IVariableInformation headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames); // variable is a VisualizerWrapper, children are (1) root and (2) numElements, parent is map (type BinarySearchTree)
                     IVariableInformation headVal;
                     if (variable is TreeContinueWrapper tcw)
                     {
@@ -668,7 +663,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         TraverseTree(headVal, goLeft, goRight, getValue, children, size, (variable as SimpleWrapper).Parent, startIndex);
                     }
                 }
-                else if (i is LinkedListItemsType) // pass in variable to Traverse call and see what it entails, use it to create subset of LinkedList
+                else if (i is LinkedListItemsType)
                 {
                     // example:
                     //    <LinkedListItems>
@@ -696,7 +691,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
                         size = MICore.Debugger.ParseUint(val);
-                        // size = size > MAX_EXPAND ? MAX_EXPAND : size;   // limit expansion
                     }
                     IVariableInformation headVal;
                     if (variable is LinkedListContinueWrapper llcw)
@@ -870,23 +864,6 @@ namespace Microsoft.MIDebugEngine.Natvis
             return go;
         }
 
-        /*
-        private class Node
-        {
-            public enum ScanState
-            {
-                left, value, right
-            }
-            public ScanState State { get; set; }
-            public IVariableInformation Content { get; private set; }
-            public Node(IVariableInformation v)
-            {
-                Content = v;
-                State = ScanState.left;
-            }
-        }
-        */
-
         private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size, IVariableInformation parent, uint startIndex=0)
         {
             uint i = startIndex;
@@ -935,7 +912,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             if (size > i)
             {
-                IVariableInformation tcw = new TreeContinueWrapper("[More...]", _process.Engine, parent, FindType(parent), isVisualizerView: true, nodes.Peek(), nodes, i);
+                IVariableInformation tcw = new TreeContinueWrapper(ResourceStrings.MoreView, _process.Engine, parent, FindType(parent), isVisualizerView: true, nodes.Peek(), nodes, i);
                 content.Add(tcw);
             }
         }
@@ -946,7 +923,6 @@ namespace Microsoft.MIDebugEngine.Natvis
             IVariableInformation node = root;
             ulong rootAddr = MICore.Debugger.ParseAddr(node.Value);
             ulong nextAddr = rootAddr;
-            // while (node != null && nextAddr != 0 && i < size)
 
             uint maxIndex = i + MAX_EXPAND > size ? size : i + MAX_EXPAND;
             while (node != null && nextAddr != 0 && i < maxIndex)
@@ -960,7 +936,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                         i++;
                     }
                 }
-                // if (i < size)
                 if (i < maxIndex)
                 {
                     node = goNext(node);
@@ -974,14 +949,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             if (size > i)
             {
-                /*
-                IVariableInformation newLinkedList = parent;
-                node = goNext(node);
-                IVariableInformation tempVariable = new VisualizerWrapper("[More...]", _process.Engine, newLinkedList, FindType(newLinkedList), isVisualizerView: true);
-                content.Add(tempVariable);
-                */
-
-                IVariableInformation llcw = new LinkedListContinueWrapper("[More...]", _process.Engine, parent, FindType(parent), isVisualizerView: true, goNext(node), i);
+                IVariableInformation llcw = new LinkedListContinueWrapper(ResourceStrings.MoreView, _process.Engine, parent, FindType(parent), isVisualizerView: true, goNext(node), i);
                 content.Add(llcw);
             }
         }
