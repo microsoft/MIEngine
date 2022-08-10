@@ -876,7 +876,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             return go;
         }
 
-        private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size, IVariableInformation parent, uint startIndex=0)
+        private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size, IVariableInformation parent, uint startIndex = 0)
         {
             uint i = startIndex;
             var nodes = new Stack<Node>();
