@@ -546,8 +546,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             foreach (var i in expandType.Items)
             {
-                // if (i is ItemType && variable.Name != ResourceStrings.MoreView)
-                if (i is ItemType) // testing why Size/Count tests are failing...might be because of this line.
+                if (i is ItemType && variable.Name != ResourceStrings.MoreView) // we do not want to display Size/Count when expanding the "[More...]" node
                 {
                     ItemType item = (ItemType)i;
                     if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
@@ -660,7 +659,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             continue;
                         }
-                        uint startIndex = (variable as VisualizerWrapper).StartIndex;
+                        uint startIndex = 0;
+                        var visualizerWrapper = variable as VisualizerWrapper;
+                        if (visualizerWrapper != null)
+                        {
+                            startIndex = visualizerWrapper.StartIndex;
+                            TraverseTree(headVal, goLeft, goRight, getValue, children, size, visualizerWrapper.Parent, startIndex);
+                        }
                         TraverseTree(headVal, goLeft, goRight, getValue, children, size, (variable as SimpleWrapper).Parent, startIndex);
                     }
                 }
@@ -729,7 +734,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             continue;
                         }
-                        uint startIndex = (variable as VisualizerWrapper).StartIndex;
+                        uint startIndex = 0;
+                        var visualizerWrapper = variable as VisualizerWrapper;
+                        if (visualizerWrapper != null)
+                        {
+                            startIndex = visualizerWrapper.StartIndex;
+                            TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, visualizerWrapper.Parent, startIndex);
+                        }
                         TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, (variable as SimpleWrapper).Parent, startIndex);
                     }
                 }
