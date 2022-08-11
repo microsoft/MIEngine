@@ -678,11 +678,11 @@ namespace Microsoft.MIDebugEngine.Natvis
                         if (visualizerWrapper != null)
                         {
                             startIndex = visualizerWrapper.StartIndex;
-                            TraverseTree(headVal, goLeft, goRight, getValue, children, size, visualizerWrapper.Parent, startIndex);
+                            TraverseTree(headVal, goLeft, goRight, getValue, children, size, variable, visualizerWrapper.Parent, startIndex);
                         }
                         else
                         {
-                            TraverseTree(headVal, goLeft, goRight, getValue, children, size, (variable as SimpleWrapper).Parent, startIndex);
+                            TraverseTree(headVal, goLeft, goRight, getValue, children, size, variable, (variable as SimpleWrapper).Parent, startIndex);
                         }
                     }
                 }
@@ -901,12 +901,19 @@ namespace Microsoft.MIDebugEngine.Natvis
             return go;
         }
 
-        private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size, IVariableInformation parent, uint startIndex = 0)
+        private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size, IVariableInformation variable, IVariableInformation parent, uint startIndex = 0)
         {
             uint i = startIndex;
-            // test -- need to delete; figure out if we can retrieve TreeContinueWrapper from parent
             var nodes = new Stack<Node>();
-            nodes.Push(new Node(root));
+            var tcwVariable = variable as TreeContinueWrapper;
+            if (tcwVariable != null)
+            {
+                nodes = tcwVariable.Nodes;
+            }
+            else
+            {
+                nodes.Push(new Node(root));
+            }
 
             uint maxIndex = i + MAX_EXPAND > size ? size : i + MAX_EXPAND;
             while (nodes.Count > 0 && i < maxIndex)
