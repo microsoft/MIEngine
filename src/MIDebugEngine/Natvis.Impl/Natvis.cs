@@ -76,17 +76,14 @@ namespace Microsoft.MIDebugEngine.Natvis
     {
         public readonly Natvis.VisualizerInfo Visualizer;
         private readonly bool _isVisualizerView;
-        private readonly uint _startIndex;
 
-        public VisualizerWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, uint startIndex = 0)
+        public VisualizerWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView)
             : base(name, engine, underlyingVariable)
         {
             Visualizer = viz;
             _isVisualizerView = isVisualizerView;
-            _startIndex = startIndex;
         }
         public override bool IsVisualized { get { return _isVisualizerView; } }
-        public uint StartIndex { get { return _startIndex; } }
         public override string TypeName { get { return String.Empty; } }
         public override string FullName()
         {
@@ -94,7 +91,19 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     }
 
-    internal sealed class LinkedListContinueWrapper : VisualizerWrapper
+    internal class PaginatedVisualizerWrapper : VisualizerWrapper
+    {
+        private readonly uint _startIndex;
+
+        public PaginatedVisualizerWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, uint startIndex=0)
+            : base(name, engine, underlyingVariable, viz, isVisualizerView)
+        {
+            _startIndex = startIndex;
+        }
+        public uint StartIndex { get { return _startIndex; } }
+    }
+
+    internal sealed class LinkedListContinueWrapper : PaginatedVisualizerWrapper
     {
         public readonly IVariableInformation ContinueNode;
         public LinkedListContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, IVariableInformation continueNode, uint startIndex = 0)
@@ -119,7 +128,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     }
 
-    internal sealed class TreeContinueWrapper : VisualizerWrapper
+    internal sealed class TreeContinueWrapper : PaginatedVisualizerWrapper
     {
         public readonly Node ContinueNode;
         public readonly Stack<Node> Nodes;
@@ -590,7 +599,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
-                                uint currentIndex = (variable as VisualizerWrapper).StartIndex;
+                                uint currentIndex = (variable as PaginatedVisualizerWrapper).StartIndex;
                                 uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
                                 for (uint index = currentIndex; index < maxIndex; ++index)
                                 {
@@ -600,7 +609,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 currentIndex += MAX_EXPAND;
                                 if (size > currentIndex)
                                 {
-                                    IVariableInformation moreVariable = new VisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, FindType(variable), isVisualizerView: true, currentIndex);
+                                    IVariableInformation moreVariable = new PaginatedVisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, FindType(variable), isVisualizerView: true, currentIndex);
                                     children.Add(moreVariable);
                                 }
                             }
@@ -660,7 +669,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             continue;
                         }
                         uint startIndex = 0;
-                        var visualizerWrapper = variable as VisualizerWrapper;
+                        var visualizerWrapper = variable as PaginatedVisualizerWrapper;
                         if (visualizerWrapper != null)
                         {
                             startIndex = visualizerWrapper.StartIndex;
@@ -735,7 +744,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             continue;
                         }
                         uint startIndex = 0;
-                        var visualizerWrapper = variable as VisualizerWrapper;
+                        var visualizerWrapper = variable as PaginatedVisualizerWrapper;
                         if (visualizerWrapper != null)
                         {
                             startIndex = visualizerWrapper.StartIndex;
@@ -786,7 +795,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             string processedExpr = ReplaceNamesInExpression(v.Value, variable, visualizer.ScopedNames);
                             Dictionary<string, string> indexDic = new Dictionary<string, string>();
-                            uint currentIndex = (variable as VisualizerWrapper).StartIndex;
+                            uint currentIndex = (variable as PaginatedVisualizerWrapper).StartIndex;
                             uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
                             for (uint index = currentIndex; index < maxIndex; ++index) // limit expansion to first 50 elements
                             {
@@ -800,7 +809,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             currentIndex += MAX_EXPAND;
                             if (size > currentIndex)
                             {
-                                IVariableInformation moreVariable = new VisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, visualizer, isVisualizerView: true, currentIndex);
+                                IVariableInformation moreVariable = new PaginatedVisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, visualizer, isVisualizerView: true, currentIndex);
                                 children.Add(moreVariable);
                             }
 
@@ -879,6 +888,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size, IVariableInformation parent, uint startIndex = 0)
         {
             uint i = startIndex;
+            // test -- need to delete; figure out if we can retrieve TreeContinueWrapper from parent
             var nodes = new Stack<Node>();
             nodes.Push(new Node(root));
 
