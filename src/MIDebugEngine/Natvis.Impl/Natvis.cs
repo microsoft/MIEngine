@@ -674,16 +674,19 @@ namespace Microsoft.MIDebugEngine.Natvis
                             continue;
                         }
                         uint startIndex = 0;
+                        IVariableInformation parent = variable;
                         var visualizerWrapper = variable as PaginatedVisualizerWrapper;
+                        var simpleWrapper = variable as SimpleWrapper;
                         if (visualizerWrapper != null)
                         {
                             startIndex = visualizerWrapper.StartIndex;
-                            TraverseTree(headVal, goLeft, goRight, getValue, children, size, variable, visualizerWrapper.Parent, startIndex);
+                            parent = visualizerWrapper.Parent;
                         }
-                        else
+                        else if (simpleWrapper != null)
                         {
-                            TraverseTree(headVal, goLeft, goRight, getValue, children, size, variable, (variable as SimpleWrapper).Parent, startIndex);
+                            parent = simpleWrapper.Parent;
                         }
+                        TraverseTree(headVal, goLeft, goRight, getValue, children, size, variable, parent, startIndex);
                     }
                 }
                 else if (i is LinkedListItemsType)
@@ -752,16 +755,19 @@ namespace Microsoft.MIDebugEngine.Natvis
                             continue;
                         }
                         uint startIndex = 0;
+                        IVariableInformation parent = variable;
                         var visualizerWrapper = variable as PaginatedVisualizerWrapper;
+                        var simpleWrapper = variable as SimpleWrapper;
                         if (visualizerWrapper != null)
                         {
                             startIndex = visualizerWrapper.StartIndex;
-                            TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, visualizerWrapper.Parent, startIndex);
+                            parent = visualizerWrapper.Parent;
                         }
-                        else
+                        else if (simpleWrapper != null)
                         {
-                            TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, (variable as SimpleWrapper).Parent, startIndex);
+                            parent = simpleWrapper.Parent;
                         }
+                        TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, parent, startIndex);
                     }
                 }
                 else if (i is IndexListItemsType)
