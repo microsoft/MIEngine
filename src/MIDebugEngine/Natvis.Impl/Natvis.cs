@@ -599,7 +599,12 @@ namespace Microsoft.MIDebugEngine.Natvis
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
-                                uint currentIndex = (variable as PaginatedVisualizerWrapper).StartIndex;
+                                uint currentIndex = 0;
+                                var pvwVariable = variable as PaginatedVisualizerWrapper;
+                                if (pvwVariable != null)
+                                {
+                                    currentIndex = (variable as PaginatedVisualizerWrapper).StartIndex;
+                                }
                                 uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
                                 for (uint index = currentIndex; index < maxIndex; ++index)
                                 {
@@ -675,7 +680,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                             startIndex = visualizerWrapper.StartIndex;
                             TraverseTree(headVal, goLeft, goRight, getValue, children, size, visualizerWrapper.Parent, startIndex);
                         }
-                        TraverseTree(headVal, goLeft, goRight, getValue, children, size, (variable as SimpleWrapper).Parent, startIndex);
+                        else
+                        {
+                            TraverseTree(headVal, goLeft, goRight, getValue, children, size, (variable as SimpleWrapper).Parent, startIndex);
+                        }
                     }
                 }
                 else if (i is LinkedListItemsType)
@@ -750,7 +758,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                             startIndex = visualizerWrapper.StartIndex;
                             TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, visualizerWrapper.Parent, startIndex);
                         }
-                        TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, (variable as SimpleWrapper).Parent, startIndex);
+                        else
+                        {
+                            TraverseList(headVal, goNext, getValue, children, size, item.NoValueHeadPointer, (variable as SimpleWrapper).Parent, startIndex);
+                        }
                     }
                 }
                 else if (i is IndexListItemsType)
@@ -795,7 +806,12 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             string processedExpr = ReplaceNamesInExpression(v.Value, variable, visualizer.ScopedNames);
                             Dictionary<string, string> indexDic = new Dictionary<string, string>();
-                            uint currentIndex = (variable as PaginatedVisualizerWrapper).StartIndex;
+                            uint currentIndex = 0;
+                            var pvwVariable = variable as PaginatedVisualizerWrapper;
+                            if (pvwVariable != null)
+                            {
+                                currentIndex = (variable as PaginatedVisualizerWrapper).StartIndex;
+                            }
                             uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
                             for (uint index = currentIndex; index < maxIndex; ++index) // limit expansion to first 50 elements
                             {
