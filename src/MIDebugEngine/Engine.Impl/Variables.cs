@@ -524,13 +524,8 @@ namespace Microsoft.MIDebugEngine
                     string consoleResults = null;
 
                     consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures: true);
-                    Value = String.Empty;
+                    Value = consoleResults;
                     this.TypeName = null;
-
-                    if (!String.IsNullOrEmpty(consoleResults))
-                    {
-                        _debuggedProcess.WriteOutput(consoleResults);
-                    }
                 }
                 else
                 {
