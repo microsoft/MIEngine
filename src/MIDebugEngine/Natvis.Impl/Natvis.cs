@@ -136,7 +136,7 @@ namespace Microsoft.MIDebugEngine.Natvis
     {
         public readonly Node ContinueNode;
         public readonly Stack<Node> Nodes;
-        public TreeContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, Node continueNode, Stack<Node> nodes, uint startIndex = 0)
+        public TreeContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, Node continueNode, Stack<Node> nodes, uint startIndex)
             : base (name, engine, underlyingVariable, viz, isVisualizerView, startIndex)
         {
             ContinueNode = continueNode;
