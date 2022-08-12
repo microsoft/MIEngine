@@ -90,7 +90,9 @@ namespace Microsoft.MIDebugEngine.Natvis
             return _isVisualizerView ? Parent.Name + ",viz" : Name;
         }
     }
-
+    /// <summary>
+    /// Represents a VisualizedWrapper that starts at an offset.
+    /// </summary>
     internal class PaginatedVisualizerWrapper : VisualizerWrapper
     {
         private readonly uint _startIndex;
