@@ -104,7 +104,9 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
         public uint StartIndex { get { return _startIndex; } }
     }
-
+    /// <summary>
+    /// Represents the continuation of a LinkedListItemsType.
+    /// </summary>
     internal sealed class LinkedListContinueWrapper : PaginatedVisualizerWrapper
     {
         public readonly IVariableInformation ContinueNode;
