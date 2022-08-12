@@ -110,7 +110,7 @@ namespace Microsoft.MIDebugEngine.Natvis
     internal sealed class LinkedListContinueWrapper : PaginatedVisualizerWrapper
     {
         public readonly IVariableInformation ContinueNode;
-        public LinkedListContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, IVariableInformation continueNode, uint startIndex = 0)
+        public LinkedListContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, IVariableInformation continueNode, uint startIndex)
             : base(name, engine, underlyingVariable, viz, isVisualizerView, startIndex)
         {
             ContinueNode = continueNode;
