@@ -964,7 +964,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
-        private void TraverseList(IVariableInformation root, Traverse goNext, Traverse getValue, List<IVariableInformation> content, uint size, bool noValueInRoot, IVariableInformation parent, uint startIndex=0)
+        private void TraverseList(IVariableInformation root, Traverse goNext, Traverse getValue, List<IVariableInformation> content, uint size, bool noValueInRoot, IVariableInformation parent, uint startIndex)
         {
             uint i = startIndex;
             IVariableInformation node = root;
