@@ -910,12 +910,12 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// Traverse tree based on specified startIndex.
         /// Then add wrappers for Natvis tree visualizations.
         /// </summary>
-        /// <param name="root"></param>
-        /// <param name="goLeft"></param>
-        /// <param name="goRight"></param>
-        /// <param name="getValue"></param>
-        /// <param name="content"></param>
-        /// <param name="size"></param>
+        /// <param name="root">Root of the tree</param>
+        /// <param name="goLeft">Left child of root</param>
+        /// <param name="goRight">Right child of root</param>
+        /// <param name="getValue">Root value</param>
+        /// <param name="content">List of IVariableInformation children</param>
+        /// <param name="size">Number of nodes in tree</param>
         /// <param name="variable">Tree to traverse if size <= 50. Otherwise, expandable continue wrapper.</param>
         /// <param name="parent">The tree to traverse</param>
         /// <param name="startIndex">Index to start traversing from</param>
