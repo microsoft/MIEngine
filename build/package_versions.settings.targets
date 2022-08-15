@@ -33,7 +33,7 @@
         <Microsoft_VisualStudio_Workspace_Version>15.0.392</Microsoft_VisualStudio_Workspace_Version>
         <Microsoft_VisualStudio_Workspace_VSIntegration_Version>15.0.392</Microsoft_VisualStudio_Workspace_VSIntegration_Version>
         <Microsoft_VisualStudio_TextManager_Interop_Version>17.0.0-previews-1-31410-258</Microsoft_VisualStudio_TextManager_Interop_Version>
-        <Microsoft_VSSDK_BuildTools_Version>17.0.1600</Microsoft_VSSDK_BuildTools_Version>
+        <Microsoft_VSSDK_BuildTools_Version>17.3.2093</Microsoft_VSSDK_BuildTools_Version>
         <System_Runtime_Loader_Version>4.3.0</System_Runtime_Loader_Version>
     </PropertyGroup>
 </Project>
