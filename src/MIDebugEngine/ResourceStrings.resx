@@ -156,6 +156,9 @@
   <data name="ModuleLoadedWithSymbols" xml:space="preserve">
     <value>Symbols loaded.</value>
   </data>
+  <data name="MoreView" xml:space="preserve">
+    <value>[More...]</value>
+  </data>
   <data name="SymbolsLoadedInfo" xml:space="preserve">
     <value>Symbols loaded - {0}</value>
   </data>
