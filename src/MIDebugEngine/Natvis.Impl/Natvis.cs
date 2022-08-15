@@ -813,7 +813,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             uint currentIndex = 0;
                             if (variable is PaginatedVisualizerWrapper pvwVariable)
                             {
-                                currentIndex = (variable as PaginatedVisualizerWrapper).StartIndex;
+                                currentIndex = pvwVariable.StartIndex;
                             }
                             uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
                             for (uint index = currentIndex; index < maxIndex; ++index) // limit expansion to first 50 elements
