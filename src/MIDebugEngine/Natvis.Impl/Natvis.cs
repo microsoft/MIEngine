@@ -911,10 +911,10 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// Then add wrappers for Natvis tree visualizations.
         /// </summary>
         /// <param name="root">Root of the tree</param>
-        /// <param name="goLeft">Left child of root</param>
-        /// <param name="goRight">Right child of root</param>
-        /// <param name="getValue">Root value</param>
-        /// <param name="content">List of IVariableInformation children</param>
+        /// <param name="goLeft">Traverse callback to retrieve left child of root</param>
+        /// <param name="goRight">Traverse callback to retrieve right child of root</param>
+        /// <param name="getValue">Callback to retrieve value of root</param>
+        /// <param name="content">List of variables to display given current variable</param>
         /// <param name="size">Number of nodes in tree</param>
         /// <param name="variable">Tree to traverse if size <= 50. Otherwise, expandable continue wrapper.</param>
         /// <param name="parent">The tree to traverse</param>
