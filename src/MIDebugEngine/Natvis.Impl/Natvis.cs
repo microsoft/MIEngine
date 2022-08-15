@@ -130,7 +130,9 @@ namespace Microsoft.MIDebugEngine.Natvis
             State = ScanState.left;
         }
     }
-
+    /// <summary>
+    /// Represents the continuation of a TreeItemsType.
+    /// </summary>
     internal sealed class TreeContinueWrapper : PaginatedVisualizerWrapper
     {
         public readonly Node ContinueNode;
@@ -558,7 +560,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             foreach (var i in expandType.Items)
             {
-                if (i is ItemType && !(variable is PaginatedVisualizerWrapper)) // we do not want to display Size/Count when expanding the "[More...]" node
+                if (i is ItemType && !(variable is PaginatedVisualizerWrapper)) // we do not want to repeatedly display other ItemTypes when expanding the "[More...]" node
                 {
                     ItemType item = (ItemType)i;
                     if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
@@ -904,6 +906,20 @@ namespace Microsoft.MIDebugEngine.Natvis
             return go;
         }
 
+        /// <summary>
+        /// Traverse tree based on specified startIndex.
+        /// Then add wrappers for Natvis tree visualizations.
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="goLeft"></param>
+        /// <param name="goRight"></param>
+        /// <param name="getValue"></param>
+        /// <param name="content"></param>
+        /// <param name="size"></param>
+        /// <param name="variable">Tree to traverse if size <= 50. Otherwise, expandable continue wrapper.</param>
+        /// <param name="parent">The tree to traverse</param>
+        /// <param name="startIndex">Index to start traversing from</param>
+        /// <returns></returns>
         private void TraverseTree(IVariableInformation root, Traverse goLeft, Traverse goRight, Traverse getValue, List<IVariableInformation> content, uint size, IVariableInformation variable, IVariableInformation parent, uint startIndex)
         {
             uint i = startIndex;
