@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
     SimpleDisplayObject obj_1;
 
-    SimpleVector vec(10);
+    SimpleVector vec(52);
     vec.Set(5, 20);
 
     SimpleLinkedList ll;
@@ -32,8 +32,8 @@ int main(int argc, char** argv)
     map.Insert(4);
     map.Insert(-72);
 
-    SimpleArray arr(15);
-    for (int i = 0 ; i < 15; i++)
+    SimpleArray arr(52);
+    for (int i = 0 ; i < 52; i++)
     {
         arr[i] = i * i;
     }
