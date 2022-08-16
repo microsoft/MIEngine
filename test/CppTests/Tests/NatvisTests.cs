@@ -118,14 +118,13 @@ namespace CppTests.Tests
 
                     this.Comment("Verifying IndexListItems natvis");
                     var arr = currentFrame.GetVariable("arr");
-                    Assert.Equal("{ size=15 }", arr.Value);
+                    Assert.Equal("{ size=52 }", arr.Value);
 
                     // Index element for IndexListItems
                     // Natvis retrieves items in reverse order.
-                    Assert.Equal("196", arr.GetVariable("[0]").Value);
-                    Assert.Equal("16", arr.GetVariable("[10]").Value);
-                    Assert.Equal("0", arr.GetVariable("[14]").Value);
-                    // TODO: Add test below when we can support the [More..] expansion to handle >50 elements
+                    Assert.Equal("2601", arr.GetVariable("[0]").Value);
+                    Assert.Equal("1681", arr.GetVariable("[10]").Value);
+                    Assert.Equal("0", arr.GetVariable("[More...]").GetVariable("[51]").Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
@@ -168,14 +167,14 @@ namespace CppTests.Tests
 
                     this.Comment("Verifying ArrayItems natvis");
                     var ll = currentFrame.GetVariable("vec");
-                    Assert.Equal("{ size=10 }", ll.Value);
+                    Assert.Equal("{ size=52 }", ll.Value);
 
                     // Custom Item in natvis
-                    Assert.Equal("10", ll.GetVariable("Size").Value);
+                    Assert.Equal("52", ll.GetVariable("Size").Value);
 
                     // Index element for ArrayItems
                     Assert.Equal("20", ll.GetVariable("[5]").Value);
-                    // TODO: Add test below when we can support the [More..] expansion to handle >50 elements
+                    Assert.Equal("0", ll.GetVariable("[More...]").GetVariable("[51]").Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
@@ -220,8 +219,7 @@ namespace CppTests.Tests
 
                     // Index element for LinkedListItems
                     Assert.Equal("5", ll.GetVariable("[5]").Value);
-                    // TODO: Uncomment line below when we can support the [More..] expansion to handle >50 elements
-                    // Assert.Equal("75", ll.GetVariable("[More...]").GetVariable("[75]").Value);
+                    Assert.Equal("75", ll.GetVariable("[More...]").GetVariable("[75]").Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
