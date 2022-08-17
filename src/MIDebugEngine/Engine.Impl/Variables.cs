@@ -431,7 +431,13 @@ namespace Microsoft.MIDebugEngine
             // TODO: could return '(T(*)[n])(exp)' but requires T
             var m = Regex.Match(trimmed, @"^\[?(\d+)\]?$");
             if (m.Success)
+            {
+                if (_engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb)
+                    return "*" + exp.Substring(0, lastComma) + "@" + trimmed;  // this does not work for lldb
+
                 return exp.Substring(0, lastComma);
+            }
+
 
             // array with dynamic size
             if (Regex.Match(trimmed, @"^\[([a-zA-Z_][a-zA-Z_\d]*)\]$").Success)
@@ -518,13 +524,8 @@ namespace Microsoft.MIDebugEngine
                     string consoleResults = null;
 
                     consoleResults = await MIDebugCommandDispatcher.ExecuteCommand(consoleCommand, _debuggedProcess, ignoreFailures: true);
-                    Value = String.Empty;
+                    Value = consoleResults;
                     this.TypeName = null;
-
-                    if (!String.IsNullOrEmpty(consoleResults))
-                    {
-                        _debuggedProcess.WriteOutput(consoleResults);
-                    }
                 }
                 else
                 {

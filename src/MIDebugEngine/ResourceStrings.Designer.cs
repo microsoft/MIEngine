@@ -302,6 +302,15 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [More...].
+        /// </summary>
+        internal static string MoreView {
+            get {
+                return ResourceManager.GetString("MoreView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit refresh required for visualized expressions.
         /// </summary>
         internal static string NoSideEffectsVisualizerMessage {

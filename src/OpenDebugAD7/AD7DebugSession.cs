@@ -811,7 +811,6 @@ namespace OpenDebugAD7
                 }
             }
 
-            BeforeContinue();
             ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
             m_isStepping = true;
 
@@ -837,6 +836,9 @@ namespace OpenDebugAD7
                 m_isStopped = true;
                 throw;
             }
+            // The program should now be stepping, so it is safe to discard the
+            // cached program state.
+            BeforeContinue();
         }
 
         private enum ClientId
