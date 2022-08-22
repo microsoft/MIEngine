@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,9 +22,9 @@ namespace DAREditor
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void SetProperty<T>(string propertyName, ref T memberVariable, T newValue) where T : IEquatable<T>
+        protected void SetProperty<T>(ref T memberVariable, T newValue,[CallerMemberName] string propertyName = null) where T : IEquatable<T>
         {
-            if (memberVariable.Equals(newValue))
+            if (memberVariable is not null && memberVariable.Equals(newValue))
             {
                 return;
             }
@@ -36,7 +37,7 @@ namespace DAREditor
         /// helper to send property change event
         /// </summary>
         /// <param name="propertyName">property name changed</param>
-        protected void OnPropertyChanged(string propertyName)
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             Debug.Assert(this.GetType().GetProperty(propertyName) != null, "Invalid Property Name");
             PropertyChangedEventHandler handler = this.PropertyChanged;
