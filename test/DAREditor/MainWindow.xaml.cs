@@ -24,6 +24,8 @@ namespace DAREditor
     /// </summary>
     public partial class MainWindow : Window
     {
+        bool _expectedTextValid = true;
+        bool _actualTextValid = true;
         readonly ViewModel _viewModel = new ViewModel();
 
         public MainWindow()
@@ -33,25 +35,21 @@ namespace DAREditor
             ActualRichTextBox.TextChanged += ActualRichTextBox_TextChanged;
             ExpectedRichTextBox.TextChanged += ExpectedRichTextBox_TextChanged;
         }
-
-        bool statusExpected = true;
-        bool statusActual = true;
         private void ExpectedRichTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             string content = RichTextHelper.GetContent(ExpectedRichTextBox);
             string content1 = RichTextHelper.GetContent(ActualRichTextBox);
-            if (JSONDescrepency.inputJSon(content, out Exception error) == null && error != null)
+            if (JSONHandler.TryDeserialize(content, out Exception error) == null && error != null)
             {
                 _viewModel.StatusText = $"Expected text is not JSON (expected): {error.Message}";
-                statusExpected = false;
+                _expectedTextValid = false;
             }
             else
             {
-                statusExpected = true;
-                if (statusExpected && statusActual)
+                _expectedTextValid = true;
+                if (_expectedTextValid && _actualTextValid)
                 {
                     _viewModel.StatusText = "JSON accepted";
-                    Debug.WriteLine("Change sent. New content:", content);
                 }
             }
         }
@@ -59,18 +57,17 @@ namespace DAREditor
         private void ActualRichTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             string content = RichTextHelper.GetContent(ActualRichTextBox);
-            if (JSONDescrepency.inputJSon(content, out Exception error) == null && error != null)
+            if (JSONHandler.TryDeserialize(content, out Exception error) == null && error != null)
             {
                 _viewModel.StatusText = $"Actual Text is not JSON (actual) {error.Message}";
-                statusActual = false;
+                _actualTextValid = false;
             }
             else
             {
-                statusActual = true;
-                if (statusActual && statusExpected)
+                _actualTextValid = true;
+                if (_actualTextValid && _expectedTextValid)
                 {
                     _viewModel.StatusText = "JSON accepted";
-                    Debug.WriteLine("Change sent. New content:", content);
                 }
             }
         }

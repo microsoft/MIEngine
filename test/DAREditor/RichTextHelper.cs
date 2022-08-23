@@ -10,9 +10,6 @@ using System.Windows.Documents;
 
 namespace DAREditor
 {
-    
-
-
     static class RichTextHelper
     {
         public static string GetContent(RichTextBox richTextBox)

@@ -17,24 +17,14 @@ namespace DAREditor
     internal class ViewModel : NotifyPropertyChangedImpl
     {
         string _statusText;
-
-        JSONDescrepency jsonconvert = new JSONDescrepency();
         public ViewModel()
         {
           _statusText = "TODO";
-            
         }
-
         public string StatusText
         {
             get => _statusText;
             set => SetProperty(ref _statusText, value);
         }
-        
-
-       
-
-        
     }
-   
 }

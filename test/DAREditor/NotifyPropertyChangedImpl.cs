@@ -22,7 +22,7 @@ namespace DAREditor
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void SetProperty<T>(ref T memberVariable, T newValue,[CallerMemberName] string propertyName = null) where T : IEquatable<T>
+        protected void SetProperty<T>(ref T memberVariable, T newValue, [CallerMemberName] string propertyName = null) where T : IEquatable<T>
         {
             if (memberVariable is not null && memberVariable.Equals(newValue))
             {

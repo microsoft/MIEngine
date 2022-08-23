@@ -6,9 +6,9 @@ using Newtonsoft.Json;
 using OpenDebug;
 namespace DAREditor
 {
-    class JSONDescrepency
+    static class JSONHandler
     {
-        public static object inputJSon(string input, out Exception error)
+        public static object TryDeserialize(string input, out Exception error)
         {
             error = null;
             try 
