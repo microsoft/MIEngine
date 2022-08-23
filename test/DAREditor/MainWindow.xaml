@@ -9,7 +9,7 @@ Licensed under the MIT license. See LICENSE file in the project root for full li
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DAREditor"
         mc:Ignorable="d"
-        Title="DAR Editor" Height="800" Width="1200">
+        Title="DAR Editor" Height="600" Width="1000">
     <Grid>
         <Grid.RowDefinitions>
             <!--0: Button row -->
@@ -37,9 +37,9 @@ Licensed under the MIT license. See LICENSE file in the project root for full li
             <Label Content="{Binding StatusText, Mode=OneWay}" />
         </StackPanel>
         <Label Grid.Row="2" Margin="0,5,0,0" >Expected:</Label>
-        <RichTextBox Grid.Row="3" Name="ExpectedRichTextBox"/>
+        <RichTextBox Grid.Row="3" Name="ExpectedRichTextBox" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
         <CheckBox Grid.Row="4" Margin="0,5,0,0">Ignore Order</CheckBox>
         <Label Grid.Row="5" Margin="0,8,0,0">Actual:</Label>
-        <RichTextBox Grid.Row="6"></RichTextBox>
+        <RichTextBox Grid.Row="6" Name="ActualRichTextBox" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </Window>

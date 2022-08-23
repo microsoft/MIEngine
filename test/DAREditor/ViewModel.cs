@@ -6,22 +6,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
+using System.Windows.Controls;
+using System.Windows;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace DAREditor
 {
     internal class ViewModel : NotifyPropertyChangedImpl
     {
         string _statusText;
-
         public ViewModel()
         {
-            _statusText = "TODO";
+          _statusText = "TODO";
         }
-
         public string StatusText
         {
             get => _statusText;
-            set => SetProperty(nameof(StatusText), ref _statusText, value);
+            set => SetProperty(ref _statusText, value);
         }
     }
 }
