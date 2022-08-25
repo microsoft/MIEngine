@@ -578,7 +578,12 @@ namespace Microsoft.MIDebugEngine.Natvis
                         continue;
                     }
                     uint size = 0;
-                    string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+
+                    // replace $i with Item.Rank here before passing it into GetExpressionValue
+                    string substitute = item.Size.Replace("$i", item.Rank);
+
+                    // string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                    string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames);
                     size = MICore.Debugger.ParseUint(val, throwOnError: true);
                     ValuePointerType[] vptrs = item.ValuePointer;
                     foreach (var vp in vptrs)
@@ -612,7 +617,16 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
                                 for (uint index = currentIndex; index < maxIndex; ++index)
                                 {
-                                    children.Add(arrayExpr.Children[index]);
+                                    // let's get this working for the 2D case, currently hardcoded
+
+                                    if (!string.IsNullOrEmpty(item.Rank))
+                                    {
+                                        int rank = Int32.Parse(item.Rank, CultureInfo.InvariantCulture);
+                                        string s = "[" + index / rank + "," + index % rank + "]";
+                                        arrayExpr.Children[index].Name = s;
+                                    }
+
+                                    children.Add(arrayExpr.Children[index]); // need to change the Name of each Children element here
                                 }
 
                                 currentIndex += MAX_EXPAND;
