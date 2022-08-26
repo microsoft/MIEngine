@@ -584,7 +584,8 @@ namespace Microsoft.MIDebugEngine.Natvis
 
                     // string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
                     string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames);
-                    size = MICore.Debugger.ParseUint(val, throwOnError: true);
+                    int rank = Int32.Parse(item.Rank, CultureInfo.InvariantCulture);
+                    size = MICore.Debugger.ParseUint(val, throwOnError: true) * (uint)rank; // we want size * rank here
                     ValuePointerType[] vptrs = item.ValuePointer;
                     foreach (var vp in vptrs)
                     {
@@ -621,7 +622,6 @@ namespace Microsoft.MIDebugEngine.Natvis
 
                                     if (!string.IsNullOrEmpty(item.Rank))
                                     {
-                                        int rank = Int32.Parse(item.Rank, CultureInfo.InvariantCulture);
                                         string s = "[" + index / rank + "," + index % rank + "]";
                                         arrayExpr.Children[index].Name = s;
                                     }
