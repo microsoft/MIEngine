@@ -223,12 +223,28 @@ namespace CppTests.Tests
                     Assert.Equal("2000", ll.GetVariable("Size").Value);
 
                     var more = ll.GetVariable("[More...]");
-                    for (int i = 1; i < 20; i++)
+                    for (int i = 1; i < 40; i++)
                     {
                         string idx = (i * 50).ToString();
                         this.Comment($"Verifying ArrayItems [More...] for {idx}");
                         Assert.Equal(idx, more.GetVariable("[" + idx + "]").Value);
-                        more = more.GetVariable("[More...]");
+                        if (i == 39)
+                        {
+                            // For 1950 to 1999 there should not be a [More...] node.
+                            try
+                            {
+                                more = more.GetVariable("[More...]");
+                                Assert.True(false, "Unexpected [More...] node for the last page.");
+                            }
+                            catch (KeyNotFoundException)
+                            {
+                                // Success
+                            }
+                        }
+                        else
+                        {
+                            more = more.GetVariable("[More...]");
+                        }
                     }
                 }
 

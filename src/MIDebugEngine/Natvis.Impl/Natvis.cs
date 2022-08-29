@@ -605,7 +605,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             //   If requestedSize > 1000, the evaluation will only grab the first 1000 elements.
 
                             // We want to limit it to at most 50.
-                            uint requestedSize = totalSize - startIndex > MAX_EXPAND ? MAX_EXPAND : totalSize - startIndex;
+                            uint requestedSize = Math.Min(MAX_EXPAND, totalSize - startIndex);
 
                             StringBuilder arrayBuilder = new StringBuilder();
                             arrayBuilder.Append('(');
