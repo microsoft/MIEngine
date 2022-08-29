@@ -36,7 +36,7 @@ namespace CppTests.Tests
 
         private const string NatvisName = "natvis";
         private const string NatvisSourceName = "main.cpp";
-        private const int ReturnSourceLine = 44;
+        private const int ReturnSourceLine = 48;
 
         [Theory]
         [RequiresTestSettings]
@@ -167,14 +167,69 @@ namespace CppTests.Tests
 
                     this.Comment("Verifying ArrayItems natvis");
                     var ll = currentFrame.GetVariable("vec");
-                    Assert.Equal("{ size=52 }", ll.Value);
+                    Assert.Equal("{ size=2000 }", ll.Value);
 
                     // Custom Item in natvis
-                    Assert.Equal("52", ll.GetVariable("Size").Value);
+                    Assert.Equal("2000", ll.GetVariable("Size").Value);
 
                     // Index element for ArrayItems
                     Assert.Equal("20", ll.GetVariable("[5]").Value);
-                    Assert.Equal("0", ll.GetVariable("[More...]").GetVariable("[51]").Value);
+                    Assert.Equal("51", ll.GetVariable("[More...]").GetVariable("[51]").Value);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        // Disable on macOS
+        // Error:
+        //   C-style cast from 'int' to 'int [10]' is not allowed
+        //   (int[10])*(((vec)._start))
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        public void Test2000ArrayItems(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks if ArrayItems can be visualized past 1000 elements.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying ArrayItems natvis");
+                    var ll = currentFrame.GetVariable("vec");
+                    Assert.Equal("{ size=2000 }", ll.Value);
+
+                    // Custom Item in natvis
+                    Assert.Equal("2000", ll.GetVariable("Size").Value);
+
+                    var more = ll.GetVariable("[More...]");
+                    for (int i = 1; i < 20; i++)
+                    {
+                        string idx = (i * 50).ToString();
+                        this.Comment($"Verifying ArrayItems [More...] for {idx}");
+                        Assert.Equal(idx, more.GetVariable("[" + idx + "]").Value);
+                        more = more.GetVariable("[More...]");
+                    }
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
@@ -294,7 +349,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint before assigning 'simpleClass' and end of method.");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, new int[] { 42, ReturnSourceLine });
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, new int[] { 46, ReturnSourceLine });
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
