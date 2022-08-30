@@ -213,7 +213,7 @@ namespace Microsoft.MIDebugEngine
             : this(ctx, engine, thread)
         {
             // strip off formatting string
-            _strippedName = StripFormatSpecifier(expr, out _format, thread.GetDebuggedThread().Id, ctx.Level);
+            _strippedName = ProcessFormatSpecifiers(expr, out _format);
             Name = displayName;
             IsParameter = isParameter;
             _parent = null;
@@ -225,7 +225,7 @@ namespace Microsoft.MIDebugEngine
             : this(parent.ThreadContext, engine, parent.Client)
         {
             // strip off formatting string
-            _strippedName = StripFormatSpecifier(expr, out _format, parent.Client.GetDebuggedThread().Id, parent.ThreadContext.Level);
+            _strippedName = ProcessFormatSpecifiers(expr, out _format);
             Name = displayName ?? expr;
             _parent = parent;
             VariableNodeType = NodeType.Synthetic;
@@ -236,7 +236,7 @@ namespace Microsoft.MIDebugEngine
             : this(parent._ctx, parent._engine, parent.Client)
         {
             // strip off formatting string
-            _strippedName = StripFormatSpecifier(expr, out _format, parent.Client.GetDebuggedThread().Id, parent._ctx.Level);
+            _strippedName = ProcessFormatSpecifiers(expr, out _format);
             Name = expr;
             VariableNodeType = NodeType.Root;
         }
@@ -337,9 +337,18 @@ namespace Microsoft.MIDebugEngine
         private ThreadContext _ctx;
         private bool _attribsFetched;
         private bool _isReadonly;
+        /// <summary>
+        /// This callback is used when we need to call into the engine for additional information for
+        /// the format specifier.
+        ///
+        /// <param name="int">threadId</param>
+        /// <param name="uint">frameLevel</param>
+        /// <returns>The expression to send to the engine</returns>
+        /// </summary>
+        private Func<int, uint, Task<string>> _deferedFormatExpression;
+        private IVariableInformation _parent;
         private string _format;
         private string _strippedName;  // "Name" stripped of format specifiers
-        private IVariableInformation _parent;
         private string _fullname;
 
         public enum NodeType
@@ -365,7 +374,7 @@ namespace Microsoft.MIDebugEngine
 
         private static Regex s_isFunction = new Regex(@".+\(.*\).*");
 
-        private string StripFormatSpecifier(string exp, out string formatSpecifier, int threadId, uint frameLevel)
+        private string ProcessFormatSpecifiers(string exp, out string formatSpecifier)
         {
             formatSpecifier = null; // will be used with -var-set-format
 
@@ -437,14 +446,24 @@ namespace Microsoft.MIDebugEngine
                 if (_engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb)
                 {
                     // return *<expression>@<count> which is only supported in GDB
-                    return $"*{expr}@{count}";
+                    return FormattableString.Invariant($"*{expr}@{count}");
                 }
                 else
                 {
-                    string derefType = GetDereferencedTypeString(expr, threadId, frameLevel);
+                    _deferedFormatExpression = async (int threadId, uint frameLevel) =>
+                    {
+                        string derefType = await GetDereferencedTypeString(expr, threadId, frameLevel);
 
-                    // return '*(T(*)[n])(exp)'
-                    return $"*({derefType}(*)[{count}])({expr})";
+                        if (!string.IsNullOrEmpty(derefType))
+                        {
+                            // Cast 'exp' to a pointer of an array of type 'T' with size 'n' with '*(T(*)[n])(exp)'
+                            return FormattableString.Invariant($"*({derefType}(*)[{count}])({expr})");
+                        }
+
+                        return string.Empty;
+                    };
+
+                    return expr;
                 }
             }
 
@@ -455,19 +474,25 @@ namespace Microsoft.MIDebugEngine
             return exp;
         }
 
-        private string GetDereferencedTypeString(string expr, int threadId, uint frameLevel)
+        private async Task<string> GetDereferencedTypeString(string expr, int threadId, uint frameLevel)
         {
             // TODO: Should we error if the current type is not a pointer type?
 
-            Task<string> eval = Task.Run(async () =>
-            {
-                // Evaluates: *expr
-                Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate($"*({expr})", threadId, frameLevel, 0, ResultClass.None);
-                return results.TryFindString("type");
-            });
-            eval.Wait();
+            // Evaluates: *expr
+            Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate($"*({expr})", threadId, frameLevel, 0, ResultClass.None);
 
-            return eval.Result;
+            if (results.ResultClass == ResultClass.done)
+            {
+                string varName = results.TryFindString("name");
+                if (!String.IsNullOrWhiteSpace(varName))
+                {
+                    // Remove the variable we created as we don't track it.
+                    await _engine.DebuggedProcess.MICommandFactory.VarDelete(varName);
+                }
+
+                return results.TryFindString("type");
+            }
+            return null;
         }
 
         public void AsyncEval(IDebugEventCallback2 pExprCallback)
@@ -571,7 +596,25 @@ namespace Microsoft.MIDebugEngine
 
                     int threadId = Client.GetDebuggedThread().Id;
                     uint frameLevel = _ctx.Level;
-                    Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(_strippedName, threadId, frameLevel, dwFlags, ResultClass.None);
+
+                    string expression = _strippedName;
+
+                    // If we have a deferred format expression, resolve it.
+                    if (_deferedFormatExpression != null)
+                    {
+                        string deferedExpression = await _deferedFormatExpression(threadId, frameLevel);
+
+                        if (!string.IsNullOrEmpty(deferedExpression))
+                        {
+                            expression = deferedExpression;
+                        }
+                        else
+                        {
+                            Debug.Fail(FormattableString.Invariant($"Failed to resolve deferred expression. Falling back to original: '{expression}'."));
+                        }
+                    }
+
+                    Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate(expression, threadId, frameLevel, dwFlags, ResultClass.None);
 
                     if (results.ResultClass == ResultClass.done)
                     {
