@@ -213,7 +213,7 @@ namespace Microsoft.MIDebugEngine
             : this(ctx, engine, thread)
         {
             // strip off formatting string
-            _strippedName = StripFormatSpecifier(expr, out _format);
+            _strippedName = StripFormatSpecifier(expr, out _format, thread.GetDebuggedThread().Id, ctx.Level);
             Name = displayName;
             IsParameter = isParameter;
             _parent = null;
@@ -225,7 +225,7 @@ namespace Microsoft.MIDebugEngine
             : this(parent.ThreadContext, engine, parent.Client)
         {
             // strip off formatting string
-            _strippedName = StripFormatSpecifier(expr, out _format);
+            _strippedName = StripFormatSpecifier(expr, out _format, parent.Client.GetDebuggedThread().Id, parent.ThreadContext.Level);
             Name = displayName ?? expr;
             _parent = parent;
             VariableNodeType = NodeType.Synthetic;
@@ -236,7 +236,7 @@ namespace Microsoft.MIDebugEngine
             : this(parent._ctx, parent._engine, parent.Client)
         {
             // strip off formatting string
-            _strippedName = StripFormatSpecifier(expr, out _format);
+            _strippedName = StripFormatSpecifier(expr, out _format, parent.Client.GetDebuggedThread().Id, parent._ctx.Level);
             Name = expr;
             VariableNodeType = NodeType.Root;
         }
@@ -365,7 +365,7 @@ namespace Microsoft.MIDebugEngine
 
         private static Regex s_isFunction = new Regex(@".+\(.*\).*");
 
-        private string StripFormatSpecifier(string exp, out string formatSpecifier)
+        private string StripFormatSpecifier(string exp, out string formatSpecifier, int threadId, uint frameLevel)
         {
             formatSpecifier = null; // will be used with -var-set-format
 
@@ -428,22 +428,46 @@ namespace Microsoft.MIDebugEngine
             }
 
             // array with static size
-            // TODO: could return '(T(*)[n])(exp)' but requires T
             var m = Regex.Match(trimmed, @"^\[?(\d+)\]?$");
             if (m.Success)
             {
+                string count = m.Groups[1].Value; // (\d+) capture group
+                string expr = exp.Substring(0, lastComma);
+
                 if (_engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb)
-                    return "*" + exp.Substring(0, lastComma) + "@" + trimmed;  // this does not work for lldb
+                {
+                    // return *<expression>@<count> which is only supported in GDB
+                    return $"*{expr}@{count}";
+                }
+                else
+                {
+                    string derefType = GetDereferencedTypeString(expr, threadId, frameLevel);
 
-                return exp.Substring(0, lastComma);
+                    // return '*(T(*)[n])(exp)'
+                    return $"*({derefType}(*)[{count}])({expr})";
+                }
             }
-
 
             // array with dynamic size
             if (Regex.Match(trimmed, @"^\[([a-zA-Z_][a-zA-Z_\d]*)\]$").Success)
                 return exp.Substring(0, lastComma);
 
             return exp;
+        }
+
+        private string GetDereferencedTypeString(string expr, int threadId, uint frameLevel)
+        {
+            // TODO: Should we error if the current type is not a pointer type?
+
+            Task<string> eval = Task.Run(async () =>
+            {
+                // Evaluates: *expr
+                Results results = await _engine.DebuggedProcess.MICommandFactory.VarCreate($"*({expr})", threadId, frameLevel, 0, ResultClass.None);
+                return results.TryFindString("type");
+            });
+            eval.Wait();
+
+            return eval.Result;
         }
 
         public void AsyncEval(IDebugEventCallback2 pExprCallback)
