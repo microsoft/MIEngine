@@ -577,9 +577,16 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         continue;
                     }
-                    uint size = 0;
+                    uint totalSize = 0;
                     string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
-                    size = MICore.Debugger.ParseUint(val, throwOnError: true);
+                    totalSize = MICore.Debugger.ParseUint(val, throwOnError: true);
+
+                    uint startIndex = 0;
+                    if (variable is PaginatedVisualizerWrapper pvwVariable)
+                    {
+                        startIndex = pvwVariable.StartIndex;
+                    }
+
                     ValuePointerType[] vptrs = item.ValuePointer;
                     foreach (var vp in vptrs)
                     {
@@ -591,34 +598,41 @@ namespace Microsoft.MIDebugEngine.Natvis
                             {
                                 continue;
                             }
+                            // Creates an expression: (T[50])*(<ValuePointer> + 50)
+                            // This evaluates for 50 elements of type T, starting at <ValuePointer> with an offet of 50 elements.
+                            // E.g. This will grab elements 50 - 99 from <ValuePointer>.
+                            // Note:
+                            //   If requestedSize > 1000, the evaluation will only grab the first 1000 elements.
+
+                            // We want to limit it to at most 50.
+                            uint requestedSize = Math.Min(MAX_EXPAND, totalSize - startIndex);
+
                             StringBuilder arrayBuilder = new StringBuilder();
                             arrayBuilder.Append('(');
                             arrayBuilder.Append(typename);
                             arrayBuilder.Append('[');
-                            arrayBuilder.Append(size);
+                            arrayBuilder.Append(requestedSize);
                             arrayBuilder.Append("])*(");
                             arrayBuilder.Append(vp.Value);
+                            arrayBuilder.Append('+');
+                            arrayBuilder.Append(startIndex);
                             arrayBuilder.Append(')');
                             string arrayStr = arrayBuilder.ToString();
+
                             IVariableInformation arrayExpr = GetExpression(arrayStr, variable, visualizer.ScopedNames);
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
-                                uint currentIndex = 0;
-                                if (variable is PaginatedVisualizerWrapper pvwVariable)
+                                uint offset = startIndex + requestedSize;
+
+                                for (uint index = 0; index < requestedSize; ++index)
                                 {
-                                    currentIndex = pvwVariable.StartIndex;
-                                }
-                                uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
-                                for (uint index = currentIndex; index < maxIndex; ++index)
-                                {
-                                    children.Add(arrayExpr.Children[index]);
+                                    children.Add(new SimpleWrapper("[" + (startIndex + index).ToString(CultureInfo.InvariantCulture) + "]", _process.Engine, arrayExpr.Children[index]));
                                 }
 
-                                currentIndex += MAX_EXPAND;
-                                if (size > currentIndex)
+                                if (totalSize > offset)
                                 {
-                                    IVariableInformation moreVariable = new PaginatedVisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, FindType(variable), isVisualizerView: true, currentIndex);
+                                    IVariableInformation moreVariable = new PaginatedVisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, FindType(variable), isVisualizerView: true, offset);
                                     children.Add(moreVariable);
                                 }
                             }
