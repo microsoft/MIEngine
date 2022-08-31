@@ -545,6 +545,53 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         private delegate IVariableInformation Traverse(IVariableInformation node);
 
+        // new function here
+        private string GetDisplayNameFromArrayIndex(int arrayIndex, int rank, int[] dimensions, bool isForward)
+        {
+            string retVal = "[";
+
+            int index = arrayIndex;
+
+            int i = rank - 1;
+            int inc = -1;
+            int endLoop = -1;
+
+            if (!isForward)
+            {
+                i = 0;
+                inc = 1;
+                endLoop = rank;
+            }
+
+            int[] indices = new int[rank];
+
+            while (i != endLoop)
+            {
+                int dimensionSize = dimensions[i];
+                int divResult = index / dimensionSize;
+                int modResult = index % dimensionSize;
+
+                indices[i] = (int)modResult;
+                index = divResult;
+
+                i += inc;
+            }
+
+            if (rank != 0)
+            {
+                retVal += indices[0];
+                for (i = 1; i < rank; i++)
+                {
+                    retVal += ",";
+                    retVal += indices[i];
+                }
+            }
+
+            retVal += "]";
+
+            return retVal;
+        }
+
         private IVariableInformation[] ExpandVisualized(IVariableInformation variable)
         {
             VisualizerInfo visualizer = FindType(variable);
@@ -577,15 +624,23 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         continue;
                     }
-                    uint size = 0;
-
-                    // replace $i with Item.Rank here before passing it into GetExpressionValue
-                    string substitute = item.Size.Replace("$i", item.Rank);
-
-                    // string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
-                    string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames);
+                    int size = 1;
                     int rank = Int32.Parse(item.Rank, CultureInfo.InvariantCulture);
-                    size = MICore.Debugger.ParseUint(val, throwOnError: true) * (uint)rank; // we want size * rank here
+                    int[] dimensions = new int[rank];
+
+                    for (int idx = 0; idx < rank; idx++)
+                    {
+                        // replace $i with Item.Rank here before passing it into GetExpressionValue
+                        string substitute = item.Size.Replace("$i", idx.ToString(CultureInfo.InvariantCulture));
+
+                        // string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                        // size should be {a, b, c, ...}
+                        string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames);
+                        int tmp = Int32.Parse(val, CultureInfo.InvariantCulture);
+                        dimensions[rank - 1 - idx] = tmp;
+                        size *= tmp;
+                    }
+
                     ValuePointerType[] vptrs = item.ValuePointer;
                     foreach (var vp in vptrs)
                     {
@@ -615,15 +670,15 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 {
                                     currentIndex = pvwVariable.StartIndex;
                                 }
-                                uint maxIndex = currentIndex + MAX_EXPAND > size ? size : currentIndex + MAX_EXPAND;
-                                for (uint index = currentIndex; index < maxIndex; ++index)
+                                uint maxIndex = currentIndex + MAX_EXPAND > (uint)size ? (uint)size : currentIndex + MAX_EXPAND;
+                                bool isForward = item.Direction == ArrayDirectionType.Forward;
+                                for (int index = (int)currentIndex; index < (int)maxIndex; ++index)
                                 {
                                     // let's get this working for the 2D case, currently hardcoded
 
                                     if (!string.IsNullOrEmpty(item.Rank))
                                     {
-                                        string s = "[" + index / rank + "," + index % rank + "]";
-                                        arrayExpr.Children[index].Name = s;
+                                        arrayExpr.Children[index].Name = GetDisplayNameFromArrayIndex(index, rank, dimensions, isForward); // what is dimensions???
                                     }
 
                                     children.Add(arrayExpr.Children[index]); // need to change the Name of each Children element here
