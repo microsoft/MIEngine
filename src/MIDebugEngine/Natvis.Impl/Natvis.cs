@@ -546,11 +546,12 @@ namespace Microsoft.MIDebugEngine.Natvis
         private delegate IVariableInformation Traverse(IVariableInformation node);
 
         // new function here
-        private string GetDisplayNameFromArrayIndex(int arrayIndex, int rank, int[] dimensions, bool isForward)
+        private string GetDisplayNameFromArrayIndex(uint arrayIndex, int rank, uint[] dimensions, bool isForward)
         {
-            string retVal = "[";
+            StringBuilder displayName = new StringBuilder();
+            // displayName.Append('[');
 
-            int index = arrayIndex;
+            uint index = arrayIndex;
 
             int i = rank - 1;
             int inc = -1;
@@ -563,15 +564,15 @@ namespace Microsoft.MIDebugEngine.Natvis
                 endLoop = rank;
             }
 
-            int[] indices = new int[rank];
+            uint[] indices = new uint[rank];
 
             while (i != endLoop)
             {
-                int dimensionSize = dimensions[i];
-                int divResult = index / dimensionSize;
-                int modResult = index % dimensionSize;
+                uint dimensionSize = dimensions[i];
+                uint divResult = index / dimensionSize;
+                uint modResult = index % dimensionSize;
 
-                indices[i] = (int)modResult;
+                indices[i] = modResult;
                 index = divResult;
 
                 i += inc;
@@ -579,17 +580,17 @@ namespace Microsoft.MIDebugEngine.Natvis
 
             if (rank != 0)
             {
-                retVal += indices[0];
+                displayName.Append(indices[0]);
                 for (i = 1; i < rank; i++)
                 {
-                    retVal += ",";
-                    retVal += indices[i];
+                    displayName.Append(',');
+                    displayName.Append(indices[i]);
                 }
             }
 
-            retVal += "]";
+            // displayName.Append(']');
 
-            return retVal;
+            return displayName.ToString();
         }
 
         private IVariableInformation[] ExpandVisualized(IVariableInformation variable)
@@ -624,21 +625,34 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         continue;
                     }
-                    int size = 1;
+
+                    uint totalSize = 0;
                     int rank = Int32.Parse(item.Rank, CultureInfo.InvariantCulture);
-                    int[] dimensions = new int[rank];
+                    uint[] dimensions = new uint[rank];
 
-                    for (int idx = 0; idx < rank; idx++)
+                    if (!string.IsNullOrEmpty(item.Rank))
                     {
-                        // replace $i with Item.Rank here before passing it into GetExpressionValue
-                        string substitute = item.Size.Replace("$i", idx.ToString(CultureInfo.InvariantCulture));
+                        totalSize = 1;
+                        for (int idx = 0; idx < rank; idx++)
+                        {
+                            // replace $i with Item.Rank here before passing it into GetExpressionValue
+                            string substitute = item.Size.Replace("$i", idx.ToString(CultureInfo.InvariantCulture));
+                            string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames);
+                            uint tmp = MICore.Debugger.ParseUint(val, throwOnError: true);
+                            dimensions[rank - 1 - idx] = tmp;
+                            totalSize *= tmp;
+                        }
+                    }
+                    else
+                    {
+                        string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                        totalSize = MICore.Debugger.ParseUint(val, throwOnError: true);
+                    }
 
-                        // string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
-                        // size should be {a, b, c, ...}
-                        string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames);
-                        int tmp = Int32.Parse(val, CultureInfo.InvariantCulture);
-                        dimensions[rank - 1 - idx] = tmp;
-                        size *= tmp;
+                    uint startIndex = 0;
+                    if (variable is PaginatedVisualizerWrapper pvwVariable)
+                    {
+                        startIndex = pvwVariable.StartIndex;
                     }
 
                     ValuePointerType[] vptrs = item.ValuePointer;
@@ -652,42 +666,57 @@ namespace Microsoft.MIDebugEngine.Natvis
                             {
                                 continue;
                             }
+                            // Creates an expression: (T[50])*(<ValuePointer> + 50)
+                            // This evaluates for 50 elements of type T, starting at <ValuePointer> with an offet of 50 elements.
+                            // E.g. This will grab elements 50 - 99 from <ValuePointer>.
+                            // Note:
+                            //   If requestedSize > 1000, the evaluation will only grab the first 1000 elements.
+
+                            // We want to limit it to at most 50.
+                            uint requestedSize = Math.Min(MAX_EXPAND, totalSize - startIndex);
+
                             StringBuilder arrayBuilder = new StringBuilder();
                             arrayBuilder.Append('(');
                             arrayBuilder.Append(typename);
                             arrayBuilder.Append('[');
-                            arrayBuilder.Append(size);
+                            arrayBuilder.Append(requestedSize);
                             arrayBuilder.Append("])*(");
                             arrayBuilder.Append(vp.Value);
+                            arrayBuilder.Append('+');
+                            arrayBuilder.Append(startIndex);
                             arrayBuilder.Append(')');
                             string arrayStr = arrayBuilder.ToString();
+
                             IVariableInformation arrayExpr = GetExpression(arrayStr, variable, visualizer.ScopedNames);
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
-                                uint currentIndex = 0;
-                                if (variable is PaginatedVisualizerWrapper pvwVariable)
-                                {
-                                    currentIndex = pvwVariable.StartIndex;
-                                }
-                                uint maxIndex = currentIndex + MAX_EXPAND > (uint)size ? (uint)size : currentIndex + MAX_EXPAND;
+                                uint offset = startIndex + requestedSize;
                                 bool isForward = item.Direction == ArrayDirectionType.Forward;
-                                for (int index = (int)currentIndex; index < (int)maxIndex; ++index)
-                                {
-                                    // let's get this working for the 2D case, currently hardcoded
 
+                                for (uint index = 0; index < requestedSize; ++index)
+                                {
+                                    /*
+                                        currentIndex = pvwVariable.StartIndex;
+                                    }
+                                    uint maxIndex = currentIndex + MAX_EXPAND > (uint)size ? (uint)size : currentIndex + MAX_EXPAND;
+                                    bool isForward = item.Direction == ArrayDirectionType.Forward;
+                                    for (uint index = currentIndex; index < maxIndex; ++index)
+                                    {
+                                    */
+                                    string displayName = (startIndex + index).ToString(CultureInfo.InvariantCulture);
                                     if (!string.IsNullOrEmpty(item.Rank))
                                     {
-                                        arrayExpr.Children[index].Name = GetDisplayNameFromArrayIndex(index, rank, dimensions, isForward); // what is dimensions???
+                                        displayName = GetDisplayNameFromArrayIndex(index, rank, dimensions, isForward);
                                     }
 
-                                    children.Add(arrayExpr.Children[index]); // need to change the Name of each Children element here
+                                    // children.Add(arrayExpr.Children[index]); // need to change the Name of each Children element here
+                                    children.Add(new SimpleWrapper("[" + displayName + "]", _process.Engine, arrayExpr.Children[index]));
                                 }
 
-                                currentIndex += MAX_EXPAND;
-                                if (size > currentIndex)
+                                if (totalSize > offset)
                                 {
-                                    IVariableInformation moreVariable = new PaginatedVisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, FindType(variable), isVisualizerView: true, currentIndex);
+                                    IVariableInformation moreVariable = new PaginatedVisualizerWrapper(ResourceStrings.MoreView, _process.Engine, variable, FindType(variable), isVisualizerView: true, offset);
                                     children.Add(moreVariable);
                                 }
                             }

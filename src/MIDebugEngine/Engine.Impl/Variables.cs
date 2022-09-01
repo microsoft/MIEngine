@@ -74,7 +74,7 @@ namespace Microsoft.MIDebugEngine
 
     internal sealed class VariableInformation : IVariableInformation
     {
-        public string Name { get; set; }
+        public string Name { get; private set; }
         public string Value { get; private set; }
         public string TypeName { get; private set; }
         public bool IsParameter { get; private set; }
