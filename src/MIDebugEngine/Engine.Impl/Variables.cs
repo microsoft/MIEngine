@@ -341,11 +341,12 @@ namespace Microsoft.MIDebugEngine
         /// This callback is used when we need to call into the engine for additional information for
         /// the format specifier.
         ///
-        /// <param name="int">threadId</param>
-        /// <param name="uint">frameLevel</param>
+        /// <param name="threadId">The threadId to use when calling the engine.</param>
+        /// <param name="frameLevel">The frameLevel to use when calling the engine.</param>
         /// <returns>The expression to send to the engine</returns>
         /// </summary>
-        private Func<int, uint, Task<string>> _deferedFormatExpression;
+        private delegate Task<string> DeferedFormatExpression(int threadId, uint frameLevel);
+        private DeferedFormatExpression _deferedFormatExpression;
         private IVariableInformation _parent;
         private string _format;
         private string _strippedName;  // "Name" stripped of format specifiers
@@ -452,7 +453,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     _deferedFormatExpression = async (int threadId, uint frameLevel) =>
                     {
-                        string derefType = await GetDereferencedTypeString(expr, threadId, frameLevel);
+                        string derefType = await GetDereferencedTypeStringAsync(expr, threadId, frameLevel);
 
                         if (!string.IsNullOrEmpty(derefType))
                         {
@@ -474,7 +475,7 @@ namespace Microsoft.MIDebugEngine
             return exp;
         }
 
-        private async Task<string> GetDereferencedTypeString(string expr, int threadId, uint frameLevel)
+        private async Task<string> GetDereferencedTypeStringAsync(string expr, int threadId, uint frameLevel)
         {
             // TODO: Should we error if the current type is not a pointer type?
 
