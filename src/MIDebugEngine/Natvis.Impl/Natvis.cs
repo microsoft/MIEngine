@@ -627,12 +627,14 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
 
                     uint totalSize = 0;
-                    int rank = Int32.Parse(item.Rank, CultureInfo.InvariantCulture);
-                    uint[] dimensions = new uint[rank];
+                    int rank = 0;
+                    uint[] dimensions = null;
 
                     if (!string.IsNullOrEmpty(item.Rank))
                     {
                         totalSize = 1;
+                        rank = Int32.Parse(item.Rank, CultureInfo.InvariantCulture);
+                        dimensions = new uint[rank];
                         for (int idx = 0; idx < rank; idx++)
                         {
                             // replace $i with Item.Rank here before passing it into GetExpressionValue
