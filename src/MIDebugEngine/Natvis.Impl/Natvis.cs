@@ -549,8 +549,6 @@ namespace Microsoft.MIDebugEngine.Natvis
         private string GetDisplayNameFromArrayIndex(uint arrayIndex, int rank, uint[] dimensions, bool isForward)
         {
             StringBuilder displayName = new StringBuilder();
-            // displayName.Append('[');
-
             uint index = arrayIndex;
 
             int i = rank - 1;
@@ -580,15 +578,14 @@ namespace Microsoft.MIDebugEngine.Natvis
 
             if (rank != 0)
             {
-                displayName.Append(indices[0]);
+                string format = _process.Engine.CurrentRadix() == 16 ? "{0:X}" : "{0:D}";
+                displayName.AppendFormat(CultureInfo.InvariantCulture, format, indices[0]);
                 for (i = 1; i < rank; i++)
                 {
                     displayName.Append(',');
-                    displayName.Append(indices[i]);
+                    displayName.AppendFormat(CultureInfo.InvariantCulture, format, indices[i]);
                 }
             }
-
-            // displayName.Append(']');
 
             return displayName.ToString();
         }
@@ -641,7 +638,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             string substitute = item.Size.Replace("$i", idx.ToString(CultureInfo.InvariantCulture));
                             string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames);
                             uint tmp = MICore.Debugger.ParseUint(val, throwOnError: true);
-                            dimensions[rank - 1 - idx] = tmp;
+                            dimensions[idx] = tmp;
                             totalSize *= tmp;
                         }
                     }
@@ -694,25 +691,16 @@ namespace Microsoft.MIDebugEngine.Natvis
                             if (arrayExpr.CountChildren != 0)
                             {
                                 uint offset = startIndex + requestedSize;
-                                bool isForward = item.Direction == ArrayDirectionType.Forward;
+                                bool isForward = item.Direction != ArrayDirectionType.Backward;
 
                                 for (uint index = 0; index < requestedSize; ++index)
                                 {
-                                    /*
-                                        currentIndex = pvwVariable.StartIndex;
-                                    }
-                                    uint maxIndex = currentIndex + MAX_EXPAND > (uint)size ? (uint)size : currentIndex + MAX_EXPAND;
-                                    bool isForward = item.Direction == ArrayDirectionType.Forward;
-                                    for (uint index = currentIndex; index < maxIndex; ++index)
-                                    {
-                                    */
                                     string displayName = (startIndex + index).ToString(CultureInfo.InvariantCulture);
                                     if (!string.IsNullOrEmpty(item.Rank))
                                     {
                                         displayName = GetDisplayNameFromArrayIndex(index, rank, dimensions, isForward);
                                     }
 
-                                    // children.Add(arrayExpr.Children[index]); // need to change the Name of each Children element here
                                     children.Add(new SimpleWrapper("[" + displayName + "]", _process.Engine, arrayExpr.Children[index]));
                                 }
 
