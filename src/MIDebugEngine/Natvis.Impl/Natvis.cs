@@ -545,51 +545,6 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         private delegate IVariableInformation Traverse(IVariableInformation node);
 
-        // new function here
-        private string GetDisplayNameFromArrayIndex(uint arrayIndex, int rank, uint[] dimensions, bool isForward)
-        {
-            StringBuilder displayName = new StringBuilder();
-            uint index = arrayIndex;
-
-            int i = rank - 1;
-            int inc = -1;
-            int endLoop = -1;
-
-            if (!isForward)
-            {
-                i = 0;
-                inc = 1;
-                endLoop = rank;
-            }
-
-            uint[] indices = new uint[rank];
-
-            while (i != endLoop)
-            {
-                uint dimensionSize = dimensions[i];
-                uint divResult = index / dimensionSize;
-                uint modResult = index % dimensionSize;
-
-                indices[i] = modResult;
-                index = divResult;
-
-                i += inc;
-            }
-
-            if (rank != 0)
-            {
-                string format = _process.Engine.CurrentRadix() == 16 ? "{0:X}" : "{0:D}";
-                displayName.AppendFormat(CultureInfo.InvariantCulture, format, indices[0]);
-                for (i = 1; i < rank; i++)
-                {
-                    displayName.Append(',');
-                    displayName.AppendFormat(CultureInfo.InvariantCulture, format, indices[i]);
-                }
-            }
-
-            return displayName.ToString();
-        }
-
         private IVariableInformation[] ExpandVisualized(IVariableInformation variable)
         {
             VisualizerInfo visualizer = FindType(variable);
@@ -630,7 +585,11 @@ namespace Microsoft.MIDebugEngine.Natvis
                     if (!string.IsNullOrEmpty(item.Rank))
                     {
                         totalSize = 1;
-                        rank = Int32.Parse(item.Rank, CultureInfo.InvariantCulture);
+                        if (!int.TryParse(item.Rank, NumberStyles.None, CultureInfo.InvariantCulture, out rank))
+                        {
+                            string expressionValue = GetExpressionValue(item.Rank, variable, visualizer.ScopedNames);
+                            rank = Int32.Parse(expressionValue, CultureInfo.InvariantCulture);
+                        }
                         dimensions = new uint[rank];
                         for (int idx = 0; idx < rank; idx++)
                         {
@@ -696,7 +655,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 for (uint index = 0; index < requestedSize; ++index)
                                 {
                                     string displayName = (startIndex + index).ToString(CultureInfo.InvariantCulture);
-                                    if (!string.IsNullOrEmpty(item.Rank))
+                                    if (rank > 0)
                                     {
                                         displayName = GetDisplayNameFromArrayIndex(index, rank, dimensions, isForward);
                                     }
@@ -1360,5 +1319,47 @@ namespace Microsoft.MIDebugEngine.Natvis
             expressionVariable.SyncEval();
             return FormatDisplayString(expressionVariable).value;
         }
+
+        private string GetDisplayNameFromArrayIndex(uint arrayIndex, int rank, uint[] dimensions, bool isForward)
+        {
+            StringBuilder displayName = new StringBuilder();
+            uint index = arrayIndex;
+
+            int i = rank - 1;
+            int inc = -1;
+            int endLoop = -1;
+
+            if (!isForward)
+            {
+                i = 0;
+                inc = 1;
+                endLoop = rank;
+            }
+
+            uint[] indices = new uint[rank];
+
+            while (i != endLoop)
+            {
+                uint dimensionSize = dimensions[i];
+                uint divResult = index / dimensionSize;
+                uint modResult = index % dimensionSize;
+
+                indices[i] = modResult;
+                index = divResult;
+
+                i += inc;
+            }
+
+            string format = _process.Engine.CurrentRadix() == 16 ? "0x{0:X}" : "{0:D}";
+            displayName.AppendFormat(CultureInfo.InvariantCulture, format, indices[0]);
+            for (i = 1; i < rank; i++)
+            {
+                displayName.Append(',');
+                displayName.AppendFormat(CultureInfo.InvariantCulture, format, indices[i]);
+            }
+
+            return displayName.ToString();
+        }
+
     }
 }
