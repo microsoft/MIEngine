@@ -1703,10 +1703,11 @@ namespace OpenDebugAD7
                 }
                 else
                 {
-                    // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types
+                    // No formatting flags provided in the request - use the default format, which includes the module name and argument names / types / values
                     flags |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE |
                                 enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS |
                                 enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES |
+                                enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES |
                                 enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_NAMES;
                 }
 
