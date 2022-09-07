@@ -36,7 +36,7 @@ namespace CppTests.Tests
 
         private const string NatvisName = "natvis";
         private const string NatvisSourceName = "main.cpp";
-        private const int ReturnSourceLine = 48;
+        private const int ReturnSourceLine = 51;
 
         [Theory]
         [RequiresTestSettings]
