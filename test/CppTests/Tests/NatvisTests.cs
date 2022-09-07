@@ -175,6 +175,10 @@ namespace CppTests.Tests
                     // Index element for ArrayItems
                     Assert.Equal("20", ll.GetVariable("[5]").Value);
                     Assert.Equal("51", ll.GetVariable("[More...]").GetVariable("[51]").Value);
+
+                    // Multi-dimensional array
+                    var c = currentFrame.GetVariable("c");
+                    Assert.Equal("3", c.GetVariable("[1,1]").Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
