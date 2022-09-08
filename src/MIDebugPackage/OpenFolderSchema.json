@@ -185,6 +185,15 @@
               },
               "hardwareBreakpoints": {
                 "$ref": "#/definitions/cpp_schema/definitions/hardwareBreakpointsOptions"
+              },
+              "unknownBreakpointHandling": {
+                "type": "string",
+                "enum": [
+                  "throw",
+                  "stop",
+                  "ignore"
+                ],
+                "description": "Controls how breakpoints set externally (usually via raw GDB commands) are handled when hit.\nAllowed values are \"throw\", which acts as if an exception was thrown by the application, \"stop\", which only pauses the debug session, and \"ignore\", which continues execution without pausing. The default value is \"throw\"."
               }
             },
             "definitions": {

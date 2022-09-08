@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace MICore.Json.LaunchOptions
@@ -113,6 +115,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("hardwareBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public HardwareBreakpointInfo HardwareBreakpointInfo { get; set; }
+
+        /// <summary>
+        /// Controls how breakpoints set externally (usually via raw GDB commands) are handled when hit. "throw" acts as if an exception was thrown by the application, "stop" only pauses the debug session, and "ignore" continues execution without pausing.
+        /// </summary>
+        [JsonProperty("unknownBreakpointHandling", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public UnknownBreakpointHandling? UnknownBreakpointHandling { get; set; }
     }
 
     public partial class AttachOptions : BaseOptions
@@ -263,6 +271,19 @@ namespace MICore.Json.LaunchOptions
         }
 
         #endregion
+    }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum UnknownBreakpointHandling
+    {
+        [EnumMember(Value = "throw")]
+        Throw,
+
+        [EnumMember(Value = "stop")]
+        Stop,
+
+        [EnumMember(Value = "ignore")]
+        Ignore,
     }
 
     public partial class LaunchOptions : BaseOptions
