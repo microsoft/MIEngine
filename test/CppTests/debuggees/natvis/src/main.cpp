@@ -3,7 +3,7 @@
 #include "SimpleVector.h"
 #include "SimpleArray.h"
 #include "SimpleClass.h"
-#include "C.h"
+#include "SimpleMatrix.h"
 
 class SimpleDisplayObject
 {
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     SimpleClass* simpleClass = nullptr;
     simpleClass = new SimpleClass();
 
-    C c(5, 8, false);
+    SimpleMatrix matrix(5, 8, false);
 
     return 0;
 }

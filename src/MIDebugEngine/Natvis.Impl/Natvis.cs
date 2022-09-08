@@ -590,6 +590,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                             string expressionValue = GetExpressionValue(item.Rank, variable, visualizer.ScopedNames);
                             rank = Int32.Parse(expressionValue, CultureInfo.InvariantCulture);
                         }
+                        if (rank <= 0)
+                        {
+                            throw new Exception("Invalid rank value");
+                        }
                         dimensions = new uint[rank];
                         for (int idx = 0; idx < rank; idx++)
                         {
@@ -655,7 +659,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 for (uint index = 0; index < requestedSize; ++index)
                                 {
                                     string displayName = (startIndex + index).ToString(CultureInfo.InvariantCulture);
-                                    if (rank > 0)
+                                    if (rank > 1)
                                     {
                                         displayName = GetDisplayNameFromArrayIndex(index, rank, dimensions, isForward);
                                     }
