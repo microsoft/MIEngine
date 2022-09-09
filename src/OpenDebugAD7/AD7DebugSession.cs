@@ -226,7 +226,7 @@ namespace OpenDebugAD7
                 if (engineLogging.HasValue)
                 {
                     m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, engineLogging.Value);
-                    HostLogger.InitalizeEngineLogger((logLevel, message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), null);
+                    HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), null);
                 }
 
                 bool? trace = logging.GetValueAsBool("trace");
@@ -245,7 +245,7 @@ namespace OpenDebugAD7
                 if (natvisDiagnostics.HasValue)
                 {
                     m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, natvisDiagnostics.Value);
-                    HostLogger.InitalizeNatvisLogger((logLevel, message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, "Natvis Diagnostics: " + message));
+                    HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, "Natvis Diagnostics: " + message));
                 }
             }
         }

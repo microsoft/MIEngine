@@ -336,7 +336,7 @@ namespace OpenDebug
             try
             {
                 HostTelemetry.ReportCurrentException(e, null);
-                HostLogger.GetEngineLogChannel()?.WriteLine(LogLevel.Error, "EXCEPTION: " + e.ToString());
+                HostLogger.GetEngineLogChannel()?.WriteLine("EXCEPTION: " + e.ToString());
             }
             catch
             {

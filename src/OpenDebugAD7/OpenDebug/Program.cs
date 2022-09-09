@@ -49,6 +49,8 @@ namespace OpenDebug
                         Console.WriteLine("--trace=response: print requests and response from VS Code to the console.");
                         Console.WriteLine("--engineLogging[=filePath]: Enable logging from the debug engine. If not");
                         Console.WriteLine("    specified, the log will go to the console.");
+                        Console.WriteLine("--natvisDiagnostics[=filePath]: Enable logging for natvis. If not");
+                        Console.WriteLine("    specified, the log will go to the console.");
                         Console.WriteLine("--server[=port_num] : Start the debug adapter listening for requests on the");
                         Console.WriteLine("    specified TCP/IP port instead of stdin/out. If port is not specified");
                         Console.WriteLine("    TCP {0} will be used.", DEFAULT_PORT);
@@ -65,10 +67,17 @@ namespace OpenDebug
                         break;
                     case "--engineLogging":
                         loggingCategories.Add(LoggingCategory.EngineLogging);
-                        HostLogger.InitalizeEngineLogger((logLevel, msg) =>
+                        HostLogger.EnableHostLogging((msg) =>
                         {
-                            Console.WriteLine(msg);
+                            Console.Error.WriteLine(msg);
                         }, null);
+                        break;
+                    case "--natvisDiagnostics":
+                        loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
+                        HostLogger.EnableNatvisLogger((msg) =>
+                        {
+                            Console.Error.WriteLine(msg);
+                        });
                         break;
                     case "--server":
                         port = DEFAULT_PORT;
@@ -96,10 +105,27 @@ namespace OpenDebug
                             try
                             {
                                 string logFilePath = a.Substring("--engineLogging=".Length);
-                                HostLogger.InitalizeEngineLogger((logLevel, msg) =>
+                                HostLogger.EnableHostLogging((msg) =>
                                 {
-                                    Console.WriteLine(msg);
+                                    Console.Error.WriteLine(msg);
                                 }, logFilePath);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.Error.WriteLine("OpenDebugAD7: ERROR: Unable to open log file. " + e.Message);
+                                return -1;
+                            }
+                        }
+                        else if (a.StartsWith("--natvisDiagnostics", StringComparison.Ordinal))
+                        {
+                            loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
+                            try
+                            {
+                                string logFilePath = a.Substring("--engineLogging=".Length);
+                                HostLogger.EnableNatvisLogger((msg) =>
+                                {
+                                    Console.Error.WriteLine(msg);
+                                });
                             }
                             catch (Exception e)
                             {

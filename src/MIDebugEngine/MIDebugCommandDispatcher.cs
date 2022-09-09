@@ -99,7 +99,7 @@ namespace Microsoft.MIDebugEngine
             Logger.Reset();
         }
 
-        public static void WriteLogToOutput(LogLevel level, string line)
+        public static void WriteLogToOutput(string line)
         {
             lock (s_processes)
             {

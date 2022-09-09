@@ -41,7 +41,7 @@ namespace MICore
         public class LogInfo
         {
             public string logFile;
-            public Action<LogLevel, string> logToOutput;
+            public Action<string> logToOutput;
             public bool enabled;
         };
 
@@ -82,7 +82,7 @@ namespace MICore
             { 
                 if (CmdLogInfo.enabled)
                 {   // command configured log file
-                    HostLogger.InitalizeEngineLogger(CmdLogInfo.logToOutput, CmdLogInfo.logFile);
+                    HostLogger.EnableHostLogging(CmdLogInfo.logToOutput, CmdLogInfo.logFile);
                     s_engineLogger = HostLogger.GetEngineLogChannel();
                 }
                 else
@@ -176,7 +176,7 @@ namespace MICore
         private void WriteLineImpl(string line)
         {
             string fullLine = String.Format(CultureInfo.CurrentCulture, "{2}: ({0}) {1}", (int)(DateTime.Now - s_initTime).TotalMilliseconds, line, _id);
-            HostLogger.GetEngineLogChannel()?.WriteLine(LogLevel.Trace, fullLine);
+            HostLogger.GetEngineLogChannel()?.WriteLine(fullLine);
 #if DEBUG
             Debug.WriteLine("MS_MIDebug: " + fullLine);
 #endif
