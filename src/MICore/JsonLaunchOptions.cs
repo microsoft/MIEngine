@@ -117,7 +117,7 @@ namespace MICore.Json.LaunchOptions
         public HardwareBreakpointInfo HardwareBreakpointInfo { get; set; }
 
         /// <summary>
-        /// Controls how breakpoints set externally (usually via raw GDB commands) are handled when hit. "throw" acts as if an exception was thrown by the application, "stop" only pauses the debug session, and "ignore" continues execution without pausing.
+        /// Controls how breakpoints set externally (usually via raw GDB commands) are handled when hit. "throw" acts as if an exception was thrown by the application and "stop" only pauses the debug session.
         /// </summary>
         [JsonProperty("unknownBreakpointHandling", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public UnknownBreakpointHandling? UnknownBreakpointHandling { get; set; }
@@ -280,10 +280,7 @@ namespace MICore.Json.LaunchOptions
         Throw,
 
         [EnumMember(Value = "stop")]
-        Stop,
-
-        [EnumMember(Value = "ignore")]
-        Ignore,
+        Stop
     }
 
     public partial class LaunchOptions : BaseOptions

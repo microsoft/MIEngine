@@ -1244,9 +1244,6 @@ namespace Microsoft.MIDebugEngine
                                                             bkptno, addr);
                                 _callback.OnException(thread, desc, "", 0);
                                 break;
-                            case MICore.Json.LaunchOptions.UnknownBreakpointHandling.Ignore:
-                                CmdContinueAsync();
-                                break;
                             case MICore.Json.LaunchOptions.UnknownBreakpointHandling.Stop:
                                 _callback.OnBreakpoint(thread, new ReadOnlyCollection<object>(new AD7BoundBreakpoint[] { }));
                                 break;
