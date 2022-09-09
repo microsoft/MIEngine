@@ -3,18 +3,23 @@
 #include "SimpleVector.h"
 #include "SimpleArray.h"
 #include "SimpleClass.h"
+#include "SimpleMatrix.h"
 
 class SimpleDisplayObject
 {
-    public:
-        SimpleDisplayObject(){}
+public:
+    SimpleDisplayObject() {}
 };
 
 int main(int argc, char** argv)
 {
     SimpleDisplayObject obj_1;
 
-    SimpleVector vec(52);
+    SimpleVector vec(2000);
+    for (int i = 0; i < 2000; i++)
+    {
+        vec.Set(i, i);
+    }
     vec.Set(5, 20);
 
     SimpleLinkedList ll;
@@ -33,13 +38,15 @@ int main(int argc, char** argv)
     map.Insert(-72);
 
     SimpleArray arr(52);
-    for (int i = 0 ; i < 52; i++)
+    for (int i = 0; i < 52; i++)
     {
         arr[i] = i * i;
     }
 
-    SimpleClass *simpleClass = nullptr;    
+    SimpleClass* simpleClass = nullptr;
     simpleClass = new SimpleClass();
+
+    SimpleMatrix matrix(5, 8, false);
 
     return 0;
 }
