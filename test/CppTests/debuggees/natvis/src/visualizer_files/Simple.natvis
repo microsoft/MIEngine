@@ -58,8 +58,8 @@
    </Expand>
   </Type>
 
-  <Type Name="C">
-    <DisplayString>C</DisplayString>
+  <Type Name="SimpleMatrix">
+    <DisplayString>SimpleMatrix</DisplayString>
     <Expand>
       <ArrayItems>
         <Direction>Forward</Direction>
