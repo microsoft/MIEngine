@@ -57,4 +57,16 @@
     </TreeItems>
    </Expand>
   </Type>
+
+  <Type Name="SimpleMatrix">
+    <DisplayString>SimpleMatrix</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Direction>Forward</Direction>
+        <Rank>2</Rank>
+        <Size>($i == 1) ? 2 : m_size2/2</Size>
+        <ValuePointer>m_pData</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
 </AutoVisualizer>
