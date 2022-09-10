@@ -1234,13 +1234,20 @@ namespace Microsoft.MIDebugEngine
                     }
                     else
                     {
-                        // This is not one of our breakpoints, so stop with a message. Possibly it
-                        // was set by the user via "-exec break ...", so display the available
-                        // information.
-                        string desc = String.Format(CultureInfo.CurrentCulture,
-                                                    ResourceStrings.UnknownBreakpoint,
-                                                    bkptno, addr);
-                        _callback.OnException(thread, desc, "", 0);
+                        // This is not one of our breakpoints. Possibly it was set by the user
+                        // via "-exec break ...", so display the available information.
+                        switch (_launchOptions.UnknownBreakpointHandling)
+                        {
+                            case MICore.Json.LaunchOptions.UnknownBreakpointHandling.Throw:
+                                string desc = String.Format(CultureInfo.CurrentCulture,
+                                                            ResourceStrings.UnknownBreakpoint,
+                                                            bkptno, addr);
+                                _callback.OnException(thread, desc, "", 0);
+                                break;
+                            case MICore.Json.LaunchOptions.UnknownBreakpointHandling.Stop:
+                                _callback.OnBreakpoint(thread, new ReadOnlyCollection<object>(new AD7BoundBreakpoint[] { }));
+                                break;
+                        }
                     }
                 }
             }

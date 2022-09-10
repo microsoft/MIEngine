@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.Debugger.Interop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using MICore.Json.LaunchOptions;
 
 namespace MICore
 {
@@ -1202,6 +1203,18 @@ namespace MICore
             }
         }
 
+        private UnknownBreakpointHandling _unknownBreakpointHandling;
+
+        public UnknownBreakpointHandling UnknownBreakpointHandling
+        {
+            get { return _unknownBreakpointHandling; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(UnknownBreakpointHandling));
+                _unknownBreakpointHandling = value;
+            }
+        }
+
         public string GetOptionsString()
         {
             try
@@ -1800,6 +1813,8 @@ namespace MICore
             {
                 throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.HardwareBreakpointInfo.Require), nameof(MIMode.Lldb)));
             }
+
+            this.UnknownBreakpointHandling = options.UnknownBreakpointHandling ?? UnknownBreakpointHandling.Throw;
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
