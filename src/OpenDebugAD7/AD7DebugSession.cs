@@ -242,10 +242,11 @@ namespace OpenDebugAD7
                 }
 
                 bool? natvisDiagnostics = logging.GetValueAsBool("natvisDiagnostics");
-                if (natvisDiagnostics.HasValue)
+                if (natvisDiagnostics.GetValueOrDefault(false))
                 {
-                    m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, natvisDiagnostics.Value);
-                    HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, "Natvis Diagnostics: " + message));
+                    m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
+                    // Since VS Code does not have a seperate Natvis Output Window and we send things to the Debug Console, prefix with '[Natvis]'
+                    HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, string.Concat("[Natvis] ", message)));
                 }
             }
         }

@@ -185,24 +185,35 @@ namespace Microsoft.DebugEngineHost
     }
 
     /// <summary>
-    /// 
+    /// The channel used for logging messages.
+    /// Channels are used if there are multiple types of logs,
+    /// e.g. Engine logs and Natvis logs
     /// </summary>
     public class HostLogChannel
     {
         /// <summary>
-        /// 
+        /// Can not create HostLogChannel via Constructor. It should be created within HostLogger.
         /// </summary>
-        /// <param name="message"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private HostLogChannel()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Writes the given message with a newline to the log channel.
+        /// </summary>
+        /// <param name="message">The message string to send.</param>
         public void WriteLine(string message)
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// 
+        /// Writes the given formatted message with the additional values with a newline to the log channel.
         /// </summary>
-        /// <param name="format"></param>
-        /// <param name="values"></param>
+        /// <param name="format">Format to use.</param>
+        /// <param name="values">Values to use within the provided format.</param>
         public void WriteLine(string format, params object[] values)
         {
             throw new NotImplementedException();
@@ -230,20 +241,20 @@ namespace Microsoft.DebugEngineHost
     /// </summary>
     public sealed class HostLogger
     {
-        // InitalizeNatvisLogger is only used in OpenDebugAD7
+        // EnableNatvisLogger is only used in OpenDebugAD7
 
         /// <summary>
-        /// 
+        /// Enables engine logging if not already enabled.
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="logFile"></param>
+        /// <param name="callback">The callback to use to send the engine log.</param>
+        /// <param name="logFile">The file to write engine logs to.</param>
         public static void EnableHostLogging(Action<string> callback, string logFile)
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// 
+        /// Gets the engine log channel created by 'EnableHostLogging'
         /// </summary>
         /// <returns></returns>
         public static HostLogChannel GetEngineLogChannel()
@@ -252,7 +263,7 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// 
+        /// Gets the Natvis log channel if its been created.
         /// </summary>
         /// <returns></returns>
         public static HostLogChannel GetNatvisLogChannel()

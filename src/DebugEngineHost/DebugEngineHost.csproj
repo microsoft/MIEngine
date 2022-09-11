@@ -30,7 +30,7 @@
     <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.DAP.cs" />
     <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.MI.cs" />
 
-    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Common\HostLogger.cs" />
+    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Common\HostLogChannel.cs" />
   </ItemGroup>
 
   <ItemGroup>

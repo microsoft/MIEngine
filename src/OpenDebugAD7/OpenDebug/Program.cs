@@ -116,23 +116,6 @@ namespace OpenDebug
                                 return -1;
                             }
                         }
-                        else if (a.StartsWith("--natvisDiagnostics", StringComparison.Ordinal))
-                        {
-                            loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
-                            try
-                            {
-                                string logFilePath = a.Substring("--engineLogging=".Length);
-                                HostLogger.EnableNatvisLogger((msg) =>
-                                {
-                                    Console.Error.WriteLine(msg);
-                                });
-                            }
-                            catch (Exception e)
-                            {
-                                Console.Error.WriteLine("OpenDebugAD7: ERROR: Unable to open log file. " + e.Message);
-                                return -1;
-                            }
-                        }
                         else if (a.StartsWith("--adapterDirectory=", StringComparison.Ordinal))
                         {
                             string adapterDirectory = a.Substring("--adapterDirectory=".Length);

@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+/*
+ * NOTE: This file is shared between DebugEngineHost and DebugEngineHost.VSCode
+ */
+
 using System;
 using System.Globalization;
 using System.IO;
@@ -11,6 +15,8 @@ namespace Microsoft.DebugEngineHost
     {
         private readonly Action<string> _log;
         private readonly StreamWriter _logFile;
+
+        private HostLogChannel() { }
 
         public HostLogChannel(Action<string> logAction, string file)
         {
@@ -56,53 +62,6 @@ namespace Microsoft.DebugEngineHost
         public void Close()
         {
             _logFile?.Close();
-        }
-    }
-
-    public sealed class HostLogger
-    {
-        private static HostLogChannel s_natvisLogChannel;
-        public static HostLogChannel s_engineLogChannel;
-
-        public static void EnableNatvisLogger(Action<string> callback)
-        {
-            if (s_natvisLogChannel == null)
-            {
-                // TODO: Support writing natvis logs to a file.
-                s_natvisLogChannel = new HostLogChannel(callback, null);
-            }
-        }
-
-        public static void EnableHostLogging(Action<string> callback, string logFile)
-        {
-            if (s_engineLogChannel == null)
-            {
-                s_engineLogChannel = new HostLogChannel(callback, logFile);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public static HostLogChannel GetEngineLogChannel()
-        {
-            return s_engineLogChannel;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public static HostLogChannel GetNatvisLogChannel()
-        {
-            return s_natvisLogChannel;
-        }
-
-        public static void Reset()
-        {
-            s_natvisLogChannel = null;
-            s_engineLogChannel = null;
         }
     }
 }

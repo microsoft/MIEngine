@@ -31,8 +31,8 @@ namespace MICore
         private static bool s_isEnabled;
         private static DateTime s_initTime;
         // NOTE: We never clean this up
-        private static HostLogChannel s_engineLogger;
-        private static HostLogChannel s_natvisLogger;
+        public HostLogChannel EngineLogger => HostLogger.GetEngineLogChannel();
+        public HostLogChannel NatvisLogger => HostLogger.GetNatvisLogChannel();
         private static int s_count;
         private readonly int _id;
 
@@ -78,43 +78,20 @@ namespace MICore
 
         public static void LoadMIDebugLogger(HostConfigurationStore configStore)
         {
-            if (s_engineLogger == null)
-            { 
-                if (CmdLogInfo.enabled)
-                {   // command configured log file
-                    HostLogger.EnableHostLogging(CmdLogInfo.logToOutput, CmdLogInfo.logFile);
-                    s_engineLogger = HostLogger.GetEngineLogChannel();
-                }
-                else
-                {   // use default logging
-                    s_engineLogger = HostLogger.GetEngineLogChannel();
-                    s_natvisLogger = HostLogger.GetNatvisLogChannel();
-                }
-
-                if (s_engineLogger != null)
-                {
-                    s_isEnabled = true;
-                }
+            if (CmdLogInfo.enabled)
+            {   // command configured log file
+                HostLogger.Reset();
+                HostLogger.EnableHostLogging(CmdLogInfo.logToOutput, CmdLogInfo.logFile);
+                s_isEnabled = true;
             }
-        }
-
-        public HostLogChannel GetNatvisChannelLog()
-        {
-            return s_natvisLogger;
         }
 
         public static void Reset()
         {
-            HostLogChannel logger;
             if (CmdLogInfo.enabled)
             {
-                logger = HostLogger.GetEngineLogChannel();
-                logger = Interlocked.Exchange(ref s_engineLogger, logger);
-                logger?.Close();
-                if (s_engineLogger != null)
-                {
-                    s_isEnabled = true;
-                }
+                HostLogger.Reset();
+                s_isEnabled = false;
             }
         }
 
