@@ -222,11 +222,27 @@ namespace OpenDebugAD7
                 m_logger.SetLoggingConfiguration(LoggingCategory.StdOut, logging.GetValueAsBool("programOutput").GetValueOrDefault(true));
                 m_logger.SetLoggingConfiguration(LoggingCategory.StdErr, logging.GetValueAsBool("programOutput").GetValueOrDefault(true));
 
-                bool? engineLogging = logging.GetValueAsBool("engineLogging");
-                if (engineLogging.HasValue)
+                JToken engineLogging = logging.GetValue("engineLogging", StringComparison.OrdinalIgnoreCase);
+                if (engineLogging != null)
                 {
-                    m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, engineLogging.Value);
-                    HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), null);
+                    if (engineLogging.Type == JTokenType.Boolean)
+                    {
+                        bool engineLoggingBool = engineLogging.Value<bool>();
+                        if (engineLoggingBool)
+                        {
+                            m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, true);
+                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), null, LogLevel.Trace);
+                        }
+                    }
+                    else if (engineLogging.Type == JTokenType.String)
+                    {
+                        string engineLoggingString = engineLogging.Value<string>();
+                        if (Enum.TryParse(engineLoggingString, ignoreCase: true, out LogLevel level))
+                        {
+                            m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, true);
+                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), null, level);
+                        }
+                    }
                 }
 
                 bool? trace = logging.GetValueAsBool("trace");
@@ -241,12 +257,27 @@ namespace OpenDebugAD7
                     m_logger.SetLoggingConfiguration(LoggingCategory.AdapterResponse, traceResponse.Value);
                 }
 
-                bool? natvisDiagnostics = logging.GetValueAsBool("natvisDiagnostics");
-                if (natvisDiagnostics.GetValueOrDefault(false))
+                JToken natvisDiagnostics = logging.GetValue("natvisDiagnostics", StringComparison.OrdinalIgnoreCase);
+                if (natvisDiagnostics != null)
                 {
-                    m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
-                    // Since VS Code does not have a seperate Natvis Output Window and we send things to the Debug Console, prefix with '[Natvis]'
-                    HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, string.Concat("[Natvis] ", message)));
+                    if (natvisDiagnostics.Type == JTokenType.Boolean)
+                    {
+                        bool natvisDiagnosticsBool = natvisDiagnostics.Value<bool>();
+                        if (natvisDiagnosticsBool)
+                        {
+                            m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
+                            HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, message), LogLevel.Trace);
+                        }
+                    }
+                    else if (natvisDiagnostics.Type == JTokenType.String)
+                    {
+                        string natvisDiagnosticsString = natvisDiagnostics.Value<string>();
+                        if (Enum.TryParse(natvisDiagnosticsString, ignoreCase: true, out LogLevel level))
+                        {
+                            m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
+                            HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, string.Concat("[Natvis] ", message)), level);
+                        }
+                    }
                 }
             }
         }

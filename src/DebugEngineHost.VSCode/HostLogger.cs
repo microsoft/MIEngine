@@ -10,20 +10,20 @@ namespace Microsoft.DebugEngineHost
         private static HostLogChannel s_natvisLogChannel;
         private static HostLogChannel s_engineLogChannel;
 
-        public static void EnableNatvisLogger(Action<string> callback)
+        public static void EnableNatvisLogger(Action<string> callback, LogLevel level = LogLevel.Information)
         {
             if (s_natvisLogChannel == null)
             {
                 // TODO: Support writing natvis logs to a file.
-                s_natvisLogChannel = new HostLogChannel(callback, null);
+                s_natvisLogChannel = new HostLogChannel(callback, null, level);
             }
         }
 
-        public static void EnableHostLogging(Action<string> callback, string logFile)
+        public static void EnableHostLogging(Action<string> callback, string logFile, LogLevel level = LogLevel.Information)
         {
             if (s_engineLogChannel == null)
             {
-                s_engineLogChannel = new HostLogChannel(callback, logFile);
+                s_engineLogChannel = new HostLogChannel(callback, logFile, level);
             }
         }
 

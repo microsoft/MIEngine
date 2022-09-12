@@ -1247,7 +1247,7 @@ namespace MICore
             if (string.IsNullOrEmpty(options))
                 throw new InvalidLaunchOptionsException(MICoreResources.Error_StringIsNullOrEmpty);
 
-            logger?.WriteTextBlock("LaunchOptions", options);
+            logger?.WriteTextBlock(LogLevel.Debug, "LaunchOptions", options);
 
             LaunchOptions launchOptions = null;
             Guid clsidLauncher = Guid.Empty;
@@ -1487,7 +1487,7 @@ namespace MICore
                     {
                         try
                         {
-                            logger?.WriteTextBlock("SupplementalOptions", suppOptions);
+                            logger?.WriteTextBlock(LogLevel.Debug, "SupplementalOptions", suppOptions);
                             XmlReader xmlRrd = OpenXml(suppOptions);
                             XmlSerializer serializer = GetXmlSerializer(typeof(Xml.LaunchOptions.SupplementalLaunchOptions));
                             return (Xml.LaunchOptions.SupplementalLaunchOptions)Deserialize(serializer, xmlRrd);

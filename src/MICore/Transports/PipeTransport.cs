@@ -11,6 +11,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -369,7 +370,7 @@ namespace MICore
             Process proc = new Process();
             proc.StartInfo.FileName = _pipePath;
             proc.StartInfo.Arguments = PipeLaunchOptions.ReplaceDebuggerCommandToken(_cmdArgs, commandText, true);
-            Logger.WriteLine("Running process {0} {1}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
+            Logger.WriteLine(LogLevel.Trace, "Running process {0} {1}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
             proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
             proc.EnableRaisingEvents = false;
             proc.StartInfo.RedirectStandardInput = false;

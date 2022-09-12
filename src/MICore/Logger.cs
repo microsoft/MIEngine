@@ -15,17 +15,10 @@ using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
-    public interface ILogger
-    {
-        void WriteLine(string line);
-
-        void WriteLine(string format, params object[] args);
-    }
-
     /// <summary>
     /// Class which implements logging. The logging is control by a registry key. If enabled, logging goes to %TMP%\Microsoft.MIDebug.log
     /// </summary>
-    public class Logger : ILogger
+    public class Logger
     {
         private static bool s_isInitialized;
         private static bool s_isEnabled;
@@ -64,7 +57,7 @@ namespace MICore
                 s_initTime = DateTime.Now;
 
                 LoadMIDebugLogger(configStore);
-                res.WriteLine("Initialized log at: " + s_initTime.ToString(CultureInfo.InvariantCulture));
+                res.WriteLine(LogLevel.Trace, "Initialized log at: " + s_initTime.ToString(CultureInfo.InvariantCulture));
             }
 
 #if DEBUG
@@ -98,38 +91,41 @@ namespace MICore
         /// <summary>
         /// If logging is enabled, writes a line of text to the log
         /// </summary>
+        /// <param name="level">[Required] The level of the log.</param>
         /// <param name="line">[Required] line to write</param>
-        public void WriteLine(string line)
+        public void WriteLine(LogLevel level, string line)
         {
             if (s_isEnabled)
             {
-                WriteLineImpl(line);
+                WriteLineImpl(level, line);
             }
         }
 
         /// <summary>
         /// If logging is enabled, writes a line of text to the log
         /// </summary>
+        /// <param name="level">[Required] The level of the log.</param>
         /// <param name="format">[Required] format string</param>
         /// <param name="args">arguments to use in the format string</param>
-        public void WriteLine(string format, params object[] args)
+        public void WriteLine(LogLevel level, string format, params object[] args)
         {
             if (s_isEnabled)
             {
-                WriteLineImpl(format, args);
+                WriteLineImpl(level, format, args);
             }
         }
 
         /// <summary>
         /// If logging is enabled, writes a block of text which may contain newlines to the log
         /// </summary>
+        /// <param name="level">[Required] The level of the log.</param>
         /// <param name="prefix">[Optional] Prefix to put on the front of each line</param>
         /// <param name="textBlock">Block of text to write</param>
-        public void WriteTextBlock(string prefix, string textBlock)
+        public void WriteTextBlock(LogLevel level, string prefix, string textBlock)
         {
             if (s_isEnabled)
             {
-                WriteTextBlockImpl(prefix, textBlock);
+                WriteTextBlockImpl(level, prefix, textBlock);
             }
         }
 
@@ -150,10 +146,10 @@ namespace MICore
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
-        private void WriteLineImpl(string line)
+        private void WriteLineImpl(LogLevel level, string line)
         {
             string fullLine = String.Format(CultureInfo.CurrentCulture, "{2}: ({0}) {1}", (int)(DateTime.Now - s_initTime).TotalMilliseconds, line, _id);
-            HostLogger.GetEngineLogChannel()?.WriteLine(fullLine);
+            HostLogger.GetEngineLogChannel()?.WriteLine(level, fullLine);
 #if DEBUG
             Debug.WriteLine("MS_MIDebug: " + fullLine);
 #endif
@@ -166,13 +162,13 @@ namespace MICore
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
-        private void WriteLineImpl(string format, object[] args)
+        private void WriteLineImpl(LogLevel level, string format, object[] args)
         {
-            WriteLineImpl(string.Format(CultureInfo.CurrentCulture, format, args));
+            WriteLineImpl(level, string.Format(CultureInfo.CurrentCulture, format, args));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
-        private void WriteTextBlockImpl(string prefix, string textBlock)
+        private void WriteTextBlockImpl(LogLevel level, string prefix, string textBlock)
         {
             using (var reader = new StringReader(textBlock))
             {
@@ -183,9 +179,9 @@ namespace MICore
                         break;
 
                     if (!string.IsNullOrEmpty(prefix))
-                        WriteLineImpl(prefix + line);
+                        WriteLineImpl(level, prefix + line);
                     else
-                        WriteLineImpl(line);
+                        WriteLineImpl(level, line);
                 }
             }
         }

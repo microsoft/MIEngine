@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -49,7 +50,7 @@ namespace OpenDebug
                         Console.WriteLine("--trace=response: print requests and response from VS Code to the console.");
                         Console.WriteLine("--engineLogging[=filePath]: Enable logging from the debug engine. If not");
                         Console.WriteLine("    specified, the log will go to the console.");
-                        Console.WriteLine("--natvisDiagnostics[=filePath]: Enable logging for natvis. If not");
+                        Console.WriteLine("--natvisDiagnostics[=logLevel]: Enable logging for natvis. If not");
                         Console.WriteLine("    specified, the log will go to the console.");
                         Console.WriteLine("--server[=port_num] : Start the debug adapter listening for requests on the");
                         Console.WriteLine("    specified TCP/IP port instead of stdin/out. If port is not specified");
@@ -70,14 +71,14 @@ namespace OpenDebug
                         HostLogger.EnableHostLogging((msg) =>
                         {
                             Console.Error.WriteLine(msg);
-                        }, null);
+                        }, null, LogLevel.Trace);
                         break;
                     case "--natvisDiagnostics":
                         loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
                         HostLogger.EnableNatvisLogger((msg) =>
                         {
                             Console.Error.WriteLine(msg);
-                        });
+                        }, LogLevel.Trace);
                         break;
                     case "--server":
                         port = DEFAULT_PORT;
@@ -108,7 +109,7 @@ namespace OpenDebug
                                 HostLogger.EnableHostLogging((msg) =>
                                 {
                                     Console.Error.WriteLine(msg);
-                                }, logFilePath);
+                                }, logFilePath, LogLevel.Trace);
                             }
                             catch (Exception e)
                             {

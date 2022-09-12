@@ -325,7 +325,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                 XmlSerializer serializer = new XmlSerializer(typeof(AutoVisualizer));
                 if (!File.Exists(path))
                 {
-                    _process.Logger.NatvisLogger?.WriteLine(ResourceStrings.FileNotFound, path);
+                    _process.Logger.NatvisLogger?.WriteLine(LogLevel.Error, ResourceStrings.FileNotFound, path);
                     return false;
                 }
                 XmlReaderSettings settings = new XmlReaderSettings();
@@ -355,7 +355,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             if (o is VisualizerType)
                             {
                                 VisualizerType v = (VisualizerType)o;
-                                TypeName t = TypeName.Parse(v.Name, _process.Logger);
+                                TypeName t = TypeName.Parse(v.Name, _process.Logger.NatvisLogger);
                                 if (t != null)
                                 {
                                     lock (_typeVisualizers)
@@ -368,7 +368,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 {
                                     foreach (var a in v.AlternativeType)
                                     {
-                                        t = TypeName.Parse(a.Name, _process.Logger);
+                                        t = TypeName.Parse(a.Name, _process.Logger.NatvisLogger);
                                         if (t != null)
                                         {
                                             lock (_typeVisualizers)
@@ -382,7 +382,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             else if (o is AliasType)
                             {
                                 AliasType a = (AliasType)o;
-                                TypeName t = TypeName.Parse(a.Name, _process.Logger);
+                                TypeName t = TypeName.Parse(a.Name, _process.Logger.NatvisLogger);
                                 if (t != null)
                                 {
                                     lock (_typeVisualizers)
@@ -406,7 +406,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             catch (Exception exception)
             {
                 // don't allow natvis failures to stop debugging
-                _process.Logger.NatvisLogger?.WriteLine(ResourceStrings.ErrorReadingFile, exception.Message, path);
+                _process.Logger.NatvisLogger?.WriteLine(LogLevel.Error, ResourceStrings.ErrorReadingFile, exception.Message, path);
                 return false;
             }
         }
@@ -451,7 +451,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 // don't allow natvis to mess up debugging
                 // eat any exceptions and return the variable's value
-                _process.Logger.NatvisLogger?.WriteLine("FormatDisplayString: " + e.Message);
+                _process.Logger.NatvisLogger?.WriteLine(LogLevel.Error, "FormatDisplayString: " + e.Message);
             }
             finally
             {
@@ -502,7 +502,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
             catch (Exception e)
             {
-                _process.Logger.WriteLine("natvis Expand: " + e.Message);    // TODO: add telemetry
+                _process.Logger.WriteLine(LogLevel.Error, "natvis Expand: " + e.Message);    // TODO: add telemetry
                 return variable.Children;
             }
         }
@@ -1098,7 +1098,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
 
                     string newName = ReplaceNamesInExpression(alias.Alias.Value, null, scopedNames);
-                    name = TypeName.Parse(newName, _process.Logger);
+                    name = TypeName.Parse(newName, _process.Logger.NatvisLogger);
                     aliasChain++;
                     if (aliasChain > MAX_ALIAS_CHAIN)
                     {
@@ -1120,7 +1120,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 return _vizCache[variable.TypeName];
             }
-            TypeName parsedName = TypeName.Parse(variable.TypeName, _process.Logger);
+            TypeName parsedName = TypeName.Parse(variable.TypeName, _process.Logger.NatvisLogger);
             IVariableInformation var = variable;
             while (parsedName != null)
             {
@@ -1139,7 +1139,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                 {
                     break;
                 }
-                parsedName = TypeName.Parse(var.TypeName, _process.Logger);
+                parsedName = TypeName.Parse(var.TypeName, _process.Logger.NatvisLogger);
             }
             return null;
         }

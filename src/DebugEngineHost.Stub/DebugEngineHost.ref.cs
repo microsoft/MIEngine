@@ -185,6 +185,47 @@ namespace Microsoft.DebugEngineHost
     }
 
     /// <summary>
+    /// Level of logging used for HostLogChannel
+    /// </summary>
+    public enum LogLevel
+    {
+        /// <summary>
+        /// Logs that contain the most detailed messages.
+        /// These messages may contain sensitive application data.
+        /// These messages are disabled by default and should never be enabled in a production environment.
+        /// </summary>
+        Trace,
+        /// <summary>
+        /// Logs that are used for interactive investigation during development.
+        /// These logs should primarily contain information useful for debugging and have no long-term value.
+        /// </summary>
+        Debug,
+        /// <summary>
+        /// Logs that track the general flow of the application.
+        /// These logs should have long-term value.
+        /// </summary>
+        Information,
+        /// <summary>
+        /// Logs that highlight an abnormal or unexpected event in the application flow, but do not otherwise cause the application execution to stop.
+        /// </summary>
+        Warning,
+        /// <summary>
+        /// Logs that highlight when the current flow of execution is stopped due to a failure.
+        /// These should indicate a failure in the current activity, not an application-wide failure.
+        /// </summary>
+        Error,
+        /// <summary>
+        /// Logs that describe an unrecoverable application or system crash, or a catastrophic failure that requires immediate attention.
+        /// </summary>
+        Critical,
+        /// <summary>
+        /// Not used for writing log messages.
+        /// Specifies that a logging category should not write any messages.
+        /// </summary>
+        None
+    }
+
+    /// <summary>
     /// The channel used for logging messages.
     /// Channels are used if there are multiple types of logs,
     /// e.g. Engine logs and Natvis logs
@@ -192,19 +233,10 @@ namespace Microsoft.DebugEngineHost
     public class HostLogChannel
     {
         /// <summary>
-        /// Can not create HostLogChannel via Constructor. It should be created within HostLogger.
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private HostLogChannel()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Writes the given message with a newline to the log channel.
         /// </summary>
         /// <param name="message">The message string to send.</param>
-        public void WriteLine(string message)
+        public void WriteLine(LogLevel level, string message)
         {
             throw new NotImplementedException();
         }
@@ -214,7 +246,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="format">Format to use.</param>
         /// <param name="values">Values to use within the provided format.</param>
-        public void WriteLine(string format, params object[] values)
+        public void WriteLine(LogLevel level, string format, params object[] values)
         {
             throw new NotImplementedException();
         }
@@ -248,7 +280,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="callback">The callback to use to send the engine log.</param>
         /// <param name="logFile">The file to write engine logs to.</param>
-        public static void EnableHostLogging(Action<string> callback, string logFile)
+        public static void EnableHostLogging(Action<string> callback, string logFile, LogLevel level = LogLevel.Information)
         {
             throw new NotImplementedException();
         }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -116,7 +117,7 @@ namespace MICore
             if (result != 0)
             {
                 // Failed to create the fifo. Bail.
-                logger?.WriteLine("Failed to create fifo");
+                logger?.WriteLine(LogLevel.Error, "Failed to create fifo");
                 throw new ArgumentException("MakeFifo failed to create fifo at path {0}", path);
             }
 
@@ -203,7 +204,7 @@ namespace MICore
         {
             if (!String.IsNullOrWhiteSpace(str) && logger != null)
             {
-                logger.WriteLine(prefix + str);
+                logger.WriteLine(LogLevel.Information, prefix + str);
             }
         }
 
