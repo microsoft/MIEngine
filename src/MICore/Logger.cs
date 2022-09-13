@@ -24,8 +24,8 @@ namespace MICore
         private static bool s_isEnabled;
         private static DateTime s_initTime;
         // NOTE: We never clean this up
-        public HostLogChannel EngineLogger => HostLogger.GetEngineLogChannel();
-        public HostLogChannel NatvisLogger => HostLogger.GetNatvisLogChannel();
+        public ILogChannel EngineLogger => HostLogger.GetEngineLogChannel();
+        public ILogChannel NatvisLogger => HostLogger.GetNatvisLogChannel();
         private static int s_count;
         private readonly int _id;
 

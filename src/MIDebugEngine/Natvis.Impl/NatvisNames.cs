@@ -139,7 +139,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// </summary>
         /// <param name="fullyQualifiedName"></param>
         /// <returns></returns>
-        public static TypeName Parse(string fullyQualifiedName, HostLogChannel logger)
+        public static TypeName Parse(string fullyQualifiedName, ILogChannel logger)
         {
             if (String.IsNullOrEmpty(fullyQualifiedName))
                 return null;

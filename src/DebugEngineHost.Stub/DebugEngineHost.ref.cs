@@ -230,17 +230,14 @@ namespace Microsoft.DebugEngineHost
     /// Channels are used if there are multiple types of logs,
     /// e.g. Engine logs and Natvis logs
     /// </summary>
-    public class HostLogChannel
+    public interface ILogChannel
     {
         /// <summary>
         /// Writes the given message with a newline to the log channel.
         /// </summary>
         /// <param name="level">The level of the log</param>
         /// <param name="message">The message string to send.</param>
-        public void WriteLine(LogLevel level, string message)
-        {
-            throw new NotImplementedException();
-        }
+        void WriteLine(LogLevel level, string message);
 
         /// <summary>
         /// Writes the given formatted message with the additional values with a newline to the log channel.
@@ -248,26 +245,17 @@ namespace Microsoft.DebugEngineHost
         /// <param name="level">The level of the log</param>
         /// <param name="format">Format to use.</param>
         /// <param name="values">Values to use within the provided format.</param>
-        public void WriteLine(LogLevel level, string format, params object[] values)
-        {
-            throw new NotImplementedException();
-        }
+        void WriteLine(LogLevel level, string format, params object[] values);
 
         /// <summary>
         /// If the log is implemented as a file, this flushes the file.
         /// </summary>
-        public void Flush()
-        {
-            throw new NotImplementedException();
-        }
+        void Flush();
 
         /// <summary>
         /// If the log is implemented as a file, this closes the file.
         /// </summary>
-        public void Close()
-        {
-            throw new NotImplementedException();
-        }
+        void Close();
     }
 
     /// <summary>
@@ -301,7 +289,7 @@ namespace Microsoft.DebugEngineHost
         /// Gets the engine log channel created by 'EnableHostLogging'
         /// </summary>
         /// <returns></returns>
-        public static HostLogChannel GetEngineLogChannel()
+        public static ILogChannel GetEngineLogChannel()
         {
             throw new NotImplementedException();
         }
@@ -310,7 +298,7 @@ namespace Microsoft.DebugEngineHost
         /// Gets the Natvis log channel if its been created.
         /// </summary>
         /// <returns></returns>
-        public static HostLogChannel GetNatvisLogChannel()
+        public static ILogChannel GetNatvisLogChannel()
         {
             throw new NotImplementedException();
         }

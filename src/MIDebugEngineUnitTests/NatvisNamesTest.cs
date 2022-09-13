@@ -8,7 +8,7 @@ using Microsoft.DebugEngineHost;
 
 namespace MIDebugEngineUnitTests
 {
-    class TestLogger : HostLogChannel
+    class TestLogger : ILogChannel
     {
         private static TestLogger s_instance;
 
@@ -32,15 +32,21 @@ namespace MIDebugEngineUnitTests
             _output = output;
         }
 
-        public new void WriteLine(LogLevel level, string line)
+        public void WriteLine(LogLevel level, string line)
         {
             _output?.WriteLine(line);
         }
 
-        public new void WriteLine(LogLevel level, string format, params object[] args)
+        public void WriteLine(LogLevel level, string format, params object[] args)
         {
             _output?.WriteLine(string.Format(CultureInfo.InvariantCulture, format, args));
         }
+
+        // Unused as ITestOutputHelper does not have a Flush implementation
+        public void Flush() { }
+
+        // Unused as ITestOutputHelper does not have a Close implementation
+        public void Close() { }
     }
 
     public class NatvisNamesTest

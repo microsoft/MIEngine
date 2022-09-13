@@ -49,13 +49,26 @@ namespace Microsoft.DebugEngineHost
         None
     }
 
-    public class HostLogChannel
+    // This must match the interface in DebugEngineHost.ref.cs
+    public interface ILogChannel
+    {
+        void WriteLine(LogLevel level, string message);
+
+        void WriteLine(LogLevel level, string format, params object[] values);
+
+        void Flush();
+
+        void Close();
+    }
+
+    public class HostLogChannel : ILogChannel
     {
         private readonly Action<string> _log;
         private readonly StreamWriter _logFile;
         private LogLevel _logLevel;
 
-        private HostLogChannel() { }
+        // For Testsing only
+        internal HostLogChannel() { }
 
         public HostLogChannel(Action<string> logAction, string file, LogLevel logLevel)
         {

@@ -7,8 +7,8 @@ namespace Microsoft.DebugEngineHost
 {
     public static class HostLogger
     {
-        private static HostLogChannel s_natvisLogChannel;
-        private static HostLogChannel s_engineLogChannel;
+        private static ILogChannel s_natvisLogChannel;
+        private static ILogChannel s_engineLogChannel;
 
         private static string s_engingLogFile;
 
@@ -34,12 +34,12 @@ namespace Microsoft.DebugEngineHost
             s_engingLogFile = logFile;
         }
 
-        public static HostLogChannel GetEngineLogChannel()
+        public static ILogChannel GetEngineLogChannel()
         {
             return s_engineLogChannel;
         }
 
-        public static HostLogChannel GetNatvisLogChannel()
+        public static ILogChannel GetNatvisLogChannel()
         {
             return s_natvisLogChannel;
         }
