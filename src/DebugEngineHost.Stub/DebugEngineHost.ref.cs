@@ -235,6 +235,7 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Writes the given message with a newline to the log channel.
         /// </summary>
+        /// <param name="level">The level of the log</param>
         /// <param name="message">The message string to send.</param>
         public void WriteLine(LogLevel level, string message)
         {
@@ -244,6 +245,7 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Writes the given formatted message with the additional values with a newline to the log channel.
         /// </summary>
+        /// <param name="level">The level of the log</param>
         /// <param name="format">Format to use.</param>
         /// <param name="values">Values to use within the provided format.</param>
         public void WriteLine(LogLevel level, string format, params object[] values)
@@ -279,11 +281,21 @@ namespace Microsoft.DebugEngineHost
         /// Enables engine logging if not already enabled.
         /// </summary>
         /// <param name="callback">The callback to use to send the engine log.</param>
-        /// <param name="logFile">The file to write engine logs to.</param>
-        public static void EnableHostLogging(Action<string> callback, string logFile, LogLevel level = LogLevel.Information)
+        /// <param name="level">The level of the log to filter the channel on.</param>
+        public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Information)
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Sets the log file to write to.
+        /// </summary>
+        /// <param name="logFile">The file to write engine logs to.</param>
+        public static void SetEngineLogFile(string logFile)
+        {
+            throw new NotImplementedException();
+        }
+
 
         /// <summary>
         /// Gets the engine log channel created by 'EnableHostLogging'

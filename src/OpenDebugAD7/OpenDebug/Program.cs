@@ -71,7 +71,7 @@ namespace OpenDebug
                         HostLogger.EnableHostLogging((msg) =>
                         {
                             Console.Error.WriteLine(msg);
-                        }, null, LogLevel.Trace);
+                        }, LogLevel.Trace);
                         break;
                     case "--natvisDiagnostics":
                         loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
@@ -106,10 +106,11 @@ namespace OpenDebug
                             try
                             {
                                 string logFilePath = a.Substring("--engineLogging=".Length);
+                                HostLogger.SetEngineLogFile(logFilePath);
                                 HostLogger.EnableHostLogging((msg) =>
                                 {
                                     Console.Error.WriteLine(msg);
-                                }, logFilePath, LogLevel.Trace);
+                                }, LogLevel.Trace);
                             }
                             catch (Exception e)
                             {

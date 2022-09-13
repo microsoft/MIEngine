@@ -83,8 +83,9 @@ namespace Microsoft.DebugEngineHost
         {
             if (level >= _logLevel)
             {
-                _log?.Invoke(message);
-                _logFile?.WriteLine(message);
+                string levelMsg = string.Format(CultureInfo.InvariantCulture, "[{0}] {1}", level.ToString(), message);
+                _log?.Invoke(levelMsg);
+                _logFile?.WriteLine(levelMsg);
                 _logFile?.Flush();
             }
         }
@@ -100,8 +101,9 @@ namespace Microsoft.DebugEngineHost
             if (level >= _logLevel)
             {
                 string message = string.Format(CultureInfo.InvariantCulture, format, values);
-                _log?.Invoke(message);
-                _logFile?.WriteLine(message);
+                string levelMsg = string.Format(CultureInfo.InvariantCulture, "[{0}] {1}", level.ToString(), message);
+                _log?.Invoke(levelMsg);
+                _logFile?.WriteLine(levelMsg);
                 _logFile?.Flush();
             }
         }

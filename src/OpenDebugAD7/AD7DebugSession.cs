@@ -231,7 +231,7 @@ namespace OpenDebugAD7
                         if (engineLoggingBool)
                         {
                             m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, true);
-                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), null, LogLevel.Trace);
+                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), LogLevel.Trace);
                         }
                     }
                     else if (engineLogging.Type == JTokenType.String)
@@ -240,7 +240,7 @@ namespace OpenDebugAD7
                         if (Enum.TryParse(engineLoggingString, ignoreCase: true, out LogLevel level))
                         {
                             m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, true);
-                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), null, level);
+                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), level);
                         }
                     }
                 }

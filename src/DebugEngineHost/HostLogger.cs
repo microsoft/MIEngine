@@ -14,12 +14,19 @@ namespace Microsoft.DebugEngineHost
         private static HostLogChannel s_natvisLogChannel;
         private static HostLogChannel s_engineLogChannel;
 
-        public static void EnableHostLogging(Action<string> callback, string logFile, LogLevel level = LogLevel.Information)
+        private static string s_engingLogFile;
+
+        public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Information)
         {
             if (s_engineLogChannel == null)
             {
-                s_engineLogChannel = new HostLogChannel(callback, logFile, level);
+                s_engineLogChannel = new HostLogChannel(callback, null, level);
             }
+        }
+
+        public static void SetEngineLogFile(string logFile)
+        {
+            s_engingLogFile = logFile;
         }
 
         public static HostLogChannel GetEngineLogChannel()

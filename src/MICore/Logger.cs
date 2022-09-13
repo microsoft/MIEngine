@@ -74,9 +74,11 @@ namespace MICore
             if (CmdLogInfo.enabled)
             {   // command configured log file
                 HostLogger.Reset();
-                HostLogger.EnableHostLogging(CmdLogInfo.logToOutput, CmdLogInfo.logFile);
-                s_isEnabled = true;
+                HostLogger.SetEngineLogFile(CmdLogInfo.logFile);
+                HostLogger.EnableHostLogging(CmdLogInfo.logToOutput);
             }
+
+            s_isEnabled = true;
         }
 
         public static void Reset()
