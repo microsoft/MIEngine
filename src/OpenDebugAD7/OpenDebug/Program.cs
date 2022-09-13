@@ -111,7 +111,7 @@ namespace OpenDebug
                                 }, natvisLogLevel);
                             }
                         }
-                        else if (a.StartsWith("--natvisDiagnostics=", StringComparison.Ordinal))
+                        else if (a.StartsWith("--engineLogging=", StringComparison.Ordinal))
                         {
                             enableEngineLogger = true;
                             logFilePath = a.Substring("--engineLogging=".Length);
