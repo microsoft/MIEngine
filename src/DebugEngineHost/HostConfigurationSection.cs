@@ -42,5 +42,7 @@ namespace Microsoft.DebugEngineHost
         {
             return _key.GetValueNames();
         }
+
+        public IntPtr YOLOHandle => _key.Handle.DangerousGetHandle();
     }
 }

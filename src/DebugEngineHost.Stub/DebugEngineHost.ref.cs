@@ -218,6 +218,12 @@ namespace Microsoft.DebugEngineHost
     public interface ILogChannel
     {
         /// <summary>
+        /// Changes the log level of the channel
+        /// </summary>
+        /// <param name="newLevel">The new log level to use.</param>
+        void SetLogLevel(LogLevel newLevel);
+
+        /// <summary>
         /// Writes the given message with a newline to the log channel.
         /// </summary>
         /// <param name="level">The level of the log</param>
@@ -248,14 +254,22 @@ namespace Microsoft.DebugEngineHost
     /// </summary>
     public static class HostLogger
     {
-        // EnableNatvisLogger is only used in OpenDebugAD7
-
         /// <summary>
         /// Enables engine logging if not already enabled.
         /// </summary>
         /// <param name="callback">The callback to use to send the engine log.</param>
         /// <param name="level">The level of the log to filter the channel on.</param>
         public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Enables natvis logging if not already enabled.
+        /// </summary>
+        /// <param name="callback">The callback to use to send the natvis log.</param>
+        /// <param name="level">The level of the log to filter the channel on.</param>
+        public static void EnableNatvisDiagnostics(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
             throw new NotImplementedException();
         }
@@ -268,7 +282,6 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
-
 
         /// <summary>
         /// Gets the engine log channel created by 'EnableHostLogging'
@@ -435,6 +448,14 @@ namespace Microsoft.DebugEngineHost
         /// <param name="loader">Natvis loader method to invoke</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Natvis")]
         public static void FindNatvis(NatvisLoader loader)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Enable's tracking the VS 'Natvis Diagnostic Messages (C++ only)' setting.
+        /// </summary>
+        public static IDisposable WatchNatvisOptionSetting(HostConfigurationStore configStore)
         {
             throw new NotImplementedException();
         }

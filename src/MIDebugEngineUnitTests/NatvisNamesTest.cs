@@ -47,6 +47,9 @@ namespace MIDebugEngineUnitTests
 
         // Unused as ITestOutputHelper does not have a Close implementation
         public void Close() { }
+
+        // Unused as ITestOutputHelper does not have LogLevels
+        public void SetLogLevel(LogLevel level) { }
     }
 
     public class NatvisNamesTest
