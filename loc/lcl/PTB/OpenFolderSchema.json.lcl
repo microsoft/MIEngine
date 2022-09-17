@@ -865,6 +865,42 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Controls how breakpoints set externally (usually via raw GDB commands) are handled when hit.]A;Allowed values are "throw", which acts as if an exception was thrown by the application, and "stop", which only pauses the debug session. The default value is "throw".]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Controla como os pontos de interrupção definidos externamente (geralmente por meio de comandos GDB brutos) são tratados quando atingidos.]A;Os valores permitidos são "throw", que age como se uma exceção fosse lançada pelo aplicativo, e "stop", que apenas pausa a sessão de depuração. O valor padrão é "throw".]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.enum[0]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[throw]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[throw]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.enum[1]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[stop]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[interromper]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.type" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[string]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[cadeia de caracteres]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.useExtendedRemote.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If true, use gdb extended-remote mode to connect to gdbserver.]]></Val>

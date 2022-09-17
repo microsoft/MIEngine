@@ -865,6 +865,42 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Controls how breakpoints set externally (usually via raw GDB commands) are handled when hit.]A;Allowed values are "throw", which acts as if an exception was thrown by the application, and "stop", which only pauses the debug session. The default value is "throw".]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[控制叫用時如何處理在外部設定的中斷點 (通常是透過原始 GDB 命令)。]A;允許的值為 "throw"，其作用就像應用程式擲出例外，以及 "stop"，其只會暫停偵錯工作階段。預設值為 "throw"。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.enum[0]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[throw]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[throw]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.enum[1]" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[stop]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[stop]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.type" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[string]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[字串]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.useExtendedRemote.description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If true, use gdb extended-remote mode to connect to gdbserver.]]></Val>
