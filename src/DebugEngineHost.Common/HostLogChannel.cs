@@ -14,21 +14,10 @@ namespace Microsoft.DebugEngineHost
     public enum LogLevel
     {
         /// <summary>
-        /// Logs that contain the most detailed messages.
-        /// These messages may contain sensitive application data.
-        /// These messages are disabled by default and should never be enabled in a production environment.
-        /// </summary>
-        Trace,
-        /// <summary>
         /// Logs that are used for interactive investigation during development.
         /// These logs should primarily contain information useful for debugging and have no long-term value.
         /// </summary>
-        Debug,
-        /// <summary>
-        /// Logs that track the general flow of the application.
-        /// These logs should have long-term value.
-        /// </summary>
-        Information,
+        Verbose,
         /// <summary>
         /// Logs that highlight an abnormal or unexpected event in the application flow, but do not otherwise cause the application execution to stop.
         /// </summary>
@@ -38,10 +27,6 @@ namespace Microsoft.DebugEngineHost
         /// These should indicate a failure in the current activity, not an application-wide failure.
         /// </summary>
         Error,
-        /// <summary>
-        /// Logs that describe an unrecoverable application or system crash, or a catastrophic failure that requires immediate attention.
-        /// </summary>
-        Critical,
         /// <summary>
         /// Not used for writing log messages.
         /// Specifies that a logging category should not write any messages.
@@ -67,8 +52,9 @@ namespace Microsoft.DebugEngineHost
         private readonly StreamWriter _logFile;
         private LogLevel _logLevel;
 
-        // For Testsing only
-        internal HostLogChannel() { }
+        private readonly object _lock = new object();
+
+        private HostLogChannel() { }
 
         public HostLogChannel(Action<string> logAction, string file, LogLevel logLevel)
         {
@@ -82,6 +68,10 @@ namespace Microsoft.DebugEngineHost
             _logLevel = logLevel;
         }
 
+        /// <summary>
+        /// Sets the log level to the provided level.
+        /// </summary>
+        /// <param name="level">The level to set the logger.</param>
         public void SetLogLevel(LogLevel level)
         {
             _logLevel = level;
@@ -94,12 +84,22 @@ namespace Microsoft.DebugEngineHost
         /// <param name="message"></param>
         public void WriteLine(LogLevel level, string message)
         {
-            if (level >= _logLevel)
+            lock (_lock)
             {
-                string levelMsg = string.Format(CultureInfo.InvariantCulture, "[{0}] {1}", level.ToString(), message);
-                _log?.Invoke(levelMsg);
-                _logFile?.WriteLine(levelMsg);
-                _logFile?.Flush();
+                if (level >= _logLevel)
+                {
+                    string prefix = string.Empty;
+                    // Only indicate level if not verbose.
+                    if (level != LogLevel.Verbose)
+                    {
+                        prefix = string.Format(CultureInfo.InvariantCulture, "[{0}] ", level.ToString());
+                    }
+                    string levelMsg = string.Format(CultureInfo.InvariantCulture, "{0}{1}", prefix, message);
+                    _log?.Invoke(levelMsg);
+                    _logFile?.WriteLine(levelMsg);
+                    _logFile?.Flush();
+                }
+
             }
         }
 
@@ -111,24 +111,39 @@ namespace Microsoft.DebugEngineHost
         /// <param name="values"></param>
         public void WriteLine(LogLevel level, string format, params object[] values)
         {
-            if (level >= _logLevel)
+            lock (_lock)
             {
-                string message = string.Format(CultureInfo.InvariantCulture, format, values);
-                string levelMsg = string.Format(CultureInfo.InvariantCulture, "[{0}] {1}", level.ToString(), message);
-                _log?.Invoke(levelMsg);
-                _logFile?.WriteLine(levelMsg);
-                _logFile?.Flush();
+                if (level >= _logLevel)
+                {
+                    string prefix = string.Empty;
+                    // Only indicate level if not verbose.
+                    if (level != LogLevel.Verbose)
+                    {
+                        prefix = string.Format(CultureInfo.InvariantCulture, "[{0}] ", level.ToString());
+                    }
+                    string message = string.Format(CultureInfo.InvariantCulture, format, values);
+                    string levelMsg = string.Format(CultureInfo.InvariantCulture, "{0}{1}", prefix, message);
+                    _log?.Invoke(levelMsg);
+                    _logFile?.WriteLine(levelMsg);
+                    _logFile?.Flush();
+                }
             }
         }
 
         public void Flush()
         {
-            _logFile?.Flush();
+            lock (_lock)
+            {
+                _logFile?.Flush();
+            }
         }
 
         public void Close()
         {
-            _logFile?.Close();
+            lock (_lock)
+            {
+                _logFile?.Close();
+            }
         }
     }
 }

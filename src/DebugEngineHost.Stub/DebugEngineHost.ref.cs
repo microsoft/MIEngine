@@ -261,7 +261,7 @@ namespace Microsoft.DebugEngineHost
     /// <summary>
     /// 
     /// </summary>
-    public sealed class HostLogger
+    public static class HostLogger
     {
         // EnableNatvisLogger is only used in OpenDebugAD7
 
@@ -288,7 +288,7 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Gets the engine log channel created by 'EnableHostLogging'
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A logger object if logging is enabled, or null if it is not</returns>
         public static ILogChannel GetEngineLogChannel()
         {
             throw new NotImplementedException();
@@ -297,14 +297,14 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Gets the Natvis log channel if its been created.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A logger object if logging is enabled, or null if it is not</returns>
         public static ILogChannel GetNatvisLogChannel()
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// 
+        /// Clears the logging objects if enabled.
         /// </summary>
         public static void Reset()
         {

@@ -231,7 +231,7 @@ namespace OpenDebugAD7
                         if (engineLoggingBool)
                         {
                             m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, true);
-                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), LogLevel.Trace);
+                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), LogLevel.Verbose);
                         }
                     }
                     else if (engineLogging.Type == JTokenType.String)
@@ -242,6 +242,10 @@ namespace OpenDebugAD7
                             m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, true);
                             HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), level);
                         }
+                    }
+                    else
+                    {
+                        m_logger.WriteLine(LoggingCategory.EngineLogging, string.Format(CultureInfo.CurrentCulture, AD7Resources.Warning_EngineLoggingParse, engineLogging.ToString()));
                     }
                 }
 
@@ -266,7 +270,7 @@ namespace OpenDebugAD7
                         if (natvisDiagnosticsBool)
                         {
                             m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
-                            HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, message), LogLevel.Trace);
+                            HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, message), LogLevel.Verbose);
                         }
                     }
                     else if (natvisDiagnostics.Type == JTokenType.String)
@@ -277,6 +281,10 @@ namespace OpenDebugAD7
                             m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
                             HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, string.Concat("[Natvis] ", message)), level);
                         }
+                    }
+                    else
+                    {
+                        m_logger.WriteLine(LoggingCategory.EngineLogging, string.Format(CultureInfo.CurrentCulture, AD7Resources.Warning_NatvisLoggingParse, natvisDiagnostics.ToString()));
                     }
                 }
             }

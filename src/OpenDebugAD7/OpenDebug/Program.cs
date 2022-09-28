@@ -28,7 +28,7 @@ namespace OpenDebug
             int port = -1;
             List<LoggingCategory> loggingCategories = new List<LoggingCategory>();
             bool enableEngineLogger = false;
-            LogLevel level = LogLevel.Trace;
+            LogLevel level = LogLevel.Verbose;
             string logFilePath = string.Empty;
 
             // parse command line arguments
@@ -78,7 +78,7 @@ namespace OpenDebug
                         HostLogger.EnableNatvisLogger((msg) =>
                         {
                             Console.Error.WriteLine(msg);
-                        }, LogLevel.Trace);
+                        }, LogLevel.Verbose);
                         break;
                     case "--server":
                         port = DEFAULT_PORT;
@@ -121,7 +121,7 @@ namespace OpenDebug
                         {
                             if (!Enum.TryParse(a.Substring("--engineLogLevel=".Length), out level))
                             {
-                                level = LogLevel.Trace;
+                                level = LogLevel.Verbose;
                             }
                         }
                         else if (a.StartsWith("--adapterDirectory=", StringComparison.Ordinal))

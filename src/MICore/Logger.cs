@@ -16,15 +16,20 @@ using Microsoft.DebugEngineHost;
 namespace MICore
 {
     /// <summary>
-    /// Class which implements logging. The logging is control by a registry key. If enabled, logging goes to %TMP%\Microsoft.MIDebug.log
+    /// Class which implements logging.
     /// </summary>
     public class Logger
     {
         private static bool s_isInitialized;
         private static bool s_isEnabled;
         private static DateTime s_initTime;
-        // NOTE: We never clean this up
-        public ILogChannel EngineLogger => HostLogger.GetEngineLogChannel();
+        /// <summary>
+        /// Optional logger to get engine diagnostics logs
+        /// </summary>
+        private ILogChannel EngineLogger => HostLogger.GetEngineLogChannel();
+        /// <summary>
+        /// Optional logger to get natvis diagnostics logs
+        /// </summary>
         public ILogChannel NatvisLogger => HostLogger.GetNatvisLogChannel();
         private static int s_count;
         private readonly int _id;
@@ -48,7 +53,7 @@ namespace MICore
             _id = Interlocked.Increment(ref s_count);
         }
 
-        public static Logger EnsureInitialized(HostConfigurationStore configStore)
+        public static Logger EnsureInitialized()
         {
             Logger res = new Logger();
             if (!s_isInitialized)
@@ -56,7 +61,7 @@ namespace MICore
                 s_isInitialized = true;
                 s_initTime = DateTime.Now;
 
-                LoadMIDebugLogger(configStore);
+                LoadMIDebugLogger();
                 res.WriteLine(LogLevel.Trace, "Initialized log at: " + s_initTime.ToString(CultureInfo.InvariantCulture));
             }
 
@@ -69,7 +74,7 @@ namespace MICore
             return res;
         }
 
-        public static void LoadMIDebugLogger(HostConfigurationStore configStore)
+        public static void LoadMIDebugLogger()
         {
             if (CmdLogInfo.enabled)
             {   // command configured log file

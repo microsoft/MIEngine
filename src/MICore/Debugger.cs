@@ -935,7 +935,7 @@ namespace MICore
 
         void ITransportCallback.OnStdErrorLine(string line)
         {
-            Logger.WriteLine(LogLevel.Error, "STDERR: " + line);
+            Logger.WriteLine(LogLevel.Warning, "STDERR: " + line);
 
             if (_initialErrors != null)
             {

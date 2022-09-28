@@ -52,7 +52,7 @@ namespace AndroidDebugLauncher
 
             _eventCallback = eventCallback;
             RegistryRoot.Set(configStore.RegistryRoot);
-            Logger = MICore.Logger.EnsureInitialized(configStore);
+            Logger = MICore.Logger.EnsureInitialized();
         }
 
         void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
@@ -892,7 +892,7 @@ namespace AndroidDebugLauncher
                     }
                     catch (JDbg.JdwpException e)
                     {
-                        Logger.WriteLine(LogLevel.Error, "JdwpException: {0}", e.Message);
+                        Logger.WriteLine(LogLevel.Warning, "JdwpException: {0}", e.Message);
 
                         string message = LauncherResources.Warning_JDbgResumeFailure;
 
