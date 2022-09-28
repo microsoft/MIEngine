@@ -204,7 +204,7 @@ namespace MICore
         {
             if (!String.IsNullOrWhiteSpace(str) && logger != null)
             {
-                logger.WriteLine(LogLevel.Information, prefix + str);
+                logger.WriteLine(LogLevel.Verbose, prefix + str);
             }
         }
 

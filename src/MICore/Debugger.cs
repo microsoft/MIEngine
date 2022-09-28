@@ -172,7 +172,7 @@ namespace MICore
         protected void SetDebuggerPid(int debuggerPid)
         {
             // Used for testing
-            Logger.WriteLine(LogLevel.Debug, string.Concat("DebuggerPid=", debuggerPid));
+            Logger.WriteLine(LogLevel.Verbose, string.Concat("DebuggerPid=", debuggerPid));
             _localDebuggerPid = debuggerPid;
         }
 
@@ -201,7 +201,7 @@ namespace MICore
             {
                 if (_waitingToStop && _retryCount < BREAK_RETRY_MAX)
                 {
-                    Logger.WriteLine(LogLevel.Trace, "Debugger failed to break. Trying again.");
+                    Logger.WriteLine(LogLevel.Verbose, "Debugger failed to break. Trying again.");
                     CmdBreak(BreakRequest.Internal);
                     _retryCount++;
                 }
@@ -1047,7 +1047,7 @@ namespace MICore
 
         void ITransportCallback.AppendToInitializationLog(string line)
         {
-            Logger.WriteLine(LogLevel.Information, line);
+            Logger.WriteLine(LogLevel.Verbose, line);
 
             if (_initializationLog != null)
             {
@@ -1240,7 +1240,7 @@ namespace MICore
                         if (waitingOperation != null)
                         {
                             Results results = _miResults.ParseCommandOutput(noprefix);
-                            Logger.WriteLine(LogLevel.Trace, id.ToString(CultureInfo.InvariantCulture) + ": elapsed time " + ((int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds).ToString(CultureInfo.InvariantCulture));
+                            Logger.WriteLine(LogLevel.Verbose, id.ToString(CultureInfo.InvariantCulture) + ": elapsed time " + ((int)(DateTime.Now - waitingOperation.StartTime).TotalMilliseconds).ToString(CultureInfo.InvariantCulture));
                             waitingOperation.OnComplete(results, this.MICommandFactory);
                             return;
                         }

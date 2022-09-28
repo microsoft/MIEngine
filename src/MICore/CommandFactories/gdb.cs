@@ -299,7 +299,7 @@ namespace MICore
             var matchlist = res.Find<ValueListValue>("matches");
 
             if (int.Parse(res.FindString("max_completions_reached"), CultureInfo.InvariantCulture) != 0)
-                _debugger.Logger.WriteLine(LogLevel.Debug, "We reached max-completions!");
+                _debugger.Logger.WriteLine(LogLevel.Verbose, "We reached max-completions!");
 
             return matchlist?.AsStrings;
         }

@@ -71,7 +71,7 @@ namespace MICore
                         break;
 
                     line = line.TrimEnd();
-                    Logger?.WriteLine(LogLevel.Debug, "->" + line);
+                    Logger?.WriteLine(LogLevel.Verbose, "->" + line);
                     Logger?.Flush();
 
                     try
@@ -144,7 +144,7 @@ namespace MICore
         {
             if (!String.IsNullOrWhiteSpace(cmd))
             {
-                Logger?.WriteLine(LogLevel.Debug, "<-" + cmd);
+                Logger?.WriteLine(LogLevel.Verbose, "<-" + cmd);
                 Logger?.Flush();
             }
 
