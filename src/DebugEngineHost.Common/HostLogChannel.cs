@@ -49,8 +49,8 @@ namespace Microsoft.DebugEngineHost
     public class HostLogChannel : ILogChannel
     {
         private readonly Action<string> _log;
-        private readonly StreamWriter _logFile;
-        private LogLevel _logLevel;
+        private StreamWriter _logFile;
+        private LogLevel _minLevelToBeLogged;
 
         private readonly object _lock = new object();
 
@@ -65,7 +65,7 @@ namespace Microsoft.DebugEngineHost
                 _logFile = File.CreateText(file);
             }
 
-            _logLevel = logLevel;
+            _minLevelToBeLogged = logLevel;
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Microsoft.DebugEngineHost
         /// <param name="level">The level to set the logger.</param>
         public void SetLogLevel(LogLevel level)
         {
-            _logLevel = level;
+            _minLevelToBeLogged = level;
         }
 
         /// <summary>
@@ -84,9 +84,9 @@ namespace Microsoft.DebugEngineHost
         /// <param name="message"></param>
         public void WriteLine(LogLevel level, string message)
         {
-            lock (_lock)
+            if (level >= _minLevelToBeLogged)
             {
-                if (level >= _logLevel)
+                lock (_lock)
                 {
                     string prefix = string.Empty;
                     // Only indicate level if not verbose.
@@ -111,21 +111,12 @@ namespace Microsoft.DebugEngineHost
         /// <param name="values"></param>
         public void WriteLine(LogLevel level, string format, params object[] values)
         {
-            lock (_lock)
+            if (level >= _minLevelToBeLogged)
             {
-                if (level >= _logLevel)
+                lock (_lock)
                 {
-                    string prefix = string.Empty;
-                    // Only indicate level if not verbose.
-                    if (level != LogLevel.Verbose)
-                    {
-                        prefix = string.Format(CultureInfo.InvariantCulture, "[{0}] ", level.ToString());
-                    }
-                    string message = string.Format(CultureInfo.InvariantCulture, format, values);
-                    string levelMsg = string.Format(CultureInfo.InvariantCulture, "{0}{1}", prefix, message);
-                    _log?.Invoke(levelMsg);
-                    _logFile?.WriteLine(levelMsg);
-                    _logFile?.Flush();
+                    string message = string.Format(CultureInfo.CurrentCulture, format, values);
+                    this.WriteLine(level, message);
                 }
             }
         }
@@ -143,6 +134,7 @@ namespace Microsoft.DebugEngineHost
             lock (_lock)
             {
                 _logFile?.Close();
+                _logFile = null;
             }
         }
     }

@@ -32,7 +32,7 @@ namespace MICore
             {
                 HostTelemetry.ReportCurrentException(currentException, "Microsoft.MIDebugEngine");
 
-                logger?.WriteLine(LogLevel.Error, "EXCEPTION: " + currentException.GetType());
+                logger?.WriteLine(LogLevel.Error, "EXCEPTION: ", currentException.GetType());
                 logger?.WriteTextBlock(LogLevel.Error, "EXCEPTION: ", currentException.StackTrace);
             }
             catch
