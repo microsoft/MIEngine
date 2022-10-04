@@ -35,6 +35,8 @@ namespace OpenDebugAD7
         Module,
         /// <summary>Process exit message.</summary>
         ProcessExit,
+        /// <summary>Natvis Diagnostic Messages</summary>
+        NatvisDiagnostics
     }
 
     /// <summary>Logging class to handle when and how various classes of output should be logged.</summary>

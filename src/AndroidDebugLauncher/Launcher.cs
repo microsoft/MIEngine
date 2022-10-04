@@ -52,7 +52,7 @@ namespace AndroidDebugLauncher
 
             _eventCallback = eventCallback;
             RegistryRoot.Set(configStore.RegistryRoot);
-            Logger = MICore.Logger.EnsureInitialized(configStore);
+            Logger = MICore.Logger.EnsureInitialized();
         }
 
         void IPlatformAppLauncher.SetLaunchOptions(string exePath, string args, string dir, object launcherXmlOptions, TargetEngine targetEngine)
@@ -747,7 +747,7 @@ namespace AndroidDebugLauncher
                     debugMessage.Replace("\r", "\\r");
                     debugMessage.Replace("\n", "\\n");
                     debugMessage.Replace("\t", "\\t");
-                    Logger.WriteLine(debugMessage.ToString());
+                    Logger.WriteLine(LogLevel.Verbose, debugMessage.ToString());
                 }
 
                 // Here is the expected output from GDB Server --
@@ -769,7 +769,7 @@ namespace AndroidDebugLauncher
 
             _gdbServerExecCancellationSource.Token.ThrowIfCancellationRequested();
 
-            Logger.WriteLine("ADB<-{0}", gdbServerCommand);
+            Logger.WriteLine(LogLevel.Verbose, "ADB<-{0}", gdbServerCommand);
             Task serverExitedOrCanceled = _shell.ExecAsync(gdbServerCommand, _gdbServerExecCancellationSource.Token, outputHandler);
             int completedTask = Task.WaitAny(serverReady.Task, serverExitedOrCanceled);
 
@@ -781,7 +781,7 @@ namespace AndroidDebugLauncher
                 // they fail, try again with TCP.
                 if (useUnixSocket && HasGdbServerInvalidSocketError(errorOutput))
                 {
-                    Logger.WriteLine("Retrying GDB Server launch using TCP socket.");
+                    Logger.WriteLine(LogLevel.Verbose, "Retrying GDB Server launch using TCP socket.");
                     return StartGdbServer(gdbServerRemotePath, workingDirectory, /*useUnixSocket:*/ false, out gdbServerSocketDescription);
                 }
 
@@ -842,11 +842,11 @@ namespace AndroidDebugLauncher
         {
             Debug.Assert(_shell != null, "ExecCommand called before m_shell is set");
 
-            Logger.WriteLine("ADB<-{0}", command);
+            Logger.WriteLine(LogLevel.Verbose, "ADB<-{0}", command);
 
             string response = ExecCommandNoLog(command);
 
-            Logger.WriteTextBlock("ADB->", response);
+            Logger.WriteTextBlock(LogLevel.Verbose, "ADB->", response);
 
             return response;
         }
@@ -892,7 +892,7 @@ namespace AndroidDebugLauncher
                     }
                     catch (JDbg.JdwpException e)
                     {
-                        Logger.WriteLine("JdwpException: {0}", e.Message);
+                        Logger.WriteLine(LogLevel.Warning, "JdwpException: {0}", e.Message);
 
                         string message = LauncherResources.Warning_JDbgResumeFailure;
 

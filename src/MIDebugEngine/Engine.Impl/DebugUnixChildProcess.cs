@@ -232,7 +232,7 @@ namespace Microsoft.MIDebugEngine
                     else
                     {
                         // sometimes gdb misses the breakpoint at exec and execution will proceed to a breakpoint in the child
-                        _process.Logger.WriteLine("Missed catching the exec after vfork. Spawning the child's debugger.");
+                        _process.Logger.WriteLine(LogLevel.Verbose, "Missed catching the exec after vfork. Spawning the child's debugger.");
                         s.State = State.AtExec;
                         goto missedExec;
                     }

@@ -37,7 +37,7 @@ namespace MICore
 
             public void OnOutputLine(string line)
             {
-                _logger?.WriteLine("[kill] ->" + line);
+                _logger?.WriteLine(LogLevel.Verbose, "[kill] ->" + line);
             }
 
             public void OnExit(string exitCode)
@@ -74,7 +74,7 @@ namespace MICore
 
         public void Send(string cmd)
         {
-            _logger?.WriteLine("<-" + cmd);
+            _logger?.WriteLine(LogLevel.Verbose, "<-" + cmd);
             _logger?.Flush();
             _asyncCommand.WriteLine(cmd);
         }
@@ -104,7 +104,7 @@ namespace MICore
                 _callback.OnStdOutLine(line);
             }
 
-            _logger?.WriteLine("->" + line);
+            _logger?.WriteLine(LogLevel.Verbose, "->" + line);
             _logger?.Flush();
         }
 
