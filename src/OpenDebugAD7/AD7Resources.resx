@@ -338,4 +338,12 @@
   <data name="Error_InvalidStackFrameOnEvaluateExpression" xml:space="preserve">
     <value>Cannot evaluate expression on the specified stack frame.</value>
   </data>
+  <data name="Warning_EngineLoggingParse" xml:space="preserve">
+    <value>Failed to parse engine logging setting: '{0}'</value>
+    <comment>{0} is the string passed in by the user</comment>
+  </data>
+  <data name="Warning_NatvisLoggingParse" xml:space="preserve">
+    <value>Failed to parse Nativs logging setting: '{0}'</value>
+    <comment>{0} is the string passed in by the user</comment>
+  </data>
 </root>
