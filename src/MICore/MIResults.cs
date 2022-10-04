@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -1199,7 +1200,7 @@ namespace MICore
             string result = CreateErrorMessageFromSpan(input);
             Debug.Fail(message + ": " + result);
 
-            Logger?.WriteLine(String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, result));
+            Logger?.WriteLine(LogLevel.Error, String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, result));
 
         }
 

@@ -81,38 +81,6 @@ namespace Microsoft.DebugEngineHost
             categoryName = categoryKey.GetSubKeyNames().Single();
         }
 
-        /// <summary>
-        /// Checks if logging is enabled, and if so returns a logger object.
-        /// </summary>
-        /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled. If not specified, this will check 'Logging' in the AD7 Metrics.</param>
-        /// <param name="logFileName">[Required] name of the log file to open if logging is enabled.</param>
-        /// <returns>If no error then logging object. If file cannot be openened then throw an exception. Otherwise return an empty logger - the user can explictly reconfigure it later</returns>
-        public HostLogger GetLogger(string enableLoggingSettingName, string logFileName)
-        {
-            if (string.IsNullOrEmpty(logFileName))
-            {
-                throw new ArgumentNullException(nameof(logFileName));
-            }
-            object enableLoggingValue;
-            if (!string.IsNullOrEmpty(enableLoggingSettingName))
-            {
-                enableLoggingValue = GetOptionalValue(DebuggerSectionName, enableLoggingSettingName);
-            }
-            else
-            {
-                enableLoggingValue = GetEngineMetric("EnableLogging");
-            }
-
-            if (enableLoggingValue == null ||
-                !(enableLoggingValue is int) ||
-                ((int)enableLoggingValue) == 0)
-            {
-                return null;
-            }
-
-            return new HostLogger(HostLogger.GetStreamForName(logFileName, throwInUseError:false));
-        }
-
         public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)
         {
             return GetDebuggerConfigurationSetting(DebuggerSectionName, settingName, defaultValue);

@@ -5,85 +5,51 @@ using System;
 
 namespace Microsoft.DebugEngineHost
 {
-    public sealed class HostLogger
+    public static class HostLogger
     {
-        public delegate void OutputCallback(string outputMessage);
+        private static ILogChannel s_natvisLogChannel;
+        private static ILogChannel s_engineLogChannel;
 
-        private static HostLogger s_instance;
-        private static readonly object s_lock = new object();
+        private static string s_engineLogFile;
 
-        /// <summary>[Optional] VSCode-only host logger instance.</summary>
-        public static HostLogger Instance { get { return s_instance; } }
-
-        /// <summary>[Optional] VSCode-only method for obtaining the current host logger instance.</summary>
-        public static void EnableHostLogging()
+        public static void EnableNatvisLogger(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
-            if (s_instance == null)
+            if (s_natvisLogChannel == null)
             {
-                lock (s_lock)
-                {
-                    if (s_instance == null)
-                    {
-                        s_instance = new HostLogger();
-                    }
-                }
+                // TODO: Support writing natvis logs to a file.
+                s_natvisLogChannel = new HostLogChannel(callback, null, level);
             }
         }
 
-        private string _logFilePath = null;
-        private System.IO.StreamWriter _logFile = null;
-
-        /// <summary>Callback for logging text to the desired output stream.</summary>
-        public Action<string> LogCallback { get; set; } = null;
-
-        /// <summary>The path to the log file.</summary>
-        public string LogFilePath
+        public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
-            get
+            if (s_engineLogChannel == null)
             {
-                return _logFilePath;
-            }
-            set
-            {
-                _logFile?.Dispose();
-                _logFilePath = value;
-
-                if (!String.IsNullOrEmpty(_logFilePath))
-                {
-                    _logFile = System.IO.File.CreateText(_logFilePath);
-                }
+                s_engineLogChannel = new HostLogChannel(callback, s_engineLogFile, level);
             }
         }
 
-        private HostLogger() { }
-
-        public void WriteLine(string line)
+        public static void SetEngineLogFile(string logFile)
         {
-            lock (s_lock)
-            {
-                _logFile?.WriteLine(line);
-                _logFile?.Flush();
-                LogCallback?.Invoke(line);
-            }
+            s_engineLogFile = logFile;
         }
 
-        public void Flush()
+        public static ILogChannel GetEngineLogChannel()
         {
+            return s_engineLogChannel;
         }
 
-        public void Close()
+        public static ILogChannel GetNatvisLogChannel()
         {
+            return s_natvisLogChannel;
         }
 
-        /// <summary>
-        /// Get a logger after the user has explicitly configured a log file/callback
-        /// </summary>
-        /// <param name="logFileName"></param>
-        /// <param name="callback"></param>
-        /// <returns>The host logger object</returns>
-        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
+        public static void Reset()
         {
-            throw new NotImplementedException();
+            s_natvisLogChannel?.Close();
+            s_natvisLogChannel = null;
+            s_engineLogChannel?.Close();
+            s_engineLogChannel = null;
         }
     }
 }

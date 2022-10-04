@@ -65,20 +65,6 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Checks if logging is enabled, and if so returns a logger object. 
-        /// 
-        /// In VS, this is wired up to read from the registry and return a logger which writes a log file to %TMP%\log-file-name.
-        /// In VS Code, this will check if the '--engineLogging' switch is enabled, and if so return a logger that wil write to the logger output.
-        /// </summary>
-        /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled. If not specified, this will check 'EnableLogging' in the AD7 Metrics.</param>
-        /// <param name="logFileName">[Required] name of the log file to open if logging is enabled. This is ignored for VSCode.</param>
-        /// <returns>[Optional] If logging is enabled, the logging object.</returns>
-        public HostLogger GetLogger(string enableLoggingSettingName, string logFileName)
-        {
-            return HostLogger.Instance;
-        }
-
-        /// <summary>
         /// Read the debugger setting
         /// </summary>
         public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)

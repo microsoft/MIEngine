@@ -163,21 +163,6 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Checks if logging is enabled, and if so returns a logger object.
-        ///
-        /// In VS, this is wired up to read from the registry and return a logger which writes a log file to %TMP%\log-file-name.
-        /// In VS Code, this will check if the '--engineLogging' switch is enabled, and if so return a logger that will write to the Console.
-        /// </summary>
-        /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled.
-        /// If not specified, this will check 'EnableLogging' in the AD7 Metrics.</param>
-        /// <param name="logFileName">[Required] name of the log file to open if logging is enabled.</param>
-        /// <returns>[Optional] If logging is enabled, the logging object.</returns>
-        public HostLogger GetLogger(string enableLoggingSettingName, string logFileName)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Read the debugger setting
         ///
         /// In VS, this is wired up to read setting value from RegistryRoot\\Debugger\\
@@ -197,56 +182,116 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
-}
+    }
 
-/// <summary>
-/// The host logger returned from HostConfigurationStore.GetLogger.
-/// </summary>
-public sealed class HostLogger
+    /// <summary>
+    /// Level of logging used for HostLogChannel
+    /// </summary>
+    public enum LogLevel
     {
         /// <summary>
-        /// Callback for programmatic display of log messages
+        /// Logs that are used for interactive investigation during development.
+        /// These logs should primarily contain information useful for debugging and have no long-term value.
         /// </summary>
-        /// <param name="outputMessage"></param>
-        public delegate void OutputCallback(string outputMessage);
+        Verbose,
+        /// <summary>
+        /// Logs that highlight an abnormal or unexpected event in the application flow, but do not otherwise cause the application execution to stop.
+        /// </summary>
+        Warning,
+        /// <summary>
+        /// Logs that highlight when the current flow of execution is stopped due to a failure.
+        /// These should indicate a failure in the current activity, not an application-wide failure.
+        /// </summary>
+        Error,
+        /// <summary>
+        /// Not used for writing log messages.
+        /// Specifies that a logging category should not write any messages.
+        /// </summary>
+        None
+    }
 
-        private HostLogger()
-        {
-            throw new NotImplementedException();
-        }
+    /// <summary>
+    /// The channel used for logging messages.
+    /// Channels are used if there are multiple types of logs,
+    /// e.g. Engine logs and Natvis logs
+    /// </summary>
+    public interface ILogChannel
+    {
+        /// <summary>
+        /// Writes the given message with a newline to the log channel.
+        /// </summary>
+        /// <param name="level">The level of the log</param>
+        /// <param name="message">The message string to send.</param>
+        void WriteLine(LogLevel level, string message);
 
         /// <summary>
-        /// Writes a line to the log
+        /// Writes the given formatted message with the additional values with a newline to the log channel.
         /// </summary>
-        /// <param name="line">Line to write.</param>
-        public void WriteLine(string line)
-        {
-            throw new NotImplementedException();
-        }
+        /// <param name="level">The level of the log</param>
+        /// <param name="format">Format to use.</param>
+        /// <param name="values">Values to use within the provided format.</param>
+        void WriteLine(LogLevel level, string format, params object[] values);
 
         /// <summary>
         /// If the log is implemented as a file, this flushes the file.
         /// </summary>
-        public void Flush()
-        {
-            throw new NotImplementedException();
-        }
+        void Flush();
 
         /// <summary>
         /// If the log is implemented as a file, this closes the file.
         /// </summary>
-        public void Close()
+        void Close();
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static class HostLogger
+    {
+        // EnableNatvisLogger is only used in OpenDebugAD7
+
+        /// <summary>
+        /// Enables engine logging if not already enabled.
+        /// </summary>
+        /// <param name="callback">The callback to use to send the engine log.</param>
+        /// <param name="level">The level of the log to filter the channel on.</param>
+        public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Get a logger after the user has explicitly configured a log file/callback
+        /// Sets the log file to write to.
         /// </summary>
-        /// <param name="logFileName"></param>
-        /// <param name="callback"></param>
-        /// <returns>The host logger object</returns>
-        public static HostLogger GetLoggerFromCmd(string logFileName, HostLogger.OutputCallback callback)
+        /// <param name="logFile">The file to write engine logs to.</param>
+        public static void SetEngineLogFile(string logFile)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        /// <summary>
+        /// Gets the engine log channel created by 'EnableHostLogging'
+        /// </summary>
+        /// <returns>A logger object if logging is enabled, or null if it is not</returns>
+        public static ILogChannel GetEngineLogChannel()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Gets the Natvis log channel if its been created.
+        /// </summary>
+        /// <returns>A logger object if logging is enabled, or null if it is not</returns>
+        public static ILogChannel GetNatvisLogChannel()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Clears the logging objects if enabled.
+        /// </summary>
+        public static void Reset()
         {
             throw new NotImplementedException();
         }

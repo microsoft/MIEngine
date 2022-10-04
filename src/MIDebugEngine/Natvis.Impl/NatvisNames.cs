@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using MICore;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 
 namespace Microsoft.MIDebugEngine.Natvis
 {
@@ -138,7 +139,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// </summary>
         /// <param name="fullyQualifiedName"></param>
         /// <returns></returns>
-        public static TypeName Parse(string fullyQualifiedName, ILogger logger)
+        public static TypeName Parse(string fullyQualifiedName, ILogChannel logger)
         {
             if (String.IsNullOrEmpty(fullyQualifiedName))
                 return null;
@@ -146,7 +147,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             TypeName t = MatchTypeName(fullyQualifiedName.Trim(), out rest);
             if (!String.IsNullOrWhiteSpace(rest))
             {
-                logger.WriteLine("Natvis failed to parse typename: {0}", fullyQualifiedName);
+                logger.WriteLine(LogLevel.Error, "Natvis failed to parse typename: {0}", fullyQualifiedName);
                 return null;
             }
             return t;

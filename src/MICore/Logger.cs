@@ -15,41 +15,45 @@ using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
-    public interface ILogger
-    {
-        void WriteLine(string line);
-
-        void WriteLine(string format, params object[] args);
-    }
-
     /// <summary>
-    /// Class which implements logging. The logging is control by a registry key. If enabled, logging goes to %TMP%\Microsoft.MIDebug.log
+    /// Class which implements logging.
     /// </summary>
-    public class Logger : ILogger
+    public class Logger
     {
         private static bool s_isInitialized;
         private static bool s_isEnabled;
         private static DateTime s_initTime;
-        // NOTE: We never clean this up
-        private static HostLogger s_logger;
+        /// <summary>
+        /// Optional logger to get engine diagnostics logs
+        /// </summary>
+        private ILogChannel EngineLogger => HostLogger.GetEngineLogChannel();
+        /// <summary>
+        /// Optional logger to get natvis diagnostics logs
+        /// </summary>
+        public ILogChannel NatvisLogger => HostLogger.GetNatvisLogChannel();
         private static int s_count;
-        private int _id;
+        private readonly int _id;
+
+        #region Command Window
+
         public class LogInfo
         {
             public string logFile;
-            public HostLogger.OutputCallback logToOutput;
+            public Action<string> logToOutput;
             public bool enabled;
         };
-        private static LogInfo s_cmdLogInfo = new LogInfo();
+
+        private readonly static LogInfo s_cmdLogInfo = new LogInfo();
         public static LogInfo CmdLogInfo { get { return s_cmdLogInfo; } }
 
+        #endregion
 
         private Logger()
         {
             _id = Interlocked.Increment(ref s_count);
         }
 
-        public static Logger EnsureInitialized(HostConfigurationStore configStore)
+        public static Logger EnsureInitialized()
         {
             Logger res = new Logger();
             if (!s_isInitialized)
@@ -57,8 +61,8 @@ namespace MICore
                 s_isInitialized = true;
                 s_initTime = DateTime.Now;
 
-                LoadMIDebugLogger(configStore);
-                res.WriteLine("Initialized log at: " + s_initTime.ToString(CultureInfo.InvariantCulture));
+                LoadMIDebugLogger();
+                res.WriteLine(LogLevel.Verbose, "Initialized log at: " + s_initTime.ToString(CultureInfo.InvariantCulture));
             }
 
 #if DEBUG
@@ -70,75 +74,65 @@ namespace MICore
             return res;
         }
 
-        public static void LoadMIDebugLogger(HostConfigurationStore configStore)
+        public static void LoadMIDebugLogger()
         {
-            if (s_logger == null)
-            { 
-                if (CmdLogInfo.enabled)
-                {   // command configured log file
-                    s_logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
-                }
-                else
-                {   // use default logging
-                    s_logger = configStore.GetLogger("EnableMIDebugLogger", "Microsoft.MIDebug.log");
-                }
-                if (s_logger != null)
-                {
-                    s_isEnabled = true;
-                }
+            if (CmdLogInfo.enabled)
+            {   // command configured log file
+                HostLogger.Reset();
+                HostLogger.SetEngineLogFile(CmdLogInfo.logFile);
+                HostLogger.EnableHostLogging(CmdLogInfo.logToOutput);
             }
+
+            s_isEnabled = true;
         }
 
         public static void Reset()
         {
-            HostLogger logger;
             if (CmdLogInfo.enabled)
             {
-                logger = HostLogger.GetLoggerFromCmd(CmdLogInfo.logFile, CmdLogInfo.logToOutput);
-                logger = Interlocked.Exchange(ref s_logger, logger);
-                logger?.Close();
-                if (s_logger != null)
-                {
-                    s_isEnabled = true;
-                }
+                HostLogger.Reset();
+                s_isEnabled = false;
             }
         }
 
         /// <summary>
         /// If logging is enabled, writes a line of text to the log
         /// </summary>
+        /// <param name="level">[Required] The level of the log.</param>
         /// <param name="line">[Required] line to write</param>
-        public void WriteLine(string line)
+        public void WriteLine(LogLevel level, string line)
         {
             if (s_isEnabled)
             {
-                WriteLineImpl(line);
+                WriteLineImpl(level, line);
             }
         }
 
         /// <summary>
         /// If logging is enabled, writes a line of text to the log
         /// </summary>
+        /// <param name="level">[Required] The level of the log.</param>
         /// <param name="format">[Required] format string</param>
         /// <param name="args">arguments to use in the format string</param>
-        public void WriteLine(string format, params object[] args)
+        public void WriteLine(LogLevel level, string format, params object[] args)
         {
             if (s_isEnabled)
             {
-                WriteLineImpl(format, args);
+                WriteLineImpl(level, format, args);
             }
         }
 
         /// <summary>
         /// If logging is enabled, writes a block of text which may contain newlines to the log
         /// </summary>
+        /// <param name="level">[Required] The level of the log.</param>
         /// <param name="prefix">[Optional] Prefix to put on the front of each line</param>
         /// <param name="textBlock">Block of text to write</param>
-        public void WriteTextBlock(string prefix, string textBlock)
+        public void WriteTextBlock(LogLevel level, string prefix, string textBlock)
         {
             if (s_isEnabled)
             {
-                WriteTextBlockImpl(prefix, textBlock);
+                WriteTextBlockImpl(level, prefix, textBlock);
             }
         }
 
@@ -159,10 +153,10 @@ namespace MICore
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
-        private void WriteLineImpl(string line)
+        private void WriteLineImpl(LogLevel level, string line)
         {
             string fullLine = String.Format(CultureInfo.CurrentCulture, "{2}: ({0}) {1}", (int)(DateTime.Now - s_initTime).TotalMilliseconds, line, _id);
-            s_logger?.WriteLine(fullLine);
+            HostLogger.GetEngineLogChannel()?.WriteLine(level, fullLine);
 #if DEBUG
             Debug.WriteLine("MS_MIDebug: " + fullLine);
 #endif
@@ -171,17 +165,17 @@ namespace MICore
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
         private static void FlushImpl()
         {
-            s_logger?.Flush();
+            HostLogger.GetEngineLogChannel()?.Flush();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
-        private void WriteLineImpl(string format, object[] args)
+        private void WriteLineImpl(LogLevel level, string format, object[] args)
         {
-            WriteLineImpl(string.Format(CultureInfo.CurrentCulture, format, args));
+            WriteLineImpl(level, string.Format(CultureInfo.CurrentCulture, format, args));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)] // Disable inlining since logging is off by default, and we want to allow the public method to be inlined
-        private void WriteTextBlockImpl(string prefix, string textBlock)
+        private void WriteTextBlockImpl(LogLevel level, string prefix, string textBlock)
         {
             using (var reader = new StringReader(textBlock))
             {
@@ -192,9 +186,9 @@ namespace MICore
                         break;
 
                     if (!string.IsNullOrEmpty(prefix))
-                        WriteLineImpl(prefix + line);
+                        WriteLineImpl(level, prefix + line);
                     else
-                        WriteLineImpl(line);
+                        WriteLineImpl(level, line);
                 }
             }
         }
