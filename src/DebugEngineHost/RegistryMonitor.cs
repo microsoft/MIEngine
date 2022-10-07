@@ -2,6 +2,7 @@
 // // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,35 +28,22 @@ namespace Microsoft.DebugEngineHost
         public enum RegChangeNotifyFilter
         {
             /// <summary>Notify the caller if a subkey is added or deleted.</summary>
-            Key = 1,
+            REG_NOTIFY_CHANGE_NAME = 1,
             /// <summary>Notify the caller of changes to the attributes of the key,
             /// such as the security descriptor information.</summary>
-            Attribute = 2,
+            REG_NOTIFY_CHANGE_ATTRIBUTES = 2,
             /// <summary>Notify the caller of changes to a value of the key. This can
             /// include adding or deleting a value, or changing an existing value.</summary>
-            Value = 4,
+            REG_NOTIFY_CHANGE_LAST_SET = 4,
             /// <summary>Notify the caller of changes to the security descriptor
             /// of the key.</summary>
-            Security = 8,
+            REG_NOTIFY_CHANGE_SECURITY = 8,
         }
 
         [DllImport("advapi32.dll", SetLastError = true)]
-        private static extern int RegOpenKeyEx(IntPtr hKey, string subKey, uint options, int samDesired,
-                                               out IntPtr phkResult);
-
-        [DllImport("advapi32.dll", SetLastError = true)]
-        private static extern int RegNotifyChangeKeyValue(IntPtr hKey, bool bWatchSubtree,
+        private static extern int RegNotifyChangeKeyValue(SafeRegistryHandle hKey, bool bWatchSubtree,
                                                           RegChangeNotifyFilter dwNotifyFilter, IntPtr hEvent,
                                                           bool fAsynchronous);
-
-        [DllImport("advapi32.dll", SetLastError = true)]
-        private static extern int RegCloseKey(IntPtr hKey);
-
-        private const int KEY_QUERY_VALUE = 0x0001;
-        private const int KEY_NOTIFY = 0x0010;
-        private const int STANDARD_RIGHTS_READ = 0x00020000;
-
-        private static readonly IntPtr HKEY_LOCAL_MACHINE = new IntPtr(unchecked((int)0x80000002));
 
         #endregion
 
@@ -73,17 +61,20 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         public event EventHandler RegChanged;
 
-        public RegistryMonitor(HostConfigurationSection section, bool watchSubtree)
+        private readonly ILogChannel _nativsLogger;
+
+        public RegistryMonitor(HostConfigurationSection section, bool watchSubtree, ILogChannel nativsLogger)
         {
             _section = section;
             _watchSubtree = watchSubtree;
+            _nativsLogger = nativsLogger;
         }
 
         public void Start()
         {
             Thread registryMonitor = new Thread(Monitor);
             registryMonitor.IsBackground = true;
-            registryMonitor.Name = "RegistryMonitor";
+            registryMonitor.Name = "Microsoft.DebugEngineHost.RegistryMonitor";
             registryMonitor.Start();
         }
 
@@ -100,35 +91,38 @@ namespace Microsoft.DebugEngineHost
         private void Monitor()
         {
             bool stopped = false;
-
-            m_stoppedEvent = new AutoResetEvent(false);
-            m_changeEvent = new AutoResetEvent(false);
-
-            IntPtr handle = m_changeEvent.SafeWaitHandle.DangerousGetHandle();
-
-            int errorCode = RegNotifyChangeKeyValue(_section.YOLOHandle, _watchSubtree, RegChangeNotifyFilter.Key | RegChangeNotifyFilter.Attribute | RegChangeNotifyFilter.Value | RegChangeNotifyFilter.Security, handle, true);
-            if (errorCode != 0) // 0 is ERROR_SUCCESS
-            {
-                throw new Win32Exception(errorCode);
-            }
             try
             {
-                while (!stopped)
-                {
-                    int waitResult = WaitHandle.WaitAny(new WaitHandle[] { m_stoppedEvent, m_changeEvent });
+                m_stoppedEvent = new AutoResetEvent(false);
+                m_changeEvent = new AutoResetEvent(false);
 
-                    if (waitResult == 0)
+                IntPtr handle = m_changeEvent.SafeWaitHandle.DangerousGetHandle();
+
+                int errorCode = RegNotifyChangeKeyValue(_section.Handle, _watchSubtree, RegChangeNotifyFilter.REG_NOTIFY_CHANGE_NAME | RegChangeNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, handle, true);
+                if (errorCode != 0) // 0 is ERROR_SUCCESS
+                {
+                    _nativsLogger?.WriteLine(LogLevel.Error, Resource.Error_WatchRegistry, errorCode);
+                }
+                else
+                {
+                    while (!stopped)
                     {
-                        stopped = true;
-                    }
-                    else
-                    {
-                        errorCode = RegNotifyChangeKeyValue(_section.YOLOHandle, _watchSubtree, RegChangeNotifyFilter.Key | RegChangeNotifyFilter.Attribute | RegChangeNotifyFilter.Value | RegChangeNotifyFilter.Security, handle, true);
-                        if (errorCode != 0) // 0 is ERROR_SUCCESS
+                        int waitResult = WaitHandle.WaitAny(new WaitHandle[] { m_stoppedEvent, m_changeEvent });
+
+                        if (waitResult == 0)
                         {
-                            throw new Win32Exception(errorCode);
+                            stopped = true;
                         }
-                        RegChanged.Invoke(this, null);
+                        else
+                        {
+                            errorCode = RegNotifyChangeKeyValue(_section.Handle, _watchSubtree, RegChangeNotifyFilter.REG_NOTIFY_CHANGE_NAME | RegChangeNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, handle, true);
+                            if (errorCode != 0) // 0 is ERROR_SUCCESS
+                            {
+                                _nativsLogger?.WriteLine(LogLevel.Error, Resource.Error_WatchRegistry, errorCode);
+                                break;
+                            }
+                            RegChanged?.Invoke(this, null);
+                        }
                     }
                 }
             }
@@ -137,12 +131,15 @@ namespace Microsoft.DebugEngineHost
                 _section.Dispose();
                 m_stoppedEvent?.Dispose();
                 m_changeEvent?.Dispose();
+
+                m_stoppedEvent = null;
+                m_changeEvent = null;
             }
         }
 
         public void Dispose()
         {
-            m_stoppedEvent.Set();
+            m_stoppedEvent?.Dispose();
         }
     }
 }

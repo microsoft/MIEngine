@@ -455,7 +455,7 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Enable's tracking the VS 'Natvis Diagnostic Messages (C++ only)' setting.
         /// </summary>
-        public static IDisposable WatchNatvisOptionSetting(HostConfigurationStore configStore)
+        public static IDisposable WatchNatvisOptionSetting(HostConfigurationStore configStore, ILogChannel natvisLogger)
         {
             throw new NotImplementedException();
         }

@@ -66,7 +66,7 @@ namespace Microsoft.DebugEngineHost
             paths.ForEach((s) => loader(s));
         }
 
-        public static IDisposable WatchNatvisOptionSetting(HostConfigurationStore configStore)
+        public static IDisposable WatchNatvisOptionSetting(HostConfigurationStore configStore, ILogChannel natvisLogger)
         {
             RegisterMonitorWrapper rmw = null;
 
@@ -76,7 +76,7 @@ namespace Microsoft.DebugEngineHost
                 // DiagnosticSection exists, set current log level and watch for changes.
                 SetNatvisLogLevel(natvisDiagnosticSection);
 
-                rmw = new RegisterMonitorWrapper(CreateAndStartNatvisDiagnosticMonitor(natvisDiagnosticSection));
+                rmw = new RegisterMonitorWrapper(CreateAndStartNatvisDiagnosticMonitor(natvisDiagnosticSection, natvisLogger));
             }
             else
             {
@@ -87,7 +87,7 @@ namespace Microsoft.DebugEngineHost
                 {
                     // We only care about the debugger subkey's keys since we are waiting for the NatvisDiagnostics
                     // section to be created.
-                    RegistryMonitor rm = new RegistryMonitor(debuggerSection, false);
+                    RegistryMonitor rm = new RegistryMonitor(debuggerSection, false, natvisLogger);
 
                     rmw = new RegisterMonitorWrapper(rm);
 
@@ -104,7 +104,7 @@ namespace Microsoft.DebugEngineHost
                             IDisposable disposable = rmw.CurrentMonitor;
 
                             // Watch NatvisDiagnostic section
-                            rmw = new RegisterMonitorWrapper(CreateAndStartNatvisDiagnosticMonitor(natvisDiagnosticSection));
+                            rmw = new RegisterMonitorWrapper(CreateAndStartNatvisDiagnosticMonitor(natvisDiagnosticSection, natvisLogger));
 
                             disposable.Dispose();
                         }
@@ -118,9 +118,9 @@ namespace Microsoft.DebugEngineHost
             return rmw;
         }
 
-        private static RegistryMonitor CreateAndStartNatvisDiagnosticMonitor(HostConfigurationSection natvisDiagnosticSection)
+        private static RegistryMonitor CreateAndStartNatvisDiagnosticMonitor(HostConfigurationSection natvisDiagnosticSection, ILogChannel natvisLogger)
         {
-            RegistryMonitor rm = new RegistryMonitor(natvisDiagnosticSection, true);
+            RegistryMonitor rm = new RegistryMonitor(natvisDiagnosticSection, true, natvisLogger);
 
             rm.RegChanged += (sender, e) =>
             {
@@ -152,8 +152,10 @@ namespace Microsoft.DebugEngineHost
                     logLevel = LogLevel.Warning;
                     break;
                 case "verbose":
-                default: // Unknown, default to verbose
                     logLevel = LogLevel.Verbose;
+                    break;
+                default: // Unknown, default to Warning
+                    logLevel = LogLevel.Warning;
                     break;
             }
 

@@ -264,7 +264,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             try
             {
-                _natvisSettingWatcher = HostNatvisProject.WatchNatvisOptionSetting(_configStore);
+                _natvisSettingWatcher = HostNatvisProject.WatchNatvisOptionSetting(_configStore, _process.Logger.NatvisLogger);
                 HostNatvisProject.FindNatvis((s) => LoadFile(s));
             }
             catch (FileNotFoundException)
@@ -1372,6 +1372,8 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             _natvisSettingWatcher?.Dispose();
             _natvisSettingWatcher = null;
         }

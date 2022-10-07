@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,6 +44,6 @@ namespace Microsoft.DebugEngineHost
             return _key.GetValueNames();
         }
 
-        public IntPtr YOLOHandle => _key.Handle.DangerousGetHandle();
+        public SafeRegistryHandle Handle => _key.Handle;
     }
 }
