@@ -8,8 +8,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.VisualStudio.Shell.RegistrationAttribute;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -17,9 +19,12 @@ namespace Microsoft.DebugEngineHost
     {
         private const string DebuggerSectionName = "Debugger";
         private const string LaunchersSectionName = "MILaunchers";
+        private const string NatvisDiagnosticsSectionName = "NatvisDiagnostics";
 
         private string _engineId;
         private string _registryRoot;
+
+        // HKLM RegistryKey
         private RegistryKey _configKey;
 
         public HostConfigurationStore(string registryRoot)
@@ -81,38 +86,6 @@ namespace Microsoft.DebugEngineHost
             categoryName = categoryKey.GetSubKeyNames().Single();
         }
 
-        /// <summary>
-        /// Checks if logging is enabled, and if so returns a logger object.
-        /// </summary>
-        /// <param name="enableLoggingSettingName">[Optional] In VS, the name of the settings key to check if logging is enabled. If not specified, this will check 'Logging' in the AD7 Metrics.</param>
-        /// <param name="logFileName">[Required] name of the log file to open if logging is enabled.</param>
-        /// <returns>If no error then logging object. If file cannot be openened then throw an exception. Otherwise return an empty logger - the user can explictly reconfigure it later</returns>
-        public HostLogger GetLogger(string enableLoggingSettingName, string logFileName)
-        {
-            if (string.IsNullOrEmpty(logFileName))
-            {
-                throw new ArgumentNullException(nameof(logFileName));
-            }
-            object enableLoggingValue;
-            if (!string.IsNullOrEmpty(enableLoggingSettingName))
-            {
-                enableLoggingValue = GetOptionalValue(DebuggerSectionName, enableLoggingSettingName);
-            }
-            else
-            {
-                enableLoggingValue = GetEngineMetric("EnableLogging");
-            }
-
-            if (enableLoggingValue == null ||
-                !(enableLoggingValue is int) ||
-                ((int)enableLoggingValue) == 0)
-            {
-                return null;
-            }
-
-            return new HostLogger(HostLogger.GetStreamForName(logFileName, throwInUseError:false));
-        }
-
         public T GetDebuggerConfigurationSetting<T>(string settingName, T defaultValue)
         {
             return GetDebuggerConfigurationSetting(DebuggerSectionName, settingName, defaultValue);
@@ -162,6 +135,46 @@ namespace Microsoft.DebugEngineHost
 
                 return key.GetValue(valueName);
             }
+        }
+
+        /// <summary>
+        /// This method grabs the Debugger Subkey in HKCU
+        /// </summary>
+        /// <returns>The subkey of Debugger if it exists. Returns null otherwise.</returns>
+        public HostConfigurationSection GetCurrentUserDebuggerSection()
+        {
+            using (RegistryKey hkcuRoot = Registry.CurrentUser.OpenSubKey(_registryRoot))
+            {
+                RegistryKey debuggerSection = hkcuRoot.OpenSubKey(DebuggerSectionName);
+                if (debuggerSection != null)
+                {
+                    return new HostConfigurationSection(debuggerSection);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Grabs the Debugger/NatvisDiagnostic subkey in HKCU
+        /// </summary>
+        /// <returns>The NatvisDiagnostic subkey if it exists. Returns null otherwise.</returns>
+        public HostConfigurationSection GetNatvisDiagnosticSection()
+        {
+            using (RegistryKey hkcuRoot = Registry.CurrentUser.OpenSubKey(_registryRoot))
+            {
+                using (RegistryKey debuggerSection = hkcuRoot.OpenSubKey(DebuggerSectionName))
+                {
+                    if (debuggerSection != null)
+                    {
+                        RegistryKey natvisDiagnosticKey = debuggerSection.OpenSubKey(NatvisDiagnosticsSectionName);
+                        if (natvisDiagnosticKey != null)
+                        {
+                            return new HostConfigurationSection(natvisDiagnosticKey);
+                        }
+                    }
+                }
+            }
+            return null;
         }
     }
 }

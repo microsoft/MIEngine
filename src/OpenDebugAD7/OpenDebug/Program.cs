@@ -27,6 +27,9 @@ namespace OpenDebug
         {
             int port = -1;
             List<LoggingCategory> loggingCategories = new List<LoggingCategory>();
+            bool enableEngineLogger = false;
+            LogLevel level = LogLevel.Verbose;
+            string logFilePath = string.Empty;
 
             // parse command line arguments
             foreach (var a in argv)
@@ -49,6 +52,10 @@ namespace OpenDebug
                         Console.WriteLine("--trace=response: print requests and response from VS Code to the console.");
                         Console.WriteLine("--engineLogging[=filePath]: Enable logging from the debug engine. If not");
                         Console.WriteLine("    specified, the log will go to the console.");
+                        Console.WriteLine("--engineLogLevel=<LogLevel>: Set's the log level for engine logging.");
+                        Console.WriteLine("    If not specified, default log level is LogLevel.Verbose");
+                        Console.WriteLine("--natvisDiagnostics[=logLevel]: Enable logging for natvis. If not");
+                        Console.WriteLine("    specified, the log will go to the console. Default logging level is LogLevel.Verbose.");
                         Console.WriteLine("--server[=port_num] : Start the debug adapter listening for requests on the");
                         Console.WriteLine("    specified TCP/IP port instead of stdin/out. If port is not specified");
                         Console.WriteLine("    TCP {0} will be used.", DEFAULT_PORT);
@@ -64,8 +71,14 @@ namespace OpenDebug
                         loggingCategories.Add(LoggingCategory.AdapterResponse);
                         break;
                     case "--engineLogging":
-                        loggingCategories.Add(LoggingCategory.EngineLogging);
-                        HostLogger.EnableHostLogging();
+                        enableEngineLogger = true;
+                        break;
+                    case "--natvisDiagnostics":
+                        loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
+                        HostLogger.EnableNatvisDiagnostics((msg) =>
+                        {
+                            Console.Error.WriteLine(msg);
+                        }, LogLevel.Verbose);
                         break;
                     case "--server":
                         port = DEFAULT_PORT;
@@ -87,17 +100,28 @@ namespace OpenDebug
                                 return -1;
                             }
                         }
+                        else if (a.StartsWith("--natvisDiagnostics=", StringComparison.Ordinal))
+                        {
+                            if (!Enum.TryParse(a.Substring("--natvisDiagnostics=".Length), out LogLevel natvisLogLevel))
+                            {
+                                loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
+                                HostLogger.EnableNatvisDiagnostics((msg) =>
+                                {
+                                    Console.Error.WriteLine(msg);
+                                }, natvisLogLevel);
+                            }
+                        }
                         else if (a.StartsWith("--engineLogging=", StringComparison.Ordinal))
                         {
-                            HostLogger.EnableHostLogging();
-                            try
+                            enableEngineLogger = true;
+                            logFilePath = a.Substring("--engineLogging=".Length);
+                            HostLogger.SetEngineLogFile(logFilePath);
+                        }
+                        else if (a.StartsWith("--engineLogLevel=", StringComparison.Ordinal))
+                        {
+                            if (!Enum.TryParse(a.Substring("--engineLogLevel=".Length), out level))
                             {
-                                HostLogger.Instance.LogFilePath = a.Substring("--engineLogging=".Length);
-                            }
-                            catch (Exception e)
-                            {
-                                Console.Error.WriteLine("OpenDebugAD7: ERROR: Unable to open log file. " + e.Message);
-                                return -1;
+                                level = LogLevel.Verbose;
                             }
                         }
                         else if (a.StartsWith("--adapterDirectory=", StringComparison.Ordinal))
@@ -116,6 +140,23 @@ namespace OpenDebug
                             return -1;
                         }
                         break;
+                }
+            }
+
+            if (enableEngineLogger)
+            {
+                loggingCategories.Add(LoggingCategory.EngineLogging);
+                try
+                {
+                    HostLogger.EnableHostLogging((msg) =>
+                    {
+                        Console.Error.WriteLine(msg);
+                    }, level);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine("OpenDebugAD7: ERROR: Unable to open log file. " + e.Message);
+                    return -1;
                 }
             }
 

@@ -633,6 +633,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to parse engine logging setting: &apos;{0}&apos;.
+        /// </summary>
+        internal static string Warning_EngineLoggingParse {
+            get {
+                return ResourceManager.GetString("Warning_EngineLoggingParse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not detect launch url..
         /// </summary>
         internal static string Warning_LaunchBrowserCannotDetectUrl {
@@ -647,6 +656,15 @@ namespace OpenDebugAD7 {
         internal static string Warning_LaunchBrowserFailed {
             get {
                 return ResourceManager.GetString("Warning_LaunchBrowserFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to parse Nativs logging setting: &apos;{0}&apos;.
+        /// </summary>
+        internal static string Warning_NatvisLoggingParse {
+            get {
+                return ResourceManager.GetString("Warning_NatvisLoggingParse", resourceCulture);
             }
         }
         
