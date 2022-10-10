@@ -74,6 +74,11 @@ namespace MICore
             return res;
         }
 
+        public static void EnableNatvisDiagnostics(LogLevel level)
+        {
+            HostLogger.EnableNatvisDiagnostics(HostOutputWindow.WriteLaunchError, level);
+        }
+
         public static void LoadMIDebugLogger()
         {
             if (CmdLogInfo.enabled)

@@ -53,9 +53,9 @@ namespace OpenDebug
                         Console.WriteLine("--engineLogging[=filePath]: Enable logging from the debug engine. If not");
                         Console.WriteLine("    specified, the log will go to the console.");
                         Console.WriteLine("--engineLogLevel=<LogLevel>: Set's the log level for engine logging.");
-                        Console.WriteLine("    If not specified, default log level is LogLevel.Trace");
+                        Console.WriteLine("    If not specified, default log level is LogLevel.Verbose");
                         Console.WriteLine("--natvisDiagnostics[=logLevel]: Enable logging for natvis. If not");
-                        Console.WriteLine("    specified, the log will go to the console. Default logging level is LogLevel.Trace.");
+                        Console.WriteLine("    specified, the log will go to the console. Default logging level is LogLevel.Verbose.");
                         Console.WriteLine("--server[=port_num] : Start the debug adapter listening for requests on the");
                         Console.WriteLine("    specified TCP/IP port instead of stdin/out. If port is not specified");
                         Console.WriteLine("    TCP {0} will be used.", DEFAULT_PORT);
@@ -75,7 +75,7 @@ namespace OpenDebug
                         break;
                     case "--natvisDiagnostics":
                         loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
-                        HostLogger.EnableNatvisLogger((msg) =>
+                        HostLogger.EnableNatvisDiagnostics((msg) =>
                         {
                             Console.Error.WriteLine(msg);
                         }, LogLevel.Verbose);
@@ -105,7 +105,7 @@ namespace OpenDebug
                             if (!Enum.TryParse(a.Substring("--natvisDiagnostics=".Length), out LogLevel natvisLogLevel))
                             {
                                 loggingCategories.Add(LoggingCategory.NatvisDiagnostics);
-                                HostLogger.EnableNatvisLogger((msg) =>
+                                HostLogger.EnableNatvisDiagnostics((msg) =>
                                 {
                                     Console.Error.WriteLine(msg);
                                 }, natvisLogLevel);

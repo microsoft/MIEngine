@@ -37,6 +37,8 @@ namespace Microsoft.DebugEngineHost
     // This must match the interface in DebugEngineHost.ref.cs
     public interface ILogChannel
     {
+        void SetLogLevel(LogLevel level);
+
         void WriteLine(LogLevel level, string message);
 
         void WriteLine(LogLevel level, string format, params object[] values);
