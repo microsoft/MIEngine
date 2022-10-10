@@ -36,6 +36,9 @@ namespace CppTests.Tests
 
         private const string NatvisName = "natvis";
         private const string NatvisSourceName = "main.cpp";
+
+        // These line numbers will need to change if src/natvis/main.cpp changes
+        private const int SimpleClassAssignmentLine = 47;
         private const int ReturnSourceLine = 51;
 
         [Theory]
@@ -369,7 +372,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint before assigning 'simpleClass' and end of method.");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, new int[] { 46, ReturnSourceLine });
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, new int[] { SimpleClassAssignmentLine, ReturnSourceLine });
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();

@@ -132,7 +132,7 @@ namespace MICore
                     debuggerCmd,
                     localOptions.GetMiDebuggerArgs());
 
-                logger?.WriteTextBlock("DbgCmd:", launchDebuggerCommand);
+                logger?.WriteTextBlock(LogLevel.Verbose, "DbgCmd:", launchDebuggerCommand);
 
                 using (FileStream dbgCmdStream = new FileStream(dbgCmdScript, FileMode.CreateNew))
                 using (StreamWriter dbgCmdWriter = new StreamWriter(dbgCmdStream, encNoBom) { AutoFlush = true })
@@ -175,7 +175,7 @@ namespace MICore
                          throw new InvalidOperationException(error);
                      },
                      logger);
-            logger?.WriteLine("Wait for connection completion.");
+            logger?.WriteLine(LogLevel.Verbose, "Wait for connection completion.");
 
             if (_waitForConnection != null)
             {
@@ -216,7 +216,7 @@ namespace MICore
                     string line = this.GetLineFromStream(_errorStream, _streamReadPidCancellationTokenSource.Token);
                     if (line == null)
                         break;
-                    Logger?.WriteTextBlock("dbgerr:", line);
+                    Logger?.WriteTextBlock(LogLevel.Error, "dbgerr:", line);
                 }
             }
         }
@@ -244,7 +244,7 @@ namespace MICore
                 {
                     shellPid = int.Parse(readShellPidTask.Result, CultureInfo.InvariantCulture);
                     // Used for testing
-                    Logger?.WriteLine(string.Concat("ShellPid=", shellPid));
+                    Logger?.WriteLine(LogLevel.Verbose, string.Concat("ShellPid=", shellPid));
                 }
                 else
                 {
@@ -300,7 +300,7 @@ namespace MICore
                 ((Process)sender).Exited -= ShellExited;
             }
 
-            Logger?.WriteLine("Shell exited, stop debugging");
+            Logger?.WriteLine(LogLevel.Verbose, "Shell exited, stop debugging");
             this.Callback.OnDebuggerProcessExit(null);
 
             Close();

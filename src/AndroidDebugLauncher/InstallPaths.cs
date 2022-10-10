@@ -69,7 +69,7 @@ namespace AndroidDebugLauncher
                     ThrowExternalFileNotFoundException(ndkReleaseVersionFile, LauncherResources.ProductName_NDK);
                 }
 
-                logger.WriteLine("Using NDK '{0}' from path '{1}'", ndkReleaseId, ndkRoot);
+                logger.WriteLine(Microsoft.DebugEngineHost.LogLevel.Verbose, "Using NDK '{0}' from path '{1}'", ndkReleaseId, ndkRoot);
 
                 // 32 vs 64-bit doesn't matter when comparing
                 var r11 = new NdkReleaseId(11, 'a');

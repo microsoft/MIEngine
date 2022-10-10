@@ -4,10 +4,11 @@ using Microsoft.MIDebugEngine.Natvis;
 using MICore;
 using Xunit.Abstractions;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 
 namespace MIDebugEngineUnitTests
 {
-    class TestLogger : ILogger
+    class TestLogger : ILogChannel
     {
         private static TestLogger s_instance;
 
@@ -26,22 +27,29 @@ namespace MIDebugEngineUnitTests
 
         private ITestOutputHelper _output;
 
-        private TestLogger() {}
-
         internal void RegisterTestOutputHelper(ITestOutputHelper output)
         {
             _output = output;
         }
 
-        public void WriteLine(string line)
+        public void WriteLine(LogLevel level, string line)
         {
             _output?.WriteLine(line);
         }
 
-        public void WriteLine(string format, params object[] args)
+        public void WriteLine(LogLevel level, string format, params object[] args)
         {
             _output?.WriteLine(string.Format(CultureInfo.InvariantCulture, format, args));
         }
+
+        // Unused as ITestOutputHelper does not have a Flush implementation
+        public void Flush() { }
+
+        // Unused as ITestOutputHelper does not have a Close implementation
+        public void Close() { }
+
+        // Unused as ITestOutputHelper does not have LogLevels
+        public void SetLogLevel(LogLevel level) { }
     }
 
     public class NatvisNamesTest

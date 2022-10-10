@@ -65,7 +65,6 @@
   
   <ItemGroup>
     <None Include="LaunchOptions.xsd" />
-    <None Include="SetMIDebugLogging.cmd" />
     <ContentWithTargetPath Include="osxlaunchhelper.scpt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>vscode\osxlaunchhelper.scpt</TargetPath>
