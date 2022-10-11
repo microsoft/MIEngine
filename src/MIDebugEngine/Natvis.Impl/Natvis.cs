@@ -157,7 +157,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     };
 
-    public class Natvis
+    public class Natvis : IDisposable
     {
         private class AliasInfo
         {
@@ -227,6 +227,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         private static Regex s_expression = new Regex(@"^\{[^\}]*\}");
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
+        private HostConfigurationStore _configStore;
         private Dictionary<string, VisualizerInfo> _vizCache;
         private uint _depth;
         public HostWaitDialog WaitDialog { get; private set; }
@@ -237,6 +238,8 @@ namespace Microsoft.MIDebugEngine.Natvis
         private const int MAX_FORMAT_DEPTH = 10;
         private const int MAX_ALIAS_CHAIN = 10;
 
+        private IDisposable _natvisSettingWatcher;
+
         public enum DisplayStringsState
         {
             On,
@@ -245,7 +248,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
         public DisplayStringsState ShowDisplayStrings { get; set; }
 
-        internal Natvis(DebuggedProcess process, bool showDisplayString)
+        internal Natvis(DebuggedProcess process, bool showDisplayString, HostConfigurationStore configStore)
         {
             _typeVisualizers = new List<FileInfo>();
             _process = process;
@@ -254,12 +257,14 @@ namespace Microsoft.MIDebugEngine.Natvis
             ShowDisplayStrings = showDisplayString ? DisplayStringsState.On : DisplayStringsState.ForVisualizedItems;  // don't compute display strings unless explicitly requested
             _depth = 0;
             Cache = new VisualizationCache();
+            _configStore = configStore;
         }
 
         public void Initialize(string fileName)
         {
             try
             {
+                _natvisSettingWatcher = HostNatvisProject.WatchNatvisOptionSetting(_configStore, _process.Logger.NatvisLogger);
                 HostNatvisProject.FindNatvis((s) => LoadFile(s));
             }
             catch (FileNotFoundException)
@@ -1365,5 +1370,12 @@ namespace Microsoft.MIDebugEngine.Natvis
             return displayName.ToString();
         }
 
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+
+            _natvisSettingWatcher?.Dispose();
+            _natvisSettingWatcher = null;
+        }
     }
 }

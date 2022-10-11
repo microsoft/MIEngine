@@ -12,7 +12,7 @@ namespace Microsoft.DebugEngineHost
 
         private static string s_engineLogFile;
 
-        public static void EnableNatvisLogger(Action<string> callback, LogLevel level = LogLevel.Verbose)
+        public static void EnableNatvisDiagnostics(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
             if (s_natvisLogChannel == null)
             {

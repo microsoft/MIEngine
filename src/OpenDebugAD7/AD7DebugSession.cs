@@ -270,7 +270,7 @@ namespace OpenDebugAD7
                         if (natvisDiagnosticsBool)
                         {
                             m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
-                            HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, message), LogLevel.Verbose);
+                            HostLogger.EnableNatvisDiagnostics((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, message), LogLevel.Verbose);
                         }
                     }
                     else if (natvisDiagnostics.Type == JTokenType.String)
@@ -279,7 +279,7 @@ namespace OpenDebugAD7
                         if (Enum.TryParse(natvisDiagnosticsString, ignoreCase: true, out LogLevel level))
                         {
                             m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
-                            HostLogger.EnableNatvisLogger((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, string.Concat("[Natvis] ", message)), level);
+                            HostLogger.EnableNatvisDiagnostics((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, string.Concat("[Natvis] ", message)), level);
                         }
                     }
                     else

@@ -24,6 +24,19 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
+        public static void EnableNatvisDiagnostics(Action<string> callback, LogLevel level = LogLevel.Verbose)
+        {
+            if (s_natvisLogChannel== null)
+            {
+                s_natvisLogChannel = new HostLogChannel(callback, null, level);
+            }
+        }
+
+        public static void DisableNatvisDiagnostics()
+        {
+            s_natvisLogChannel = null;
+        }
+
         public static void SetEngineLogFile(string logFile)
         {
             s_engineLogFile = logFile;

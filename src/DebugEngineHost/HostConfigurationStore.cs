@@ -8,8 +8,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.VisualStudio.Shell.RegistrationAttribute;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -17,9 +19,12 @@ namespace Microsoft.DebugEngineHost
     {
         private const string DebuggerSectionName = "Debugger";
         private const string LaunchersSectionName = "MILaunchers";
+        private const string NatvisDiagnosticsSectionName = "NatvisDiagnostics";
 
         private string _engineId;
         private string _registryRoot;
+
+        // HKLM RegistryKey
         private RegistryKey _configKey;
 
         public HostConfigurationStore(string registryRoot)
@@ -130,6 +135,46 @@ namespace Microsoft.DebugEngineHost
 
                 return key.GetValue(valueName);
             }
+        }
+
+        /// <summary>
+        /// This method grabs the Debugger Subkey in HKCU
+        /// </summary>
+        /// <returns>The subkey of Debugger if it exists. Returns null otherwise.</returns>
+        public HostConfigurationSection GetCurrentUserDebuggerSection()
+        {
+            using (RegistryKey hkcuRoot = Registry.CurrentUser.OpenSubKey(_registryRoot))
+            {
+                RegistryKey debuggerSection = hkcuRoot.OpenSubKey(DebuggerSectionName);
+                if (debuggerSection != null)
+                {
+                    return new HostConfigurationSection(debuggerSection);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Grabs the Debugger/NatvisDiagnostic subkey in HKCU
+        /// </summary>
+        /// <returns>The NatvisDiagnostic subkey if it exists. Returns null otherwise.</returns>
+        public HostConfigurationSection GetNatvisDiagnosticSection()
+        {
+            using (RegistryKey hkcuRoot = Registry.CurrentUser.OpenSubKey(_registryRoot))
+            {
+                using (RegistryKey debuggerSection = hkcuRoot.OpenSubKey(DebuggerSectionName))
+                {
+                    if (debuggerSection != null)
+                    {
+                        RegistryKey natvisDiagnosticKey = debuggerSection.OpenSubKey(NatvisDiagnosticsSectionName);
+                        if (natvisDiagnosticKey != null)
+                        {
+                            return new HostConfigurationSection(natvisDiagnosticKey);
+                        }
+                    }
+                }
+            }
+            return null;
         }
     }
 }
