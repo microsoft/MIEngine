@@ -65,7 +65,7 @@ namespace Microsoft.MIDebugEngine
             _deleteEntryPointBreakpoint = false;
             MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
             _waitDialog = (MICommandFactory.SupportsStopOnDynamicLibLoad() && launchOptions.WaitDynamicLibLoad) ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
-            Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString);
+            Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString, configStore);
 
             // we do NOT have real Win32 process IDs, so we use a guid
             AD_PROCESS_ID pid = new AD_PROCESS_ID();
@@ -1032,6 +1032,8 @@ namespace Microsoft.MIDebugEngine
             {
                 _waitDialog.Dispose();
             }
+
+            Natvis?.Dispose();
 
             Logger.Flush();
         }
