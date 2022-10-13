@@ -2979,6 +2979,8 @@ namespace OpenDebugAD7
 
         protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
         {
+            try
+            {
             EvaluateArguments.ContextValue context = responder.Arguments.Context.GetValueOrDefault(EvaluateArguments.ContextValue.Unknown);
             int frameId = responder.Arguments.FrameId.GetValueOrDefault(-1);
             string expression = responder.Arguments.Expression;
@@ -3034,16 +3036,7 @@ namespace OpenDebugAD7
                 propertyInfoFlags |= (enum_DEBUGPROP_INFO_FLAGS)enum_DEBUGPROP_INFO_FLAGS110.DEBUGPROP110_INFO_NOSIDEEFFECTS;
             }
 
-            IDebugProperty2 property;
-            try
-            {
-                GetDebugPropertyFromExpression(eb, expression, frameId, isExecInConsole, flags, dapEvalFlags, out property);
-            }
-            catch (ProtocolException pe)
-            {
-                responder.SetError(pe);
-                return;
-            }
+            GetDebugPropertyFromExpression(eb, expression, frameId, isExecInConsole, flags, dapEvalFlags, out IDebugProperty2 property);
 
             property.GetPropertyInfo(propertyInfoFlags, radix, Constants.EvaluationTimeout, null, 0, propertyInfo);
 
@@ -3074,6 +3067,13 @@ namespace OpenDebugAD7
                 VariablesReference = variable.VariablesReference,
                 MemoryReference = memoryReference
             });
+
+            }
+            catch (Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+                return;
+            }
         }
 
         protected override void HandleReadMemoryRequestAsync(IRequestResponder<ReadMemoryArguments, ReadMemoryResponse> responder)
