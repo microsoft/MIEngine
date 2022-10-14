@@ -514,6 +514,11 @@
           <xs:documentation>Expression that points to value of the linked list node. It can be left empty or have 'this' to refer to the linked list node itself. This expression is evaluated under the context of the linked list node and not the parent linked list type.</xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element maxOccurs="1" name="NoValueHeadPointer" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>Indicates the Node in the HeadPointer has no Value.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
     <xs:attributeGroup ref="CommonAttributes" />
   </xs:complexType>
@@ -608,20 +613,28 @@
 
   <xs:simpleType name="PriorityType">
     <xs:annotation>
-      <xs:documentation>Specifies an optional priority to assign to this entry for type matching.  Priorities range from 0-100 and entries with higher priority numbers within a particular file or directory
-      will be checked first.  &lt;Type&gt; entries that do not specify a priority will be assigned as default priority of &quot;50&quot;  &lt;AlternativeType&gt; entries which do not specify a priority
-      will inherit the priority of the enclosing &lt;Type&gt; element.  The priority number is only used to disambiguate type matching when all other means of disambiguation are unavailable.
-      For example, entries with more specific template instantiations, module constraints, or view constraints will take priority regardless of any priority numbers specified.  
-      Similarly, regardless of priority numbers, natvis files that are part of a loaded project will always take precedence over files in the user natvis directory, 
-      which will, in turn, take precedence over files in the system-wide natvis directory.   
-      
-      If two entries have the same priority and cannot otherwise be disambiguated, it is implementation-defined which one will get used.
+      <xs:documentation>
+        Specifies an optional priority to assign to this entry for type matching. Higher priority entries within a particular file or directory
+        are checked first.  &lt;Type&gt; entries that do not specify a priority receive default priority of &quot;Medium&quot;  &lt;AlternativeType&gt; entries which do not specify a priority
+        will inherit the priority of the enclosing &lt;Type&gt; element.  The priority is only used to disambiguate type matching when all other means of disambiguation are unavailable.
+        For example, entries with more specific template instantiations, module constraints, or view constraints will take priority regardless of any priority values specified.
+        Similarly, regardless of priority, natvis files that are part of a loaded project will always take precedence over files in the user natvis directory,
+        which will, in turn, take precedence over files in the system-wide natvis directory.
+
+        If two entries have the same priority and cannot otherwise be disambiguated, it is unspecified which one will get used.
       </xs:documentation>
     </xs:annotation>
-    <xs:restriction base="xs:int">
-      <xs:minInclusive value="0" />
-      <xs:maxInclusive value="100" />
-    </xs:restriction>
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="Low" />
+          <xs:enumeration value="MediumLow" />
+          <xs:enumeration value="Medium" />
+          <xs:enumeration value="MediumHigh" />
+          <xs:enumeration value="High" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
   </xs:simpleType>
 
   <xs:complexType name="UIVisualizerType">
@@ -718,6 +731,22 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="AliasType">
+    <xs:annotation>
+      <xs:documentation>Specifies a way to alias types.</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="Name" type="StringType" use="required">
+      <xs:annotation>
+        <xs:documentation>The name of type to alias.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="Value" type="StringType" use="required">
+      <xs:annotation>
+        <xs:documentation>The new displayed alias value.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
   <!-- Definition of complex elements-->
 
   <xs:element name="AutoVisualizer">
@@ -736,6 +765,7 @@
         <xs:choice minOccurs="0" maxOccurs="unbounded">
           <xs:element minOccurs="0" maxOccurs="unbounded" name="Type" type="VisualizerType" />
           <xs:element minOccurs="0" maxOccurs="unbounded" name="HResult" type="HResultType"/>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="Alias" type="AliasType"/>
         </xs:choice>
       </xs:sequence>
     </xs:complexType>
