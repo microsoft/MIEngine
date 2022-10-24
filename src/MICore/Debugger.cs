@@ -784,6 +784,9 @@ namespace MICore
                     case '\\':
                         outStr.Append("\\\\");
                         break;
+                    case '\n':
+                        outStr.Append("\\n");
+                        break;
                     default:
                         outStr.Append(str[i]);
                         break;
