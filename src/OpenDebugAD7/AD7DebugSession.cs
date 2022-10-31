@@ -128,8 +128,54 @@ namespace OpenDebugAD7
             m_dataBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
             m_exceptionBreakpoints = new List<string>();
             m_variableManager = new VariableManager();
+
+            //Register sendInvalidate request
+            Protocol.RegisterRequestType<SendInvalidateRequest, SendInvalidateArguments, SendInvalidateResponse>(r => this.HandleSendInvalidateRequestAsync(r));
+    
         }
 
+        private void HandleSendInvalidateRequestAsync(IRequestResponder<SendInvalidateArguments> responder)
+        {
+            InvalidatedEvent invalidated = new InvalidatedEvent();
+            SendInvalidateResponse response = new SendInvalidateResponse();
+            
+            // Setting the area and adding it to the result
+            switch (responder.Arguments.Areas.ToString())
+            {
+                case "Threads":
+                    invalidated.Areas.Add(InvalidatedAreas.Threads);
+                    break;
+                case "Stacks":
+                    invalidated.Areas.Add(InvalidatedAreas.Stacks);
+                    break;
+                case "Variables":
+                    invalidated.Areas.Add(InvalidatedAreas.Variables);
+                    break;
+                case "Unknown":
+                    invalidated.Areas.Add(InvalidatedAreas.Unknown);
+                    break;
+                default:
+                    invalidated.Areas.Add(InvalidatedAreas.All);
+                    break;
+            }
+
+            // Setting the StackFrameId if passed (and the 'threadId' is ignored).
+            if (null != responder.Arguments.StackFrameId)
+            {
+                invalidated.StackFrameId = responder.Arguments.StackFrameId;
+            }
+
+            // Setting the ThreadId if passed
+            else if (null != responder.Arguments.ThreadId)
+            {
+                invalidated.ThreadId = responder.Arguments.ThreadId;
+            }
+
+
+            Protocol.SendEvent(invalidated);
+            response.body.result = JsonConvert.SerializeObject(responder);
+            responder.SetResponse(response);
+        }
         #endregion
 
         #region Utility
@@ -3873,5 +3919,32 @@ namespace OpenDebugAD7
                 throw new NotImplementedException();
             }
         }
+    }
+
+    internal class SendInvalidateRequest : DebugRequestWithResponse<SendInvalidateArguments, SendInvalidateResponse>
+    {
+ 
+        public SendInvalidateRequest(): base("sendInvalidate")
+        {
+        }
+    }
+
+    internal class SendInvalidateResponse : ResponseBody
+    {
+        public sealed class Body
+        {
+            public string result;
+        }
+
+        public Body body = new Body();
+    }
+
+    internal class SendInvalidateArguments : DebugRequestArguments
+    {
+
+        public string Areas { get; set; }
+        public int? ThreadId { get; set; }
+        public int? StackFrameId { get; set; }
+
     }
 }
