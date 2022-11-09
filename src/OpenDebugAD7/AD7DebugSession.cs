@@ -2980,6 +2980,8 @@ namespace OpenDebugAD7
 
         protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
         {
+            try
+            {
             EvaluateArguments.ContextValue context = responder.Arguments.Context.GetValueOrDefault(EvaluateArguments.ContextValue.Unknown);
             int frameId = responder.Arguments.FrameId.GetValueOrDefault(-1);
             string expression = responder.Arguments.Expression;
@@ -3066,6 +3068,13 @@ namespace OpenDebugAD7
                 VariablesReference = variable.VariablesReference,
                 MemoryReference = memoryReference
             });
+
+            }
+            catch (Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+                return;
+            }
         }
 
         protected override void HandleReadMemoryRequestAsync(IRequestResponder<ReadMemoryArguments, ReadMemoryResponse> responder)

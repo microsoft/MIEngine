@@ -49,6 +49,8 @@ namespace DebugAdapterRunner
         // The current thread id which is automatically updated when the tool receives a stopped event
         public int CurrentThreadId;
 
+        public DateTime StartTime { get; } = DateTime.Now;
+
         // Keep a trace of the debug adapter output if requested
         private StringBuilder _debugAdapterOutput = new StringBuilder();
 
