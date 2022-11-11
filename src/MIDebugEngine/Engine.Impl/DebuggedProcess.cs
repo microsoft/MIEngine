@@ -52,6 +52,7 @@ namespace Microsoft.MIDebugEngine
         private IProcessSequence _childProcessHandler;
         private bool _deleteEntryPointBreakpoint;
         private string _entryPointBreakpoint = string.Empty;
+        private bool _simpleValuesExcludesRefTypes = false;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
@@ -550,6 +551,8 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
+                _simpleValuesExcludesRefTypes = await this.MICommandFactory.SupportsSimpleValuesExcludesRefTypes();
+
                 await this.MICommandFactory.EnableTargetAsyncOption();
 
                 await this.CheckCygwin(_launchOptions as LocalLaunchOptions);
@@ -1985,8 +1988,14 @@ namespace Microsoft.MIDebugEngine
         //NOTE: eval is not called
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {
-            // If values are requested, request simple values, otherwise we'll use -var-create to get the type of argument it is.
-            var frames = await MICommandFactory.StackListArguments(values ? PrintValue.SimpleValues : PrintValue.NoValues, thread.Id, low, high);
+            // If SimpleValues excludes printing values for references to compound types,
+            // use SimpleValues (even if values are not requested) as it gets types too.
+            // Otherwise, if values are requested, use SimpleValues, but if not, the
+            // potential performance penalty of fetching values for references to compound
+            // types is too high, so use NoValues and follow up with -var-create to get
+            // the types.
+            PrintValue printValue = (_simpleValuesExcludesRefTypes || values) ? PrintValue.SimpleValues : PrintValue.NoValues;
+            var frames = await MICommandFactory.StackListArguments(printValue, thread.Id, low, high);
             List<ArgumentList> parameters = new List<ArgumentList>();
 
             foreach (var f in frames)
