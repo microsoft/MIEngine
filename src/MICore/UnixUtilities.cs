@@ -259,7 +259,7 @@ namespace MICore
 
         private static void Kill(int pid, int signal)
         {
-            var k = Process.Start("/bin/kill", String.Format(CultureInfo.InvariantCulture, "-{0} {1}", signal, pid));
+            var k = Process.Start("kill", String.Format(CultureInfo.InvariantCulture, "-{0} {1}", signal, pid));
             k.WaitForExit();
         }
     }
