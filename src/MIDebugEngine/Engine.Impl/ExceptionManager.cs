@@ -102,7 +102,7 @@ namespace Microsoft.MIDebugEngine
             // 1. Writes and reads when *NOT* on the FlushSettingsUpdates thread - collection should be locked on itself
             // 2. Reads on the FlushSettingsUpdates thread - no locking is needed
             public ExceptionBreakpointStates CategoryState;
-            public readonly Dictionary<string, ulong> CurrentRules = new Dictionary<string, ulong>();
+            public readonly Dictionary<string, long> CurrentRules = new Dictionary<string, long>();
 
             private readonly object _updateLock = new object();
             /*OPTIONAL*/
@@ -302,7 +302,7 @@ namespace Microsoft.MIDebugEngine
             ExceptionCategorySettings categorySettings;
             if (_categoryMap.TryGetValue(CppExceptionCategoryGuid, out categorySettings))
             {
-                ulong breakpointNumber = Convert.ToUInt32(bkptno, CultureInfo.InvariantCulture);
+                long breakpointNumber = Convert.ToInt32(bkptno, CultureInfo.InvariantCulture);
                 lock (categorySettings.CurrentRules)
                 {
                     exceptionName = categorySettings.CurrentRules.FirstOrDefault(pair => pair.Value == breakpointNumber).Key;
@@ -511,8 +511,8 @@ namespace Microsoft.MIDebugEngine
                 {
                     try
                     {
-                        IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
-                        ulong breakpointId = breakpointIds.Single();
+                        IEnumerable<long> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, null, newCategoryState);
+                        long breakpointId = breakpointIds.Single();
                         lock (categorySettings.CurrentRules)
                         {
                             categorySettings.CurrentRules.Add("*", breakpointId);
@@ -531,12 +531,12 @@ namespace Microsoft.MIDebugEngine
             if (updates.RulesToRemove.Count > 0)
             {
                 // Detach these exceptions from 'CurrentRules'
-                List<ulong> breakpointsToRemove = new List<ulong>();
+                List<long> breakpointsToRemove = new List<long>();
                 lock (categorySettings.CurrentRules)
                 {
                     foreach (string exceptionToRemove in updates.RulesToRemove)
                     {
-                        ulong breakpointId;
+                        long breakpointId;
                         if (!categorySettings.CurrentRules.TryGetValue(exceptionToRemove, out breakpointId))
                             continue;
 
@@ -575,7 +575,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     try
                     {
-                        IEnumerable<ulong> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
+                        IEnumerable<long> breakpointIds = await _commandFactory.SetExceptionBreakpoints(categoryId, exceptionNames, grouping.Key);
 
                         lock (categorySettings.CurrentRules)
                         {
@@ -584,7 +584,7 @@ namespace Microsoft.MIDebugEngine
                             // remove old breakpoint if exceptionName is in categorySettings.CurrentRules.Keys
                             if (categorySettings.CurrentRules.ContainsKey(exceptionName))
                                 {
-                                    _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { categorySettings.CurrentRules[exceptionName] });
+                                    _commandFactory.RemoveExceptionBreakpoint(categoryId, new long[] { categorySettings.CurrentRules[exceptionName] });
                                 }
                                 categorySettings.CurrentRules[exceptionName] = breakpointId;
                                 return 1;
@@ -609,7 +609,7 @@ namespace Microsoft.MIDebugEngine
                 }
                 if (!isBreakThrown)
                 {
-                    ulong breakpointId;
+                    long breakpointId;
                     lock (categorySettings.CurrentRules)
                     {
                         foreach (string exceptionName in exceptionNames)
@@ -617,7 +617,7 @@ namespace Microsoft.MIDebugEngine
                             if (!categorySettings.CurrentRules.TryGetValue(exceptionName, out breakpointId))
                                 continue;
 
-                            _commandFactory.RemoveExceptionBreakpoint(categoryId, new ulong[] { breakpointId });
+                            _commandFactory.RemoveExceptionBreakpoint(categoryId, new long[] { breakpointId });
                             categorySettings.CurrentRules.Remove(exceptionName);
                         }
                     }

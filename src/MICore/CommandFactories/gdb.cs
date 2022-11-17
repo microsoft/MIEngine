@@ -310,11 +310,11 @@ namespace MICore
             return new Guid[] { new Guid(CppExceptionCategoryString) };
         }
 
-        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointStates)
+        public override async Task<IEnumerable<long>> SetExceptionBreakpoints(Guid exceptionCategory, IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointStates)
         {
             string command;
             Results result;
-            List<ulong> breakpointNumbers = new List<ulong>();
+            List<long> breakpointNumbers = new List<long>();
 
             if (exceptionNames == null) // set breakpoint for all exceptions in exceptionCategory
             {
@@ -353,9 +353,9 @@ namespace MICore
             return breakpointNumbers;
         }
 
-        public override async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        public override async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<long> exceptionBreakpoints)
         {
-            foreach (ulong breakpointNumber in exceptionBreakpoints)
+            foreach (long breakpointNumber in exceptionBreakpoints)
             {
                 await BreakDelete(breakpointNumber.ToString(CultureInfo.InvariantCulture));
             }
