@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -218,6 +219,7 @@ namespace DebugAdapterRunner
                     }
 
                     string messageStart;
+                    string messageSuffix = string.Empty;
                     if (runner.DebugAdapter.HasExited)
                     {
                         if (runner.HasAsserted())
@@ -226,7 +228,21 @@ namespace DebugAdapterRunner
                         }
                         else
                         {
-                            messageStart = string.Format(CultureInfo.CurrentCulture, "The debugger process has exited with code '{0}' without sending all expected responses.", runner.DebugAdapter.ExitCode);
+                            int exitCode = runner.DebugAdapter.ExitCode;
+                            messageStart = string.Format(CultureInfo.CurrentCulture, "The debugger process has exited with code '{0}' without sending all expected responses.", exitCode);
+
+                            // OSX will normally write out nice crash reports that we can include if the debug adapter crashes.
+                            // Try to include them in the exception.
+                            // NOTE that OSX uses exit code 128+<signal_number> if there is a crash. The highest documented signal
+                            // number is 31 (User defined signal 2). See 'man signal' for more numbers.
+                            // The most common is 139 (SigSegV).
+                            if (exitCode > 128 && exitCode <= 128+31 && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                            {
+                                if (TryFindOSXCrashReport(runner, out string crashReport))
+                                {
+                                    messageSuffix = "\n\nCrash report:\n" + crashReport;
+                                }
+                            }
                         }
                     }
                     else if (getMessageExeception is TimeoutException)
@@ -265,8 +281,8 @@ namespace DebugAdapterRunner
                         actualResponseText += string.Format(CultureInfo.CurrentCulture, "{0}. {1}\n", (i + 1), JsonConvert.SerializeObject(responseList[i]));
                     }
 
-                    string errorMessage = string.Format(CultureInfo.CurrentCulture, "{0}\nExpected =\n{1}\nActual Responses =\n{2}",
-                        messageStart, expectedResponseText, actualResponseText);
+                    string errorMessage = string.Format(CultureInfo.CurrentCulture, "{0}\nExpected =\n{1}\nActual Responses =\n{2}{3}",
+                        messageStart, expectedResponseText, actualResponseText, messageSuffix);
 
                     throw new DARException(errorMessage);
                 }
@@ -330,6 +346,57 @@ namespace DebugAdapterRunner
                     throw;
                 }
             }
+        }
+
+        private static bool TryFindOSXCrashReport(DebugAdapterRunner runner, out string crashReport)
+        {
+            crashReport = null;
+
+            string homeDir = Environment.GetEnvironmentVariable("HOME");
+            if (String.IsNullOrEmpty(homeDir))
+                return false;
+
+            string crashReportDirectory = Path.Combine(homeDir, "Library/Logs/DiagnosticReports/");
+            if (!Directory.Exists(crashReportDirectory))
+                return false;
+
+            string debugAdapterFilePath = runner.DebugAdapter?.StartInfo?.FileName;
+            if (String.IsNullOrEmpty(debugAdapterFilePath))
+                return false;
+            string debugAdapterFileName = Path.GetFileName(debugAdapterFilePath);
+
+            string crashReportPath = null;
+            for (int retry = 0; retry < 15; retry++)
+            {
+                IEnumerable<string> crashReportFiles = Directory.EnumerateFiles(crashReportDirectory, debugAdapterFileName + "*")
+                    .Select(name => Path.Combine(crashReportDirectory, name));
+
+                (string Path, DateTime CreationTime) latestCrashReport = crashReportFiles
+                    .Select<string, (string Path, DateTime CreationTime)>(path => new(path, File.GetCreationTime(path)))
+                    .OrderByDescending(tuple => tuple.CreationTime)
+                    .FirstOrDefault();
+                if (latestCrashReport.Path == null ||
+                    latestCrashReport.CreationTime < runner.StartTime)
+                {
+                    // It can take a little while for the crash report to get written, so wait a second and try again
+                    // NOTE: From what I have seen, crash logs are written in one shot, so, unless we get very unlucky,
+                    // we should get the whole thing.
+                    Thread.Sleep(1000);
+                    continue;
+                }
+
+                crashReportPath = latestCrashReport.Path;
+                break;
+            }
+
+            if (crashReportPath == null)
+            {
+                // Crash log was never found
+                return false;
+            }
+
+            crashReport = File.ReadAllText(crashReportPath);
+            return true;
         }
     }
 }

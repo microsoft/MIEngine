@@ -557,7 +557,7 @@ namespace MICore
         /// exceptions in the category. Note that this clear all previous exception breakpoints set in this category.</param>
         /// <param name="exceptionBreakpointState">Indicates when the exception breakpoint should fire</param>
         /// <returns>Task containing the exception breakpoint id's for the various set exceptions</returns>
-        public virtual Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
+        public virtual Task<IEnumerable<long>> SetExceptionBreakpoints(Guid exceptionCategory, /*OPTIONAL*/ IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointState)
         {
             // NOTES:
             // GDB /MI has no support for exceptions. Though they do have it through the non-MI through a 'catch' command. Example:
@@ -573,7 +573,7 @@ namespace MICore
             throw new NotImplementedException();
         }
 
-        public virtual Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        public virtual Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<long> exceptionBreakpoints)
         {
             throw new NotImplementedException();
         }
@@ -658,8 +658,7 @@ namespace MICore
 
             if (results.TryFindString("reason") == "signal-received")
             {
-                if (results.TryFindString("signal-name") == "SIGINT" || 
-                    results.TryFindString("signal-name") == "SIGTRAP")
+                if (results.TryFindString("signal-name") == "SIGTRAP")
                 {
                     isAsyncBreak = true;
                 }
