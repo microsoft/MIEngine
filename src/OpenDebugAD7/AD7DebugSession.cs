@@ -887,6 +887,7 @@ namespace OpenDebugAD7
             // The program should now be stepping, so it is safe to discard the
             // cached program state.
             BeforeContinue();
+            m_isStepping = true;
         }
 
         private enum ClientId
