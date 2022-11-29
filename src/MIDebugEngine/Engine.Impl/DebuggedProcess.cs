@@ -3,6 +3,8 @@
 
 using MICore;
 using Microsoft.DebugEngineHost;
+using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Collections.Generic;
@@ -2271,6 +2273,37 @@ namespace Microsoft.MIDebugEngine
 
         public bool IsChildProcessDebugging => _childProcessHandler != null;
 
+        /*
+         * New function to take care of regex with file globbing here. This function is called only when a wildcard is detected in sourceFileMap.
+         */
+        public bool RegexFileGlobbing(string directory, string filename, out string mappedString)
+        {
+            mappedString = String.Empty;
+
+            if (!directory.Contains('*'))
+            {
+                return false;
+            }
+
+            string trimmedDirectory = directory.TrimEnd('/');
+            trimmedDirectory = trimmedDirectory.Substring(0, trimmedDirectory.LastIndexOf('/'));
+            string pattern = directory.Substring(trimmedDirectory.Length) + filename;
+
+            Matcher matcher = new Matcher();
+            matcher.AddIncludePatterns(new[] { pattern });
+            PatternMatchingResult result = matcher.Execute(
+                new DirectoryInfoWrapper(
+                    new DirectoryInfo(trimmedDirectory)));
+
+            if (result.HasMatches)
+            {
+                mappedString = result.Files.First().Path;
+                return true;
+            }
+
+            return false;
+        }
+
         public bool MapCurrentSrcToCompileTimeSrc(string currentSrc, out string compilerSrc)
         {
             if (_launchOptions.SourceMap != null)
@@ -2303,6 +2336,16 @@ namespace Microsoft.MIDebugEngine
                             compilerSrc = PlatformUtilities.WindowsPathToUnixPath(compilerSrc); // use Unix notation for the compiled path
                         }
                         return true;
+                    }
+
+                    // detect wildcard case here
+                    if (e.EditorPath.Contains('*'))
+                    {
+                        var file = currentSrc.Substring(e.CompileTimePath.Length);
+                        if (RegexFileGlobbing(e.EditorPath, file, out compilerSrc))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
@@ -2353,6 +2396,16 @@ namespace Microsoft.MIDebugEngine
                         }
                         currentName = Path.Combine(e.EditorPath, file);    // map to the compiled location
                         return true;
+                    }
+
+                    // detect wildcard case here
+                    if (e.CompileTimePath.Contains('*'))
+                    {
+                        var file = hostOSCompilerSrc.Substring(e.CompileTimePath.Length);
+                        if (RegexFileGlobbing(e.CompileTimePath, file, out currentName))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
