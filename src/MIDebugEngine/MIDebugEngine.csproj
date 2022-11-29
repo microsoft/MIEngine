@@ -32,6 +32,7 @@
   <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
 
   <ItemGroup Label="NuGet Packages">
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="6.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.15.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)" />
   </ItemGroup>
