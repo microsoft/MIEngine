@@ -53,6 +53,10 @@ namespace Microsoft.DebugEngineHost
         // Set when monitoring is stopped
         private AutoResetEvent _stoppedEvent;
 
+        // Members to handle multiple stop calls.
+        private bool _isStopped = false;
+        private readonly object _stopLock = new object();
+
         /// <summary>
         /// Occurs when the specified registry key has changed.
         /// </summary>
@@ -77,7 +81,14 @@ namespace Microsoft.DebugEngineHost
 
         public void Stop()
         {
-            _stoppedEvent?.Set();
+            lock (_stopLock)
+            {
+                if (!_isStopped)
+                {
+                    _stoppedEvent?.Set();
+                    _isStopped = true;
+                }
+            }
         }
 
         // The handle is owned by change event instance which lives while we use the handle.
