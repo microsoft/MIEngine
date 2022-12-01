@@ -2297,7 +2297,7 @@ namespace Microsoft.MIDebugEngine
 
             if (result.HasMatches)
             {
-                mappedString = result.Files.First().Path;
+                mappedString = trimmedDirectory + "/" + result.Files.First().Path;
                 return true;
             }
 
@@ -2338,6 +2338,7 @@ namespace Microsoft.MIDebugEngine
                         return true;
                     }
 
+                    ///*
                     // detect wildcard case here
                     if (e.EditorPath.Contains('*'))
                     {
@@ -2347,6 +2348,7 @@ namespace Microsoft.MIDebugEngine
                             return true;
                         }
                     }
+                    //*/
                 }
             }
             compilerSrc = currentSrc;
@@ -2394,18 +2396,21 @@ namespace Microsoft.MIDebugEngine
                         {
                             continue;   // match didn't end at a directory separator, not actually a match
                         }
+
+                        // /*
+                        // detect wildcard case here
+                        if (e.EditorPath.Contains('*'))
+                        {
+                            // var file = hostOSCompilerSrc.Substring(e.CompileTimePath.Length);
+                            if (RegexFileGlobbing(e.EditorPath, file, out currentName))
+                            {
+                                return true;
+                            }
+                        }
+                        // */
+
                         currentName = Path.Combine(e.EditorPath, file);    // map to the compiled location
                         return true;
-                    }
-
-                    // detect wildcard case here
-                    if (e.CompileTimePath.Contains('*'))
-                    {
-                        var file = hostOSCompilerSrc.Substring(e.CompileTimePath.Length);
-                        if (RegexFileGlobbing(e.CompileTimePath, file, out currentName))
-                        {
-                            return true;
-                        }
                     }
                 }
             }
