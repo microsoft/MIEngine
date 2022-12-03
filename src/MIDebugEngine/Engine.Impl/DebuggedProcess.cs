@@ -2304,7 +2304,7 @@ namespace Microsoft.MIDebugEngine
             return false;
         }
 
-        public bool MapCurrentSrcToCompileTimeSrc(string currentSrc, out string compilerSrc)
+        public bool MapCurrentSrcToCompileTimeSrc(string currentSrc, out string compilerSrc) // B -> A // this should no-op in current scenario, need to set a breakpoint in Project B to check this
         {
             if (_launchOptions.SourceMap != null)
             {
@@ -2338,24 +2338,23 @@ namespace Microsoft.MIDebugEngine
                         return true;
                     }
 
-                    ///*
-                    // detect wildcard case here
-                    if (e.EditorPath.Contains('*'))
+                    /*
+                     * if currentSrc matches SourceMap[x].EditorPath, set compilerSrc to SourceMap[x].CompileTimePath
+                    */
+                    if (Regex.IsMatch(currentSrc.TrimEnd('/'), e.EditorPath.TrimEnd('/')))
                     {
-                        var file = currentSrc.Substring(e.CompileTimePath.Length);
-                        if (RegexFileGlobbing(e.EditorPath, file, out compilerSrc))
-                        {
-                            return true;
-                        }
+                        // var file = currentSrc.Substring(e.CompileTimePath.Length);
+                        // var file = currentSrc.Substring(e.EditorPath.Length);
+                        compilerSrc = e.CompileTimePath + "main.cpp";
+                        return true;
                     }
-                    //*/
                 }
             }
             compilerSrc = currentSrc;
             return false;
         }
 
-        public bool MapCompileTimeSrcToCurrentSrc(string compilerSrc, out string currentName)
+        public bool MapCompileTimeSrcToCurrentSrc(string compilerSrc, out string currentName) // A -> B
         {
             if (_launchOptions.SourceMap != null)
             {
