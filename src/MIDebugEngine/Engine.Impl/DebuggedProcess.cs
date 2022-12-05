@@ -2338,6 +2338,19 @@ namespace Microsoft.MIDebugEngine
                         return true;
                     }
 
+                    // /*
+                    // detect wildcard case here
+                    if (e.CompileTimePath.Contains('*'))
+                    {
+                        // var file = hostOSCompilerSrc.Substring(e.CompileTimePath.Length);
+                        if (RegexFileGlobbing(e.CompileTimePath, "main.cpp", out compilerSrc))
+                        {
+                            return true;
+                        }
+                    }
+                    // */
+
+
                     /*
                      * if currentSrc matches SourceMap[x].EditorPath, set compilerSrc to SourceMap[x].CompileTimePath
                     */
