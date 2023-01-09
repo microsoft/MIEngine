@@ -178,7 +178,7 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        internal async Task ThreadCreatedEvent(int id, string groupId)
+        internal void ThreadCreatedEvent(int id, string groupId)
         {
             // Mark that the threads have changed
             lock (_threadList)
@@ -204,47 +204,6 @@ namespace Microsoft.MIDebugEngine
                     _threadGroups[groupId] = new List<int>();
                 }
                 _threadGroups[groupId].Add(id);
-            }
-
-            // Run Thread-info now to get the target-id
-            ResultValue resVal = null;
-            if (id >= 0)
-            {
-                uint? tid = null;
-                tid = (uint)id;
-                Results results = await _debugger.MICommandFactory.ThreadInfo(tid);
-                if (results.ResultClass != ResultClass.done)
-                {
-                    // This can happen on some versions of gdb where thread-info is not supported while running, so only assert if we're also not running. 
-                    if (this._debugger.ProcessState != ProcessState.Running)
-                    {
-                        Debug.Fail("Thread info not successful");
-                    }
-                }
-                else
-                {
-                    var tlist = results.Find<ValueListValue>("threads");
-
-                    // tlist.Content.Length could be 0 when the thread exits between it getting created and we request thread-info
-                    Debug.Assert(tlist.Content.Length <= 1, "Expected at most 1 thread, received more than one thread.");
-                    resVal = tlist.Content.FirstOrDefault(item => item.FindInt("id") == id);
-                }
-            }
-
-            if (resVal != null)
-            {
-                lock (_threadList)
-                {
-                    bool bNew = false;
-                    var thread = SetThreadInfoFromResultValue(resVal, out bNew);
-                    Debug.Assert(thread.Id == id, "thread.Id and id should match");
-
-                    if (bNew)
-                    {
-                        NewThreads.Add(thread);
-                        SendThreadEvents(null, null);
-                    }
-                }
             }
         }
 
