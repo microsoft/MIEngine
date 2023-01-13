@@ -1592,7 +1592,7 @@ namespace MICore
             {
                 DebugChildProcesses = suppOptions.DebugChildProcesses;
             }
-            if (VisualizerFiles.Count > 0)
+            if (VisualizerFiles == null || VisualizerFiles.Count == 0)
             {
                 VisualizerFiles = suppOptions.VisualizerFiles;
             }
