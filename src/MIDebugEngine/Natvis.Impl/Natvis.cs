@@ -321,6 +321,20 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
+        /*
+         * Handle multiple Natvis files
+         */
+        public void Initialize(List <string> fileNames)
+        {
+            if (fileNames.Count > 0)
+            {
+                foreach (var file in fileNames)
+                {
+                    Initialize(file);
+                }
+            }
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053: UseSecureXmlResolver.",
             Justification = "Usage is secure -- XmlResolver property is set to 'null' in desktop CLR, and is always null in CoreCLR. But CodeAnalysis cannot understand the invocation since it happens through reflection.")]
         private bool LoadFile(string path)

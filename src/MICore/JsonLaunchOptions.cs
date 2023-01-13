@@ -41,8 +41,8 @@ namespace MICore.Json.LaunchOptions
         /// <summary>
         /// .natvis file to be used when debugging this process. This option is not compatible with GDB pretty printing. Please also see "showDisplayString" if using this setting.
         /// </summary>
-        [JsonProperty("visualizerFile", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string VisualizerFile { get; set; }
+        [JsonProperty("visualizerFiles", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<string> VisualizerFiles { get; set; }
 
         /// <summary>
         /// When a visualizerFile is specified, showDisplayString will enable the display string. Turning this option on can cause slower performance during debugging.
@@ -144,7 +144,7 @@ namespace MICore.Json.LaunchOptions
             int processId,
             string type = null,
             string targetArchitecture = null,
-            string visualizerFile = null,
+            List<string> visualizerFiles = null,
             bool? showDisplayString = null,
             string additionalSOLibSearchPath = null,
             string MIMode = null,
@@ -160,7 +160,7 @@ namespace MICore.Json.LaunchOptions
             this.Program = program;
             this.Type = type;
             this.TargetArchitecture = targetArchitecture;
-            this.VisualizerFile = visualizerFile;
+            this.VisualizerFiles = visualizerFiles;
             this.ShowDisplayString = showDisplayString;
             this.AdditionalSOLibSearchPath = additionalSOLibSearchPath;
             this.MIMode = MIMode;
@@ -408,7 +408,7 @@ namespace MICore.Json.LaunchOptions
             List<SetupCommand> postRemoteConnectCommands = null,
             List<SetupCommand> customLaunchSetupCommands = null,
             LaunchCompleteCommand? launchCompleteCommand = null,
-            string visualizerFile = null,
+            List<string> visualizerFiles = null,
             bool? showDisplayString = null,
             List<Environment> environment = null,
             string additionalSOLibSearchPath = null,
@@ -440,7 +440,7 @@ namespace MICore.Json.LaunchOptions
             this.PostRemoteConnectCommands = postRemoteConnectCommands;
             this.CustomLaunchSetupCommands = customLaunchSetupCommands;
             this.LaunchCompleteCommand = launchCompleteCommand;
-            this.VisualizerFile = visualizerFile;
+            this.VisualizerFiles = visualizerFiles;
             this.ShowDisplayString = showDisplayString;
             this.Environment = environment;
             this.AdditionalSOLibSearchPath = additionalSOLibSearchPath;

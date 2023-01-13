@@ -13,8 +13,9 @@
 // 
 namespace MICore.Xml.LaunchOptions {
     using System.Xml.Serialization;
-    
-    
+    using System.Collections.Generic;
+
+
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
@@ -233,7 +234,7 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string VisualizerFile;
+        public List<string> VisualizerFiles;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -387,7 +388,7 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string VisualizerFile;
+        public List<string> VisualizerFiles;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
