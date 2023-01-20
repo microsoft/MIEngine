@@ -975,15 +975,15 @@ namespace MICore
             }
         }
         */
-        private List<string> _visualizerFiles;
-        public List<string> VisualizerFiles
+        private List<string> _visualizerFile;
+        public List<string> VisualizerFile
         {
-            get { return _visualizerFiles; }
+            get { return _visualizerFile; }
             set
             {
                 // test -- need to delete
-                VerifyCanModifyProperty(nameof(VisualizerFiles));
-                _visualizerFiles = value;
+                VerifyCanModifyProperty(nameof(VisualizerFile));
+                _visualizerFile = value;
             }
         }
 
@@ -1592,9 +1592,9 @@ namespace MICore
             {
                 DebugChildProcesses = suppOptions.DebugChildProcesses;
             }
-            if (VisualizerFiles == null || VisualizerFiles.Count == 0)
+            if (VisualizerFile == null || VisualizerFile.Count == 0)
             {
-                VisualizerFiles = suppOptions.VisualizerFiles;
+                VisualizerFile = suppOptions.VisualizerFile;
             }
             if (suppOptions.ShowDisplayStringSpecified)
             {
@@ -1784,7 +1784,7 @@ namespace MICore
                 this.TargetArchitecture = ConvertTargetArchitectureAttribute(options.TargetArchitecture);
             }
 
-            this.VisualizerFiles = options.VisualizerFiles;
+            this.VisualizerFile = options.VisualizerFile;
             this.ShowDisplayString = options.ShowDisplayString.GetValueOrDefault(false);
 
             this.AdditionalSOLibSearchPath = String.IsNullOrEmpty(this.AdditionalSOLibSearchPath) ?
@@ -1854,8 +1854,8 @@ namespace MICore
             if (string.IsNullOrEmpty(this.WorkingDirectory))
                 this.WorkingDirectory = source.WorkingDirectory;
 
-            if (this.VisualizerFiles.Count > 0)
-                this.VisualizerFiles = source.VisualizerFiles;
+            if (this.VisualizerFile.Count > 0)
+                this.VisualizerFile = source.VisualizerFile;
 
             this.ShowDisplayString = source.ShowDisplayString;
             this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;

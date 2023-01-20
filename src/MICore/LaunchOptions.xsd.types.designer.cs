@@ -234,7 +234,7 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public List<string> VisualizerFiles;
+        public List<string> VisualizerFile;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -388,7 +388,7 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public List<string> VisualizerFiles;
+        public List<string> VisualizerFile;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
