@@ -543,7 +543,7 @@ namespace Microsoft.MIDebugEngine
         public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
         {
             bool success = false;
-            Natvis.Initialize(_launchOptions.VisualizerFile); // test -- need to delete; this was changed
+            Natvis.Initialize(_launchOptions.VisualizerFile);
             int total = 1;
 
             await this.WaitForConsoleDebuggerInitialize(token);

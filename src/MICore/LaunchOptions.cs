@@ -960,28 +960,12 @@ namespace MICore
             }
         }
 
-        /*
-        private string _visualizerFile;
-        /// <summary>
-        /// [Optional] Natvis file name - from install location
-        /// </summary>
-        public string VisualizerFile
-        {
-            get { return _visualizerFile; }
-            set
-            {
-                VerifyCanModifyProperty(nameof(VisualizerFile));
-                _visualizerFile = value;
-            }
-        }
-        */
         private List<string> _visualizerFile;
         public List<string> VisualizerFile
         {
             get { return _visualizerFile; }
             set
             {
-                // test -- need to delete
                 VerifyCanModifyProperty(nameof(VisualizerFile));
                 _visualizerFile = value;
             }

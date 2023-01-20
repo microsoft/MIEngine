@@ -128,13 +128,16 @@ namespace MICore.Json.LaunchOptions
     {
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            // test -- need to delete; insert something here
-            // if string type, return List containing string
-
-            if (reader.TokenType == JsonToken.StartArray) { return reader.Value; }
-            else return new List<string>(); // need to pass in reader.Value here
-
-            // throw new NotImplementedException();
+            List<string> visualizerFile = new List<string>();
+            if (reader.TokenType == JsonToken.StartArray)
+            {
+                visualizerFile = serializer.Deserialize<List<string>>(reader);
+            }
+            else
+            {
+                visualizerFile.Add(reader.Value.ToString());
+            }
+            return visualizerFile;
         }
 
         public override bool CanConvert(Type objectType)
