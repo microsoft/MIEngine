@@ -961,6 +961,9 @@ namespace MICore
         }
 
         private List<string> _visualizerFile;
+        /// <summary>
+        /// [Optional] Natvis file name - from install location
+        /// </summary>
         public List<string> VisualizerFile
         {
             get { return _visualizerFile; }
@@ -1838,7 +1841,7 @@ namespace MICore
             if (string.IsNullOrEmpty(this.WorkingDirectory))
                 this.WorkingDirectory = source.WorkingDirectory;
 
-            if (this.VisualizerFile.Count > 0)
+            if (this.VisualizerFile == null || this.VisualizerFile.Count == 0)
                 this.VisualizerFile = source.VisualizerFile;
 
             this.ShowDisplayString = source.ShowDisplayString;
