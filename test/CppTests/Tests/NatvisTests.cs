@@ -420,7 +420,7 @@ namespace CppTests.Tests
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure launch");
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath);
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, string.Empty);
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
@@ -457,7 +457,7 @@ namespace CppTests.Tests
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure launch");
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath);
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, string.Empty);
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
@@ -473,6 +473,56 @@ namespace CppTests.Tests
                     this.Comment("Verifying comma format specifier");
                     int[] expected = { 0, 1, 4, 9 };
                     currentFrame.AssertEvaluateAsIntArray("arr._array,[4]", EvaluateContext.Watch, expected);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestMultipleNatvisFiles(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks if TreeItems are visualized.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                List<string> visFile = new List<string>();
+                visFile.Add(Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple1.natvis"));
+                visFile.Add(Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple2.natvis"));
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying TreeItems natvis");
+                    var map = currentFrame.GetVariable("map");
+
+                    // Custom Item in natvis
+                    Assert.Equal("6", map.GetVariable("Count").Value);
+
+                    // Index element for TreeItems
+                    // Visualized map will show the BST in a flat ordered list.
+                    // Values are inserted as [0, -100, 15, -35, 4, -72]
+                    // Expected visualize list to be [-100, -72, -35, 0, 4, 15]
+                    Assert.Equal("-100", map.GetVariable("[0]").Value);
+                    Assert.Equal("0", map.GetVariable("[3]").Value);
+                    Assert.Equal("15", map.GetVariable("[5]").Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();

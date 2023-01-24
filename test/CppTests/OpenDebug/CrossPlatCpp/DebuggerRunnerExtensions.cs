@@ -10,7 +10,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
     {
         public static void Launch(this IDebuggerRunner runner, IDebuggerSettings settings, bool stopAtEntry, string program, params string[] args)
         {
-            runner.RunCommand(new LaunchCommand(settings, program, null, false, args) { StopAtEntry = stopAtEntry });
+            runner.RunCommand(new LaunchCommand(settings, program, string.Empty, false, args) { StopAtEntry = stopAtEntry });
         }
 
         public static void Launch(this IDebuggerRunner runner, IDebuggerSettings settings, bool stopAtEntry, IDebuggee debuggee, params string[] args)
