@@ -7,6 +7,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using DebuggerTesting.OpenDebug.Commands;
+using DebuggerTesting.OpenDebug.CrossPlatCpp;
 using DebuggerTesting.Utilities;
 using Newtonsoft.Json;
 
@@ -14,7 +15,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
 {
     #region LaunchCommandArgs
 
-    public sealed class CppLaunchCommandArgs : LaunchCommandArgs
+    public class CppLaunchCommandArgs : LaunchCommandArgs
     {
         public string launchOptionType;
         public string miDebuggerPath;
@@ -36,39 +37,22 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         public string MIMode;
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        [JsonConverter(typeof(VisualizerFileConverter))]
         public List<string> VisualizerFile { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool ShowDisplayString;
     }
 
-    internal class VisualizerFileConverter : JsonConverter
+    public sealed class CppLaunchCommandArgsVisualizerFileStr : CppLaunchCommandArgs
     {
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
-        {
-            List<string> visualizerFile = new List<string>();
-            if (reader.TokenType == JsonToken.StartArray)
-            {
-                visualizerFile = serializer.Deserialize<List<string>>(reader);
-            }
-            else
-            {
-                visualizerFile.Add(reader.Value.ToString());
-            }
-            return visualizerFile;
-        }
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string VisualizerFile;
+    }
 
-        public override bool CanConvert(Type objectType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
-        {
-            // throw new NotImplementedException();
-            serializer.Serialize(writer, value);
-        }
+    public sealed class CppLaunchCommandArgsVisualizerFileList: CppLaunchCommandArgs
+    {
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<string> VisualizerFile { get; set; }
     }
 
     #endregion
