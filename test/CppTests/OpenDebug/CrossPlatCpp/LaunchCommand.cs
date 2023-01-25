@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using DebuggerTesting.OpenDebug.Commands;
 using DebuggerTesting.OpenDebug.CrossPlatCpp;
 using DebuggerTesting.Utilities;

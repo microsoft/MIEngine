@@ -39,11 +39,6 @@
     <ContentFiles Include="TestConfigurations\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ContentFiles Remove="debuggees\natvis\src\visualizer_files\Simple1.natvis" />
-    <ContentFiles Remove="debuggees\natvis\src\visualizer_files\Simple2.natvis" />
-  </ItemGroup>
-
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\DebugAdapterRunner\DebugAdapterRunner.csproj" />
     <ProjectReference Include="..\DebuggerTesting\DebuggerTesting.csproj" />
