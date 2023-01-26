@@ -326,7 +326,7 @@ namespace Microsoft.MIDebugEngine.Natvis
          */
         public void Initialize(List <string> fileNames)
         {
-            if (fileNames.Count > 0)
+            if (fileNames != null && fileNames.Count > 0)
             {
                 foreach (var file in fileNames)
                 {

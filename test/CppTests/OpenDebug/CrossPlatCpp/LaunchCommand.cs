@@ -35,9 +35,6 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         public string MIMode;
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<string> VisualizerFile { get; set; }
-
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool ShowDisplayString;
     }
 
@@ -67,6 +64,8 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         {
             this.Timeout = TimeSpan.FromSeconds(15);
 
+            this.Args = new CppLaunchCommandArgsVisualizerFileStr();
+
             this.Args.name = CreateName(settings);
             this.Args.program = program;
             this.Args.args = args ?? new string[] { };
@@ -87,8 +86,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 this.Args.miDebuggerPath = settings.DebuggerPath;
                 this.Args.targetArchitecture = settings.DebuggeeArchitecture.ToArchitectureString();
                 this.Args.MIMode = settings.MIMode;
-                this.Args.VisualizerFile = new List<string>();
-                this.Args.VisualizerFile.Add(visualizerFile);
+                (this.Args as CppLaunchCommandArgsVisualizerFileStr).VisualizerFile = visualizerFile;
                 this.Args.ShowDisplayString = !string.IsNullOrEmpty(visualizerFile);
             }
         }
@@ -103,30 +101,33 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         {
             this.Timeout = TimeSpan.FromSeconds(15);
 
-            this.Args.name = CreateName(settings);
-            this.Args.program = program;
-            this.Args.args = args ?? new string[] { };
-            this.Args.request = "launch";
-            this.Args.cwd = Path.GetDirectoryName(program);
-            this.Args.environment = new EnvironmentEntry[] { };
-            this.Args.launchOptionType = "Local";
-            this.Args.symbolSearchPath = String.Empty;
-            this.Args.sourceFileMap = new Dictionary<string, string>();
+            CppLaunchCommandArgsVisualizerFileList launchArgs = new CppLaunchCommandArgsVisualizerFileList();
+
+            launchArgs.name = CreateName(settings);
+            launchArgs.program = program;
+            launchArgs.args = args ?? new string[] { };
+            launchArgs.request = "launch";
+            launchArgs.cwd = Path.GetDirectoryName(program);
+            launchArgs.environment = new EnvironmentEntry[] { };
+            launchArgs.launchOptionType = "Local";
+            launchArgs.symbolSearchPath = String.Empty;
+            launchArgs.sourceFileMap = new Dictionary<string, string>();
 
             if (settings.DebuggerType == SupportedDebugger.VsDbg)
             {
-                this.Args.type = "cppvsdbg";
+                launchArgs.type = "cppvsdbg";
             }
             else
             {
-                this.Args.type = "cppdbg";
-                this.Args.miDebuggerPath = settings.DebuggerPath;
-                this.Args.targetArchitecture = settings.DebuggeeArchitecture.ToArchitectureString();
-                this.Args.MIMode = settings.MIMode;
-                this.Args.VisualizerFile = visualizerFile;
-                // this.Args.ShowDisplayString = !string.IsNullOrEmpty(visualizerFile);
-                this.Args.ShowDisplayString = visualizerFile != null && visualizerFile.Count > 0;
+                launchArgs.type = "cppdbg";
+                launchArgs.miDebuggerPath = settings.DebuggerPath;
+                launchArgs.targetArchitecture = settings.DebuggeeArchitecture.ToArchitectureString();
+                launchArgs.MIMode = settings.MIMode;
+                launchArgs.VisualizerFile = visualizerFile;
+                launchArgs.ShowDisplayString = visualizerFile != null && visualizerFile.Count > 0;
             }
+
+            this.Args = launchArgs;
         }
 
         /// <summary>
