@@ -62,7 +62,7 @@ namespace CppTests.Tests
 
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, "foofoo", string.Empty);
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, "foofoo");
                 launch.ExpectsSuccess = false;
                 runner.RunCommand(launch);
 

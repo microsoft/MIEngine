@@ -109,7 +109,7 @@ namespace CppTests.Tests
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure");
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, string.Empty, isAttach: false);
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, isAttach: false);
 
                 launch.Args.externalConsole = false;
 
@@ -195,7 +195,7 @@ namespace CppTests.Tests
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure");
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, string.Empty, false, "-fCalling");
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, null, false, "-fCalling");
 
                 launch.Args.externalConsole = false;
 

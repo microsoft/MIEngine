@@ -964,12 +964,12 @@ namespace MICore
         /// <summary>
         /// [Optional] Natvis file name - from install location
         /// </summary>
-        public List<string> VisualizerFile
+        public List<string> VisualizerFiles
         {
-            get { return _visualizerFile; }
+            get {  return _visualizerFile; }
             set
             {
-                VerifyCanModifyProperty(nameof(VisualizerFile));
+                VerifyCanModifyProperty(nameof(VisualizerFiles));
                 _visualizerFile = value;
             }
         }
@@ -1579,9 +1579,9 @@ namespace MICore
             {
                 DebugChildProcesses = suppOptions.DebugChildProcesses;
             }
-            if (VisualizerFile == null || VisualizerFile.Count == 0)
+            if (VisualizerFiles == null || VisualizerFiles.Count == 0)
             {
-                VisualizerFile = suppOptions.VisualizerFile;
+                VisualizerFiles = suppOptions.VisualizerFile;
             }
             if (suppOptions.ShowDisplayStringSpecified)
             {
@@ -1771,7 +1771,7 @@ namespace MICore
                 this.TargetArchitecture = ConvertTargetArchitectureAttribute(options.TargetArchitecture);
             }
 
-            this.VisualizerFile = options.VisualizerFile;
+            this.VisualizerFiles = options.VisualizerFile;
             this.ShowDisplayString = options.ShowDisplayString.GetValueOrDefault(false);
 
             this.AdditionalSOLibSearchPath = String.IsNullOrEmpty(this.AdditionalSOLibSearchPath) ?
@@ -1841,8 +1841,8 @@ namespace MICore
             if (string.IsNullOrEmpty(this.WorkingDirectory))
                 this.WorkingDirectory = source.WorkingDirectory;
 
-            if (this.VisualizerFile == null || this.VisualizerFile.Count == 0)
-                this.VisualizerFile = source.VisualizerFile;
+            if (this.VisualizerFiles == null || this.VisualizerFiles.Count == 0)
+                this.VisualizerFiles = source.VisualizerFile;
 
             this.ShowDisplayString = source.ShowDisplayString;
             this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;

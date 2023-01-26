@@ -420,7 +420,7 @@ namespace CppTests.Tests
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure launch");
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, string.Empty);
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath);
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
@@ -457,7 +457,7 @@ namespace CppTests.Tests
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
                 this.Comment("Configure launch");
-                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, string.Empty);
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath);
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");

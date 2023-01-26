@@ -35,19 +35,11 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         public string MIMode;
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public object VisualizerFile;
+
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool ShowDisplayString;
-    }
-
-    public sealed class CppLaunchCommandArgsVisualizerFileStr : CppLaunchCommandArgs
-    {
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string VisualizerFile;
-    }
-
-    public sealed class CppLaunchCommandArgsVisualizerFileList: CppLaunchCommandArgs
-    {
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<string> VisualizerFile { get; set; }
     }
 
     #endregion
@@ -60,12 +52,16 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         /// <param name="program">The full path to the program to launch</param>
         /// <param name="architecture">The architecture of the program</param>
         /// <param name="args">[OPTIONAL] Args to pass to the program</param>
-        public LaunchCommand(IDebuggerSettings settings, string program, string visualizerFile = null, bool isAttach = false, params string[] args)
+        public LaunchCommand(IDebuggerSettings settings, string program, object visualizerFile = null, bool isAttach = false, params string[] args)
         {
+            if (!(visualizerFile == null || visualizerFile is string || visualizerFile is List<string>))
+            {
+                throw new ArgumentOutOfRangeException(nameof(visualizerFile));
+            }
+
             this.Timeout = TimeSpan.FromSeconds(15);
 
-            this.Args = new CppLaunchCommandArgsVisualizerFileStr();
-
+            this.Args = new CppLaunchCommandArgs();
             this.Args.name = CreateName(settings);
             this.Args.program = program;
             this.Args.args = args ?? new string[] { };
@@ -86,48 +82,9 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 this.Args.miDebuggerPath = settings.DebuggerPath;
                 this.Args.targetArchitecture = settings.DebuggeeArchitecture.ToArchitectureString();
                 this.Args.MIMode = settings.MIMode;
-                (this.Args as CppLaunchCommandArgsVisualizerFileStr).VisualizerFile = visualizerFile;
-                this.Args.ShowDisplayString = !string.IsNullOrEmpty(visualizerFile);
+                this.Args.VisualizerFile = visualizerFile;
+                this.Args.ShowDisplayString = visualizerFile != null;
             }
-        }
-
-        /// <summary>
-        /// Launches a new process and attaches to it - handles multiple visualizerFiles
-        /// </summary>
-        /// <param name="program">The full path to the program to launch</param>
-        /// <param name="architecture">The architecture of the program</param>
-        /// <param name="args">[OPTIONAL] Args to pass to the program</param>
-        public LaunchCommand(IDebuggerSettings settings, string program, List<string> visualizerFile = null, bool isAttach = false, params string[] args)
-        {
-            this.Timeout = TimeSpan.FromSeconds(15);
-
-            CppLaunchCommandArgsVisualizerFileList launchArgs = new CppLaunchCommandArgsVisualizerFileList();
-
-            launchArgs.name = CreateName(settings);
-            launchArgs.program = program;
-            launchArgs.args = args ?? new string[] { };
-            launchArgs.request = "launch";
-            launchArgs.cwd = Path.GetDirectoryName(program);
-            launchArgs.environment = new EnvironmentEntry[] { };
-            launchArgs.launchOptionType = "Local";
-            launchArgs.symbolSearchPath = String.Empty;
-            launchArgs.sourceFileMap = new Dictionary<string, string>();
-
-            if (settings.DebuggerType == SupportedDebugger.VsDbg)
-            {
-                launchArgs.type = "cppvsdbg";
-            }
-            else
-            {
-                launchArgs.type = "cppdbg";
-                launchArgs.miDebuggerPath = settings.DebuggerPath;
-                launchArgs.targetArchitecture = settings.DebuggeeArchitecture.ToArchitectureString();
-                launchArgs.MIMode = settings.MIMode;
-                launchArgs.VisualizerFile = visualizerFile;
-                launchArgs.ShowDisplayString = visualizerFile != null && visualizerFile.Count > 0;
-            }
-
-            this.Args = launchArgs;
         }
 
         /// <summary>
@@ -137,7 +94,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
         /// <param name="program"></param>
         /// <param name="coreDumpPath"></param>
         public LaunchCommand(IDebuggerSettings settings, string program, string coreDumpPath)
-            : this(settings, program, string.Empty, false, null)
+            : this(settings, program)
         {
             this.Args.coreDumpPath = coreDumpPath;
         }

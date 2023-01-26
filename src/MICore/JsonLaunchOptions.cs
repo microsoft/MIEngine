@@ -39,7 +39,7 @@ namespace MICore.Json.LaunchOptions
         public string TargetArchitecture { get; set; }
 
         /// <summary>
-        /// .natvis file to be used when debugging this process. This option is not compatible with GDB pretty printing. Please also see "showDisplayString" if using this setting.
+        /// .natvis files to be used when debugging this process. This option is not compatible with GDB pretty printing. Please also see "showDisplayString" if using this setting.
         /// </summary>
         [JsonProperty("visualizerFile", DefaultValueHandling = DefaultValueHandling.Ignore)]
         [JsonConverter(typeof(VisualizerFileConverter))]
@@ -133,7 +133,7 @@ namespace MICore.Json.LaunchOptions
             {
                 visualizerFile = serializer.Deserialize<List<string>>(reader);
             }
-            else
+            else if (reader.TokenType == JsonToken.String)
             {
                 visualizerFile.Add(reader.Value.ToString());
             }
