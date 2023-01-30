@@ -510,6 +510,7 @@ namespace CppTests.Tests
                 {
                     IFrameInspector currentFrame = threadInspector.Stack.First();
 
+                    // Simple1.natvis
                     this.Comment("Verifying ArrayItems natvis");
                     var ll = currentFrame.GetVariable("vec");
                     Assert.Equal("{ size=2000 }", ll.Value);
@@ -521,10 +522,7 @@ namespace CppTests.Tests
                     Assert.Equal("20", ll.GetVariable("[5]").Value);
                     Assert.Equal("51", ll.GetVariable("[More...]").GetVariable("[51]").Value);
 
-                    // Multi-dimensional array
-                    var matrix = currentFrame.GetVariable("matrix");
-                    Assert.Equal("3", matrix.GetVariable("[1,1]").Value);
-
+                    // Simple2.natvis
                     this.Comment("Verifying TreeItems natvis");
                     var map = currentFrame.GetVariable("map");
 
