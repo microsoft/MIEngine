@@ -490,7 +490,7 @@ namespace CppTests.Tests
         [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestMultipleNatvisFiles(ITestSettings settings)
         {
-            this.TestPurpose("This test checks if TreeItems are visualized.");
+            this.TestPurpose("This test checks if multiple Natvis files can be used.");
             this.WriteSettings(settings);
 
             IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
