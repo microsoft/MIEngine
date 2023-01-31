@@ -483,6 +483,11 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
+        // Disable on macOS
+        // Error:
+        //   C-style cast from 'int' to 'int [10]' is not allowed
+        //   (int[10])*(((vec)._start))
+        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestMultipleNatvisFiles(ITestSettings settings)
         {
             this.TestPurpose("This test checks if TreeItems are visualized.");
