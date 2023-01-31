@@ -260,7 +260,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             _configStore = configStore;
         }
 
-        public void Initialize(string fileName)
+        public void InitializeNatvisServices()
         {
             try
             {
@@ -271,7 +271,10 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 // failed to find the VS Service
             }
+        }
 
+        public void Initialize(string fileName)
+        {
             if (!string.IsNullOrEmpty(fileName))
             {
                 if (!Path.IsPathRooted(fileName))
@@ -328,6 +331,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             if (fileNames != null && fileNames.Count > 0)
             {
+                InitializeNatvisServices();
                 foreach (var file in fileNames)
                 {
                     Initialize(file);
