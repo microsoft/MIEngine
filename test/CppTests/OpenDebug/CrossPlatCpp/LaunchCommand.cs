@@ -61,7 +61,6 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
 
             this.Timeout = TimeSpan.FromSeconds(15);
 
-            this.Args = new CppLaunchCommandArgs();
             this.Args.name = CreateName(settings);
             this.Args.program = program;
             this.Args.args = args ?? new string[] { };

@@ -962,17 +962,9 @@ namespace MICore
 
         private List<string> _visualizerFile;
         /// <summary>
-        /// [Optional] Natvis file name - from install location
+        /// Collection of natvis files to use when evaluating
         /// </summary>
-        public List<string> VisualizerFiles
-        {
-            get {  return _visualizerFile; }
-            set
-            {
-                VerifyCanModifyProperty(nameof(VisualizerFiles));
-                _visualizerFile = value;
-            }
-        }
+        public List<string> VisualizerFiles { get; } = new List<string>();
 
         private bool _waitDynamicLibLoad = true;
         /// <summary>
@@ -1581,7 +1573,7 @@ namespace MICore
             }
             if (VisualizerFiles == null || VisualizerFiles.Count == 0)
             {
-                VisualizerFiles = suppOptions.VisualizerFile;
+                this.VisualizerFiles.Add(suppOptions.VisualizerFile);
             }
             if (suppOptions.ShowDisplayStringSpecified)
             {
@@ -1771,7 +1763,10 @@ namespace MICore
                 this.TargetArchitecture = ConvertTargetArchitectureAttribute(options.TargetArchitecture);
             }
 
-            this.VisualizerFiles = options.VisualizerFile;
+            if (options.VisualizerFile != null && options.VisualizerFile.Count > 0)
+            {
+                this.VisualizerFiles.AddRange(options.VisualizerFile);
+            }
             this.ShowDisplayString = options.ShowDisplayString.GetValueOrDefault(false);
 
             this.AdditionalSOLibSearchPath = String.IsNullOrEmpty(this.AdditionalSOLibSearchPath) ?
@@ -1842,7 +1837,7 @@ namespace MICore
                 this.WorkingDirectory = source.WorkingDirectory;
 
             if (this.VisualizerFiles == null || this.VisualizerFiles.Count == 0)
-                this.VisualizerFiles = source.VisualizerFile;
+                this.VisualizerFiles.Add(source.VisualizerFile);
 
             this.ShowDisplayString = source.ShowDisplayString;
             this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;
