@@ -137,6 +137,10 @@ namespace MICore.Json.LaunchOptions
             {
                 visualizerFile.Add(reader.Value.ToString());
             }
+            else
+            {
+                throw new Exception("Input is neither a List nor a String");
+            }
             return visualizerFile;
         }
 

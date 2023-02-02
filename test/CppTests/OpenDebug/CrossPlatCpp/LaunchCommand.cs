@@ -13,7 +13,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
 {
     #region LaunchCommandArgs
 
-    public class CppLaunchCommandArgs : LaunchCommandArgs
+    public sealed class CppLaunchCommandArgs : LaunchCommandArgs
     {
         public string launchOptionType;
         public string miDebuggerPath;

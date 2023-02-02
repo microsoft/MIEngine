@@ -960,7 +960,6 @@ namespace MICore
             }
         }
 
-        private List<string> _visualizerFile;
         /// <summary>
         /// Collection of natvis files to use when evaluating
         /// </summary>
@@ -1571,7 +1570,7 @@ namespace MICore
             {
                 DebugChildProcesses = suppOptions.DebugChildProcesses;
             }
-            if (VisualizerFiles == null || VisualizerFiles.Count == 0)
+            if (!this.VisualizerFiles.Contains(suppOptions.VisualizerFile))
             {
                 this.VisualizerFiles.Add(suppOptions.VisualizerFile);
             }
@@ -1836,7 +1835,7 @@ namespace MICore
             if (string.IsNullOrEmpty(this.WorkingDirectory))
                 this.WorkingDirectory = source.WorkingDirectory;
 
-            if (this.VisualizerFiles == null || this.VisualizerFiles.Count == 0)
+            if (!string.IsNullOrEmpty(source.VisualizerFile))
                 this.VisualizerFiles.Add(source.VisualizerFile);
 
             this.ShowDisplayString = source.ShowDisplayString;
