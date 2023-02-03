@@ -139,7 +139,7 @@ namespace MICore.Json.LaunchOptions
             }
             else
             {
-                throw new Exception("Input is neither a List nor a String");
+                throw new JsonReaderException(MICoreResources.Error_IncorrectVisualizerFileFormat);
             }
             return visualizerFile;
         }

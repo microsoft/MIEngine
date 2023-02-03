@@ -186,6 +186,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Input is neither a List nor a String..
+        /// </summary>
+        public static string Error_IncorrectVisualizerFileFormat {
+            get {
+                return ResourceManager.GetString("Error_IncorrectVisualizerFileFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal file &quot;{0}&quot; could not be found..
         /// </summary>
         public static string Error_InternalFileMissing {
