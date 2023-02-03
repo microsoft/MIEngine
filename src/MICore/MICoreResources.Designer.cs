@@ -186,7 +186,7 @@ namespace MICore {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Input is neither a List nor a String..
+        ///   Looks up a localized string similar to &apos;visualizerFile&apos; must be a string or array of strings..
         /// </summary>
         public static string Error_IncorrectVisualizerFileFormat {
             get {

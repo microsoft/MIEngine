@@ -327,6 +327,6 @@ Error: {1}</value>
     <value>'editorPath' can not be null or empty</value>
   </data>
   <data name="Error_IncorrectVisualizerFileFormat" xml:space="preserve">
-    <value>Input is neither a List nor a String.</value>
+    <value>'visualizerFile' must be a string or array of strings.</value>
   </data>
 </root>
