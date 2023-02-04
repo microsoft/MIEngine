@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="SimpleDisplayObject">
+   <DisplayString>Hello DisplayString</DisplayString>
+  </Type>
+
+  <Type Name="SimpleClass">
+   <DisplayString Condition="this == 0">Null Class</DisplayString>
+   <DisplayString Condition="this != 0">Non-null Class</DisplayString>
+  </Type>
+
+  <Type Name="SimpleVector">
+   <DisplayString>{{ size={_size} }}</DisplayString>
+   <Expand>
+    <Item Name="Size">_size</Item>
+    <ArrayItems>
+      <Size>_size</Size>
+      <ValuePointer>_start</ValuePointer>
+    </ArrayItems>
+   </Expand>
+  </Type>
+
+  <Type Name="SimpleArray">
+  <DisplayString>{{ size={_size} }}</DisplayString>
+  <Expand>
+    <IndexListItems>
+      <Size>_size</Size>
+      <ValueNode>_array[_size - 1 - $i]</ValueNode>
+    </IndexListItems>
+  </Expand>
+  </Type>
+</AutoVisualizer>
