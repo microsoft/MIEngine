@@ -960,19 +960,10 @@ namespace MICore
             }
         }
 
-        private string _visualizerFile;
         /// <summary>
-        /// [Optional] Natvis file name - from install location
+        /// Collection of natvis files to use when evaluating
         /// </summary>
-        public string VisualizerFile
-        {
-            get { return _visualizerFile; }
-            set
-            {
-                VerifyCanModifyProperty(nameof(VisualizerFile));
-                _visualizerFile = value;
-            }
-        }
+        public List<string> VisualizerFiles { get; } = new List<string>();
 
         private bool _waitDynamicLibLoad = true;
         /// <summary>
@@ -1579,9 +1570,9 @@ namespace MICore
             {
                 DebugChildProcesses = suppOptions.DebugChildProcesses;
             }
-            if (string.IsNullOrWhiteSpace(VisualizerFile))
+            if (!this.VisualizerFiles.Contains(suppOptions.VisualizerFile))
             {
-                VisualizerFile = suppOptions.VisualizerFile;
+                this.VisualizerFiles.Add(suppOptions.VisualizerFile);
             }
             if (suppOptions.ShowDisplayStringSpecified)
             {
@@ -1771,7 +1762,10 @@ namespace MICore
                 this.TargetArchitecture = ConvertTargetArchitectureAttribute(options.TargetArchitecture);
             }
 
-            this.VisualizerFile = options.VisualizerFile;
+            if (options.VisualizerFile != null && options.VisualizerFile.Count > 0)
+            {
+                this.VisualizerFiles.AddRange(options.VisualizerFile);
+            }
             this.ShowDisplayString = options.ShowDisplayString.GetValueOrDefault(false);
 
             this.AdditionalSOLibSearchPath = String.IsNullOrEmpty(this.AdditionalSOLibSearchPath) ?
@@ -1841,8 +1835,8 @@ namespace MICore
             if (string.IsNullOrEmpty(this.WorkingDirectory))
                 this.WorkingDirectory = source.WorkingDirectory;
 
-            if (string.IsNullOrEmpty(this.VisualizerFile))
-                this.VisualizerFile = source.VisualizerFile;
+            if (!string.IsNullOrEmpty(source.VisualizerFile))
+                this.VisualizerFiles.Add(source.VisualizerFile);
 
             this.ShowDisplayString = source.ShowDisplayString;
             this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;

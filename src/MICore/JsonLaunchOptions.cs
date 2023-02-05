@@ -39,10 +39,11 @@ namespace MICore.Json.LaunchOptions
         public string TargetArchitecture { get; set; }
 
         /// <summary>
-        /// .natvis file to be used when debugging this process. This option is not compatible with GDB pretty printing. Please also see "showDisplayString" if using this setting.
+        /// .natvis files to be used when debugging this process. This option is not compatible with GDB pretty printing. Please also see "showDisplayString" if using this setting.
         /// </summary>
         [JsonProperty("visualizerFile", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string VisualizerFile { get; set; }
+        [JsonConverter(typeof(VisualizerFileConverter))]
+        public List<string> VisualizerFile { get; set; }
 
         /// <summary>
         /// When a visualizerFile is specified, showDisplayString will enable the display string. Turning this option on can cause slower performance during debugging.
@@ -123,6 +124,37 @@ namespace MICore.Json.LaunchOptions
         public UnknownBreakpointHandling? UnknownBreakpointHandling { get; set; }
     }
 
+    internal class VisualizerFileConverter : JsonConverter
+    {
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            List<string> visualizerFile = new List<string>();
+            if (reader.TokenType == JsonToken.StartArray)
+            {
+                visualizerFile = serializer.Deserialize<List<string>>(reader);
+            }
+            else if (reader.TokenType == JsonToken.String)
+            {
+                visualizerFile.Add(reader.Value.ToString());
+            }
+            else
+            {
+                throw new JsonReaderException(MICoreResources.Error_IncorrectVisualizerFileFormat);
+            }
+            return visualizerFile;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public partial class AttachOptions : BaseOptions
     {
         #region Public Properties for Serialization
@@ -144,7 +176,7 @@ namespace MICore.Json.LaunchOptions
             int processId,
             string type = null,
             string targetArchitecture = null,
-            string visualizerFile = null,
+            List<string> visualizerFile = null,
             bool? showDisplayString = null,
             string additionalSOLibSearchPath = null,
             string MIMode = null,
@@ -408,7 +440,7 @@ namespace MICore.Json.LaunchOptions
             List<SetupCommand> postRemoteConnectCommands = null,
             List<SetupCommand> customLaunchSetupCommands = null,
             LaunchCompleteCommand? launchCompleteCommand = null,
-            string visualizerFile = null,
+            List<string> visualizerFile = null,
             bool? showDisplayString = null,
             List<Environment> environment = null,
             string additionalSOLibSearchPath = null,
