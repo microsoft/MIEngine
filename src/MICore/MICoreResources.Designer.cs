@@ -186,6 +186,15 @@ namespace MICore {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;visualizerFile&apos; must be a string or array of strings..
+        /// </summary>
+        public static string Error_IncorrectVisualizerFileFormat {
+            get {
+                return ResourceManager.GetString("Error_IncorrectVisualizerFileFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal file &quot;{0}&quot; could not be found..
         /// </summary>
         public static string Error_InternalFileMissing {
