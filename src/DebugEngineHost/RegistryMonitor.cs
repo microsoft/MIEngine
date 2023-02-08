@@ -47,15 +47,14 @@ namespace Microsoft.DebugEngineHost
 
         #endregion
 
-        private readonly HostConfigurationSection _section;
+        private HostConfigurationSection _section;
         private readonly bool _watchSubtree;
 
-        // Set when monitoring is stopped
-        private AutoResetEvent _stoppedEvent;
+        // Set when registry value is changed
+        private AutoResetEvent m_changeEvent;
 
-        // Members to handle multiple stop calls.
-        private bool _isStopped = false;
-        private readonly object _stopLock = new object();
+        // Set when monitoring is stopped
+        private AutoResetEvent m_stoppedEvent;
 
         /// <summary>
         /// Occurs when the specified registry key has changed.
@@ -81,13 +80,9 @@ namespace Microsoft.DebugEngineHost
 
         public void Stop()
         {
-            lock (_stopLock)
+            if (m_stoppedEvent != null)
             {
-                if (!_isStopped)
-                {
-                    _stoppedEvent?.Set();
-                    _isStopped = true;
-                }
+                m_stoppedEvent.Set();
             }
         }
 
@@ -98,52 +93,53 @@ namespace Microsoft.DebugEngineHost
             bool stopped = false;
             try
             {
-                _stoppedEvent = new AutoResetEvent(false);
-                using (AutoResetEvent registryChangedEvent = new AutoResetEvent(false))
+                m_stoppedEvent = new AutoResetEvent(false);
+                m_changeEvent = new AutoResetEvent(false);
+
+                IntPtr handle = m_changeEvent.SafeWaitHandle.DangerousGetHandle();
+
+                int errorCode = RegNotifyChangeKeyValue(_section.Handle, _watchSubtree, RegChangeNotifyFilter.REG_NOTIFY_CHANGE_NAME | RegChangeNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, handle, true);
+                if (errorCode != 0) // 0 is ERROR_SUCCESS
                 {
-                    IntPtr handle = registryChangedEvent.SafeWaitHandle.DangerousGetHandle();
+                    _nativsLogger?.WriteLine(LogLevel.Error, Resource.Error_WatchRegistry, errorCode);
+                }
+                else
+                {
+                    while (!stopped)
+                    {
+                        int waitResult = WaitHandle.WaitAny(new WaitHandle[] { m_stoppedEvent, m_changeEvent });
 
-                    int errorCode = RegNotifyChangeKeyValue(_section.Handle, _watchSubtree, RegChangeNotifyFilter.REG_NOTIFY_CHANGE_NAME | RegChangeNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, handle, true);
-                    if (errorCode != 0) // 0 is ERROR_SUCCESS
-                    {
-                        _nativsLogger?.WriteLine(LogLevel.Error, Resource.Error_WatchRegistry, errorCode);
-                    }
-                    else
-                    {
-                        while (!stopped)
+                        if (waitResult == 0)
                         {
-                            int waitResult = WaitHandle.WaitAny(new WaitHandle[] { _stoppedEvent, registryChangedEvent });
-
-                            if (waitResult == 0)
+                            stopped = true;
+                        }
+                        else
+                        {
+                            errorCode = RegNotifyChangeKeyValue(_section.Handle, _watchSubtree, RegChangeNotifyFilter.REG_NOTIFY_CHANGE_NAME | RegChangeNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, handle, true);
+                            if (errorCode != 0) // 0 is ERROR_SUCCESS
                             {
-                                stopped = true;
+                                _nativsLogger?.WriteLine(LogLevel.Error, Resource.Error_WatchRegistry, errorCode);
+                                break;
                             }
-                            else
-                            {
-                                errorCode = RegNotifyChangeKeyValue(_section.Handle, _watchSubtree, RegChangeNotifyFilter.REG_NOTIFY_CHANGE_NAME | RegChangeNotifyFilter.REG_NOTIFY_CHANGE_LAST_SET, handle, true);
-                                if (errorCode != 0) // 0 is ERROR_SUCCESS
-                                {
-                                    _nativsLogger?.WriteLine(LogLevel.Error, Resource.Error_WatchRegistry, errorCode);
-                                    break;
-                                }
-                                RegChanged?.Invoke(this, null);
-                            }
+                            RegChanged?.Invoke(this, null);
                         }
                     }
                 }
             }
             finally
             {
-                _stoppedEvent.Dispose();
-                _stoppedEvent = null;
-
                 _section.Dispose();
+                m_stoppedEvent?.Dispose();
+                m_changeEvent?.Dispose();
+
+                m_stoppedEvent = null;
+                m_changeEvent = null;
             }
         }
 
         public void Dispose()
         {
-            Stop(); // Stopping the monitor will dispose of the AutoResetEvent and HostConfigurationSection
+            m_stoppedEvent?.Dispose();
         }
     }
 }

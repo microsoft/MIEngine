@@ -104,7 +104,7 @@ namespace Microsoft.DebugEngineHost
                             IDisposable disposable = rmw.CurrentMonitor;
 
                             // Watch NatvisDiagnostic section
-                            rmw = new RegisterMonitorWrapper(CreateAndStartNatvisDiagnosticMonitor(checkForSection, natvisLogger));
+                            rmw = new RegisterMonitorWrapper(CreateAndStartNatvisDiagnosticMonitor(natvisDiagnosticSection, natvisLogger));
 
                             disposable.Dispose();
                         }

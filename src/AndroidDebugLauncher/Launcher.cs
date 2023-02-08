@@ -459,7 +459,7 @@ namespace AndroidDebugLauncher
 
                 launchOptions.DebuggerMIMode = MIMode.Gdb;
 
-                launchOptions.VisualizerFiles.Add("Microsoft.Android.natvis");
+                launchOptions.VisualizerFile = "Microsoft.Android.natvis";
                 launchOptions.WaitDynamicLibLoad = _launchOptions.WaitDynamicLibLoad;
 
                 return launchOptions;
