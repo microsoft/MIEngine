@@ -263,7 +263,7 @@ namespace MICoreUnitTests
             launchOptions.WorkingDirectory = "/home/user";
             launchOptions.DebuggerMIMode = MIMode.Gdb;
             launchOptions.WaitDynamicLibLoad = false;
-            launchOptions.VisualizerFiles.Add(@"c:\myproject\file.natvis");
+            launchOptions.VisualizerFile = @"c:\myproject\file.natvis";
             launchOptions.SourceMap = new ReadOnlyCollection<SourceMapEntry>(new List<SourceMapEntry>());
             launchOptions.Environment = new ReadOnlyCollection<EnvironmentEntry>(new List<EnvironmentEntry>());
             Microsoft.DebugEngineHost.HostConfigurationStore configStore = null;

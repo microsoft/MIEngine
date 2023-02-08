@@ -45,7 +45,10 @@
   </ItemGroup>
 
   <Target Name="Copy Config and Debuggees" BeforeTargets="DropFiles">
-    <Copy SourceFiles="@(ContentFiles)" DestinationFolder="$(DropDir)\contentFiles\%(RecursiveDir)" />
+    <Copy
+        SourceFiles="@(ContentFiles)"
+        DestinationFolder="$(DropDir)\contentFiles\%(RecursiveDir)"
+    />
   </Target>
 
   <ItemGroup>
