@@ -4,3 +4,4 @@ steps:
   inputs:
     outputFormat: pre
     debugMode: false
+  continueOnError: true

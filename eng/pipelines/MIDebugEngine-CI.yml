@@ -1,5 +1,15 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
+
+schedules:
+# Run on the 15th and 30th of every month
+- cron: 30 1 1,15 * * 
+  displayName: Biweekly Build
+  branches:
+    include:
+    - main
+  always: true # Run even if there are no code changes
+
 stages:
 - stage: CI
   dependsOn: []
@@ -8,6 +18,8 @@ stages:
     value: test
   - name: TeamName
     value: MDDDebugger
+  - name: Codeql.Enabled
+    value: true
   jobs:
   - template: ./jobs/VSEngSS-MicroBuild2022-1ES.job.yml
     parameters:
