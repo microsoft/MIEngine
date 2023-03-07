@@ -2,7 +2,7 @@
 name: $(Date:yyyMMdd).$(Rev:r)
 
 schedules:
-# Run on the 15th and 30th of every month
+# Run on the 1st and 15th of every month
 - cron: 30 1 1,15 * * 
   displayName: Biweekly Build
   branches:
