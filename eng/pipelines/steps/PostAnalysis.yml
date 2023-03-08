@@ -1,0 +1,19 @@
+parameters:
+  GdnSuppressionFiles: $(Build.SourcesDirectory)\eng\pipelines\resources\falsepositives.gdnsuppress
+  
+steps:
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@2
+  displayName: 🏋️‍♀️ Break on compliance issues
+  inputs:
+    GdnBreakAllTools: true
+    GdnBreakSuppressionFiles: ${{ parameters.GdnSuppressionFiles }}
+    GdnBreakSuppressionSets: falsepositives
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@2
+  displayName: 📝 Generate Guardian Suppressions File
+  inputs:
+    GdnBreakAllTools: true
+    GdnBreakOutputSuppressionFile: $(Build.ArtifactStagingDirectory)\GuardianSuppressions
+    GdnBreakOutputSuppressionSet: falsepositives
+  continueOnError: true
+  condition: failed()

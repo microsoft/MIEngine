@@ -1,0 +1,10 @@
+parameters:
+  TSAConfigFilePath: $(Build.SourcesDirectory)\eng\pipelines\resources\TSAconfig.json 
+  
+steps:
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-uploadtotsa.TSAUpload@2
+  displayName: 📢 Create bugs for compliance tools results
+  inputs:
+    GdnPublishTsaOnboard: true
+    GdnPublishTsaConfigFile: ${{ parameters.TSAConfigFilePath }}  # All relevant settings are in this file.
+  condition: succeededOrFailed()
