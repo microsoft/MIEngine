@@ -546,6 +546,11 @@ namespace Microsoft.MIDebugEngine
         public AD7BreakpointEvent(IDebugBoundBreakpoint2[] boundBreakpoints)
         {
             _boundBreakpoints = boundBreakpoints;
+            foreach (IDebugBoundBreakpoint2 bp in boundBreakpoints)
+            {
+                uint res = 0;
+                bp.GetHitCount(out res);
+            }
         }
 
         #region IDebugBreakpointEvent2 Members

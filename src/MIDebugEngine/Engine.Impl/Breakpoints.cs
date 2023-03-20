@@ -362,7 +362,7 @@ namespace Microsoft.MIDebugEngine
         internal ulong Addr { get; set; }
         /*OPTIONAL*/
         public string FunctionName { get; private set; }
-        internal uint HitCount { get; private set; }
+        internal uint HitCount { get; set; }
         internal bool Enabled { get; set; }
         internal bool IsDataBreakpoint { get { return _parent.AD7breakpoint.IsDataBreakpoint; } }
         private MITextPosition _textPosition;

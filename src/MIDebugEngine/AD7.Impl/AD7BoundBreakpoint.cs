@@ -161,7 +161,9 @@ namespace Microsoft.MIDebugEngine
         // resets a breakpoint's hit count.
         int IDebugBoundBreakpoint2.SetHitCount(uint dwHitCount)
         {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
+            _bp.HitCount = dwHitCount;
+            return Constants.S_OK;
         }
 
         // The sample engine does not support pass counts on breakpoints.
