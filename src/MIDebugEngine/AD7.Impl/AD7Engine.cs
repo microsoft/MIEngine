@@ -35,7 +35,7 @@ namespace Microsoft.MIDebugEngine
 
     [System.Runtime.InteropServices.ComVisible(true)]
     [System.Runtime.InteropServices.Guid("0fc2f352-2fc1-4f80-8736-51cd1ab28f16")]
-    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugEngine3, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110, IDebugProgramDAP, IDebugMemoryBytesDAP, IDisposable
+    sealed public class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugEngine3, IDebugProgram3, IDebugEngineProgram2, IDebugMemoryBytes2, IDebugEngine110, IDebugProgramDAP, IDebugMemoryBytesDAP, IDisposable, IDebugEngineNonDebugLaunch168
     {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private EngineCallback _engineCallback;
@@ -1209,6 +1209,51 @@ namespace Microsoft.MIDebugEngine
         {
             Debug.Fail("This function is not called by the debugger.");
             return Constants.E_NOTIMPL;
+        }
+        #endregion
+
+        #region IDebugEngineNonDebugLaunch168 Members
+        /*
+         * See https://dev.azure.com/devdiv/DevDiv/_search?text=LaunchNonDebugProcess&type=code&pageSize=25&filters=ProjectFilters%7BDevDiv%7D&action=contents&result=DefaultCollection/DevDiv/VSCodeDebugAdapterHost/GBmain//src/product/VsCodeDebuggerHost/AD7/Implementation/AD7Engine.cs
+         */
+        public int LaunchNonDebugProcess(string pszExe, string pszArgs, string pszDir, string bstrEnv, string pszOptions, uint dwLaunchFlags, PROCESS_STARTUP_INFO[] pStartupInfo, IDebugEventCallback2 pCallback)
+        {
+            // throw new NotImplementedException();
+            Debug.Assert(!this.IsDebugging, "Can't launch if already debugging");
+            Debug.Assert(this._ad7ProgramId == Guid.Empty, "ProgramId shouldn't be set yet.");
+
+            try
+            {
+                // We are being asked to launch a process without debugging it
+                this._engineCallback = new EngineCallback(this, pCallback, nonDebug: true);
+
+                this.CreateDebuggedProcess();
+
+                this.launchInfo = new AdapterLaunchInfo(this.ConfigurationStore, null, pszOptions, LaunchType.NonDebugLaunch, LaunchLocation.Local);
+                this.targetInterop = new LocalTargetInterop(this.Logger, this.ConfigurationStore);
+
+                // We normally start the adapter once the "program create" event has been processed by VS, but in
+                //  the Ctrl-F5 case, no events will be sent or received, so start it here instead.
+                this.DebuggedProcess.StartDebugAdapter(this.launchInfo, this.targetInterop);
+
+                return VSConstants.S_OK;
+            }
+            catch (Exception e)
+            {
+                this.Cleanup();
+                return EngineUtils.ProcessException(e);
+            }
+        }
+
+        public int TerminateNonDebugProcess()
+        {
+            // throw new NotImplementedException();
+            this.DebuggedProcess?.Terminate();
+
+            // In debug mode, this is called once VS has processed the "program destroy" event, but in non-debug mode we need to do it manually
+            this.Cleanup();
+
+            return Constants.S_OK;
         }
 
         #endregion
