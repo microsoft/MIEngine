@@ -690,17 +690,11 @@ namespace Microsoft.MIDebugEngine
                 LocalLaunchOptions localLaunchOptions = _launchOptions as LocalLaunchOptions;
                 if (this.IsCoreDump)
                 {
-                    // Add executable information
-                    this.AddExecutablePathCommand(commands);
+                    // Load executable and core dump
+                    this.AddExecutableAndCorePathCommand(commands);
 
-                    // Important: this must occur after file-exec-and-symbols but before anything else.
+                    // Important: this must occur after executable load but before anything else.
                     this.AddGetTargetArchitectureCommand(commands);
-
-                    // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
-                    string coreDump = this.UseUnixPathSeparators ? _launchOptions.CoreDumpPath : this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath, true);
-                    string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
-                    string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
-                    commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
                 else if (_launchOptions.ProcessId.HasValue)
                 {
@@ -916,6 +910,30 @@ namespace Microsoft.MIDebugEngine
             };
 
             commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures: false, failureHandler: failureHandler));
+        }
+
+        private void AddExecutableAndCorePathCommand(IList<LaunchCommand> commands)
+        {
+            string command;
+            if (_launchOptions.DebuggerMIMode == MIMode.Lldb)
+            {
+                // LLDB requires loading the executable and the core into the same target, using one command. Quotes in the path are supported.
+                string exePath = this.EnsureProperPathSeparators(_launchOptions.ExePath, true);
+                string corePath = this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath, true);
+                command = String.Concat("file ", exePath, " -c ", corePath);
+            }
+            else
+            {
+                // GDB requires loading the executable and core separately.
+                // Note: Linux/mac do not support quotes around this path, but spaces in the path do work.
+                this.AddExecutablePathCommand(commands);
+                string corePathNoQuotes = this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath, true, true);
+                command = String.Concat("-target-select core ", corePathNoQuotes);
+            }
+
+            // Load core dump information
+            string description = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
+            commands.Add(new LaunchCommand(command, description, ignoreFailures: false));
         }
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
