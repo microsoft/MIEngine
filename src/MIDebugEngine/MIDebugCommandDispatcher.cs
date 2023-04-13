@@ -15,6 +15,39 @@ namespace Microsoft.MIDebugEngine
     {
         private readonly static List<DebuggedProcess> s_processes = new List<DebuggedProcess>();
 
+        public static async Task<Results> ExecuteMICommandWithResultsObject(string command)
+        {
+            DebuggedProcess lastProcess;
+            lock (s_processes)
+            {
+                if (s_processes.Count == 0)
+                {
+                    throw new InvalidOperationException(MICoreResources.Error_NoMIDebuggerProcess);
+                }
+
+                lastProcess = s_processes[s_processes.Count - 1];
+            }
+
+            if (string.IsNullOrWhiteSpace(command))
+                throw new ArgumentNullException(nameof(command));
+
+            if (lastProcess == null)
+            {
+                throw new InvalidOperationException(MICoreResources.Error_NoMIDebuggerProcess);
+            }
+
+            command = command.Trim();
+
+            if (command[0] == '-')
+            {
+                return await lastProcess.CmdAsync(command, ResultClass.None);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public static Task<string> ExecuteCommand(string command)
         {
             DebuggedProcess lastProcess;
