@@ -34,8 +34,14 @@ namespace Microsoft.MIDebugEngine
         public int GetCodeLocationId(IDebugCodeContext2 pCodeContext, out ulong puCodeLocationId)
         {
             AD7MemoryAddress addr = pCodeContext as AD7MemoryAddress;
-            puCodeLocationId = addr.Address;
-            return Constants.S_OK;
+            if (addr != null)
+            {
+                puCodeLocationId = addr.Address;
+                return Constants.S_OK;
+            }
+
+            puCodeLocationId = 0;
+            return Constants.S_FALSE;
         }
 
         public int GetCurrentLocation(out ulong puCodeLocationId)
