@@ -130,34 +130,16 @@ namespace OpenDebugAD7
             m_variableManager = new VariableManager();
 
             //Register sendInvalidate request
-            Protocol.RegisterRequestType<SendInvalidateRequest, SendInvalidateArguments, SendInvalidateResponse>(r => this.HandleSendInvalidateRequestAsync(r));
+            Protocol.RegisterRequestType<SendInvalidateRequest, SendInvalidateArguments>(r => this.HandleSendInvalidateRequestAsync(r));
     
         }
 
         private void HandleSendInvalidateRequestAsync(IRequestResponder<SendInvalidateArguments> responder)
         {
             InvalidatedEvent invalidated = new InvalidatedEvent();
-            SendInvalidateResponse response = new SendInvalidateResponse();
             
             // Setting the area and adding it to the result
-            switch (responder.Arguments.Areas.ToString())
-            {
-                case "Threads":
-                    invalidated.Areas.Add(InvalidatedAreas.Threads);
-                    break;
-                case "Stacks":
-                    invalidated.Areas.Add(InvalidatedAreas.Stacks);
-                    break;
-                case "Variables":
-                    invalidated.Areas.Add(InvalidatedAreas.Variables);
-                    break;
-                case "Unknown":
-                    invalidated.Areas.Add(InvalidatedAreas.Unknown);
-                    break;
-                default:
-                    invalidated.Areas.Add(InvalidatedAreas.All);
-                    break;
-            }
+            invalidated.Areas.Add(responder.Arguments.Areas);
 
             // Setting the StackFrameId if passed (and the 'threadId' is ignored).
             if (null != responder.Arguments.StackFrameId)
@@ -173,8 +155,7 @@ namespace OpenDebugAD7
 
 
             Protocol.SendEvent(invalidated);
-            response.body.result = JsonConvert.SerializeObject(responder);
-            responder.SetResponse(response);
+
         }
         #endregion
 
@@ -3921,7 +3902,7 @@ namespace OpenDebugAD7
         }
     }
 
-    internal class SendInvalidateRequest : DebugRequestWithResponse<SendInvalidateArguments, SendInvalidateResponse>
+    internal class SendInvalidateRequest : DebugRequest<SendInvalidateArguments>
     {
  
         public SendInvalidateRequest(): base("sendInvalidate")
@@ -3929,20 +3910,10 @@ namespace OpenDebugAD7
         }
     }
 
-    internal class SendInvalidateResponse : ResponseBody
-    {
-        public sealed class Body
-        {
-            public string result;
-        }
-
-        public Body body = new Body();
-    }
-
     internal class SendInvalidateArguments : DebugRequestArguments
     {
 
-        public string Areas { get; set; }
+        public InvalidatedAreas Areas { get; set; }
         public int? ThreadId { get; set; }
         public int? StackFrameId { get; set; }
 
