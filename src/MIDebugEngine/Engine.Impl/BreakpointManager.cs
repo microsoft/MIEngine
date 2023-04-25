@@ -58,20 +58,13 @@ namespace Microsoft.MIDebugEngine
             string bkptId = null;
             //
             // =breakpoint-modified,
-            //    bkpt ={number="2",type="breakpoint",disp="keep",enabled="y",addr="<MULTIPLE>",times="0",original-location="main.cpp:220"},
+            //    bkpt ={number="2",type="breakpoint",disp="keep",enabled="y",addr="<MULTIPLE>",times="0",original-location="main.cpp:220"},locations=[
             //          { number="2.1",enabled="y",addr="0x9c2149a9",func="Foo::bar<int>(int)",file="main.cpp",fullname="C:\\\\...\\\\main.cpp",line="220",thread-groups=["i1"]},
-            //          { number="2.2",enabled="y",addr="0x9c2149f2",func="Foo::bar<float>(float)",file="main.cpp",fullname="C:\\\\...\\\\main.cpp",line="220",thread-groups=["i1"]}
+            //          { number="2.2",enabled="y",addr="0x9c2149f2",func="Foo::bar<float>(float)",file="main.cpp",fullname="C:\\\\...\\\\main.cpp",line="220",thread-groups=["i1"]}]}
             // note: the ".x" part of the breakpoint number never appears in stopping events, that is, when executing at one of these addresses 
             //       the stopping event delivered contains bkptno="2"
-            if (bkpt is MICore.ValueListValue)
-            {
-                MICore.ValueListValue list = bkpt as MICore.ValueListValue;
-                bkptId = list.Content[0].FindString("number"); // 0 is the "<MULTIPLE>" entry
-            }
-            else
-            {
-                bkptId = bkpt.FindString("number");
-            }
+            bkptId = bkpt.FindString("number");
+
             AD7PendingBreakpoint pending = CodeBreakpoints.FirstOrDefault((p) => { return p.BreakpointId == bkptId; });
             if (pending == null)
             {
