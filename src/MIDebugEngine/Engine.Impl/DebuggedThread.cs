@@ -44,7 +44,7 @@ namespace Microsoft.MIDebugEngine
         private List<DebuggedThread> _deadThreads;
         private List<DebuggedThread> _newThreads;
         private Dictionary<string, List<int>> _threadGroups;
-        private static uint s_targetId = int.MaxValue;
+        private static uint s_targetId = 0; // Thread ids should be start at 0 in the default scenario
         private const string c_defaultGroupId = "i1";  // gdb's default group id, also used for any process without group ids
 
         private List<DebuggedThread> DeadThreads
