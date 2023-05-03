@@ -21,10 +21,12 @@
 		"ms-vscode.powershell",
 		"jmrog.vscode-nuget-package-manager"
 	],
-	"postCreateCommand": "",
-  	"build": {
-    		"dockerfile": "Dockerfile"
-  	}
+	"image":"mcr.microsoft.com/vscode/devcontainers/dotnet:6.0-focal",
+	"remoteUser": "root"
+	// "postCreateCommand": "",
+  // 	"build": {
+  //   		"dockerfile": "Dockerfile"
+  // 	}
 }
 
 // Built with ❤ by [Pipeline Foundation](https://pipeline.foundation)
