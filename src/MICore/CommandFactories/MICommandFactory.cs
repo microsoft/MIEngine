@@ -658,7 +658,9 @@ namespace MICore
 
             if (results.TryFindString("reason") == "signal-received")
             {
-                if (results.TryFindString("signal-name") == "SIGTRAP")
+                if (results.TryFindString("signal-name") == "SIGTRAP" || 
+                    // If we are remote, we use -exec-interrupt to async-break. GDB will send a SIGINT and we will need to handle the async break
+                    (_debugger.IsRemoteGdbTarget() && results.TryFindString("signal-name") == "SIGINT"))
                 {
                     isAsyncBreak = true;
                 }

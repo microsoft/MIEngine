@@ -591,7 +591,7 @@ namespace MICore
                 _launchOptions is LocalLaunchOptions && !IsLocalLaunchUsingServer());
         }
 
-        private bool IsRemoteGdbTarget()
+        internal bool IsRemoteGdbTarget()
         {
             return MICommandFactory.Mode == MIMode.Gdb &&
                (_launchOptions is PipeLaunchOptions || _launchOptions is UnixShellPortLaunchOptions ||
