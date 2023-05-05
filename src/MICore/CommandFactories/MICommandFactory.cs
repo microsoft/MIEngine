@@ -35,6 +35,17 @@ namespace MICore
         BreakThrown = 0x2
     }
 
+    /// <summary>
+    /// The signals that are using for async-break.
+    /// None will be used for no signal or signals that are not listed in the enum
+    /// </summary>
+    public enum AsyncBreakSignal
+    {
+        None = 0,
+        SIGTRAP = 2,
+        SIGINT = 5
+    }
+
     public abstract class MICommandFactory
     {
         protected Debugger _debugger;
@@ -652,21 +663,22 @@ namespace MICore
             get { return false; }
         }
 
-        public virtual bool IsAsyncBreakSignal(Results results)
+        public virtual AsyncBreakSignal GetAsyncBreakSignal(Results results)
         {
-            bool isAsyncBreak = false;
-
             if (results.TryFindString("reason") == "signal-received")
             {
-                if (results.TryFindString("signal-name") == "SIGTRAP" || 
-                    // If we are remote, we use -exec-interrupt to async-break. GDB will send a SIGINT and we will need to handle the async break
-                    (_debugger.IsRemoteGdbTarget() && (_debugger.IsRequestingInternalAsyncBreak || _debugger.IsRequestingRealAsyncBreak) && results.TryFindString("signal-name") == "SIGINT"))
+                if (results.TryFindString("signal-name") == "SIGTRAP")
                 {
-                    isAsyncBreak = true;
+                    return MICore.AsyncBreakSignal.SIGTRAP;
                 }
+                else if (results.TryFindString("signal-name") == "SIGINT")
+                {
+                    return MICore.AsyncBreakSignal.SIGINT;
+                }
+                return MICore.AsyncBreakSignal.Unknown;
             }
 
-            return isAsyncBreak;
+            return MICore.AsyncBreakSignal.None;
         }
 
         public Results IsModuleLoad(string cmd)
