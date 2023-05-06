@@ -675,7 +675,6 @@ namespace MICore
                 {
                     return MICore.AsyncBreakSignal.SIGINT;
                 }
-                return MICore.AsyncBreakSignal.Unknown;
             }
 
             return MICore.AsyncBreakSignal.None;
