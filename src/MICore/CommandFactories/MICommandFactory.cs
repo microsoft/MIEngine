@@ -667,11 +667,12 @@ namespace MICore
         {
             if (results.TryFindString("reason") == "signal-received")
             {
-                if (results.TryFindString("signal-name") == "SIGTRAP")
+                string signalName = results.TryFindString("signal-name");
+                if (signalName == "SIGTRAP")
                 {
                     return MICore.AsyncBreakSignal.SIGTRAP;
                 }
-                else if (results.TryFindString("signal-name") == "SIGINT")
+                else if (signalName == "SIGINT")
                 {
                     return MICore.AsyncBreakSignal.SIGINT;
                 }
