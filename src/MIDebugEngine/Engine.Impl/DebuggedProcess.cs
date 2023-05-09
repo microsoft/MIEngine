@@ -1332,14 +1332,18 @@ namespace Microsoft.MIDebugEngine
             else if (reason == "signal-received")
             {
                 string name = results.Results.TryFindString("signal-name");
+                AsyncBreakSignal signal = MICommandFactory.GetAsyncBreakSignal(results.Results);
+                bool isAsyncBreak = signal == AsyncBreakSignal.SIGTRAP || (IsUsingExecInterrupt && signal == AsyncBreakSignal.SIGINT);
                 if ((name == "SIG32") || (name == "SIG33"))
                 {
                     // we are going to ignore these (Sigma) signals for now
                     CmdContinueAsyncConditional(breakRequest);
                 }
-                else if (MICommandFactory.IsAsyncBreakSignal(results.Results))
+                else if (isAsyncBreak)
                 {
                     _callback.OnAsyncBreakComplete(thread);
+                    // Reset flag for real async break
+                    IsUsingExecInterrupt = false;
                 }
                 else
                 {
