@@ -283,8 +283,9 @@ namespace MICore
                 results = results.Add("frame", frameResult.Find("frame"));
             }
 
-            bool fIsAsyncBreak = MICommandFactory.IsAsyncBreakSignal(results);
-            if (await DoInternalBreakActions(fIsAsyncBreak))
+            AsyncBreakSignal signal = MICommandFactory.GetAsyncBreakSignal(results);
+            bool isAsyncBreak = signal == AsyncBreakSignal.SIGTRAP || (IsUsingExecInterrupt && signal == AsyncBreakSignal.SIGINT);
+            if (await DoInternalBreakActions(isAsyncBreak))
             {
                 return;
             }
@@ -409,6 +410,8 @@ namespace MICore
                     {
                         CmdContinueAsync();
                         processContinued = true;
+                        // Reset since this -exec-interrupt was for an internal breakpoint.
+                        IsUsingExecInterrupt = false;
                     }
 
                     if (firstException != null)
@@ -591,7 +594,7 @@ namespace MICore
                 _launchOptions is LocalLaunchOptions && !IsLocalLaunchUsingServer());
         }
 
-        private bool IsRemoteGdbTarget()
+        internal bool IsRemoteGdbTarget()
         {
             return MICommandFactory.Mode == MIMode.Gdb &&
                (_launchOptions is PipeLaunchOptions || _launchOptions is UnixShellPortLaunchOptions ||
@@ -605,6 +608,11 @@ namespace MICore
                 return this._launchOptions.IsCoreDump;
             }
         }
+
+        /// <summary>
+        /// Flag to indicate that '-exec-interrupt' was used for async-break scenarios.
+        /// </summary>
+        public bool IsUsingExecInterrupt { get; protected set; } = false;
 
         public async Task<Results> CmdTerminate()
         {
@@ -749,6 +757,7 @@ namespace MICore
                 }
             }
 
+            IsUsingExecInterrupt = true;
             var res = CmdAsync("-exec-interrupt", ResultClass.done);
             return res.ContinueWith((t) =>
             {
