@@ -137,22 +137,25 @@ namespace OpenDebugAD7
         private void HandleSendInvalidateRequestAsync(IRequestResponder<SendInvalidateArguments> responder)
         {
             InvalidatedEvent invalidated = new InvalidatedEvent();
-            
-            // Setting the area and adding it to the result
-            invalidated.Areas.Add(responder.Arguments.Areas);
+            // Set the Arguments only if passed
+            if (null != responder.Arguments) {
+                // Setting the Areas if passed
+                if (null != responder.Arguments.Areas || responder.Arguments.Areas.Length != 0) {
+                    invalidated.Areas = responder.Arguments.Areas.ToList();
+                }
 
-            // Setting the StackFrameId if passed (and the 'threadId' is ignored).
-            if (null != responder.Arguments.StackFrameId)
-            {
-                invalidated.StackFrameId = responder.Arguments.StackFrameId;
+                // Setting the StackFrameId if passed (and the 'threadId' is ignored).
+                if (null != responder.Arguments.StackFrameId)
+                {
+                    invalidated.StackFrameId = responder.Arguments.StackFrameId;
+                }
+
+                // Setting the ThreadId if passed
+                else if (null != responder.Arguments.ThreadId)
+                {
+                    invalidated.ThreadId = responder.Arguments.ThreadId;
+                }
             }
-
-            // Setting the ThreadId if passed
-            else if (null != responder.Arguments.ThreadId)
-            {
-                invalidated.ThreadId = responder.Arguments.ThreadId;
-            }
-
 
             Protocol.SendEvent(invalidated);
 
@@ -3913,7 +3916,7 @@ namespace OpenDebugAD7
     internal class SendInvalidateArguments : DebugRequestArguments
     {
 
-        public InvalidatedAreas Areas { get; set; }
+        public InvalidatedAreas[]? Areas { get; set; }
         public int? ThreadId { get; set; }
         public int? StackFrameId { get; set; }
 
