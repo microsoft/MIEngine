@@ -3916,7 +3916,7 @@ namespace OpenDebugAD7
     internal class SendInvalidateArguments : DebugRequestArguments
     {
 
-        public InvalidatedAreas[]? Areas { get; set; }
+        public List<InvalidatedAreas> Areas { get; set; }
         public int? ThreadId { get; set; }
         public int? StackFrameId { get; set; }
 
