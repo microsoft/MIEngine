@@ -141,7 +141,7 @@ namespace OpenDebugAD7
             if (null != responder.Arguments) {
                 // Setting the Areas if passed
                 if (null != responder.Arguments.Areas) {
-                    invalidated.Areas = responder.Arguments.Areas.ToList();
+                    invalidated.Areas = responder.Arguments.Areas;
                 }
 
                 // Setting the StackFrameId if passed (and the 'threadId' is ignored).
