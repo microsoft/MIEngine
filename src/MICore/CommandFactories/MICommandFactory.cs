@@ -711,6 +711,24 @@ namespace MICore
         {
             return false;
         }
+
+        /// <summary>
+        /// Get the set of features supported by the underlying debugger.
+        /// </summary>
+        public virtual Task<HashSet<string>> GetFeatures()
+        {
+            return Task.FromResult(new HashSet<string>());
+        }
+
+        /// <summary>
+        /// True if the underlying debugger excludes the printing of references to
+        /// compound types when PrintValue.SimpleValues is used as an argument to
+        /// StackListLocals(), StackListArguments() and StackListVariables().
+        /// </summary>
+        public virtual Task<bool> SupportsSimpleValuesExcludesRefTypes()
+        {
+            return Task.FromResult(false);
+        }
         #endregion
     }
 }
