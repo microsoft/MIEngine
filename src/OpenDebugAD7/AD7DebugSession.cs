@@ -140,7 +140,7 @@ namespace OpenDebugAD7
             // Set the Arguments only if passed
             if (null != responder.Arguments) {
                 // Setting the Areas if passed
-                if (null != responder.Arguments.Areas || responder.Arguments.Areas.Length != 0) {
+                if (null != responder.Arguments.Areas) {
                     invalidated.Areas = responder.Arguments.Areas.ToList();
                 }
 
