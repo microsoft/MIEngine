@@ -198,6 +198,18 @@ namespace MICore
             }
         }
 
+        public override async Task<HashSet<string>> GetFeatures()
+        {
+            Results results = await _debugger.CmdAsync("-list-features", ResultClass.done);
+            return new HashSet<string>(results.Find<ValueListValue>("features").AsStrings);
+        }
+
+        public override async Task<bool> SupportsSimpleValuesExcludesRefTypes()
+        {
+            HashSet<string> features = await GetFeatures();
+            return features.Contains("simple-values-ref-types");
+        }
+
         public override async Task Terminate()
         {
             // Although the mi documentation states that the correct command to terminate is -exec-abort
