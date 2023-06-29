@@ -44,6 +44,8 @@ namespace MICore
         public event EventHandler ThreadCreatedEvent;
         public event EventHandler ThreadExitedEvent;
         public event EventHandler ThreadGroupExitedEvent;
+        public event EventHandler RecordStartedEvent;
+        public event EventHandler RecordStoppedEvent;
         public event EventHandler<ResultEventArgs> TelemetryEvent;
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
@@ -1457,6 +1459,16 @@ namespace MICore
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-exited,".Length));
                 ThreadExitedEvent(this, new ResultEventArgs(results, 0));
+            }
+            else if (cmd.StartsWith("record-started,", StringComparison.Ordinal))
+            {
+                results = _miResults.ParseResultList(cmd.Substring("record-started,".Length));
+                RecordStartedEvent(this, new ResultEventArgs(results, 0));
+            }
+            else if (cmd.StartsWith("record-stopped,", StringComparison.Ordinal))
+            {
+                results = _miResults.ParseResultList(cmd.Substring("record-stopped,".Length));
+                RecordStoppedEvent(this, new ResultEventArgs(results, 0));
             }
             else if (cmd.StartsWith("telemetry,", StringComparison.Ordinal))
             {

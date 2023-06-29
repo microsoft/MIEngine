@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using MICore;
@@ -19,7 +19,7 @@ using Logger = MICore.Logger;
 
 namespace Microsoft.MIDebugEngine
 {
-    internal class DebuggedProcess : MICore.Debugger
+    internal sealed class DebuggedProcess : MICore.Debugger
     {
         public AD_PROCESS_ID Id { get; private set; }
         public AD7Engine Engine { get; private set; }
@@ -32,6 +32,7 @@ namespace Microsoft.MIDebugEngine
         public Disassembly Disassembly { get; private set; }
         public ExceptionManager ExceptionManager { get; private set; }
         public CygwinFilePathMapper CygwinFilePathMapper { get; private set; }
+        public string[] TargetFeatures { get; private set; }
 
         private List<DebuggedModule> _moduleList;
         private ISampleEngineCallback _callback;
@@ -434,6 +435,21 @@ namespace Microsoft.MIDebugEngine
                 ThreadCache.ThreadGroupExitedEvent(result.Results.FindString("id"));
             };
 
+            RecordStartedEvent += async delegate (object o, EventArgs args)
+            {
+                var result = args as ResultEventArgs;
+                string threadGroup = result.Results.FindString("thread-group"); // e.g. "i1"
+                string method = result.Results.FindString("method"); // e.g. "full"
+                await UpdateTargetFeatures();
+            };
+
+            RecordStoppedEvent += async delegate (object o, EventArgs args)
+            {
+                var result = args as ResultEventArgs;
+                string threadGroup = result.Results.FindString("thread-group"); // e.g. "i1"
+                await UpdateTargetFeatures();
+            };
+
             TelemetryEvent += (object o, ResultEventArgs args) =>
             {
                 string eventName;
@@ -541,6 +557,13 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
+        private async Task UpdateTargetFeatures()
+        {
+            TargetFeatures = await MICommandFactory.GetTargetFeatures();
+            // NOTE: Currently OpenDebugAD7 polls if we can reverse execute on every stop.
+            // It would be better to notify it instead from here so it can update the Capabilities
+        }
+
         public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
         {
             bool success = false;
@@ -601,6 +624,8 @@ namespace Microsoft.MIDebugEngine
                         }
                     }
                 }
+                // now the exe is loaded and we can check target features
+                await UpdateTargetFeatures();
 
                 success = true;
             }
@@ -1395,7 +1420,13 @@ namespace Microsoft.MIDebugEngine
             {
                 if (breakRequest == BreakRequest.None)
                 {
+                    // FIXME: we also end up here when gdb prints
+                    // "No more reverse-execution history."
+                    // but does not set a stopped event reason
                     Debug.Fail("Unknown stopping reason");
+                    // FIXME: this will show up as "Exception occurred" in vscode which
+                    // confusingly suggests that an exception has occurred in the debuggee.
+                    // But OnError() only prints something in the console rather than in the editor
                     _callback.OnException(thread, "Unknown", "Unknown stopping event", 0);
                 }
             }
@@ -1683,9 +1714,15 @@ namespace Microsoft.MIDebugEngine
             _worker.PostOperation(() => { func(); });
         }
 
-        public async Task Execute(DebuggedThread thread)
+        public async Task Execute(DebuggedThread thread, ExecuteDirection executionDirection = ExecuteDirection.ExecuteDirection_Forward)
         {
             await ExceptionManager.EnsureSettingsUpdated();
+
+            if (executionDirection == ExecuteDirection.ExecuteDirection_Reverse)
+            {
+                await MICommandFactory.ExecContinue(false);
+                return;
+            }
 
             // Should clear stepping state
             if (_worker.IsPollThread())
@@ -1698,30 +1735,32 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        public Task Continue(DebuggedThread thread)
+        public Task Continue(DebuggedThread thread, ExecuteDirection executionDirection = ExecuteDirection.ExecuteDirection_Forward)
         {
             // Called after Stopping event
-            return Execute(thread);
+            return Execute(thread, executionDirection);
         }
 
-        public async Task Step(int threadId, enum_STEPKIND kind, enum_STEPUNIT unit)
+        public async Task Step(int threadId, enum_STEPKIND kind, enum_STEPUNIT unit, ExecuteDirection direction = ExecuteDirection.ExecuteDirection_Forward)
         {
             this.VerifyNotDebuggingCoreDump();
 
             await ExceptionManager.EnsureSettingsUpdated();
 
+            // STEP_BACKWARDS is deprecated, use direction
+            bool isForwardStep = direction == ExecuteDirection.ExecuteDirection_Forward;
             if ((unit == enum_STEPUNIT.STEP_LINE) || (unit == enum_STEPUNIT.STEP_STATEMENT))
             {
                 switch (kind)
                 {
                     case enum_STEPKIND.STEP_INTO:
-                        await MICommandFactory.ExecStep(threadId);
+                        await MICommandFactory.ExecStep(threadId, isForwardStep);
                         break;
                     case enum_STEPKIND.STEP_OVER:
-                        await MICommandFactory.ExecNext(threadId);
+                        await MICommandFactory.ExecNext(threadId, isForwardStep);
                         break;
                     case enum_STEPKIND.STEP_OUT:
-                        await MICommandFactory.ExecFinish(threadId);
+                        await MICommandFactory.ExecFinish(threadId, isForwardStep);
                         break;
                     default:
                         throw new NotImplementedException();
@@ -1732,13 +1771,13 @@ namespace Microsoft.MIDebugEngine
                 switch (kind)
                 {
                     case enum_STEPKIND.STEP_INTO:
-                        await MICommandFactory.ExecStepInstruction(threadId);
+                        await MICommandFactory.ExecStepInstruction(threadId, isForwardStep);
                         break;
                     case enum_STEPKIND.STEP_OVER:
-                        await MICommandFactory.ExecNextInstruction(threadId);
+                        await MICommandFactory.ExecNextInstruction(threadId, isForwardStep);
                         break;
                     case enum_STEPKIND.STEP_OUT:
-                        await MICommandFactory.ExecFinish(threadId);
+                        await MICommandFactory.ExecFinish(threadId, isForwardStep);
                         break;
                     default:
                         throw new NotImplementedException();

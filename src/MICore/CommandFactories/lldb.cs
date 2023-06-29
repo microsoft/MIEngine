@@ -3,18 +3,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Globalization;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace MICore
 {
-    internal class LlldbMICommandFactory : MICommandFactory
+    internal sealed class LlldbMICommandFactory : MICommandFactory
     {
         public override string Name
         {
@@ -117,6 +114,11 @@ namespace MICore
         {
             // lldb-mi doesn't support target-async mode, and doesn't seem to need to
             return Task.FromResult((object)null);
+        }
+
+        public override Task<string[]> GetTargetFeatures()
+        {
+            return Task.FromResult(new string[0]);
         }
 
         public override string GetTargetArchitectureCommand()

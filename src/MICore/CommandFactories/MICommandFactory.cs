@@ -4,12 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.IO;
-using System.Text;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Globalization;
+using System.Threading.Tasks;
+using System.Text;
+using System.Linq;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace MICore
@@ -223,33 +221,43 @@ namespace MICore
 
         #region Program Execution
 
-        public async Task ExecStep(int threadId, ResultClass resultClass = ResultClass.running)
+        public async Task ExecStep(int threadId, bool forward = true, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-step";
+            if (!forward)
+                command += " --reverse";
             await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
-        public async Task ExecNext(int threadId, ResultClass resultClass = ResultClass.running)
+        public async Task ExecNext(int threadId, bool forward = true, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-next";
+            if (!forward)
+                command += " --reverse";
             await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
-        public async Task ExecFinish(int threadId, ResultClass resultClass = ResultClass.running)
+        public async Task ExecFinish(int threadId, bool forward = true, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-finish";
+            if (!forward)
+                command += " --reverse";
             await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
-        public async Task ExecStepInstruction(int threadId, ResultClass resultClass = ResultClass.running)
+        public async Task ExecStepInstruction(int threadId, bool forward = true, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-step-instruction";
+            if (!forward)
+                command += " --reverse";
             await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
-        public async Task ExecNextInstruction(int threadId, ResultClass resultClass = ResultClass.running)
+        public async Task ExecNextInstruction(int threadId, bool forward = true, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-next-instruction";
+            if (!forward)
+                command += " --reverse";
             await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
         }
 
@@ -265,9 +273,11 @@ namespace MICore
         /// <summary>
         /// Continues running the target process
         /// </summary>
-        public async Task ExecContinue()
+        public async Task ExecContinue(bool forward = true)
         {
             string command = "-exec-continue";
+            if (!forward)
+                command += " --reverse";
             await _debugger.CmdAsync(command, ResultClass.running);
         }
 
@@ -698,6 +708,8 @@ namespace MICore
         {
             return true;
         }
+
+        abstract public Task<string[]> GetTargetFeatures();
 
         abstract public Task<List<ulong>> StartAddressesForLine(string file, uint line);
 

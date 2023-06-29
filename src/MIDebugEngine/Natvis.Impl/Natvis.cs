@@ -1171,6 +1171,10 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 return ((VisualizerWrapper)variable).Visualizer;
             }
+
+            if (string.IsNullOrEmpty(variable.TypeName))
+                return null;
+
             if (_vizCache.ContainsKey(variable.TypeName))
             {
                 return _vizCache[variable.TypeName];
