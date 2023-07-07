@@ -980,6 +980,13 @@ namespace MICore
                             MIDebuggerInitializeFailedException exception;
                             string version = GdbVersionFromLog();
 
+                            int majorVersion = -1;
+                            if (!string.IsNullOrWhiteSpace(version))
+                            {
+                                int.TryParse(version.Split('.').FirstOrDefault(), out majorVersion);
+                            }
+                            MICommandFactory.MajorVersion = majorVersion;
+
                             // We can't use IsMinGW or IsCygwin because we never connected to the debugger
                             bool isMinGWOrCygwin = _launchOptions is LocalLaunchOptions &&
                                     PlatformUtilities.IsWindows() &&
