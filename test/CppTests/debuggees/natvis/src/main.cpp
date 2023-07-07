@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     SimpleClass* simpleClass = nullptr;
     simpleClass = new SimpleClass();
 
-    SimpleMatrix matrix(2, 256, false);
+    SimpleMatrix matrix(2, 256);
 
     return 0;
 }
