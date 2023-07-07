@@ -5,7 +5,7 @@ public:
     int m_cols;
     int* m_pData;
 
-    SimpleMatrix(int row, int col, bool fUseSize1)
+    SimpleMatrix(int row, int col)
     {
         m_rows = row;
         m_cols = col;
