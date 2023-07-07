@@ -76,9 +76,10 @@ namespace MICore
 
         public override async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
+            string command = "-var-create";
             string quoteEscapedExpression = EscapeQuotes(expression);
-            string command = string.Format(CultureInfo.InvariantCulture, "-var-create - - \"{0}\"", quoteEscapedExpression);  // use '-' to indicate that "--frame" should be used to determine the frame number
-            Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
+            string args = string.Format(CultureInfo.InvariantCulture, $"- - \"{quoteEscapedExpression}\"");  // use '-' to indicate that "--frame" should be used to determine the frame number
+            Results results = await ThreadFrameCmdAsync(command, args, resultClass, threadId, frameLevel);
 
             return results;
         }
@@ -94,16 +95,16 @@ namespace MICore
             return results;
         }
 
-        protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass exepctedResultClass, int threadId, uint frameLevel)
+        protected override async Task<Results> ThreadFrameCmdAsync(string command, string args, ResultClass exepctedResultClass, int threadId, uint frameLevel)
         {
-            string threadFrameCommand = string.Format(CultureInfo.InvariantCulture, @"{0} --thread {1} --frame {2}", command, threadId, frameLevel);
+            string threadFrameCommand = string.Format(CultureInfo.InvariantCulture, $@"{command} {args} --thread {threadId} --frame {frameLevel}");
 
             return await _debugger.CmdAsync(threadFrameCommand, exepctedResultClass);
         }
 
-        protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
+        protected override async Task<Results> ThreadCmdAsync(string command, string args, ResultClass expectedResultClass, int threadId)
         {
-            string threadCommand = string.Format(CultureInfo.InvariantCulture, @"{0} --thread {1}", command, threadId);
+            string threadCommand = string.Format(CultureInfo.InvariantCulture, $@"{command} {args} --thread {threadId}");
 
             return await _debugger.CmdAsync(threadCommand, expectedResultClass);
         }
