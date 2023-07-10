@@ -64,7 +64,7 @@
       <ArrayItems>
         <Direction>Forward</Direction>
         <Rank>2</Rank>
-        <Size>($i == 1) ? 2 : m_size2/2</Size>
+        <Size>($i == 0) ? m_rows : m_cols</Size>
         <ValuePointer>m_pData</ValuePointer>
       </ArrayItems>
     </Expand>

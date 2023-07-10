@@ -1,21 +1,33 @@
 parameters:
-  FolderToScan: '$(Pipeline.Workspace)\Lab.Release'
+  SourceFolder: '$(Pipeline.Workspace)\Lab.Release'
 
 steps:
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(Pipeline.Workspace)\ApiScanFiles'
   inputs:
-    SourceFolder: ${{ parameters.FolderToScan }}
+    SourceFolder: ${{ parameters.SourceFolder }}
     Contents: |
       **\*Microsoft@(*.dll|*.pdb|*.exe)
-      **\*Newtonsoft@(*.dll|*.pdb|*.exe)
       **\*OpenDebugAD7@(*.dll|*.pdb|*.exe)
       **\*WindowsDebugLauncher@(*.dll|*.pdb|*.exe)
+      **\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.dll
       !**\*.resources.dll
+      !**\Microsoft.VisualStudio.Debugger.Interop*
+      !**\vscode\Microsoft.VisualStudio.Interop.dll
+      !**\vscode\Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.dll
     TargetFolder: '$(Pipeline.Workspace)\ApiScanFiles'
     CleanTargetFolder: true
     OverWrite: true
 
+# This gets excluded by !**\Microsoft.VisualStudio.Debugger.Interop* but we create Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.dll.
+- task: CopyFiles@2
+  displayName: 'Copy UnixPortSupplier to: $(Pipeline.Workspace)\ApiScanFiles'
+  inputs:
+    SourceFolder: ${{ parameters.SourceFolder }}
+    Contents: |
+      **\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.dll
+    TargetFolder: '$(Pipeline.Workspace)\ApiScanFiles'
+  
 - task: securedevelopmentteam.vss-secure-development-tools.build-task-apiscan.APIScan@2
   displayName: 'Run APIScan'
   inputs:

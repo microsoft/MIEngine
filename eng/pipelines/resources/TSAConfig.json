@@ -1,0 +1,9 @@
+{
+    "codebaseName": "MIEngine",
+    "notificationAliases": ["vsdbgnft@microsoft.com"],
+    "instanceUrl": "https://devdiv.visualstudio.com",
+    "projectName": "DevDiv",
+    "areaPath": "DevDiv\\VS Diagnostics\\Debugger - XPlat\\Cpp",
+    "iterationPath": "DevDiv",
+    "allTools": true
+}
