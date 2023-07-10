@@ -4,7 +4,7 @@
     before the start of the project.-->
     <MajorVersion>17</MajorVersion>
     <MinorVersion>8</MinorVersion>
-    <VersionZeroYear>2020</VersionZeroYear>
+    <VersionZeroYear>2022</VersionZeroYear>
     <!-- Note: for compatibility, we leave the default assembly version of the repo at 14.0.
     If we ever decide to change this, make sure that you notify partner teams such as C++ IOT -->
     <AssemblyVersion Condition="'$(AssemblyVersion)'==''">14.0.0.0</AssemblyVersion>
