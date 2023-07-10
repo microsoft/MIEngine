@@ -52,6 +52,7 @@ namespace Microsoft.MIDebugEngine
         private IProcessSequence _childProcessHandler;
         private bool _deleteEntryPointBreakpoint;
         private string _entryPointBreakpoint = string.Empty;
+        private bool? _simpleValuesExcludesRefTypes = null;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
@@ -1332,14 +1333,18 @@ namespace Microsoft.MIDebugEngine
             else if (reason == "signal-received")
             {
                 string name = results.Results.TryFindString("signal-name");
+                AsyncBreakSignal signal = MICommandFactory.GetAsyncBreakSignal(results.Results);
+                bool isAsyncBreak = signal == AsyncBreakSignal.SIGTRAP || (IsUsingExecInterrupt && signal == AsyncBreakSignal.SIGINT);
                 if ((name == "SIG32") || (name == "SIG33"))
                 {
                     // we are going to ignore these (Sigma) signals for now
                     CmdContinueAsyncConditional(breakRequest);
                 }
-                else if (MICommandFactory.IsAsyncBreakSignal(results.Results))
+                else if (isAsyncBreak)
                 {
                     _callback.OnAsyncBreakComplete(thread);
+                    // Reset flag for real async break
+                    IsUsingExecInterrupt = false;
                 }
                 else
                 {
@@ -1981,8 +1986,26 @@ namespace Microsoft.MIDebugEngine
         //NOTE: eval is not called
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {
-            // If values are requested, request simple values, otherwise we'll use -var-create to get the type of argument it is.
-            var frames = await MICommandFactory.StackListArguments(values ? PrintValue.SimpleValues : PrintValue.NoValues, thread.Id, low, high);
+            PrintValue printValue = values ? PrintValue.SimpleValues : PrintValue.NoValues;
+            if (types && !values)
+            {
+                // We want types but not values. There is no PrintValue option for this, but if
+                // SimpleValues excludes printing values for references to compound types, then
+                // the fastest approach is to use SimpleValues (and ignore the values).
+                // Otherwise, the potential performance penalty of fetching values for
+                // references to compound types is too high, so use NoValues and follow up with
+                // -var-create to get the types.
+                if (!_simpleValuesExcludesRefTypes.HasValue)
+                {
+                    _simpleValuesExcludesRefTypes  = await this.MICommandFactory.SupportsSimpleValuesExcludesRefTypes();
+                }
+                if (_simpleValuesExcludesRefTypes.Value)
+                {
+                    printValue = PrintValue.SimpleValues;
+                }
+            }
+
+            var frames = await MICommandFactory.StackListArguments(printValue, thread.Id, low, high);
             List<ArgumentList> parameters = new List<ArgumentList>();
 
             foreach (var f in frames)

@@ -1,0 +1,7 @@
+steps:
+- task: PSScriptAnalyzer@1
+  displayName: 🔎 Run PSScriptAnalyzer
+  inputs:
+    Path: '$(Build.SourcesDirectory)'
+    Settings: required
+    Recurse: true

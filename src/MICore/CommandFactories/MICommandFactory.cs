@@ -35,6 +35,17 @@ namespace MICore
         BreakThrown = 0x2
     }
 
+    /// <summary>
+    /// The signals that are using for async-break.
+    /// None will be used for no signal or signals that are not listed in the enum
+    /// </summary>
+    public enum AsyncBreakSignal
+    {
+        None = 0,
+        SIGTRAP = 2,
+        SIGINT = 5
+    }
+
     public abstract class MICommandFactory
     {
         protected Debugger _debugger;
@@ -42,6 +53,8 @@ namespace MICore
         public MIMode Mode { get; private set; }
 
         public abstract string Name { get; }
+
+        internal int MajorVersion { get; set; }
 
         public static MICommandFactory GetInstance(MIMode mode, Debugger debugger)
         {
@@ -108,16 +121,18 @@ namespace MICore
 
         public async Task<Results> StackInfoDepth(int threadId, int maxDepth = 1000, ResultClass resultClass = ResultClass.done)
         {
-            string command = string.Format(CultureInfo.InvariantCulture, @"-stack-info-depth {0}", maxDepth);
-            Results results = await ThreadCmdAsync(command, resultClass, threadId);
+            string command = "-stack-info-depth";
+            string args = string.Format(CultureInfo.InvariantCulture, $@"{maxDepth}");
+            Results results = await ThreadCmdAsync(command, args, resultClass, threadId);
 
             return results;
         }
 
         public async Task<TupleValue[]> StackListFrames(int threadId, uint lowFrameLevel, uint highFrameLevel = 1000)
         {
-            string command = string.Format(CultureInfo.InvariantCulture, @"-stack-list-frames {0} {1}", lowFrameLevel, highFrameLevel);
-            Results results = await ThreadCmdAsync(command, ResultClass.done, threadId);
+            string command = "-stack-list-frames";
+            string args = string.Format(CultureInfo.InvariantCulture, $@"{lowFrameLevel} {highFrameLevel}");
+            Results results = await ThreadCmdAsync(command, args, ResultClass.done, threadId);
 
             ListValue list = results.Find<ListValue>("stack");
             if (list is ResultListValue)
@@ -153,9 +168,10 @@ namespace MICore
         /// <returns></returns>
         public async Task<ResultValue> StackListLocals(PrintValue printValues, int threadId, uint frameLevel)
         {
-            string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-locals {0}", (int)printValues);
+            string cmd = "-stack-list-locals";
+            string args = string.Format(CultureInfo.InvariantCulture, $@"{(int)printValues}");
 
-            Results localsResults = await ThreadFrameCmdAsync(cmd, ResultClass.done, threadId, frameLevel);
+            Results localsResults = await ThreadFrameCmdAsync(cmd, args, ResultClass.done, threadId, frameLevel);
             return localsResults.Find("locals");
         }
 
@@ -169,8 +185,9 @@ namespace MICore
         /// <returns>This returns an array of results of frames, which contains a level and an args array. </returns>
         public virtual async Task<TupleValue[]> StackListArguments(PrintValue printValues, int threadId, uint lowFrameLevel, uint hiFrameLevel)
         {
-            string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-arguments {0} {1} {2}", (int)printValues, lowFrameLevel, hiFrameLevel);
-            Results argumentsResults = await ThreadCmdAsync(cmd, ResultClass.done, threadId);
+            string command = "-stack-list-arguments";
+            string args = string.Format(CultureInfo.InvariantCulture, $@"{(int)printValues} {lowFrameLevel} {hiFrameLevel}");
+            Results argumentsResults = await ThreadCmdAsync(command, args, ResultClass.done, threadId);
 
             return argumentsResults.Find<ListValue>("stack-args").IsEmpty()
                 ? new TupleValue[0]
@@ -202,9 +219,9 @@ namespace MICore
         /// <returns>Returns an array of results for variables</returns>
         public async Task<ValueListValue> StackListVariables(PrintValue printValues, int threadId, uint frameLevel)
         {
-            string cmd = string.Format(CultureInfo.InvariantCulture, @"-stack-list-variables {0}", (int)printValues);
-
-            Results variablesResults = await ThreadFrameCmdAsync(cmd, ResultClass.done, threadId, frameLevel);
+            string cmd = "-stack-list-variables";
+            string args = string.Format(CultureInfo.InvariantCulture, $@"{(int)printValues}");
+            Results variablesResults = await ThreadFrameCmdAsync(cmd, args, ResultClass.done, threadId, frameLevel);
             return variablesResults.Find<ValueListValue>("variables");
         }
 
@@ -215,31 +232,36 @@ namespace MICore
         public async Task ExecStep(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-step";
-            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
+            string args = string.Empty;
+            await ThreadFrameCmdAsync(command, args, resultClass, threadId, 0);
         }
 
         public async Task ExecNext(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-next";
-            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
+            string args = string.Empty;
+            await ThreadFrameCmdAsync(command, args, resultClass, threadId, 0);
         }
 
         public async Task ExecFinish(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-finish";
-            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
+            string args = string.Empty;
+            await ThreadFrameCmdAsync(command, args, resultClass, threadId, 0);
         }
 
         public async Task ExecStepInstruction(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-step-instruction";
-            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
+            string args = string.Empty;
+            await ThreadFrameCmdAsync(command, args, resultClass, threadId, 0);
         }
 
         public async Task ExecNextInstruction(int threadId, ResultClass resultClass = ResultClass.running)
         {
             string command = "-exec-next-instruction";
-            await ThreadFrameCmdAsync(command, resultClass, threadId, 0);
+            string args = string.Empty;
+            await ThreadFrameCmdAsync(command, args, resultClass, threadId, 0);
         }
 
         /// <summary>
@@ -285,15 +307,17 @@ namespace MICore
 
         public async Task<TupleValue[]> DataListRegisterValues(int threadId)
         {
-            string command = "-data-list-register-values x";
-            Results results = await ThreadCmdAsync(command, ResultClass.done, threadId);
+            string command = "-data-list-register-values";
+            string args = "x";
+            Results results = await ThreadCmdAsync(command, args, ResultClass.done, threadId);
             return results.Find<ValueListValue>("register-values").AsArray<TupleValue>();
         }
 
         public async Task<string> DataEvaluateExpression(string expr, int threadId, uint frame)
         {
-            string command = "-data-evaluate-expression \"" + expr + "\"";
-            Results results = await ThreadFrameCmdAsync(command, ResultClass.None, threadId, frame);
+            string command = "-data-evaluate-expression";
+            string args = $"\"{expr}\"";
+            Results results = await ThreadFrameCmdAsync(command, args, ResultClass.None, threadId, frame);
             return results.FindString("value");
         }
 
@@ -333,8 +357,9 @@ namespace MICore
         public virtual async Task<Results> VarCreate(string expression, int threadId, uint frameLevel, enum_EVALFLAGS dwFlags, ResultClass resultClass = ResultClass.done)
         {
             string quoteEscapedExpression = EscapeQuotes(HandleInvalidChars(expression));
-            string command = string.Format(CultureInfo.InvariantCulture, "-var-create - * \"{0}\"", quoteEscapedExpression);
-            Results results = await ThreadFrameCmdAsync(command, resultClass, threadId, frameLevel);
+            string command = "-var-create";
+            string args = string.Format(CultureInfo.InvariantCulture, $" - * \"{quoteEscapedExpression}\"");
+            Results results = await ThreadFrameCmdAsync(command, args, resultClass, threadId, frameLevel);
 
             return results;
         }
@@ -635,8 +660,8 @@ namespace MICore
 
         #region Other
 
-        abstract protected Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel);
-        abstract protected Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId);
+        abstract protected Task<Results> ThreadFrameCmdAsync(string command, string args, ResultClass expectedResultClass, int threadId, uint frameLevel);
+        abstract protected Task<Results> ThreadCmdAsync(string command, string args, ResultClass expectedResultClass, int threadId);
 
         abstract public string GetSetEnvironmentVariableCommand(string name, string value);
 
@@ -652,19 +677,22 @@ namespace MICore
             get { return false; }
         }
 
-        public virtual bool IsAsyncBreakSignal(Results results)
+        public virtual AsyncBreakSignal GetAsyncBreakSignal(Results results)
         {
-            bool isAsyncBreak = false;
-
             if (results.TryFindString("reason") == "signal-received")
             {
-                if (results.TryFindString("signal-name") == "SIGTRAP")
+                string signalName = results.TryFindString("signal-name");
+                if (signalName == "SIGTRAP")
                 {
-                    isAsyncBreak = true;
+                    return MICore.AsyncBreakSignal.SIGTRAP;
+                }
+                else if (signalName == "SIGINT")
+                {
+                    return MICore.AsyncBreakSignal.SIGINT;
                 }
             }
 
-            return isAsyncBreak;
+            return MICore.AsyncBreakSignal.None;
         }
 
         public Results IsModuleLoad(string cmd)
@@ -696,6 +724,24 @@ namespace MICore
         public virtual bool SupportsBreakpointChecksums()
         {
             return false;
+        }
+
+        /// <summary>
+        /// Get the set of features supported by the underlying debugger.
+        /// </summary>
+        public virtual Task<HashSet<string>> GetFeatures()
+        {
+            return Task.FromResult(new HashSet<string>());
+        }
+
+        /// <summary>
+        /// True if the underlying debugger excludes the printing of references to
+        /// compound types when PrintValue.SimpleValues is used as an argument to
+        /// StackListLocals(), StackListArguments() and StackListVariables().
+        /// </summary>
+        public virtual Task<bool> SupportsSimpleValuesExcludesRefTypes()
+        {
+            return Task.FromResult(false);
         }
         #endregion
     }

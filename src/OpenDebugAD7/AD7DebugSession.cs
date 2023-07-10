@@ -128,8 +128,38 @@ namespace OpenDebugAD7
             m_dataBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
             m_exceptionBreakpoints = new List<string>();
             m_variableManager = new VariableManager();
+
+            //Register sendInvalidate request
+            Protocol.RegisterRequestType<SendInvalidateRequest, SendInvalidateArguments>(r => this.HandleSendInvalidateRequestAsync(r));
+    
         }
 
+        private void HandleSendInvalidateRequestAsync(IRequestResponder<SendInvalidateArguments> responder)
+        {
+            InvalidatedEvent invalidated = new InvalidatedEvent();
+            // Set the Arguments only if passed
+            if (null != responder.Arguments) {
+                // Setting the Areas if passed
+                if (null != responder.Arguments.Areas) {
+                    invalidated.Areas = responder.Arguments.Areas;
+                }
+
+                // Setting the StackFrameId if passed (and the 'threadId' is ignored).
+                if (null != responder.Arguments.StackFrameId)
+                {
+                    invalidated.StackFrameId = responder.Arguments.StackFrameId;
+                }
+
+                // Setting the ThreadId if passed
+                else if (null != responder.Arguments.ThreadId)
+                {
+                    invalidated.ThreadId = responder.Arguments.ThreadId;
+                }
+            }
+
+            Protocol.SendEvent(invalidated);
+
+        }
         #endregion
 
         #region Utility
@@ -3873,5 +3903,22 @@ namespace OpenDebugAD7
                 throw new NotImplementedException();
             }
         }
+    }
+
+    internal class SendInvalidateRequest : DebugRequest<SendInvalidateArguments>
+    {
+ 
+        public SendInvalidateRequest(): base("sendInvalidate")
+        {
+        }
+    }
+
+    internal class SendInvalidateArguments : DebugRequestArguments
+    {
+
+        public List<InvalidatedAreas> Areas { get; set; }
+        public int? ThreadId { get; set; }
+        public int? StackFrameId { get; set; }
+
     }
 }

@@ -14,13 +14,32 @@ steps:
   parameters:
     FolderToScan: $(Pipeline.Workspace)\Lab.Release
 
+- template: ../tasks/AntiMalware.yml
+  parameters:
+    SourcePath: $(Build.SourcesDirectory)\src
+
 - template: ../tasks/BinSkim.yml
 
 - template: ../tasks/PoliCheck.yml
+
+- template: ../tasks/PSScriptAnalyzer.yml
 
 - template: ../tasks/SdtReport.yml
 
 - template: ../tasks/PublishSecurityAnalysisLogs.yml
   parameters:
     ArtifactName: 'CodeAnalysis'
+
+## Create any bugs associated with the results.
+- template: ../tasks/TSAUpload.yml
+
+## Finally, break the build if anything was found. This is so we can bring the issue to our attention.
+- template: ../steps/PostAnalysis.yml
+
+- template: ../tasks/PublishPipelineArtifact.yml
+  parameters:
+    DisplayName: 🎁 Publish Artifact for Guardian Suppressions
+    artifactName: Guardian Suppressions
+    path: $(Build.ArtifactStagingDirectory)\GuardianSuppressions
+    condition: failed()
 ...
