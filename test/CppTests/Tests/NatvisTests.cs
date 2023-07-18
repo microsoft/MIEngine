@@ -181,7 +181,8 @@ namespace CppTests.Tests
 
                     // Multi-dimensional array
                     var matrix = currentFrame.GetVariable("matrix");
-                    Assert.Equal("3", matrix.GetVariable("[1,1]").Value);
+                    Assert.Equal("1", matrix.GetVariable("[0,1]").Value);
+                    Assert.Equal("51", matrix.GetVariable("[More...]").GetVariable("[0,51]").Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();

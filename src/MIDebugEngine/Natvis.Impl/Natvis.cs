@@ -676,12 +676,8 @@ namespace Microsoft.MIDebugEngine.Natvis
 
                                 for (uint index = 0; index < requestedSize; ++index)
                                 {
-                                    string displayName = (startIndex + index).ToString(CultureInfo.InvariantCulture);
-                                    if (rank > 1)
-                                    {
-                                        displayName = GetDisplayNameFromArrayIndex(index, rank, dimensions, isForward);
-                                    }
-
+                                    uint currentOffsetIndex = startIndex + index;
+                                    string displayName = rank > 1 ? GetDisplayNameFromArrayIndex(currentOffsetIndex, rank, dimensions, isForward) : currentOffsetIndex.ToString(CultureInfo.InvariantCulture);
                                     children.Add(new SimpleWrapper("[" + displayName + "]", _process.Engine, arrayExpr.Children[index]));
                                 }
 
