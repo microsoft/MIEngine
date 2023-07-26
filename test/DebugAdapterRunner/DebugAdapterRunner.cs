@@ -56,6 +56,8 @@ namespace DebugAdapterRunner
 
         private IDictionary<string, CallbackRequestHandler> _callbackHandlers = new Dictionary<string, CallbackRequestHandler>();
 
+        private static readonly Encoding s_utf8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
         // Current list of responses received from the debug adapter
         public List<string> Responses { get; private set; }
 
@@ -155,7 +157,9 @@ namespace DebugAdapterRunner
             startInfo.CreateNoWindow = true;
             startInfo.RedirectStandardInput = true;
             startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;                
+            startInfo.RedirectStandardError = true;
+            startInfo.StandardOutputEncoding = s_utf8NoBOM;
+            startInfo.StandardInputEncoding = s_utf8NoBOM;
 
             if (redirectVSAssert)
             {
