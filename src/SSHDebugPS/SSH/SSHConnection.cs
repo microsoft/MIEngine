@@ -52,6 +52,13 @@ namespace Microsoft.SSHDebugPS.SSH
                 username = usernameCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'id' command ends with a newline
             }
 
+            string operatingSystem = string.Empty;
+            var operatingSystemCommand = _remoteSystem.Shell.ExecuteCommand("uname", Timeout.InfiniteTimeSpan);
+            if (operatingSystemCommand.ExitCode == 0)
+            {
+                operatingSystem = operatingSystemCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'uname' command ends with a newline
+            }
+
             string architecture = string.Empty;
             var architectureCommand = _remoteSystem.Shell.ExecuteCommand("uname -m", Timeout.InfiniteTimeSpan);
             if (architectureCommand.ExitCode == 0)
@@ -59,15 +66,17 @@ namespace Microsoft.SSHDebugPS.SSH
                 architecture = architectureCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'uname -m' command ends with a newline
             }
 
-            SystemInformation systemInformation = new SystemInformation(username, architecture);
+            SystemInformation systemInformation = new SystemInformation(username, architecture, operatingSystem.ConvertToPlatformID());
 
-            var command = _remoteSystem.Shell.ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.InfiniteTimeSpan);
+            PSOutputParser psOutputParser = new PSOutputParser(systemInformation);
+
+            var command = _remoteSystem.Shell.ExecuteCommand(psOutputParser.PSCommandLine, Timeout.InfiniteTimeSpan);
             if (command.ExitCode != 0)
             {
                 throw new CommandFailedException(StringResources.Error_PSFailed);
             }
 
-            return PSOutputParser.Parse(command.Output, systemInformation);
+            return psOutputParser.Parse(command.Output);
         }
 
         /// <inheritdoc/>

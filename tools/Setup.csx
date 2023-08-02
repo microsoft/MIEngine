@@ -196,14 +196,20 @@ class Setup {
                     vscodeExtensionPath = Path.Join(Environment.GetEnvironmentVariable("HOME"), ".vscode/extensions");
                 }
                 IEnumerable<string> extensions = Directory.EnumerateDirectories(vscodeExtensionPath);
-
-                foreach (string extension in extensions)
+                if (extensions.Any())
                 {
-                    if (extension.Contains("ms-vscode.cpptools"))
+                    foreach (string extension in extensions)
                     {
-                        TargetPath = extension;
-                        break;
+                        if (extension.Contains("ms-vscode.cpptools"))
+                        {
+                            TargetPath = extension;
+                            break;
+                        }
                     }
+                }
+                else 
+                {
+                    throw new InvalidOperationException("Unable to find an installation of VS Code C++ Extension.");
                 }
             }
         }
@@ -217,7 +223,7 @@ class Setup {
 
         if (Client == Client.VS)
         {
-            listFilePath = Path.Join(scriptDirectoryPath, "VS.CodeSpaces.list");
+            listFilePath = Path.Join(scriptDirectoryPath, "VS.list");
             // Use <Configuration> folder.
             binDirectoryPath = Path.Join(binDirectoryPath, Configuration.ToString());
         }
@@ -225,13 +231,12 @@ class Setup {
         {
             listFilePath = Path.Join(scriptDirectoryPath, "VSCode.list");
             // Use Desktop.<Configuration> folder.
-            binDirectoryPath = Path.Join(binDirectoryPath, "Desktop." + Configuration.ToString());
+            binDirectoryPath = Path.Join(binDirectoryPath, Configuration.ToString());
         }
 
         if (!Directory.Exists(binDirectoryPath))
         {
-            string configurationToUse = Client == Client.VS ? Configuration.ToString() : "Desktop." + Configuration.ToString();
-            throw new InvalidOperationException(string.Format("'{0}' does not exist. Did you build {1}?", binDirectoryPath, configurationToUse));
+            throw new InvalidOperationException(string.Format("'{0}' does not exist. Did you build {1}?", binDirectoryPath, Configuration.ToString()));
         }
 
         IList<ListFileFormat> lffList = this.ParseListFiles(listFilePath);
