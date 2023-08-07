@@ -59,28 +59,27 @@ namespace Microsoft.SSHDebugPS
         // Use padding to expand column width. 10 for pid and 32 for userid as that is the max size for each
         // Tested this format with different distributions of Linux and container distributions. This command (and the alternative without the flags) seems 
         // to be the one that works the best between standard *nix and BusyBox implementations of ps.
-        private const string PSCommandLineFormat = "ps{0}-o pid=pppppppppp -o flags=ffffffff -o ruser=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr -o args";
+        private const string PSCommandLineFormat = "ps{0}-o pid=pppppppppp{1} -o ruser=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr -o args";
         private SystemInformation _currentSystemInformation;
         private ColumnDef _pidCol;
         private ColumnDef _flagsCol;
         private ColumnDef _ruserCol;
         private ColumnDef _argsCol;
 
-        public static string PSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" axww ");
-        public static string AltPSCommandLine = PSCommandLineFormat.FormatInvariantWithArgs(" ");
+        // In order to determine the architecture of a process, we need to run the ps command with 'flags'.
+        // However, certain of distros of Linux do not support flags, so only add this for macOS.
+        private string PSFlagFormat => _currentSystemInformation.Platform == PlatformID.MacOSX ? " -o flags=ffffffff" : string.Empty;
 
-        public static List<Process> Parse(string output, SystemInformation systemInformation)
-        {
-            return new PSOutputParser().ParseInternal(output, systemInformation);
-        }
+        public string PSCommandLine => PSCommandLineFormat.FormatInvariantWithArgs(" axww ", PSFlagFormat);
+        public string AltPSCommandLine => PSCommandLineFormat.FormatInvariantWithArgs(" ", PSFlagFormat);
 
-        private PSOutputParser()
-        {
-        }
-
-        private List<Process> ParseInternal(string output, SystemInformation systemInformation)
+        public PSOutputParser(SystemInformation systemInformation)
         {
             _currentSystemInformation = systemInformation;
+        }
+
+        public List<Process> Parse(string output)
+        {
             List<Process> processList = new List<Process>();
 
             using (var reader = new StringReader(output))
@@ -136,14 +135,18 @@ namespace Microsoft.SSHDebugPS
             if (!SkipNonWhitespace(headerLine, ref index))
                 return false;
 
-            _flagsCol = new ColumnDef(colStart, index);
+            /// <see cref PSFlagFormat/> on why this is only executed for macOS.
+            if (_currentSystemInformation.Platform == PlatformID.MacOSX)
+            {
+                _flagsCol = new ColumnDef(colStart, index);
 
-            if (!SkipWhitespace(headerLine, ref index))
-                return false;
+                if (!SkipWhitespace(headerLine, ref index))
+                    return false;
 
-            colStart = index;
-            if (!SkipNonWhitespace(headerLine, ref index))
-                return false;
+                colStart = index;
+                if (!SkipNonWhitespace(headerLine, ref index))
+                    return false;
+            }
 
             _ruserCol = new ColumnDef(colStart, index);
 
@@ -170,10 +173,15 @@ namespace Microsoft.SSHDebugPS
             if (!uint.TryParse(pidText, NumberStyles.None, CultureInfo.InvariantCulture, out pid))
                 return null;
 
-            uint flags;
-            string flagsText = _flagsCol.Extract(line);
-            if (!uint.TryParse(flagsText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out flags))
-                return null;
+            uint? flags = null;
+            /// <see cref PSFlagFormat/> on why this is only executed for macOS.
+            if (_currentSystemInformation.Platform == PlatformID.MacOSX)
+            {
+                string flagsText = _flagsCol.Extract(line);
+                if (!uint.TryParse(flagsText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint tempFlags))
+                    return null;
+                flags = tempFlags;
+            }
 
             string ruser = _ruserCol.Extract(line);
             string commandLine = _argsCol.Extract(line);
