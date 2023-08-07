@@ -125,7 +125,7 @@ namespace Microsoft.SSHDebugPS
 
     internal static class OperatingSystemStringConverter
     {
-        internal static PlatformID ConvertToPlatformID(this string value)
+        internal static PlatformID ConvertToPlatformID(string value)
         {
             if (!string.IsNullOrEmpty(value))
             {

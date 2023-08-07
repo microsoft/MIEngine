@@ -195,17 +195,10 @@ class Setup {
                 {
                     vscodeExtensionPath = Path.Join(Environment.GetEnvironmentVariable("HOME"), ".vscode/extensions");
                 }
-                IEnumerable<string> extensions = Directory.EnumerateDirectories(vscodeExtensionPath);
+                IEnumerable<string> extensions = Directory.EnumerateDirectories(vscodeExtensionPath).Where(extension => extension.Contains("ms-vscode.cpptools"));
                 if (extensions.Any())
                 {
-                    foreach (string extension in extensions)
-                    {
-                        if (extension.Contains("ms-vscode.cpptools"))
-                        {
-                            TargetPath = extension;
-                            break;
-                        }
-                    }
+                    TargetPath = extensions.First();
                 }
                 else 
                 {

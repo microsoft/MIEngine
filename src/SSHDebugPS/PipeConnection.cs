@@ -120,7 +120,7 @@ namespace Microsoft.SSHDebugPS
                 architecture = commandOutput;
             }
 
-            return new SystemInformation(username, architecture, platform.ConvertToPlatformID());
+            return new SystemInformation(username, architecture, OperatingSystemStringConverter.ConvertToPlatformID(platform));
         }
 
         public override List<Process> ListProcesses()

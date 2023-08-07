@@ -66,7 +66,7 @@ namespace Microsoft.SSHDebugPS.SSH
                 architecture = architectureCommand.Output.TrimEnd('\n', '\r'); // trim line endings because 'uname -m' command ends with a newline
             }
 
-            SystemInformation systemInformation = new SystemInformation(username, architecture, operatingSystem.ConvertToPlatformID());
+            SystemInformation systemInformation = new SystemInformation(username, architecture, OperatingSystemStringConverter.ConvertToPlatformID(operatingSystem));
 
             PSOutputParser psOutputParser = new PSOutputParser(systemInformation);
 
