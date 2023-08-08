@@ -98,8 +98,8 @@ namespace Microsoft.SSHDebugPS
         /// <returns>SystemInformation containing username and architecture. If it was unable to obtain any of these, the value will be set to string.Empty.</returns>
         public SystemInformation GetSystemInformation()
         {
-            string commandOutput;
-            string errorMessage;
+            string commandOutput = string.Empty;
+            string errorMessage = string.Empty;
             int exitCode;
 
             string username = string.Empty;
@@ -108,13 +108,19 @@ namespace Microsoft.SSHDebugPS
                 username = commandOutput;
             }
 
+            string platform = string.Empty;
+            if (ExecuteCommand("uname", Timeout.Infinite, commandOutput: out commandOutput, errorMessage: out errorMessage, exitCode: out exitCode))
+            {
+                platform = commandOutput;
+            }
+
             string architecture = string.Empty;
             if (ExecuteCommand("uname -m", Timeout.Infinite, commandOutput: out commandOutput, errorMessage: out errorMessage, exitCode: out exitCode))
             {
                 architecture = commandOutput;
             }
 
-            return new SystemInformation(username, architecture);
+            return new SystemInformation(username, architecture, OperatingSystemStringConverter.ConvertToPlatformID(platform));
         }
 
         public override List<Process> ListProcesses()
@@ -152,12 +158,15 @@ namespace Microsoft.SSHDebugPS
             errorMessage = string.Empty;
             string commandOutput;
             int exitCode;
-            if (!ExecuteCommand(PSOutputParser.PSCommandLine, Timeout.Infinite, out commandOutput, out errorMessage, out exitCode))
+
+            PSOutputParser psOutputParser = new PSOutputParser(systemInformation);
+
+            if (!ExecuteCommand(psOutputParser.PSCommandLine, Timeout.Infinite, out commandOutput, out errorMessage, out exitCode))
             {
                 // Clear output and errorMessage
                 commandOutput = string.Empty;
                 errorMessage = string.Empty;
-                if (!ExecuteCommand(PSOutputParser.AltPSCommandLine, Timeout.Infinite, out commandOutput, out errorMessage, out exitCode))
+                if (!ExecuteCommand(psOutputParser.AltPSCommandLine, Timeout.Infinite, out commandOutput, out errorMessage, out exitCode))
                 {
                     if (exitCode == 127)
                     {
@@ -174,7 +183,7 @@ namespace Microsoft.SSHDebugPS
                 }
             }
 
-            processes = PSOutputParser.Parse(commandOutput, systemInformation);
+            processes = psOutputParser.Parse(commandOutput);
             return true;
         }
 
