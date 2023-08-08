@@ -1,0 +1,16 @@
+# filename,source-root,source-dir,install-dir
+# Where 'source-root' is either 'src', or 'bin'
+Microsoft.Android.natvis,src,AndroidDebugLauncher,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.AndroidDebugLauncher.dll,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.AndroidDebugLauncher.pkgdef,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.DebugEngineHost.dll,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.IOSDebugLauncher.dll,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.IOSDebugLauncher.pkgdef,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.JDbg.dll,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.MICore.dll,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.MICore.XmlSerializers.dll,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.MIDebugEngine.dll,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.MIDebugEngine.pkgdef,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.SSHDebugPS.dll,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+Microsoft.SSHDebugPS.pkgdef,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
+OpenFolderSchema.json,bin,,\Common7\IDE\CommonExtensions\Microsoft\MDD\Debugger
