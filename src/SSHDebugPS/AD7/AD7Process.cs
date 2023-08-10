@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Flags are only used in ps command scenarios. It will be set to 0 for others.
         /// </summary>
-        private readonly uint _flags;
+        private readonly uint? _flags;
 
         /// <summary>
         /// Returns true if _commandLine appears to hold a real file name + args rather than just a description
@@ -297,7 +297,7 @@ namespace Microsoft.SSHDebugPS
         {
             // For Apple Silicon M1, it is possible that the process we are attaching to is being emulated as x86_64. 
             // The process is emulated if it has process flags has P_TRANSLATED (0x20000).
-            if (_port.IsOSX() && _systemArch == "arm64")
+            if (_port.IsOSX() && _systemArch == "arm64" && _flags.HasValue)
             {
                 if ((_flags & 0x20000) != 0)
                 {

@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Microsoft.DebugEngineHost;
 using Microsoft.SSHDebugPS.Utilities;
@@ -104,13 +106,13 @@ namespace Microsoft.SSHDebugPS
         /// <summary>
         /// Only used by the PSOutputParser
         /// </summary>
-        public uint Flags { get; private set; }
+        public uint? Flags { get; private set; }
         public string SystemArch { get; private set; }
         public string CommandLine { get; private set; }
         public string UserName { get; private set; }
         public bool IsSameUser { get; private set; }
 
-        public Process(uint id, string arch, uint flags, string userName, string commandLine, bool isSameUser)
+        public Process(uint id, string arch, uint? flags, string userName, string commandLine, bool isSameUser)
         {
             this.Id = id;
             this.Flags = flags;
@@ -121,15 +123,37 @@ namespace Microsoft.SSHDebugPS
         }
     }
 
+    internal static class OperatingSystemStringConverter
+    {
+        internal static PlatformID ConvertToPlatformID(string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                value = value.ToLowerInvariant();
+                if (value.Contains("darwin"))
+                {
+                    return PlatformID.MacOSX;
+                } else if (value.Contains("linux"))
+                {
+                    return PlatformID.Unix;
+                }
+            }
+            Debug.Fail($"Expected a valid platform '{value}' of darwin or linux, but falling back to linux.");
+            return PlatformID.Unix;
+        }
+    }
+
     internal class SystemInformation
     {
         public string UserName { get; private set; }
         public string Architecture { get; private set; }
+        public PlatformID Platform { get; private set; }
 
-        public SystemInformation(string username, string architecture)
+        public SystemInformation(string username, string architecture, PlatformID platform)
         {
             this.UserName = username;
             this.Architecture = architecture;
+            Platform = platform;
         }
     }
 }
