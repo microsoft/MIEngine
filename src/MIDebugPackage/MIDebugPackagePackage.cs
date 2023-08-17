@@ -403,6 +403,16 @@ namespace Microsoft.MIDebugPackage
         private void EnableLogging(bool sendToOutputWindow, string logFile)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
+
+            IVsDebugger debugger = (IVsDebugger)GetService(typeof(IVsDebugger));
+            DBGMODE[] mode = new DBGMODE[] { DBGMODE.DBGMODE_Design };
+            int hr = debugger.GetMode(mode);
+
+            if (hr == VSConstants.S_OK && mode[0] != DBGMODE.DBGMODE_Design)
+            {
+                throw new ArgumentException("Unable to update MIDebugLog while debugging.");
+            }
+
             try
             {
                 MIDebugCommandDispatcher.EnableLogging(sendToOutputWindow, logFile);

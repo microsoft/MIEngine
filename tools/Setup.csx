@@ -218,7 +218,7 @@ class Setup {
         {
             listFilePath = Path.Join(scriptDirectoryPath, "VS.list");
             // Use <Configuration> folder.
-            binDirectoryPath = Path.Join(binDirectoryPath, Configuration.ToString());
+            binDirectoryPath = Path.Join(binDirectoryPath, "Lab." + Configuration.ToString());
         }
         else if (Client == Client.VSCode)
         {
