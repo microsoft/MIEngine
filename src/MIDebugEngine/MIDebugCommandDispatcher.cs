@@ -4,6 +4,7 @@
 using MICore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -89,6 +90,23 @@ namespace Microsoft.MIDebugEngine
 
         public static void EnableLogging(bool output, string logFile)
         {
+            if (!string.IsNullOrEmpty(logFile))
+            {
+                string tempDirectory = Path.GetTempPath();
+                if (Path.IsPathRooted(logFile) || (!string.IsNullOrEmpty(tempDirectory) && Directory.Exists(tempDirectory)))
+                {
+                    string filePath = Path.Combine(tempDirectory, logFile);
+
+                    File.CreateText(filePath).Dispose(); // Test to see if we can create a text file in HostLogChannel. This will allow the error to be shown when enabling the setting.
+
+                    logFile = filePath;
+                }
+                else
+                {
+                    throw new ArgumentOutOfRangeException(nameof(logFile));
+                }
+            }
+
             Logger.CmdLogInfo.logFile = logFile;
             if (output)
                 Logger.CmdLogInfo.logToOutput = WriteLogToOutput;
