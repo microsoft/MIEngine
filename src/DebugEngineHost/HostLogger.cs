@@ -54,7 +54,9 @@ namespace Microsoft.DebugEngineHost
 
         public static void Reset()
         {
+            s_natvisLogChannel?.Close();
             s_natvisLogChannel = null;
+            s_engineLogChannel?.Close();
             s_engineLogChannel = null;
         }
     }
