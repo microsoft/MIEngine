@@ -305,9 +305,79 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
+        private class DisasmAddressRange
+        {
+            public readonly string Symbol;
+            public ulong StartAddress;
+            public ulong EndAddress;
+            private readonly Dictionary<ulong, DisasmInstruction> _AddressToInstruction;
+
+            public DisasmAddressRange(DisasmInstruction instruction)
+            {
+                Symbol = instruction.Symbol;
+                StartAddress = instruction.Addr;
+                EndAddress = instruction.Addr + 1;
+                _AddressToInstruction = new Dictionary<ulong, DisasmInstruction>()
+                {
+                    {instruction.Addr, instruction}
+                };
+            }
+
+            public void UpdateEndAddress(DisasmInstruction instruction)
+            {
+                EndAddress = instruction.Addr + 1;
+                _AddressToInstruction.Add(instruction.Addr, instruction);
+            }
+
+            public void MapSourceToInstructions(DebuggedProcess process, TupleValue[] src_and_asm_lines)
+            {
+                /* Example response
+                 *  [
+                 *   {
+                 *      line="15",
+                 *      file="main.cpp",
+                 *      fullname="/home/cpp/main.cpp",
+                 *      line_asm_insn=[
+                 *          {
+                 *              address="0x0000000008001485",
+                 *              func-name="main(int, char**)",
+                 *              offset="316",
+                 *              opcodes="83 bd 4c ff ff ff 00",
+                 *              inst="cmpl   $0x0,-0xb4(%rbp)"
+                 *          },
+                 *          {
+                 *              address="0x000000000800148c",
+                 *              func-name="main(int, char**)",
+                 *              offset="323",
+                 *              opcodes="75 07",
+                 *              inst="jne    0x8001495 <main(int, char**)+332>"
+                 *          }
+                 *      ]
+                 *   }
+                 *  ]
+                 */
+                foreach (TupleValue src_and_asm_line in src_and_asm_lines)
+                {
+                    uint line = src_and_asm_line.FindUint("line");
+                    string file = process.GetMappedFileFromTuple(src_and_asm_line);
+                    ValueListValue line_asm_instructions = src_and_asm_line.Find<ValueListValue>("line_asm_insn");
+                    foreach (ResultValue line_asm_insn in line_asm_instructions.Content)
+                    {
+                        ulong address = line_asm_insn.FindAddr("address");
+                        _AddressToInstruction[address].File = file;
+                        _AddressToInstruction[address].Line = line;
+                    }
+                }
+            }
+        }
+
         // this is inefficient so we try and grab everything in one gulp
         internal static async Task<DisasmInstruction[]> Disassemble(DebuggedProcess process, ulong startAddr, ulong endAddr)
         {
+            // Due to GDB not returning source information when requesting outside of the range of user code.
+            // We first get disassembly with opcodes, then map each Symbol to an address range and attempt to retrieve source information per Symbol.
+
+            // Mode 2 - disassembly with raw opcodes
             string cmd = "-data-disassemble -s " + EngineUtils.AsAddr(startAddr, process.Is64BitArch) + " -e " + EngineUtils.AsAddr(endAddr, process.Is64BitArch) + " -- 2";
             Results results = await process.CmdAsync(cmd, ResultClass.None);
             if (results.ResultClass != ResultClass.done)
@@ -315,7 +385,65 @@ namespace Microsoft.MIDebugEngine
                 return null;
             }
 
-            return DecodeDisassemblyInstructions(results.Find<ValueListValue>("asm_insns").AsArray<TupleValue>());
+            DisasmInstruction[] instructions =  DecodeDisassemblyInstructions(results.Find<ValueListValue>("asm_insns").AsArray<TupleValue>());
+
+            if (instructions != null && instructions.Length != 0)
+            {
+                IList<DisasmAddressRange> ranges = new List<DisasmAddressRange>();
+                // Map 'Symbol' (Function Name) to Address Range
+                DisasmAddressRange currentRange = new DisasmAddressRange(instructions[0]);
+                for (int i = 1; i < instructions.Length; i++)
+                {
+                    if (currentRange.Symbol == instructions[i].Symbol)
+                    {
+                        currentRange.UpdateEndAddress(instructions[i]);
+                    }
+                    else
+                    {
+                        ranges.Add(currentRange);
+
+                        // Start new range
+                        currentRange = new DisasmAddressRange(instructions[i]);
+                    }
+                }
+
+                // Add the last range
+                ranges.Add(currentRange);
+
+                foreach (DisasmAddressRange dismAddressRange in ranges)
+                {
+                    // Mode 5 - mixed source and disassembly with raw opcodes
+                    cmd = "-data-disassemble -s " + EngineUtils.AsAddr(dismAddressRange.StartAddress, process.Is64BitArch) + " -e " + EngineUtils.AsAddr(dismAddressRange.EndAddress, process.Is64BitArch) + " -- 5";
+                    results = await process.CmdAsync(cmd, ResultClass.None);
+                    if (results.ResultClass != ResultClass.done)
+                    {
+                        return null;
+                    }
+
+                    /* Example response
+                    * asm_insns=[
+                    *  src_and_asm_line={
+                    *      line="15",
+                    *      file="main.cpp",
+                    *      fullname="/home/cpp/main.cpp",
+                    *      line_asm_insn=[ ... ]
+                    *  }
+                    * ]
+                    */
+                    ResultListValue asm_insns = results.TryFind<ResultListValue>("asm_insns");
+                    if (asm_insns != null)
+                    {
+                        TupleValue[] values = asm_insns.FindAll<TupleValue>("src_and_asm_line");
+                        if (values != null)
+                        {
+                            dismAddressRange.MapSourceToInstructions(process, values);
+                        }
+                    }
+                }
+            }
+
+
+            return instructions;
         }
 
         // this is inefficient so we try and grab everything in one gulp
