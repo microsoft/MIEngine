@@ -189,7 +189,7 @@ namespace Microsoft.MIDebugEngine
         {
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
-            Logger.LoadMIDebugLogger();
+            Logger.EnsureInitialized();
 
             if (celtPrograms != 1)
             {
@@ -539,7 +539,7 @@ namespace Microsoft.MIDebugEngine
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
             // Check if the logger was enabled late.
-            Logger.LoadMIDebugLogger();
+            Logger.EnsureInitialized();
 
             process = null;
 
