@@ -97,6 +97,7 @@ namespace MICore
             {
                 HostLogger.Reset();
                 s_isEnabled = false;
+                s_isInitialized = false;
             }
         }
 
