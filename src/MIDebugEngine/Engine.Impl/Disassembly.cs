@@ -308,8 +308,21 @@ namespace Microsoft.MIDebugEngine
         // this is inefficient so we try and grab everything in one gulp
         internal static async Task<DisasmInstruction[]> Disassemble(DebuggedProcess process, ulong startAddr, ulong endAddr)
         {
-            string cmd = "-data-disassemble -s " + EngineUtils.AsAddr(startAddr, process.Is64BitArch) + " -e " + EngineUtils.AsAddr(endAddr, process.Is64BitArch) + " -- 2";
-            Results results = await process.CmdAsync(cmd, ResultClass.None);
+            string cmd;
+            string startAddrStr;
+            string endAddrStr;
+            int i = 0;
+            Results results;
+            do
+            {
+                startAddrStr = EngineUtils.AsAddr(startAddr, process.Is64BitArch);
+                endAddrStr = EngineUtils.AsAddr(endAddr, process.Is64BitArch);
+                cmd = "-data-disassemble -s " + startAddrStr + " -e " + endAddrStr + " -- 2";
+                results = await process.CmdAsync(cmd, ResultClass.None);
+                --startAddr;
+                ++i;
+            } while (results.ResultClass != ResultClass.done && i < process.MaxInstructionSize);
+            
             if (results.ResultClass != ResultClass.done)
             {
                 return null;
