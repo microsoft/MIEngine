@@ -52,6 +52,7 @@ namespace Microsoft.MIDebugEngine
         private IProcessSequence _childProcessHandler;
         private bool _deleteEntryPointBreakpoint;
         private string _entryPointBreakpoint = string.Empty;
+        private bool? _simpleValuesExcludesRefTypes = null;
 
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
@@ -689,17 +690,11 @@ namespace Microsoft.MIDebugEngine
                 LocalLaunchOptions localLaunchOptions = _launchOptions as LocalLaunchOptions;
                 if (this.IsCoreDump)
                 {
-                    // Add executable information
-                    this.AddExecutablePathCommand(commands);
+                    // Load executable and core dump
+                    this.AddExecutableAndCorePathCommand(commands);
 
-                    // Important: this must occur after file-exec-and-symbols but before anything else.
+                    // Important: this must occur after executable load but before anything else.
                     this.AddGetTargetArchitectureCommand(commands);
-
-                    // Add core dump information (linux/mac does not support quotes around this path but spaces in the path do work)
-                    string coreDump = this.UseUnixPathSeparators ? _launchOptions.CoreDumpPath : this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath, true);
-                    string coreDumpCommand = _launchOptions.DebuggerMIMode == MIMode.Lldb ? String.Concat("target create --core ", coreDump) : String.Concat("-target-select core ", coreDump);
-                    string coreDumpDescription = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
-                    commands.Add(new LaunchCommand(coreDumpCommand, coreDumpDescription, ignoreFailures: false));
                 }
                 else if (_launchOptions.ProcessId.HasValue)
                 {
@@ -915,6 +910,30 @@ namespace Microsoft.MIDebugEngine
             };
 
             commands.Add(new LaunchCommand("-file-exec-and-symbols " + exe, description, ignoreFailures: false, failureHandler: failureHandler));
+        }
+
+        private void AddExecutableAndCorePathCommand(IList<LaunchCommand> commands)
+        {
+            string command;
+            if (_launchOptions.DebuggerMIMode == MIMode.Lldb)
+            {
+                // LLDB requires loading the executable and the core into the same target, using one command. Quotes in the path are supported.
+                string exePath = this.EnsureProperPathSeparators(_launchOptions.ExePath, true);
+                string corePath = this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath, true);
+                command = String.Concat("file ", exePath, " -c ", corePath);
+            }
+            else
+            {
+                // GDB requires loading the executable and core separately.
+                // Note: Linux/mac do not support quotes around this path, but spaces in the path do work.
+                this.AddExecutablePathCommand(commands);
+                string corePathNoQuotes = this.EnsureProperPathSeparators(_launchOptions.CoreDumpPath, true, true);
+                command = String.Concat("-target-select core ", corePathNoQuotes);
+            }
+
+            // Load core dump information
+            string description = String.Format(CultureInfo.CurrentCulture, ResourceStrings.LoadingCoreDumpMessage, _launchOptions.CoreDumpPath);
+            commands.Add(new LaunchCommand(command, description, ignoreFailures: false));
         }
 
         private void DetermineAndAddExecutablePathCommand(IList<LaunchCommand> commands, UnixShellPortLaunchOptions launchOptions)
@@ -1332,14 +1351,18 @@ namespace Microsoft.MIDebugEngine
             else if (reason == "signal-received")
             {
                 string name = results.Results.TryFindString("signal-name");
+                AsyncBreakSignal signal = MICommandFactory.GetAsyncBreakSignal(results.Results);
+                bool isAsyncBreak = signal == AsyncBreakSignal.SIGTRAP || (IsUsingExecInterrupt && signal == AsyncBreakSignal.SIGINT);
                 if ((name == "SIG32") || (name == "SIG33"))
                 {
                     // we are going to ignore these (Sigma) signals for now
                     CmdContinueAsyncConditional(breakRequest);
                 }
-                else if (MICommandFactory.IsAsyncBreakSignal(results.Results))
+                else if (isAsyncBreak)
                 {
                     _callback.OnAsyncBreakComplete(thread);
+                    // Reset flag for real async break
+                    IsUsingExecInterrupt = false;
                 }
                 else
                 {
@@ -1981,8 +2004,26 @@ namespace Microsoft.MIDebugEngine
         //NOTE: eval is not called
         public async Task<List<ArgumentList>> GetParameterInfoOnly(AD7Thread thread, bool values, bool types, uint low, uint high)
         {
-            // If values are requested, request simple values, otherwise we'll use -var-create to get the type of argument it is.
-            var frames = await MICommandFactory.StackListArguments(values ? PrintValue.SimpleValues : PrintValue.NoValues, thread.Id, low, high);
+            PrintValue printValue = values ? PrintValue.SimpleValues : PrintValue.NoValues;
+            if (types && !values)
+            {
+                // We want types but not values. There is no PrintValue option for this, but if
+                // SimpleValues excludes printing values for references to compound types, then
+                // the fastest approach is to use SimpleValues (and ignore the values).
+                // Otherwise, the potential performance penalty of fetching values for
+                // references to compound types is too high, so use NoValues and follow up with
+                // -var-create to get the types.
+                if (!_simpleValuesExcludesRefTypes.HasValue)
+                {
+                    _simpleValuesExcludesRefTypes  = await this.MICommandFactory.SupportsSimpleValuesExcludesRefTypes();
+                }
+                if (_simpleValuesExcludesRefTypes.Value)
+                {
+                    printValue = PrintValue.SimpleValues;
+                }
+            }
+
+            var frames = await MICommandFactory.StackListArguments(printValue, thread.Id, low, high);
             List<ArgumentList> parameters = new List<ArgumentList>();
 
             foreach (var f in frames)
