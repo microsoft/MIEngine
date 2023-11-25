@@ -370,7 +370,7 @@ namespace MICore
 
         public static ReadOnlyCollection<SourceMapEntry> CreateCollection(Dictionary<string, object> source)
         {
-            IList<SourceMapEntry> sourceMaps = new List<SourceMapEntry>(source.Keys.Count);
+            var sourceMaps = new List<SourceMapEntry>(source.Keys.Count);
 
             foreach (var item in source)
             {
@@ -416,6 +416,7 @@ namespace MICore
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapInvalidEditorPath));
                 }
             }
+            sourceMaps.Sort((x, y) => string.CompareOrdinal(y.CompileTimePath, x.CompileTimePath));
             return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);
         }
     }
