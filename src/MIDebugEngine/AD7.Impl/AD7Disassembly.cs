@@ -41,7 +41,7 @@ namespace Microsoft.MIDebugEngine
             }
 
             puCodeLocationId = 0;
-            return Constants.S_FALSE;
+            return Constants.E_FAIL;
         }
 
         public int GetCurrentLocation(out ulong puCodeLocationId)

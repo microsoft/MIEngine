@@ -242,8 +242,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
                 }
-                AD7Property propArray = new AD7Property(_engine, viArray);
-                v = propArray._variableInformation.Value;
+                v = viArray.Value;
                 v.Trim();
                 if (v.Length == 0)
                 {
