@@ -229,11 +229,37 @@ namespace Microsoft.MIDebugEngine
             {
                 return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
             }
-            v = v.Trim();
+
+            if ((v[0] == '[') && (v[v.Length-1] == ']'))
+            {
+                // this is an array evaluation result from GDB, which does not contain an address
+                // VS on the other hand supports direct array evaluations without address operator
+                // therefore we need to re-evaluate with an address operator
+                //
+                VariableInformation viArray = new VariableInformation("&(" + _variableInformation.FullName() + ")", (VariableInformation)_variableInformation);
+                viArray.SyncEval();
+                if (viArray.Error)
+                {
+                    return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
+                }
+                v = viArray.Value;
+                v.Trim();
+                if (v.Length == 0)
+                {
+                    return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
+                }
+            }
+
             if (v[0] == '{')
             {
+                var index = v.IndexOf('}');
+                if (index == -1)
+                {
+                    // syntax error!
+                    return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
+                }
                 // strip type name and trailing spaces
-                v = v.Substring(v.IndexOf('}') + 1);
+                v = v.Substring(index+1);
                 v = v.Trim();
             }
             int i = v.IndexOf(' ');
