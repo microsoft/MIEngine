@@ -416,7 +416,11 @@ namespace MICore
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_SourceFileMapInvalidEditorPath));
                 }
             }
+
+            // Ensure the map is sorted such that more specific directories are in front of less specific by sorting the map
+            // in descending order of the compile time path
             sourceMaps.Sort((x, y) => string.CompareOrdinal(y.CompileTimePath, x.CompileTimePath));
+            
             return new ReadOnlyCollection<SourceMapEntry>(sourceMaps);
         }
     }
