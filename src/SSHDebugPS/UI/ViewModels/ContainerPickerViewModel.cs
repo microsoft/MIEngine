@@ -296,7 +296,6 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        // Default is to Support SSH Connections
         private bool _isMaximized = false;
         public bool IsMaximized
         {
