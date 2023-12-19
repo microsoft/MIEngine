@@ -297,6 +297,21 @@ namespace Microsoft.SSHDebugPS.UI
         }
 
         // Default is to Support SSH Connections
+        private bool _isMaximized = false;
+        public bool IsMaximized
+        {
+            get
+            {
+                return _isMaximized;
+            }
+            set
+            {
+                _isMaximized = value;
+                OnPropertyChanged(nameof(IsMaximized));
+            }
+        }
+
+        // Default is to Support SSH Connections
         private bool _supportSSHConnections = true;
         public bool SupportSSHConnections
         {

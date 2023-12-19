@@ -4,15 +4,18 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using Microsoft.SSHDebugPS.Docker;
 using Microsoft.SSHDebugPS.UI;
 using Microsoft.SSHDebugPS.Utilities;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.SSHDebugPS.UI
@@ -24,10 +27,12 @@ namespace Microsoft.SSHDebugPS.UI
     {
         public ContainerPickerDialogWindow(bool supportSSHConnections)
         {
-            InitializeComponent();
             _model = new ContainerPickerViewModel(supportSSHConnections);
             this.DataContext = _model;
             this.Loaded += OnWindowLoaded;
+            StateChanged += OnWindowStateChanged;
+
+            InitializeComponent();
         }
 
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
@@ -35,13 +40,13 @@ namespace Microsoft.SSHDebugPS.UI
             bool listItemFocused = false;
             try
             {
-                if (ContainerListBox != null && ContainerListBox.HasItems)
+                if (ContainerListView != null && ContainerListView.HasItems)
                 {
-                    if (ContainerListBox.SelectedItem == null)
+                    if (ContainerListView.SelectedItem == null)
                     {
-                        ContainerListBox.SelectedIndex = 0;
+                        ContainerListView.SelectedIndex = 0;
                     }
-                    ((ListBoxItem)ContainerListBox.ItemContainerGenerator.ContainerFromItem(ContainerListBox.SelectedItem)).Focus();
+                    ((ListBoxItem)ContainerListView.ItemContainerGenerator.ContainerFromItem(ContainerListView.SelectedItem)).Focus();
                     listItemFocused = true;
                 }
             }
@@ -56,6 +61,26 @@ namespace Microsoft.SSHDebugPS.UI
                 ConnectionTypeComboBox.Focus();
             }
             e.Handled = true;
+        }
+
+        private void OnWindowStateChanged(object sender, EventArgs e)
+        {
+            _model.IsMaximized = WindowState is WindowState.Maximized;
+        }
+
+        private void MaximizeOrRestoreButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = _model.IsMaximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseWindow();
+        }
+
+        private void CloseWindow()
+        {
+            Close();
         }
 
         #region Properties
@@ -87,7 +112,7 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        private void ContainerListBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        private void ContainerListView_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
             ListBoxItem item = e.OriginalSource as ListBoxItem;
 
@@ -97,7 +122,7 @@ namespace Microsoft.SSHDebugPS.UI
             }
         }
 
-        private void ContainerListBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void ContainerListView_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (sender is ListBox list)
             {
