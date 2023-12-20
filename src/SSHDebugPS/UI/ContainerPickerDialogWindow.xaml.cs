@@ -30,7 +30,6 @@ namespace Microsoft.SSHDebugPS.UI
             _model = new ContainerPickerViewModel(supportSSHConnections);
             this.DataContext = _model;
             this.Loaded += OnWindowLoaded;
-            StateChanged += OnWindowStateChanged;
 
             InitializeComponent();
         }
@@ -62,17 +61,6 @@ namespace Microsoft.SSHDebugPS.UI
             }
             e.Handled = true;
         }
-
-        private void OnWindowStateChanged(object sender, EventArgs e)
-        {
-            _model.IsMaximized = WindowState is WindowState.Maximized;
-        }
-
-        private void MaximizeOrRestoreButton_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = _model.IsMaximized ? WindowState.Normal : WindowState.Maximized;
-        }
-
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             CloseWindow();
