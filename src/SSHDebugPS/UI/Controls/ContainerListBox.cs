@@ -6,11 +6,11 @@ using System.Windows.Controls;
 
 namespace Microsoft.SSHDebugPS.UI
 {
-    public class ContainerListBox : ListBox
+    public class ContainerListView : ListView
     {
         protected override AutomationPeer OnCreateAutomationPeer()
         {
-            return new ContainerListBoxAutomationPeer(this);
+            return new ContainerListViewAutomationPeer(this);
         }
     }
 }

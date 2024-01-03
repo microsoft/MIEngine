@@ -9,12 +9,13 @@ namespace Microsoft.SSHDebugPS.Docker
 {
     internal class BoolToVisibilityConverter : IValueConverter
     {
+        public bool Negative { get; set; }
+
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (targetType == typeof(Visibility))
             {
-                // Could have a parameter
-                if (parameter != null)
+                if (Negative)
                 {
                     // Only allowed param is flip
                     return (bool)value ? Visibility.Collapsed : Visibility.Visible;

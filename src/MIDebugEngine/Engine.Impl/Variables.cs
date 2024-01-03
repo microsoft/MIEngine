@@ -425,6 +425,9 @@ namespace Microsoft.MIDebugEngine
                 case "su":
                 case "sub":
                     return "(const char16_t*)(" + exp.Substring(0, lastComma) + ")";
+                case "s32":
+                case "s32b":
+                    return "(const char32_t*)(" + exp.Substring(0, lastComma) + ")";
                 case "c":
                     return "(char)(" + exp.Substring(0, lastComma) + ")";
                 // just remove and ignore these
