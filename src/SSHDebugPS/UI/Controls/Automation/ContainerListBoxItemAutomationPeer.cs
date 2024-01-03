@@ -11,12 +11,12 @@ namespace Microsoft.SSHDebugPS.UI
     /// This automationpeer class is here to support the custom expand/collapse action on the listbox item
     /// </summary>
     /// <typeparam name="T">Must be IContainerViewModel</typeparam>
-    public class ContainerListBoxItemAutomationPeer<T> : 
+    public class ContainerListViewItemAutomationPeer<T> : 
         ListBoxItemAutomationPeer, 
         IExpandCollapseProvider 
         where T : IContainerViewModel
     {
-        public ContainerListBoxItemAutomationPeer(object item, ContainerListBoxAutomationPeer ownerAutomationPeer)
+        public ContainerListViewItemAutomationPeer(object item, ContainerListViewAutomationPeer ownerAutomationPeer)
             : base(item, ownerAutomationPeer)
         { }
 
