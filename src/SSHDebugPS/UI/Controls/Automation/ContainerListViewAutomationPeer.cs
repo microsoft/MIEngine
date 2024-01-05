@@ -5,15 +5,15 @@ using System.Windows.Automation.Peers;
 
 namespace Microsoft.SSHDebugPS.UI
 {
-    public class ContainerListBoxAutomationPeer : ListBoxAutomationPeer
+    public class ContainerListViewAutomationPeer : ListViewAutomationPeer
     {
-        public ContainerListBoxAutomationPeer(ContainerListBox owner)
+        public ContainerListViewAutomationPeer(ContainerListView owner)
             : base(owner)
         { }
 
         protected override ItemAutomationPeer CreateItemAutomationPeer(object item)
         {
-            return new ContainerListBoxItemAutomationPeer<DockerContainerViewModel>(item, this);
+            return new ContainerListViewItemAutomationPeer<DockerContainerViewModel>(item, this);
         }
     }
 }
