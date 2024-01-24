@@ -13,9 +13,9 @@ steps:
     CleanTargetFolder: true
     OverWrite: true
 
-- template: ../tasks/PublishPipelineArtifact.yml
+- template: ../tasks/1ES/PublishPipelineArtifact.yml
   parameters:
     displayName: 'Publish Binaries'
-    path: ${{ parameters.TargetFolder }}
-    artifactName: '${{ parameters.ArtifactName }}'
+    targetPath: ${{ parameters.TargetFolder }}
+    artifactName:  '${{ parameters.ArtifactName }}'
 ...

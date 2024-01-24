@@ -1,0 +1,15 @@
+---
+parameters:
+  displayName: 'Publish Pipeline Artifact'
+  targetPath: '$(Build.ArtifactStagingDirectory)'
+  artifactName: 'drop'
+  condition: 'succeeded()'
+
+steps:
+- task: 1ES.PublishPipelineArtifact@1
+  displayName: ${{ parameters.displayName }}
+  inputs:
+    targetPath: ${{ parameters.targetPath }}
+    artifactName:  '${{ parameters.artifactName }}'
+  condition: ${{ parameters.condition }}
+...

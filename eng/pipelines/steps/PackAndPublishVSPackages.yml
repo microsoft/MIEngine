@@ -12,10 +12,10 @@ steps:
     echo ##vso[task.setvariable variable=NugetPackageVersion;]%NugetPackageVersion%
   displayName: 'Get NuGet Version'
 
-- template: ../tasks/PublishPipelineArtifact.yml
+- template: ../tasks/1ES/PublishPipelineArtifact.yml
   parameters:
     displayName: 'Publish File Version'
-    path: '$(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt' 
+    targetPath: '$(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt'
     artifactName: 'PackageVersion'
 
 - template: ../tasks/NuGetCommand.yml
@@ -27,11 +27,13 @@ steps:
     buildProperties: 'version=$(NugetPackageVersion)'
     basePath: ${{ parameters.BasePath }}
 
-- template: ../tasks/NuGetCommand.yml
-  parameters:
-    displayName: 'NuGet push'
-    command: push
-    searchPatternPush: '$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.MIEngine.*.nupkg;$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.UnixPortSupplier.*.nupkg'
-    feedPublish: '97a41293-2972-4f48-8c0e-05493ae82010' # VS
-    condition: and(succeeded(), eq(variables['SignType'], 'real'))
+- task: 1ES.PublishNuget@1
+  displayName: Publish Nuget package
+  condition: and(succeeded(), eq(variables['SignType'], 'real'))
+  inputs:
+    useDotNetTask: false # The default is false to use the NuGetCommand task. Set to true to use the DotNetCoreCLI task to publish packages.
+    packagesToPush: '$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.MIEngine.*.nupkg;$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.UnixPortSupplier.*.nupkg'
+    packageParentPath: '$(Build.SourcesDirectory)'
+    publishVstsFeed: '97a41293-2972-4f48-8c0e-05493ae82010' # VS
+    nuGetFeedType: internal  # Change to external when publishing to external feed
 ...
