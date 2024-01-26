@@ -10,6 +10,6 @@ steps:
   displayName: ${{ parameters.displayName }}
   inputs:
     targetPath: ${{ parameters.targetPath }}
-    artifactName:  '${{ parameters.artifactName }}'
+    artifactName: '${{ parameters.artifactName }}'
   condition: ${{ parameters.condition }}
 ...

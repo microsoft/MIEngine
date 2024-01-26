@@ -17,5 +17,5 @@ steps:
   parameters:
     displayName: 'Publish Binaries'
     targetPath: ${{ parameters.TargetFolder }}
-    artifactName:  '${{ parameters.ArtifactName }}'
+    artifactName: '${{ parameters.ArtifactName }}'
 ...
