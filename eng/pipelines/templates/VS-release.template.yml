@@ -6,10 +6,6 @@ steps:
 
 - template: ../tasks/NuGetToolInstaller.yml
 
-- template: ../tasks/MicroBuildSigningPlugin.yml
-
-- template: ../tasks/MicroBuildLocalizationPlugin.yml
-
 - template: ../steps/BuildSolution.yml
   parameters:
     Configuration: 'Lab.Release'
