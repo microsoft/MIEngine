@@ -31,15 +31,17 @@ steps:
       "SIGN_TYPE": "$(SignType)" 
     } 
 
-- template: ../tasks/PublishPipelineArtifact.yml
+- template: ../tasks/1ES/PublishPipelineArtifact.yml
   parameters:
+    displayName: 'Publish binlogs'
+    targetPath: '$(Build.BinariesDirectory)/build_logs/'
     artifactName: '${{ parameters.Configuration }}_binlog'
-    path: '$(Build.BinariesDirectory)/build_logs/'
     condition: ne(variables['System.Debug'], '')
 
-- template: ../tasks/PublishPipelineArtifact.yml
+- template: ../tasks/1ES/PublishPipelineArtifact.yml
   parameters:
+    displayName: 'Publish debug binaries'
+    targetPath: '$(Build.SourcesDirectory)\bin\${{ parameters.Configuration }}'
     artifactName: '${{ parameters.Configuration }}_debug_bin'
-    path: '$(Build.SourcesDirectory)\bin\${{ parameters.Configuration }}'
     condition: ne(variables['System.Debug'], '')
 ...
