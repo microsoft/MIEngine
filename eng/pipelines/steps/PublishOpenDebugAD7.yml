@@ -39,11 +39,11 @@ steps:
       copy ${{ parameters.SignedBinariesFolder }}\Release\osxlaunchhelper.scpt $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     displayName: "Copy osxlaunchhelper.scpt"
 
-  - template: ../tasks/PublishPipelineArtifact.yml
+  - template: ../tasks/1ES/PublishPipelineArtifact.yml
     parameters:
       displayName: 'Publish Unsigned ${{ parameters.RuntimeID }}'
-      path: '$(Build.StagingDirectory)\${{ parameters.RuntimeID }}'
-      artifactName: 'unsigned_${{ parameters.RuntimeID }}_binaries'  
+      targetPath: '$(Build.StagingDirectory)\${{ parameters.RuntimeID }}'
+      artifactName: 'unsigned_${{ parameters.RuntimeID }}_binaries' 
 
 # Publishing for non-macOS
 - ${{ if not(startsWith(parameters.RuntimeID, 'osx-')) }}:
@@ -51,8 +51,8 @@ steps:
       Compress-Archive -Path $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters -DestinationPath $(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip
     displayName: "Create ${{ parameters.RuntimeID}}.zip"  
 
-  - template: ../tasks/PublishPipelineArtifact.yml
+  - template: ../tasks/1ES/PublishPipelineArtifact.yml
     parameters:
       displayName: 'Publish ${{ parameters.RuntimeID }}'
-      path: '$(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip'
+      targetPath: '$(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip'
       artifactName: '${{ parameters.RuntimeID }}_zip'

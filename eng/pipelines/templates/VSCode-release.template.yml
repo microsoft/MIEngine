@@ -8,8 +8,6 @@ steps:
 
 - template: ../tasks/NuGetToolInstaller.yml
 
-- template: ../tasks/MicroBuildSigningPlugin.yml
-
 - template: ../tasks/UseDotNet.yml
 
 - template: ../steps/BuildSolution.yml
