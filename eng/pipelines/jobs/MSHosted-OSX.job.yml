@@ -9,7 +9,9 @@ jobs:
 - job:
   displayName: ${{ parameters.DisplayName }}
   pool:
+    name: Azure Pipelines
     vmImage: 'macOS-latest'
+    os: macOS
   steps:
   - ${{ parameters.JobTemplate }}
 ...

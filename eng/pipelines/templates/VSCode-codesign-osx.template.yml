@@ -22,9 +22,9 @@ steps:
       echo "#[command] zip -r $(Pipeline.Workspace)/${{ rid }}.zip ./debugAdapters"
       zip -r $(Pipeline.Workspace)/${{ rid }}.zip ./debugAdapters
 
-  - template: ../tasks/PublishPipelineArtifact.yml
+  - template: ../tasks/1ES/PublishPipelineArtifact.yml
     parameters:
       displayName: 'Publish Binaries'
-      path: '$(Pipeline.Workspace)/${{ rid }}.zip'
+      targetPath: '$(Pipeline.Workspace)/${{ rid }}.zip'
       artifactName: 'unsigned_${{ rid }}_zip'
 ...
