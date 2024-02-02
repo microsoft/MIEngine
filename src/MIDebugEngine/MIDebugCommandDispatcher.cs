@@ -41,7 +41,7 @@ namespace Microsoft.MIDebugEngine
             return GetLastProcess().ProcessState;
         }
 
-        public static async Task<Results> SetSelectedThread(int threadId)
+        public static async Task<Results> ViewSelectedThreadInfo(int threadId)
         {
             GetLastProcess().MICommandFactory.DefineCurrentThread(threadId);
             return await Task.FromResult<Results>(new Results(ResultClass.done));
@@ -60,7 +60,7 @@ namespace Microsoft.MIDebugEngine
             }
             else
             {
-                return null;
+                throw new ArgumentOutOfRangeException(nameof(command));
             }
         }
 
