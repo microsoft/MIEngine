@@ -213,6 +213,28 @@ namespace Microsoft.MIDebugEngine
                 new Entry( "mm[0-7][0-7]", true, "AMD3DNow" ),
                 new Entry( "mm[0-7]", true, "MMX" ),
             };
+            private static readonly Entry[] s_IntelGTRegisters = new Entry[]
+            {
+                new Entry( "r[0-9]+$", true, "GRF"),
+                new Entry( "a[0-9]+", true, "ARF"),
+                new Entry( "f[0-9]+", true, "ARF"),
+                new Entry( "ce", false, "ARF"),
+                new Entry( "sr[0-9]+", true, "ARF"),
+                new Entry( "cr[0-9]+", true, "ARF"),
+                new Entry( "acc[0-9]+", true, "ARF"),
+                new Entry( "mme[0-9]+", true, "ARF"),
+                new Entry( "dbg[0-9]+", true, "ARF"),
+                new Entry( "genstbase", false, "Virtual"),
+                new Entry( "sustbase", false, "Virtual"),
+                new Entry( "dynbase", false, "Virtual"),
+                new Entry( "iobase", false, "Virtual"),
+                new Entry( "isabase", false, "Virtual"),
+                new Entry( "blsustbase", false, "Virtual"),
+                new Entry( "blsastbase", false, "Virtual"),
+                new Entry( "btbase", false, "Virtual"),
+                new Entry( "scrbase", false, "Virtual"),
+
+            };
 
             private static readonly Entry[] s_allRegisters = new Entry[]
             {
@@ -230,6 +252,10 @@ namespace Microsoft.MIDebugEngine
                 else if (registerNames.Contains("eax")) // x86 register set
                 {
                     map._map = s_X86Registers;
+                }
+                else if (registerNames.Contains("isabase") && registerNames.Contains("ce")) // Intel GPU register set
+                {
+                    map._map = s_IntelGTRegisters;
                 }
                 else
                 {
