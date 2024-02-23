@@ -161,6 +161,8 @@ namespace MICore
         // The key is the thread group, the value is the pid
         private Dictionary<string, int> _debuggeePids;
 
+        private string _gdbVersion = string.Empty;
+
         public Debugger(LaunchOptions launchOptions, Logger logger)
         {
             _launchOptions = launchOptions;
@@ -316,8 +318,29 @@ namespace MICore
             this.OnStateChanged(mode, _miResults.ParseResultList(strresult));
         }
 
+        private void SetGdbVersion()
+        {
+            if (string.IsNullOrWhiteSpace(_gdbVersion))
+            {
+                _gdbVersion = GdbVersionFromLog();
+            }
+        }
+
+        private void SetMajorGdbVersion()
+        {
+            int majorVersion = -1;
+            if (!string.IsNullOrWhiteSpace(_gdbVersion))
+            {
+                int.TryParse(_gdbVersion.Split('.').FirstOrDefault(), out majorVersion);
+            }
+            MICommandFactory.MajorVersion = majorVersion;
+        }
+
         protected void OnStateChanged(string mode, Results results)
         {
+            SetGdbVersion();
+            SetMajorGdbVersion();
+
             if (mode == "stopped")
             {
                 OnStopped(results);
@@ -492,8 +515,6 @@ namespace MICore
             {
                 _consoleDebuggerInitializeCompletionSource = null;
 
-                // We no longer care about keeping these, so empty them out
-                _initializationLog = null;
                 _initialErrors = null;
             }
         }
@@ -978,24 +999,16 @@ namespace MICore
                         if (_consoleDebuggerInitializeCompletionSource != null)
                         {
                             MIDebuggerInitializeFailedException exception;
-                            string version = GdbVersionFromLog();
-
-                            int majorVersion = -1;
-                            if (!string.IsNullOrWhiteSpace(version))
-                            {
-                                int.TryParse(version.Split('.').FirstOrDefault(), out majorVersion);
-                            }
-                            MICommandFactory.MajorVersion = majorVersion;
-
+                            
                             // We can't use IsMinGW or IsCygwin because we never connected to the debugger
                             bool isMinGWOrCygwin = _launchOptions is LocalLaunchOptions &&
                                     PlatformUtilities.IsWindows() &&
                                     this.MICommandFactory.Mode == MIMode.Gdb;
-                            if (isMinGWOrCygwin && version != null && IsUnsupportedWindowsGdbVersion(version))
+                            if (isMinGWOrCygwin && _gdbVersion != null && IsUnsupportedWindowsGdbVersion(_gdbVersion))
                             {
                                 exception = new MIDebuggerInitializeFailedUnsupportedGdbException(
-                                    this.MICommandFactory.Name, _initialErrors.ToList().AsReadOnly(), _initializationLog.ToList().AsReadOnly(), version);
-                                SendUnsupportedWindowsGdbEvent(version);
+                                    this.MICommandFactory.Name, _initialErrors.ToList().AsReadOnly(), _initializationLog.ToList().AsReadOnly(), _gdbVersion);
+                                SendUnsupportedWindowsGdbEvent(_gdbVersion);
                             }
                             else
                             {
@@ -1039,15 +1052,20 @@ namespace MICore
 
         string GdbVersionFromLog()
         {
-            foreach (string line in _initializationLog)
+            if (_initializationLog != null)
             {
-                // Second set of parenthesis looks for a Cygwin-specific version number
-                // Cygwin example: GNU gdb (GDB) (Cygwin 7.11.1-2) 7.11.1
-                // MinGW example:  GNU gdb (GDB) 8.0.1
-                Match match = Regex.Match(line, "GNU gdb \\(GDB\\) (?:\\(Cygwin (\\d+[\\d\\.-]*)\\) )?(\\d+[\\d\\.-]*)");
-                if (match.Success)
+                foreach (string line in _initializationLog)
                 {
-                    return match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
+                    // Second set of parenthesis looks for a Cygwin-specific version number
+                    // Cygwin example: GNU gdb (GDB) (Cygwin 7.11.1-2) 7.11.1
+                    // MinGW example:  GNU gdb (GDB) 8.0.1
+                    // Intel GNU gdb example: GNU gdb (Intel(R) Distribution for GDB* 2024.1.0) 14.1
+                    Match match = Regex.Match(line,
+                        @"GNU gdb(?: \(GDB\))?(?: \(Cygwin (\d+[\.\d-]*)\)| \(Intel\(R\) Distribution for GDB\* [\d.]+\))? ([\d.]+)");
+                    if (match.Success)
+                    {
+                        return match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
+                    }
                 }
             }
 
