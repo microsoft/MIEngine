@@ -4,6 +4,7 @@ parameters:
   Solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
   Configuration: 'Release'
   BuildArguments: ''
+  OneESPT: false
 
 steps:
 - template: ../tasks/NuGetCommand.yml
@@ -37,6 +38,7 @@ steps:
     targetPath: '$(Build.BinariesDirectory)/build_logs/'
     artifactName: '${{ parameters.Configuration }}_binlog'
     condition: ne(variables['System.Debug'], '')
+    OneESPT: ${{ parameters.OneESPT }}
 
 - template: ../tasks/1ES/PublishPipelineArtifact.yml
   parameters:
@@ -44,4 +46,5 @@ steps:
     targetPath: '$(Build.SourcesDirectory)\bin\${{ parameters.Configuration }}'
     artifactName: '${{ parameters.Configuration }}_debug_bin'
     condition: ne(variables['System.Debug'], '')
+    OneESPT: ${{ parameters.OneESPT }}
 ...
