@@ -17,6 +17,7 @@ steps:
     displayName: 'Publish File Version'
     targetPath: '$(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt'
     artifactName: 'PackageVersion'
+    OneESPT: true
 
 - template: ../tasks/NuGetCommand.yml
   parameters:
