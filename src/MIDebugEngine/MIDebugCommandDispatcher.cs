@@ -41,12 +41,6 @@ namespace Microsoft.MIDebugEngine
             return GetLastProcess().ProcessState;
         }
 
-        public static async Task<Results> ViewSelectedThreadInfo(int threadId)
-        {
-            GetLastProcess().MICommandFactory.DefineCurrentThread(threadId);
-            return await Task.FromResult<Results>(new Results(ResultClass.done));
-        }
-
         public static async Task<Results> ExecuteMICommandWithResultsObject(string command)
         {
             if (string.IsNullOrWhiteSpace(command))
