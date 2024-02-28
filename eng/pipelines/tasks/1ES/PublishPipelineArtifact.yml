@@ -4,12 +4,21 @@ parameters:
   targetPath: '$(Build.ArtifactStagingDirectory)'
   artifactName: 'drop'
   condition: 'succeeded()'
+  OneESPT: false # Indicates that this is running under the 1ES Pipeline Template
 
 steps:
-- task: 1ES.PublishPipelineArtifact@1
-  displayName: ${{ parameters.displayName }}
-  inputs:
-    targetPath: ${{ parameters.targetPath }}
-    artifactName: '${{ parameters.artifactName }}'
-  condition: ${{ parameters.condition }}
+- ${{ if eq(parameters['OneESPT'], true) }}:
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      targetPath: ${{ parameters.targetPath }}
+      artifactName: '${{ parameters.artifactName }}'
+    condition: ${{ parameters.condition }}
+- ${{ else }}:
+  - template: ../PublishPipelineArtifact.yml
+    parameters:
+      path: '${{ parameters.targetPath }}'
+      artifactName: '${{ parameters.artifactName }}'
+      displayName: ${{ parameters.displayName }}
+      condition: ${{ parameters.condition }}
 ...

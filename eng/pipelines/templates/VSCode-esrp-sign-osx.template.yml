@@ -23,4 +23,5 @@ steps:
       displayName: 'Publish Binaries'
       targetPath: '$(Pipeline.Workspace)\Artifacts\${{ rid }}.zip'
       artifactName: '${{ rid }}_zip'
+      OneESPT: true
 ...

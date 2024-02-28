@@ -18,6 +18,7 @@ steps:
 - template: ../steps/BuildSolution.yml
   parameters:
     Configuration: ${{ parameters.Configuration }}
+    OneESPT: false
 
 - template: ../tasks/CSharp.yml
 
@@ -26,6 +27,7 @@ steps:
   parameters:
     TargetFolder: '$(Build.StagingDirectory)\drop'
     ArtifactName: '${{ parameters.Configuration }}'
+    OneESPT: false
 
 - template: ../tasks/MicroBuildCleanup.yml
 ...

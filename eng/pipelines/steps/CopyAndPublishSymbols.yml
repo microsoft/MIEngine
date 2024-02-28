@@ -1,5 +1,8 @@
 # Collects build symbols and publishes them as 'Symbols'
 ---
+parameters:
+  OneESPT: false
+
 steps:
 - template: ../tasks/CopyFiles.yml
   parameters:
@@ -32,4 +35,5 @@ steps:
     displayName: 'Publish Symbols'
     targetPath: '$(Build.ArtifactStagingDirectory)/symbols' 
     artifactName: 'Symbols'
+    OneESPT: ${{ parameters.OneESPT }}
 ...
