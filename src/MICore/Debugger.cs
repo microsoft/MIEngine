@@ -318,29 +318,8 @@ namespace MICore
             this.OnStateChanged(mode, _miResults.ParseResultList(strresult));
         }
 
-        private void SetGdbVersion()
-        {
-            if (string.IsNullOrWhiteSpace(_gdbVersion))
-            {
-                _gdbVersion = GdbVersionFromLog();
-            }
-        }
-
-        private void SetMajorGdbVersion()
-        {
-            int majorVersion = -1;
-            if (!string.IsNullOrWhiteSpace(_gdbVersion))
-            {
-                int.TryParse(_gdbVersion.Split('.').FirstOrDefault(), out majorVersion);
-            }
-            MICommandFactory.MajorVersion = majorVersion;
-        }
-
         protected void OnStateChanged(string mode, Results results)
         {
-            SetGdbVersion();
-            SetMajorGdbVersion();
-
             if (mode == "stopped")
             {
                 OnStopped(results);
@@ -959,6 +938,10 @@ namespace MICore
                     if (_initializationLog != null)
                     {
                         _initializationLog.AddLast(line);
+                        if (string.IsNullOrEmpty(_gdbVersion))
+                        {
+                            TryInitializeGdbVersion(line);
+                        }
                     }
                 }
             }
@@ -1004,7 +987,7 @@ namespace MICore
                             bool isMinGWOrCygwin = _launchOptions is LocalLaunchOptions &&
                                     PlatformUtilities.IsWindows() &&
                                     this.MICommandFactory.Mode == MIMode.Gdb;
-                            if (isMinGWOrCygwin && _gdbVersion != null && IsUnsupportedWindowsGdbVersion(_gdbVersion))
+                            if (isMinGWOrCygwin && IsUnsupportedWindowsGdbVersion(_gdbVersion))
                             {
                                 exception = new MIDebuggerInitializeFailedUnsupportedGdbException(
                                     this.MICommandFactory.Name, _initialErrors.ToList().AsReadOnly(), _initializationLog.ToList().AsReadOnly(), _gdbVersion);
@@ -1050,26 +1033,25 @@ namespace MICore
             }
         }
 
-        string GdbVersionFromLog()
-        {
-            if (_initializationLog != null)
+        void TryInitializeGdbVersion(string line)
+        {   
+            // Second set of parenthesis looks for a Cygwin-specific version number
+            // Cygwin example: GNU gdb (GDB) (Cygwin 7.11.1-2) 7.11.1
+            // MinGW example:  GNU gdb (GDB) 8.0.1
+            // Intel GNU gdb example: GNU gdb (Intel(R) Distribution for GDB* 2024.1.0) 14.1
+            Match match = Regex.Match(line,
+                @"GNU gdb(?: \(GDB\))?(?: \(Cygwin (\d+[\.\d-]*)\)| \(Intel\(R\) Distribution for GDB\* [\d.]+\))? ([\d.]+)");
+            if (match.Success)
             {
-                foreach (string line in _initializationLog)
-                {
-                    // Second set of parenthesis looks for a Cygwin-specific version number
-                    // Cygwin example: GNU gdb (GDB) (Cygwin 7.11.1-2) 7.11.1
-                    // MinGW example:  GNU gdb (GDB) 8.0.1
-                    // Intel GNU gdb example: GNU gdb (Intel(R) Distribution for GDB* 2024.1.0) 14.1
-                    Match match = Regex.Match(line,
-                        @"GNU gdb(?: \(GDB\))?(?: \(Cygwin (\d+[\.\d-]*)\)| \(Intel\(R\) Distribution for GDB\* [\d.]+\))? ([\d.]+)");
-                    if (match.Success)
-                    {
-                        return match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
-                    }
-                }
+                _gdbVersion =  match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
             }
 
-            return null;
+            int majorVersion = 0;
+            if (!string.IsNullOrWhiteSpace(_gdbVersion))
+            {
+                int.TryParse(_gdbVersion.Split('.').FirstOrDefault(), out majorVersion);
+            }
+            MICommandFactory.MajorVersion = majorVersion;
         }
 
         bool IsUnsupportedWindowsGdbVersion(string version)
