@@ -200,7 +200,11 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
         public Command[] SetupCommands;
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable = false)]
+        public Command[] PostRemoteConnectCommands;
+
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
         public SourceMapEntry[] SourceMap;
@@ -354,7 +358,11 @@ namespace MICore.Xml.LaunchOptions {
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
         public Command[] SetupCommands;
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable = false)]
+        public Command[] PostRemoteConnectCommands;
+
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable=false)]
         public Command[] CustomLaunchSetupCommands;
