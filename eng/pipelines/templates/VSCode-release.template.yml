@@ -8,18 +8,18 @@ steps:
 
 - template: ../tasks/NuGetToolInstaller.yml
 
-- template: ../tasks/MicroBuildSigningPlugin.yml
-
 - template: ../tasks/UseDotNet.yml
 
 - template: ../steps/BuildSolution.yml
   parameters:
     Configuration: 'Lab.Release'
+    OneESPT: true
 
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
     TargetFolder: '$(Build.StagingDirectory)\bin'
     ArtifactName: 'bin'
+    OneESPT: true
 
 - template: ../tasks/SignVerify.yml
   parameters:
@@ -27,6 +27,8 @@ steps:
     ExcludeFolders: '.git MicroBuild'
 
 - template: ../steps/CopyAndPublishSymbols.yml
+  parameters:
+    OneESPT: true
 
 - script: |
     mkdir $(Build.StagingDirectory)\zips\

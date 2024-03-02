@@ -18,9 +18,10 @@ steps:
       SigningTarget: '$(Pipeline.Workspace)\Artifacts\${{ rid }}.zip'
       SigningCert: 8023
 
-  - template: ../tasks/PublishPipelineArtifact.yml
+  - template: ../tasks/1ES/PublishPipelineArtifact.yml
     parameters:
       displayName: 'Publish Binaries'
-      path: '$(Pipeline.Workspace)\Artifacts\${{ rid }}.zip'
+      targetPath: '$(Pipeline.Workspace)\Artifacts\${{ rid }}.zip'
       artifactName: '${{ rid }}_zip'
+      OneESPT: true
 ...
