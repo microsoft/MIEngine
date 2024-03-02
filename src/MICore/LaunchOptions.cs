@@ -1490,8 +1490,12 @@ namespace MICore
                 string optFile = Path.Combine(slnRoot, "Microsoft.MIEngine.Options.xml");
                 if (File.Exists(optFile))
                 {
-                    var reader = File.OpenText(optFile);
-                    string suppOptions = reader.ReadToEnd();
+                    string suppOptions = null;
+                    using (var reader = File.OpenText(optFile))
+                    {
+                        suppOptions = reader.ReadToEnd();
+                    }
+
                     if (!string.IsNullOrEmpty(suppOptions))
                     {
                         try
@@ -1554,6 +1558,11 @@ namespace MICore
             var newSetupCmds = LaunchCommand.CreateCollection(suppOptions.SetupCommands);
             setupCmds.AddRange(newSetupCmds);
             SetupCommands = new ReadOnlyCollection<LaunchCommand>(setupCmds);
+
+            var postRemoteConnectCmds = this.PostRemoteConnectCommands.ToList();
+            var newPostRemoteConnectCmds = LaunchCommand.CreateCollection(suppOptions.PostRemoteConnectCommands);
+            postRemoteConnectCmds.AddRange(newPostRemoteConnectCmds);
+            PostRemoteConnectCommands = new ReadOnlyCollection<LaunchCommand>(postRemoteConnectCmds);
 
             MergeMap(suppOptions.SourceMap);
             if (!string.IsNullOrWhiteSpace(suppOptions.AdditionalSOLibSearchPath))
@@ -1847,6 +1856,7 @@ namespace MICore
             this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;
 
             this.SetupCommands = LaunchCommand.CreateCollection(source.SetupCommands);
+            this.PostRemoteConnectCommands = LaunchCommand.CreateCollection(source.PostRemoteConnectCommands);
 
             if (source.CustomLaunchSetupCommands != null)
             {

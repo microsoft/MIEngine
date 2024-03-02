@@ -131,12 +131,15 @@ namespace Microsoft.SSHDebugPS.SSH
         /// <returns>Full path of the created directory.</returns>
         public override string MakeDirectory(string path)
         {
-            bool directoryExists = false;
-            liblinux.IO.IRemoteFileSystemInfo stat = null;
+            bool exists = false;
+            bool isDirectory = false;
+
             try
             {
-                stat = _remoteSystem.FileSystem.Stat(path);
-                directoryExists = stat.IsDirectory();
+                liblinux.IO.IRemoteFileSystemInfo stat = _remoteSystem.FileSystem.Stat(path);
+
+                exists = stat.Exists();
+                isDirectory = stat.IsDirectory();
             }
             catch
             {
@@ -144,11 +147,11 @@ namespace Microsoft.SSHDebugPS.SSH
                 // Unfortunately the exceptions that are thrown by liblinux are not public, so we can't specialize it.
             }
 
-            if (stat == null && !directoryExists)
+            if (!exists)
             {
                 return _remoteSystem.FileSystem.CreateDirectory(path).FullPath;
             }
-            else if (stat != null && directoryExists)
+            else if (exists && isDirectory)
             {
                 return _remoteSystem.FileSystem.GetDirectory(path).FullPath;
             }
