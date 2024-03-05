@@ -413,6 +413,11 @@
           <xs:documentation>One or more GDB/LLDB commands to execute in order to setup the underlying debugger. These are not required.</xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element name="PostRemoteConnectCommands" minOccurs="0" maxOccurs="1" type="CommandList">
+        <xs:annotation>
+          <xs:documentation>One or more commands to execute after the connection has been made, in order to set up the remote connection. These are not required.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="SourceMap" type="SourceMapList" minOccurs="0" maxOccurs="1">
       </xs:element>
       <xs:element name="ServerOptions" type="ServerOptions" minOccurs="0" maxOccurs="1">
@@ -480,6 +485,11 @@
       <xs:element name="SetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
         <xs:annotation>
           <xs:documentation>One or more GDB/LLDB commands to execute in order to setup the underlying debugger. These are not required.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PostRemoteConnectCommands" minOccurs="0" maxOccurs="1" type="CommandList">
+        <xs:annotation>
+          <xs:documentation>One or more commands to execute after the connection has been made, in order to set up the remote connection. These are not required.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="CustomLaunchSetupCommands" minOccurs="0" maxOccurs="1" type="CommandList">
