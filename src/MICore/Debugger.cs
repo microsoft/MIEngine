@@ -494,6 +494,8 @@ namespace MICore
             {
                 _consoleDebuggerInitializeCompletionSource = null;
 
+                // We no longer care about keeping these, so empty them out
+                _initializationLog = null;
                 _initialErrors = null;
             }
         }
