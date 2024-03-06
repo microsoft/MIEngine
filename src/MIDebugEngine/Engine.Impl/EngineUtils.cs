@@ -253,7 +253,7 @@ namespace Microsoft.MIDebugEngine
                 {
                     map._map = s_X86Registers;
                 }
-                else if (registerNames.Contains("isabase") && registerNames.Contains("ce")) // Intel GPU register set
+                else if (registerNames.Contains("ce")) // Intel GPU register set
                 {
                     map._map = s_IntelGTRegisters;
                 }
