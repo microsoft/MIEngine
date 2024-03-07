@@ -150,6 +150,9 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<ThreadContext> GetThreadContext(DebuggedThread thread)
         {
+            if (thread == null)
+                return null;
+
             lock (_threadList)
             {
                 if (_topContext.ContainsKey(thread.Id))

@@ -13,7 +13,7 @@
     <StartAction>Program</StartAction>
     <OutputPath>$(MIDefaultOutputPath)\vscode</OutputPath>
     <DropSubDir>vscode</DropSubDir>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <OutputType>Exe</OutputType>
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
