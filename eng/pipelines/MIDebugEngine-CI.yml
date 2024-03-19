@@ -39,8 +39,10 @@ stages:
 
 - stage: CodeAnalysis
   dependsOn: [CI]
+  variables:
+  - group: VSEng sponsored APIScan 
   jobs:
-  - template: ./jobs/MSHosted-Windows.job.yml
+  - template: ./jobs/VSEngSS-MicroBuild2022-1ES.job.yml
     parameters:
       DisplayName: 'CodeAnalysis'
       JobTemplate:
