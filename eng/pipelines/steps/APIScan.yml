@@ -38,4 +38,4 @@ steps:
     isLargeApp: false
   continueOnError: true
   env:
-    AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(MIEngineApiScan)
+    AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId)
