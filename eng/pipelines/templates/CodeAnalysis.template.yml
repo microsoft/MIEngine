@@ -4,6 +4,12 @@ steps:
 
 - template: ../tasks/CredScan.yml
 
+- template: ../steps/BuildSolution.yml
+  parameters:
+    Solution: '$(Build.SourcesDirectory)\test\CppTests\debuggees\sln\debuggees.sln'
+    Configuration: 'Debug'
+    OneESPT: false
+
 - task: DownloadPipelineArtifact@2
   displayName: Download Pipeline Artifact
   inputs:
