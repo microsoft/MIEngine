@@ -3,4 +3,4 @@ steps:
   displayName: 'Use .NET Core sdk'
   inputs:
     packageType: sdk
-    version: 6.x
+    version: 8.x
