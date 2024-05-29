@@ -44,7 +44,7 @@ jobs:
         Configuration: ${{ matrix.configuration }}
 
     - name: Setup VSTest.console.exe
-      uses: darenm/Setup-VSTest@v1.2
+      uses: darenm/Setup-VSTest@v1.3
 
     - name: Run VS Extension tests
       run: vstest.console.exe ${{ github.workspace }}\bin\${{ matrix.configuration }}\MICoreUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\JDbgUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\SSHDebugTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\MIDebugEngineUnitTests.dll
