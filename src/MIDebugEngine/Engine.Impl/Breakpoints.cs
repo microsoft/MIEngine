@@ -146,12 +146,11 @@ namespace Microsoft.MIDebugEngine
                 if (b is TupleValue)
                 {
                     bkpt = b as TupleValue;
-                }
-                else if (b is ValueListValue)
-                {
-                    // "<MULTIPLE>" sometimes includes a list of bound breakpoints
-                    list = b as ValueListValue;
-                    bkpt = list.Content[0] as TupleValue;
+                    // The locations field is present if the breakpoint has multiple locations.
+                    if (b.TryFind("locations", out var locations) && locations is ValueListValue)
+                    {
+                        list = (ValueListValue) locations;
+                    }
                 }
             }
             else
@@ -189,9 +188,9 @@ namespace Microsoft.MIDebugEngine
             else   // <MULTIPLE> with list of addresses
             {
                 BindResult res = new BindResult(bp);
-                for (int i = 1; i < list.Content.Length; ++i)
+                foreach (var t in list.Content)
                 {
-                    BoundBreakpoint bbp = await bp.GetBoundBreakpoint(list.Content[i] as TupleValue);
+                    BoundBreakpoint bbp = await bp.GetBoundBreakpoint(t as TupleValue);
                     res.BoundBreakpoints.Add(bbp);
                 }
                 return res;
@@ -290,12 +289,13 @@ namespace Microsoft.MIDebugEngine
                 return resultList;
             }
             BoundBreakpoint bbp = null;
-            if (bkpt is ValueListValue)
+
+            // The locations field is present if the breakpoint has multiple locations.
+            if (bkpt.TryFind("locations", out var locations) && locations is ValueListValue list)
             {
-                var list = (ValueListValue)bkpt;
-                for (int i = 1; i < list.Content.Length; ++i)
+                foreach (var t in list.Content)
                 {
-                    bbp = await GetBoundBreakpoint(list.Content[i] as TupleValue);
+                    bbp = await GetBoundBreakpoint(t as TupleValue);
                     if (bbp != null)
                         resultList.Add(bbp);
                 }
