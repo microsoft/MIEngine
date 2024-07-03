@@ -3,6 +3,7 @@
 parameters:
   TargetFolder: '$(Build.SourcesDirectory)\drop'
   ArtifactName: 'drop'
+  OneESPT: false
 
 steps:
 - template: ../tasks/CopyFiles.yml
@@ -13,9 +14,10 @@ steps:
     CleanTargetFolder: true
     OverWrite: true
 
-- template: ../tasks/PublishPipelineArtifact.yml
+- template: ../tasks/1ES/PublishPipelineArtifact.yml
   parameters:
     displayName: 'Publish Binaries'
-    path: ${{ parameters.TargetFolder }}
+    targetPath: ${{ parameters.TargetFolder }}
     artifactName: '${{ parameters.ArtifactName }}'
+    OneESPT: ${{ parameters.OneESPT }}
 ...
