@@ -53,3 +53,9 @@ void Calling::CoreRun()
     double ave = average(10, 1.0, 3.0, 4.5, 11.0, -30.0, 17.4, 2.1, -4.0, 0.0, 12.1);
     this->Log("Average ", ave);
 }
+
+int a(int count)
+{
+    b();
+    return count - 1;
+}
