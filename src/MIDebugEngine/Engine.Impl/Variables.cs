@@ -715,7 +715,12 @@ namespace Microsoft.MIDebugEngine
             Results results = await _engine.DebuggedProcess.MICommandFactory.VarSetFormat(_internalName, _format, ResultClass.None);
             if (results.ResultClass == ResultClass.done)
             {
-                Value = results.FindString("value");
+                // Sample output for LLDB:    ^done,changelist=[{name="var1",value="123",in_scope="true",type_changed="false",type_changed="0"}]
+                // Sample output for GDB:     ^done,format="natural",value="123"
+                if (_engine.DebuggedProcess.LaunchOptions.DebuggerMIMode == MIMode.Lldb)
+                    Value = results.Find<ValueListValue>("changelist").Content[0].FindString("value");
+                else
+                    Value = results.FindString("value");
             }
             else if (results.ResultClass == ResultClass.error)
             {
