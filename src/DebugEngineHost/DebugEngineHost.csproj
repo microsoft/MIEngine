@@ -89,8 +89,12 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
 
-    <PackageReference Include="Microsoft.IO.Redist" Version="$(Microsoft_IO_Redist_Version)" />
-    <PackageReference Include="System.Text.Json" Version="$(System_Text_Json_Version)" />
+    <PackageReference Include="Microsoft.IO.Redist" Version="$(Microsoft_IO_Redist_Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Text.Json" Version="$(System_Text_Json_Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Label="Assembly to Generate">
