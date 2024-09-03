@@ -32,11 +32,5 @@ namespace DebuggerTesting.OpenDebug
 
         public RunnerException(Exception innerException, string messageFormat, params object[] messageArgs)
             : base(string.Format(CultureInfo.CurrentCulture, messageFormat, messageArgs), innerException) { }
-
-#if !CORECLR
-        // Required for serialization
-        protected RunnerException(SerializationInfo info, StreamingContext context)
-            : base(info, context) { }
-#endif
     }
 }

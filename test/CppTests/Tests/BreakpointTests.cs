@@ -125,7 +125,7 @@ namespace CppTests.Tests
                 runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
 
                 this.Comment("Set initial function breakpoints");
-                FunctionBreakpoints functionBreakpoints = new FunctionBreakpoints("Arguments::CoreRun", "Calling::CoreRun", "a()");
+                FunctionBreakpoints functionBreakpoints = new FunctionBreakpoints("Arguments::CoreRun", "Calling::CoreRun", "a");
                 runner.SetFunctionBreakpoints(functionBreakpoints);
 
                 this.Comment("Launch and run until first initial breakpoint");
@@ -137,7 +137,7 @@ namespace CppTests.Tests
                               .AfterContinue();
 
                 this.Comment("Remove and replace third initial function breakpoint while in break mode");
-                functionBreakpoints.Remove("a()");
+                functionBreakpoints.Remove("a");
                 functionBreakpoints.Add("b()");
                 runner.SetFunctionBreakpoints(functionBreakpoints);
 
