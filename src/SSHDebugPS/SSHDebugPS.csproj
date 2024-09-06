@@ -91,11 +91,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageNuspec Include="$(MIEngineRoot)\MIEngine.UnixPortSupplier.nuspec" />
-    <NugetPackages Include="VS.Redist.Debugger.MDD.UnixPortSupplier" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="StringResources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
