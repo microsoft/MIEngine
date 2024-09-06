@@ -84,6 +84,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageNuspec Include="$(MIEngineRoot)\MIEngine.UnixPortSupplier.nuspec" />
+    <NugetPackages Include="VS.Redist.Debugger.MDD.UnixPortSupplier" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="StringResources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -97,4 +102,5 @@
   </ItemGroup>
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\miengine.csharp.localization.targets" />
+  <Import Project="..\..\build\DropFiles.targets" />
 </Project>
