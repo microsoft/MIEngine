@@ -7,6 +7,18 @@ parameters:
   BasePath: $(Build.StagingDirectory)
 
 steps:
+- script: |
+    for /f "delims=" %%f in ($(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt) do set NugetPackageVersion=%%f
+    echo ##vso[task.setvariable variable=NugetPackageVersion;]%NugetPackageVersion%
+  displayName: 'Get NuGet Version'
+
+- template: ../tasks/1ES/PublishPipelineArtifact.yml
+  parameters:
+    displayName: 'Publish File Version'
+    targetPath: '$(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt'
+    artifactName: 'PackageVersion'
+    OneESPT: true
+    
 - task: 1ES.PublishNuget@1
   displayName: Publish Nuget package
   condition: and(succeeded(), eq(variables['SignType'], 'real'))
