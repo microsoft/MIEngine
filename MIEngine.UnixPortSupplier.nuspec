@@ -12,7 +12,7 @@
     <tags></tags>
   </metadata>
   <files>
-    <file src="ReferenceAssemblies\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.xml" target="ref\dotnet" />
-    <file src="ReferenceAssemblies\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.dll" target="ref\dotnet" />
+    <file src="Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.xml" target="ref\dotnet" />
+    <file src="Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.dll" target="ref\dotnet" />
   </files>
 </package>
