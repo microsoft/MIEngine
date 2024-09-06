@@ -1,0 +1,18 @@
+# Pack and Publish NuGet Packages for VS
+# Creates:
+#    - VS.Redist.Debugger.MDD.MIEngine
+#    - VS.Redist.Debugger.MDD.UnixPortSupplier
+---
+parameters:
+  BasePath: $(Build.StagingDirectory)
+
+steps:
+- task: 1ES.PublishNuget@1
+  displayName: Publish Nuget package
+  condition: and(succeeded(), eq(variables['SignType'], 'real'))
+  inputs:
+    packagesToPush: '$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.MIEngine.*.nupkg;$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.UnixPortSupplier.*.nupkg'
+    packageParentPath: '$(Build.SourcesDirectory)'
+    publishVstsFeed: '97a41293-2972-4f48-8c0e-05493ae82010' # VS
+    nuGetFeedType: internal
+...
