@@ -35,6 +35,11 @@
   <ItemGroup>
     <DropSignedFile Include="$(OutDir)\$(AssemblyName).dll" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageNuspec Include="$(MIEngineRoot)\MIEngine.UnixPortSupplier.nuspec" />
+    <NugetPackages Include="VS.Redist.Debugger.MDD.UnixPortSupplier" />
+  </ItemGroup>
   
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\DropFiles.targets" />
