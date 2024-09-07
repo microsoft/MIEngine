@@ -12,10 +12,10 @@
     <tags></tags>
   </metadata>
   <files>
-    <file src="drop\Release\ReferenceAssemblies\*.xml" target="ref\dotnet" exclude="drop\Release\ReferenceAssemblies\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.xml" />
-    <file src="drop\Release\ReferenceAssemblies\Microsoft.DebugEngineHost.dll" target="ref\dotnet" />
-    <file src="drop\Release\Microsoft.MICore.dll" target="ref\dotnet" />
-    <file src="drop\Release\*" target="Release" exclude="drop\Release\Install.cmd;drop\Release\ReferenceAssemblies" />
-    <file src="drop\Release\loc\**\*" target="Release\loc" />
+    <file src="ReferenceAssemblies\*.xml" target="ref\dotnet" exclude="ReferenceAssemblies\Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier.DesignTime.xml" />
+    <file src="ReferenceAssemblies\Microsoft.DebugEngineHost.dll" target="ref\dotnet" />
+    <file src="Microsoft.MICore.dll" target="ref\dotnet" />
+    <file src="*" target="Release" exclude="Install.cmd;drop\Release\ReferenceAssemblies" />
+    <file src="loc\**\*" target="Release\loc" />
   </files>
 </package>
