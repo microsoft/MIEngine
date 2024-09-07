@@ -104,4 +104,5 @@
   </ItemGroup>
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\miengine.csharp.localization.targets" />
+  <Import Project="..\..\build\DropFiles.targets" />
 </Project>
