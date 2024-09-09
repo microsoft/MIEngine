@@ -18,13 +18,21 @@ steps:
     targetPath: '$(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt'
     artifactName: 'PackageVersion'
     OneESPT: true
-    
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: $(Build.BinariesDirectory) 
+    Contents: '**/*.nupkg'
+    TargetFolder: $(Build.SourcesDirectory)/NugetPackages
+    flattenFolders: true
+    OverWrite: true
+
 - task: 1ES.PublishNuget@1
   displayName: Publish Nuget package
   condition: and(succeeded(), eq(variables['SignType'], 'real'))
   inputs:
-    packagesToPush: '$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.MIEngine.*.nupkg;$(Build.SourcesDirectory)\VS.Redist.Debugger.MDD.UnixPortSupplier.*.nupkg'
-    packageParentPath: '$(Build.SourcesDirectory)'
+    packagesToPush: '$(Build.SourcesDirectory)/NugetPackages/*.nupkg'
+    packageParentPath: '$(Build.SourcesDirectory)/NugetPackages'
     publishVstsFeed: '97a41293-2972-4f48-8c0e-05493ae82010' # VS
     nuGetFeedType: internal
 ...
