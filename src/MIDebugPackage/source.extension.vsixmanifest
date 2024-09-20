@@ -5,7 +5,7 @@
     <DisplayName>Microsoft MI-based Debugger</DisplayName>
     <Description xml:space="preserve">Provides support for connecting Visual Studio to MI compatible debuggers</Description>
   </Metadata>
-  <Installation InstalledByMsi="false">
+  <Installation InstalledByMsi="false" AllUsers="true">
     <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[15.0, 17.0)" />
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 17.0)" />
   </Installation>

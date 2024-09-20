@@ -1,7 +1,9 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
+
 variables:
-  - group: TSDTUSR
+- name: TeamName
+  value: MDDDebugger
 
 resources:
   repositories:

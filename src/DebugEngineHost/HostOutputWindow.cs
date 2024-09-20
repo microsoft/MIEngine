@@ -117,7 +117,7 @@ namespace Microsoft.DebugEngineHost
                     }
 
                     // Output the text
-                    outputPane.OutputString(message);
+                    outputPane.OutputStringThreadSafe(message);
                 }
                 catch (Exception)
                 {
