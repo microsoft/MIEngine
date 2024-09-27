@@ -3,7 +3,7 @@ param(
 [Alias("c")]
 [string]$Configuration="Debug",
 
-[ValidateSet("win-x86", "win10-arm64")]
+[ValidateSet("win-x86", "win-arm64")]
 [Alias("r")]
 [string]$RID="win-x86",
 
