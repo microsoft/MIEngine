@@ -1,6 +1,6 @@
 ---
 parameters:
-  rids: ["win-x86", "win10-arm64", "osx-x64", "osx-arm64", "linux-x64", "linux-arm", "linux-arm64", "linux-musl-x64", "linux-musl-arm64" ]
+  rids: ["win-x86", "win-arm64", "osx-x64", "osx-arm64", "linux-x64", "linux-arm", "linux-arm64", "linux-musl-x64", "linux-musl-arm64" ]
 
 steps:
 - checkout: self
@@ -28,6 +28,7 @@ steps:
 
 - template: ../steps/CopyAndPublishSymbols.yml
   parameters:
+    SourceFolder: '$(Build.StagingDirectory)\bin'
     OneESPT: true
 
 - script: |

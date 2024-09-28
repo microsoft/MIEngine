@@ -2,13 +2,14 @@
 ---
 parameters:
   OneESPT: false
+  SourceFolder: '$(Build.StagingDirectory)\drop'
 
 steps:
 - template: ../tasks/CopyFiles.yml
   parameters:
     displayName: 'Collect build symbols'
-    SourceFolder: '$(Build.StagingDirectory)\drop'
-    Contents: '$(Build.StagingDirectory)\drop\**\*.+(pdb|exe|dll)'
+    SourceFolder: ${{ parameters.SourceFolder }}
+    Contents: '${{ parameters.SourceFolder }}\**\*.+(pdb|exe|dll)'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
     CleanTargetFolder: true
 
