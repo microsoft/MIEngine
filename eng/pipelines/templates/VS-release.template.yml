@@ -6,9 +6,12 @@ steps:
 
 - template: ../tasks/NuGetToolInstaller.yml
 
+- template: ../tasks/MicroBuildSigningPlugin.yml
+
 - template: ../steps/BuildSolution.yml
   parameters:
     Configuration: 'Lab.Release'
+    BuildArguments: /p:NuGetPath=$(NuGetExeToolPath) /p:NuGetPrerelease=false
     OneESPT: true
 
 - template: ../steps/CollectAndPublishBinaries.yml
@@ -25,7 +28,7 @@ steps:
   parameters:
     OneESPT: true
 
-- template: ../steps/PackAndPublishVSPackages.yml
+- template: ../steps/PublishVSPackages.yml
   parameters:
     BasePath: $(Build.StagingDirectory)
 
