@@ -28,6 +28,13 @@
     </PackageReference>
 
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
+
+    <PackageReference Include="Microsoft.IO.Redist" Version="$(Microsoft_IO_Redist_Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Text.Json" Version="$(System_Text_Json_Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -97,4 +104,5 @@
   </ItemGroup>
   <Import Project="..\..\build\miengine.targets" />
   <Import Project="..\..\build\miengine.csharp.localization.targets" />
+  <Import Project="..\..\build\DropFiles.targets" />
 </Project>
