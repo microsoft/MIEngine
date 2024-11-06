@@ -176,6 +176,30 @@ namespace MICore
             {
                 _currentThreadId = results.FindInt("current-thread-id");
             }
+
+            var tlist = results.Find<ValueListValue>("threads");
+            foreach (var tVal in tlist.Content)
+            {
+                if (tVal.Contains("details"))
+                {
+                    string details = tVal.FindString("details");
+                    var keyValuePairs = details.Split(',')
+                        .Select(part => part.Split(new[] { ':' }, 2))
+                        .Where(part => part.Length == 2)
+                        .ToDictionary(
+                            part => part[0].Trim(),
+                            part => part[1].Trim()
+                        );
+
+                    if (keyValuePairs.TryGetValue("Name", out string name))
+                    {
+                        if (tVal is TupleValue tupleValue)
+                        {
+                            tupleValue.Content.Add(new NamedResultValue("name", new ConstValue(name)));
+                        }
+                    }
+                }
+            }
             return results;
         }
 
