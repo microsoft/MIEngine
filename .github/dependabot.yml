@@ -1,0 +1,202 @@
+version: 2
+updates:
+  - package-ecosystem: 'github-actions'
+    # default location of '.github/workflows'
+    directory: '/'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'weekly'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/AndroidDebugLauncher'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/DebugEngineHost'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/DebugEngineHost.Stub'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/DebugEngineHost.VSCode'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/IOSDebugLauncher'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/JDbg'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/MakePIAPortable'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/MICore'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/MIDebugEngine'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/MIDebugPackage'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/OpenDebugAD7'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/SSHDebugPS'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/tools/MakePIAPortableTool'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'src/WindowsDebugLauncher'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'tools/iOS/CertTool'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: 'tools/iOS/DebugListenerTool'
+    open-pull-requests-limit: 5
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+# Built with ❤ by [Pipeline Foundation](https://pipeline.foundation)
