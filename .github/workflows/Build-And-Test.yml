@@ -168,6 +168,8 @@ jobs:
     - run: |
         ${{ github.workspace }}/eng/Scripts/CI-Build.sh
 
+    # Disabling lldb-mi tests since DownloadLldbMI.sh will obtain 
+    # an x64 version instead of an arm64 and test will fail.
     # - run: |
     #    ${{ github.workspace }}/eng/Scripts/CI-Test.sh
 
