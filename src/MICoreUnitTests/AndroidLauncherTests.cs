@@ -55,7 +55,7 @@ namespace MICoreUnitTests
             {
                 var options = CreateFromXml(content);
 
-                Assert.True(false, "Exception was not thrown");
+                Assert.Fail("Exception was not thrown");
             }
             catch (MICore.InvalidLaunchOptionsException e)
             {
@@ -133,7 +133,7 @@ namespace MICoreUnitTests
             {
                 var options = CreateFromXml(content);
 
-                Assert.True(false, "Exception was not thrown");
+                Assert.Fail("Exception was not thrown");
             }
             catch (MICore.InvalidLaunchOptionsException e)
             {
@@ -303,7 +303,7 @@ namespace MICoreUnitTests
             try
             {
                 PwdOutputParser.ExtractWorkingDirectory("/bogus-directory-with-a-*", "com.Android53");
-                Assert.True(false, "Code should not be reached");
+                Assert.Fail("Code should not be reached");
             }
             catch (LauncherException e)
             {
@@ -313,7 +313,7 @@ namespace MICoreUnitTests
             try
             {
                 PwdOutputParser.ExtractWorkingDirectory("/directory1\n/directory2", "com.Android53");
-                Assert.True(false, "Code should not be reached");
+                Assert.Fail("Code should not be reached");
             }
             catch (LauncherException e)
             {
@@ -323,7 +323,7 @@ namespace MICoreUnitTests
             try
             {
                 PwdOutputParser.ExtractWorkingDirectory("run-as: Package 'com.bogus.hellojni' is unknown", "com.bogus.hellojni");
-                Assert.True(false, "Code should not be reached");
+                Assert.Fail("Code should not be reached");
             }
             catch (LauncherException e)
             {
@@ -337,7 +337,7 @@ namespace MICoreUnitTests
             try
             {
                 RunAsOutputParser.ThrowIfRunAsErrors("run-as: Package 'com.bogus.hellojni' is unknown", "com.bogus.hellojni");
-                Assert.True(false, "Code should not be reached");
+                Assert.Fail("Code should not be reached");
             }
             catch (LauncherException e)
             {
@@ -351,7 +351,7 @@ namespace MICoreUnitTests
             try
             {
                 RunAsOutputParser.ThrowIfRunAsErrors("run-as: Package 'com.android.phone' is not an application", "com.android.phone");
-                Assert.True(false, "Code should not be reached");
+                Assert.Fail("Code should not be reached");
             }
             catch (LauncherException e)
             {
@@ -365,7 +365,7 @@ namespace MICoreUnitTests
             try
             {
                 RunAsOutputParser.ThrowIfRunAsErrors("run-as: Package 'com.android.email' is not debuggable", "com.android.email");
-                Assert.True(false, "Code should not be reached");
+                Assert.Fail("Code should not be reached");
             }
             catch (LauncherException e)
             {

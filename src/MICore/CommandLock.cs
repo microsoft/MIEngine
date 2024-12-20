@@ -93,9 +93,9 @@ namespace MICore
         /// </summary>
         private int _lockStatus;
 
-        private const int StatusFree = 0;
-        private const int StatusClosed = -1;
-        private const int StatusExclusive = -2;
+        private const int s_statusFree = 0;
+        private const int s_statusClosed = -1;
+        private const int s_statusExclusive = -2;
 
         private int _prevExclusiveToken;
         private int _pendingSharedLockRequests;
@@ -112,7 +112,7 @@ namespace MICore
             lock (this.LockObject)
             {
                 _closeMessage = closeMessage;
-                _lockStatus = StatusClosed;
+                _lockStatus = s_statusClosed;
                 if (_waitingSharedLockSource != null)
                 {
                     _waitingSharedLockSource.SetException(new DebuggerDisposedException(_closeMessage));
@@ -134,14 +134,14 @@ namespace MICore
         {
             lock (this.LockObject)
             {
-                if (_lockStatus == StatusClosed)
+                if (_lockStatus == s_statusClosed)
                 {
                     throw new DebuggerDisposedException(_closeMessage);
                 }
 
-                if (_lockStatus == StatusFree)
+                if (_lockStatus == s_statusFree)
                 {
-                    _lockStatus = StatusExclusive;
+                    _lockStatus = s_statusExclusive;
                     return Task.FromResult(GetNextExclusiveLockToken());
                 }
 
@@ -160,7 +160,7 @@ namespace MICore
         {
             lock (this.LockObject)
             {
-                if (_lockStatus == StatusClosed)
+                if (_lockStatus == s_statusClosed)
                 {
                     throw new DebuggerDisposedException(_closeMessage);
                 }
@@ -188,17 +188,17 @@ namespace MICore
 
             lock (this.LockObject)
             {
-                if (_lockStatus == StatusClosed)
+                if (_lockStatus == s_statusClosed)
                 {
                     return;
                 }
-                else if (_lockStatus != StatusExclusive || tokenValue != _prevExclusiveToken)
+                else if (_lockStatus != s_statusExclusive || tokenValue != _prevExclusiveToken)
                 {
                     Debug.Fail("Very bad - bogus exclusive lock token provided");
                     throw new InvalidOperationException();
                 }
 
-                _lockStatus = StatusFree;
+                _lockStatus = s_statusFree;
 
                 actionAfterReleaseLock = GetAfterReleaseLockAction();
             }
@@ -216,11 +216,11 @@ namespace MICore
 
             lock (this.LockObject)
             {
-                if (_lockStatus == StatusClosed)
+                if (_lockStatus == s_statusClosed)
                 {
                     return;
                 }
-                else if (_lockStatus != StatusExclusive || tokenValue != _prevExclusiveToken)
+                else if (_lockStatus != s_statusExclusive || tokenValue != _prevExclusiveToken)
                 {
                     Debug.Fail("Very bad - bogus exclusive lock token provided");
                     throw new InvalidOperationException();
@@ -244,7 +244,7 @@ namespace MICore
 
             lock (this.LockObject)
             {
-                if (_lockStatus == StatusClosed)
+                if (_lockStatus == s_statusClosed)
                 {
                     return;
                 }
@@ -256,7 +256,7 @@ namespace MICore
 
                 _lockStatus--;
 
-                if (_lockStatus == StatusFree)
+                if (_lockStatus == s_statusFree)
                 {
                     actionAfterReleaseLock = GetAfterReleaseLockAction();
                 }
@@ -271,12 +271,12 @@ namespace MICore
         // NOTE: This method MUST be called with this.LockObject held
         private Action GetAfterReleaseLockAction()
         {
-            Debug.Assert(_lockStatus == StatusFree, "Why is GetAfterReleaseLockAction called when the lock is not free?");
+            Debug.Assert(_lockStatus == s_statusFree, "Why is GetAfterReleaseLockAction called when the lock is not free?");
 
             if (_waitingExclusiveLockRequests.Count > 0)
             {
                 TaskCompletionSource<ExclusiveLockToken> completionSource = _waitingExclusiveLockRequests.Dequeue();
-                _lockStatus = StatusExclusive;
+                _lockStatus = s_statusExclusive;
 
                 var newLockToken = GetNextExclusiveLockToken();
                 return () => completionSource.SetResult(newLockToken);

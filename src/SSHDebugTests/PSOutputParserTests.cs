@@ -28,9 +28,9 @@ namespace SSHDebugTests
             List<Process> r = psOutputParser.Parse(input);
             Assert.Equal(5, r.Count);
             // Testing flags here as PID USER ARGS are tested in the other tests.
-            Assert.Equal(r[0].Flags.Value, (uint)0x4004);
-            Assert.Equal(r[1].Flags.Value, (uint)0x1004004);
-            Assert.Equal(r[4].Flags.Value, (uint)0x80004104);
+            Assert.Equal((uint)0x4004, r[0].Flags.Value);
+            Assert.Equal((uint)0x1004004, r[1].Flags.Value);
+            Assert.Equal((uint)0x80004104, r[4].Flags.Value);
         }
 
         [Fact]

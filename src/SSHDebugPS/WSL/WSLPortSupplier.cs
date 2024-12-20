@@ -17,9 +17,9 @@ namespace Microsoft.SSHDebugPS.WSL
     [Guid("B8587A49-00BD-4DEE-94B9-6EBF49003E04")]
     internal class WSLPortSupplier : AD7PortSupplier
     {
-        private readonly Guid _Id = new Guid("267B1341-AC92-44DC-94DF-2EE4205DD17E");
+        private readonly Guid _id = new Guid("267B1341-AC92-44DC-94DF-2EE4205DD17E");
 
-        protected override Guid Id { get { return _Id; } }
+        protected override Guid Id { get { return _id; } }
         protected override string Name { get { return StringResources.WSL_PSName; } }
         protected override string Description { get { return StringResources.WSL_PSDescription; } }
         IEnumerable<string> _distros;

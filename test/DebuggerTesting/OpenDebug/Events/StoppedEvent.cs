@@ -61,20 +61,20 @@ namespace DebuggerTesting.OpenDebug.Events
     /// </summary>
     public class StoppedEvent : Event<StoppedEventValue>
     {
-        private bool verifyLineRange;
-        private int startLine;
-        private int endLine;
-        private ulong address;
+        private readonly bool _verifyLineRange;
+        private readonly int _startLine;
+        private readonly int _endLine;
+        private readonly ulong _address;
 
         public StoppedEvent(ulong address)
             : base("stopped")
         {
 
-            this.address = address;
+            this._address = address;
 
             this.ExpectedResponse.body.reason = FromReason(StoppedReason.InstructionBreakpoint);
 
-            this.verifyLineRange = false;
+            this._verifyLineRange = false;
         }
 
         public StoppedEvent(StoppedReason? reason = null, string fileName = null, int? lineNumber = null, string text = null)
@@ -88,7 +88,7 @@ namespace DebuggerTesting.OpenDebug.Events
             }
             this.ExpectedResponse.body.line = lineNumber;
             this.ExpectedResponse.body.text = text;
-            this.verifyLineRange = false;
+            this._verifyLineRange = false;
         }
 
         /// <summary>
@@ -107,9 +107,9 @@ namespace DebuggerTesting.OpenDebug.Events
                 this.ExpectedResponse.body.source.name = fileName;
             }
 
-            this.startLine = startLine;
-            this.endLine = endLine;
-            this.verifyLineRange = true;
+            this._startLine = startLine;
+            this._endLine = endLine;
+            this._verifyLineRange = true;
         }
 
 
@@ -151,8 +151,8 @@ namespace DebuggerTesting.OpenDebug.Events
             base.ProcessActualResponse(response);
             this.ActualEventInfo = new StoppedInfo(this.ActualEvent);
 
-            if (this.verifyLineRange)
-                VerifyLineRange(this.ActualEventInfo.Line, this.startLine, this.endLine);
+            if (this._verifyLineRange)
+                VerifyLineRange(this.ActualEventInfo.Line, this._startLine, this._endLine);
         }
 
         /// <summary>
@@ -168,14 +168,14 @@ namespace DebuggerTesting.OpenDebug.Events
             if (actualLine == null || actualLine < expectedStartLine || actualLine > expectedEndLine)
             {
                 string message = "Expected a line within {0}-{1} but actual line was {2}.".FormatInvariantWithArgs(expectedStartLine, expectedEndLine, actualLine);
-                Assert.True(false, message);
+                Assert.Fail(message);
             }
         }
 
         private string GetExpectedLine()
         {
-            if (this.verifyLineRange)
-                return "{0}-{1}".FormatInvariantWithArgs(this.startLine, this.endLine);
+            if (this._verifyLineRange)
+                return "{0}-{1}".FormatInvariantWithArgs(this._startLine, this._endLine);
             return (this.ExpectedResponse.body.line ?? 0).ToString(CultureInfo.InvariantCulture);
         }
 

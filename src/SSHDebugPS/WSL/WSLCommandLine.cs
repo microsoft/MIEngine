@@ -6,13 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 using static Microsoft.VisualStudio.Shell.VsTaskLibraryHelper;
-using System.Linq;
+using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
 namespace Microsoft.SSHDebugPS.WSL
 {
@@ -98,7 +96,7 @@ namespace Microsoft.SSHDebugPS.WSL
                 }
 
                 // Parse the installed distributions
-                /* Ouput looks like:
+                /* Output looks like:
                     NAME                   STATE           VERSION
                 * Ubuntu                 Stopped         2
                     docker-desktop-data    Running         2

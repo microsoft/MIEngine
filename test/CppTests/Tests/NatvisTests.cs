@@ -34,12 +34,12 @@ namespace CppTests.Tests
         #region Methods
 
 
-        private const string NatvisName = "natvis";
-        private const string NatvisSourceName = "main.cpp";
+        private const string s_natvisName = "natvis";
+        private const string s_natvisSourceName = "main.cpp";
 
         // These line numbers will need to change if src/natvis/main.cpp changes
-        private const int SimpleClassAssignmentLine = 47;
-        private const int ReturnSourceLine = 51;
+        private const int s_simpleClassAssignmentLine = 47;
+        private const int s_returnSourceLine = 51;
 
         [Theory]
         [RequiresTestSettings]
@@ -48,8 +48,8 @@ namespace CppTests.Tests
             this.TestPurpose("Create and compile the 'natvis' debuggee");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Create(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
-            debuggee.AddSourceFiles(NatvisSourceName);
+            IDebuggee debuggee = Debuggee.Create(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
+            debuggee.AddSourceFiles(s_natvisSourceName);
             debuggee.Compile();
         }
 
@@ -61,7 +61,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if DisplayString are visualized.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             this.Comment("Run the debuggee, check argument count");
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
@@ -73,7 +73,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -99,7 +99,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if IndexListItems are visualized.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
@@ -110,7 +110,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -148,7 +148,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if ArrayItems are visualized.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
@@ -159,7 +159,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -203,7 +203,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if ArrayItems can be visualized past 1000 elements.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
@@ -214,7 +214,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -242,7 +242,7 @@ namespace CppTests.Tests
                             try
                             {
                                 more = more.GetVariable("[More...]");
-                                Assert.True(false, "Unexpected [More...] node for the last page.");
+                                Assert.Fail("Unexpected [More...] node for the last page.");
                             }
                             catch (KeyNotFoundException)
                             {
@@ -269,7 +269,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if LinkedListItems are visualized.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
@@ -280,7 +280,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -314,7 +314,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if TreeItems are visualized.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
@@ -325,7 +325,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -362,7 +362,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if 'this' in conditional expressions are evaluated.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
@@ -373,7 +373,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint before assigning 'simpleClass' and end of method.");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, new int[] { SimpleClassAssignmentLine, ReturnSourceLine });
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, new int[] { s_simpleClassAssignmentLine, s_returnSourceLine });
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -415,7 +415,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if the comma format specifier is visualized.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             this.Comment("Run the debuggee, check argument count");
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
@@ -425,7 +425,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -452,7 +452,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if the comma format specifier with square brackets is visualized.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             this.Comment("Run the debuggee, check argument count");
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
@@ -462,7 +462,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
@@ -494,7 +494,7 @@ namespace CppTests.Tests
             this.TestPurpose("This test checks if multiple Natvis files can be used.");
             this.WriteSettings(settings);
 
-            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, s_natvisName, DebuggeeMonikers.Natvis.Default);
 
             using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
             {
@@ -507,7 +507,7 @@ namespace CppTests.Tests
                 runner.RunCommand(launch);
 
                 this.Comment("Set Breakpoint");
-                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(s_natvisSourceName, s_returnSourceLine);
                 runner.SetBreakpoints(writerBreakpoints);
 
                 runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();

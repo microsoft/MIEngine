@@ -183,7 +183,7 @@ namespace MICoreUnitTests
             try
             {
                 GetLaunchOptions(content);
-                Assert.True(false, "Should be unreachable");
+                Assert.Fail("Should be unreachable");
             }
             catch (InvalidLaunchOptionsException e)
             {
@@ -200,7 +200,7 @@ namespace MICoreUnitTests
             try
             {
                 GetLaunchOptions(content);
-                Assert.True(false, "Should be unreachable");
+                Assert.Fail("Should be unreachable");
             }
             catch (InvalidLaunchOptionsException e)
             {
@@ -217,7 +217,7 @@ namespace MICoreUnitTests
             try
             {
                 GetLaunchOptions(content);
-                Assert.True(false, "Should be unreachable");
+                Assert.Fail("Should be unreachable");
             }
             catch (InvalidLaunchOptionsException e)
             {
@@ -241,7 +241,7 @@ namespace MICoreUnitTests
             try
             {
                 GetLaunchOptions(content);
-                Assert.True(false, "Should be unreachable");
+                Assert.Fail("Should be unreachable");
             }
             catch (InvalidLaunchOptionsException e)
             {

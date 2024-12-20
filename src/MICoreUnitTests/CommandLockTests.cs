@@ -11,7 +11,7 @@ namespace MICoreUnitTests
     public class CommandLockTests
     {
         [Fact]
-        public void ExclusiveTest1()
+        public async Task ExclusiveTest1Async()
         {
             var commandLock = new CommandLock();
 
@@ -23,7 +23,7 @@ namespace MICoreUnitTests
                 Task<ExclusiveLockToken> t2 = commandLock.AquireExclusive();
                 Assert.False(t2.IsCompleted);
 
-                ExclusiveLockToken token = t1.Result;
+                ExclusiveLockToken token = await t1;
                 token.Close();
                 Assert.True(t2.IsCompleted, "Closing t1 should signal t2");
                 Assert.True(ExclusiveLockToken.IsNullOrClosed(token), "Closing the token should zero it out");
@@ -64,7 +64,7 @@ namespace MICoreUnitTests
         }
 
         [Fact]
-        public void ExclusiveThenSharedTest()
+        public async Task ExclusiveThenSharedTestAsync()
         {
             var commandLock = new CommandLock();
 
@@ -77,7 +77,7 @@ namespace MICoreUnitTests
                 Task t2 = commandLock.AquireShared();
                 Assert.False(t2.IsCompleted);
 
-                ExclusiveLockToken token = t1.Result;
+                ExclusiveLockToken token = await t1;
                 token.Close();
                 Assert.True(t2.IsCompleted, "Closing t1 should signal t2");
                 Assert.True(ExclusiveLockToken.IsNullOrClosed(token), "Closing the token should zero it out");
@@ -89,7 +89,7 @@ namespace MICoreUnitTests
                 t1 = commandLock.AquireExclusive();
                 Assert.True(t1.IsCompleted);
 
-                t1.Result.Close();
+                (await t1).Close();
 
                 t2 = commandLock.AquireShared();
                 Assert.True(t2.IsCompleted, "Shared lock should be immediately aquired");
@@ -127,7 +127,7 @@ namespace MICoreUnitTests
         }
 
         [Fact]
-        public void ConvertToSharedLockTest1()
+        public async Task ConvertToSharedLockTest1Async()
         {
             // NOTE: This test covers the case that there ARE pending shared locks
             var commandLock = new CommandLock();
@@ -140,7 +140,7 @@ namespace MICoreUnitTests
                 Task t2 = commandLock.AquireShared();
                 Assert.False(t2.IsCompleted);
 
-                ExclusiveLockToken token = t1.Result;
+                ExclusiveLockToken token = await t1;
                 token.ConvertToSharedLock();
                 Assert.True(ExclusiveLockToken.IsNullOrClosed(token), "ConvertToSharedLock should have nulled out the token");
 
@@ -153,7 +153,7 @@ namespace MICoreUnitTests
         }
 
         [Fact]
-        public void ConvertToSharedLockTest2()
+        public async Task ConvertToSharedLockTest2Async()
         {
             // NOTE: This test covers the case that there are NOT pending shared locks
             var commandLock = new CommandLock();
@@ -163,7 +163,7 @@ namespace MICoreUnitTests
                 Task<ExclusiveLockToken> t1 = commandLock.AquireExclusive();
                 Assert.True(t1.IsCompleted);
 
-                ExclusiveLockToken token = t1.Result;
+                ExclusiveLockToken token = await t1;
                 token.ConvertToSharedLock();
                 Assert.True(ExclusiveLockToken.IsNullOrClosed(token), "ConvertToSharedLock should have nulled out the token");
 

@@ -48,7 +48,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                     case SupportedDebugger.Lldb:
                         return "+Inf";
                     default:
-                        Assert.True(false, "Debugger type doesn't have a specification for double value");
+                        Assert.Fail("Debugger type doesn't have a specification for double value");
                         return null;
                 }
             }
@@ -67,7 +67,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                     //0.00000000000000000
                     return value.ToString("G10", CultureInfo.InvariantCulture);
                 default:
-                    Assert.True(false, "Debugger type doesn't have a specification for double value");
+                    Assert.Fail("Debugger type doesn't have a specification for double value");
                     return null;
             }
         }
@@ -106,7 +106,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                     case SupportedDebugger.Lldb:
                         return "+Inf";
                     default:
-                        Assert.True(false, "Debugger type doesn't have a specification for float value");
+                        Assert.Fail("Debugger type doesn't have a specification for float value");
                         return null;
                 }
             }
@@ -121,7 +121,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 case SupportedDebugger.VsDbg:
                     return value.ToString("G5", CultureInfo.InvariantCulture);
                 default:
-                    Assert.True(false, "Debugger type doesn't have a specification for float value");
+                    Assert.Fail("Debugger type doesn't have a specification for float value");
                     return null;
             }
         }
@@ -163,7 +163,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                         // 0 '\0'
                         return @"{0} '\{0}'".FormatInvariantWithArgs((int)value);
                     default:
-                        Assert.True(false, "Debugger type doesn't have a specification for char value");
+                        Assert.Fail("Debugger type doesn't have a specification for char value");
                         return null;
                 }
             }
@@ -180,7 +180,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 case SupportedDebugger.Lldb:
                     return "{0} '{1}'".FormatInvariantWithArgs((int)value, value);
                 default:
-                    Assert.True(false, "Debugger type doesn't have a specification for char value");
+                    Assert.Fail("Debugger type doesn't have a specification for char value");
                     return null;
             }
         }
@@ -226,7 +226,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 case SupportedDebugger.VsDbg:
                     return "{0} '{1}'".FormatInvariantWithArgs((int)value, value);
                 default:
-                    Assert.True(false, "Debugger type doesn't have a specification for wchar value");
+                    Assert.Fail("Debugger type doesn't have a specification for wchar value");
                     return null;
             }
         }
@@ -255,7 +255,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 case SupportedDebugger.VsDbg:
                     return @"identifier ""{0}"" is undefined".FormatInvariantWithArgs(variableName);
                 default:
-                    Assert.True(false, "This debugger type doesn't have a error message test.");
+                    Assert.Fail("This debugger type doesn't have a error message test.");
                     return null;
             }
         }
@@ -293,7 +293,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 case SupportedDebugger.Lldb:
                     return "size={0}".FormatInvariantWithArgs(vectorCount);
                 default:
-                    Assert.True(false, "This debugger type doesn't have a vector format.");
+                    Assert.Fail("This debugger type doesn't have a vector format.");
                     return null;
             }
         }
@@ -347,7 +347,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                     sb.Append("}");
                     return sb.ToString();
                 default:
-                    Assert.True(false, "This debugger type doesn't have an object format.");
+                    Assert.Fail("This debugger type doesn't have an object format.");
                     return null;
             }
         }
@@ -393,7 +393,7 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                     sb.Append("}");
                     return sb.ToString();
                 default:
-                    Assert.True(false, "This debugger type doesn't have an object format.");
+                    Assert.Fail("This debugger type doesn't have an object format.");
                     return null;
             }
 

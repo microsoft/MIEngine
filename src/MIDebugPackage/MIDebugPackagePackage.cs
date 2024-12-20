@@ -126,7 +126,7 @@ namespace Microsoft.MIDebugPackage
         /// '(' ... ')' : Auto complete list for the switch (I don't know what is valid here except for 'd')
         /// d : A path
         /// </summary>
-        private const string LaunchMIDebugCommandSyntax = "E,Executable:!(d) O,OptionsFile:!(d)";
+        private const string s_launchMIDebugCommandSyntax = "E,Executable:!(d) O,OptionsFile:!(d)";
         // NOTE: This must be in the same order as the syntax string
         private enum LaunchMIDebugCommandSwitchEnum
         {
@@ -141,7 +141,7 @@ namespace Microsoft.MIDebugPackage
 
             if (IsQueryParameterList(pvaIn, pvaOut, nCmdExecOpt))
             {
-                Marshal.GetNativeVariantForObject("$ /switchdefs:\"" + LaunchMIDebugCommandSyntax + "\"", pvaOut);
+                Marshal.GetNativeVariantForObject("$ /switchdefs:\"" + s_launchMIDebugCommandSyntax + "\"", pvaOut);
                 return VSConstants.S_OK;
             }
 
@@ -169,7 +169,7 @@ namespace Microsoft.MIDebugPackage
                 throw new ApplicationException(message);
             }
 
-            hr = parseCommandLine.EvaluateSwitches(LaunchMIDebugCommandSyntax);
+            hr = parseCommandLine.EvaluateSwitches(s_launchMIDebugCommandSyntax);
             if (ErrorHandler.Failed(hr))
                 return hr;
 
@@ -246,7 +246,7 @@ namespace Microsoft.MIDebugPackage
         /// '(' ... ')' : Auto complete list for the switch (I don't know what is valid here except for 'd')
         /// d : A path
         /// </summary>
-        private const string LogMIDebugCommandSyntax = "O,On:(d) OutputWindow Off";
+        private const string s_logMIDebugCommandSyntax = "O,On:(d) OutputWindow Off";
         private enum LogMIDebugCommandSwitchEnum
         {
             On,
@@ -262,7 +262,7 @@ namespace Microsoft.MIDebugPackage
 
             if (IsQueryParameterList(pvaIn, pvaOut, nCmdLogOpt))
             {
-                Marshal.GetNativeVariantForObject("$ /switchdefs:\"" + LogMIDebugCommandSyntax + "\"", pvaOut);
+                Marshal.GetNativeVariantForObject("$ /switchdefs:\"" + s_logMIDebugCommandSyntax + "\"", pvaOut);
                 return VSConstants.S_OK;
             }
 
@@ -290,7 +290,7 @@ namespace Microsoft.MIDebugPackage
                 throw new ApplicationException(message);
             }
 
-            hr = parseCommandLine.EvaluateSwitches(LogMIDebugCommandSyntax);
+            hr = parseCommandLine.EvaluateSwitches(s_logMIDebugCommandSyntax);
             if (ErrorHandler.Failed(hr))
                 return hr;
 
