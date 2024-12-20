@@ -1,14 +1,14 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <Microsoft_VisualStudio_Debugger_Interop_Portable_Version>1.0.1</Microsoft_VisualStudio_Debugger_Interop_Portable_Version>
-        <Microsoft_VisualStudio_Interop_Version>17.11.40262</Microsoft_VisualStudio_Interop_Version>
+        <Microsoft_VisualStudio_Interop_Version>17.12.40391</Microsoft_VisualStudio_Interop_Version>
         <Newtonsoft_Json_Version>13.0.3</Newtonsoft_Json_Version>
         <Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version>17.2.60629.1</Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version>
 
         <!-- Test Packages -->
         <Microsoft_NET_Test_Sdk_Version>16.7.1</Microsoft_NET_Test_Sdk_Version>
-        <xunit_Version>2.4.1</xunit_Version>
-        <xunit_runner_visualstudio_Version>2.4.3</xunit_runner_visualstudio_Version>
+        <xunit_Version>2.9.2</xunit_Version>
+        <xunit_runner_visualstudio_Version>3.0.0</xunit_runner_visualstudio_Version>
         <coverlet_collector_Version>1.3.0</coverlet_collector_Version>
         <MSTest_TestFramework_Version>2.1.2</MSTest_TestFramework_Version>
 
@@ -25,19 +25,19 @@
         <Microsoft_VisualStudio_Debugger_Interop_15_0_Version>17.5.33428.366</Microsoft_VisualStudio_Debugger_Interop_15_0_Version>
         <Microsoft_VisualStudio_Debugger_Interop_16_0_Version>17.5.33428.366</Microsoft_VisualStudio_Debugger_Interop_16_0_Version>
         <Microsoft_VisualStudio_Debugger_InteropA_Version>17.5.33428.366</Microsoft_VisualStudio_Debugger_InteropA_Version>
-        <Microsoft_VisualStudio_Shell_15_0_Version>17.11.40262</Microsoft_VisualStudio_Shell_15_0_Version>
-        <Microsoft_VisualStudio_Shell_Framework_Version>17.11.40262</Microsoft_VisualStudio_Shell_Framework_Version>
-        <Microsoft_VisualStudio_Threading_Version>17.11.20</Microsoft_VisualStudio_Threading_Version>
-        <Microsoft_VisualStudio_Utilities_Version>17.11.40262</Microsoft_VisualStudio_Utilities_Version>
+        <Microsoft_VisualStudio_Shell_15_0_Version>17.12.40392</Microsoft_VisualStudio_Shell_15_0_Version>
+        <Microsoft_VisualStudio_Shell_Framework_Version>17.12.40391</Microsoft_VisualStudio_Shell_Framework_Version>
+        <Microsoft_VisualStudio_Threading_Version>17.12.19</Microsoft_VisualStudio_Threading_Version>
+        <Microsoft_VisualStudio_Utilities_Version>17.12.40391</Microsoft_VisualStudio_Utilities_Version>
         <Microsoft_VisualStudio_Shell_Interop_15_0_DesignTime_Version>15.0.26932</Microsoft_VisualStudio_Shell_Interop_15_0_DesignTime_Version>
         <Microsoft_VisualStudio_Workspace_Version>15.0.392</Microsoft_VisualStudio_Workspace_Version>
         <Microsoft_VisualStudio_Workspace_VSIntegration_Version>15.0.392</Microsoft_VisualStudio_Workspace_VSIntegration_Version>
-        <Microsoft_VisualStudio_TextManager_Interop_Version>17.11.40262</Microsoft_VisualStudio_TextManager_Interop_Version>
+        <Microsoft_VisualStudio_TextManager_Interop_Version>17.12.40391</Microsoft_VisualStudio_TextManager_Interop_Version>
         <Microsoft_VSSDK_BuildTools_Version>17.3.2093</Microsoft_VSSDK_BuildTools_Version>
         <System_Runtime_Loader_Version>4.3.0</System_Runtime_Loader_Version>
 
         <!-- For Component Governance -->
         <Microsoft_IO_Redist_Version>6.0.1</Microsoft_IO_Redist_Version>
-        <System_Text_Json_Version>8.0.4</System_Text_Json_Version>
+        <System_Text_Json_Version>8.0.5</System_Text_Json_Version>
     </PropertyGroup>
 </Project>
