@@ -2,13 +2,14 @@
 ---
 parameters:
   OneESPT: false
+  SourceFolder: '$(Build.StagingDirectory)\drop'
 
 steps:
 - template: ../tasks/CopyFiles.yml
   parameters:
     displayName: 'Collect build symbols'
-    SourceFolder: '$(Build.SourcesDirectory)'
-    Contents: '$(Build.SourcesDirectory)\bin\**\*.+(pdb|exe|dll)'
+    SourceFolder: ${{ parameters.SourceFolder }}
+    Contents: '${{ parameters.SourceFolder }}\**\*.+(pdb|exe|dll)'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
     CleanTargetFolder: true
 
@@ -19,16 +20,9 @@ steps:
     SymbolsFeatureName: MIEngine
     SymbolsProject: VS
     SymbolsAgentPath: '$(Build.ArtifactStagingDirectory)\Symbols\'
-    ExcludeAgentFolders: '$(Build.ArtifactStagingDirectory)\Symbols\bin\Debug;$(Build.ArtifactStagingDirectory)\Symbols\bin\Lab.Debug'
+    ExcludeAgentFolders: '$(Build.ArtifactStagingDirectory)\Symbols\Debug;$(Build.ArtifactStagingDirectory)\Symbols\Lab.Debug'
     ${{ if parameters.OneESPT }}:
       ExpirationInDays: 3650 # Expire in 10 years for release builds
     ${{ else }}:
       ExpirationInDays: 1 # Expire in 1 day if used for testing
-            
-- template: ../tasks/1ES/PublishPipelineArtifact.yml
-  parameters:
-    displayName: 'Publish Symbols Artifact'
-    targetPath: '$(Build.ArtifactStagingDirectory)/symbols' 
-    artifactName: 'Symbols'
-    OneESPT: ${{ parameters.OneESPT }}
 ...
