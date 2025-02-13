@@ -29,6 +29,8 @@ steps:
     TargetFolders: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop'
 
 - template: ../steps/CopyAndPublishSymbols.yml
+  parameters:
+    SourceFolder: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop'
 
 - template: ../tasks/PublishPipelineArtifact.yml
   parameters:
