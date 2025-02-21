@@ -1267,7 +1267,7 @@ namespace MICore
             {
                 try
                 {
-                    JObject parsedOptions = JObject.Parse(options);
+                    JObject parsedOptions = JsonConvert.DeserializeObject<JObject>(options, new JsonSerializerSettings { DateParseHandling = DateParseHandling.None });
 
                     // if the customLauncher element is present then try using the custom launcher implementation from the config store
                     if (parsedOptions["customLauncher"] != null && !string.IsNullOrWhiteSpace(parsedOptions["customLauncher"].Value<string>()))
