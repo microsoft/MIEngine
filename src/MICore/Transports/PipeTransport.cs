@@ -209,7 +209,6 @@ namespace MICore
                         {
                             // kill only the process
                             _process.Kill();
-
                         }
                     }
                     catch
