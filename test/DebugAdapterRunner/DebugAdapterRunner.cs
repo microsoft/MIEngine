@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -163,8 +164,25 @@ namespace DebugAdapterRunner
 
             if (redirectVSAssert)
             {
-                _assertionFileName = Path.Combine(Path.GetTempPath(), string.Format(CultureInfo.InvariantCulture, "vsassert.{0}.txt", Guid.NewGuid()));
-                startInfo.Environment["VSASSERT"] = _assertionFileName;
+                string vsassertPath = null;
+
+                // First see if the caller already specified the assertion path
+                if (additionalEnvironmentVariables != null)
+                {
+                    vsassertPath = additionalEnvironmentVariables
+                        .Where(pair => pair.Key.Equals("VSASSERT", StringComparison.OrdinalIgnoreCase))
+                        .Select(pair => pair.Value)
+                        .FirstOrDefault();
+                }
+
+                if (string.IsNullOrEmpty(vsassertPath))
+                {
+                    // If the caller didn't specify a path, create a temporary one
+                    vsassertPath = Path.Combine(Path.GetTempPath(), string.Format(CultureInfo.InvariantCulture, "vsassert.{0}.txt", Guid.NewGuid()));
+                    startInfo.Environment["VSASSERT"] = vsassertPath;
+                }
+
+                _assertionFileName = vsassertPath;
             }
 
             if (additionalEnvironmentVariables != null)
