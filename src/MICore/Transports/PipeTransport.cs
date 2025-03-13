@@ -197,11 +197,19 @@ namespace MICore
 
             if (_process != null)
             {
-                if (_killOnClose && !_process.HasExited)
+                if (!_process.HasExited)
                 {
                     try
                     {
-                        KillPipeProcessAndChildren(_process);
+                        if (_killOnClose)
+                        {
+                            KillPipeProcessAndChildren(_process);
+                        }
+                        else
+                        {
+                            // kill only the process
+                            _process.Kill();
+                        }
                     }
                     catch
                     {
