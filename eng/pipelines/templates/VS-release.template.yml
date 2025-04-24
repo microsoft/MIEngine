@@ -8,24 +8,27 @@ steps:
 
 - template: ../tasks/MicroBuildSigningPlugin.yml
 
-- template: ../tasks/MicroBuildLocalizationPlugin.yml
-
 - template: ../steps/BuildSolution.yml
   parameters:
     Configuration: 'Lab.Release'
+    BuildArguments: /p:NuGetPath=$(NuGetExeToolPath) /p:NuGetPrerelease=false
+    OneESPT: true
 
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
     TargetFolder: '$(Build.StagingDirectory)\drop'
     ArtifactName: 'drop'
+    OneESPT: true
 
 - template: ../tasks/SignVerify.yml
   parameters:
     TargetFolders: '$(Build.StagingDirectory)\drop'
 
 - template: ../steps/CopyAndPublishSymbols.yml
+  parameters:
+    OneESPT: true
 
-- template: ../steps/PackAndPublishVSPackages.yml
+- template: ../steps/PublishVSPackages.yml
   parameters:
     BasePath: $(Build.StagingDirectory)
 

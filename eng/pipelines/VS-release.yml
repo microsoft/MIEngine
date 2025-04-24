@@ -1,12 +1,73 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
-variables:
-  - group: TSDTUSR
-jobs:
-- template: ./jobs/VSEngSS-MicroBuild2022-1ES.job.yml
-  parameters:
-    DisplayName: 'VS_Release'
-    JobTemplate:
-    - template: ../templates/VS-release.template.yml
 
+variables:
+- name: TeamName
+  value: MDDDebugger
+
+resources:
+  repositories:
+  - repository: MicroBuildTemplate
+    type: git
+    name: 1ESPipelineTemplates/MicroBuildTemplate
+    ref: refs/tags/release
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
+  parameters:
+    pool:
+      name: VSEngSS-MicroBuild2022-1ES
+      os: windows
+    sdl:
+      sourceAnalysisPool:
+        name: VSEngSS-MicroBuild2022-1ES
+        os: windows 
+    stages:
+    - stage: BuildVSReleasePackage
+      displayName: VS_Release
+      jobs:
+      - job: Phase_1
+        displayName: VS_Release
+        timeoutInMinutes: 180
+        cancelTimeoutInMinutes: 1
+        templateContext:
+          mb:
+            signing:
+              enabled: true
+              signType: real
+              zipSources: false
+            localization:
+              enabled: true
+        steps:
+        - template: /eng/pipelines/templates/VS-release.template.yml@self
+
+    - stage: VS_Insertion
+      dependsOn: [BuildVSReleasePackage]
+      jobs:
+      - job:
+        displayName: Insert package into VS
+        templateContext:
+          inputs:
+          - input: pipelineArtifact
+            artifactName: PackageVersion
+            targetPath: $(Build.ArtifactStagingDirectory)\PackageVersion
+        steps:
+        - checkout: none
+
+        - powershell: |
+            $version= [IO.File]::ReadAllText("$(Build.ArtifactStagingDirectory)\PackageVersion\NugetPackageVersion.txt")
+            Write-Host "##vso[task.setvariable variable=MDDPackageVersion;]$version"
+          displayName: 'Set MDDPackage Version'
+
+        - task: ms-vseng.MicroBuildShipTasks.55100717-a81d-45ea-a363-b8fe3ec375ad.MicroBuildInsertVsPayload@5
+          displayName: 'Insert VS Payload'
+          inputs:
+            TargetBranch: $(TargetBranch)  
+            TeamName: 'VS Debugger Platform'
+            TeamEmail: $(TEAMEMAIL)
+            DefaultConfigValues: 'VS.Redist.Debugger.MDD.MIEngine=$(MDDPackageVersion)'
+            RevisionTextFiles: 'src/SetupPackages/VC/IDE/MDD/core/revision.txt,src/SetupPackages/VC/IDE/MDD/res/revision.txt'
+            InsertionPayloadName: 'MIEngine $(MDDPackageVersion)'
+            InsertionDescription: 'Updating MIEngine to $(MDDPackageVersion). See $(Release.Artifacts.MIEngine_MDD.BuildURI)'
+            InsertionReviewers: $(InsertionReviewers)
 ...

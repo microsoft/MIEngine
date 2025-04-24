@@ -1,35 +1,28 @@
 # Collects build symbols and publishes them as 'Symbols'
 ---
+parameters:
+  OneESPT: false
+  SourceFolder: '$(Build.StagingDirectory)\drop'
+
 steps:
 - template: ../tasks/CopyFiles.yml
   parameters:
     displayName: 'Collect build symbols'
-    SourceFolder: '$(Build.SourcesDirectory)'
-    Contents: '$(Build.SourcesDirectory)\bin\**\*.+(pdb|exe|dll)'
+    SourceFolder: ${{ parameters.SourceFolder }}
+    Contents: '${{ parameters.SourceFolder }}\**\*.+(pdb|exe|dll)'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
     CleanTargetFolder: true
 
-- task: PowerShell@2
-  displayName: 'Set Variables for PublishSymbols'
+    
+- task: ms-vseng.MicroBuildShipTasks.0ffdda1d-8c7b-40da-b8b1-061660eaeea3.MicroBuildArchiveSymbols@5
+  displayName: 'Archive MIEngine_MDD on Symweb'
   inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "##vso[task.setvariable variable=ArtifactServices.Symbol.AccountName]microsoft"
-      Write-Host "##vso[task.setvariable variable=ArtifactServices.Symbol.PAT;issecret=true;]${env:ARTIFACTSERVICES_SYMBOL_PAT}"
-      Write-Host "##vso[task.setvariable variable=ArtifactServices.Symbol.UseAAD]false"
-  env:
-    ARTIFACTSERVICES_SYMBOL_PAT: $(all-org-SymbolsReadWrite)
-
-- template: ../tasks/PublishSymbols.yml
-  parameters:
-    IndexSources: false
-    SymbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols'
-    SearchPattern: '**\*.pdb'
-    SymbolServerType: TeamServices
-
-- template: ../tasks/PublishPipelineArtifact.yml
-  parameters:
-    displayName: 'Publish Symbols'
-    path: '$(Build.ArtifactStagingDirectory)/symbols' 
-    artifactName: 'Symbols'
+    SymbolsFeatureName: MIEngine
+    SymbolsProject: VS
+    SymbolsAgentPath: '$(Build.ArtifactStagingDirectory)\Symbols\'
+    ExcludeAgentFolders: '$(Build.ArtifactStagingDirectory)\Symbols\Debug;$(Build.ArtifactStagingDirectory)\Symbols\Lab.Debug'
+    ${{ if parameters.OneESPT }}:
+      ExpirationInDays: 3650 # Expire in 10 years for release builds
+    ${{ else }}:
+      ExpirationInDays: 1 # Expire in 1 day if used for testing
 ...
