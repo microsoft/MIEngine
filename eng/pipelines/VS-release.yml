@@ -59,7 +59,7 @@ extends:
             Write-Host "##vso[task.setvariable variable=MDDPackageVersion;]$version"
           displayName: 'Set MDDPackage Version'
 
-        - task: ms-vseng.MicroBuildShipTasks.55100717-a81d-45ea-a363-b8fe3ec375ad.MicroBuildInsertVsPayload@4
+        - task: ms-vseng.MicroBuildShipTasks.55100717-a81d-45ea-a363-b8fe3ec375ad.MicroBuildInsertVsPayload@5
           displayName: 'Insert VS Payload'
           inputs:
             TargetBranch: $(TargetBranch)  

@@ -8,6 +8,7 @@ steps:
     dotnet publish $(Build.SourcesDirectory)\src\OpenDebugAD7\OpenDebugAD7.csproj -c ${{ parameters.Configuration }} -r ${{ parameters.RuntimeID }} --self-contained -o $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin
     copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.dll "$(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\Microsoft.DebugEngineHost.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
+    copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\Newtonsoft.Json.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MIDebugEngine.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     copy ${{ parameters.SignedBinariesFolder }}\Release\Microsoft.MICore.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
   displayName: "Publish OpenDebugAD7 ${{ parameters.RuntimeID }}"
