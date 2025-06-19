@@ -11,31 +11,6 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
-    public class PlatformConverter : JsonConverter<string>
-    {
-        public override string ReadJson(JsonReader reader, Type objectType, string existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            if (reader.TokenType == JsonToken.String)
-            {
-                // Old format: Platform is a string
-                return reader.Value?.ToString();
-            }
-            else if (reader.TokenType == JsonToken.StartObject)
-            {
-                // New format: Platform is an object with "os" and "architecture" properties
-                var obj = JObject.Load(reader);
-                return obj["os"]?.ToString();
-            }
-            
-            return null;
-        }
-
-        public override void WriteJson(JsonWriter writer, string value, JsonSerializer serializer)
-        {
-            writer.WriteValue(value);
-        }
-    }
-
     public class DockerContainerInstance : ContainerInstance
     {
         /// <summary>
@@ -87,8 +62,6 @@ namespace Microsoft.SSHDebugPS.Docker
         [JsonProperty("CreatedAt")]
         public string Created { get; private set; }
 
-        [JsonProperty("Platform")]
-        [JsonConverter(typeof(PlatformConverter))]
         public string Platform { get; set; }
 
         #endregion
