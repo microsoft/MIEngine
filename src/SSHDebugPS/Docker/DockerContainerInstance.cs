@@ -62,6 +62,7 @@ namespace Microsoft.SSHDebugPS.Docker
         [JsonProperty("CreatedAt")]
         public string Created { get; private set; }
 
+        [JsonIgnore]
         public string Platform { get; set; }
 
         #endregion
