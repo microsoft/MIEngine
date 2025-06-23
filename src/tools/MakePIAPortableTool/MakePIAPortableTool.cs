@@ -40,6 +40,8 @@ namespace MakePIAPortable
             { "System.Collections.Generic.IEnumerable", System_Runtime },
             { "System.Reflection.DefaultMemberAttribute", System_Runtime },
             { "System.Reflection.AssemblyDelaySignAttribute", System_Runtime},
+            { "System.Reflection.AssemblyKeyFileAttribute", System_Runtime },
+            { "System.Reflection.AssemblySignatureKeyAttribute", System_Runtime },
             { "System.Runtime.CompilerServices.CompilationRelaxationsAttribute", System_Runtime },
             { "System.Runtime.CompilerServices.RuntimeCompatibilityAttribute", System_Runtime },
             { "System.Diagnostics.DebuggableAttribute", System_Runtime },
