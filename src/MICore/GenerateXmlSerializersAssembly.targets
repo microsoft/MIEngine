@@ -80,32 +80,37 @@
         If TEST_LAB_BUILD is set, we are public signing. 
         sgen.exe does not have -publicsign and does not work if a keyfile is passed in. 
       -->
-      <SerializationSigningCompilerOptions Condition="'$(TEST_LAB_BUILD)'==''">/keyfile:$(AssemblyOriginatorKeyFile)</SerializationSigningCompilerOptions>
-
+      <SerializationSigningKeyFile Condition="'$(TEST_LAB_BUILD)'==''">$(AssemblyOriginatorKeyFile)</SerializationSigningKeyFile>
+      <SerializationSigningCompilerOptions Condition="'$(TEST_LAB_BUILD)'==''">/keyfile:$(SerializationSigningKeyFile)</SerializationSigningCompilerOptions>
+      
       <!--
         Add $(MIEngineRoot)src\MICore\SGEN_SHA2_SIGNATUREKEY to enable SHA2 signing for sgen.exe.
       -->
-      <SerializationSigningCompilerOptions Condition="'$(DelaySign)'=='true'">$(SerializationSigningCompilerOptions) /delaysign $(MIEngineRoot)src\MICore\SGEN_SHA2_SIGNATUREKEY</SerializationSigningCompilerOptions>
-
-      <CompilerPath>$(CscToolPath)$(CscToolExe)</CompilerPath>
-      <CompilerPath Condition="'$(CompilerPath)' == '' and Exists('$(MSBuildBinPath)\csc.exe')">$(MSBuildBinPath)\csc.exe</CompilerPath>
-      <CompilerPath Condition="'$(CompilerPath)' == '' and Exists('$(MSBuildBinPath)\roslyn\csc.exe')">$(MSBuildBinPath)\roslyn\csc.exe</CompilerPath>
-
-      <!-- Fix for VS 2019 -->
-      <CompilerPath Condition="'$(CompilerPath)' == '' and Exists('$(RoslynTargetsPath)\csc.exe')">$(RoslynTargetsPath)\csc.exe</CompilerPath>
+      <SgenSha2SignatureKeyFile Condition="'$(DelaySign)'=='true'">SGEN_SHA2_SIGNATUREKEY</SgenSha2SignatureKeyFile>
+      <SerializationSigningCompilerOptions Condition="'$(DelaySign)'=='true'">$(SerializationSigningCompilerOptions) /delaysign $(MIEngineRoot)src\MICore\$(SgenSha2SignatureKeyFile)</SerializationSigningCompilerOptions>
 
       <RefPath>$(MSBuildFrameworkToolsPath)</RefPath>
     </PropertyGroup>
 
     <Error Condition="'$(SDK40ToolsPath)'==''" Text="SDK40ToolsPath msbuild property is undefined." />
     <Error Condition="!Exists('$(SDK40ToolsPath)sgen.exe')" Text="sgen.exe does not exist in the SDK40ToolsPath ($(SDK40ToolsPath)xsd.exe)." />
-    <Error Condition="'$(CompilerPath)' == '' or !Exists('$(CompilerPath)')" Text="Unable to locate csc.exe - path '$(CompilerPath)' is not valid!" />
 
     <RemoveDir Condition="Exists('$(IntermediateOutputPath)sgen')" Directories="$(IntermediateOutputPath)sgen" />
     <MakeDir Directories="$(IntermediateOutputPath)sgen" />
     
     <!-- Compile the types file into an assembly that we can use as input to sgen. We don't want to pass our real assembly as we have some things that sgen doesn't like. -->
-    <Exec Command="&quot;$(CompilerPath)&quot; $(XsdCodeFile) $(GeneratedAssemblyInfoFile) /out:$(IntermediateOutputPath)sgen/$(AssemblyName).dll /target:library /noconfig $(SerializationSigningCompilerOptions) /r:$(RefPath)/System.dll /r:$(RefPath)/System.Xml.dll" />
+    <Csc
+        Sources="$(XsdCodeFile);$(GeneratedAssemblyInfoFile);$(SgenSha2SignatureKeyFile)"
+        OutputAssembly="$(IntermediateOutputPath)sgen/$(AssemblyName).dll"
+        TargetType="Library"
+        NoConfig="true"
+        NoLogo="$(NoLogo)"
+        DelaySign="$(DelaySign)"
+        KeyFile="$(SerializationSigningKeyFile)"
+        DebugType="none"
+        LangVersion="$(LangVersion)"
+        References="$(RefPath)/mscorlib.dll;$(RefPath)/System.dll;$(RefPath)/System.Xml.dll"
+        />
 
     <!-- Now generate the serialization assembly -->
     <Exec Command="&quot;$(SDK40ToolsPath)sgen.exe&quot; $(IntermediateOutputPath)sgen/$(AssemblyName).dll /force /compiler:&quot;$(SerializationSigningCompilerOptions)&quot; /keep" />
