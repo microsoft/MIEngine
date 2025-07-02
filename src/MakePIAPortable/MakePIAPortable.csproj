@@ -65,9 +65,17 @@
     
     <MakePIAPortableExe>$(MIDefaultOutputPath)tools\MakePIAPortableTool.dll</MakePIAPortableExe>
     <ILToolsExist Condition="Exists($(ILDAsmFileLocation)) AND Exists($(ILAsmFileLocation))">true</ILToolsExist>
+    <PackageVersionTargetsFile>..\..\build\package_versions.settings.targets</PackageVersionTargetsFile>
   </PropertyGroup>
-  
-  <Target Name="GeneratePortablePIA" Inputs="@(MakePIAPortableFiles)" Outputs="@(MakePIAPortableFiles->'$(PIAOutput)%(Filename)')" BeforeTargets="SignFiles" AfterTargets="Build">
+
+  <ItemGroup>
+    <!--Ensure that VS doesn't skip incremental build if package_versions.settings.targets is changed, or the target failed on the last run.
+    For more information: https://github.com/dotnet/project-system/blob/main/docs/up-to-date-check.md#customization
+    -->
+    <UpToDateCheckInput Include="$(PackageVersionTargetsFile)" />
+    <UpToDateCheckOutput Include="@(MakePIAPortableFiles->'$(PIAOutput)%(Filename)%(Extension)')" />
+  </ItemGroup>
+  <Target Name="GeneratePortablePIA" Inputs="$(PackageVersionTargetsFile);@(MakePIAPortableFiles)" Outputs="@(MakePIAPortableFiles->'$(PIAOutput)%(Filename)%(Extension)')" BeforeTargets="SignFiles" AfterTargets="Build">
     <Message Importance="High" Text="ILDAsmFileLocation: $(ILDAsmFileLocation)" />
     <Message Importance="High" Text="ILAsmFileLocation: $(ILAsmFileLocation)" />
     <Error Condition="'$(ILToolsExist)' != 'true'" Text="Unable to retrieve IL tools needed for MakePIAPortable" />
