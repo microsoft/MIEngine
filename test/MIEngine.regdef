@@ -35,8 +35,3 @@ Windows Registry Editor Version 5.00
 "Assembly"="Microsoft.AndroidDebugLauncher"
 "Class"="AndroidDebugLauncher.Launcher"
 "CodeBase"="$GlassInstallDir$\Microsoft.AndroidDebugLauncher.dll"
-
-[$RootKey$\CLSID\{316783D1-1824-4847-B3D3-FB048960EDCF}]
-"Assembly"="Microsoft.IOSDebugLauncher"
-"Class"="IOSDebugLauncher.Launcher"
-"CodeBase"="$GlassInstallDir$\Microsoft.IOSDebugLauncher.dll"
