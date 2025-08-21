@@ -21,8 +21,9 @@ This repo also includes:
 
 ### Debug Multiple Platforms
 
-* Support for debugging C/C++ on [Android](http://blogs.msdn.com/b/vcblog/archive/2014/12/12/debug-jni-android-applications-using-visual-c-cross-platform-mobile.aspx) and [iOS](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debugging-c-code-on-ios-with-visual-studio-2015.aspx).
-* Debug on any platform that supports GDB, such as Linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
+* Support for debugging C/C++ on [Android](http://blogs.msdn.com/b/vcblog/archive/2014/12/12/debug-jni-android-applications-using-visual-c-cross-platform-mobile.aspx) ~~and [iOS](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debugging-c-code-on-ios-with-visual-studio-2015.aspx).~~
+    * Note: iOS support is not available after Visual Studio 2022.
+* * Debug on any platform that supports GDB, such as Linux and even [Raspberry Pi](http://blogs.msdn.com/b/vcblog/archive/2015/04/29/debug-c-code-on-linux-from-visual-studio.aspx).
 
 ### Prerequisites
 MIEngine can be built with either [Visual Studio](https://visualstudio.microsoft.com/downloads/) or with the [.NET CLI](https://dotnet.microsoft.com/download/dotnet).
