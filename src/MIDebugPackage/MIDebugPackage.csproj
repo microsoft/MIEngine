@@ -163,9 +163,6 @@
     <DropSignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pdb" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.AndroidDebugLauncher.pkgdef" />
-    <DropSignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.dll" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pdb" />
-    <DropUnsignedFile Include="$(OutDir)\Microsoft.IOSDebugLauncher.pkgdef" />
     <DropSignedFile Include="$(OutDir)\Microsoft.JDbg.dll" />
     <DropUnsignedFile Include="$(OutDir)\Microsoft.JDbg.pdb" />
     <DropSignedFile Include="$(OutDir)\Microsoft.SSHDebugPS.dll" />
@@ -208,13 +205,7 @@
       <Private>false</Private>
       <ExcludeAssets>all</ExcludeAssets>
     </ProjectReference>
-    <ProjectReference Include="..\IOSDebugLauncher\IOSDebugLauncher.csproj">
-      <Project>{d2a11674-f677-4b11-9989-2f6099a6f0a2}</Project>
-      <Name>IOSDebugLauncher</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup;BuiltProjectOutputGroupDependencies;GetCopyToOutputDirectoryItems;SatelliteDllsProjectOutputGroup;</IncludeOutputGroupsInVSIX>
-      <Private>false</Private>
-      <ExcludeAssets>all</ExcludeAssets>
-    </ProjectReference>
+
     <ProjectReference Include="..\JDbg\JDbg.csproj">
       <Project>{78728205-db3e-4b7b-a7d2-5cbe38e9c607}</Project>
       <Name>JDbg</Name>
