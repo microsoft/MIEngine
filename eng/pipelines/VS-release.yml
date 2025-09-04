@@ -1,6 +1,11 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
 
+trigger:
+  branches:
+    include:
+    - release_mdd
+
 variables:
 - name: TeamName
   value: MDDDebugger
@@ -34,7 +39,11 @@ extends:
           mb:
             signing:
               enabled: true
-              signType: real
+              ${{ if eq(variables['Build.Reason'], 'IndividualCI') }}:
+                signType: real
+                signWithProd: true
+              ${{ else }}:
+                signType: test
               zipSources: false
             localization:
               enabled: true
@@ -68,6 +77,6 @@ extends:
             DefaultConfigValues: 'VS.Redist.Debugger.MDD.MIEngine=$(MDDPackageVersion)'
             RevisionTextFiles: 'src/SetupPackages/VC/IDE/MDD/core/revision.txt,src/SetupPackages/VC/IDE/MDD/res/revision.txt'
             InsertionPayloadName: 'MIEngine $(MDDPackageVersion)'
-            InsertionDescription: 'Updating MIEngine to $(MDDPackageVersion). See $(Release.Artifacts.MIEngine_MDD.BuildURI)'
+            InsertionDescription: 'Updating MIEngine to $(MDDPackageVersion).'
             InsertionReviewers: $(InsertionReviewers)
 ...
