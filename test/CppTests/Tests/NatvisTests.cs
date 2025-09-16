@@ -138,11 +138,6 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
-        // Disable on macOS
-        // Error:
-        //   C-style cast from 'int' to 'int [10]' is not allowed
-        //   (int[10])*(((vec)._start))
-        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestArrayItems(ITestSettings settings)
         {
             this.TestPurpose("This test checks if ArrayItems are visualized.");
@@ -193,11 +188,6 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
-        // Disable on macOS
-        // Error:
-        //   C-style cast from 'int' to 'int [10]' is not allowed
-        //   (int[10])*(((vec)._start))
-        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void Test2000ArrayItems(ITestSettings settings)
         {
             this.TestPurpose("This test checks if ArrayItems can be visualized past 1000 elements.");
@@ -484,11 +474,6 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
-        // Disable on macOS
-        // Error:
-        //   C-style cast from 'int' to 'int [10]' is not allowed
-        //   (int[10])*(((vec)._start))
-        [UnsupportedDebugger(SupportedDebugger.Lldb, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void TestMultipleNatvisFiles(ITestSettings settings)
         {
             this.TestPurpose("This test checks if multiple Natvis files can be used.");
