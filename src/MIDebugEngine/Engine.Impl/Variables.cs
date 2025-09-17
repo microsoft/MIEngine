@@ -289,8 +289,9 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.ArrayElement;
             }
-            else if (Name == "<anonymous union>")
+            else if (Name == "<anonymous union>" || TypeName.EndsWith("(anonymous union)", StringComparison.InvariantCulture))
             {
+                // GDB provides anonymous unions in the expression; LLDB includes them in the type name and leaves the expression empty
                 VariableNodeType = NodeType.AnonymousUnion;
             }
             else if (Name.Length > 1 && Name[0] == '*')
