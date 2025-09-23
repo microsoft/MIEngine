@@ -393,6 +393,8 @@ namespace Microsoft.MIDebugEngine
             string expFS = exp.Substring(lastComma + 1).Trim();
 
             // Strip off modifiers that may be included together with another format specifier, e.g. 'nvoXb' is a valid format specifier, but we only care about the 'Xb' part
+            // This is not quite the right fix -- really the below switch statement should be a series of if statements. But since none of the supported format specifiers
+            // contain any of these characters we can fix this the simple way and remove them.
             expFS = expFS.Replace("nvo", "").Replace("na", "").Replace("nr", "").Replace("nd", "");
 
             // https://docs.microsoft.com/en-us/visualstudio/debugger/format-specifiers-in-cpp
@@ -444,7 +446,7 @@ namespace Microsoft.MIDebugEngine
 
             // Array with static size
             // Note that size specifiers may also include format specifiers (e.g. "ptr,[10]s8") which we should recognize in the regex, but ignore, since neither LLDB nor GDB support them
-            var matchStatic = Regex.Match(expFS, @"^\[(\d+)\][a-zA-Z\d]*$");
+            var matchStatic = Regex.Match(expFS, @"^\[?(\d+)\]?[a-zA-Z\d]*$");
             if (matchStatic.Success)
             {
                 string count = matchStatic.Groups[1].Value; // (\d+) capture group
