@@ -92,7 +92,7 @@ namespace MICore
                 _debuggerPid = _process.Id;
                 stdout = _process.StandardOutput;
                 // Creating a new stream writer to set encoding to UTF-8 with UTF8Identifier as false. This prevents sending Byte Order Mask within the stream.
-                stdin = new StreamWriter(_process.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 65536 /* note: this is the default buffer size in the BCL */, leaveOpen: true);
+                stdin = new StreamWriter(_process.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), STREAM_BUFFER_SIZE, leaveOpen: true);
                 _stdErrReader = _process.StandardError;
                 _remainingReaders = 2;
 

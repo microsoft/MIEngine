@@ -15,6 +15,8 @@ namespace MICore
 {
     public abstract class StreamTransport : ITransport
     {
+        protected const int STREAM_BUFFER_SIZE = 65536;
+        
         private ITransportCallback _callback;
         private Thread _thread;
         private bool _bQuit;
