@@ -43,8 +43,8 @@ namespace JDbg
 
             _client = new TcpClient();
             _client.NoDelay = true;
-            _client.ReceiveBufferSize = 65536;
-            _client.SendBufferSize = 65536;
+            _client.ReceiveBufferSize = 2048;
+            _client.SendBufferSize = 2048;
             _client.ReceiveTimeout = 0;
             _client.SendTimeout = 30000;
             _client.LingerState = new LingerOption(true, 30);

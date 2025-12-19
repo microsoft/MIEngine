@@ -17,6 +17,10 @@ namespace MICore
 {
     public class PipeTransport : StreamTransport
     {
+        // Using a larger than normal buffer (64KB instead of 1KB default) as lldb-mi has a bug where
+        // commands that exceed the buffer are truncated
+        private const int STREAM_BUFFER_SIZE = 65536;
+        
         private static readonly object _lock = new object();
 
         private Process _process;

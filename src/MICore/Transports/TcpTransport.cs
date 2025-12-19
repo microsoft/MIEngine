@@ -62,13 +62,13 @@ namespace MICore
                     );
                 // Starting with .NET Framework 4.7, this method authenticates using None, which allows the operating system to choose the best protocol to use, and to block protocols that are not secure.
                 sslStream.AuthenticateAsClientAsync(tcpOptions.Hostname, certStore.Certificates, System.Security.Authentication.SslProtocols.None, false /* checkCertificateRevocation */).Wait();
-                reader = new StreamReader(sslStream, Encoding.UTF8, false, STREAM_BUFFER_SIZE);
-                writer = new StreamWriter(sslStream, Encoding.UTF8, STREAM_BUFFER_SIZE);
+                reader = new StreamReader(sslStream);
+                writer = new StreamWriter(sslStream);
             }
             else
             {
-                reader = new StreamReader(_client.GetStream(), Encoding.UTF8, false, STREAM_BUFFER_SIZE);
-                writer = new StreamWriter(_client.GetStream(), Encoding.UTF8, STREAM_BUFFER_SIZE);
+                reader = new StreamReader(_client.GetStream());
+                writer = new StreamWriter(_client.GetStream());
             }
         }
 
