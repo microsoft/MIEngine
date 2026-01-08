@@ -23,4 +23,5 @@ public:
     bool runThreading = false;
     bool runExpression = false;
     bool runEnvironment = false;
+    bool runInheritance = false;
 };

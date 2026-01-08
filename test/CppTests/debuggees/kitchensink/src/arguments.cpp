@@ -42,6 +42,11 @@ void Arguments::CoreRun()
             {
                 this->runEnvironment = true;
             }
+
+            if (argStr.compare("-fInheritance") == 0)
+            {
+                this->runInheritance = true;
+            }
         }
     }
 }

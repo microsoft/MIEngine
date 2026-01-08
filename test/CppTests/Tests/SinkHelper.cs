@@ -22,6 +22,7 @@ namespace CppTests.Tests
         public const string NonTerminating = "nonterminating.cpp";
         public const string Expression = "expression.cpp";
         public const string Environment = "environment.cpp";
+        public const string Inheritance = "inheritance.cpp";
 
         private const string Name = "kitchensink";
         private const string OutputName = "sink";
@@ -47,7 +48,8 @@ namespace CppTests.Tests
                 SinkHelper.Feature,
                 SinkHelper.Threading,
                 SinkHelper.NonTerminating,
-                SinkHelper.Expression);
+                SinkHelper.Expression,
+                SinkHelper.Inheritance);
             debuggee.CompilerOptions |= CompilerOption.SupportThreading;
         }
     }

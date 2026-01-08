@@ -25,6 +25,7 @@ namespace CppTests.Tests
             public const int Execution = 4;
             public const int Expression = 5;
             public const int Environment = 6;
+            public const int Inheritance = 7;
         }
 
         internal static class SharedLib

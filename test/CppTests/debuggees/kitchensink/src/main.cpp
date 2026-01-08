@@ -8,6 +8,7 @@
 #include "threading.h"
 #include "expression.h"
 #include "environment.h"
+#include "inheritance.h"
 
 using namespace std;
 
@@ -49,6 +50,12 @@ int main(int argc, char *argv[])
     {
         Environment environmentFeature;;
         environmentFeature.Run();
+    }
+
+    if (argumentsFeature.runInheritance == true)
+    {
+        Inheritance inheritanceFeature;
+        inheritanceFeature.Run();
     }
 
     cout << "Goodbye.\n";
