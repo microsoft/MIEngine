@@ -50,7 +50,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         public string EvalDependentExpression(string expr) => Parent.EvalDependentExpression(expr);
         public void AsyncEval(IDebugEventCallback2 pExprCallback) => Parent.AsyncEval(pExprCallback);
         public void SyncEval(enum_EVALFLAGS dwFlags, DAPEvalFlags dwDAPFlags) => Parent.SyncEval(dwFlags, dwDAPFlags);
-        public virtual string FullName() => Name;
+        public virtual string FullName() => Parent.FullName();
         public void EnsureChildren() => Parent.EnsureChildren();
         public void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error)
         {
@@ -646,8 +646,9 @@ namespace Microsoft.MIDebugEngine.Natvis
                             {
                                 continue;
                             }
-                            // Creates an expression: (T[50])*(<ValuePointer> + 50)
-                            // This evaluates for 50 elements of type T, starting at <ValuePointer> with an offet of 50 elements.
+
+                            // Creates a dereferenced pointer-to-array expression: (*(T(*)[50])(ValuePointer + 50))
+                            // This evaluates for 50 elements of type T, starting at <ValuePointer> with an offset of 50 elements.
                             // E.g. This will grab elements 50 - 99 from <ValuePointer>.
                             // Note:
                             //   If requestedSize > 1000, the evaluation will only grab the first 1000 elements.
@@ -656,15 +657,15 @@ namespace Microsoft.MIDebugEngine.Natvis
                             uint requestedSize = Math.Min(MAX_EXPAND, totalSize - startIndex);
 
                             StringBuilder arrayBuilder = new StringBuilder();
-                            arrayBuilder.Append('(');
+                            arrayBuilder.Append("(*(");
                             arrayBuilder.Append(typename);
-                            arrayBuilder.Append('[');
+                            arrayBuilder.Append("(*)[");
                             arrayBuilder.Append(requestedSize);
-                            arrayBuilder.Append("])*(");
+                            arrayBuilder.Append("])(");
                             arrayBuilder.Append(vp.Value);
                             arrayBuilder.Append('+');
                             arrayBuilder.Append(startIndex);
-                            arrayBuilder.Append(')');
+                            arrayBuilder.Append("))");
                             string arrayStr = arrayBuilder.ToString();
 
                             IVariableInformation arrayExpr = GetExpression(arrayStr, variable, visualizer.ScopedNames);

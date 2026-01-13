@@ -272,7 +272,7 @@ namespace Microsoft.MIDebugEngine
 
             int index;
 
-            if (!results.Contains("value") && (Name == TypeName || Name.Contains("::")))
+            if (!results.Contains("value") && (Name == TypeName || (Name.Contains("::") && name == null)))
             {
                 // base classes show up with no value and exp==type 
                 // (sometimes underlying debugger does not follow this convention, when using typedefs in templated types so look for "::" in the field name too)
@@ -289,8 +289,9 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.ArrayElement;
             }
-            else if (Name == "<anonymous union>")
+            else if (Name == "<anonymous union>" || TypeName.EndsWith("(anonymous union)", StringComparison.InvariantCulture))
             {
+                // GDB provides anonymous unions in the expression; LLDB includes them in the type name and leaves the expression empty
                 VariableNodeType = NodeType.AnonymousUnion;
             }
             else if (Name.Length > 1 && Name[0] == '*')
@@ -388,10 +389,16 @@ namespace Microsoft.MIDebugEngine
             if (lastComma <= 0)
                 return exp;
 
+            // Find the format specifier expression
+            string expFS = exp.Substring(lastComma + 1).Trim();
+
+            // Strip off modifiers that may be included together with another format specifier, e.g. 'nvoXb' is a valid format specifier, but we only care about the 'Xb' part
+            // This is not quite the right fix -- really the below switch statement should be a series of if statements. But since none of the supported format specifiers
+            // contain any of these characters we can fix this the simple way and remove them.
+            expFS = expFS.Replace("nvo", "").Replace("na", "").Replace("nr", "").Replace("nd", "");
+
             // https://docs.microsoft.com/en-us/visualstudio/debugger/format-specifiers-in-cpp
-            string expFS = exp.Substring(lastComma + 1);
-            string trimmed = expFS.Trim();
-            switch (trimmed)
+            switch (expFS)
             {
                 case "x":
                 case "X":
@@ -432,19 +439,17 @@ namespace Microsoft.MIDebugEngine
                     return "(char)(" + exp.Substring(0, lastComma) + ")";
                 // just remove and ignore these
                 case "en":
-                case "na":
-                case "nd":
-                case "nr":
                 case "!":
                 case "":
                     return exp.Substring(0, lastComma);
             }
 
-            // array with static size
-            var m = Regex.Match(trimmed, @"^\[?(\d+)\]?$");
-            if (m.Success)
+            // Array with static size
+            // Note that size specifiers may also include format specifiers (e.g. "ptr,[10]s8") which we should recognize in the regex, but ignore, since neither LLDB nor GDB support them
+            var matchStatic = Regex.Match(expFS, @"^\[?(\d+)\]?[a-zA-Z\d]*$");
+            if (matchStatic.Success)
             {
-                string count = m.Groups[1].Value; // (\d+) capture group
+                string count = matchStatic.Groups[1].Value; // (\d+) capture group
                 string expr = exp.Substring(0, lastComma);
 
                 if (_engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb)
@@ -471,9 +476,13 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
-            // array with dynamic size
-            if (Regex.Match(trimmed, @"^\[([a-zA-Z_][a-zA-Z_\d]*)\]$").Success)
-                return exp.Substring(0, lastComma);
+            // Array with dynamic size is not supported, discard the format specifier
+            var matchDynamic = Regex.Match(expFS, @"^\[.*\][a-zA-Z\d]*$");
+            if (matchDynamic.Success)
+            {
+                string expr = exp.Substring(0, lastComma);
+                return expr;
+            }
 
             return exp;
         }
@@ -714,7 +723,20 @@ namespace Microsoft.MIDebugEngine
             Results results = await _engine.DebuggedProcess.MICommandFactory.VarSetFormat(_internalName, _format, ResultClass.None);
             if (results.ResultClass == ResultClass.done)
             {
-                Value = results.FindString("value");
+                if (results.Contains("value"))
+                {
+                    // Sample output for GDB:     ^done,format="natural",value="123"
+                    this.Value = results.FindString("value");
+                }
+                else if (results.TryFind("changelist", out ValueListValue changeList))
+                {
+                    // Sample output for LLDB:    ^done,changelist=[{name="var1",value="123",in_scope="true",type_changed="false",type_changed="0"}]
+                    this.Value = changeList.Content[0].FindString("value");
+                }
+                else
+                {
+                    throw new MIResultFormatException("value", results);
+                }
             }
             else if (results.ResultClass == ResultClass.error)
             {

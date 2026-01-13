@@ -1267,7 +1267,11 @@ namespace MICore
             {
                 try
                 {
-                    JObject parsedOptions = JObject.Parse(options);
+                    JObject parsedOptions = JsonConvert.DeserializeObject<JObject>(options, new JsonSerializerSettings { DateParseHandling = DateParseHandling.None });
+                    if (parsedOptions is null)
+                    {
+                        throw new InvalidLaunchOptionsException(MICoreResources.Error_UnknownLaunchOptions);
+                    }
 
                     // if the customLauncher element is present then try using the custom launcher implementation from the config store
                     if (parsedOptions["customLauncher"] != null && !string.IsNullOrWhiteSpace(parsedOptions["customLauncher"].Value<string>()))
@@ -1337,11 +1341,8 @@ namespace MICore
 
                             case "IOSLaunchOptions":
                                 {
-                                    serializer = GetXmlSerializer(typeof(IOSLaunchOptions));
-                                    launcherXmlOptions = Deserialize(serializer, reader);
-                                    clsidLauncher = new Guid("316783D1-1824-4847-B3D3-FB048960EDCF");
+                                    throw new InvalidLaunchOptionsException(MICoreResources.Error_Deprecated_iOS_Debugging);
                                 }
-                                break;
 
                             case "AndroidLaunchOptions":
                                 {
