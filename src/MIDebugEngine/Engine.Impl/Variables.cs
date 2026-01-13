@@ -272,7 +272,7 @@ namespace Microsoft.MIDebugEngine
 
             int index;
 
-            if (!results.Contains("value") && (Name == TypeName || Name.Contains("::")))
+            if (!results.Contains("value") && (Name == TypeName || (Name.Contains("::") && name == null)))
             {
                 // base classes show up with no value and exp==type 
                 // (sometimes underlying debugger does not follow this convention, when using typedefs in templated types so look for "::" in the field name too)
