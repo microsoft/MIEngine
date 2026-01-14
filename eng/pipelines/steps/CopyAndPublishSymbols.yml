@@ -14,9 +14,10 @@ steps:
     CleanTargetFolder: true
 
     
-- task: ms-vseng.MicroBuildShipTasks.0ffdda1d-8c7b-40da-b8b1-061660eaeea3.MicroBuildArchiveSymbols@5
+- task: ms-vseng.MicroBuildShipTasks.0ffdda1d-8c7b-40da-b8b1-061660eaeea3.MicroBuildArchiveSymbols@6
   displayName: 'Archive MIEngine_MDD on Symweb'
   inputs:
+    azureSubscription: 'VSEng-SymbolsUpload' 
     SymbolsFeatureName: MIEngine
     SymbolsProject: VS
     SymbolsAgentPath: '$(Build.ArtifactStagingDirectory)\Symbols\'
@@ -25,4 +26,6 @@ steps:
       ExpirationInDays: 3650 # Expire in 10 years for release builds
     ${{ else }}:
       ExpirationInDays: 1 # Expire in 1 day if used for testing
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 ...
