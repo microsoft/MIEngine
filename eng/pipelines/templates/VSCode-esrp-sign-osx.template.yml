@@ -17,6 +17,7 @@ steps:
     inputs:
       SigningTarget: '$(Pipeline.Workspace)\Artifacts\${{ rid }}.zip'
       SigningCert: 8023
+      ConnectedPMEServiceName: '6cc74545-d7b9-4050-9dfa-ebefcc8961ea'
 
   - template: ../tasks/1ES/PublishPipelineArtifact.yml
     parameters:
