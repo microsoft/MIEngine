@@ -23,7 +23,7 @@ steps:
     SymbolsAgentPath: '$(Build.ArtifactStagingDirectory)\Symbols\'
     ExcludeAgentFolders: '$(Build.ArtifactStagingDirectory)\Symbols\Debug;$(Build.ArtifactStagingDirectory)\Symbols\Lab.Debug'
     ${{ if parameters.OneESPT }}:
-      ExpirationInDays: 3650 # Expire in 10 years for release builds
+      ExpirationInDays: 5475 # Expire in 10 years for release builds
     ${{ else }}:
       ExpirationInDays: 1 # Expire in 1 day if used for testing
   env:
