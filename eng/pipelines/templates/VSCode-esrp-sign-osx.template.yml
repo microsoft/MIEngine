@@ -25,4 +25,5 @@ steps:
       targetPath: '$(Pipeline.Workspace)\Artifacts\${{ rid }}.zip'
       artifactName: '${{ rid }}_zip'
       OneESPT: true
+      sbomEnabled: false # Disable SBOM for zipped files
 ...
