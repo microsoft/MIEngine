@@ -44,7 +44,7 @@ namespace Microsoft.MIDebugEngine
         private List<DebuggedThread> _deadThreads;
         private List<DebuggedThread> _newThreads;
         private Dictionary<string, List<int>> _threadGroups;
-        private static uint s_targetId = uint.MaxValue;
+        private static uint s_targetId = 0; // Thread ids should be start at 0 in the default scenario
         private const string c_defaultGroupId = "i1";  // gdb's default group id, also used for any process without group ids
 
         private List<DebuggedThread> DeadThreads
@@ -215,7 +215,7 @@ namespace Microsoft.MIDebugEngine
                 Results results = await _debugger.MICommandFactory.ThreadInfo(tid);
                 if (results.ResultClass != ResultClass.done)
                 {
-                    // This can happen on some versions of gdb where thread-info is not supported while running, so only assert if we're also not running. 
+                    // This can happen on some versions of gdb where thread-info is not supported while running, so only assert if we're also not running.
                     if (this._debugger.ProcessState != ProcessState.Running)
                     {
                         Debug.Fail("Thread info not successful");
@@ -371,9 +371,19 @@ namespace Microsoft.MIDebugEngine
                 // In gdb coredumps the thread name is in the form:" LWP <thread-id>"
                 return true;
             }
+            else if (targetId.StartsWith("pid ", StringComparison.OrdinalIgnoreCase))
+            {
+                // In QNX gdb coredumps the thread name is in the form:"pid <pid> tid <pid>", eg "pid 4194373 tid 308"
+                int tid_pos = targetId.IndexOf("tid ", StringComparison.Ordinal);
+                int len = targetId.Length - (tid_pos + 4);
+                if (len > 0 && System.UInt32.TryParse(targetId.Substring(tid_pos + 4, len), out tid) && tid != 0)
+                {
+                    return true;
+                }
+            }
             else
             {
-                tid = --s_targetId;
+                tid = ++s_targetId;
                 return true;
             }
 
@@ -420,7 +430,7 @@ namespace Microsoft.MIDebugEngine
             {
                 var tlist = threadsinfo.Find<ValueListValue>("threads");
 
-                // update our thread list   
+                // update our thread list
                 lock (_threadList)
                 {
                     foreach (var thread in _threadList)
