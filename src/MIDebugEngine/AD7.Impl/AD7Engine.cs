@@ -1111,7 +1111,27 @@ namespace Microsoft.MIDebugEngine
 
         public int WriteAt(IDebugMemoryContext2 pStartContext, uint dwCount, byte[] rgbMemory)
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (!(pStartContext is AD7MemoryAddress memContext))
+                    return Constants.E_INVALIDARG;
+
+                ulong address = memContext.Address;
+                bool isWriteSuccess = false;
+                DebuggedProcess.WorkerThread.RunOperation(async () =>
+                {
+                    isWriteSuccess = await DebuggedProcess.WriteProcessMemory(address, dwCount, rgbMemory);
+                });
+
+                if (!isWriteSuccess)
+                    return Constants.E_FAIL;
+
+                return Constants.S_OK;
+            }
+            catch
+            {
+                return Constants.E_FAIL;
+            }
         }
 
         #endregion
