@@ -2121,6 +2121,18 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<Tuple<ulong, ulong>> FindValidMemoryRange(ulong address, uint count, int offset)
         {
+            // Debugging coredump with LLDB doesn't work well with '-data-read-memory-bytes', the function
+            // returns an error. Namely 'LLDB unable to read entire memory block of n bytes at address 0x0....'.
+            // As a result we have to skip calling '-data-read-memory-bytes' and just use the address + offet and count
+            // in order to get the memory range.
+            if (IsCoreDump && _launchOptions.DebuggerMIMode == MIMode.Lldb)
+            {
+                ulong startAddress = (ulong)((long)address + offset);
+                ulong endAddress = startAddress + count;
+
+                return new Tuple<ulong, ulong>(startAddress, endAddress);
+            }
+
             var ret = new Tuple<ulong, ulong>(0, 0);    // init to an empty range
             string cmd = String.Format(CultureInfo.InvariantCulture, "-data-read-memory-bytes -o {0} {1} {2}", offset.ToString(CultureInfo.InvariantCulture), EngineUtils.AsAddr(address, Is64BitArch), count.ToString(CultureInfo.InvariantCulture));
             Results results = await CmdAsync(cmd, ResultClass.None);
