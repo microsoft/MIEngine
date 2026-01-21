@@ -408,12 +408,12 @@ namespace Microsoft.MIDebugEngine
                 _callback.OnError(message);
             };
 
-            ThreadCreatedEvent += async delegate (object o, EventArgs args)
+            ThreadCreatedEvent += delegate (object o, EventArgs args)
             {
                 try
                 {
                     ResultEventArgs result = (ResultEventArgs)args;
-                    await ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
+                    ThreadCache.ThreadCreatedEvent(result.Results.FindInt("id"), result.Results.TryFindString("group-id"));
                     _childProcessHandler?.ThreadCreatedEvent(result.Results);
                 }
                 catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
