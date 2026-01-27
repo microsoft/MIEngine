@@ -523,43 +523,21 @@ namespace CppTests.Tests
             // VsDbg moves the stack pointer to the return address which is not necessarily the calling address
             if (debugger.DebuggerType == SupportedDebugger.VsDbg)
             {
-                // Visual C++ compiler for x64 and x86 generate symbols differently which means that the line numbers will be different.
-                if (debugger.DebuggeeArchitecture == SupportedArchitecture.x64)
-                {
-                    return new[] {
-                        new StackFrame(10, "accumulate(", "expression.cpp", null),
-                        new StackFrame(12, "accumulate(", "expression.cpp", null),
-                        new StackFrame(12, "accumulate(", "expression.cpp", null),
-                        new StackFrame(20, "func(", "expression.cpp", null),
-                        new StackFrame(81, "Expression::checkCallStack(", "expression.cpp", null),
-                        new StackFrame(74, "Expression::checkPrettyPrinting(", "expression.cpp", null),
-                        new StackFrame(63, "Expression::checkSpecialValues(", "expression.cpp", null),
-                        new StackFrame(53, "Expression::checkClassOnStackAndHeap(", "expression.cpp", null),
-                        new StackFrame(40, "Expression::checkArrayAndPointers(", "expression.cpp", null),
-                        new StackFrame(32, "Expression::checkPrimitiveTypes(", "expression.cpp", null),
-                        new StackFrame(86, "Expression::CoreRun(", "expression.cpp", null),
-                        new StackFrame(23, "Feature::Run(", "feature.cpp", null),
-                        new StackFrame(45, "main", "main.cpp", null)
-                    };
-                }
-                else
-                {
-                    return new[] {
-                        new StackFrame(10, "accumulate(", "expression.cpp", null),
-                        new StackFrame(12, "accumulate(", "expression.cpp", null),
-                        new StackFrame(12, "accumulate(", "expression.cpp", null),
-                        new StackFrame(19, "func(", "expression.cpp", null),
-                        new StackFrame(81, "Expression::checkCallStack(", "expression.cpp", null),
-                        new StackFrame(75, "Expression::checkPrettyPrinting(", "expression.cpp", null),
-                        new StackFrame(63, "Expression::checkSpecialValues(", "expression.cpp", null),
-                        new StackFrame(54, "Expression::checkClassOnStackAndHeap(", "expression.cpp", null),
-                        new StackFrame(40, "Expression::checkArrayAndPointers(", "expression.cpp", null),
-                        new StackFrame(32, "Expression::checkPrimitiveTypes(", "expression.cpp", null),
-                        new StackFrame(86, "Expression::CoreRun(", "expression.cpp", null),
-                        new StackFrame(23, "Feature::Run(", "feature.cpp", null),
-                        new StackFrame(46, "main", "main.cpp", null)
-                    };
-                }
+                return new[] {
+                    new StackFrame(10, "accumulate(", "expression.cpp", null),
+                    new StackFrame(12, "accumulate(", "expression.cpp", null),
+                    new StackFrame(12, "accumulate(", "expression.cpp", null),
+                    new StackFrame(19, "func(", "expression.cpp", null),
+                    new StackFrame(80, "Expression::checkCallStack(", "expression.cpp", null),
+                    new StackFrame(74, "Expression::checkPrettyPrinting(", "expression.cpp", null),
+                    new StackFrame(63, "Expression::checkSpecialValues(", "expression.cpp", null),
+                    new StackFrame(53, "Expression::checkClassOnStackAndHeap(", "expression.cpp", null),
+                    new StackFrame(40, "Expression::checkArrayAndPointers(", "expression.cpp", null),
+                    new StackFrame(32, "Expression::checkPrimitiveTypes(", "expression.cpp", null),
+                    new StackFrame(86, "Expression::CoreRun(", "expression.cpp", null),
+                    new StackFrame(23, "Feature::Run(", "feature.cpp", null),
+                    new StackFrame(45, "main", "main.cpp", null)
+                };
             }
             else
             {
