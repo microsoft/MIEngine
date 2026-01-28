@@ -38,6 +38,7 @@ steps:
     artifactName: 'nupkgs'
     OneESPT: true
 
+# Retain the pipeline run for 2 years so we can compare future builds against it
 - powershell: |
     $contentType = 'application/json';
     $headers = @{ Authorization = 'Bearer $(System.AccessToken)' };
