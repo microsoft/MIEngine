@@ -6,8 +6,6 @@ steps:
 
 - template: ../tasks/NuGetToolInstaller.yml
 
-- template: ../tasks/MicroBuildSigningPlugin.yml
-
 - template: ../tasks/NuGetCommand.yml
   parameters:
     Command: 'restore'
@@ -21,7 +19,7 @@ steps:
     configuration: 'Release'
     msbuildArguments: /p:NuGetPath=$(NuGetExeToolPath) /p:NuGetPrerelease=false
     env: { 
-        "SIGN_TYPE": "$(SignType)" 
+        "SIGN_TYPE": "real" 
     } 
 
 - template: ../tasks/SignVerify.yml
@@ -31,12 +29,24 @@ steps:
 - template: ../steps/CopyAndPublishSymbols.yml
   parameters:
     SourceFolder: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop'
+    OneESPT: true
 
-- template: ../tasks/PublishPipelineArtifact.yml
+- template: ../tasks/1ES/PublishPipelineArtifact.yml
   parameters:
     displayName: 'Publish Nupkgs'
     path: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop'
     artifactName: 'nupkgs'
+    OneESPT: true
+
+- powershell: |
+    $contentType = 'application/json';
+    $headers = @{ Authorization = 'Bearer $(System.AccessToken)' };
+    $rawRequest = @{ daysValid = 365 * 2; definitionId = $(resources.pipeline.CI.pipelineID); ownerId = 'User:$(Build.RequestedForId)'; protectPipeline = $false; runId = $(resources.pipeline.CI.runId) };
+    $request = ConvertTo-Json @($rawRequest);
+    Write-Host $request
+    $uri = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/retention/leases?api-version=6.0-preview.1";
+    Invoke-RestMethod -uri $uri -method POST -Headers $headers -ContentType $contentType -Body $request;
+  displayName: Retain build
 
 - template: ../tasks/MicroBuildCleanup.yml
 ...
