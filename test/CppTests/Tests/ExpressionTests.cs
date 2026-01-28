@@ -530,12 +530,12 @@ namespace CppTests.Tests
                     new StackFrame(19, "func(", "expression.cpp", null),
                     new StackFrame(80, "Expression::checkCallStack(", "expression.cpp", null),
                     new StackFrame(74, "Expression::checkPrettyPrinting(", "expression.cpp", null),
-                    new StackFrame(63, "Expression::checkSpecialValues(", "expression.cpp", null),
+                    new StackFrame(62, "Expression::checkSpecialValues(", "expression.cpp", null),
                     new StackFrame(53, "Expression::checkClassOnStackAndHeap(", "expression.cpp", null),
-                    new StackFrame(40, "Expression::checkArrayAndPointers(", "expression.cpp", null),
-                    new StackFrame(32, "Expression::checkPrimitiveTypes(", "expression.cpp", null),
-                    new StackFrame(86, "Expression::CoreRun(", "expression.cpp", null),
-                    new StackFrame(23, "Feature::Run(", "feature.cpp", null),
+                    new StackFrame(39, "Expression::checkArrayAndPointers(", "expression.cpp", null),
+                    new StackFrame(31, "Expression::checkPrimitiveTypes(", "expression.cpp", null),
+                    new StackFrame(85, "Expression::CoreRun(", "expression.cpp", null),
+                    new StackFrame(22, "Feature::Run(", "feature.cpp", null),
                     new StackFrame(45, "main", "main.cpp", null)
                 };
             }
