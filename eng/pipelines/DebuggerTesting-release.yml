@@ -33,8 +33,7 @@ extends:
           mb:
             signing:
               enabled: true
-              signType: real
-              signWithProd: true
+              signType: test
               zipSources: false
             localization:
               enabled: true

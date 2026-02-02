@@ -34,15 +34,22 @@ steps:
 - template: ../tasks/1ES/PublishPipelineArtifact.yml
   parameters:
     displayName: 'Publish Nupkgs'
-    path: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop'
+    targetPath: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop'
     artifactName: 'nupkgs'
     OneESPT: true
+
+- task: 1ES.PublishNuget@1
+  displayName: 'NuGet push'
+  inputs:
+    packageParentPath: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop\'
+    packagesToPush: '$(Build.SourcesDirectory)\bin\DebugAdapterProtocolTests\Release\drop\*.nupkg'
+    publishVstsFeed: 'cf33e8db-bbb9-4205-82ee-e1cd159cce99'
 
 # Retain the pipeline run for 2 years so we can compare future builds against it
 - powershell: |
     $contentType = 'application/json';
     $headers = @{ Authorization = 'Bearer $(System.AccessToken)' };
-    $rawRequest = @{ daysValid = 365 * 2; definitionId = $(resources.pipeline.CI.pipelineID); ownerId = 'User:$(Build.RequestedForId)'; protectPipeline = $false; runId = $(resources.pipeline.CI.runId) };
+    $rawRequest = @{ daysValid = 365 * 2; definitionId = $(System.DefinitionId); ownerId = 'User:$(Build.RequestedForId)'; protectPipeline = $false; runId = $(Build.BuildId) };
     $request = ConvertTo-Json @($rawRequest);
     Write-Host $request
     $uri = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/retention/leases?api-version=6.0-preview.1";
