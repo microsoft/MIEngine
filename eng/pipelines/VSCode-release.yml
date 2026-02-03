@@ -1,11 +1,6 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
 
-trigger:
-  branches:
-    include:
-    - release-cpptools
-
 variables:
 - name: TeamName
   value: MDDDebugger
@@ -38,11 +33,8 @@ extends:
           mb:
             signing:
               enabled: true
-              ${{ if eq(variables['Build.Reason'], 'IndividualCI') }}:
-                signType: real
-                signWithProd: true
-              ${{ else }}:
-                signType: test
+              signType: real
+              signWithProd: true
               zipSources: false
             localization:
               enabled: true
