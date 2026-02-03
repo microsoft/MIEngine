@@ -1,6 +1,8 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
 
+trigger: none
+
 variables:
 - name: TeamName
   value: MDDDebugger
