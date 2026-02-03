@@ -59,3 +59,4 @@ steps:
       targetPath: '$(Build.StagingDirectory)\zips\${{ parameters.RuntimeID }}.zip'
       artifactName: '${{ parameters.RuntimeID }}_zip'
       OneESPT: true
+      sbomEnabled: false # Disable SBOM for zipped files
