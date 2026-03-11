@@ -454,8 +454,9 @@ namespace Microsoft.MIDebugEngine
 
                 if (_engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb)
                 {
-                    // return *<expression>@<count> which is only supported in GDB
-                    return FormattableString.Invariant($"*{expr}@{count}");
+                    // GDB's @ operator artificial array syntax: pointer@count
+                    // This treats the pointer as an array of 'count' elements
+                    return FormattableString.Invariant($"{expr}@{count}");
                 }
                 else
                 {
@@ -476,12 +477,53 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
-            // Array with dynamic size is not supported, discard the format specifier
-            var matchDynamic = Regex.Match(expFS, @"^\[.*\][a-zA-Z\d]*$");
+            // Array with dynamic size - evaluate the size expression
+            var matchDynamic = Regex.Match(expFS, @"^\[(.+)\][a-zA-Z\d]*$");
             if (matchDynamic.Success)
             {
+                string sizeExpr = matchDynamic.Groups[1].Value; // capture the expression inside brackets
                 string expr = exp.Substring(0, lastComma);
-                return expr;
+
+                if (_engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb)
+                {
+                    // For GDB, use pointer@(size_expression) syntax
+                    // GDB can evaluate the size expression at runtime
+                    return FormattableString.Invariant($"{expr}@({sizeExpr})");
+                }
+                else
+                {
+                    // For LLDB, we need to evaluate the size expression first, then use array cast syntax
+                    _deferedFormatExpression = async (int threadId, uint frameLevel) =>
+                    {
+                        // Evaluate the size expression to get the count
+                        string countResult = await _engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(sizeExpr, threadId, frameLevel);
+
+                        if (string.IsNullOrWhiteSpace(countResult))
+                        {
+                            return string.Empty;
+                        }
+
+                        // Parse the evaluated result as an integer
+                        // Remove any type suffixes and parse
+                        string cleanCount = Regex.Match(countResult, @"\d+").Value;
+                        if (string.IsNullOrEmpty(cleanCount) || !int.TryParse(cleanCount, out int count) || count <= 0)
+                        {
+                            return string.Empty;
+                        }
+
+                        string derefType = await GetDereferencedTypeStringAsync(expr, threadId, frameLevel);
+
+                        if (!string.IsNullOrEmpty(derefType))
+                        {
+                            // Cast 'exp' to a pointer of an array of type 'T' with evaluated size
+                            return FormattableString.Invariant($"*({derefType}(*)[{count}])({expr})");
+                        }
+
+                        return string.Empty;
+                    };
+
+                    return expr;
+                }
             }
 
             return exp;
