@@ -38,8 +38,8 @@ namespace CppTests.Tests
         private const string NatvisSourceName = "main.cpp";
 
         // These line numbers will need to change if src/natvis/main.cpp changes
-        private const int SimpleClassAssignmentLine = 47;
-        private const int ReturnSourceLine = 51;
+        private const int SimpleClassAssignmentLine = 48;
+        private const int ReturnSourceLine = 52;
 
         [Theory]
         [RequiresTestSettings]
@@ -464,6 +464,40 @@ namespace CppTests.Tests
                     this.Comment("Verifying comma format specifier");
                     int[] expected = { 0, 1, 4, 9 };
                     currentFrame.AssertEvaluateAsIntArray("arr._array,[4]", EvaluateContext.Watch, expected);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestDynamicArraySizeFormatSpecifier(ITestSettings settings)
+        {
+            this.TestPurpose("Verify that a dynamic size expression in the comma format specifier (e.g. ptr,[variable]) expands correctly.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            this.Comment("Launch and stop at return line");
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                runner.RunCommand(new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath));
+
+                SourceBreakpoints bp = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(bp);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector frame = threadInspector.Stack.First();
+
+                    this.Comment("Evaluate arr._array,[dynamicSize] where dynamicSize==4");
+                    int[] expectedValues = { 0, 1, 4, 9 };
+                    frame.AssertEvaluateAsIntArray("arr._array,[dynamicSize]", EvaluateContext.Watch, expectedValues);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();

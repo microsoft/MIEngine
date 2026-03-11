@@ -42,6 +42,7 @@ int main(int argc, char** argv)
     {
         arr[i] = i * i;
     }
+    int dynamicSize = 4;
 
     SimpleClass* simpleClass = nullptr;
     simpleClass = new SimpleClass();

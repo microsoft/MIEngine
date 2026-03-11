@@ -476,11 +476,47 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
-            // Array with dynamic size is not supported, discard the format specifier
-            var matchDynamic = Regex.Match(expFS, @"^\[.*\][a-zA-Z\d]*$");
+            // Array with dynamic size: evaluate the expression inside brackets at runtime to get the count
+            var matchDynamic = Regex.Match(expFS, @"^\[(.*)\][a-zA-Z\d]*$");
             if (matchDynamic.Success)
             {
+                string sizeExpression = matchDynamic.Groups[1].Value;
                 string expr = exp.Substring(0, lastComma);
+
+                _deferedFormatExpression = async (int threadId, uint frameLevel) =>
+                {
+                    try
+                    {
+                        string countStr = await _engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(sizeExpression, threadId, frameLevel);
+                        uint count = MICore.Debugger.ParseUint(countStr);
+
+                        if (count == 0)
+                        {
+                            return string.Empty;
+                        }
+
+                        if (_engine.DebuggedProcess.MICommandFactory.Mode == MIMode.Gdb)
+                        {
+                            return FormattableString.Invariant($"*{expr}@{count}");
+                        }
+                        else
+                        {
+                            string derefType = await GetDereferencedTypeStringAsync(expr, threadId, frameLevel);
+
+                            if (!string.IsNullOrEmpty(derefType))
+                            {
+                                return FormattableString.Invariant($"*({derefType}(*)[{count}])({expr})");
+                            }
+
+                            return string.Empty;
+                        }
+                    }
+                    catch
+                    {
+                        return string.Empty;
+                    }
+                };
+
                 return expr;
             }
 
