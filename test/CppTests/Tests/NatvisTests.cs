@@ -515,6 +515,51 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileNatvisDebuggee))]
         [RequiresTestSettings]
+        public void TestCommaFormatWithDynamicExpression(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks if the comma format specifier with dynamic expressions is visualized.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            this.Comment("Run the debuggee, check argument count");
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying comma format specifier with variable reference");
+                    int[] expected = { 0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 361, 400, 441, 484, 529, 576, 625, 676, 729, 784, 841, 900, 961, 1024, 1089, 1156, 1225, 1296, 1369, 1444, 1521, 1600, 1681, 1764, 1849, 1936, 2025, 2116, 2209, 2304, 2401, 2500, 2601 };
+                    currentFrame.AssertEvaluateAsIntArray("arr._array,[arr._size]", EvaluateContext.Watch, expected);
+
+                    this.Comment("Verifying comma format specifier with arithmetic expression");
+                    int[] expectedSubset = { 0, 1, 4, 9, 16 };
+                    currentFrame.AssertEvaluateAsIntArray("arr._array,[2+3]", EvaluateContext.Watch, expectedSubset);
+
+                    this.Comment("Verifying comma format specifier with expression using variable");
+                    int[] expectedHalf = { 0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 361, 400, 441, 484, 529, 576, 625 };
+                    currentFrame.AssertEvaluateAsIntArray("arr._array,[arr._size/2]", EvaluateContext.Watch, expectedHalf);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
         public void TestMultipleNatvisFiles(ITestSettings settings)
         {
             this.TestPurpose("This test checks if multiple Natvis files can be used.");
