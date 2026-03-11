@@ -4,6 +4,7 @@
 #include "SimpleArray.h"
 #include "SimpleClass.h"
 #include "SimpleMatrix.h"
+#include "SimpleTemplated.h"
 
 class SimpleDisplayObject
 {
@@ -47,6 +48,11 @@ int main(int argc, char** argv)
     simpleClass = new SimpleClass();
 
     SimpleMatrix matrix(2, 256);
+
+    SimpleContainer<int> container(42, 10);
+    SimplePair<int, double> pair(1, 3.14);
+    SimpleMap<double, char, int> genericMap(2.71, 'x', 5);
+    SimpleMap<int, double, int> intKeyMap(7, 1.618, 3);
 
     return 0;
 }

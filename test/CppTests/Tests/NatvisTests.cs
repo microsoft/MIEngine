@@ -38,8 +38,8 @@ namespace CppTests.Tests
         private const string NatvisSourceName = "main.cpp";
 
         // These line numbers will need to change if src/natvis/main.cpp changes
-        private const int SimpleClassAssignmentLine = 47;
-        private const int ReturnSourceLine = 51;
+        private const int SimpleClassAssignmentLine = 48;
+        private const int ReturnSourceLine = 57;
 
         [Theory]
         [RequiresTestSettings]
@@ -527,6 +527,57 @@ namespace CppTests.Tests
                     Assert.Equal("-100", map.GetVariable("[0]").Value);
                     Assert.Equal("0", map.GetVariable("[3]").Value);
                     Assert.Equal("15", map.GetVariable("[5]").Value);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestWildcardMatchSelectsBestVisualizer(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks that the natvis visualizer picks the most specific wildcard match.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying single-arg SimpleContainer<int> matches <*>");
+                    var container = currentFrame.GetVariable("container");
+                    Assert.Equal("{ size=10 }", container.Value);
+
+                    this.Comment("Verifying SimplePair picks <*,*> over <*>");
+                    var pair = currentFrame.GetVariable("pair");
+                    Assert.StartsWith("(", pair.Value);
+
+                    this.Comment("Verifying SimpleMap<double,...> picks <*,*,*> over <*>");
+                    var genericMap = currentFrame.GetVariable("genericMap");
+                    Assert.Contains("size=", genericMap.Value);
+                    Assert.DoesNotContain("int-keyed", genericMap.Value);
+
+                    this.Comment("Verifying SimpleMap<int,...> picks int-specialized <int,*,*> over generic <*,*,*>");
+                    var intKeyMap = currentFrame.GetVariable("intKeyMap");
+                    Assert.Contains("int-keyed", intKeyMap.Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
