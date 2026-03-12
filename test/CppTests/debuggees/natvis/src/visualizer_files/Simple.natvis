@@ -69,4 +69,32 @@
       </ArrayItems>
     </Expand>
   </Type>
+
+  <!-- SimpleContainer<T>: single-arg, like std::vector<T> -->
+  <Type Name="SimpleContainer&lt;*&gt;">
+    <DisplayString>{{ size={_size} }}</DisplayString>
+  </Type>
+
+  <!-- SimplePair: single-wildcard fallback, less specific than <*,*> -->
+  <Type Name="SimplePair&lt;*&gt;">
+    <DisplayString>{_key}</DisplayString>
+  </Type>
+  <!-- SimplePair: two-arg pattern, preferred over single wildcard -->
+  <Type Name="SimplePair&lt;*,*&gt;">
+    <DisplayString>({_key}, {_value})</DisplayString>
+  </Type>
+
+  <!-- SimpleMap: single-wildcard fallback, less specific than <*,*,*> -->
+  <Type Name="SimpleMap&lt;*&gt;">
+    <DisplayString>{_size} elements</DisplayString>
+  </Type>
+  <!-- SimpleMap: full three-arg pattern, like std::map<K,V,Comp> -->
+  <Type Name="SimpleMap&lt;*,*,*&gt;">
+    <DisplayString>{{ size={_size} }}</DisplayString>
+  </Type>
+  <!-- SimpleMap: int-key specialization, concrete arg beats wildcard -->
+  <Type Name="SimpleMap&lt;int,*,*&gt;">
+    <DisplayString>{{ size={_size} (int-keyed) }}</DisplayString>
+  </Type>
+
 </AutoVisualizer>
