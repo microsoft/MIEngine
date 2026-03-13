@@ -113,4 +113,12 @@
     </Expand>
   </Type>
 
+  <Type Name="DataPoint">
+    <DisplayString>{value}</DisplayString>
+  </Type>
+
+  <Type Name="DataPoint *">
+    <DisplayString>{{ {this}={*this} }}</DisplayString>
+  </Type>
+
 </AutoVisualizer>

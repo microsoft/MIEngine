@@ -38,8 +38,8 @@ namespace CppTests.Tests
         private const string NatvisSourceName = "main.cpp";
 
         // These line numbers will need to change if src/natvis/main.cpp changes
-        private const int SimpleClassAssignmentLine = 64;
-        private const int ReturnSourceLine = 76;
+        private const int SimpleClassAssignmentLine = 65;
+        private const int ReturnSourceLine = 80;
 
         [Theory]
         [RequiresTestSettings]
@@ -390,6 +390,47 @@ namespace CppTests.Tests
 
                     // Custom Item in natvis
                     Assert.Equal("Non-null Class", simpleClass.Value);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestThisInDisplayString(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks that {this} in a DisplayString value does not produce extra braces.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying {this} in DisplayString does not recurse");
+                    var dpPtr = currentFrame.GetVariable("dpPtr");
+
+                    // Natvis: <DisplayString>{{ {this}={*this} }}</DisplayString>
+                    // Expected: "{ 0x<hex_address>=42 }" — {this} is the raw address, {*this} is the dereferenced value
+                    Assert.Matches(@"^\{ 0x[0-9a-fA-F]+=42 \}$", dpPtr.Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
