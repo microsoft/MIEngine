@@ -36,6 +36,7 @@ namespace Microsoft.MIDebugEngine
         string EvalDependentExpression(string expr);
         bool IsVisualized { get; }
         bool IsReadOnly();
+        bool IsNullPointer();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         bool IsPreformatted { get; set; }
         string Address();
@@ -115,6 +116,30 @@ namespace Microsoft.MIDebugEngine
         private static bool IsPointer(string typeName)
         {
             return typeName.Trim().EndsWith("*", StringComparison.Ordinal);
+        }
+
+        public bool IsNullPointer()
+        {
+            if (string.IsNullOrEmpty(TypeName) || !IsPointer(TypeName) || string.IsNullOrEmpty(Value))
+            {
+                return false;
+            }
+
+            string trimmed = Value.Trim();
+
+            // GDB may represent null as "0x0", "0x00", "0x0000000000000000", etc.
+            if (trimmed.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                return long.TryParse(trimmed.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out long hexVal) && hexVal == 0;
+            }
+
+            // Decimal zero
+            if (long.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out long decVal) && decVal == 0)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public string FullName()   // Full expression used to re-compute the value
