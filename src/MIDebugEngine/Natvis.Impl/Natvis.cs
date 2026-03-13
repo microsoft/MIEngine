@@ -45,6 +45,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
         public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         public virtual bool IsReadOnly() => Parent.IsReadOnly();
+        public bool IsNullPointer() => Parent.IsNullPointer();
 
         public VariableInformation FindChildByName(string name) => Parent.FindChildByName(name);
         public string EvalDependentExpression(string expr) => Parent.EvalDependentExpression(expr);
