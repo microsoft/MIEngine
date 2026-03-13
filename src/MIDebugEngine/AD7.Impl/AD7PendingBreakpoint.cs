@@ -115,11 +115,6 @@ namespace Microsoft.MIDebugEngine
                     return false;
                 }
             }
-            if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
-            {
-                this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
-                return false;
-            }
 
             return true;
         }
@@ -406,6 +401,11 @@ namespace Microsoft.MIDebugEngine
                 }
                 AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, IsDataBreakpoint, bp.Addr, bp.FunctionName, bp.DocumentContext(_engine));
                 AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, this, breakpointResolution, bp);
+                // Apply pass count (hit count condition) from the original request to the bound breakpoint
+                if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
+                {
+                    ((IDebugBoundBreakpoint2)boundBreakpoint).SetPassCount(_bpRequestInfo.bpPassCount);
+                }
                 //check can bind one last time. If the pending breakpoint was deleted before now, we need to clean up gdb side
                 if (CanBind())
                 {
@@ -645,13 +645,17 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // The sample engine does not support pass counts on breakpoints.
         int IDebugPendingBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount)
         {
-            if (bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+            _bpRequestInfo.bpPassCount = bpPassCount;
+            _bpRequestInfo.dwFields |= enum_BPREQI_FIELDS.BPREQI_PASSCOUNT;
+
+            lock (_boundBreakpoints)
             {
-                this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR), true);
-                return Constants.E_FAIL;
+                foreach (AD7BoundBreakpoint bp in _boundBreakpoints)
+                {
+                    ((IDebugBoundBreakpoint2)bp).SetPassCount(bpPassCount);
+                }
             }
             return Constants.S_OK;
         }

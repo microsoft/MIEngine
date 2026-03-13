@@ -212,7 +212,11 @@ namespace Microsoft.MIDebugEngine
                     continue;
                 }
 
-                hitBoundBreakpoints.Add(currBoundBp);
+                currBoundBp.IncrementHitCount();
+                if (currBoundBp.ShouldBreak())
+                {
+                    hitBoundBreakpoints.Add(currBoundBp);
+                }
             }
 
             fContinue = (hitBoundBreakpoints.Count == 0 && hitBps.Length != 0);
