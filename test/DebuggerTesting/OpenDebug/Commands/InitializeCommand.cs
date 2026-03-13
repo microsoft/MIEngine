@@ -35,6 +35,9 @@ namespace DebuggerTesting.OpenDebug.Commands
 
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public bool? supportsSetVariable;
+
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public bool? supportsHitConditionalBreakpoints;
         }
 
         public Body body = new Body();

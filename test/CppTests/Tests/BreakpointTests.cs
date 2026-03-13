@@ -516,6 +516,282 @@ namespace CppTests.Tests
                 Assert.True(runner.InitializeResponse.body.supportsFunctionBreakpoints.HasValue
                     && runner.InitializeResponse.body.supportsFunctionBreakpoints.Value == true, "Function breakpoints should be supported");
 
+                Assert.True(runner.InitializeResponse.body.supportsHitConditionalBreakpoints.HasValue
+                    && runner.InitializeResponse.body.supportsHitConditionalBreakpoints.Value == true, "Hit conditional breakpoints should be supported");
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterConfigurationDone();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        public void HitConditionBreakpointEqual(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that a breakpoint with a hit count condition (equal) only breaks on the Nth hit");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set a breakpoint with hit condition = 5 inside a loop that iterates 10 times");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, hitCondition: "5");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run to breakpoint - should only stop on 5th hit");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterConfigurationDone();
+
+                this.Comment("Verify that the loop variable equals 4 (0-indexed, 5th iteration)");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "4");
+                }
+
+                this.Comment("Run to completion - hit count 5 already reached, should not stop again");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        public void HitConditionBreakpointGreaterOrEqual(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that a breakpoint with a hit count condition (>=) breaks on the Nth hit and every subsequent hit");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set a breakpoint with hit condition >= 8 inside a loop that iterates 10 times");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, hitCondition: ">=8");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run to breakpoint - should stop on 8th hit");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterConfigurationDone();
+
+                this.Comment("Verify that the loop variable equals 7 (0-indexed, 8th iteration)");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "7");
+                }
+
+                this.Comment("Continue - should stop on 9th hit");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                this.Comment("Verify that the loop variable equals 8 (0-indexed, 9th iteration)");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "8");
+                }
+
+                this.Comment("Continue - should stop on 10th hit");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                this.Comment("Verify that the loop variable equals 9 (0-indexed, 10th iteration)");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "9");
+                }
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        public void HitConditionBreakpointModulo(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that a breakpoint with a hit count condition (modulo) breaks on every Nth hit");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set a breakpoint with hit condition %3 inside a loop that iterates 10 times");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, hitCondition: "%3");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run to breakpoint - should stop on 3rd hit");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterConfigurationDone();
+
+                this.Comment("Verify that the loop variable equals 2 (0-indexed, 3rd iteration)");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "2");
+                }
+
+                this.Comment("Continue - should stop on 6th hit");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                this.Comment("Verify that the loop variable equals 5 (0-indexed, 6th iteration)");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "5");
+                }
+
+                this.Comment("Continue - should stop on 9th hit");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                this.Comment("Verify that the loop variable equals 8 (0-indexed, 9th iteration)");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "8");
+                }
+
+                this.Comment("Run to completion - no more multiples of 3 within 10 iterations");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        public void InvalidHitConditionBreakpoint(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that an invalid hit condition returns a non-verified breakpoint with an error message");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set a breakpoint with an invalid hit condition");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, hitCondition: "invalid");
+                var response = runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Verify breakpoint is not verified and has an error message about hit condition");
+                Assert.NotNull(response.body.breakpoints);
+                Assert.Single(response.body.breakpoints);
+                Assert.False(response.body.breakpoints[0].verified, "Breakpoint with invalid hit condition should not be verified");
+                Assert.Contains("hitCondition", response.body.breakpoints[0].message);
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterConfigurationDone();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        public void InvalidLogMessageBreakpoint(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that an invalid log message returns a non-verified breakpoint with an error message");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set a breakpoint with an invalid log message (unmatched brace)");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, logMessage: "{unmatched");
+                var response = runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Verify breakpoint is not verified and has an error message about log message");
+                Assert.NotNull(response.body.breakpoints);
+                Assert.Single(response.body.breakpoints);
+                Assert.False(response.body.breakpoints[0].verified, "Breakpoint with invalid log message should not be verified");
+                Assert.Contains("logMessage", response.body.breakpoints[0].message);
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterConfigurationDone();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        public void InvalidLogMessageAndHitConditionBreakpoint(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that both invalid log message and invalid hit condition errors are returned together");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set a breakpoint with both an invalid log message and an invalid hit condition");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, logMessage: "{unmatched", hitCondition: "invalid");
+                var response = runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Verify breakpoint is not verified and error message mentions both logMessage and hitCondition");
+                Assert.NotNull(response.body.breakpoints);
+                Assert.Single(response.body.breakpoints);
+                Assert.False(response.body.breakpoints[0].verified, "Breakpoint with invalid log message and hit condition should not be verified");
+                Assert.Contains("logMessage", response.body.breakpoints[0].message);
+                Assert.Contains("hitCondition", response.body.breakpoints[0].message);
+
                 this.Comment("Run to completion");
                 runner.Expects.ExitedEvent()
                               .TerminatedEvent()

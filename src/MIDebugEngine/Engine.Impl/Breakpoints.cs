@@ -398,6 +398,7 @@ namespace Microsoft.MIDebugEngine
         internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, uint size, string bkptno)
         {
             Addr = addr;
+            HitCount = 0;
             Enabled = true;
             this.Number = bkptno;
             _parent = parent;
@@ -433,6 +434,16 @@ namespace Microsoft.MIDebugEngine
                 }
                 _textPosition = new MITextPosition(_textPosition.FileName, value);
             }
+        }
+
+        internal void IncrementHitCount()
+        {
+            HitCount++;
+        }
+
+        internal void SetHitCount(uint count)
+        {
+            HitCount = count;
         }
     }
 }
