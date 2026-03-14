@@ -2448,10 +2448,36 @@ namespace OpenDebugAD7
                                 // Check to see if hit condition changed
                                 else if (!StringComparer.Ordinal.Equals(ad7BPRequest.HitCondition, bp.HitCondition))
                                 {
-                                    // Hit condition has been modified. Delete breakpoint so it will be recreated with the updated hit condition.
-                                    var toRemove = dict[bp.Line];
-                                    toRemove.Delete();
-                                    dict.Remove(bp.Line);
+                                    // Hit condition has been modified. Update the existing breakpoint's
+                                    // pass count in-place (matching VS behavior) so the hit count is
+                                    // preserved and the engine re-sends -break-after to GDB.
+                                    ad7BPRequest.UpdateHitCondition(bp.HitCondition);
+                                    if (ad7BPRequest.TryParseHitCondition(out var style, out var passCount))
+                                    {
+                                        var bpPassCount = new BP_PASSCOUNT
+                                        {
+                                            stylePassCount = style,
+                                            dwPassCount = passCount
+                                        };
+                                        dict[bp.Line].SetPassCount(bpPassCount);
+                                        resBreakpoints.Add(new Breakpoint()
+                                        {
+                                            Id = (int)ad7BPRequest.Id,
+                                            Verified = true,
+                                            Line = bp.Line
+                                        });
+                                    }
+                                    else
+                                    {
+                                        resBreakpoints.Add(new Breakpoint()
+                                        {
+                                            Id = (int)ad7BPRequest.Id,
+                                            Verified = false,
+                                            Line = bp.Line,
+                                            Message = AD7Resources.Error_UnableToParseHitCondition
+                                        });
+                                    }
+                                    continue;
                                 }
                                 // Check to see if tracepoint changed
                                 else if (!StringComparer.Ordinal.Equals(ad7BPRequest.LogMessage, bp.LogMessage))

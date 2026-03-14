@@ -393,23 +393,33 @@ namespace Microsoft.MIDebugEngine
                 if (_bp != null && (_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0
                     && _bpRequestInfo.bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
                 {
-                    uint ignoreCount = ComputeIgnoreCount(_bpRequestInfo.bpPassCount.stylePassCount, _bpRequestInfo.bpPassCount.dwPassCount);
+                    uint ignoreCount = ComputeIgnoreCount(_bpRequestInfo.bpPassCount.stylePassCount, _bpRequestInfo.bpPassCount.dwPassCount, 0);
                     await _bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess);
                 }
             }
         }
 
         /// <summary>
-        /// Computes the ignore count for -break-after. All styles skip the first N-1 hits.
+        /// Computes the ignore count for -break-after, accounting for hits already
+        /// counted from a prior breakpoint (<paramref name="currentHits"/>).
         /// </summary>
-        private static uint ComputeIgnoreCount(enum_BP_PASSCOUNT_STYLE style, uint passCount)
+        private static uint ComputeIgnoreCount(enum_BP_PASSCOUNT_STYLE style, uint passCount, uint currentHits)
         {
+            if (passCount == 0)
+            {
+                return 0;
+            }
+
             switch (style)
             {
                 case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL:
                 case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL_OR_GREATER:
+                    // Need to stop at hit N. Already counted currentHits, so skip (N - 1 - currentHits) more.
+                    return passCount - 1 > currentHits ? passCount - 1 - currentHits : 0;
                 case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD:
-                    return passCount > 0 ? passCount - 1 : 0;
+                    // Next stop is at the next multiple of passCount after currentHits.
+                    uint remainder = currentHits % passCount;
+                    return remainder == 0 ? passCount - 1 : passCount - 1 - remainder;
                 default:
                     return 0;
             }
@@ -674,12 +684,42 @@ namespace Microsoft.MIDebugEngine
             _bpRequestInfo.bpPassCount = bpPassCount;
             _bpRequestInfo.dwFields |= enum_BPREQI_FIELDS.BPREQI_PASSCOUNT;
 
+            PendingBreakpoint bp = null;
             lock (_boundBreakpoints)
             {
-                foreach (AD7BoundBreakpoint bp in _boundBreakpoints)
+                foreach (AD7BoundBreakpoint boundBp in _boundBreakpoints)
                 {
-                    ((IDebugBoundBreakpoint2)bp).SetPassCount(bpPassCount);
+                    ((IDebugBoundBreakpoint2)boundBp).SetPassCount(bpPassCount);
                 }
+                if (_bp != null)
+                {
+                    bp = _bp;
+                }
+            }
+
+            // Re-send -break-after to GDB with the updated ignore count, accounting
+            // for the current hit count so the breakpoint fires at the right time.
+            if (bp != null && bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+            {
+                uint currentHits = 0;
+                lock (_boundBreakpoints)
+                {
+                    foreach (AD7BoundBreakpoint boundBp in _boundBreakpoints)
+                    {
+                        uint hc;
+                        if (((IDebugBoundBreakpoint2)boundBp).GetHitCount(out hc) == Constants.S_OK && hc > currentHits)
+                        {
+                            currentHits = hc;
+                        }
+                    }
+                }
+                uint ignoreCount = ComputeIgnoreCount(bpPassCount.stylePassCount, bpPassCount.dwPassCount, currentHits);
+                _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+                {
+                    _engine.DebuggedProcess.AddInternalBreakAction(
+                        () => bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess)
+                    );
+                });
             }
             return Constants.S_OK;
         }
