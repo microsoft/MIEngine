@@ -71,6 +71,20 @@ namespace Microsoft.MIDebugEngine
                 return;
             }
 
+            // Sync GDB's hit count ("times") for pass count breakpoints.
+            // e.g. =breakpoint-modified,bkpt={number="1",...,times="5",ignore="2",...}
+            string timesStr = bkpt.TryFindString("times");
+            if (!string.IsNullOrEmpty(timesStr) && uint.TryParse(timesStr, out uint times))
+            {
+                foreach (AD7BoundBreakpoint boundBp in pending.EnumBoundBreakpoints())
+                {
+                    if (boundBp.HasPassCount)
+                    {
+                        boundBp.SetHitCount(times);
+                    }
+                }
+            }
+
             string warning = bkpt.TryFindString("warning");
             if (!string.IsNullOrEmpty(warning))
             {
@@ -212,7 +226,11 @@ namespace Microsoft.MIDebugEngine
                     continue;
                 }
 
-                currBoundBp.IncrementHitCount();
+                // Pass count breakpoints get their hit count from =breakpoint-modified.
+                if (!currBoundBp.HasPassCount)
+                {
+                    currBoundBp.IncrementHitCount();
+                }
                 if (currBoundBp.ShouldBreak())
                 {
                     hitBoundBreakpoints.Add(currBoundBp);

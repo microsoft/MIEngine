@@ -39,6 +39,7 @@ namespace Microsoft.MIDebugEngine
         internal string Number { get { return _bp.Number; } }
         internal AD7PendingBreakpoint PendingBreakpoint { get { return _pendingBreakpoint; } }
         internal bool IsDataBreakpoint { get { return PendingBreakpoint.IsDataBreakpoint; } }
+        internal bool HasPassCount { get { return _passCountStyle != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE; } }
 
         public AD7BoundBreakpoint(AD7Engine engine, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution, BoundBreakpoint bp)
         {
@@ -162,6 +163,14 @@ namespace Microsoft.MIDebugEngine
         {
             _bp.SetHitCount(dwHitCount);
             return Constants.S_OK;
+        }
+
+        /// <summary>
+        /// Syncs the hit count from GDB's "times" field in =breakpoint-modified events.
+        /// </summary>
+        internal void SetHitCount(uint hitCount)
+        {
+            _bp.SetHitCount(hitCount);
         }
 
         // This is used to specify the breakpoint hit count condition.

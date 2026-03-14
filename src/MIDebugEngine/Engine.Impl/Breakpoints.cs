@@ -353,6 +353,18 @@ namespace Microsoft.MIDebugEngine
                 await process.MICommandFactory.BreakCondition(Number, expr);
             }
         }
+
+        /// <summary>
+        /// Sends -break-after to set an ignore count on this breakpoint.
+        /// </summary>
+        internal async Task<Results> SetBreakAfterAsync(uint count, DebuggedProcess process)
+        {
+            if (process.ProcessState != MICore.ProcessState.Exited)
+            {
+                return await process.MICommandFactory.BreakAfter(Number, count);
+            }
+            return null;
+        }
     }
 
     internal class BoundBreakpoint

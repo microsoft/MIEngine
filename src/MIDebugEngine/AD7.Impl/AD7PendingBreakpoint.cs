@@ -388,6 +388,30 @@ namespace Microsoft.MIDebugEngine
                         }
                     }
                 }
+
+                // Set ignore count via -break-after if a pass count is configured
+                if (_bp != null && (_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0
+                    && _bpRequestInfo.bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+                {
+                    uint ignoreCount = ComputeIgnoreCount(_bpRequestInfo.bpPassCount.stylePassCount, _bpRequestInfo.bpPassCount.dwPassCount);
+                    await _bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Computes the ignore count for -break-after. All styles skip the first N-1 hits.
+        /// </summary>
+        private static uint ComputeIgnoreCount(enum_BP_PASSCOUNT_STYLE style, uint passCount)
+        {
+            switch (style)
+            {
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL:
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL_OR_GREATER:
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD:
+                    return passCount > 0 ? passCount - 1 : 0;
+                default:
+                    return 0;
             }
         }
 
