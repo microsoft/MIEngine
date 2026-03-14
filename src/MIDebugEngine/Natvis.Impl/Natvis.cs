@@ -934,7 +934,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                 }
             }
-            if (!(variable is VisualizerWrapper)) // don't stack wrappers
+            if (!(variable is VisualizerWrapper) && !expandType.HideRawView) // don't stack wrappers, and respect HideRawView
             {
                 // add the [Raw View] field
                 IVariableInformation rawView = new VisualizerWrapper(ResourceStrings.RawView, _process.Engine, variable, visualizer, isVisualizerView: false);

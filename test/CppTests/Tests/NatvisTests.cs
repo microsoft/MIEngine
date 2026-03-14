@@ -38,8 +38,8 @@ namespace CppTests.Tests
         private const string NatvisSourceName = "main.cpp";
 
         // These line numbers will need to change if src/natvis/main.cpp changes
-        private const int SimpleClassAssignmentLine = 48;
-        private const int ReturnSourceLine = 57;
+        private const int SimpleClassAssignmentLine = 64;
+        private const int ReturnSourceLine = 76;
 
         [Theory]
         [RequiresTestSettings]
@@ -578,6 +578,54 @@ namespace CppTests.Tests
                     this.Comment("Verifying SimpleMap<int,...> picks int-specialized <int,*,*> over generic <*,*,*>");
                     var intKeyMap = currentFrame.GetVariable("intKeyMap");
                     Assert.Contains("int-keyed", intKeyMap.Value);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestHideRawView(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks that HideRawView='true' on Expand hides the [Raw View] node.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying HideRawView='true' hides [Raw View]");
+                    var hideRawObj = currentFrame.GetVariable("hideRawObj");
+                    Assert.Equal("Hidden raw view object", hideRawObj.Value);
+                    Assert.Equal("10", hideRawObj.GetVariable("X").Value);
+                    Assert.Equal("20", hideRawObj.GetVariable("Y").Value);
+                    Assert.False(hideRawObj.Variables.ContainsKey("[Raw View]"), "[Raw View] should be hidden when HideRawView='true'");
+
+                    this.Comment("Verifying default Expand still shows [Raw View]");
+                    var showRawObj = currentFrame.GetVariable("showRawObj");
+                    Assert.Equal("Shown raw view object", showRawObj.Value);
+                    Assert.Equal("30", showRawObj.GetVariable("A").Value);
+                    Assert.Equal("40", showRawObj.GetVariable("B").Value);
+                    Assert.True(showRawObj.Variables.ContainsKey("[Raw View]"), "[Raw View] should be visible by default");
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();

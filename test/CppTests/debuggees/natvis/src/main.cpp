@@ -12,6 +12,22 @@ public:
     SimpleDisplayObject() {}
 };
 
+class HideRawViewObject
+{
+public:
+    int x;
+    int y;
+    HideRawViewObject() : x(10), y(20) {}
+};
+
+class ShowRawViewObject
+{
+public:
+    int a;
+    int b;
+    ShowRawViewObject() : a(30), b(40) {}
+};
+
 int main(int argc, char** argv)
 {
     SimpleDisplayObject obj_1;
@@ -53,6 +69,9 @@ int main(int argc, char** argv)
     SimplePair<int, double> pair(1, 3.14);
     SimpleMap<double, char, int> genericMap(2.71, 'x', 5);
     SimpleMap<int, double, int> intKeyMap(7, 1.618, 3);
+
+    HideRawViewObject hideRawObj;
+    ShowRawViewObject showRawObj;
 
     return 0;
 }
