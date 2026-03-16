@@ -31,6 +31,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
                 if (newPort.IsConnected)
                 {
+                    TrackPort(name, newPort);
                     port = newPort;
                     return HR.S_OK;
                 }

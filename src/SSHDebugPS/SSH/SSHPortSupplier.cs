@@ -37,6 +37,7 @@ namespace Microsoft.SSHDebugPS.SSH
 
             if (newPort.IsConnected)
             {
+                TrackPort(name, newPort);
                 port = newPort;
                 return HR.S_OK;
             }

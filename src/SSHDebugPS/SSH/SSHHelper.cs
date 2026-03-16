@@ -49,16 +49,19 @@ namespace Microsoft.SSHDebugPS.SSH
                             }
                             else
                             {
+                                remoteSystem.Dispose();
                                 return null;
                             }
                         }
                         else
                         {
+                            remoteSystem.Dispose();
                             throw new InvalidOperationException("Why is IVsConnectionManager null?");
                         }
                     }
                     catch (Exception ex)
                     {
+                        remoteSystem.Dispose();
                         VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, ex.Message, null,
                             OLEMSGICON.OLEMSGICON_CRITICAL, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
                         return null;
