@@ -5,6 +5,7 @@
 #include "SimpleClass.h"
 #include "SimpleMatrix.h"
 #include "SimpleTemplated.h"
+#include "DataPoint.h"
 
 class SimpleDisplayObject
 {
@@ -72,6 +73,9 @@ int main(int argc, char** argv)
 
     HideRawViewObject hideRawObj;
     ShowRawViewObject showRawObj;
+
+    DataPoint dp(42);
+    DataPoint *dpPtr = &dp;
 
     return 0;
 }

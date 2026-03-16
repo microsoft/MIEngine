@@ -1440,6 +1440,13 @@ namespace Microsoft.MIDebugEngine.Natvis
             string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames);
             IVariableInformation expressionVariable = new VariableInformation(processedExpr, variable, _process.Engine, null);
             expressionVariable.SyncEval();
+
+            // Avoid recursive natvis formatting when expression is 'this'
+            if (expression.Trim() == "this")
+            {
+                return expressionVariable.Value;
+            }
+
             return FormatDisplayString(expressionVariable).value;
         }
 
