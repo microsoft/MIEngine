@@ -21,6 +21,7 @@ namespace Microsoft.SSHDebugPS
         private Connection _connection;
         private readonly Dictionary<uint, IDebugPortEvents2> _eventCallbacks = new Dictionary<uint, IDebugPortEvents2>();
         private uint _lastCallbackCookie;
+        private int _sessionRefCount;
 
         protected string Name { get; private set; }
 
@@ -37,16 +38,19 @@ namespace Microsoft.SSHDebugPS
 
         protected Connection GetConnection()
         {
-            if (_connection == null)
+            lock (_lock)
             {
-                _connection = GetConnectionInternal();
-                if (_connection != null)
+                if (_connection == null)
                 {
-                    Name = _connection.Name;
+                    _connection = GetConnectionInternal();
+                    if (_connection != null)
+                    {
+                        Name = _connection.Name;
+                    }
                 }
-            }
 
-            return _connection;
+                return _connection;
+            }
         }
 
         protected abstract Connection GetConnectionInternal();
@@ -60,7 +64,10 @@ namespace Microsoft.SSHDebugPS
         {
             get
             {
-                return _connection != null;
+                lock (_lock)
+                {
+                    return _connection != null;
+                }
             }
         }
 
@@ -241,14 +248,32 @@ namespace Microsoft.SSHDebugPS
             return GetConnection().IsLinux();
         }
 
+        public void AddSessionRef()
+        {
+            Interlocked.Increment(ref _sessionRefCount);
+        }
+
         public void Clean()
         {
-            try
+            if (Interlocked.Decrement(ref _sessionRefCount) > 0)
             {
-                _connection?.Close();
+                return;
             }
-            // Dev15 632648: Liblinux sometimes throws exceptions on shutdown - we are shutting down anyways, so ignore to not crash
-            catch (Exception) { }
+
+            lock (_lock)
+            {
+                try
+                {
+                    _connection?.Close();
+                }
+                // Dev15 632648: Liblinux sometimes throws exceptions on shutdown - we are shutting down anyways, so ignore to not crash
+                catch (Exception) { }
+                finally
+                {
+                    _connection = null;
+                    Interlocked.Exchange(ref _sessionRefCount, 0);
+                }
+            }
         }
     }
 }
