@@ -249,6 +249,10 @@ namespace Microsoft.SSHDebugPS
             }
             // Dev15 632648: Liblinux sometimes throws exceptions on shutdown - we are shutting down anyways, so ignore to not crash
             catch (Exception) { }
+            finally
+            {
+                _connection = null;
+            }
         }
     }
 }

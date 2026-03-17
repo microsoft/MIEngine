@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using liblinux;
@@ -20,6 +21,7 @@ namespace Microsoft.SSHDebugPS.SSH
     {
         private const string _Name = "SSH";
         private readonly Guid _Id = new Guid("3FDDF14E-E758-4695-BE0C-7509920432C9");
+        private readonly Dictionary<string, SSHPort> _portCache = new Dictionary<string, SSHPort>(StringComparer.OrdinalIgnoreCase);
 
         protected override Guid Id { get { return _Id; } }
         protected override string Name { get { return _Name; } }
@@ -53,7 +55,15 @@ namespace Microsoft.SSHDebugPS.SSH
             for (int i = 0; i < store.Connections.Count; i++)
             {
                 ConnectionInfo connectionInfo = (ConnectionInfo)store.Connections[i];
-                ports[i] = new SSHPort(this, GetFormattedSSHConnectionName(connectionInfo), isInAddPort: false);
+                string name = GetFormattedSSHConnectionName(connectionInfo);
+
+                if (!_portCache.TryGetValue(name, out SSHPort port))
+                {
+                    port = new SSHPort(this, name, isInAddPort: false);
+                    _portCache[name] = port;
+                }
+
+                ports[i] = port;
             }
 
             ppEnum = new AD7PortEnum(ports);
