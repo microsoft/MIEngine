@@ -353,6 +353,18 @@ namespace Microsoft.MIDebugEngine
                 await process.MICommandFactory.BreakCondition(Number, expr);
             }
         }
+
+        /// <summary>
+        /// Sends -break-after to set an ignore count on this breakpoint.
+        /// </summary>
+        internal async Task<Results> SetBreakAfterAsync(uint count, DebuggedProcess process)
+        {
+            if (process.ProcessState != MICore.ProcessState.Exited)
+            {
+                return await process.MICommandFactory.BreakAfter(Number, count);
+            }
+            return null;
+        }
     }
 
     internal class BoundBreakpoint
@@ -363,6 +375,8 @@ namespace Microsoft.MIDebugEngine
         /*OPTIONAL*/
         public string FunctionName { get; private set; }
         internal uint HitCount { get; private set; }
+        private uint _rawGdbHitCount;
+        private readonly object _hitCountLock = new object();
         internal bool Enabled { get; set; }
         internal bool IsDataBreakpoint { get { return _parent.AD7breakpoint.IsDataBreakpoint; } }
         private MITextPosition _textPosition;
@@ -398,6 +412,7 @@ namespace Microsoft.MIDebugEngine
         internal BoundBreakpoint(PendingBreakpoint parent, ulong addr, uint size, string bkptno)
         {
             Addr = addr;
+            HitCount = 0;
             Enabled = true;
             this.Number = bkptno;
             _parent = parent;
@@ -432,6 +447,38 @@ namespace Microsoft.MIDebugEngine
                     return;
                 }
                 _textPosition = new MITextPosition(_textPosition.FileName, value);
+            }
+        }
+
+        internal void IncrementHitCount()
+        {
+            lock (_hitCountLock)
+            {
+                HitCount++;
+            }
+        }
+
+        internal void SetHitCount(uint count)
+        {
+            lock (_hitCountLock)
+            {
+                HitCount = count;
+            }
+        }
+
+        /// <summary>
+        /// Applies the delta from GDB's "times" field, preserving user-initiated resets.
+        /// </summary>
+        internal void SetGdbHitCount(uint gdbTimes)
+        {
+            lock (_hitCountLock)
+            {
+                if (gdbTimes >= _rawGdbHitCount)
+                {
+                    uint delta = gdbTimes - _rawGdbHitCount;
+                    HitCount += delta;
+                }
+                _rawGdbHitCount = gdbTimes;
             }
         }
     }

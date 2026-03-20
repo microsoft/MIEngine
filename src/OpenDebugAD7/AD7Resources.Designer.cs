@@ -479,6 +479,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to parse &apos;hitCondition&apos;. Expected a number, optionally prefixed with &gt;= or %..
+        /// </summary>
+        internal static string Error_UnableToParseHitCondition {
+            get {
+                return ResourceManager.GetString("Error_UnableToParseHitCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error setting breakpoint. {0}.
         /// </summary>
         internal static string Error_UnableToSetBreakpoint {

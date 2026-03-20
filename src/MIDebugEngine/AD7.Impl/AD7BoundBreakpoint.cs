@@ -5,6 +5,7 @@ using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -19,6 +20,8 @@ namespace Microsoft.MIDebugEngine
         private BoundBreakpoint _bp;
 
         private bool _deleted;
+        private enum_BP_PASSCOUNT_STYLE _passCountStyle;
+        private uint _passCountValue;
 
         internal bool Enabled
         {
@@ -37,6 +40,7 @@ namespace Microsoft.MIDebugEngine
         internal string Number { get { return _bp.Number; } }
         internal AD7PendingBreakpoint PendingBreakpoint { get { return _pendingBreakpoint; } }
         internal bool IsDataBreakpoint { get { return PendingBreakpoint.IsDataBreakpoint; } }
+        internal bool HasPassCount { get { return _passCountStyle != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE; } }
 
         public AD7BoundBreakpoint(AD7Engine engine, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution, BoundBreakpoint bp)
         {
@@ -143,8 +147,7 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // The sample engine does not support hit counts on breakpoints. A real-world debugger will want to keep track 
-        // of how many times a particular bound breakpoint has been hit and return it here.
+        // Returns the number of times this breakpoint has been hit.
         int IDebugBoundBreakpoint2.GetHitCount(out uint pdwHitCount)
         {
             pdwHitCount = _bp.HitCount;
@@ -156,28 +159,90 @@ namespace Microsoft.MIDebugEngine
             return ((IDebugPendingBreakpoint2)_pendingBreakpoint).SetCondition(bpCondition);  // setting on the pending break will set the condition
         }
 
-        // The sample engine does not support hit counts on breakpoints. A real-world debugger will want to keep track 
-        // of how many times a particular bound breakpoint has been hit. The debugger calls SetHitCount when the user 
-        // resets a breakpoint's hit count.
+        // Called by the debugger when the user resets a breakpoint's hit count.
         int IDebugBoundBreakpoint2.SetHitCount(uint dwHitCount)
         {
-            throw new NotImplementedException();
+            _bp.SetHitCount(dwHitCount);
+            _pendingBreakpoint?.RecomputeBreakAfter(dwHitCount);
+
+            return Constants.S_OK;
         }
 
-        // The sample engine does not support pass counts on breakpoints.
+        /// <summary>
+        /// Syncs the hit count from GDB's "times" field using a delta
+        /// to preserve any user-initiated hit count reset.
+        /// </summary>
+        internal void SetHitCount(uint hitCount)
+        {
+            _bp.SetGdbHitCount(hitCount);
+        }
+
         // This is used to specify the breakpoint hit count condition.
         int IDebugBoundBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount)
         {
-            if (bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
-            {
-                Delete();
-                _engine.Callback.OnBreakpointUnbound(this, enum_BP_UNBOUND_REASON.BPUR_BREAKPOINT_ERROR);
-                return Constants.E_FAIL;
-            }
+            _passCountStyle = bpPassCount.stylePassCount;
+            _passCountValue = bpPassCount.dwPassCount;
             return Constants.S_OK;
         }
 
         #endregion
+
+        internal uint HitCount => _bp.HitCount;
+
+        internal void IncrementHitCount()
+        {
+            _bp.IncrementHitCount();
+        }
+
+        /// <summary>
+        /// Evaluates whether the debugger should break at this breakpoint based on the
+        /// current hit count and the configured pass count condition.
+        /// Must be called after IncrementHitCount.
+        /// </summary>
+        internal bool ShouldBreak()
+        {
+            uint hitCount = _bp.HitCount;
+            switch (_passCountStyle)
+            {
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE:
+                    return true;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL:
+                    return hitCount == _passCountValue;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL_OR_GREATER:
+                    return hitCount >= _passCountValue;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD:
+                    return _passCountValue != 0 && (hitCount % _passCountValue) == 0;
+                default:
+                    return true;
+            }
+        }
+
+        /// <summary>
+        /// Re-sends -break-after to GDB after a pass count breakpoint fires.
+        /// MOD: skips passCount-1 hits. EQUAL: clears the ignore count.
+        /// </summary>
+        internal async Task RearmBreakAfterAsync()
+        {
+            uint ignoreCount;
+            switch (_passCountStyle)
+            {
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD:
+                    if (_passCountValue == 0) return;
+                    ignoreCount = _passCountValue - 1;
+                    break;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL:
+                    ignoreCount = 0;
+                    break;
+                default:
+                    return;
+            }
+
+            PendingBreakpoint bp = _pendingBreakpoint?.PendingBreakpoint;
+            if (bp != null && _engine?.DebuggedProcess != null)
+            {
+                await bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess);
+            }
+        }
 
         internal void UpdateAddr(ulong addr)
         {

@@ -18,12 +18,13 @@ namespace DebuggerTesting.OpenDebug.Commands
     {
         public sealed class SourceBreakpoint
         {
-            public SourceBreakpoint(int line, int? column, string condition, string logMessage)
+            public SourceBreakpoint(int line, int? column, string condition, string logMessage, string hitCondition)
             {
                 this.line = line;
                 this.column = column;
                 this.condition = condition;
                 this.logMessage = logMessage;
+                this.hitCondition = hitCondition;
             }
 
             public int line;
@@ -36,6 +37,9 @@ namespace DebuggerTesting.OpenDebug.Commands
 
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string logMessage;
+
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public string hitCondition;
         }
 
         public Source source = new Source();
@@ -72,11 +76,11 @@ namespace DebuggerTesting.OpenDebug.Commands
 
         #region Add/Remove
 
-        public SourceBreakpoints Add(int lineNumber, string condition = null, string logMessage = null)
+        public SourceBreakpoints Add(int lineNumber, string condition = null, string logMessage = null, string hitCondition = null)
         {
             if (this.Breakpoints.ContainsKey(lineNumber))
                 throw new RunnerException("Breakpoint line {0} already added to file {1}.", lineNumber, this.RelativePath);
-            this.Breakpoints.Add(lineNumber, new SetBreakpointsCommandArgs.SourceBreakpoint(lineNumber, null, condition, logMessage));
+            this.Breakpoints.Add(lineNumber, new SetBreakpointsCommandArgs.SourceBreakpoint(lineNumber, null, condition, logMessage, hitCondition));
             return this;
         }
 
