@@ -960,6 +960,85 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
         [RequiresTestSettings]
+        public void HitConditionBreakpointModuloRearms(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that a modulo breakpoint fires on every Nth hit across many cycles, verifying that GDB's ignore count is re-armed after each stop");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set a breakpoint with hit condition %2 inside a loop that iterates 10 times");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, hitCondition: "%2");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run to breakpoint - should stop on 2nd hit (i == 1)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterConfigurationDone();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "1");
+                }
+
+                this.Comment("Continue - should stop on 4th hit (i == 3)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "3");
+                }
+
+                this.Comment("Continue - should stop on 6th hit (i == 5)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "5");
+                }
+
+                this.Comment("Continue - should stop on 8th hit (i == 7)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "7");
+                }
+
+                this.Comment("Continue - should stop on 10th hit (i == 9)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "9");
+                }
+
+                this.Comment("Run to completion - loop is exhausted");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
         public void HitConditionBreakpointModifyMidRun(ITestSettings settings)
         {
             this.TestPurpose("Tests changing a hitCondition while stopped at the breakpoint");
@@ -1025,6 +1104,65 @@ namespace CppTests.Tests
                     IFrameInspector mainFrame = inspector.Stack.First();
                     mainFrame.AssertVariables("i", "9");
                 }
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        public void HitConditionBreakpointClearMidRun(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that clearing a hit condition mid-run resets GDB's ignore count so the breakpoint fires on the next hit");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set a breakpoint with hit condition %5 inside a loop that iterates 10 times");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, hitCondition: "%5");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run to breakpoint - should stop on 5th hit (i == 4)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterConfigurationDone();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "4");
+                }
+
+                this.Comment("Clear the hit condition while stopped — remove and re-add without hitCondition");
+                callingBreakpoints.Remove(17);
+                callingBreakpoints.Add(17);
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Continue - with no hit condition, should stop on the very next hit (i == 5)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                this.Comment("Verify the breakpoint fired immediately, not at the next modulo multiple");
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "5");
+                }
+
+                this.Comment("Remove the breakpoint and run to completion");
+                callingBreakpoints.Remove(17);
+                runner.SetBreakpoints(callingBreakpoints);
 
                 this.Comment("Run to completion");
                 runner.Expects.ExitedEvent()
@@ -1380,6 +1518,112 @@ namespace CppTests.Tests
                 runner.Expects.ExitedEvent()
                               .TerminatedEvent()
                               .AfterConfigurationDone();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        #endregion
+
+        #region HitCondition Edge Case Tests
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        public void HitConditionBreakpointEqualFiresOnce(ITestSettings settings)
+        {
+            this.TestPurpose("Tests that an EQUAL hitCondition fires exactly once and never again, even with re-arm");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set EQUAL breakpoint at hit 3 on loop body, plus unconditional breakpoint after loop");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, hitCondition: "3");
+                callingBreakpoints.Add(21);
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run - should stop at hit 3 (i == 2)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterConfigurationDone();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "2");
+                }
+
+                this.Comment("Continue - EQUAL should not fire on hits 4-10; next stop is the post-loop breakpoint");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 21)
+                              .AfterContinue();
+
+                this.Comment("Run to completion");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
+        [RequiresTestSettings]
+        public void HitConditionBreakpointEqualAfterGte(ITestSettings settings)
+        {
+            this.TestPurpose("Tests changing from >=N to EQUAL mid-run, verifying re-arm clears stale ignore count");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Breakpoint);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fCalling");
+
+                this.Comment("Set breakpoint with >=3 — fires on hits 3, 4, 5, ...");
+                SourceBreakpoints callingBreakpoints = new SourceBreakpoints(debuggee, SinkHelper.Calling);
+                callingBreakpoints.Add(17, hitCondition: ">=3");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Run to first fire at hit 3 (i == 2)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterConfigurationDone();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "2");
+                }
+
+                this.Comment("Continue - >=3 fires on hit 4 (i == 3)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                this.Comment("Switch to EQUAL 7 while stopped at hit 4");
+                callingBreakpoints.Remove(17);
+                callingBreakpoints.Add(17, hitCondition: "7");
+                runner.SetBreakpoints(callingBreakpoints);
+
+                this.Comment("Continue - should skip hits 5 and 6, fire at hit 7 (i == 6)");
+                runner.Expects.HitBreakpointEvent(SinkHelper.Calling, 17)
+                              .AfterContinue();
+
+                using (IThreadInspector inspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector mainFrame = inspector.Stack.First();
+                    mainFrame.AssertVariables("i", "6");
+                }
+
+                this.Comment("Run to completion - EQUAL 7 already satisfied, should not fire again");
+                runner.Expects.ExitedEvent()
+                              .TerminatedEvent()
+                              .AfterContinue();
 
                 runner.DisconnectAndVerify();
             }

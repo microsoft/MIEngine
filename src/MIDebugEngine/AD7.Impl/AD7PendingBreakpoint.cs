@@ -697,23 +697,27 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
-            // Re-send -break-after to GDB with the updated ignore count, accounting
-            // for the current hit count so the breakpoint fires at the right time.
-            if (bp != null && bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+            // When the pass count is cleared (NONE), send ignore count 0 to clear
+            // any stale GDB ignore count from the previous condition.
+            if (bp != null)
             {
-                uint currentHits = 0;
-                lock (_boundBreakpoints)
+                uint ignoreCount = 0;
+                if (bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
                 {
-                    foreach (AD7BoundBreakpoint boundBp in _boundBreakpoints)
+                    uint currentHits = 0;
+                    lock (_boundBreakpoints)
                     {
-                        uint hc;
-                        if (((IDebugBoundBreakpoint2)boundBp).GetHitCount(out hc) == Constants.S_OK && hc > currentHits)
+                        foreach (AD7BoundBreakpoint boundBp in _boundBreakpoints)
                         {
-                            currentHits = hc;
+                            uint hc;
+                            if (((IDebugBoundBreakpoint2)boundBp).GetHitCount(out hc) == Constants.S_OK && hc > currentHits)
+                            {
+                                currentHits = hc;
+                            }
                         }
                     }
+                    ignoreCount = ComputeIgnoreCount(bpPassCount.stylePassCount, bpPassCount.dwPassCount, currentHits);
                 }
-                uint ignoreCount = ComputeIgnoreCount(bpPassCount.stylePassCount, bpPassCount.dwPassCount, currentHits);
                 _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
                 {
                     _engine.DebuggedProcess.AddInternalBreakAction(
@@ -722,6 +726,28 @@ namespace Microsoft.MIDebugEngine
                 });
             }
             return Constants.S_OK;
+        }
+
+        /// <summary>
+        /// Re-sends -break-after to GDB after a hit count reset.
+        /// </summary>
+        internal void RecomputeBreakAfter(uint currentHits)
+        {
+            if (_bp == null
+                || (_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) == 0
+                || _bpRequestInfo.bpPassCount.stylePassCount == enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+            {
+                return;
+            }
+
+            PendingBreakpoint bp = _bp;
+            uint ignoreCount = ComputeIgnoreCount(_bpRequestInfo.bpPassCount.stylePassCount, _bpRequestInfo.bpPassCount.dwPassCount, currentHits);
+            _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+            {
+                _engine.DebuggedProcess.AddInternalBreakAction(
+                    () => bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess)
+                );
+            });
         }
 
         // Toggles the virtualized state of this pending breakpoint. When a pending breakpoint is virtualized, 

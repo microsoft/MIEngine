@@ -198,10 +198,6 @@ namespace OpenDebugAD7.AD7Impl
         #region Hit Conditions
 
         /// <summary>
-        /// Attempts to parse the hit condition string into a pass count style and value.
-        /// Returns true if HitCondition is null/empty (no condition) or if it is a valid hit condition.
-        /// </summary>
-        /// <summary>
         /// Updates the hit condition string so that subsequent <see cref="TryParseHitCondition"/>
         /// calls return the new pass count, and future comparisons see the updated value.
         /// </summary>
@@ -210,6 +206,10 @@ namespace OpenDebugAD7.AD7Impl
             HitCondition = hitCondition;
         }
 
+        /// <summary>
+        /// Attempts to parse the hit condition string into a pass count style and value.
+        /// Returns true if HitCondition is null/empty (no condition) or if it is a valid hit condition.
+        /// </summary>
         internal bool TryParseHitCondition(out enum_BP_PASSCOUNT_STYLE style, out uint passCount)
         {
             style = enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE;

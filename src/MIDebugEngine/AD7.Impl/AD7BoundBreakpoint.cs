@@ -5,6 +5,7 @@ using Microsoft.DebugEngineHost;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -162,15 +163,18 @@ namespace Microsoft.MIDebugEngine
         int IDebugBoundBreakpoint2.SetHitCount(uint dwHitCount)
         {
             _bp.SetHitCount(dwHitCount);
+            _pendingBreakpoint?.RecomputeBreakAfter(dwHitCount);
+
             return Constants.S_OK;
         }
 
         /// <summary>
-        /// Syncs the hit count from GDB's "times" field in =breakpoint-modified events.
+        /// Syncs the hit count from GDB's "times" field using a delta
+        /// to preserve any user-initiated hit count reset.
         /// </summary>
         internal void SetHitCount(uint hitCount)
         {
-            _bp.SetHitCount(hitCount);
+            _bp.SetGdbHitCount(hitCount);
         }
 
         // This is used to specify the breakpoint hit count condition.
@@ -182,6 +186,8 @@ namespace Microsoft.MIDebugEngine
         }
 
         #endregion
+
+        internal uint HitCount => _bp.HitCount;
 
         internal void IncrementHitCount()
         {
@@ -208,6 +214,33 @@ namespace Microsoft.MIDebugEngine
                     return _passCountValue != 0 && (hitCount % _passCountValue) == 0;
                 default:
                     return true;
+            }
+        }
+
+        /// <summary>
+        /// Re-sends -break-after to GDB after a pass count breakpoint fires.
+        /// MOD: skips passCount-1 hits. EQUAL: clears the ignore count.
+        /// </summary>
+        internal async Task RearmBreakAfterAsync()
+        {
+            uint ignoreCount;
+            switch (_passCountStyle)
+            {
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD:
+                    if (_passCountValue == 0) return;
+                    ignoreCount = _passCountValue - 1;
+                    break;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL:
+                    ignoreCount = 0;
+                    break;
+                default:
+                    return;
+            }
+
+            PendingBreakpoint bp = _pendingBreakpoint?.PendingBreakpoint;
+            if (bp != null && _engine?.DebuggedProcess != null)
+            {
+                await bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess);
             }
         }
 
