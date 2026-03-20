@@ -84,9 +84,10 @@ namespace Microsoft.MIDebugEngine
                         boundBp.SetHitCount(times);
 
                         // Re-arm GDB's ignore count so it skips to the next target hit.
-                        // Guard on hit count change to avoid looping: -break-after
-                        // itself triggers =breakpoint-modified.
-                        if (boundBp.HitCount != previousHitCount)
+                        // HitCount guard: -break-after itself triggers =breakpoint-modified.
+                        // ShouldBreak guard: GDB also emits =breakpoint-modified on ignored
+                        //   hits, and re-arming then would shift the next stop.
+                        if (boundBp.HitCount != previousHitCount && boundBp.ShouldBreak())
                         {
                             await boundBp.RearmBreakAfterAsync();
                         }
