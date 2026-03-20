@@ -80,7 +80,16 @@ namespace Microsoft.MIDebugEngine
                 {
                     if (boundBp.HasPassCount)
                     {
+                        uint previousHitCount = boundBp.HitCount;
                         boundBp.SetHitCount(times);
+
+                        // Re-arm GDB's ignore count so it skips to the next target hit.
+                        // Guard on hit count change to avoid looping: -break-after
+                        // itself triggers =breakpoint-modified.
+                        if (boundBp.HitCount != previousHitCount)
+                        {
+                            await boundBp.RearmBreakAfterAsync();
+                        }
                     }
                 }
             }
