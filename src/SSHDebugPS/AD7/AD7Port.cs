@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -22,6 +23,7 @@ namespace Microsoft.SSHDebugPS
         private readonly Dictionary<uint, IDebugPortEvents2> _eventCallbacks = new Dictionary<uint, IDebugPortEvents2>();
         private uint _lastCallbackCookie;
         private int _sessionRefCount;
+        private int _activeAsyncCommands;
 
         protected string Name { get; private set; }
 
@@ -95,6 +97,8 @@ namespace Microsoft.SSHDebugPS
                 result = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
             });
 
+            CloseConnectionIfIdle();
+
             return result;
         }
 
@@ -162,7 +166,92 @@ namespace Microsoft.SSHDebugPS
 
         void IDebugUnixShellPort.BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
-            GetConnection().BeginExecuteAsyncCommand(commandText, runInShell, callback, out asyncCommand);
+            var wrappedCallback = new AsyncCommandCallback(this, callback);
+            var connection = GetConnection();
+            lock (_lock)
+            {
+                _activeAsyncCommands++;
+            }
+            connection.BeginExecuteAsyncCommand(commandText, runInShell, wrappedCallback, out asyncCommand);
+            asyncCommand = new AsyncCommandWrapper(this, asyncCommand);
+        }
+
+        private class AsyncCommandWrapper : IDebugUnixShellAsyncCommand
+        {
+            private readonly AD7Port _port;
+            private readonly IDebugUnixShellAsyncCommand _inner;
+            private int _notified;
+
+            public AsyncCommandWrapper(AD7Port port, IDebugUnixShellAsyncCommand inner)
+            {
+                _port = port;
+                _inner = inner;
+            }
+
+            public void Write(string text) => _inner.Write(text);
+            public void WriteLine(string text) => _inner.WriteLine(text);
+
+            public void Abort()
+            {
+                _inner.Abort();
+                // If OnExit didn't fire (abort path), notify the port now
+                if (Interlocked.CompareExchange(ref _notified, 1, 0) == 0)
+                {
+                    _port.OnAsyncCommandExited();
+                }
+            }
+        }
+
+        private void OnAsyncCommandExited()
+        {
+            lock (_lock)
+            {
+                _activeAsyncCommands--;
+            }
+            CloseConnectionIfIdle();
+        }
+
+        private void CloseConnectionIfIdle()
+        {
+            lock (_lock)
+            {
+                if (_sessionRefCount > 0 || _activeAsyncCommands > 0 || _connection == null)
+                {
+                    return;
+                }
+
+                var conn = _connection;
+                _connection = null;
+                try { conn.Close(); } catch (Exception) { }
+            }
+        }
+
+        /// <summary>
+        /// Wraps an IDebugUnixShellCommandCallback to detect when an async command exits,
+        /// allowing the port to close idle connections for engines that do not call
+        /// IDebugPortCleanup.AddSessionRef/Clean (e.g., vsdbg).
+        /// </summary>
+        private class AsyncCommandCallback : IDebugUnixShellCommandCallback
+        {
+            private readonly AD7Port _port;
+            private readonly IDebugUnixShellCommandCallback _inner;
+
+            public AsyncCommandCallback(AD7Port port, IDebugUnixShellCommandCallback inner)
+            {
+                _port = port;
+                _inner = inner;
+            }
+
+            public void OnOutputLine(string line)
+            {
+                _inner.OnOutputLine(line);
+            }
+
+            public void OnExit(string exitCode)
+            {
+                _inner.OnExit(exitCode);
+                _port.OnAsyncCommandExited();
+            }
         }
 
         void IConnectionPointContainer.EnumConnectionPoints(out IEnumConnectionPoints ppEnum)
@@ -250,29 +339,34 @@ namespace Microsoft.SSHDebugPS
 
         public void AddSessionRef()
         {
-            Interlocked.Increment(ref _sessionRefCount);
+            lock (_lock)
+            {
+                _sessionRefCount++;
+            }
+            EnsureConnected();
         }
 
         public void Clean()
         {
-            if (Interlocked.Decrement(ref _sessionRefCount) > 0)
-            {
-                return;
-            }
-
             lock (_lock)
             {
+                Debug.Assert(_sessionRefCount > 0, "Unbalanced call to Clean -- no matching AddSessionRef");
+                _sessionRefCount--;
+
+                if (_sessionRefCount > 0)
+                {
+                    return;
+                }
+
+                var conn = _connection;
+                _connection = null;
+
                 try
                 {
-                    _connection?.Close();
+                    conn?.Close();
                 }
                 // Dev15 632648: Liblinux sometimes throws exceptions on shutdown - we are shutting down anyways, so ignore to not crash
                 catch (Exception) { }
-                finally
-                {
-                    _connection = null;
-                    Interlocked.Exchange(ref _sessionRefCount, 0);
-                }
             }
         }
     }
