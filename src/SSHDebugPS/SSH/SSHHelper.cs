@@ -23,52 +23,60 @@ namespace Microsoft.SSHDebugPS.SSH
             if (connectionInfo != null)
             {
                 UnixSystem remoteSystem = new UnixSystem();
-                string name = SSHPortSupplier.GetFormattedSSHConnectionName(connectionInfo);
-
-                while (true)
+                bool success = false;
+                try
                 {
-                    try
-                    {
-                        VSOperationWaiter.Wait(
-                            StringResources.WaitingOp_Connecting.FormatCurrentCultureWithArgs(name), 
-                            throwOnCancel: false, 
-                            action: (cancellationToken) =>
-                                remoteSystem.Connect(connectionInfo));
-                        break;
-                    }
-                    catch (RemoteAuthenticationException)
-                    {
-                        IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
-                        if (connectionManager != null)
-                        {
-                            IConnectionManagerResult result = connectionManager.ShowDialog(StringResources.AuthenticationFailureHeader, StringResources.AuthenticationFailureDescription, connectionInfo);
+                    string name = SSHPortSupplier.GetFormattedSSHConnectionName(connectionInfo);
 
-                            if (result != null && (result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
+                    while (true)
+                    {
+                        try
+                        {
+                            VSOperationWaiter.Wait(
+                                StringResources.WaitingOp_Connecting.FormatCurrentCultureWithArgs(name),
+                                throwOnCancel: false,
+                                action: (cancellationToken) =>
+                                    remoteSystem.Connect(connectionInfo));
+                            break;
+                        }
+                        catch (RemoteAuthenticationException)
+                        {
+                            IVsConnectionManager connectionManager = (IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager));
+                            if (connectionManager != null)
                             {
-                                connectionInfo = result.ConnectionInfo;
+                                IConnectionManagerResult result = connectionManager.ShowDialog(StringResources.AuthenticationFailureHeader, StringResources.AuthenticationFailureDescription, connectionInfo);
+
+                                if (result != null && (result.DialogResult & ConnectionManagerDialogResult.Succeeded) == ConnectionManagerDialogResult.Succeeded)
+                                {
+                                    connectionInfo = result.ConnectionInfo;
+                                }
+                                else
+                                {
+                                    return null;
+                                }
                             }
                             else
                             {
-                                return null;
+                                throw new InvalidOperationException("Why is IVsConnectionManager null?");
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            throw new InvalidOperationException("Why is IVsConnectionManager null?");
+                            VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, ex.Message, null,
+                                OLEMSGICON.OLEMSGICON_CRITICAL, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                            return null;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, ex.Message, null,
-                            OLEMSGICON.OLEMSGICON_CRITICAL, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                        return null;
-                    }
-                }
 
-                // NOTE: This will be null if connect is canceled
-                if (remoteSystem != null)
-                {
+                    success = true;
                     return new SSHConnection(remoteSystem);
+                }
+                finally
+                {
+                    if (!success)
+                    {
+                        remoteSystem.Dispose();
+                    }
                 }
             }
 
