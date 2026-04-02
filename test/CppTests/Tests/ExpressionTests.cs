@@ -516,6 +516,56 @@ namespace CppTests.Tests
 
         #endregion
 
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForExpressionTests))]
+        [RequiresTestSettings]
+        public void NullPointerNotExpandable(ITestSettings settings)
+        {
+            this.TestPurpose("Verify that a null pointer is not expandable in the variables view.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Expression);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch.");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fExpression");
+
+                this.Comment("Set a breakpoint after pStu is set to nullptr.");
+                runner.SetBreakpoints(debuggee.Breakpoints(SinkHelper.Expression, 53));
+
+                this.Comment("To start debugging and break.");
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verify pStu is null.");
+                    currentFrame.AssertEvaluateAsNull("pStu", EvaluateContext.Watch);
+
+                    this.Comment("Verify null pointer is not expandable.");
+                    IVariableInspector pStuVar = currentFrame.GetVariable("pStu");
+                    Assert.True(
+                        pStuVar.VariablesReference == null || pStuVar.VariablesReference == 0,
+                        string.Format(CultureInfo.InvariantCulture,
+                            "Expected null pointer 'pStu' to not be expandable, but VariablesReference was {0}",
+                            pStuVar.VariablesReference));
+
+                    this.Comment("Verify non-null pointer student (on stack) is still expandable.");
+                    IVariableInspector studentVar = currentFrame.GetVariable("student");
+                    Assert.True(
+                        studentVar.VariablesReference != null && studentVar.VariablesReference > 0,
+                        "Expected non-null struct 'student' to be expandable.");
+                }
+
+                this.Comment("Run to completion.");
+                runner.Expects.TerminatedEvent().AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
         #region Private methods
 
         private static StackFrame[] GenerateFramesList(IDebuggerSettings debugger)
