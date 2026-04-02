@@ -17,6 +17,10 @@ namespace MICore
 {
     public class PipeTransport : StreamTransport
     {
+        // Using a larger than normal buffer (64KB instead of 1KB default) as lldb-mi has a bug where
+        // commands that exceed the buffer are truncated
+        private const int STREAM_BUFFER_SIZE = 65536;
+        
         private static readonly object _lock = new object();
 
         private Process _process;
@@ -92,7 +96,7 @@ namespace MICore
                 _debuggerPid = _process.Id;
                 stdout = _process.StandardOutput;
                 // Creating a new stream writer to set encoding to UTF-8 with UTF8Identifier as false. This prevents sending Byte Order Mask within the stream.
-                stdin = new StreamWriter(_process.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 1024 /* note: this is the default buffer size in the BCL */, leaveOpen: true);
+                stdin = new StreamWriter(_process.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), STREAM_BUFFER_SIZE, leaveOpen: true);
                 _stdErrReader = _process.StandardError;
                 _remainingReaders = 2;
 

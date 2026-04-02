@@ -18,6 +18,7 @@ steps:
     targetPath: '$(Build.SourcesDirectory)\obj\Lab.Release\NugetPackageVersion.txt'
     artifactName: 'PackageVersion'
     OneESPT: true
+    sbomEnabled: false # Disable SBOM for version file
 
 - task: CopyFiles@2
   inputs:

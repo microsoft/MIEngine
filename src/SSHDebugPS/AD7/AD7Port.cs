@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace Microsoft.SSHDebugPS
         private Connection _connection;
         private readonly Dictionary<uint, IDebugPortEvents2> _eventCallbacks = new Dictionary<uint, IDebugPortEvents2>();
         private uint _lastCallbackCookie;
+        private int _refCount;
 
         protected string Name { get; private set; }
 
@@ -37,16 +39,19 @@ namespace Microsoft.SSHDebugPS
 
         protected Connection GetConnection()
         {
-            if (_connection == null)
+            lock (_lock)
             {
-                _connection = GetConnectionInternal();
-                if (_connection != null)
+                if (_connection == null)
                 {
-                    Name = _connection.Name;
+                    _connection = GetConnectionInternal();
+                    if (_connection != null)
+                    {
+                        Name = _connection.Name;
+                    }
                 }
-            }
 
-            return _connection;
+                return _connection;
+            }
         }
 
         protected abstract Connection GetConnectionInternal();
@@ -60,7 +65,10 @@ namespace Microsoft.SSHDebugPS
         {
             get
             {
-                return _connection != null;
+                lock (_lock)
+                {
+                    return _connection != null;
+                }
             }
         }
 
@@ -87,6 +95,8 @@ namespace Microsoft.SSHDebugPS
                 List<Process> processList = connection.ListProcesses();
                 result = processList.Select((proc) => new AD7Process(this, proc)).ToArray();
             });
+
+            CloseConnectionIfIdle();
 
             return result;
         }
@@ -155,7 +165,115 @@ namespace Microsoft.SSHDebugPS
 
         void IDebugUnixShellPort.BeginExecuteAsyncCommand(string commandText, bool runInShell, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)
         {
-            GetConnection().BeginExecuteAsyncCommand(commandText, runInShell, callback, out asyncCommand);
+            var wrappedCallback = new AsyncCommandCallback(this, callback);
+            lock (_lock)
+            {
+                _refCount++;
+            }
+            try
+            {
+                var connection = GetConnection();
+                connection.BeginExecuteAsyncCommand(commandText, runInShell, wrappedCallback, out asyncCommand);
+                asyncCommand = new AsyncCommandWrapper(wrappedCallback, asyncCommand);
+            }
+            catch
+            {
+                lock (_lock)
+                {
+                    _refCount--;
+                }
+                CloseConnectionIfIdle();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Wraps IDebugUnixShellAsyncCommand so that Abort() triggers NotifyExited on the
+        /// callback, ensuring the ref count is decremented even when OnExit does not fire.
+        /// </summary>
+        private class AsyncCommandWrapper : IDebugUnixShellAsyncCommand
+        {
+            private readonly AsyncCommandCallback _callback;
+            private readonly IDebugUnixShellAsyncCommand _inner;
+
+            public AsyncCommandWrapper(AsyncCommandCallback callback, IDebugUnixShellAsyncCommand inner)
+            {
+                _callback = callback;
+                _inner = inner;
+            }
+
+            public void Write(string text) => _inner.Write(text);
+            public void WriteLine(string text) => _inner.WriteLine(text);
+
+            public void Abort()
+            {
+                _inner.Abort();
+                _callback.NotifyExited();
+            }
+        }
+
+        private void OnAsyncCommandExited()
+        {
+            lock (_lock)
+            {
+                Debug.Assert(_refCount > 0, "Underflowing _refCount");
+                _refCount--;
+            }
+            CloseConnectionIfIdle();
+        }
+
+        private void CloseConnectionIfIdle()
+        {
+            lock (_lock)
+            {
+                if (_refCount > 0 || _connection == null)
+                {
+                    return;
+                }
+
+                var conn = _connection;
+                _connection = null;
+                try {
+                    conn.Close();
+                }
+                // Dev15 632648: Liblinux sometimes throws exceptions on shutdown - we are shutting down anyways, so ignore to not crash
+                catch (Exception) { }
+            }
+        }
+
+        /// <summary>
+        /// Wraps an IDebugUnixShellCommandCallback to track async command exits.
+        /// </summary>
+        private class AsyncCommandCallback : IDebugUnixShellCommandCallback
+        {
+            private readonly AD7Port _port;
+            private readonly IDebugUnixShellCommandCallback _inner;
+            private int _notified;
+
+            public AsyncCommandCallback(AD7Port port, IDebugUnixShellCommandCallback inner)
+            {
+                _port = port;
+                _inner = inner;
+            }
+
+            public void OnOutputLine(string line)
+            {
+                _inner.OnOutputLine(line);
+            }
+
+            public void OnExit(string exitCode)
+            {
+                _inner.OnExit(exitCode);
+                NotifyExited();
+            }
+
+            public void NotifyExited()
+            {
+                if (Interlocked.CompareExchange(ref _notified, 1, 0) == 0)
+                {
+                    _port.OnAsyncCommandExited();
+                }
+            }
         }
 
         void IConnectionPointContainer.EnumConnectionPoints(out IEnumConnectionPoints ppEnum)
@@ -241,14 +359,23 @@ namespace Microsoft.SSHDebugPS
             return GetConnection().IsLinux();
         }
 
+        public void AddSessionRef()
+        {
+            lock (_lock)
+            {
+                _refCount++;
+            }
+            EnsureConnected();
+        }
+
         public void Clean()
         {
-            try
+            lock (_lock)
             {
-                _connection?.Close();
+                Debug.Assert(_refCount > 0, "Underflowing _refCount");
+                _refCount--;
             }
-            // Dev15 632648: Liblinux sometimes throws exceptions on shutdown - we are shutting down anyways, so ignore to not crash
-            catch (Exception) { }
+            CloseConnectionIfIdle();
         }
     }
 }

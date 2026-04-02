@@ -78,7 +78,7 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_ATTRIB) != 0)
             {
-                if (variable.CountChildren != 0)
+                if (variable.CountChildren != 0 && !variable.IsNullPointer())
                 {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_OBJ_IS_EXPANDABLE;
                 }
@@ -127,10 +127,10 @@ namespace Microsoft.MIDebugEngine
                 }
             }
 
-            // If the debugger has asked for the property, or the property has children (meaning it is a pointer in the sample)
+            // If the debugger has asked for the property, or the property has non-null children,
             // then set the pProperty field so the debugger can call back when the children are enumerated.
             if (((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP) != 0) ||
-                (variable.CountChildren != 0))
+                (variable.CountChildren != 0 && !variable.IsNullPointer()))
             {
                 propertyInfo.pProperty = (IDebugProperty2)this;
                 propertyInfo.dwFields |= enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_PROP;

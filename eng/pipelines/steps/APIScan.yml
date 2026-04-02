@@ -31,6 +31,7 @@ steps:
 - task: securedevelopmentteam.vss-secure-development-tools.build-task-apiscan.APIScan@2
   displayName: 'Run APIScan'
   inputs:
+    azureSubscription: 'VSEng-APIScanSC'
     softwareFolder: '$(Pipeline.Workspace)\ApiScanFiles'
     softwareName: MIEngine
     softwareVersionNum: '$(Build.BuildNumber)'
@@ -38,4 +39,5 @@ steps:
     isLargeApp: false
   continueOnError: true
   env:
-    AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId)
+    AzureServicesAuthConnectionString: RunAs=App;AppId=d318cba7-db4d-4fb3-99e1-01879cb74e91;TenantId=72f988bf-86f1-41af-91ab-2d7cd011db47;ServiceConnectionId=93e24264-c5e6-4681-8175-ec8a41668480;
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)

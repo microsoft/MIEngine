@@ -69,4 +69,56 @@
       </ArrayItems>
     </Expand>
   </Type>
+
+  <!-- SimpleContainer<T>: single-arg, like std::vector<T> -->
+  <Type Name="SimpleContainer&lt;*&gt;">
+    <DisplayString>{{ size={_size} }}</DisplayString>
+  </Type>
+
+  <!-- SimplePair: single-wildcard fallback, less specific than <*,*> -->
+  <Type Name="SimplePair&lt;*&gt;">
+    <DisplayString>{_key}</DisplayString>
+  </Type>
+  <!-- SimplePair: two-arg pattern, preferred over single wildcard -->
+  <Type Name="SimplePair&lt;*,*&gt;">
+    <DisplayString>({_key}, {_value})</DisplayString>
+  </Type>
+
+  <!-- SimpleMap: single-wildcard fallback, less specific than <*,*,*> -->
+  <Type Name="SimpleMap&lt;*&gt;">
+    <DisplayString>{_size} elements</DisplayString>
+  </Type>
+  <!-- SimpleMap: full three-arg pattern, like std::map<K,V,Comp> -->
+  <Type Name="SimpleMap&lt;*,*,*&gt;">
+    <DisplayString>{{ size={_size} }}</DisplayString>
+  </Type>
+  <!-- SimpleMap: int-key specialization, concrete arg beats wildcard -->
+  <Type Name="SimpleMap&lt;int,*,*&gt;">
+    <DisplayString>{{ size={_size} (int-keyed) }}</DisplayString>
+  </Type>
+
+  <Type Name="HideRawViewObject">
+    <DisplayString>Hidden raw view object</DisplayString>
+    <Expand HideRawView="true">
+      <Item Name="X">x</Item>
+      <Item Name="Y">y</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="ShowRawViewObject">
+    <DisplayString>Shown raw view object</DisplayString>
+    <Expand>
+      <Item Name="A">a</Item>
+      <Item Name="B">b</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="DataPoint">
+    <DisplayString>{value}</DisplayString>
+  </Type>
+
+  <Type Name="DataPoint *">
+    <DisplayString>{{ {this}={*this} }}</DisplayString>
+  </Type>
+
 </AutoVisualizer>

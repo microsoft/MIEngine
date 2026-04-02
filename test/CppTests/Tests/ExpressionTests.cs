@@ -516,6 +516,56 @@ namespace CppTests.Tests
 
         #endregion
 
+        [Theory]
+        [DependsOnTest(nameof(CompileKitchenSinkForExpressionTests))]
+        [RequiresTestSettings]
+        public void NullPointerNotExpandable(ITestSettings settings)
+        {
+            this.TestPurpose("Verify that a null pointer is not expandable in the variables view.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = SinkHelper.Open(this, settings.CompilerSettings, DebuggeeMonikers.KitchenSink.Expression);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch.");
+                runner.Launch(settings.DebuggerSettings, debuggee, "-fExpression");
+
+                this.Comment("Set a breakpoint after pStu is set to nullptr.");
+                runner.SetBreakpoints(debuggee.Breakpoints(SinkHelper.Expression, 53));
+
+                this.Comment("To start debugging and break.");
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verify pStu is null.");
+                    currentFrame.AssertEvaluateAsNull("pStu", EvaluateContext.Watch);
+
+                    this.Comment("Verify null pointer is not expandable.");
+                    IVariableInspector pStuVar = currentFrame.GetVariable("pStu");
+                    Assert.True(
+                        pStuVar.VariablesReference == null || pStuVar.VariablesReference == 0,
+                        string.Format(CultureInfo.InvariantCulture,
+                            "Expected null pointer 'pStu' to not be expandable, but VariablesReference was {0}",
+                            pStuVar.VariablesReference));
+
+                    this.Comment("Verify non-null pointer student (on stack) is still expandable.");
+                    IVariableInspector studentVar = currentFrame.GetVariable("student");
+                    Assert.True(
+                        studentVar.VariablesReference != null && studentVar.VariablesReference > 0,
+                        "Expected non-null struct 'student' to be expandable.");
+                }
+
+                this.Comment("Run to completion.");
+                runner.Expects.TerminatedEvent().AfterContinue();
+
+                runner.DisconnectAndVerify();
+            }
+        }
+
         #region Private methods
 
         private static StackFrame[] GenerateFramesList(IDebuggerSettings debugger)
@@ -523,43 +573,21 @@ namespace CppTests.Tests
             // VsDbg moves the stack pointer to the return address which is not necessarily the calling address
             if (debugger.DebuggerType == SupportedDebugger.VsDbg)
             {
-                // Visual C++ compiler for x64 and x86 generate symbols differently which means that the line numbers will be different.
-                if (debugger.DebuggeeArchitecture == SupportedArchitecture.x64)
-                {
-                    return new[] {
-                        new StackFrame(10, "accumulate(", "expression.cpp", null),
-                        new StackFrame(12, "accumulate(", "expression.cpp", null),
-                        new StackFrame(12, "accumulate(", "expression.cpp", null),
-                        new StackFrame(20, "func(", "expression.cpp", null),
-                        new StackFrame(81, "Expression::checkCallStack(", "expression.cpp", null),
-                        new StackFrame(74, "Expression::checkPrettyPrinting(", "expression.cpp", null),
-                        new StackFrame(63, "Expression::checkSpecialValues(", "expression.cpp", null),
-                        new StackFrame(53, "Expression::checkClassOnStackAndHeap(", "expression.cpp", null),
-                        new StackFrame(40, "Expression::checkArrayAndPointers(", "expression.cpp", null),
-                        new StackFrame(32, "Expression::checkPrimitiveTypes(", "expression.cpp", null),
-                        new StackFrame(86, "Expression::CoreRun(", "expression.cpp", null),
-                        new StackFrame(23, "Feature::Run(", "feature.cpp", null),
-                        new StackFrame(45, "main", "main.cpp", null)
-                    };
-                }
-                else
-                {
-                    return new[] {
-                        new StackFrame(10, "accumulate(", "expression.cpp", null),
-                        new StackFrame(12, "accumulate(", "expression.cpp", null),
-                        new StackFrame(12, "accumulate(", "expression.cpp", null),
-                        new StackFrame(19, "func(", "expression.cpp", null),
-                        new StackFrame(81, "Expression::checkCallStack(", "expression.cpp", null),
-                        new StackFrame(75, "Expression::checkPrettyPrinting(", "expression.cpp", null),
-                        new StackFrame(63, "Expression::checkSpecialValues(", "expression.cpp", null),
-                        new StackFrame(54, "Expression::checkClassOnStackAndHeap(", "expression.cpp", null),
-                        new StackFrame(40, "Expression::checkArrayAndPointers(", "expression.cpp", null),
-                        new StackFrame(32, "Expression::checkPrimitiveTypes(", "expression.cpp", null),
-                        new StackFrame(86, "Expression::CoreRun(", "expression.cpp", null),
-                        new StackFrame(23, "Feature::Run(", "feature.cpp", null),
-                        new StackFrame(46, "main", "main.cpp", null)
-                    };
-                }
+                return new[] {
+                    new StackFrame(10, "accumulate(", "expression.cpp", null),
+                    new StackFrame(12, "accumulate(", "expression.cpp", null),
+                    new StackFrame(12, "accumulate(", "expression.cpp", null),
+                    new StackFrame(19, "func(", "expression.cpp", null),
+                    new StackFrame(80, "Expression::checkCallStack(", "expression.cpp", null),
+                    new StackFrame(74, "Expression::checkPrettyPrinting(", "expression.cpp", null),
+                    new StackFrame(62, "Expression::checkSpecialValues(", "expression.cpp", null),
+                    new StackFrame(53, "Expression::checkClassOnStackAndHeap(", "expression.cpp", null),
+                    new StackFrame(39, "Expression::checkArrayAndPointers(", "expression.cpp", null),
+                    new StackFrame(31, "Expression::checkPrimitiveTypes(", "expression.cpp", null),
+                    new StackFrame(85, "Expression::CoreRun(", "expression.cpp", null),
+                    new StackFrame(22, "Feature::Run(", "feature.cpp", null),
+                    new StackFrame(45, "main", "main.cpp", null)
+                };
             }
             else
             {

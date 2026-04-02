@@ -45,12 +45,13 @@ namespace Microsoft.MIDebugEngine.Natvis
         public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
         public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         public virtual bool IsReadOnly() => Parent.IsReadOnly();
+        public bool IsNullPointer() => Parent.IsNullPointer();
 
         public VariableInformation FindChildByName(string name) => Parent.FindChildByName(name);
         public string EvalDependentExpression(string expr) => Parent.EvalDependentExpression(expr);
         public void AsyncEval(IDebugEventCallback2 pExprCallback) => Parent.AsyncEval(pExprCallback);
         public void SyncEval(enum_EVALFLAGS dwFlags, DAPEvalFlags dwDAPFlags) => Parent.SyncEval(dwFlags, dwDAPFlags);
-        public virtual string FullName() => Name;
+        public virtual string FullName() => Parent.FullName();
         public void EnsureChildren() => Parent.EnsureChildren();
         public void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error)
         {
@@ -646,8 +647,9 @@ namespace Microsoft.MIDebugEngine.Natvis
                             {
                                 continue;
                             }
-                            // Creates an expression: (T[50])*(<ValuePointer> + 50)
-                            // This evaluates for 50 elements of type T, starting at <ValuePointer> with an offet of 50 elements.
+
+                            // Creates a dereferenced pointer-to-array expression: (*(T(*)[50])(ValuePointer + 50))
+                            // This evaluates for 50 elements of type T, starting at <ValuePointer> with an offset of 50 elements.
                             // E.g. This will grab elements 50 - 99 from <ValuePointer>.
                             // Note:
                             //   If requestedSize > 1000, the evaluation will only grab the first 1000 elements.
@@ -656,15 +658,15 @@ namespace Microsoft.MIDebugEngine.Natvis
                             uint requestedSize = Math.Min(MAX_EXPAND, totalSize - startIndex);
 
                             StringBuilder arrayBuilder = new StringBuilder();
-                            arrayBuilder.Append('(');
+                            arrayBuilder.Append("(*(");
                             arrayBuilder.Append(typename);
-                            arrayBuilder.Append('[');
+                            arrayBuilder.Append("(*)[");
                             arrayBuilder.Append(requestedSize);
-                            arrayBuilder.Append("])*(");
+                            arrayBuilder.Append("])(");
                             arrayBuilder.Append(vp.Value);
                             arrayBuilder.Append('+');
                             arrayBuilder.Append(startIndex);
-                            arrayBuilder.Append(')');
+                            arrayBuilder.Append("))");
                             string arrayStr = arrayBuilder.ToString();
 
                             IVariableInformation arrayExpr = GetExpression(arrayStr, variable, visualizer.ScopedNames);
@@ -932,7 +934,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                 }
             }
-            if (!(variable is VisualizerWrapper)) // don't stack wrappers
+            if (!(variable is VisualizerWrapper) && !expandType.HideRawView) // don't stack wrappers, and respect HideRawView
             {
                 // add the [Raw View] field
                 IVariableInformation rawView = new VisualizerWrapper(ResourceStrings.RawView, _process.Engine, variable, visualizer, isVisualizerView: false);
@@ -1123,7 +1125,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         tryAgain:
             foreach (var autoVis in _typeVisualizers)
             {
-                var visualizer = autoVis.Visualizers.Find((v) => v.ParsedName.Match(name));   // TODO: match on View, version, etc
+                var visualizer = FindBestMatch(autoVis.Visualizers, name, v => v.ParsedName);
                 if (visualizer != null)
                 {
                     _vizCache[variable.TypeName] = new VisualizerInfo(visualizer.Visualizer, name);
@@ -1133,7 +1135,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             // failed to find a visualizer for the type, try looking for a typedef
             foreach (var autoVis in _typeVisualizers)
             {
-                var alias = autoVis.Aliases.Find((v) => v.ParsedName.Match(name));   // TODO: match on View, version, etc
+                var alias = FindBestMatch(autoVis.Aliases, name, a => a.ParsedName);
                 if (alias != null)
                 {
                     // add the template parameter macro values
@@ -1159,6 +1161,46 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Finds the best matching candidate from a list based on type name matching.
+        /// </summary>
+        /// <typeparam name="T">Either TypeInfo or AliasInfo</typeparam>
+        /// <param name="candidates">The list of candidate objects to consider for a match.</param>
+        /// <param name="name">The type name to match against the candidate patterns.</param>
+        /// <param name="getParsedName">A function that returns the parsed <see cref="TypeName"/> for a given candidate.</param>
+        /// <returns>The best matching candidate, or <c>null</c> if no candidate matches.</returns>
+        internal static T FindBestMatch<T>(List<T> candidates, TypeName name, Func<T, TypeName> getParsedName) where T : class
+        {
+            T best = null;
+            int bestArgCount = 0;
+            int bestConcreteCount = 0;
+            foreach (var candidate in candidates)
+            {
+                TypeName parsedName = getParsedName(candidate);
+                if (parsedName.Match(name)) // TODO: match on View, version, etc
+                {
+                    int concreteCount = 0;
+                    foreach (var arg in parsedName.Args)
+                    {
+                        if (!arg.IsWildcard)
+                        {
+                            concreteCount++;
+                        }
+                    }
+
+                    if (best == null
+                        || parsedName.Args.Count > bestArgCount
+                        || (parsedName.Args.Count == bestArgCount && concreteCount > bestConcreteCount))
+                    {
+                        best = candidate;
+                        bestArgCount = parsedName.Args.Count;
+                        bestConcreteCount = concreteCount;
+                    }
+                }
+            }
+            return best;
         }
 
         private VisualizerInfo FindType(IVariableInformation variable)
@@ -1255,15 +1297,24 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
                 result.Append(expression.Substring(pos, m.Index - pos));
                 pos = m.Index;
+
+                // Check if this identifier is preceded by '->', '.', or '::', indicating it is
+                // a member access or scope-qualified name rather than a root-level variable reference.
+                // In that case, skip substitution and emit the name as-is.
+                bool isMemberAccess = IsPrecededByMemberAccessOperator(expression, m.Index);
+
                 bool found = false;
-                foreach (var p in processors)
+                if (!isMemberAccess)
                 {
-                    string repl = p(m);
-                    if (repl != null)
+                    foreach (var p in processors)
                     {
-                        result.Append(repl);
-                        found = true;
-                        break;  // found a substitute
+                        string repl = p(m);
+                        if (repl != null)
+                        {
+                            result.Append(repl);
+                            found = true;
+                            break;  // found a substitute
+                        }
                     }
                 }
                 if (!found)
@@ -1283,6 +1334,60 @@ namespace Microsoft.MIDebugEngine.Natvis
                 result.Append(expression.Substring(pos, expression.Length - pos));
             }
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Returns true if the character(s) immediately before <paramref name="index"/>
+        /// form a member-access or scope-resolution operator:
+        ///   '->'  (pointer member access)
+        ///   '.'   (direct member access)
+        ///   '::'  (C++ scope resolution)
+        /// Identifiers that follow these operators are part of a sub-expression
+        /// and must not be replaced with a root-level child lookup.
+        /// </summary>
+        /// <param name="expression">The full expression string in which the identifier is located.</param>
+        /// <param name="index">The zero-based index in <paramref name="expression"/> where the identifier starts.</param>
+        /// <returns>
+        /// <c>true</c> if the identifier at <paramref name="index"/> is immediately preceded (optionally via whitespace)
+        /// by a member-access or scope-resolution operator (<c>.</c>, <c>-&gt;</c>, or <c>::</c>); otherwise, <c>false</c>.
+        /// </returns>
+        internal static bool IsPrecededByMemberAccessOperator(string expression, int index)
+        {
+            // Validate index bounds
+            if (string.IsNullOrEmpty(expression) || index < 0 || index > expression.Length)
+            {
+                return false;
+            }
+
+            // Skip any whitespace between the operator and the identifier
+            int i = index - 1;
+            while (i >= 0 && char.IsWhiteSpace(expression[i]))
+            {
+                i--;
+            }
+
+            if (i >= 0 && expression[i] == '.')
+            {
+                return true;    // preceded by '.'
+            }
+
+            if (i >= 1)
+            {
+                char prev1 = expression[i];
+                char prev2 = expression[i - 1];
+
+                if (prev2 == '-' && prev1 == '>')
+                {
+                    return true;    // preceded by '->'
+                }
+
+                if (prev2 == ':' && prev1 == ':')
+                {
+                    return true;    // preceded by '::'
+                }
+            }
+
+            return false;
         }
 
         private string ReplaceNamesInExpression(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames)
@@ -1335,6 +1440,13 @@ namespace Microsoft.MIDebugEngine.Natvis
             string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames);
             IVariableInformation expressionVariable = new VariableInformation(processedExpr, variable, _process.Engine, null);
             expressionVariable.SyncEval();
+
+            // Avoid recursive natvis formatting when expression is 'this'
+            if (expression.Trim() == "this")
+            {
+                return expressionVariable.Value;
+            }
+
             return FormatDisplayString(expressionVariable).value;
         }
 

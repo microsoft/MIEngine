@@ -300,9 +300,11 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(TypeName="ExpandType", Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class ExpandType1 {
-        
+
         private object[] itemsField;
-        
+
+        private bool hideRawViewField;
+
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("ArrayItems", typeof(ArrayItemsType))]
         [System.Xml.Serialization.XmlElementAttribute("CustomListItems", typeof(CustomListItemsType))]
@@ -318,6 +320,17 @@ namespace Microsoft.MIDebugEngine.Natvis {
             }
             set {
                 this.itemsField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool HideRawView {
+            get {
+                return this.hideRawViewField;
+            }
+            set {
+                this.hideRawViewField = value;
             }
         }
     }

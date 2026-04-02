@@ -229,6 +229,7 @@ namespace Microsoft.MIDebugEngine
                     if (port is IDebugUnixShellPort)
                     {
                         _unixPort = (IDebugUnixShellPort)port;
+                        (_unixPort as IDebugPortCleanup)?.AddSessionRef();
                     }
                     StartDebugging(launchOptions);
                 }
