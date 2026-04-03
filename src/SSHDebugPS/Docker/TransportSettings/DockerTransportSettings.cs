@@ -5,15 +5,18 @@ using Microsoft.SSHDebugPS.Utilities;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
-    internal abstract class DockerTransportSettingsBase : IPipeTransportSettings
+    internal abstract class ContainerTransportSettingsBase : IPipeTransportSettings
     {
         protected abstract string SubCommand { get; }
         protected abstract string SubCommandArgs { get; }
 
+        protected virtual string WindowsExe => "docker.exe";
+        protected virtual string UnixExe => "docker";
+
         internal string HostName { get; private set; }
         internal bool HostIsUnix { get; private set; }
 
-        public DockerTransportSettingsBase(string hostname, bool hostIsUnix)
+        public ContainerTransportSettingsBase(string hostname, bool hostIsUnix)
         {
             HostIsUnix = hostIsUnix;
             if (!string.IsNullOrWhiteSpace(hostname))
@@ -26,24 +29,21 @@ namespace Microsoft.SSHDebugPS.Docker
             }
         }
 
-        public DockerTransportSettingsBase(DockerTransportSettingsBase settings)
+        public ContainerTransportSettingsBase(ContainerTransportSettingsBase settings)
             : this(settings.HostName, settings.HostIsUnix)
         { }
 
-        private static string WindowsExe => "docker.exe";
-        private static string UnixExe => "docker";
-
-        // 0 = docker command parameters
-        // 1 = docker subcommand
-        // 2 = docker subcommand parameters
+        // 0 = command parameters (e.g. --host)
+        // 1 = subcommand (e.g. exec, cp, ps)
+        // 2 = subcommand parameters
         private const string _baseCommandFormat = "{0} {1} {2}";
         // 0 = hostname property
-        private const string _hostnameFormat = "--host \"{0}\"";
+        protected virtual string HostnameArgFormat => "--host \"{0}\"";
         private string GenerateExeCommandArgs()
         {
             var hostnameArg = string.Empty;
             if (!string.IsNullOrWhiteSpace(this.HostName))
-                hostnameArg = _hostnameFormat.FormatInvariantWithArgs(this.HostName);
+                hostnameArg = HostnameArgFormat.FormatInvariantWithArgs(this.HostName);
 
             return _baseCommandFormat.FormatInvariantWithArgs(hostnameArg, SubCommand, SubCommandArgs);
         }
@@ -56,14 +56,17 @@ namespace Microsoft.SSHDebugPS.Docker
         #endregion
     }
 
-    internal class DockerCommandSettings : DockerTransportSettingsBase
+    /// <summary>
+    /// A command settings class that allows setting the subcommand and args dynamically.
+    /// Used by <see cref="ContainerHelper"/> for container discovery commands (ps, info, version, inspect).
+    /// </summary>
+    internal abstract class ContainerCommandSettingsBase : ContainerTransportSettingsBase
     {
         private string _cmd;
         private string _args;
 
-        public DockerCommandSettings(string hostname, bool hostIsUnix)
-            : base(hostname, hostIsUnix)
-        { }
+        public ContainerCommandSettingsBase(string hostname, bool hostIsUnix)
+            : base(hostname, hostIsUnix) { }
 
         public void SetCommand(string cmd, string args)
         {
@@ -73,6 +76,23 @@ namespace Microsoft.SSHDebugPS.Docker
 
         protected override string SubCommand => _cmd;
         protected override string SubCommandArgs => _args;
+    }
+
+    // Preserves backward compatibility as a type alias
+    internal abstract class DockerTransportSettingsBase : ContainerTransportSettingsBase
+    {
+        public DockerTransportSettingsBase(string hostname, bool hostIsUnix)
+            : base(hostname, hostIsUnix) { }
+
+        public DockerTransportSettingsBase(ContainerTransportSettingsBase settings)
+            : base(settings) { }
+    }
+
+    internal class DockerCommandSettings : ContainerCommandSettingsBase
+    {
+        public DockerCommandSettings(string hostname, bool hostIsUnix)
+            : base(hostname, hostIsUnix)
+        { }
     }
 }
 

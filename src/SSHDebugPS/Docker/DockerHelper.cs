@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -13,20 +13,29 @@ using Microsoft.SSHDebugPS.Utilities;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
-    public class DockerHelper
+    /// <summary>
+    /// Base class for container runtime helpers (Docker, Podman, etc.).
+    /// Subclasses override <see cref="CreateCommandSettings"/> to provide runtime-specific command settings.
+    /// </summary>
+    internal abstract class ContainerHelper
     {
-        private const string dockerPSCommand = "ps";
+        private const string psCommand = "ps";
         // --no-trunc avoids parameter truncation
-        private const string dockerPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
-        private const string dockerInfoCommand = "info";
-        private const string dockerInfoArgs = "-f {{.Driver}}";
-        private const string dockerVersionCommand = "version";
-        private const string dockerVersionArgs = "-f {{.Server.Os}}";
-        private const string dockerInspectCommand = "inspect";
-        private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
+        private const string psArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
+        private const string infoCommand = "info";
+        private const string infoArgs = "-f {{.Driver}}";
+        private const string versionCommand = "version";
+        private const string versionArgs = "-f {{.Server.Os}}";
+        private const string inspectCommand = "inspect";
+        private const string inspectArgs = "-f \"{{json .Platform}}\" ";
         private static char[] charsToTrim = { ' ', '\"' };
 
-        private static void RunDockerCommand(DockerCommandSettings settings, Action<string> callback)
+        /// <summary>
+        /// Creates the command settings for the container runtime (determines the executable name).
+        /// </summary>
+        protected abstract ContainerCommandSettingsBase CreateCommandSettings(string hostname, bool hostIsUnix);
+
+        protected void RunCommand(ContainerCommandSettingsBase settings, Action<string> callback)
         {
             LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
 
@@ -96,17 +105,17 @@ namespace Microsoft.SSHDebugPS.Docker
         }
 
         // LCOW is the abbreviation for Linux Containers on Windows
-        internal static bool TryGetLCOW(string hostname, out bool lcow)
+        internal bool TryGetLCOW(string hostname, out bool lcow)
         {
             lcow = false;
             bool delegateLCOW = false;
 
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerInfoCommand, dockerInfoArgs);
+            ContainerCommandSettingsBase settings = CreateCommandSettings(hostname, false);
+            settings.SetCommand(infoCommand, infoArgs);
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunCommand(settings, delegate (string args)
                 {
                     if (args.Contains("lcow"))
                     {
@@ -124,17 +133,17 @@ namespace Microsoft.SSHDebugPS.Docker
             return true;
         }
 
-        internal static bool TryGetServerOS(string hostname, out string serverOS)
+        internal bool TryGetServerOS(string hostname, out string serverOS)
         {
             serverOS = string.Empty;
             string delegateServerOS = string.Empty;
 
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerVersionCommand, dockerVersionArgs);
+            ContainerCommandSettingsBase settings = CreateCommandSettings(hostname, false);
+            settings.SetCommand(versionCommand, versionArgs);
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunCommand(settings, delegate (string args)
                 {
                     delegateServerOS = args;
                 });
@@ -149,17 +158,17 @@ namespace Microsoft.SSHDebugPS.Docker
             return true;
         }
 
-        internal static bool TryGetContainerPlatform(string hostname, string containerName, out string containerPlatform)
+        internal bool TryGetContainerPlatform(string hostname, string containerName, out string containerPlatform)
         {
             containerPlatform = string.Empty;
             string delegateContainerPlatform = string.Empty;
 
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerInspectCommand, string.Concat(dockerInspectArgs, containerName));
+            ContainerCommandSettingsBase settings = CreateCommandSettings(hostname, false);
+            settings.SetCommand(inspectCommand, string.Concat(inspectArgs, containerName));
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunCommand(settings, delegate (string args)
                 {
                     delegateContainerPlatform = args;
                 });
@@ -174,20 +183,28 @@ namespace Microsoft.SSHDebugPS.Docker
             return true;
         }
 
-        internal static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
+        /// <summary>
+        /// Tries to create a container instance from a JSON string. Override for different JSON formats.
+        /// </summary>
+        protected virtual bool TryCreateContainerInstance(string json, out DockerContainerInstance instance)
+        {
+            return DockerContainerInstance.TryCreate(json, out instance);
+        }
+
+        internal IEnumerable<DockerContainerInstance> GetLocalContainers(string hostname, out int totalContainers)
         {
             totalContainers = 0;
             int containerCount = 0;
             List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
 
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
-            settings.SetCommand(dockerPSCommand, dockerPSArgs);
+            ContainerCommandSettingsBase settings = CreateCommandSettings(hostname, false);
+            settings.SetCommand(psCommand, psArgs);
 
-            RunDockerCommand(settings, delegate (string args)
+            RunCommand(settings, delegate (string args)
             {
                 if (args.Trim()[0] == '{')
                 {
-                    if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
+                    if (TryCreateContainerInstance(args, out DockerContainerInstance containerInstance))
                     {
                         containers.Add(containerInstance);
                     }
@@ -202,17 +219,16 @@ namespace Microsoft.SSHDebugPS.Docker
         /// <summary>
         /// Checks if the specified container is in the list of containers from the target host.
         /// </summary>
-        // Another fallback option would be to: docker inspect <containerName> --format {{.State.Status}} which should return "running"
-        internal static bool IsContainerRunning(string hostName, string containerName, Connection remoteConnection)
+        internal bool IsContainerRunning(string hostName, string containerName, Connection remoteConnection)
         {
             IEnumerable<DockerContainerInstance> containers;
             if (remoteConnection != null)
             {
-                containers = GetRemoteDockerContainers(remoteConnection, hostName, out _);
+                containers = GetRemoteContainers(remoteConnection, hostName, out _);
             }
             else
             {
-                containers = GetLocalDockerContainers(hostName, out _);
+                containers = GetLocalContainers(hostName, out _);
             }
 
             if (containers != null)
@@ -228,7 +244,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return false;
         }
 
-        internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname, out int totalContainers)
+        internal IEnumerable<DockerContainerInstance> GetRemoteContainers(IConnection connection, string hostname, out int totalContainers)
         {
             totalContainers = 0;
             SSHConnection sshConnection = connection as SSHConnection;
@@ -241,8 +257,8 @@ namespace Microsoft.SSHDebugPS.Docker
 
             List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
 
-            DockerCommandSettings settings = new DockerCommandSettings(hostname, true);
-            settings.SetCommand(dockerPSCommand, dockerPSArgs);
+            ContainerCommandSettingsBase settings = CreateCommandSettings(hostname, true);
+            settings.SetCommand(psCommand, psArgs);
 
             RemoteCommandRunner commandRunner = new RemoteCommandRunner(settings, sshConnection, handleRawOutput: false);
 
@@ -300,7 +316,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
                 foreach (var item in outputLines)
                 {
-                    if (DockerContainerInstance.TryCreate(item, out DockerContainerInstance containerInstance))
+                    if (TryCreateContainerInstance(item, out DockerContainerInstance containerInstance))
                     {
                         containers.Add(containerInstance);
                     }
@@ -310,5 +326,31 @@ namespace Microsoft.SSHDebugPS.Docker
 
             return containers;
         }
+    }
+
+    /// <summary>
+    /// Docker-specific container helper. Provides static convenience methods for backward compatibility.
+    /// </summary>
+    internal class DockerHelper : ContainerHelper
+    {
+        private static readonly DockerHelper _instance = new DockerHelper();
+        private static ContainerHelper Base => _instance;
+
+        protected override ContainerCommandSettingsBase CreateCommandSettings(string hostname, bool hostIsUnix)
+        {
+            return new DockerCommandSettings(hostname, hostIsUnix);
+        }
+
+        // Static convenience methods for backward compatibility
+        internal static bool TryGetLCOW(string hostname, out bool lcow) => Base.TryGetLCOW(hostname, out lcow);
+        internal static bool TryGetServerOS(string hostname, out string serverOS) => Base.TryGetServerOS(hostname, out serverOS);
+        internal static bool TryGetContainerPlatform(string hostname, string containerName, out string containerPlatform)
+            => Base.TryGetContainerPlatform(hostname, containerName, out containerPlatform);
+        internal static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
+            => Base.GetLocalContainers(hostname, out totalContainers);
+        internal static bool IsContainerRunning(string hostName, string containerName, Connection remoteConnection)
+            => Base.IsContainerRunning(hostName, containerName, remoteConnection);
+        internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname, out int totalContainers)
+            => Base.GetRemoteContainers(connection, hostname, out totalContainers);
     }
 }

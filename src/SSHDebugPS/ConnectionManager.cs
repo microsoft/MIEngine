@@ -65,6 +65,46 @@ namespace Microsoft.SSHDebugPS
             }
         }
 
+        public static Podman.PodmanConnection GetPodmanConnection(string name, bool supportSSHConnections)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            Podman.PodmanContainerTransportSettings settings;
+            Connection remoteConnection;
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+            if (!Podman.PodmanConnection.TryConvertConnectionStringToSettings(name, out settings, out remoteConnection) || settings == null)
+            {
+                string connectionString;
+
+                bool success = ShowContainerPickerWindow(IntPtr.Zero, supportSSHConnections, Podman.PodmanContainerRuntime.Instance, out connectionString);
+                if (success)
+                {
+                    success = Podman.PodmanConnection.TryConvertConnectionStringToSettings(connectionString, out settings, out remoteConnection);
+                }
+
+                if (!success || settings == null)
+                {
+                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
+                    return null;
+                }
+            }
+
+            string displayName = Podman.PodmanConnection.CreateConnectionString(settings.ContainerName, remoteConnection?.Name, settings.HostName);
+            if (Podman.PodmanHelper.IsContainerRunning(settings.HostName, settings.ContainerName, remoteConnection))
+            {
+                return new Podman.PodmanConnection(settings, remoteConnection, displayName);
+            }
+            else
+            {
+                VSMessageBoxHelper.PostErrorMessage(
+                   StringResources.Error_ContainerUnavailableTitle,
+                   StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(settings.ContainerName));
+                return null;
+            }
+        }
+
         public static SSHConnection GetSSHConnection(string name)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
@@ -141,16 +181,22 @@ namespace Microsoft.SSHDebugPS
             return SSHHelper.CreateSSHConnectionFromConnectionInfo(connectionInfo);
         }
 
+        public static bool ShowContainerPickerWindow(IntPtr hwnd, bool supportSSHConnections, out string connectionString)
+        {
+            return ShowContainerPickerWindow(hwnd, supportSSHConnections, DockerContainerRuntime.Instance, out connectionString);
+        }
+
         /// <summary>
         /// Open the ContainerPickerDialog
         /// </summary>
         /// <param name="hwnd">Parent hwnd or IntPtr.Zero</param>
         /// <param name="supportSSHConnections">SSHConnections are supported</param>
+        /// <param name="containerRuntime">The container runtime to use for discovery</param>
         /// <param name="connectionString">[out] connection string obtained by the dialog</param>
-        public static bool ShowContainerPickerWindow(IntPtr hwnd, bool supportSSHConnections, out string connectionString)
+        public static bool ShowContainerPickerWindow(IntPtr hwnd, bool supportSSHConnections, IContainerRuntime containerRuntime, out string connectionString)
         {
             ThreadHelper.ThrowIfNotOnUIThread("Microsoft.SSHDebugPS.ShowContainerPickerWindow");
-            ContainerPickerDialogWindow dialog = new ContainerPickerDialogWindow(supportSSHConnections);
+            ContainerPickerDialogWindow dialog = new ContainerPickerDialogWindow(supportSSHConnections, containerRuntime);
 
             if (hwnd == IntPtr.Zero) // get the VS main window hwnd
             {

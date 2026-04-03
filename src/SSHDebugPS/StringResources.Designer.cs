@@ -115,6 +115,24 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Podman (Linux Container) connection type allows Visual Studio to connect to Podman containers running locally or remotely (using SSH)..
+        /// </summary>
+        internal static string Podman_PSDescription {
+            get {
+                return ResourceManager.GetString("Podman_PSDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Podman (Linux Container).
+        /// </summary>
+        internal static string Podman_PSName {
+            get {
+                return ResourceManager.GetString("Podman_PSName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Command failed to execute.
         /// </summary>
         internal static string Error_CommandFailed {
@@ -192,6 +210,15 @@ namespace Microsoft.SSHDebugPS {
         internal static string Error_EnsureDockerContainerIsLinux {
             get {
                 return ResourceManager.GetString("Error_EnsureDockerContainerIsLinux", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ensure the selected Podman Connection target is a Linux container..
+        /// </summary>
+        internal static string Error_EnsurePodmanContainerIsLinux {
+            get {
+                return ResourceManager.GetString("Error_EnsurePodmanContainerIsLinux", resourceCulture);
             }
         }
         

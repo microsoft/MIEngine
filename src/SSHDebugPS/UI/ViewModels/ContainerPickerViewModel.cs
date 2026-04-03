@@ -21,10 +21,16 @@ namespace Microsoft.SSHDebugPS.UI
     public class ContainerPickerViewModel : INotifyPropertyChanged
     {
         private Lazy<bool> _sshAvailable;
+        private readonly IContainerRuntime _containerRuntime;
 
         public ContainerPickerViewModel(bool supportSSHConnections)
+            : this(supportSSHConnections, DockerContainerRuntime.Instance)
+        { }
+
+        internal ContainerPickerViewModel(bool supportSSHConnections, IContainerRuntime containerRuntime)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
+            _containerRuntime = containerRuntime;
             SupportSSHConnections = supportSSHConnections;
             InitializeConnections();
             ContainerInstances = new ObservableCollection<IContainerViewModel>();
@@ -132,7 +138,7 @@ namespace Microsoft.SSHDebugPS.UI
                     remoteConnectionString = SelectedConnection.Connection.Name;
                 }
 
-                SelectedContainerConnectionString = DockerConnection.CreateConnectionString(containerId, remoteConnectionString, Hostname);
+                SelectedContainerConnectionString = _containerRuntime.CreateConnectionString(containerId, remoteConnectionString, Hostname);
                 return true;
             }
 
@@ -156,7 +162,7 @@ namespace Microsoft.SSHDebugPS.UI
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
-                    containers = DockerHelper.GetLocalDockerContainers(Hostname, out totalContainers);
+                    containers = _containerRuntime.Helper.GetLocalContainers(Hostname, out totalContainers);
                 }
                 else
                 {
@@ -167,17 +173,17 @@ namespace Microsoft.SSHDebugPS.UI
                         UpdateStatusMessage(UIResources.SSHConnectionFailedStatusText, isError: true);
                         return;
                     }
-                    containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
+                    containers = _containerRuntime.Helper.GetRemoteContainers(connection, Hostname, out totalContainers);
                 }
 
                 if (containers.Any()) 
                 {
                     string serverOS;
 
-                    if (DockerHelper.TryGetServerOS(Hostname, out serverOS))
+                    if (_containerRuntime.Helper.TryGetServerOS(Hostname, out serverOS))
                     {
                         bool lcow;
-                        bool getLCOW = DockerHelper.TryGetLCOW(Hostname, out lcow);
+                        bool getLCOW = _containerRuntime.Helper.TryGetLCOW(Hostname, out lcow);
                         TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
                         serverOS = textInfo.ToTitleCase(serverOS);
 
@@ -192,7 +198,7 @@ namespace Microsoft.SSHDebugPS.UI
                             foreach (DockerContainerInstance container in containers)
                             {
                                 string containerPlatform = string.Empty;
-                                if (DockerHelper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform))
+                                if (_containerRuntime.Helper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform))
                                 {
                                     container.Platform = textInfo.ToTitleCase(containerPlatform);
                                 }
