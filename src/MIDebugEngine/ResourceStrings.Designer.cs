@@ -518,5 +518,14 @@ namespace Microsoft.MIDebugEngine {
                 return ResourceManager.GetString("Warning_UsingDefaultArchitecture", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;Run without Debugging&apos; is only supported for local and pipe transport launches..
+        /// </summary>
+        internal static string NoDebugUnsupportedTransport {
+            get {
+                return ResourceManager.GetString("NoDebugUnsupportedTransport", resourceCulture);
+            }
+        }
     }
 }

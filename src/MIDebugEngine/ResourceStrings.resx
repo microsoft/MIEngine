@@ -293,4 +293,7 @@ See https://aka.ms/miengine-gdb-troubleshooting for details.</value>
     <value>New value = {0}</value>
     <comment>0 = new value of watchpoint</comment>
   </data>
+  <data name="NoDebugUnsupportedTransport" xml:space="preserve">
+    <value>'Run without Debugging' is only supported for local and pipe transport launches.</value>
+  </data>
 </root>

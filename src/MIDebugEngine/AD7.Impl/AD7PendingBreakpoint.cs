@@ -170,6 +170,13 @@ namespace Microsoft.MIDebugEngine
         {
             try
             {
+                // In noDebug mode, breakpoints cannot be bound (no debugger).
+                // Return S_OK silently since this is expected during DAP protocol handshake.
+                if (_engine.DebuggedProcess.LaunchOptions.NoDebug)
+                {
+                    return Constants.S_OK;
+                }
+
                 if (CanBind())
                 {
                     // Make sure that HostMarshal calls happen on main thread instead of poll thread.

@@ -54,25 +54,38 @@ namespace Microsoft.MIDebugEngine
         private string _entryPointBreakpoint = string.Empty;
         private bool? _simpleValuesExcludesRefTypes = null;
 
+        private NonDebugProcess _nonDebugProcess;
+
         public DebuggedProcess(bool bLaunched, LaunchOptions launchOptions, ISampleEngineCallback callback, WorkerThread worker, BreakpointManager bpman, AD7Engine engine, HostConfigurationStore configStore, HostWaitLoop waitLoop = null) : base(launchOptions, engine.Logger)
         {
-            uint processExitCode = 0;
-            _pendingMessages = new StringBuilder(400);
-            _worker = worker;
-            _breakpointManager = bpman;
             Engine = engine;
-            _libraryLoaded = new List<string>();
-            _loadOrder = 0;
-            _deleteEntryPointBreakpoint = false;
-            MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
-            _waitDialog = (MICommandFactory.SupportsStopOnDynamicLibLoad() && launchOptions.WaitDynamicLibLoad) ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
-            Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString, configStore);
 
             // we do NOT have real Win32 process IDs, so we use a guid
             AD_PROCESS_ID pid = new AD_PROCESS_ID();
             pid.ProcessIdType = (int)enum_AD_PROCESS_ID.AD_PROCESS_ID_GUID;
             pid.guidProcessId = Guid.NewGuid();
             this.Id = pid;
+
+            // noDebug mode: skip all MI/debugger infrastructure.
+            // Only Engine and Id are needed for the AD7 layer; NonDebugProcess handles the rest.
+            if (_launchOptions.NoDebug)
+            {
+                _callback = callback;
+                _nonDebugProcess = new NonDebugProcess(_launchOptions, callback);
+                MIDebugCommandDispatcher.AddProcess(this);
+                return;
+            }
+
+            uint processExitCode = 0;
+            _pendingMessages = new StringBuilder(400);
+            _worker = worker;
+            _breakpointManager = bpman;
+            _libraryLoaded = new List<string>();
+            _loadOrder = 0;
+            _deleteEntryPointBreakpoint = false;
+            MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
+            _waitDialog = (MICommandFactory.SupportsStopOnDynamicLibLoad() && launchOptions.WaitDynamicLibLoad) ? new HostWaitDialog(ResourceStrings.LoadingSymbolMessage, ResourceStrings.LoadingSymbolCaption) : null;
+            Natvis = new Natvis.Natvis(this, launchOptions.ShowDisplayString, configStore);
 
             SourceLineCache = new SourceLineCache(this);
 
@@ -543,6 +556,12 @@ namespace Microsoft.MIDebugEngine
 
         public async Task Initialize(HostWaitLoop waitLoop, CancellationToken token)
         {
+            if (_launchOptions.NoDebug)
+            {
+                _nonDebugProcess.Launch();
+                return;
+            }
+
             bool success = false;
             Natvis.Initialize(_launchOptions.VisualizerFiles);
             int total = 1;
@@ -1779,6 +1798,13 @@ namespace Microsoft.MIDebugEngine
 
         public void Close()
         {
+            // In noDebug mode, the MI transport was never initialized.
+            // CloseQuietly() would NullRef on _transport.Close().
+            if (_launchOptions.NoDebug)
+            {
+                return;
+            }
+
             if (_launchOptions.DeviceAppLauncher != null)
             {
                 _launchOptions.DeviceAppLauncher.Terminate();
@@ -1788,6 +1814,13 @@ namespace Microsoft.MIDebugEngine
 
         public async Task ResumeFromLaunch()
         {
+            // In noDebug mode, the program is already running from Initialize.
+            if (_launchOptions.NoDebug)
+            {
+                _connected = true;
+                return;
+            }
+
             _connected = true;
 
             // Send any strings we got before the process came up
@@ -1889,6 +1922,12 @@ namespace Microsoft.MIDebugEngine
 
         public void Terminate()
         {
+            if (_launchOptions.NoDebug)
+            {
+                _nonDebugProcess.Terminate();
+                return;
+            }
+
             // Pretend to kill the process, which will tear down the MI Debugger
             //TODO: Something better than this.
             if (_launchOptions.DeviceAppLauncher != null)

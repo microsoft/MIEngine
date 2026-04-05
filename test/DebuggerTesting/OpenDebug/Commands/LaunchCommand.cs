@@ -44,6 +44,12 @@ namespace DebuggerTesting.OpenDebug.Commands
             get { return this.Args.sourceFileMap; }
             set { this.Args.sourceFileMap = value; }
         }
+
+        public bool NoDebug
+        {
+            get { return this.Args.noDebug; }
+            set { this.Args.noDebug = value; }
+        }
     }
 
     public class EnvironmentEntry : JsonValue

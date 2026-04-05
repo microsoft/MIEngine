@@ -282,5 +282,117 @@ namespace MICoreUnitTests
         {
             return LaunchOptions.GetInstance(null, "bogus-exe-path", null, null, content, false, null, TargetEngine.Native, null);
         }
+
+        private LaunchOptions GetLaunchOptions(string content, bool noDebug)
+        {
+            return LaunchOptions.GetInstance(null, "bogus-exe-path", null, null, content, noDebug, null, TargetEngine.Native, null);
+        }
+
+        [Fact]
+        public void TestLaunchOptions_NoDebugFalse()
+        {
+            string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
+            string content = string.Concat("<LocalLaunchOptions xmlns=\"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014\"\n",
+                "MIDebuggerPath=\"", fakeFilePath, "\"\n",
+                "ExePath=\"", fakeFilePath, "\"\n",
+                "TargetArchitecture=\"arm\"\n",
+                "/>");
+
+            var options = GetLaunchOptions(content, noDebug: false);
+            Assert.False(options.NoDebug);
+        }
+
+        [Fact]
+        public void TestLaunchOptions_NoDebugTrue()
+        {
+            string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
+            string content = string.Concat("<LocalLaunchOptions xmlns=\"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014\"\n",
+                "MIDebuggerPath=\"", fakeFilePath, "\"\n",
+                "ExePath=\"", fakeFilePath, "\"\n",
+                "TargetArchitecture=\"arm\"\n",
+                "/>");
+
+            var options = GetLaunchOptions(content, noDebug: true);
+            Assert.True(options.NoDebug);
+        }
+
+        [Fact]
+        public void TestLaunchOptions_NoDebugDefaultIsFalse()
+        {
+            string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
+            string content = string.Concat("<LocalLaunchOptions xmlns=\"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014\"\n",
+                "MIDebuggerPath=\"", fakeFilePath, "\"\n",
+                "ExePath=\"", fakeFilePath, "\"\n",
+                "TargetArchitecture=\"arm\"\n",
+                "/>");
+
+            var options = GetLaunchOptions(content);
+            Assert.False(options.NoDebug);
+        }
+
+        [Fact]
+        public void TestLaunchOptions_NoDebugRejectsGdbserver()
+        {
+            string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
+            string content = string.Concat("<LocalLaunchOptions xmlns=\"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014\"\n",
+                "MIDebuggerPath=\"", fakeFilePath, "\"\n",
+                "MIDebuggerServerAddress=\"localhost:1234\"\n",
+                "ExePath=\"", fakeFilePath, "\"\n",
+                "TargetArchitecture=\"arm\"\n",
+                "/>");
+
+            try
+            {
+                GetLaunchOptions(content, noDebug: true);
+                Assert.True(false, "Should be unreachable");
+            }
+            catch (InvalidLaunchOptionsException e)
+            {
+                Assert.Contains("miDebuggerServerAddress", e.Message, StringComparison.Ordinal);
+            }
+        }
+
+        [Fact]
+        public void TestLaunchOptions_NoDebugRejectsCoreDump()
+        {
+            string fakeFilePath = typeof(BasicLaunchOptionsTests).Assembly.Location;
+            // Use an existing file for CoreDumpPath so XML validation doesn't reject it first.
+            string content = string.Concat("<LocalLaunchOptions xmlns=\"http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014\"\n",
+                "MIDebuggerPath=\"", fakeFilePath, "\"\n",
+                "ExePath=\"", fakeFilePath, "\"\n",
+                "CoreDumpPath=\"", fakeFilePath, "\"\n",
+                "TargetArchitecture=\"arm\"\n",
+                "/>");
+
+            try
+            {
+                GetLaunchOptions(content, noDebug: true);
+                Assert.True(false, "Should be unreachable");
+            }
+            catch (InvalidLaunchOptionsException e)
+            {
+                Assert.Contains("coreDumpPath", e.Message, StringComparison.Ordinal);
+            }
+        }
+
+        [Fact]
+        public void TestLaunchOptions_NoDebugRejectsTcpTransport()
+        {
+            string content = @"<TcpLaunchOptions xmlns=""http://schemas.microsoft.com/vstudio/MDDDebuggerOptions/2014""
+              Hostname=""destinationComputer""
+              Port=""1234""
+              ExePath=""/a/b/c""
+              TargetArchitecture=""ARM""/>";
+
+            try
+            {
+                GetLaunchOptions(content, noDebug: true);
+                Assert.True(false, "Should be unreachable");
+            }
+            catch (InvalidLaunchOptionsException e)
+            {
+                Assert.Contains("only supported for local and pipe transport", e.Message, StringComparison.Ordinal);
+            }
+        }
     }
 }

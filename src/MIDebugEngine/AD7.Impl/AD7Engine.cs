@@ -703,7 +703,10 @@ namespace Microsoft.MIDebugEngine
 
             try
             {
-                _pollThread.RunOperation(() => _debuggedProcess.CmdTerminate());
+                if (!_debuggedProcess.LaunchOptions.NoDebug)
+                {
+                    _pollThread.RunOperation(() => _debuggedProcess.CmdTerminate());
+                }
 
                 _debuggedProcess.Terminate();
             }
@@ -762,6 +765,11 @@ namespace Microsoft.MIDebugEngine
         // breakmode.
         public int CauseBreak()
         {
+            if (_debuggedProcess.LaunchOptions.NoDebug)
+            {
+                return Constants.S_FALSE;
+            }
+
             _pollThread.RunOperation(() => _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Async));
 
             return Constants.S_OK;
@@ -804,6 +812,12 @@ namespace Microsoft.MIDebugEngine
         public int Detach()
         {
             _breakpointManager.ClearBoundBreakpoints();
+
+            if (_debuggedProcess.LaunchOptions.NoDebug)
+            {
+                _debuggedProcess.Terminate();
+                return Constants.S_OK;
+            }
 
             try
             {

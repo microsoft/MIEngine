@@ -144,6 +144,8 @@ namespace MICore
                 pipeCwd: pipeCwd,
                 pipeEnvironment: GetEnvironmentEntries(pipeEnv)
             );
+            pipeOptions.RawPipeArguments = ParseArguments(pipeArgs, quoteArgs);
+            pipeOptions.RawPipeArgumentList = (pipeArgs ?? new List<string>()).AsReadOnly();
 
             Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
             pipeOptions.InitializeCommonOptions(baseOptions);
@@ -210,6 +212,12 @@ namespace MICore
         static internal PipeLaunchOptions CreateFromXml(Xml.LaunchOptions.PipeLaunchOptions source)
         {
             var options = new PipeLaunchOptions(RequireAttribute(source.PipePath, "PipePath"), source.PipeArguments, source.PipeCommandArguments, source.PipeCwd, source.PipeEnvironment);
+            options.RawPipeArguments = source.PipeArguments;
+            // XML doesn't provide a structured arg list — store the full string as a single element
+            // so RawPipeArgumentList is never null.
+            options.RawPipeArgumentList = string.IsNullOrEmpty(source.PipeArguments)
+                ? (IReadOnlyList<string>)Array.Empty<string>()
+                : new List<string> { source.PipeArguments }.AsReadOnly();
             options.InitializeCommonOptions(source);
 
             return options;
@@ -225,6 +233,18 @@ namespace MICore
         /// </summary>
         /// 
         public string PipeArguments { get; private set; }
+
+        /// <summary>
+        /// [Optional] The raw pipe arguments without the debugger command appended.
+        /// Used by noDebug mode to construct pipe commands without the debugger.
+        /// </summary>
+        public string RawPipeArguments { get; private set; }
+
+        /// <summary>
+        /// [Optional] The individual pipe argument strings before formatting.
+        /// Used by noDebug mode with RunInTerminal to pass individual args.
+        /// </summary>
+        public IReadOnlyList<string> RawPipeArgumentList { get; private set; }
 
         /// <summary>
         /// [Optional] Arguments to pass to the PipePath program that include a format specifier ('{0}') for a custom command.
@@ -885,6 +905,12 @@ namespace MICore
             }
         }
 
+        /// <summary>
+        /// [Optional] The individual argument strings before formatting into ExeArguments.
+        /// Used by noDebug RunInTerminal to pass individual args per the DAP spec.
+        /// </summary>
+        public IReadOnlyList<string> ExeArgumentList { get; private set; }
+
         private int? _processId;
 
         /// <summary>
@@ -1419,6 +1445,38 @@ namespace MICore
                 launchOptions.WorkingDirectory = dir;
 
             launchOptions.NoDebug = noDebug;
+
+            // Validate noDebug against incompatible settings
+            if (noDebug)
+            {
+                if (!(launchOptions is LocalLaunchOptions) && !(launchOptions is PipeLaunchOptions))
+                {
+                    throw new InvalidLaunchOptionsException(
+                        "'Run without Debugging' is only supported for local and pipe transport launches.");
+                }
+
+                if (launchOptions is LocalLaunchOptions localOpts)
+                {
+                    if (!string.IsNullOrEmpty(localOpts.MIDebuggerServerAddress))
+                    {
+                        throw new InvalidLaunchOptionsException(
+                            "'Run without Debugging' is not supported with 'miDebuggerServerAddress'. " +
+                            "The miDebuggerServerAddress option requires a debugger (gdbserver) on the remote machine.");
+                    }
+                    if (localOpts.IsCoreDump)
+                    {
+                        throw new InvalidLaunchOptionsException(
+                            "'Run without Debugging' is not supported with 'coreDumpPath'. " +
+                            "Inspecting a core dump requires a debugger.");
+                    }
+                    if (!string.IsNullOrEmpty(localOpts.DebugServer))
+                    {
+                        throw new InvalidLaunchOptionsException(
+                            "'Run without Debugging' is not supported with 'debugServerPath'. " +
+                            "The debugServerPath option launches a debug server which requires a debugger.");
+                    }
+                }
+            }
 
             if (launchOptions._setupCommands == null)
                 launchOptions._setupCommands = new List<LaunchCommand>(capacity: 0).AsReadOnly();
@@ -2002,6 +2060,7 @@ namespace MICore
             }
 
             this.ExeArguments = ParseArguments(args);
+            this.ExeArgumentList = (args ?? new List<string>()).AsReadOnly();
             this.WorkingDirectory = launch.Cwd ?? String.Empty;
 
             this.CoreDumpPath = launch.CoreDumpPath;
