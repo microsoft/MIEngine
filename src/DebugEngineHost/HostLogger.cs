@@ -89,7 +89,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         internal static string GetFeedbackLogFilePath(int vsPid)
         {
-            return Path.Combine(Path.GetTempPath(), string.Format(CultureInfo.InvariantCulture, "MIEngine-{0}.log", vsPid));
+            return Path.Combine(Path.GetTempPath(), string.Format(CultureInfo.InvariantCulture, "Microsoft.VisualStudio.MIDebugEngine-{0}.log", vsPid));
         }
 
         public static void Reset()
