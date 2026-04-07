@@ -308,6 +308,11 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
+
+        public static void WriteFeedbackLog(string message)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>

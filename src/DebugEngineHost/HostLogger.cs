@@ -3,9 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
+using System.IO;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -16,11 +15,19 @@ namespace Microsoft.DebugEngineHost
 
         private static string s_engineLogFile;
 
+        private static readonly FeedbackLogBuffer s_circularBuffer = new FeedbackLogBuffer();
+        private static VSFeedbackLogger s_feedbackLogger;
+
         public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
             if (s_engineLogChannel == null)
             {
                 s_engineLogChannel = new HostLogChannel(callback, s_engineLogFile, level);
+            }
+
+            if (s_feedbackLogger == null)
+            {
+                s_feedbackLogger = new VSFeedbackLogger(s_circularBuffer);
             }
         }
 
@@ -50,6 +57,39 @@ namespace Microsoft.DebugEngineHost
         public static ILogChannel GetNatvisLogChannel()
         {
             return s_natvisLogChannel;
+        }
+
+        /// <summary>
+        /// Writes a message to the feedback circular buffer and, if active, to the feedback log file.
+        /// </summary>
+        public static void WriteFeedbackLog(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return;
+            }
+
+            string timestamp = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture);
+            string logLine = string.Format(CultureInfo.InvariantCulture, "{0}: {1}", timestamp, message);
+
+            s_circularBuffer.Write(logLine);
+            s_feedbackLogger?.Write(logLine);
+        }
+
+        /// <summary>
+        /// Returns log entries added since the last flush, then advances the flush marker.
+        /// </summary>
+        internal static IReadOnlyCollection<string> GetNewFeedbackEntries()
+        {
+            return s_circularBuffer.FlushNewEntries();
+        }
+
+        /// <summary>
+        /// Gets the path for the feedback log file for a given VS process ID.
+        /// </summary>
+        internal static string GetFeedbackLogFilePath(int vsPid)
+        {
+            return Path.Combine(Path.GetTempPath(), string.Format(CultureInfo.InvariantCulture, "MIEngine-{0}.log", vsPid));
         }
 
         public static void Reset()

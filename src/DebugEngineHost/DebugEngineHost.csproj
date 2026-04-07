@@ -99,12 +99,17 @@
 
   <ItemGroup Label="Assembly to Generate">
     <GenerateAssembly Include="$(ILDir)Microsoft.Internal.VisualStudio.Interop.il" />
+    <GenerateAssembly Include="$(ILDir)Microsoft.Internal.VisualStudio.Shell.Embeddable.il" />
   </ItemGroup>
   
   <ItemGroup Label="References">
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="Microsoft.Internal.VisualStudio.Interop">
       <HintPath>$(GeneratedAssembliesDir)Microsoft.Internal.VisualStudio.Interop.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Internal.VisualStudio.Shell.Embeddable">
+      <HintPath>$(GeneratedAssembliesDir)Microsoft.Internal.VisualStudio.Shell.Embeddable.dll</HintPath>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
   

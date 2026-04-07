@@ -51,5 +51,9 @@ namespace Microsoft.DebugEngineHost
             s_engineLogChannel?.Close();
             s_engineLogChannel = null;
         }
+
+        public static void WriteFeedbackLog(string message)
+        {
+        }
     }
 }
