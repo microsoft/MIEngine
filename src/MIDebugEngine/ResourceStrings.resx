@@ -241,6 +241,18 @@ This may occur if the process's executable was changed after the process was sta
     <value>Failed to get executable path with error '{0}'.</value>
     <comment>0 = failure message</comment>
   </data>
+  <data name="DeterminingExecutablePath" xml:space="preserve">
+    <value>Determining executable path for process {0}</value>
+    <comment>{0} = process ID</comment>
+  </data>
+  <data name="Error_GetExePathTimedOut" xml:space="preserve">
+    <value>'{0}' timed out. The remote system may be unresponsive.</value>
+    <comment>{0} = shell command that was executed</comment>
+  </data>
+  <data name="Error_GetExePathFailed" xml:space="preserve">
+    <value>'{0}' failed with exit code {1}. Verify the process is still running and accessible.</value>
+    <comment>{0} = shell command that was executed, {1} = exit code</comment>
+  </data>
   <data name="Error_PTraceFailure" xml:space="preserve">
     <value>Attaching to process {0} with {1} failed because of insufficient privileges with error message '{2}'.
 
