@@ -108,11 +108,14 @@ namespace MICore
         /// <param name="line">[Required] line to write</param>
         public void WriteLine(LogLevel level, string line)
         {
-            HostLogger.WriteFeedbackLog(line);
-
             if (s_isEnabled)
             {
                 WriteLineImpl(level, line);
+            }
+
+            if (HostLogger.IsFeedbackLogEnabled)
+            {
+                HostLogger.WriteFeedbackLog(line);
             }
         }
 
@@ -124,12 +127,10 @@ namespace MICore
         /// <param name="args">arguments to use in the format string</param>
         public void WriteLine(LogLevel level, string format, params object[] args)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, format, args);
-            HostLogger.WriteFeedbackLog(message);
-
-            if (s_isEnabled)
+            if (s_isEnabled || HostLogger.IsFeedbackLogEnabled)
             {
-                WriteLineImpl(level, message);
+                string message = string.Format(CultureInfo.CurrentCulture, format, args);
+                WriteLine(level, message);
             }
         }
 
@@ -141,11 +142,14 @@ namespace MICore
         /// <param name="textBlock">Block of text to write</param>
         public void WriteTextBlock(LogLevel level, string prefix, string textBlock)
         {
-            HostLogger.WriteFeedbackLog((!string.IsNullOrEmpty(prefix) ? prefix : string.Empty) + textBlock);
-
             if (s_isEnabled)
             {
                 WriteTextBlockImpl(level, prefix, textBlock);
+            }
+
+            if (HostLogger.IsFeedbackLogEnabled)
+            {
+                HostLogger.WriteFeedbackLog((!string.IsNullOrEmpty(prefix) ? prefix : string.Empty) + textBlock);
             }
         }
 

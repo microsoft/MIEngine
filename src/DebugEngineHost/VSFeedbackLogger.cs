@@ -72,14 +72,10 @@ namespace Microsoft.DebugEngineHost
                         if (!_enabled)
                         {
                             string logFileName = HostLogger.GetFeedbackLogFilePath(_vsPid);
-                            StreamWriter writer = new StreamWriter(logFileName, append: true, encoding: Encoding.UTF8);
+                            StreamWriter writer = FeedbackLogBuffer.OpenLogFile(logFileName);
                             try
                             {
-                                foreach (string logLine in _circularBuffer.FlushNewEntries())
-                                {
-                                    writer.WriteLine(logLine);
-                                }
-                                writer.Flush();
+                                FeedbackLogBuffer.WriteEntries(writer, _circularBuffer.FlushNewEntries());
                             }
                             catch
                             {

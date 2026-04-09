@@ -52,6 +52,11 @@ namespace Microsoft.DebugEngineHost
             s_engineLogChannel = null;
         }
 
+        public static bool IsFeedbackLogEnabled
+        {
+            get { return false; }
+        }
+
         public static void WriteFeedbackLog(string message)
         {
         }

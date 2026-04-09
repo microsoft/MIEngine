@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -15,7 +16,7 @@ namespace Microsoft.DebugEngineHost
 
         private static string s_engineLogFile;
 
-        private static readonly FeedbackLogBuffer s_circularBuffer = new FeedbackLogBuffer();
+        private static FeedbackLogBuffer s_circularBuffer;
         private static VSFeedbackLogger s_feedbackLogger;
 
         public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
@@ -27,7 +28,7 @@ namespace Microsoft.DebugEngineHost
 
             if (s_feedbackLogger == null)
             {
-                s_feedbackLogger = new VSFeedbackLogger(s_circularBuffer);
+                s_feedbackLogger = new VSFeedbackLogger(EnsureFeedbackBuffer());
             }
         }
 
@@ -60,6 +61,14 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
+        /// Returns true if the feedback log is currently active (buffer has been created).
+        /// </summary>
+        public static bool IsFeedbackLogEnabled
+        {
+            get { return s_circularBuffer != null; }
+        }
+
+        /// <summary>
         /// Writes a message to the feedback circular buffer and, if active, to the feedback log file.
         /// </summary>
         public static void WriteFeedbackLog(string message)
@@ -72,8 +81,31 @@ namespace Microsoft.DebugEngineHost
             string timestamp = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture);
             string logLine = string.Format(CultureInfo.InvariantCulture, "{0}: {1}", timestamp, message);
 
-            s_circularBuffer.Write(logLine);
+            EnsureFeedbackBuffer().Write(logLine);
             s_feedbackLogger?.Write(logLine);
+        }
+
+        private static FeedbackLogBuffer EnsureFeedbackBuffer()
+        {
+            if (s_circularBuffer == null)
+            {
+                Interlocked.CompareExchange(ref s_circularBuffer, new FeedbackLogBuffer(), null);
+            }
+
+            return s_circularBuffer;
+        }
+
+        /// <summary>
+        /// Returns true if the feedback buffer has been created and has entries.
+        /// This is a cheap check to avoid unnecessary work in non-MIEngine scenarios.
+        /// </summary>
+        internal static bool HasFeedbackEntries
+        {
+            get
+            {
+                FeedbackLogBuffer buffer = s_circularBuffer;
+                return buffer != null && !buffer.IsEmpty;
+            }
         }
 
         /// <summary>
@@ -81,7 +113,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         internal static IReadOnlyCollection<string> GetNewFeedbackEntries()
         {
-            return s_circularBuffer.FlushNewEntries();
+            return s_circularBuffer?.FlushNewEntries() ?? Array.Empty<string>();
         }
 
         /// <summary>
