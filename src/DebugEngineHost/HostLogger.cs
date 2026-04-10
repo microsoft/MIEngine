@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
+using System.IO;
+using System.Threading;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -16,11 +16,19 @@ namespace Microsoft.DebugEngineHost
 
         private static string s_engineLogFile;
 
+        private static FeedbackLogBuffer s_circularBuffer;
+        private static VSFeedbackLogger s_feedbackLogger;
+
         public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
             if (s_engineLogChannel == null)
             {
                 s_engineLogChannel = new HostLogChannel(callback, s_engineLogFile, level);
+            }
+
+            if (s_feedbackLogger == null)
+            {
+                s_feedbackLogger = new VSFeedbackLogger(EnsureFeedbackBuffer());
             }
         }
 
@@ -50,6 +58,69 @@ namespace Microsoft.DebugEngineHost
         public static ILogChannel GetNatvisLogChannel()
         {
             return s_natvisLogChannel;
+        }
+
+        /// <summary>
+        /// Returns true if the feedback log is currently active (buffer has been created).
+        /// </summary>
+        public static bool IsFeedbackLogEnabled
+        {
+            get { return s_circularBuffer != null; }
+        }
+
+        /// <summary>
+        /// Writes a message to the feedback circular buffer and, if active, to the feedback log file.
+        /// </summary>
+        public static void WriteFeedbackLog(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return;
+            }
+
+            string timestamp = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture);
+            string logLine = string.Format(CultureInfo.InvariantCulture, "{0}: {1}", timestamp, message);
+
+            EnsureFeedbackBuffer().Write(logLine);
+            s_feedbackLogger?.Write(logLine);
+        }
+
+        private static FeedbackLogBuffer EnsureFeedbackBuffer()
+        {
+            if (s_circularBuffer == null)
+            {
+                Interlocked.CompareExchange(ref s_circularBuffer, new FeedbackLogBuffer(), null);
+            }
+
+            return s_circularBuffer;
+        }
+
+        /// <summary>
+        /// Returns true if feedback entries have ever been written during this session.
+        /// </summary>
+        internal static bool HasFeedbackEntries
+        {
+            get
+            {
+                FeedbackLogBuffer buffer = s_circularBuffer;
+                return buffer != null && buffer.HasEntries;
+            }
+        }
+
+        /// <summary>
+        /// Returns log entries added since the last flush, then advances the flush marker.
+        /// </summary>
+        internal static IReadOnlyCollection<string> GetNewFeedbackEntries()
+        {
+            return s_circularBuffer?.FlushNewEntries() ?? Array.Empty<string>();
+        }
+
+        /// <summary>
+        /// Gets the path for the feedback log file for a given VS process ID.
+        /// </summary>
+        internal static string GetFeedbackLogFilePath(int vsPid)
+        {
+            return Path.Combine(Path.GetTempPath(), string.Format(CultureInfo.InvariantCulture, "Microsoft.VisualStudio.MIDebugEngine-{0}.log", vsPid));
         }
 
         public static void Reset()

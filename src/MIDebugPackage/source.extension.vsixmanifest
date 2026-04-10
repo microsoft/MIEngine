@@ -21,5 +21,6 @@
     <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Microsoft.MIDebugEngine.pkgdef" />
     <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Microsoft.AndroidDebugLauncher.pkgdef" />
     <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Microsoft.SSHDebugPS.pkgdef" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="Microsoft.DebugEngineHost.dll" />
   </Assets>
 </PackageManifest>

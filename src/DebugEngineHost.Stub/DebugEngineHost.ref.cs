@@ -308,6 +308,23 @@ namespace Microsoft.DebugEngineHost
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Returns true if the feedback log is currently active
+        /// </summary>
+        public static bool IsFeedbackLogEnabled
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        /// <summary>
+        /// Writes a message to the feedback circular buffer and, if active, to the feedback log file.
+        /// </summary>
+        /// <param name="message">The message to write to the feedback log.</param>
+        public static void WriteFeedbackLog(string message)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
