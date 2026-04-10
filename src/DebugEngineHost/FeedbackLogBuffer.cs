@@ -23,15 +23,15 @@ namespace Microsoft.DebugEngineHost
         private readonly object _syncObj = new object();
 
         /// <summary>
-        /// Returns true if no entries have been written since the last flush.
+        /// Returns true if any entries have ever been written to the buffer.
         /// </summary>
-        internal bool IsEmpty
+        internal bool HasEntries
         {
             get
             {
                 lock (_syncObj)
                 {
-                    return _writeSequence == _lastFlushSequence;
+                    return _writeSequence > 0;
                 }
             }
         }

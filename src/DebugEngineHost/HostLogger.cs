@@ -96,15 +96,14 @@ namespace Microsoft.DebugEngineHost
         }
 
         /// <summary>
-        /// Returns true if the feedback buffer has been created and has entries.
-        /// This is a cheap check to avoid unnecessary work in non-MIEngine scenarios.
+        /// Returns true if feedback entries have ever been written during this session.
         /// </summary>
         internal static bool HasFeedbackEntries
         {
             get
             {
                 FeedbackLogBuffer buffer = s_circularBuffer;
-                return buffer != null && !buffer.IsEmpty;
+                return buffer != null && buffer.HasEntries;
             }
         }
 
