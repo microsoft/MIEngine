@@ -71,6 +71,30 @@ namespace Microsoft.MIDebugEngine
                 return;
             }
 
+            // Sync GDB's hit count ("times") for pass count breakpoints.
+            // e.g. =breakpoint-modified,bkpt={number="1",...,times="5",ignore="2",...}
+            string timesStr = bkpt.TryFindString("times");
+            if (!string.IsNullOrEmpty(timesStr) && uint.TryParse(timesStr, out uint times))
+            {
+                foreach (AD7BoundBreakpoint boundBp in pending.EnumBoundBreakpoints())
+                {
+                    if (boundBp.HasPassCount)
+                    {
+                        uint previousHitCount = boundBp.HitCount;
+                        boundBp.SetHitCount(times);
+
+                        // Re-arm GDB's ignore count so it skips to the next target hit.
+                        // HitCount guard: -break-after itself triggers =breakpoint-modified.
+                        // ShouldBreak guard: GDB also emits =breakpoint-modified on ignored
+                        //   hits, and re-arming then would shift the next stop.
+                        if (boundBp.HitCount != previousHitCount && boundBp.ShouldBreak())
+                        {
+                            await boundBp.RearmBreakAfterAsync();
+                        }
+                    }
+                }
+            }
+
             string warning = bkpt.TryFindString("warning");
             if (!string.IsNullOrEmpty(warning))
             {
@@ -212,7 +236,15 @@ namespace Microsoft.MIDebugEngine
                     continue;
                 }
 
-                hitBoundBreakpoints.Add(currBoundBp);
+                // Pass count breakpoints get their hit count from =breakpoint-modified.
+                if (!currBoundBp.HasPassCount)
+                {
+                    currBoundBp.IncrementHitCount();
+                }
+                if (currBoundBp.ShouldBreak())
+                {
+                    hitBoundBreakpoints.Add(currBoundBp);
+                }
             }
 
             fContinue = (hitBoundBreakpoints.Count == 0 && hitBps.Length != 0);
