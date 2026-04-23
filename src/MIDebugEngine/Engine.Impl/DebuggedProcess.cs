@@ -2134,6 +2134,29 @@ namespace Microsoft.MIDebugEngine
             return toRead;
         }
 
+        internal async Task<bool> WriteProcessMemory(ulong address, uint dwCount, byte[] rgbMemory)
+        {
+            try
+            {
+                // Convert bytes to hex string  
+                StringBuilder hex = new StringBuilder((int)dwCount * 2);
+                for (int i = 0; i < dwCount; i++)
+                    hex.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}", rgbMemory[i]);
+
+                // Send the MI command  
+                string cmd = $"-data-write-memory-bytes {EngineUtils.AsAddr(address, this.Is64BitArch)} {hex}";
+                var result = await this.CmdAsync(cmd, ResultClass.None);
+
+                // Check result  
+                return result.ResultClass != ResultClass.error;
+            }
+            catch (MIException ex)
+            {
+                Logger.WriteLine(LogLevel.Warning, $"WriteProcessMemory failed: {ex.Message}");
+                return false;
+            }
+        }
+
         internal async Task<Tuple<ulong, ulong>> FindValidMemoryRange(ulong address, uint count, int offset)
         {
             // Debugging coredump with LLDB doesn't work well with '-data-read-memory-bytes', the function
