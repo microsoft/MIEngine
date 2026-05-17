@@ -1636,6 +1636,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("DisplayString", typeof(DisplayStringType))]
         [System.Xml.Serialization.XmlElementAttribute("Expand", typeof(ExpandType1))]
+        [System.Xml.Serialization.XmlElementAttribute("Intrinsic", typeof(IntrinsicType))]
         [System.Xml.Serialization.XmlElementAttribute("StringView", typeof(StringViewType))]
         [System.Xml.Serialization.XmlElementAttribute("UIVisualizer", typeof(UIVisualizerItemType))]
         public object[] Items {
@@ -1820,6 +1821,98 @@ namespace Microsoft.MIDebugEngine.Natvis {
             set {
                 this.valueField = value;
             }
+        }
+    }
+
+    /// <summary>
+    /// Represents a &lt;Parameter&gt; child element of &lt;Intrinsic&gt;.
+    /// </summary>
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
+    public partial class IntrinsicParameterType {
+
+        private string nameField;
+        private string typeField;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Name {
+            get { return this.nameField; }
+            set { this.nameField = value; }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Type {
+            get { return this.typeField; }
+            set { this.typeField = value; }
+        }
+    }
+
+    /// <summary>
+    /// Represents an &lt;Intrinsic&gt; element — an inline named expression that can be
+    /// called by name (with optional arguments) in any subsequent NatVis expression
+    /// within the same &lt;Type&gt; block.
+    /// </summary>
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
+    public partial class IntrinsicType {
+
+        private string nameField;
+        private string expressionField;
+        private bool optionalField;
+        private bool optionalFieldSpecified;
+        private string categoryField;
+        private string moduleNameField;
+        private IntrinsicParameterType[] parameterField;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Name {
+            get { return this.nameField; }
+            set { this.nameField = value; }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Expression {
+            get { return this.expressionField; }
+            set { this.expressionField = value; }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool Optional {
+            get { return this.optionalField; }
+            set { this.optionalField = value; }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool OptionalSpecified {
+            get { return this.optionalFieldSpecified; }
+            set { this.optionalFieldSpecified = value; }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Category {
+            get { return this.categoryField; }
+            set { this.categoryField = value; }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ModuleName {
+            get { return this.moduleNameField; }
+            set { this.moduleNameField = value; }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("Parameter")]
+        public IntrinsicParameterType[] Parameter {
+            get { return this.parameterField; }
+            set { this.parameterField = value; }
         }
     }
 }
