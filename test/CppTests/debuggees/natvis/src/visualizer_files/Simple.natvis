@@ -121,4 +121,18 @@
     <DisplayString>{{ {this}={*this} }}</DisplayString>
   </Type>
 
+  <Type Name="ConditionalLinkedList">
+    <DisplayString>{{ active={isActive}, count={numElements} }}</DisplayString>
+    <Expand>
+      <Item Name="IsActive">isActive</Item>
+      <Item Name="Count">numElements</Item>
+      <LinkedListItems Condition="isActive">
+        <Size>numElements</Size>
+        <HeadPointer>head</HeadPointer>
+        <NextPointer>next</NextPointer>
+        <ValueNode>data</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+
 </AutoVisualizer>

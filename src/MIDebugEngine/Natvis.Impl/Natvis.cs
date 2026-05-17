@@ -789,7 +789,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     //      <ValueNode>m_element</ValueNode>
                     //    </LinkedListItems>
                     LinkedListItemsType item = (LinkedListItemsType)i;
-                    if (String.IsNullOrWhiteSpace(item.Condition))
+                    if (!String.IsNullOrWhiteSpace(item.Condition))
                     {
                         if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                             continue;
