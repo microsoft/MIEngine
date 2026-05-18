@@ -19,4 +19,8 @@ if [ ! -f "$RootDir/bin/DebugAdapterProtocolTests/Debug/CppTests/config.xml" ]; 
     fi
 fi
 
-dotnet test "$RootDir"/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll --logger "trx;LogFileName=$RootDir/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx"
+# Run tests in a subshell with core dumps enabled (ulimit resets when subshell exits)
+(
+    ulimit -c unlimited
+    dotnet test "$RootDir"/bin/DebugAdapterProtocolTests/Debug/CppTests/CppTests.dll --logger "trx;LogFileName=$RootDir/bin/DebugAdapterProtocolTests/Debug/CppTests/results.trx"
+)
