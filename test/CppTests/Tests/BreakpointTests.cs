@@ -202,9 +202,8 @@ namespace CppTests.Tests
         [DependsOnTest(nameof(CompileKitchenSinkForBreakpointTests))]
         [RequiresTestSettings]
         // TODO: https://github.com/microsoft/MIEngine/issues/1170
-        // - gdb_gnu
         // - lldb
-        [UnsupportedDebugger(SupportedDebugger.Lldb | SupportedDebugger.Gdb_Gnu | SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
+        [UnsupportedDebugger(SupportedDebugger.Lldb | SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void RunModeBreakpoints(ITestSettings settings)
         {
             this.TestPurpose("Tests setting breakpoints while in run mode");
