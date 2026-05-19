@@ -144,6 +144,11 @@ namespace MICore
                 proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
             }
 
+            foreach (var entry in options.GetDebuginfodEnvironmentEntries())
+            {
+                proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+            }
+
             InitProcess(proc, out reader, out writer);
         }
 

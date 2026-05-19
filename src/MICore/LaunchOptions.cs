@@ -137,15 +137,17 @@ namespace MICore
                 quoteArgs = platformSpecificTransportOptions.QuoteArgs ?? quoteArgs;
             }
 
+            Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
+            string debuginfodPrefix = ComputeDebuginfodPrefixFromSettings(baseOptions.Debuginfod);
+
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
                 pipePath: pipeProgram,
-                pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs),
+                pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs, debuginfodPrefix),
                 pipeCommandArguments: ParseArguments(pipeCmd??pipeArgs, quoteArgs),
                 pipeCwd: pipeCwd,
                 pipeEnvironment: GetEnvironmentEntries(pipeEnv)
             );
 
-            Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
             pipeOptions.InitializeCommonOptions(baseOptions);
             if (baseOptions is Json.LaunchOptions.LaunchOptions)
             {
@@ -160,13 +162,30 @@ namespace MICore
             return pipeOptions;
         }
 
-        private static string EnsurePipeArguments(List<string> pipeArgs, string debuggerPath, string debuggerPathDefault, bool quoteArgs)
+        private static string ComputeDebuginfodPrefixFromSettings(Json.LaunchOptions.DebuginfodSettings settings)
+        {
+            bool enabled = settings?.Enabled ?? true;
+            int timeout = settings?.Timeout ?? 30;
+            if (timeout < 0) timeout = 30;
+
+            if (enabled && timeout > 0)
+            {
+                return string.Format(CultureInfo.InvariantCulture, "env DEBUGINFOD_TIMEOUT={0} DEBUGINFOD_MAXTIME={0} ", timeout);
+            }
+            else if (!enabled)
+            {
+                return "env DEBUGINFOD_URLS= ";
+            }
+            return string.Empty;
+        }
+
+        private static string EnsurePipeArguments(List<string> pipeArgs, string debuggerPath, string debuggerPathDefault, bool quoteArgs, string debuginfodPrefix = "")
         {
             // Debugger path. Assume /usr/bin/gdb unless specified
             string dbgPath = String.IsNullOrWhiteSpace(debuggerPath) ? debuggerPathDefault : debuggerPath;
 
-            // debugger command: /usr/bin/gdb --interpreter=mi
-            string dbgCmdArguments = String.Format(CultureInfo.InvariantCulture, "{0} {1}", dbgPath, "--interpreter=mi");
+            // debugger command: env DEBUGINFOD_TIMEOUT=30 /usr/bin/gdb --interpreter=mi
+            string dbgCmdArguments = String.Format(CultureInfo.InvariantCulture, "{0}{1} {2}", debuginfodPrefix, dbgPath, "--interpreter=mi");
 
             string userArguments = ParseArguments(pipeArgs, quoteArgs);
 
@@ -298,6 +317,12 @@ namespace MICore
         {
             this.Name = jsonEntry.Name;
             this.Value = jsonEntry.Value;
+        }
+
+        public EnvironmentEntry(string name, string value)
+        {
+            this.Name = name;
+            this.Value = value;
         }
 
         /// <summary>
@@ -805,6 +830,13 @@ namespace MICore
                 this.InitializeCommonOptions(baseLaunchOptions);
                 this.BaseOptions = baseLaunchOptions;
             }
+
+            // Prepend debuginfod env vars to the remote command.
+            string prefix = GetDebuginfodEnvironmentPrefix();
+            if (!string.IsNullOrEmpty(prefix))
+            {
+                this.StartRemoteDebuggerCommand = prefix + this.StartRemoteDebuggerCommand;
+            }
         }
     }
 
@@ -1239,6 +1271,51 @@ namespace MICore
                 VerifyCanModifyProperty(nameof(DebuginfodTimeout));
                 _debuginfodTimeout = value;
             }
+        }
+
+        /// <summary>
+        /// Returns environment entries to configure debuginfod on the GDB process.
+        /// </summary>
+        public List<EnvironmentEntry> GetDebuginfodEnvironmentEntries()
+        {
+            var entries = new List<EnvironmentEntry>();
+            if (DebuggerMIMode != MIMode.Gdb)
+                return entries;
+
+            if (EnableDebuginfod)
+            {
+                if (DebuginfodTimeout > 0)
+                {
+                    string timeoutStr = DebuginfodTimeout.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    entries.Add(new EnvironmentEntry("DEBUGINFOD_TIMEOUT", timeoutStr));
+                    entries.Add(new EnvironmentEntry("DEBUGINFOD_MAXTIME", timeoutStr));
+                }
+            }
+            else
+            {
+                entries.Add(new EnvironmentEntry("DEBUGINFOD_URLS", ""));
+            }
+
+            return entries;
+        }
+
+        /// <summary>
+        /// Returns an 'env' command prefix for debuginfod settings, for use in remote commands.
+        /// Returns empty string if no env vars are needed.
+        /// </summary>
+        public string GetDebuginfodEnvironmentPrefix()
+        {
+            var entries = GetDebuginfodEnvironmentEntries();
+            if (entries.Count == 0)
+                return string.Empty;
+
+            var sb = new StringBuilder();
+            sb.Append("env ");
+            foreach (var entry in entries)
+            {
+                sb.AppendFormat(CultureInfo.InvariantCulture, "{0}={1} ", entry.Name, entry.Value);
+            }
+            return sb.ToString();
         }
 
         public string GetOptionsString()
