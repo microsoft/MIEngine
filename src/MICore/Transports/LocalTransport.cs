@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using System.Diagnostics;
@@ -38,6 +39,24 @@ namespace MICore
                 string path = proc.StartInfo.GetEnvironmentVariable("PATH");
                 path = (string.IsNullOrEmpty(path) ? miDebuggerDir : path + ";" + miDebuggerDir);
                 proc.StartInfo.SetEnvironmentVariable("PATH", path);
+            }
+
+            // Configure debuginfod environment variables on the GDB process.
+            if (options.DebuggerMIMode == MIMode.Gdb)
+            {
+                if (options.EnableDebuginfod)
+                {
+                    if (options.DebuginfodTimeout > 0)
+                    {
+                        string timeoutStr = options.DebuginfodTimeout.ToString(CultureInfo.InvariantCulture);
+                        proc.StartInfo.SetEnvironmentVariable("DEBUGINFOD_TIMEOUT", timeoutStr);
+                        proc.StartInfo.SetEnvironmentVariable("DEBUGINFOD_MAXTIME", timeoutStr);
+                    }
+                }
+                else
+                {
+                    proc.StartInfo.SetEnvironmentVariable("DEBUGINFOD_URLS", "");
+                }
             }
 
             // Allow to execute custom commands before launching debugger.

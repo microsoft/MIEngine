@@ -1211,6 +1211,36 @@ namespace MICore
             }
         }
 
+        private bool _enableDebuginfod = true;
+
+        /// <summary>
+        /// If true (default), GDB's debuginfod support is enabled.
+        /// </summary>
+        public bool EnableDebuginfod
+        {
+            get { return _enableDebuginfod; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(EnableDebuginfod));
+                _enableDebuginfod = value;
+            }
+        }
+
+        private int _debuginfodTimeout = 30;
+
+        /// <summary>
+        /// The timeout in seconds for debuginfod requests. Default is 30. Set to 0 for no override.
+        /// </summary>
+        public int DebuginfodTimeout
+        {
+            get { return _debuginfodTimeout; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(DebuginfodTimeout));
+                _debuginfodTimeout = value;
+            }
+        }
+
         public string GetOptionsString()
         {
             try
@@ -1824,6 +1854,9 @@ namespace MICore
             }
 
             this.UnknownBreakpointHandling = options.UnknownBreakpointHandling ?? UnknownBreakpointHandling.Throw;
+            this.EnableDebuginfod = options.Debuginfod?.Enabled ?? true;
+            int debuginfodTimeout = options.Debuginfod?.Timeout ?? 30;
+            this.DebuginfodTimeout = debuginfodTimeout >= 0 ? debuginfodTimeout : 30;
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
@@ -1855,6 +1888,8 @@ namespace MICore
 
             this.ShowDisplayString = source.ShowDisplayString;
             this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;
+            this.EnableDebuginfod = source.EnableDebuginfod;
+            this.DebuginfodTimeout = source.DebuginfodTimeout >= 0 ? source.DebuginfodTimeout : 30;
 
             this.SetupCommands = LaunchCommand.CreateCollection(source.SetupCommands);
             this.PostRemoteConnectCommands = LaunchCommand.CreateCollection(source.PostRemoteConnectCommands);
