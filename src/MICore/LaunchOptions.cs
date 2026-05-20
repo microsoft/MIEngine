@@ -138,11 +138,10 @@ namespace MICore
             }
 
             Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
-            string debuginfodPrefix = ComputeDebuginfodPrefixFromSettings(baseOptions.Debuginfod);
 
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
                 pipePath: pipeProgram,
-                pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs, debuginfodPrefix),
+                pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs),
                 pipeCommandArguments: ParseArguments(pipeCmd??pipeArgs, quoteArgs),
                 pipeCwd: pipeCwd,
                 pipeEnvironment: GetEnvironmentEntries(pipeEnv)
@@ -162,30 +161,13 @@ namespace MICore
             return pipeOptions;
         }
 
-        private static string ComputeDebuginfodPrefixFromSettings(Json.LaunchOptions.DebuginfodSettings settings)
-        {
-            bool enabled = settings?.Enabled ?? true;
-            int timeout = settings?.Timeout ?? 30;
-            if (timeout < 0) timeout = 30;
-
-            if (enabled && timeout > 0)
-            {
-                return string.Format(CultureInfo.InvariantCulture, "env DEBUGINFOD_TIMEOUT={0} DEBUGINFOD_MAXTIME={0} ", timeout);
-            }
-            else if (!enabled)
-            {
-                return "env DEBUGINFOD_URLS= ";
-            }
-            return string.Empty;
-        }
-
-        private static string EnsurePipeArguments(List<string> pipeArgs, string debuggerPath, string debuggerPathDefault, bool quoteArgs, string debuginfodPrefix = "")
+        private static string EnsurePipeArguments(List<string> pipeArgs, string debuggerPath, string debuggerPathDefault, bool quoteArgs)
         {
             // Debugger path. Assume /usr/bin/gdb unless specified
             string dbgPath = String.IsNullOrWhiteSpace(debuggerPath) ? debuggerPathDefault : debuggerPath;
 
-            // debugger command: env DEBUGINFOD_TIMEOUT=30 /usr/bin/gdb --interpreter=mi
-            string dbgCmdArguments = String.Format(CultureInfo.InvariantCulture, "{0}{1} {2}", debuginfodPrefix, dbgPath, "--interpreter=mi");
+            // debugger command: /usr/bin/gdb --interpreter=mi
+            string dbgCmdArguments = String.Format(CultureInfo.InvariantCulture, "{0} {1}", dbgPath, "--interpreter=mi");
 
             string userArguments = ParseArguments(pipeArgs, quoteArgs);
 
@@ -831,7 +813,6 @@ namespace MICore
                 this.BaseOptions = baseLaunchOptions;
             }
 
-            // Prepend debuginfod env vars to the remote command.
             string prefix = GetDebuginfodEnvironmentPrefix();
             if (!string.IsNullOrEmpty(prefix))
             {
@@ -1300,7 +1281,7 @@ namespace MICore
         }
 
         /// <summary>
-        /// Returns an 'env' command prefix for debuginfod settings, for use in remote commands.
+        /// Returns an 'env' command prefix for debuginfod settings, for use in shell-based remote commands.
         /// Returns empty string if no env vars are needed.
         /// </summary>
         public string GetDebuginfodEnvironmentPrefix()
