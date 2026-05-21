@@ -567,6 +567,15 @@ namespace MICore
             await _debugger.CmdAsync(command, ResultClass.done);
         }
 
+        /// <summary>
+        /// Sends -break-after to set an ignore count on a breakpoint.
+        /// </summary>
+        public virtual async Task<Results> BreakAfter(string bkptno, uint count)
+        {
+            string command = string.Format(CultureInfo.InvariantCulture, "-break-after {0} {1}", bkptno, count);
+            return await _debugger.CmdAsync(command, ResultClass.done);
+        }
+
         public virtual IEnumerable<Guid> GetSupportedExceptionCategories()
         {
             return new Guid[0];

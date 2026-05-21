@@ -577,6 +577,34 @@
     </xs:simpleContent>
   </xs:complexType>
 
+  <xs:complexType name="IntrinsicParameterType">
+    <xs:annotation>
+      <xs:documentation>Defines a single parameter of an Intrinsic function, giving it a name and an optional C++ type hint.</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="Name" type="VariableNameType" use="required"/>
+    <xs:attribute name="Type" type="TypeNameType" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="IntrinsicType">
+    <xs:annotation>
+      <xs:documentation>
+        Defines an inline named expression (an "intrinsic") that can be called by name within any subsequent
+        NatVis expression in the same &lt;Type&gt; block.  For example:
+          &lt;Intrinsic Name="day" Expression="jd - 2440588"/&gt;
+        allows writing {day()} in a DisplayString.  Parameters are substituted positionally:
+          &lt;Intrinsic Name="offset" Expression="sizeof(int) * n"&gt;&lt;Parameter Name="n" Type="int"/&gt;&lt;/Intrinsic&gt;
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Parameter" type="IntrinsicParameterType"/>
+    </xs:sequence>
+    <xs:attribute name="Name" type="VariableNameType" use="required"/>
+    <xs:attribute name="Expression" type="xs:string" use="required"/>
+    <xs:attribute name="Optional" type="OptionalType" use="optional"/>
+    <xs:attribute name="Category" type="xs:string" use="optional"/>
+    <xs:attribute name="ModuleName" type="ModuleNameStringType" use="optional"/>
+  </xs:complexType>
+
   <xs:complexType name="VisualizerType">
     <xs:annotation>
       <xs:documentation>Specifies a visualizer entry which customizes the debugger view of a type.</xs:documentation>
@@ -589,6 +617,7 @@
         </xs:annotation>
       </xs:element>
       <xs:element minOccurs="0" maxOccurs="unbounded" name="CustomVisualizer" type="CustomVisualizerType" />
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Intrinsic" type="IntrinsicType"/>
       <xs:choice minOccurs="0" maxOccurs="1">
         <xs:sequence>
           <xs:element  minOccurs="0" maxOccurs="unbounded" name="DisplayString" type="DisplayStringType"/>

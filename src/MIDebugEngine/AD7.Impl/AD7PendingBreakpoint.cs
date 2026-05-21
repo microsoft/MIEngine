@@ -115,11 +115,6 @@ namespace Microsoft.MIDebugEngine
                     return false;
                 }
             }
-            if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
-            {
-                this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR));
-                return false;
-            }
 
             return true;
         }
@@ -393,6 +388,40 @@ namespace Microsoft.MIDebugEngine
                         }
                     }
                 }
+
+                // Set ignore count via -break-after if a pass count is configured
+                if (_bp != null && (_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0
+                    && _bpRequestInfo.bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+                {
+                    uint ignoreCount = ComputeIgnoreCount(_bpRequestInfo.bpPassCount.stylePassCount, _bpRequestInfo.bpPassCount.dwPassCount, 0);
+                    await _bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Computes the ignore count for -break-after, accounting for hits already
+        /// counted from a prior breakpoint (<paramref name="currentHits"/>).
+        /// </summary>
+        private static uint ComputeIgnoreCount(enum_BP_PASSCOUNT_STYLE style, uint passCount, uint currentHits)
+        {
+            if (passCount == 0)
+            {
+                return 0;
+            }
+
+            switch (style)
+            {
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL:
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL_OR_GREATER:
+                    // Need to stop at hit N. Already counted currentHits, so skip (N - 1 - currentHits) more.
+                    return passCount - 1 > currentHits ? passCount - 1 - currentHits : 0;
+                case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD:
+                    // Next stop is at the next multiple of passCount after currentHits.
+                    uint remainder = currentHits % passCount;
+                    return remainder == 0 ? passCount - 1 : passCount - 1 - remainder;
+                default:
+                    return 0;
             }
         }
 
@@ -406,6 +435,11 @@ namespace Microsoft.MIDebugEngine
                 }
                 AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, IsDataBreakpoint, bp.Addr, bp.FunctionName, bp.DocumentContext(_engine));
                 AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, this, breakpointResolution, bp);
+                // Apply pass count (hit count condition) from the original request to the bound breakpoint
+                if ((_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
+                {
+                    ((IDebugBoundBreakpoint2)boundBreakpoint).SetPassCount(_bpRequestInfo.bpPassCount);
+                }
                 //check can bind one last time. If the pending breakpoint was deleted before now, we need to clean up gdb side
                 if (CanBind())
                 {
@@ -645,15 +679,75 @@ namespace Microsoft.MIDebugEngine
             return Constants.S_OK;
         }
 
-        // The sample engine does not support pass counts on breakpoints.
         int IDebugPendingBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount)
         {
-            if (bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+            _bpRequestInfo.bpPassCount = bpPassCount;
+            _bpRequestInfo.dwFields |= enum_BPREQI_FIELDS.BPREQI_PASSCOUNT;
+
+            PendingBreakpoint bp = null;
+            lock (_boundBreakpoints)
             {
-                this.SetError(new AD7ErrorBreakpoint(this, ResourceStrings.UnsupportedPassCountBreakpoint, enum_BP_ERROR_TYPE.BPET_GENERAL_ERROR), true);
-                return Constants.E_FAIL;
+                foreach (AD7BoundBreakpoint boundBp in _boundBreakpoints)
+                {
+                    ((IDebugBoundBreakpoint2)boundBp).SetPassCount(bpPassCount);
+                }
+                if (_bp != null)
+                {
+                    bp = _bp;
+                }
+            }
+
+            // When the pass count is cleared (NONE), send ignore count 0 to clear
+            // any stale GDB ignore count from the previous condition.
+            if (bp != null)
+            {
+                uint ignoreCount = 0;
+                if (bpPassCount.stylePassCount != enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+                {
+                    uint currentHits = 0;
+                    lock (_boundBreakpoints)
+                    {
+                        foreach (AD7BoundBreakpoint boundBp in _boundBreakpoints)
+                        {
+                            uint hc;
+                            if (((IDebugBoundBreakpoint2)boundBp).GetHitCount(out hc) == Constants.S_OK && hc > currentHits)
+                            {
+                                currentHits = hc;
+                            }
+                        }
+                    }
+                    ignoreCount = ComputeIgnoreCount(bpPassCount.stylePassCount, bpPassCount.dwPassCount, currentHits);
+                }
+                _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+                {
+                    _engine.DebuggedProcess.AddInternalBreakAction(
+                        () => bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess)
+                    );
+                });
             }
             return Constants.S_OK;
+        }
+
+        /// <summary>
+        /// Re-sends -break-after to GDB after a hit count reset.
+        /// </summary>
+        internal void RecomputeBreakAfter(uint currentHits)
+        {
+            if (_bp == null
+                || (_bpRequestInfo.dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) == 0
+                || _bpRequestInfo.bpPassCount.stylePassCount == enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE)
+            {
+                return;
+            }
+
+            PendingBreakpoint bp = _bp;
+            uint ignoreCount = ComputeIgnoreCount(_bpRequestInfo.bpPassCount.stylePassCount, _bpRequestInfo.bpPassCount.dwPassCount, currentHits);
+            _engine.DebuggedProcess.WorkerThread.RunOperation(() =>
+            {
+                _engine.DebuggedProcess.AddInternalBreakAction(
+                    () => bp.SetBreakAfterAsync(ignoreCount, _engine.DebuggedProcess)
+                );
+            });
         }
 
         // Toggles the virtualized state of this pending breakpoint. When a pending breakpoint is virtualized, 

@@ -38,8 +38,8 @@ namespace CppTests.Tests
         private const string NatvisSourceName = "main.cpp";
 
         // These line numbers will need to change if src/natvis/main.cpp changes
-        private const int SimpleClassAssignmentLine = 65;
-        private const int ReturnSourceLine = 80;
+        private const int SimpleClassAssignmentLine = 66;
+        private const int ReturnSourceLine = 90;
 
         [Theory]
         [RequiresTestSettings]
@@ -667,6 +667,52 @@ namespace CppTests.Tests
                     Assert.Equal("30", showRawObj.GetVariable("A").Value);
                     Assert.Equal("40", showRawObj.GetVariable("B").Value);
                     Assert.True(showRawObj.Variables.ContainsKey("[Raw View]"), "[Raw View] should be visible by default");
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestLinkedListItemsCondition(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks that a Condition attribute on LinkedListItems is evaluated correctly.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying LinkedListItems with Condition='isActive' when isActive is true");
+                    var activeList = currentFrame.GetVariable("activeList");
+                    Assert.Contains("active=true", activeList.Value);
+                    Assert.Equal("3", activeList.GetVariable("Count").Value);
+                    Assert.True(activeList.Variables.ContainsKey("[0]"), "activeList should show indexed children when condition is true");
+
+                    this.Comment("Verifying LinkedListItems with Condition='isActive' when isActive is false");
+                    var inactiveList = currentFrame.GetVariable("inactiveList");
+                    Assert.Contains("active=false", inactiveList.Value);
+                    Assert.Equal("2", inactiveList.GetVariable("Count").Value);
+                    Assert.False(inactiveList.Variables.ContainsKey("[0]"), "inactiveList should not show indexed children when condition is false");
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();

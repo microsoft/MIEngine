@@ -19,6 +19,8 @@ namespace OpenDebugAD7.AD7Impl
 
         public string Condition { get; private set; }
 
+        public string HitCondition { get; private set; }
+
         public AD7DocumentPosition DocumentPosition { get; private set; }
 
         public AD7FunctionPosition FunctionPosition { get; private set; }
@@ -39,10 +41,11 @@ namespace OpenDebugAD7.AD7Impl
         // Bind result from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
         public Breakpoint BindResult { get; set; }
 
-        public AD7BreakPointRequest(SessionConfiguration config, string path, int line, string condition)
+        public AD7BreakPointRequest(SessionConfiguration config, string path, int line, string condition, string hitCondition)
         {
             DocumentPosition = new AD7DocumentPosition(config, path, line);
             Condition = condition;
+            HitCondition = hitCondition;
         }
 
         public AD7BreakPointRequest(string functionName)
@@ -119,9 +122,13 @@ namespace OpenDebugAD7.AD7Impl
                 pBPRequestInfo[0].bpCondition.bstrCondition = Condition;
                 pBPRequestInfo[0].bpCondition.styleCondition = enum_BP_COND_STYLE.BP_COND_WHEN_TRUE;
             }
-            if ((dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0)
+            if ((dwFields & enum_BPREQI_FIELDS.BPREQI_PASSCOUNT) != 0
+                && !string.IsNullOrWhiteSpace(HitCondition)
+                && TryParseHitCondition(out enum_BP_PASSCOUNT_STYLE style, out uint passCount))
             {
-                // not supported
+                pBPRequestInfo[0].dwFields |= enum_BPREQI_FIELDS.BPREQI_PASSCOUNT;
+                pBPRequestInfo[0].bpPassCount.stylePassCount = style;
+                pBPRequestInfo[0].bpPassCount.dwPassCount = passCount;
             }
             return 0;
         }
@@ -185,6 +192,60 @@ namespace OpenDebugAD7.AD7Impl
         public bool HasTracepoint => !string.IsNullOrEmpty(m_logMessage) && m_Tracepoint != null;
 
         public Tracepoint Tracepoint => m_Tracepoint;
+
+        #endregion
+
+        #region Hit Conditions
+
+        /// <summary>
+        /// Updates the hit condition string so that subsequent <see cref="TryParseHitCondition"/>
+        /// calls return the new pass count, and future comparisons see the updated value.
+        /// </summary>
+        internal void UpdateHitCondition(string hitCondition)
+        {
+            HitCondition = hitCondition;
+        }
+
+        /// <summary>
+        /// Attempts to parse the hit condition string into a pass count style and value.
+        /// Returns true if HitCondition is null/empty (no condition) or if it is a valid hit condition.
+        /// </summary>
+        internal bool TryParseHitCondition(out enum_BP_PASSCOUNT_STYLE style, out uint passCount)
+        {
+            style = enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE;
+            passCount = 0;
+
+            if (string.IsNullOrWhiteSpace(HitCondition))
+            {
+                return true;
+            }
+
+            string hc = HitCondition.Trim();
+            string numberPart = hc;
+
+            if (hc.StartsWith(">="))
+            {
+                style = enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL_OR_GREATER;
+                numberPart = hc.Substring(2).Trim();
+            }
+            else if (hc.StartsWith("%"))
+            {
+                style = enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD;
+                numberPart = hc.Substring(1).Trim();
+            }
+            else
+            {
+                style = enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL;
+            }
+
+            return uint.TryParse(numberPart, out passCount);
+        }
+
+        /// <summary>
+        /// Validates that the hit condition string can be parsed into a pass count.
+        /// Returns true if HitCondition is null/empty (no condition) or if it is a valid hit condition.
+        /// </summary>
+        internal bool IsHitConditionValid => TryParseHitCondition(out _, out _);
 
         #endregion
     }

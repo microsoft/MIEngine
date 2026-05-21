@@ -11,6 +11,7 @@ using Microsoft.SSHDebugPS.Utilities;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS
 {
@@ -153,11 +154,18 @@ namespace Microsoft.SSHDebugPS
             string output = null;
             string errorMessage;
 
-            string waitPrompt = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
-            VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: (cancellationToken) =>
+            if (ThreadHelper.CheckAccess())
+            {
+                string waitPrompt = StringResources.WaitingOp_ExecutingCommand.FormatCurrentCultureWithArgs(commandDescription);
+                VS.VSOperationWaiter.Wait(waitPrompt, throwOnCancel: true, action: (cancellationToken) =>
+                {
+                    code = GetConnection().ExecuteCommand(commandText, timeout, out output, out errorMessage);
+                });
+            }
+            else
             {
                 code = GetConnection().ExecuteCommand(commandText, timeout, out output, out errorMessage);
-            });
+            }
 
             exitCode = code;
             commandOutput = output;

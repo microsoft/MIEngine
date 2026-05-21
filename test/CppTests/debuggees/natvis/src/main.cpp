@@ -6,6 +6,7 @@
 #include "SimpleMatrix.h"
 #include "SimpleTemplated.h"
 #include "DataPoint.h"
+#include "ConditionalLinkedList.h"
 
 class SimpleDisplayObject
 {
@@ -76,6 +77,15 @@ int main(int argc, char** argv)
 
     DataPoint dp(42);
     DataPoint *dpPtr = &dp;
+
+    ConditionalLinkedList activeList(true);
+    activeList.Add(10);
+    activeList.Add(20);
+    activeList.Add(30);
+
+    ConditionalLinkedList inactiveList(false);
+    inactiveList.Add(100);
+    inactiveList.Add(200);
 
     return 0;
 }

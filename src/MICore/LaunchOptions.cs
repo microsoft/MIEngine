@@ -137,6 +137,8 @@ namespace MICore
                 quoteArgs = platformSpecificTransportOptions.QuoteArgs ?? quoteArgs;
             }
 
+            Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
+
             PipeLaunchOptions pipeOptions = new PipeLaunchOptions(
                 pipePath: pipeProgram,
                 pipeArguments: EnsurePipeArguments(pipeArgs, debuggerPath, gdbPathDefault, quoteArgs),
@@ -145,7 +147,6 @@ namespace MICore
                 pipeEnvironment: GetEnvironmentEntries(pipeEnv)
             );
 
-            Json.LaunchOptions.BaseOptions baseOptions = Json.LaunchOptions.LaunchOptionHelpers.GetLaunchOrAttachOptions(parsedOptions);
             pipeOptions.InitializeCommonOptions(baseOptions);
             if (baseOptions is Json.LaunchOptions.LaunchOptions)
             {
@@ -298,6 +299,12 @@ namespace MICore
         {
             this.Name = jsonEntry.Name;
             this.Value = jsonEntry.Value;
+        }
+
+        public EnvironmentEntry(string name, string value)
+        {
+            this.Name = name;
+            this.Value = value;
         }
 
         /// <summary>
@@ -805,6 +812,12 @@ namespace MICore
                 this.InitializeCommonOptions(baseLaunchOptions);
                 this.BaseOptions = baseLaunchOptions;
             }
+
+            string prefix = GetDebuginfodEnvironmentPrefix();
+            if (!string.IsNullOrEmpty(prefix))
+            {
+                this.StartRemoteDebuggerCommand = prefix + this.StartRemoteDebuggerCommand;
+            }
         }
     }
 
@@ -1209,6 +1222,81 @@ namespace MICore
                 VerifyCanModifyProperty(nameof(UnknownBreakpointHandling));
                 _unknownBreakpointHandling = value;
             }
+        }
+
+        private bool _enableDebuginfod = true;
+
+        /// <summary>
+        /// If true (default), GDB's debuginfod support is enabled.
+        /// </summary>
+        public bool EnableDebuginfod
+        {
+            get { return _enableDebuginfod; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(EnableDebuginfod));
+                _enableDebuginfod = value;
+            }
+        }
+
+        private int _debuginfodTimeout = 30;
+
+        /// <summary>
+        /// The timeout in seconds for debuginfod requests. Default is 30. Set to 0 for no override.
+        /// </summary>
+        public int DebuginfodTimeout
+        {
+            get { return _debuginfodTimeout; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(DebuginfodTimeout));
+                _debuginfodTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Returns environment entries to configure debuginfod on the GDB process.
+        /// </summary>
+        public List<EnvironmentEntry> GetDebuginfodEnvironmentEntries()
+        {
+            var entries = new List<EnvironmentEntry>();
+            if (DebuggerMIMode != MIMode.Gdb)
+                return entries;
+
+            if (EnableDebuginfod)
+            {
+                if (DebuginfodTimeout > 0)
+                {
+                    string timeoutStr = DebuginfodTimeout.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    entries.Add(new EnvironmentEntry("DEBUGINFOD_TIMEOUT", timeoutStr));
+                    entries.Add(new EnvironmentEntry("DEBUGINFOD_MAXTIME", timeoutStr));
+                }
+            }
+            else
+            {
+                entries.Add(new EnvironmentEntry("DEBUGINFOD_URLS", ""));
+            }
+
+            return entries;
+        }
+
+        /// <summary>
+        /// Returns an 'env' command prefix for debuginfod settings, for use in shell-based remote commands.
+        /// Returns empty string if no env vars are needed.
+        /// </summary>
+        public string GetDebuginfodEnvironmentPrefix()
+        {
+            var entries = GetDebuginfodEnvironmentEntries();
+            if (entries.Count == 0)
+                return string.Empty;
+
+            var sb = new StringBuilder();
+            sb.Append("env ");
+            foreach (var entry in entries)
+            {
+                sb.AppendFormat(CultureInfo.InvariantCulture, "{0}={1} ", entry.Name, entry.Value);
+            }
+            return sb.ToString();
         }
 
         public string GetOptionsString()
@@ -1824,6 +1912,9 @@ namespace MICore
             }
 
             this.UnknownBreakpointHandling = options.UnknownBreakpointHandling ?? UnknownBreakpointHandling.Throw;
+            this.EnableDebuginfod = options.Debuginfod?.Enabled ?? true;
+            int debuginfodTimeout = options.Debuginfod?.Timeout ?? 30;
+            this.DebuginfodTimeout = debuginfodTimeout >= 0 ? debuginfodTimeout : 30;
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)
@@ -1855,6 +1946,8 @@ namespace MICore
 
             this.ShowDisplayString = source.ShowDisplayString;
             this.WaitDynamicLibLoad = source.WaitDynamicLibLoad;
+            this.EnableDebuginfod = source.EnableDebuginfod;
+            this.DebuginfodTimeout = source.DebuginfodTimeout >= 0 ? source.DebuginfodTimeout : 30;
 
             this.SetupCommands = LaunchCommand.CreateCollection(source.SetupCommands);
             this.PostRemoteConnectCommands = LaunchCommand.CreateCollection(source.PostRemoteConnectCommands);

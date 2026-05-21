@@ -119,6 +119,33 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Determining executable path for process {0}.
+        /// </summary>
+        internal static string DeterminingExecutablePath {
+            get {
+                return ResourceManager.GetString("DeterminingExecutablePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; timed out. The remote system may be unresponsive..
+        /// </summary>
+        internal static string Error_GetExePathTimedOut {
+            get {
+                return ResourceManager.GetString("Error_GetExePathTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; failed with exit code {1}. Verify the process is still running and accessible..
+        /// </summary>
+        internal static string Error_GetExePathFailed {
+            get {
+                return ResourceManager.GetString("Error_GetExePathFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to obtain target architecture..
         /// </summary>
         internal static string Error_FailedToGetTargetArchitecture {

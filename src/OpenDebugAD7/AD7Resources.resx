@@ -198,6 +198,9 @@
   <data name="Error_UnableToParseLogMessage" xml:space="preserve">
     <value>Unable to parse 'logMessage'.</value>
   </data>
+  <data name="Error_UnableToParseHitCondition" xml:space="preserve">
+    <value>Unable to parse 'hitCondition'. Expected a number, optionally prefixed with &gt;= or %.</value>
+  </data>
   <data name="Msg_E_CRASHDUMP_UNSUPPORTED" xml:space="preserve">
     <value>This operation is not supported when debugging dump files.</value>
   </data>
