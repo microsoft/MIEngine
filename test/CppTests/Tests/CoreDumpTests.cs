@@ -51,9 +51,6 @@ namespace CppTests.Tests
         [Theory]
         [RequiresTestSettings]
         [SupportedPlatform(SupportedPlatform.Linux, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
-        // TODO: https://github.com/microsoft/MIEngine/issues/1170
-        // - gdb_gnu
-        [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void CoreDumpBasic(ITestSettings settings)
         {
             this.TestPurpose("This test checks to see if core dump can be launched successfully");
@@ -69,9 +66,6 @@ namespace CppTests.Tests
         [Theory]
         [RequiresTestSettings]
         [SupportedPlatform(SupportedPlatform.Linux, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
-        // TODO: https://github.com/microsoft/MIEngine/issues/1170
-        // - gdb_gnu
-        [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void CoreDumpBasicMismatchedSourceAndSymbols(ITestSettings settings)
         {
             this.TestPurpose("This test checks to see if core dump can be launched successfully with mismathed source code.");
@@ -90,9 +84,6 @@ namespace CppTests.Tests
         [Theory]
         [RequiresTestSettings]
         [SupportedPlatform(SupportedPlatform.Linux, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
-        // TODO: https://github.com/microsoft/MIEngine/issues/1170
-        // - gdb_gnu
-        [UnsupportedDebugger(SupportedDebugger.Gdb_Gnu, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void CoreDumpVerifyActions(ITestSettings settings)
         {
             this.TestPurpose("This test checks to see the behavior when do actions during core dump debugging.");
@@ -144,32 +135,32 @@ namespace CppTests.Tests
                 StepInCommand stepInCommand = new StepInCommand(runner.DarRunner.CurrentThreadId);
                 runner.RunCommandExpectFailure(stepInCommand);
                 this.WriteLine(string.Format(CultureInfo.InvariantCulture, "Actual respone message: {0}", stepInCommand.Message));
-                Assert.Contains(stepInCommand.Message, string.Format(CultureInfo.InvariantCulture, stepError, "step in"));
+                Assert.Contains(string.Format(CultureInfo.InvariantCulture, stepError, "step in"), stepInCommand.Message);
 
                 this.Comment("Try to step over and verify the error message");
                 StepOverCommand stepOverCommand = new StepOverCommand(runner.DarRunner.CurrentThreadId);
                 runner.RunCommandExpectFailure(stepOverCommand);
                 this.WriteLine(string.Format(CultureInfo.InvariantCulture, "Actual respone message: {0}", stepOverCommand.Message));
-                Assert.Contains(stepOverCommand.Message, string.Format(CultureInfo.InvariantCulture, stepError, "step next"));
+                Assert.Contains(string.Format(CultureInfo.InvariantCulture, stepError, "step next"), stepOverCommand.Message);
 
                 this.Comment("Try to step out and verify the error message");
                 StepOutCommand stepOutCommand = new StepOutCommand(runner.DarRunner.CurrentThreadId);
                 runner.RunCommandExpectFailure(stepOutCommand);
                 this.WriteLine(string.Format(CultureInfo.InvariantCulture, "Actual respone message: {0}", stepOutCommand.Message));
-                Assert.Contains(stepOutCommand.Message, string.Format(CultureInfo.InvariantCulture, stepError, "step out"));
+                Assert.Contains(string.Format(CultureInfo.InvariantCulture, stepError, "step out"), stepOutCommand.Message);
 
                 this.Comment("Try to continue and verify the error message");
                 ContinueCommand continueCommand = new ContinueCommand(runner.DarRunner.CurrentThreadId);
                 runner.RunCommandExpectFailure(continueCommand);
                 this.WriteLine(string.Format(CultureInfo.InvariantCulture, "Actual respone message: {0}", continueCommand.Message));
-                Assert.Contains(continueCommand.Message, string.Format(CultureInfo.InvariantCulture, stepError, "continue"));
+                Assert.Contains(string.Format(CultureInfo.InvariantCulture, stepError, "continue"), continueCommand.Message);
 
                 this.Comment("Try to set a breakpoint and verify the error message");
                 SourceBreakpoints bp = debuggee.Breakpoints(srcAppName, 16);
                 SetBreakpointsResponseValue setBpResponse = runner.SetBreakpoints(bp);
                 Assert.False(setBpResponse.body.breakpoints[0].verified);
                 this.WriteLine(string.Format(CultureInfo.InvariantCulture, "Actual respone message: {0}", setBpResponse.body.breakpoints[0].message));
-                Assert.Contains(setBpResponse.body.breakpoints[0].message, bpError);
+                Assert.Contains(bpError, setBpResponse.body.breakpoints[0].message);
 
                 this.Comment("Stop core dump debugging");
                 runner.DisconnectAndVerify();

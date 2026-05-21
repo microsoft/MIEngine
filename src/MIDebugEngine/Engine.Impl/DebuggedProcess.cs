@@ -624,7 +624,10 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
             {
                 commands.Add(new LaunchCommand("-interpreter-exec console \"set pagination off\""));
-                commands.Add(new LaunchCommand("set debuginfod enabled on", ignoreFailures:true));
+                if (_launchOptions.EnableDebuginfod)
+                {
+                    commands.Add(new LaunchCommand("set debuginfod enabled on", ignoreFailures: true));
+                }
             }
 
             // When user specifies loading directives then the debugger cannot auto load symbols, the MIEngine must intervene at each solib-load event and make a determination
@@ -944,52 +947,67 @@ namespace Microsoft.MIDebugEngine
             // Runs a shell command to get the full path of the exe.
             // /proc file system does not exist on OSX. And querying lsof on privilaged process fails with no output on Mac, while on Linux the command succeedes with 
             // embedded error text in lsof output like "(readlink error)". 
-            string absoluteExePath;
 
             // Must have a processId
             Debug.Assert(_launchOptions.ProcessId.HasValue, "ProcessId should have a value.");
 
+            string shellCommand;
             if (launchOptions.UnixPort.IsOSX())
             {
                 // Usually the first FD=txt in the output of lsof points to the executable.
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, "shell lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId.Value);
+                shellCommand = string.Format(CultureInfo.InvariantCulture, "lsof -p {0} | awk '$4 == \"txt\" {{ print $9 }}'|awk 'NR==1 {{print $1}}'", _launchOptions.ProcessId.Value);
             }
             else if (launchOptions.UnixPort.IsLinux())
             {
-                absoluteExePath = string.Format(CultureInfo.InvariantCulture, @"shell readlink -f /proc/{0}/exe", _launchOptions.ProcessId.Value);
+                shellCommand = string.Format(CultureInfo.InvariantCulture, "readlink -f /proc/{0}/exe", _launchOptions.ProcessId.Value);
             }
             else
             {
                 throw new LaunchErrorException(ResourceStrings.Error_UnsupportedPlatform);
             }
 
+            string commandOutput;
+            int exitCode;
+            try
+            {
+                launchOptions.UnixPort.ExecuteSyncCommand(
+                    string.Format(CultureInfo.CurrentCulture, ResourceStrings.DeterminingExecutablePath, _launchOptions.ProcessId.Value),
+                    shellCommand,
+                    out commandOutput,
+                    timeout: 30000,
+                    out exitCode);
+            }
+            catch (TimeoutException)
+            {
+                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_FailedToGetExePath,
+                    string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_GetExePathTimedOut, shellCommand));
+                throw new LaunchErrorException(message);
+            }
+
+            if (exitCode != 0 || string.IsNullOrWhiteSpace(commandOutput))
+            {
+                string errorDetail = !string.IsNullOrWhiteSpace(commandOutput)
+                    ? commandOutput.Trim()
+                    : string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_GetExePathFailed, shellCommand, exitCode);
+                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_FailedToGetExePath, errorDetail);
+                throw new LaunchErrorException(message);
+            }
+
+            string trimmedExePath = commandOutput.Trim();
+
+            // If the folder contains a space, we need to quote the path.
+            if (trimmedExePath.Contains(' '))
+            {
+                trimmedExePath = "\"" + trimmedExePath + "\"";
+            }
+
             Action<string> failureHandler = (string miError) =>
             {
-                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_FailedToGetExePath, miError);
+                string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, trimmedExePath, MICommandFactory.Name, miError);
                 throw new LaunchErrorException(message);
             };
 
-            Func<string, Task> successHandler = async (string exePath) =>
-            {
-                string trimmedExePath = exePath.Trim();
-                try
-                {
-                    // If the folder contains a space, we need to quote the path.
-                    if (trimmedExePath.Contains(' '))
-                    {
-                        trimmedExePath = "\"" + trimmedExePath + "\"";
-                    }
-
-                    await CmdAsync("-file-exec-and-symbols " + trimmedExePath, ResultClass.done);
-                }
-                catch (UnexpectedMIResultException miException)
-                {
-                    string message = string.Format(CultureInfo.CurrentCulture, ResourceStrings.Error_ExePathInvalid, trimmedExePath, MICommandFactory.Name, miException.MIError);
-                    throw new LaunchErrorException(message);
-                }
-            };
-
-            commands.Add(new LaunchCommand(absoluteExePath, ignoreFailures: false, failureHandler: failureHandler, successHandler: successHandler));
+            commands.Add(new LaunchCommand("-file-exec-and-symbols " + trimmedExePath, ignoreFailures: false, failureHandler: failureHandler));
         }
 
         private TargetArchitecture DefaultArch()
@@ -2121,6 +2139,18 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<Tuple<ulong, ulong>> FindValidMemoryRange(ulong address, uint count, int offset)
         {
+            // Debugging coredump with LLDB doesn't work well with '-data-read-memory-bytes', the function
+            // returns an error. Namely 'LLDB unable to read entire memory block of n bytes at address 0x0....'.
+            // As a result we have to skip calling '-data-read-memory-bytes' and just use the address + offet and count
+            // in order to get the memory range.
+            if (IsCoreDump && _launchOptions.DebuggerMIMode == MIMode.Lldb)
+            {
+                ulong startAddress = (ulong)((long)address + offset);
+                ulong endAddress = startAddress + count;
+
+                return new Tuple<ulong, ulong>(startAddress, endAddress);
+            }
+
             var ret = new Tuple<ulong, ulong>(0, 0);    // init to an empty range
             string cmd = String.Format(CultureInfo.InvariantCulture, "-data-read-memory-bytes -o {0} {1} {2}", offset.ToString(CultureInfo.InvariantCulture), EngineUtils.AsAddr(address, Is64BitArch), count.ToString(CultureInfo.InvariantCulture));
             Results results = await CmdAsync(cmd, ResultClass.None);
