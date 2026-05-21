@@ -163,7 +163,8 @@ namespace MICore
             }
 
             // Do not pass the launchOptions Environment entries as those are used for the debuggee only.
-            RunInTerminalLauncher launcher = new RunInTerminalLauncher(windowtitle, new List<EnvironmentEntry>(0).AsReadOnly());
+            var debuggerEnv = options.GetDebuginfodEnvironmentEntries().AsReadOnly();
+            RunInTerminalLauncher launcher = new RunInTerminalLauncher(windowtitle, debuggerEnv);
 
             launcher.Launch(
                      cmdArgs,

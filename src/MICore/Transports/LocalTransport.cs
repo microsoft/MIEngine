@@ -40,6 +40,11 @@ namespace MICore
                 proc.StartInfo.SetEnvironmentVariable("PATH", path);
             }
 
+            foreach (var entry in options.GetDebuginfodEnvironmentEntries())
+            {
+                proc.StartInfo.SetEnvironmentVariable(entry.Name, entry.Value);
+            }
+
             // Allow to execute custom commands before launching debugger.
             // For ex., instructing GDB not to break for certain signals
             if (options.DebuggerMIMode == MIMode.Gdb && !string.IsNullOrWhiteSpace(options.WorkingDirectory))
