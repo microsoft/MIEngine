@@ -499,6 +499,51 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Controls GDB's debuginfod behavior for automatic downloading of debug symbols.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GDB の debuginfod の動作を、デバッグ シンボルを自動ダウンロードするために制御します。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[If true (default), GDB's debuginfod support is enabled. Set to false to disable debuginfod, which can prevent GDB from hanging when debuginfod servers are unavailable.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[true (既定値) の場合、GDB の debuginfod サポートは有効です。debuginfod を無効にするには、false に設定します。これにより、debuginfod サーバーを利用できない場合に、GDB がハングするのを防ぐことができます。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[boolean]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.timeout.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The timeout in seconds for debuginfod server requests. Default is 30. Set to 0 for no timeout override (GDB defaults apply). Applies to local, runInTerminal, and SSH attach transports. This setting is not applied for pipeTransport; set DEBUGINFOD_TIMEOUT and DEBUGINFOD_MAXTIME in the debugger's environment manually.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[debuginfod サーバー要求のタイムアウト (秒)。既定値は 30 です。タイムアウトのオーバーライドを無効にするには、0 に設定します (GDB の既定値が適用されます)。ローカル、runInTerminal、および SSH attach トランスポートに適用されます。この設定は pipeTransport には適用されません。DEBUGINFOD_TIMEOUT および DEBUGINFOD_MAXTIME は、デバッガーの環境で手動で設定してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.timeout.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[integer]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[object]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Environment variables to add to the environment for the program. ]A;Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
