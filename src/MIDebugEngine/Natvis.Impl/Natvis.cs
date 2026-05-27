@@ -1264,6 +1264,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 return String.Empty;
             }
+            format = format.Trim();
             StringBuilder value = new StringBuilder();
             for (int i = 0; i < format.Length; ++i)
             {
