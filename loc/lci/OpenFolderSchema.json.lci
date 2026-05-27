@@ -398,7 +398,7 @@
         </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
@@ -416,7 +416,7 @@
         </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[boolean]]></Val>
         </Str>
         <Disp Icon="Str" />
@@ -434,7 +434,7 @@
         </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.timeout.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[integer]]></Val>
         </Str>
         <Disp Icon="Str" />
