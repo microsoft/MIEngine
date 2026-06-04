@@ -524,9 +524,13 @@ namespace Microsoft.MIDebugEngine.Natvis {
         private bool optionalFieldSpecified;
         
         private string conditionField;
-        
+
+        private string includeViewField;
+
+        private string excludeViewField;
+
         private uint maxItemsPerViewField;
-        
+
         private bool maxItemsPerViewFieldSpecified;
         
         /// <remarks/>
@@ -594,7 +598,29 @@ namespace Microsoft.MIDebugEngine.Natvis {
                 this.conditionField = value;
             }
         }
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string IncludeView {
+            get {
+                return this.includeViewField;
+            }
+            set {
+                this.includeViewField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ExcludeView {
+            get {
+                return this.excludeViewField;
+            }
+            set {
+                this.excludeViewField = value;
+            }
+        }
+
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public uint MaxItemsPerView {
@@ -717,13 +743,17 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class ExpandedItemType {
-        
+
         private bool optionalField;
-        
+
         private bool optionalFieldSpecified;
-        
+
         private string conditionField;
-        
+
+        private string includeViewField;
+
+        private string excludeViewField;
+
         private string valueField;
         
         /// <remarks/>
@@ -758,7 +788,29 @@ namespace Microsoft.MIDebugEngine.Natvis {
                 this.conditionField = value;
             }
         }
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string IncludeView {
+            get {
+                return this.includeViewField;
+            }
+            set {
+                this.includeViewField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ExcludeView {
+            get {
+                return this.excludeViewField;
+            }
+            set {
+                this.excludeViewField = value;
+            }
+        }
+
         /// <remarks/>
         [System.Xml.Serialization.XmlTextAttribute()]
         public string Value {
@@ -770,7 +822,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
             }
         }
     }
-    
+
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
@@ -852,11 +904,11 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class IndexNodeType {
-        
+
         private string conditionField;
-        
+
         private string valueField;
-        
+
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Condition {
@@ -867,7 +919,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
                 this.conditionField = value;
             }
         }
-        
+
         /// <remarks/>
         [System.Xml.Serialization.XmlTextAttribute()]
         public string Value {
@@ -879,7 +931,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
             }
         }
     }
-    
+
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
@@ -887,15 +939,19 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class ItemType {
-        
+
         private string nameField;
-        
+
         private bool optionalField;
-        
+
         private bool optionalFieldSpecified;
-        
+
         private string conditionField;
-        
+
+        private string includeViewField;
+
+        private string excludeViewField;
+
         private string valueField;
         
         /// <remarks/>
@@ -941,7 +997,29 @@ namespace Microsoft.MIDebugEngine.Natvis {
                 this.conditionField = value;
             }
         }
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string IncludeView {
+            get {
+                return this.includeViewField;
+            }
+            set {
+                this.includeViewField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ExcludeView {
+            get {
+                return this.excludeViewField;
+            }
+            set {
+                this.excludeViewField = value;
+            }
+        }
+
         /// <remarks/>
         [System.Xml.Serialization.XmlTextAttribute()]
         public string Value {
@@ -953,7 +1031,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
             }
         }
     }
-    
+
     /// <remarks/>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
@@ -1263,17 +1341,21 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
     public partial class DisplayStringType {
-        
+
         private bool optionalField;
-        
+
         private bool optionalFieldSpecified;
-        
+
         private string conditionField;
-        
+
         private string legacyAddinField;
-        
+
         private string exportField;
-        
+
+        private string includeViewField;
+
+        private string excludeViewField;
+
         private string valueField;
         
         /// <remarks/>
@@ -1330,7 +1412,29 @@ namespace Microsoft.MIDebugEngine.Natvis {
                 this.exportField = value;
             }
         }
-        
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string IncludeView {
+            get {
+                return this.includeViewField;
+            }
+            set {
+                this.includeViewField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ExcludeView {
+            get {
+                return this.excludeViewField;
+            }
+            set {
+                this.excludeViewField = value;
+            }
+        }
+
         /// <remarks/>
         [System.Xml.Serialization.XmlTextAttribute()]
         public string Value {
