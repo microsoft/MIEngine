@@ -207,11 +207,11 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="EnableDebuginfod" type="xs:boolean" use="optional" default="true">
+    <xs:attribute name="EnableDebuginfod" type="xs:boolean" use="optional" default="false">
       <xs:annotation>
         <xs:documentation>
-          If true (default), GDB's debuginfod support is enabled, allowing automatic downloading of debug symbols.
-          Set to false to disable debuginfod, which can prevent GDB from hanging when debuginfod servers are unavailable.
+          If true, GDB's debuginfod support is enabled, allowing automatic downloading of debug symbols.
+          Set to true to enable debuginfod. Default is false.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
