@@ -398,7 +398,7 @@
         </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[object]]></Val>
         </Str>
         <Disp Icon="Str" />
@@ -408,7 +408,7 @@
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[If true (default), GDB's debuginfod support is enabled. Set to false to disable debuginfod, which can prevent GDB from hanging when debuginfod servers are unavailable.]]></Val>
+          <Val><![CDATA[If true, GDB's debuginfod support is enabled. Set to true to enable debuginfod. Default is false.]]></Val>
         </Str>
         <Disp Icon="Str" />
         <Cmts>
@@ -416,7 +416,7 @@
         </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[boolean]]></Val>
         </Str>
         <Disp Icon="Str" />
@@ -434,7 +434,7 @@
         </Cmts>
       </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.timeout.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[integer]]></Val>
         </Str>
         <Disp Icon="Str" />
