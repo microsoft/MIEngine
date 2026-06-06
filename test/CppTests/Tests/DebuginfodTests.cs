@@ -108,7 +108,8 @@ namespace CppTests.Tests
                 {
                     string logContent = File.ReadAllText(engineLogPath);
                     this.Comment("Verifying debuginfod was NOT enabled in GDB");
-                    Assert.DoesNotContain("debuginfod enabled", logContent);
+                    Assert.DoesNotContain("set debuginfod enabled on", logContent);
+                    Assert.Contains("set debuginfod enabled off", logContent);
                 }
             }
             finally
