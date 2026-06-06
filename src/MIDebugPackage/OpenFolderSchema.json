@@ -197,12 +197,12 @@
               "debuginfod": {
                 "type": "object",
                 "description": "Controls GDB's debuginfod behavior for automatic downloading of debug symbols.",
-                "default": { "enabled": true, "timeout": 30 },
+                "default": { "enabled": false, "timeout": 30 },
                 "properties": {
                   "enabled": {
                     "type": "boolean",
-                    "description": "If true (default), GDB's debuginfod support is enabled. Set to false to disable debuginfod, which can prevent GDB from hanging when debuginfod servers are unavailable.",
-                    "default": true
+                    "description": "If true, GDB's debuginfod support is enabled. Set to true to enable debuginfod. Default is false.",
+                    "default": false
                   },
                   "timeout": {
                     "type": "integer",
