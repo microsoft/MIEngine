@@ -101,7 +101,7 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(true)]
+        [System.ComponentModel.DefaultValueAttribute(false)]
         public bool EnableDebuginfod;
 
         /// <remarks/>
@@ -115,7 +115,7 @@ namespace MICore.Xml.LaunchOptions {
             this.JVMPort = 65534;
             this.JVMHost = "localhost";
             this.WaitDynamicLibLoad = true;
-            this.EnableDebuginfod = true;
+            this.EnableDebuginfod = false;
             this.DebuginfodTimeout = 30;
         }
     }
@@ -468,7 +468,7 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(true)]
+        [System.ComponentModel.DefaultValueAttribute(false)]
         public bool EnableDebuginfod;
 
         /// <remarks/>
@@ -478,7 +478,7 @@ namespace MICore.Xml.LaunchOptions {
         
         public BaseLaunchOptions() {
             this.WaitDynamicLibLoad = true;
-            this.EnableDebuginfod = true;
+            this.EnableDebuginfod = false;
             this.DebuginfodTimeout = 30;
         }
     }
@@ -562,7 +562,7 @@ namespace MICore.Xml.LaunchOptions {
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(true)]
+        [System.ComponentModel.DefaultValueAttribute(false)]
         public bool EnableDebuginfod;
 
         /// <remarks/>
@@ -572,7 +572,7 @@ namespace MICore.Xml.LaunchOptions {
         
         public IOSLaunchOptions() {
             this.WaitDynamicLibLoad = true;
-            this.EnableDebuginfod = true;
+            this.EnableDebuginfod = false;
             this.DebuginfodTimeout = 30;
         }
     }

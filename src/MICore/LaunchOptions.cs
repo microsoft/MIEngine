@@ -1224,10 +1224,10 @@ namespace MICore
             }
         }
 
-        private bool _enableDebuginfod = true;
+        private bool _enableDebuginfod = false;
 
         /// <summary>
-        /// If true (default), GDB's debuginfod support is enabled.
+        /// If true, GDB's debuginfod support is enabled. Default is false.
         /// </summary>
         public bool EnableDebuginfod
         {
@@ -1912,7 +1912,7 @@ namespace MICore
             }
 
             this.UnknownBreakpointHandling = options.UnknownBreakpointHandling ?? UnknownBreakpointHandling.Throw;
-            this.EnableDebuginfod = options.Debuginfod?.Enabled ?? true;
+            this.EnableDebuginfod = options.Debuginfod?.Enabled ?? false;
             int debuginfodTimeout = options.Debuginfod?.Timeout ?? 30;
             this.DebuginfodTimeout = debuginfodTimeout >= 0 ? debuginfodTimeout : 30;
         }
