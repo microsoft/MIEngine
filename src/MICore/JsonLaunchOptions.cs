@@ -324,7 +324,7 @@ namespace MICore.Json.LaunchOptions
     public partial class DebuginfodSettings
     {
         /// <summary>
-        /// If true (default), GDB's debuginfod support is enabled.
+        /// If true, GDB's debuginfod support is enabled. Default is false.
         /// </summary>
         [JsonProperty("enabled")]
         public bool? Enabled { get; set; }
