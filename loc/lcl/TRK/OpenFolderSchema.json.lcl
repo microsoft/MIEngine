@@ -499,6 +499,54 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Controls GDB's debuginfod behavior for automatic downloading of debug symbols.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GDB’nin debuginfod davranışını, hata ayıklama sembollerini otomatik olarak indirmek için denetler.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[If true, GDB's debuginfod support is enabled. Set to true to enable debuginfod. Default is false.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[True ise, GDB’nin debuginfod desteği etkinleştirilir. debuginfod'u etkinleştirmek için true olarak ayarlayın. Varsayılan değer false değeridir.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[If true (default), GDB's debuginfod support is enabled. Set to false to disable debuginfod, which can prevent GDB from hanging when debuginfod servers are unavailable.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[boolean]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.timeout.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The timeout in seconds for debuginfod server requests. Default is 30. Set to 0 for no timeout override (GDB defaults apply). Applies to local, runInTerminal, and SSH attach transports. This setting is not applied for pipeTransport; set DEBUGINFOD_TIMEOUT and DEBUGINFOD_MAXTIME in the debugger's environment manually.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[debuginfod sunucu istekleri için saniye cinsinden zaman aşımı. Varsayılan değer 30'dur. Zaman aşımı geçersiz kılmasını devre dışı bırakmak için 0 olarak ayarlayın (GDB varsayılanları uygulanır). Yerel, runInTerminal ve SSH ekleme aktarımlarına uygulanır. Bu ayar pipeTransport için geçerli olmaz. DEBUGINFOD_TIMEOUT ve DEBUGINFOD_MAXTIME değerlerini hata ayıklayıcının ortamında kendiniz ayarlayın.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.timeout.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[integer]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[object]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Environment variables to add to the environment for the program. ]A;Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
