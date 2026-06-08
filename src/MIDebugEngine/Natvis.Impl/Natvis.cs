@@ -247,6 +247,8 @@ namespace Microsoft.MIDebugEngine.Natvis
         private static Regex s_expression = new Regex(@"^\{[^\}]*\}");
         private static readonly Regex s_moduleQualifiedPrefix = new Regex(@"\w+(?:\.\w+)*\.(?:dll|exe)!", RegexOptions.IgnoreCase);
         private static readonly Regex s_intrinsicCallPattern = new Regex(@"\b(\w+)\s*\(");
+        // Matches the leading "0x<hex> " address that GDB/LLDB prepends when displaying a string pointer value.
+        private static readonly Regex s_addressPrefix = new Regex(@"^0x[0-9a-fA-F]+\s+");
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
         private HostConfigurationStore _configStore;
@@ -1280,7 +1282,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                     Match m = s_expression.Match(format.Substring(i));
                     if (m.Success)
                     {
-                        string exprValue = GetExpressionValue(format.Substring(i + 1, m.Length - 2), variable, scopedNames, intrinsics);
+                        string rawExpr = format.Substring(i + 1, m.Length - 2);
+                        string spec = ExtractFormatSpecifier(rawExpr);
+                        string exprValue = GetExpressionValue(rawExpr, variable, scopedNames, intrinsics);
+                        if (spec == "sub" || spec == "su")
+                            exprValue = CleanUtf16StringValue(exprValue);
+                        else if (spec == "sb")
+                            exprValue = CleanAsciiStringValue(exprValue);
                         value.Append(exprValue);
                         i += m.Length - 1;
                     }
@@ -1458,6 +1466,88 @@ namespace Microsoft.MIDebugEngine.Natvis
             if (last.Length > 0 || result.Count > 0)
                 result.Add(last);
             return result;
+        }
+
+        /// <summary>
+        /// Returns the index of the last top-level comma in <paramref name="expression"/>,
+        /// i.e. a comma not nested inside any parentheses or square brackets.
+        /// Returns -1 when no such comma exists.
+        /// </summary>
+        private static int FindLastTopLevelComma(string expression)
+        {
+            int depth = 0;
+            int lastTopLevelComma = -1;
+            for (int i = 0; i < expression.Length; i++)
+            {
+                char c = expression[i];
+                if (c == '(' || c == '[') depth++;
+                else if (c == ')' || c == ']') depth--;
+                else if (c == ',' && depth == 0)
+                    lastTopLevelComma = i;
+            }
+            return lastTopLevelComma;
+        }
+
+        /// <summary>
+        /// Returns the format specifier from a NatVis expression (the part after the last
+        /// top-level comma), normalized the same way as
+        /// <see cref="VariableInformation.ProcessFormatSpecifiers"/>: modifiers "nvo", "na",
+        /// "nr", "nd" are stripped before returning.  Returns null when no specifier is present.
+        /// </summary>
+        internal static string ExtractFormatSpecifier(string expression)
+        {
+            int commaPos = FindLastTopLevelComma(expression);
+            if (commaPos < 0) return null;
+            return expression.Substring(commaPos + 1).Trim()
+                .Replace("nvo", "").Replace("na", "").Replace("nr", "").Replace("nd", "");
+        }
+
+        /// <summary>
+        /// Cleans up the raw value that GDB/LLDB returns for a <c>const char16_t*</c>
+        /// expression (i.e. one evaluated with the <c>,sub</c> / <c>,su</c> format specifier).
+        /// GDB and LLDB both prefix the string with the pointer address, e.g.
+        ///   <c>0x00007fff5fbff6c0 u"Hello"</c>
+        /// This method strips the address and the surrounding <c>u"…"</c> quotes so that
+        /// the NatVis DisplayString shows just the string content.
+        /// </summary>
+        internal static string CleanUtf16StringValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            // Strip leading "0x<hex> " address prefix emitted by GDB/LLDB.
+            value = s_addressPrefix.Replace(value, "");
+            // Strip surrounding u"..." or U"..." quotes.
+            if (value.Length >= 3 &&
+                (value.StartsWith("u\"", StringComparison.Ordinal) || value.StartsWith("U\"", StringComparison.Ordinal)))
+            {
+                value = value.EndsWith("\"", StringComparison.Ordinal)
+                    ? value.Substring(2, value.Length - 3)
+                    : value.Substring(2);
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Cleans up the raw value that GDB/LLDB returns for a <c>char*</c> expression
+        /// (i.e. one evaluated with the <c>,sb</c> format specifier).
+        /// GDB and LLDB prefix the string with the pointer address, e.g.
+        ///   <c>0x00007fff5fbff6c0 "Hello"</c>
+        /// This method strips the address and the surrounding <c>"…"</c> quotes so that
+        /// the NatVis DisplayString shows just the string content (matching VS behaviour,
+        /// where <c>{ptr,sb}</c> evaluates to bare text without quotes).
+        /// </summary>
+        internal static string CleanAsciiStringValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            // Strip leading "0x<hex> " address prefix emitted by GDB/LLDB.
+            value = s_addressPrefix.Replace(value, "");
+            // Strip surrounding "..." quotes.
+            if (value.Length >= 2 && value.StartsWith("\"", StringComparison.Ordinal))
+            {
+                value = value.EndsWith("\"", StringComparison.Ordinal)
+                    ? value.Substring(1, value.Length - 2)
+                    : value.Substring(1);
+            }
+            return value;
         }
 
         /// <summary>
