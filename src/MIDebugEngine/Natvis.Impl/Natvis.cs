@@ -1489,21 +1489,6 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
 
         /// <summary>
-        /// Strips a Visual Studio NatVis format specifier (e.g. ",sub", ",d", ",Xb",
-        /// ",view(name)na") from the end of an expression.  Format specifiers follow the
-        /// last top-level comma (i.e. a comma not nested inside any parentheses or
-        /// square brackets).  GDB and LLDB do not understand these specifiers; leaving them
-        /// in place causes expression evaluation to fail.
-        /// </summary>
-        internal static string StripFormatSpecifier(string expression)
-        {
-            int commaPos = FindLastTopLevelComma(expression);
-            return commaPos >= 0
-                ? expression.Substring(0, commaPos).TrimEnd()
-                : expression;
-        }
-
-        /// <summary>
         /// Returns the format specifier from a NatVis expression (the part after the last
         /// top-level comma), normalized the same way as
         /// <see cref="VariableInformation.ProcessFormatSpecifiers"/>: modifiers "nvo", "na",
@@ -1546,13 +1531,23 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// (i.e. one evaluated with the <c>,sb</c> format specifier).
         /// GDB and LLDB prefix the string with the pointer address, e.g.
         ///   <c>0x00007fff5fbff6c0 "Hello"</c>
-        /// This method strips the address, leaving the quoted string content.
+        /// This method strips the address and the surrounding <c>"…"</c> quotes so that
+        /// the NatVis DisplayString shows just the string content (matching VS behaviour,
+        /// where <c>{ptr,sb}</c> evaluates to bare text without quotes).
         /// </summary>
         internal static string CleanAsciiStringValue(string value)
         {
             if (string.IsNullOrEmpty(value)) return value;
             // Strip leading "0x<hex> " address prefix emitted by GDB/LLDB.
-            return s_addressPrefix.Replace(value, "");
+            value = s_addressPrefix.Replace(value, "");
+            // Strip surrounding "..." quotes.
+            if (value.Length >= 2 && value.StartsWith("\"", StringComparison.Ordinal))
+            {
+                value = value.EndsWith("\"", StringComparison.Ordinal)
+                    ? value.Substring(1, value.Length - 2)
+                    : value.Substring(1);
+            }
+            return value;
         }
 
         /// <summary>
