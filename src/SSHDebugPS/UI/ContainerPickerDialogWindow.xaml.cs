@@ -25,9 +25,9 @@ namespace Microsoft.SSHDebugPS.UI
     /// </summary>
     public partial class ContainerPickerDialogWindow : DialogWindow
     {
-        public ContainerPickerDialogWindow(bool supportSSHConnections)
+        public ContainerPickerDialogWindow(bool supportSSHConnections, ContainerRuntimeType runtimeType = ContainerRuntimeType.Docker)
         {
-            _model = new ContainerPickerViewModel(supportSSHConnections);
+            _model = new ContainerPickerViewModel(supportSSHConnections, runtimeType);
             this.DataContext = _model;
             this.Loaded += OnWindowLoaded;
 

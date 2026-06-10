@@ -26,7 +26,7 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
         private static char[] charsToTrim = { ' ', '\"' };
 
-        private static void RunDockerCommand(DockerCommandSettings settings, Action<string> callback)
+        internal static void RunContainerCommand(IPipeTransportSettings settings, Action<string> callback)
         {
             LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
 
@@ -106,7 +106,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunContainerCommand(settings, delegate (string args)
                 {
                     if (args.Contains("lcow"))
                     {
@@ -134,7 +134,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunContainerCommand(settings, delegate (string args)
                 {
                     delegateServerOS = args;
                 });
@@ -159,7 +159,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunContainerCommand(settings, delegate (string args)
                 {
                     delegateContainerPlatform = args;
                 });
@@ -183,7 +183,7 @@ namespace Microsoft.SSHDebugPS.Docker
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
-            RunDockerCommand(settings, delegate (string args)
+            RunContainerCommand(settings, delegate (string args)
             {
                 if (args.Trim()[0] == '{')
                 {

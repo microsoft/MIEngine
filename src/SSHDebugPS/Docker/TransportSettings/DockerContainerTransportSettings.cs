@@ -1,97 +1,38 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.SSHDebugPS.Utilities;
-using System.Diagnostics;
-
 namespace Microsoft.SSHDebugPS.Docker
 {
-    internal class DockerContainerTransportSettings : DockerTransportSettingsBase
+    internal class DockerContainerTransportSettings : ContainerTargetTransportSettings
     {
-        internal string ContainerName { get; private set; }
+        internal const string WindowsExeName = "docker.exe";
+        internal const string UnixExeName = "docker";
+        internal const string HostFlag = "--host \"{0}\"";
 
         public DockerContainerTransportSettings(string hostname, string containerName, bool hostIsUnix)
-            : base(hostname, hostIsUnix)
-        {
-            ContainerName = containerName;
-        }
+            : base(hostname, containerName, hostIsUnix, WindowsExeName, UnixExeName, HostFlag)
+        { }
 
         public DockerContainerTransportSettings(DockerContainerTransportSettings settings)
             : base(settings)
-        {
-            ContainerName = settings.ContainerName;
-        }
-
-        protected override string SubCommand => throw new System.NotImplementedException();
-        protected override string SubCommandArgs => throw new System.NotImplementedException();
+        { }
     }
 
-    internal class DockerExecSettings : DockerContainerTransportSettings
+    internal class DockerExecSettings : ContainerExecSettings
     {
-        private bool _runInShell;
-        private string _commandToExecute;
-        // 0 = container, 1 = command to execute
-        private const string _subCommandArgsFormat = "{0} {1}";
-        private const string _subCommandArgsFormatWithShell = "{0} /bin/sh -c \"{1}\"";
-        private const string _subCommandArgsFormatWithShellLinuxHost = "{0} /bin/sh -c '{1}'"; // Single quote the argument on Linux so variable resolution does not happen until it is in the container.
-        private const string _interactiveFlag = "-i ";
-
-        private bool _makeInteractive;
-
         public DockerExecSettings(DockerContainerTransportSettings settings, string command, bool runInShell, bool makeInteractive = true)
-            : base(settings)
-        {
-            Debug.Assert(!string.IsNullOrWhiteSpace(command), "Exec command cannot be null");
-            _runInShell = runInShell;
-            _commandToExecute = command;
-            _makeInteractive = makeInteractive;
-        }
-
-        protected override string SubCommand => "exec";
-        protected override string SubCommandArgs
-        {
-            get
-            {
-                string subCommandFormat = this.HostIsUnix ? _subCommandArgsFormatWithShellLinuxHost : _subCommandArgsFormatWithShell;
-                // Because _subCommandArgsFormatWithShellLinuxHost single quotes the the subcommand arguments, we need to escape the command's single quotes
-                // by closing the single quotes and adding an escaped single quote and then reopening the single quote.
-                string command = this.HostIsUnix ? _commandToExecute.Replace("'", "'\\''") : _commandToExecute;
-                return (_makeInteractive ? _interactiveFlag : string.Empty) + 
-                    (_runInShell ? subCommandFormat : _subCommandArgsFormat).FormatInvariantWithArgs(ContainerName, command);
-            }
-        }
+            : base(settings, command, runInShell, makeInteractive)
+        { }
     }
 
-    internal class DockerCopySettings : DockerContainerTransportSettings
+    internal class DockerCopySettings : ContainerCopySettings
     {
-        // {0} = container, {1} = source, {2} = destination
-        private string _copyFormatToContainer = "{1} {0}:{2}";
-
-        private string _sourcePath;
-        private string _destinationPath;
-
-        /// <summary>
-        /// Settings to copy from host to the docker container
-        /// </summary>
-        /// <param name="sourcePath">Local path on host</param>
-        /// <param name="destinationPath">Remote path within the docker container</param>
-        /// <param name="containerName">Name of container</param>
-        /// <param name="hostIsUnix">Host is Unix</param>
         public DockerCopySettings(string hostname, string sourcePath, string destinationPath, string containerName, bool hostIsUnix)
-            : base(hostname, containerName, hostIsUnix)
-        {
-            _sourcePath = sourcePath;
-            _destinationPath = destinationPath;
-        }
+            : base(hostname, sourcePath, destinationPath, containerName, hostIsUnix, DockerContainerTransportSettings.WindowsExeName, DockerContainerTransportSettings.UnixExeName, DockerContainerTransportSettings.HostFlag)
+        { }
 
         public DockerCopySettings(DockerContainerTransportSettings settings, string sourcePath, string destinationPath)
-            : base(settings)
-        {
-            _sourcePath = sourcePath;
-            _destinationPath = destinationPath;
-        }
-
-        protected override string SubCommand => "cp";
-        protected override string SubCommandArgs => _copyFormatToContainer.FormatInvariantWithArgs(ContainerName, _sourcePath, _destinationPath);
+            : base(settings, sourcePath, destinationPath)
+        { }
     }
 }
