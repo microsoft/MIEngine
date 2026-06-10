@@ -235,5 +235,197 @@ namespace MIDebugEngineUnitTests
         {
             Assert.Equal("42", Natvis.CleanAsciiStringValue("42"));
         }
+
+        // -- SubstituteLocalVars ---------------------------------------------
+
+        [Fact]
+        public void SubstituteLocalVars_EmptyExpression_Unchanged()
+        {
+            Assert.Equal("", Natvis.SubstituteLocalVars("", new System.Collections.Generic.Dictionary<string, string> { ["ptr"] = "head" }));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_NoVars_Unchanged()
+        {
+            Assert.Equal("ptr->next", Natvis.SubstituteLocalVars("ptr->next", new System.Collections.Generic.Dictionary<string, string>()));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_SingleVar_Substituted()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["ptr"] = "m_head" };
+            Assert.Equal("(m_head)->next", Natvis.SubstituteLocalVars("ptr->next", vars));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_WordBoundary_PartialNameNotReplaced()
+        {
+            // "ptrr" must not be replaced when the variable is "ptr"
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["ptr"] = "m_head" };
+            Assert.Equal("ptrr->next", Natvis.SubstituteLocalVars("ptrr->next", vars));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_MultipleVars_BothSubstituted()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string>
+            {
+                ["lo"] = "start",
+                ["hi"] = "end"
+            };
+            Assert.Equal("(start) + (end)", Natvis.SubstituteLocalVars("lo + hi", vars));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_ParensPreservesPrecedence()
+        {
+            // Replacement is wrapped in () so "ptr->val * 2" becomes "((m_head)->val) * 2"
+            // after two substitution passes aren't needed here — single pass is enough.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["ptr"] = "m_head" };
+            Assert.Equal("(m_head)->val", Natvis.SubstituteLocalVars("ptr->val", vars));
+        }
+
+        // -- ApplyExecToLocalVars --------------------------------------------
+
+        [Fact]
+        public void ApplyExecToLocalVars_SimpleAssignment_UpdatesVar()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["ptr"] = "m_head" };
+            Natvis.ApplyExecToLocalVars("ptr = ptr->next", vars);
+            Assert.Equal("(m_head)->next", vars["ptr"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_UnknownLhs_NoChange()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["ptr"] = "m_head" };
+            Natvis.ApplyExecToLocalVars("other = 0", vars);
+            // "other" is not a declared variable; dict should be unchanged
+            Assert.Equal("m_head", vars["ptr"]);
+            Assert.False(vars.ContainsKey("other"));
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_EmptyExpression_NoChange()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["ptr"] = "m_head" };
+            Natvis.ApplyExecToLocalVars("", vars);
+            Assert.Equal("m_head", vars["ptr"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_CounterIncrement_UpdatesVar()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            Natvis.ApplyExecToLocalVars("i = i + 1", vars);
+            Assert.Equal("(0) + 1", vars["i"]);
+        }
+
+        // Assignment must not match == comparison operator (regression guard)
+        [Fact]
+        public void ApplyExecToLocalVars_EqualityComparison_NoChange()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "5" };
+            Natvis.ApplyExecToLocalVars("i == 1", vars);
+            Assert.Equal("5", vars["i"]);
+        }
+
+        // -- ApplyExecToLocalVars — increment/decrement -----------------------
+
+        [Fact]
+        public void ApplyExecToLocalVars_PrefixIncrement_UpdatesVar()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "3" };
+            Natvis.ApplyExecToLocalVars("++i", vars);
+            Assert.Equal("(3) + 1", vars["i"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_PostfixIncrement_UpdatesVar()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "3" };
+            Natvis.ApplyExecToLocalVars("i++", vars);
+            Assert.Equal("(3) + 1", vars["i"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_PrefixDecrement_UpdatesVar()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "3" };
+            Natvis.ApplyExecToLocalVars("--i", vars);
+            Assert.Equal("(3) - 1", vars["i"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_PostfixDecrement_UpdatesVar()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "3" };
+            Natvis.ApplyExecToLocalVars("i--", vars);
+            Assert.Equal("(3) - 1", vars["i"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_IncrUnknownVar_NoChange()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "3" };
+            Natvis.ApplyExecToLocalVars("++j", vars);
+            Assert.Equal("3", vars["i"]);
+            Assert.False(vars.ContainsKey("j"));
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_IncrWithSpaces_UpdatesVar()
+        {
+            // Whitespace around the operator/operand must be tolerated.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            Natvis.ApplyExecToLocalVars("  i++  ", vars);
+            Assert.Equal("(0) + 1", vars["i"]);
+        }
+
+        // -- FormatCustomListItemName ----------------------------------------
+
+        [Fact]
+        public void FormatCustomListItemName_NullTemplate_ReturnsBracketedIndex()
+        {
+            Assert.Equal("[0]",  Natvis.FormatCustomListItemName(null, 0,  new System.Collections.Generic.Dictionary<string, string>()));
+            Assert.Equal("[42]", Natvis.FormatCustomListItemName(null, 42, new System.Collections.Generic.Dictionary<string, string>()));
+        }
+
+        [Fact]
+        public void FormatCustomListItemName_BracedDollarI_ReplacedWithIndex()
+        {
+            Assert.Equal("[7]", Natvis.FormatCustomListItemName("[{$i}]", 7, new System.Collections.Generic.Dictionary<string, string>()));
+        }
+
+        [Fact]
+        public void FormatCustomListItemName_BareDollarI_ReplacedWithIndex()
+        {
+            Assert.Equal("item_3", Natvis.FormatCustomListItemName("item_$i", 3, new System.Collections.Generic.Dictionary<string, string>()));
+        }
+
+        [Fact]
+        public void FormatCustomListItemName_NoSpecialTokens_Unchanged()
+        {
+            Assert.Equal("key", Natvis.FormatCustomListItemName("key", 5, new System.Collections.Generic.Dictionary<string, string>()));
+        }
+
+        [Fact]
+        public void FormatCustomListItemName_LocalVar_Substituted()
+        {
+            // A local variable name that appears in the Name template is substituted.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["node"] = "m_head" };
+            Assert.Equal("[(m_head)]", Natvis.FormatCustomListItemName("[node]", 0, vars));
+        }
+
+        [Fact]
+        public void FormatCustomListItemName_ExprToken_FallsBackToIndex()
+        {
+            // {expr} tokens that survive local-var substitution require debugger evaluation,
+            // which is not available here.  The method must fall back to [index] rather than
+            // surfacing the raw expression text (or a debugger error string) as the child name.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["iSpan"] = "0" };
+            // After substituting iSpan, "[{getKey((0), 0)}]" still contains '{' -- fall back.
+            Assert.Equal("[2]", Natvis.FormatCustomListItemName("[{getKey(iSpan, 0)}]", 2, vars));
+        }
     }
 }
