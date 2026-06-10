@@ -26,7 +26,6 @@ namespace Microsoft.SSHDebugPS.UI
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             SupportSSHConnections = supportSSHConnections;
-            _runtimeType = runtimeType;
             _discoveryStrategy = CreateDiscoveryStrategy(runtimeType);
             InitializeConnections();
             ContainerInstances = new ObservableCollection<IContainerViewModel>();
@@ -144,7 +143,6 @@ namespace Microsoft.SSHDebugPS.UI
         // The formatted string for the ConnectionType dialog
         public string SelectedContainerConnectionString { get; private set; }
 
-        private readonly ContainerRuntimeType _runtimeType;
         private readonly IContainerDiscoveryStrategy _discoveryStrategy;
 
         private static IContainerDiscoveryStrategy CreateDiscoveryStrategy(ContainerRuntimeType runtimeType)

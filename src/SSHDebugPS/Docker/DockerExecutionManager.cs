@@ -63,7 +63,11 @@ namespace Microsoft.SSHDebugPS.Docker
 
         protected virtual ContainerExecSettings CreateExecSettings(ContainerTargetTransportSettings baseSettings, string command, bool runInShell, bool makeInteractive)
         {
-            return new DockerExecSettings((DockerContainerTransportSettings)baseSettings, command, runInShell, makeInteractive);
+            if (!(baseSettings is DockerContainerTransportSettings dockerSettings))
+            {
+                throw new ArgumentException($"Expected {nameof(DockerContainerTransportSettings)} but got {baseSettings.GetType().Name}", nameof(baseSettings));
+            }
+            return new DockerExecSettings(dockerSettings, command, runInShell, makeInteractive);
         }
 
         private ICommandRunner GetExecCommandRunner(string command, bool runInShell, bool makeInteractive)
