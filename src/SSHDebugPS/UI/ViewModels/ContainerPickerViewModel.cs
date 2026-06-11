@@ -22,7 +22,7 @@ namespace Microsoft.SSHDebugPS.UI
     {
         private Lazy<bool> _sshAvailable;
 
-        public ContainerPickerViewModel(bool supportSSHConnections, ContainerRuntimeType runtimeType = ContainerRuntimeType.Docker)
+        public ContainerPickerViewModel(bool supportSSHConnections, ContainerRuntimeType runtimeType)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             SupportSSHConnections = supportSSHConnections;

@@ -3,7 +3,7 @@
 
 namespace Microsoft.SSHDebugPS.Docker
 {
-    internal class DockerContainerTransportSettings : ContainerTargetTransportSettings
+    internal sealed class DockerContainerTransportSettings : ContainerTargetTransportSettings
     {
         internal const string WindowsExeName = "docker.exe";
         internal const string UnixExeName = "docker";
@@ -18,14 +18,14 @@ namespace Microsoft.SSHDebugPS.Docker
         { }
     }
 
-    internal class DockerExecSettings : ContainerExecSettings
+    internal sealed class DockerExecSettings : ContainerExecSettings
     {
         public DockerExecSettings(DockerContainerTransportSettings settings, string command, bool runInShell, bool makeInteractive = true)
             : base(settings, command, runInShell, makeInteractive)
         { }
     }
 
-    internal class DockerCopySettings : ContainerCopySettings
+    internal sealed class DockerCopySettings : ContainerCopySettings
     {
         public DockerCopySettings(string hostname, string sourcePath, string destinationPath, string containerName, bool hostIsUnix)
             : base(hostname, sourcePath, destinationPath, containerName, hostIsUnix, DockerContainerTransportSettings.WindowsExeName, DockerContainerTransportSettings.UnixExeName, DockerContainerTransportSettings.HostFlag)

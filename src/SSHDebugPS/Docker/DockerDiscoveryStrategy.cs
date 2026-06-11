@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -9,7 +10,7 @@ using Microsoft.SSHDebugPS.UI;
 
 namespace Microsoft.SSHDebugPS
 {
-    internal class DockerDiscoveryStrategy : IContainerDiscoveryStrategy
+    internal sealed class DockerDiscoveryStrategy : IContainerDiscoveryStrategy
     {
         private const string unknownOS = "Unknown";
 
@@ -39,17 +40,15 @@ namespace Microsoft.SSHDebugPS
             {
                 bool lcow;
                 DockerHelper.TryGetLCOW(hostname, out lcow);
-                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-                serverOS = textInfo.ToTitleCase(serverOS);
 
-                if (lcow && serverOS.Contains("Windows"))
+                if (lcow && serverOS.IndexOf("windows", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     foreach (DockerContainerInstance container in containers)
                     {
                         string containerPlatform = string.Empty;
                         if (DockerHelper.TryGetContainerPlatform(hostname, container.Name, out containerPlatform))
                         {
-                            container.Platform = textInfo.ToTitleCase(containerPlatform);
+                            container.Platform = new CultureInfo("en-US", false).TextInfo.ToTitleCase(containerPlatform);
                         }
                         else
                         {
@@ -59,9 +58,10 @@ namespace Microsoft.SSHDebugPS
                 }
                 else
                 {
+                    string platform = new CultureInfo("en-US", false).TextInfo.ToTitleCase(serverOS);
                     foreach (DockerContainerInstance container in containers)
                     {
-                        container.Platform = serverOS;
+                        container.Platform = platform;
                     }
                 }
             }

@@ -3,7 +3,7 @@
 
 namespace Microsoft.SSHDebugPS.Docker
 {
-    internal class DockerCommandSettings : ContainerCommandSettings
+    internal sealed class DockerCommandSettings : ContainerCommandSettings
     {
         public DockerCommandSettings(string hostname, bool hostIsUnix)
             : base(hostname, hostIsUnix, DockerContainerTransportSettings.WindowsExeName, DockerContainerTransportSettings.UnixExeName, DockerContainerTransportSettings.HostFlag)
