@@ -40,6 +40,7 @@ namespace Microsoft.SSHDebugPS
             {
                 bool lcow;
                 DockerHelper.TryGetLCOW(hostname, out lcow);
+                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 
                 if (lcow && serverOS.IndexOf("windows", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
@@ -48,7 +49,7 @@ namespace Microsoft.SSHDebugPS
                         string containerPlatform = string.Empty;
                         if (DockerHelper.TryGetContainerPlatform(hostname, container.Name, out containerPlatform))
                         {
-                            container.Platform = new CultureInfo("en-US", false).TextInfo.ToTitleCase(containerPlatform);
+                            container.Platform = textInfo.ToTitleCase(containerPlatform);
                         }
                         else
                         {
@@ -58,7 +59,7 @@ namespace Microsoft.SSHDebugPS
                 }
                 else
                 {
-                    string platform = new CultureInfo("en-US", false).TextInfo.ToTitleCase(serverOS);
+                    string platform = textInfo.ToTitleCase(serverOS);
                     foreach (DockerContainerInstance container in containers)
                     {
                         container.Platform = platform;
