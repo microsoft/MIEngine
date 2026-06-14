@@ -38,7 +38,7 @@ namespace Microsoft.SSHDebugPS
             {
                 string connectionString;
 
-                bool success = ShowContainerPickerWindow(IntPtr.Zero, supportSSHConnections, out connectionString);
+                bool success = ShowContainerPickerWindow(IntPtr.Zero, supportSSHConnections, ContainerRuntimeType.Docker, out connectionString);
                 if (success)
                 {
                     success = DockerConnection.TryConvertConnectionStringToSettings(connectionString, out settings, out remoteConnection);
@@ -146,11 +146,12 @@ namespace Microsoft.SSHDebugPS
         /// </summary>
         /// <param name="hwnd">Parent hwnd or IntPtr.Zero</param>
         /// <param name="supportSSHConnections">SSHConnections are supported</param>
+        /// <param name="runtimeType">Which container runtime to query</param>
         /// <param name="connectionString">[out] connection string obtained by the dialog</param>
-        public static bool ShowContainerPickerWindow(IntPtr hwnd, bool supportSSHConnections, out string connectionString)
+        public static bool ShowContainerPickerWindow(IntPtr hwnd, bool supportSSHConnections, ContainerRuntimeType runtimeType, out string connectionString)
         {
             ThreadHelper.ThrowIfNotOnUIThread("Microsoft.SSHDebugPS.ShowContainerPickerWindow");
-            ContainerPickerDialogWindow dialog = new ContainerPickerDialogWindow(supportSSHConnections);
+            ContainerPickerDialogWindow dialog = new ContainerPickerDialogWindow(supportSSHConnections, runtimeType);
 
             if (hwnd == IntPtr.Zero) // get the VS main window hwnd
             {
