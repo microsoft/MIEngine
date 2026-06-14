@@ -37,7 +37,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return instance != null;
         }
 
-        private DockerContainerInstance() { }
+        protected DockerContainerInstance() { }
 
         #region JsonProperties
 
@@ -48,19 +48,19 @@ namespace Microsoft.SSHDebugPS.Docker
         public override string Name { get; set; }
 
         [JsonProperty(nameof(Image))]
-        public string Image { get; private set; }
+        public virtual string Image { get; protected set; }
 
         [JsonProperty(nameof(Ports))]
-        public string Ports { get; set; }
+        public virtual string Ports { get; set; }
 
         [JsonProperty(nameof(Command))]
-        public string Command { get; private set; }
+        public virtual string Command { get; protected set; }
 
         [JsonProperty(nameof(Status))]
-        public string Status { get; private set; }
+        public virtual string Status { get; protected set; }
 
         [JsonProperty("CreatedAt")]
-        public string Created { get; private set; }
+        public virtual string Created { get; protected set; }
 
         [JsonIgnore]
         public string Platform { get; set; }

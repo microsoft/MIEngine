@@ -198,7 +198,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return GetCommandRunner(execSettings, handleRawOutput: handleRawOutput);
         }
 
-        private ICommandRunner GetCommandRunner(DockerContainerTransportSettings settings, bool handleRawOutput = false)
+        private ICommandRunner GetCommandRunner(IPipeTransportSettings settings, bool handleRawOutput = false)
         {
             if (OuterConnection == null)
             {
