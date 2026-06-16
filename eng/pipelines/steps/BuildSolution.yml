@@ -5,7 +5,7 @@ parameters:
   Configuration: 'Release'
   BuildArguments: ''
   OneESPT: false
-  NuGetConfigPath: '$(Build.SourcesDirectory)/src/.nuget/NuGet.config'
+  NuGetConfigPath: '$(Build.SourcesDirectory)/eng/pipelines/NuGet.release.config'
 
 steps:
 - template: ../tasks/NuGetCommand.yml
