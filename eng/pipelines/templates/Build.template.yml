@@ -19,6 +19,7 @@ steps:
   parameters:
     Configuration: ${{ parameters.Configuration }}
     OneESPT: false
+    NuGetConfigPath: '$(Build.SourcesDirectory)/eng/pipelines/NuGet.release.config'
 
 - template: ../tasks/CSharp.yml
 
