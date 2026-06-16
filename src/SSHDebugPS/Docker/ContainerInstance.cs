@@ -11,18 +11,18 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.SSHDebugPS.Docker
 {
-    public class DockerContainerInstance : ContainerInstance
+    public class ContainerInstance : IContainerInstance
     {
         /// <summary>
-        /// Create a DockerContainerInstance from the results of docker ps in JSON format
+        /// Create a ContainerInstance from the results of docker ps in JSON format
         /// </summary>
-        public static bool TryCreate(string json, out DockerContainerInstance instance)
+        public static bool TryCreate(string json, out ContainerInstance instance)
         {
             instance = null;
             try
             {
                 JObject obj = JObject.Parse(json);
-                instance = obj.ToObject<DockerContainerInstance>();
+                instance = obj.ToObject<ContainerInstance>();
             }
             catch (Exception e)
             {
@@ -37,15 +37,15 @@ namespace Microsoft.SSHDebugPS.Docker
             return instance != null;
         }
 
-        protected DockerContainerInstance() { }
+        protected ContainerInstance() { }
 
         #region JsonProperties
 
         [JsonProperty("ID")]
-        public override string Id { get; set; }
+        public virtual string Id { get; set; }
 
         [JsonProperty("Names")]
-        public override string Name { get; set; }
+        public virtual string Name { get; set; }
 
         [JsonProperty(nameof(Image))]
         public virtual string Image { get; protected set; }
@@ -67,10 +67,55 @@ namespace Microsoft.SSHDebugPS.Docker
 
         #endregion
 
-        // Docker container names: only [a-zA-Z0-9][a-zA-Z0-9_.-] are allowed. It is also case sensitive
-        protected override bool EqualsInternal(ContainerInstance instance)
+        #region IEquatable
+
+        public static bool operator ==(ContainerInstance left, ContainerInstance right)
         {
-            if (instance is DockerContainerInstance other)
+            if (left is null || right is null)
+            {
+                return ReferenceEquals(left, right);
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ContainerInstance left, ContainerInstance right)
+        {
+            return !(left == right);
+        }
+
+        public bool Equals(IContainerInstance instance)
+        {
+            if (!ReferenceEquals(null, instance) && instance is ContainerInstance container)
+            {
+                return this.EqualsInternal(container);
+            }
+
+            return false;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IContainerInstance instance)
+            {
+                return this.Equals(instance);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return GetHashCodeInternal();
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        // Container names: only [a-zA-Z0-9][a-zA-Z0-9_.-] are allowed. It is also case sensitive
+        protected virtual bool EqualsInternal(ContainerInstance instance)
+        {
+            if (instance is ContainerInstance other)
             {
                 // the id can be a partial on a container
                 return String.Equals(Id, other.Id, StringComparison.Ordinal) ||
@@ -81,10 +126,12 @@ namespace Microsoft.SSHDebugPS.Docker
             return false;
         }
 
-        protected override int GetHashCodeInternal()
+        protected virtual int GetHashCodeInternal()
         {
             // Since IDs can be partial, we don't have a good way to get a good hash code.
             return string.IsNullOrWhiteSpace(Id) ? 0 : Id.Substring(0,1).GetHashCode();
         }
+
+        #endregion
     }
 }

@@ -9,6 +9,7 @@ namespace Microsoft.SSHDebugPS
     public enum ContainerRuntimeType
     {
         Unknown,
-        Docker
+        Docker,
+        Podman
     }
 }

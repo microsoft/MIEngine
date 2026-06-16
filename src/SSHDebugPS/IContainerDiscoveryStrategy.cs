@@ -14,8 +14,8 @@ namespace Microsoft.SSHDebugPS
         string ConnectionToolTip { get; }
         string HostnameAutomationName { get; }
 
-        IEnumerable<DockerContainerInstance> GetLocalContainers(string hostname, out int totalContainers);
-        IEnumerable<DockerContainerInstance> GetRemoteContainers(IConnection connection, string hostname, out int totalContainers);
-        void AssignPlatforms(IEnumerable<DockerContainerInstance> containers, string hostname);
+        IEnumerable<ContainerInstance> GetLocalContainers(string hostname, out int totalContainers);
+        IEnumerable<ContainerInstance> GetRemoteContainers(IConnection connection, string hostname, out int totalContainers);
+        void AssignPlatforms(IEnumerable<ContainerInstance> containers, string hostname);
     }
 }

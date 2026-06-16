@@ -239,6 +239,22 @@
   <data name="HostnameAutomationName" xml:space="preserve">
     <value>Optional Docker Host name</value>
   </data>
+  <data name="Podman_ConnectionLabel" xml:space="preserve">
+    <value>Podman _CLI host:</value>
+  </data>
+  <data name="Podman_HostnameLabel" xml:space="preserve">
+    <value>Podman _host (Optional):</value>
+    <comment>Hostname for Podman daemon configuration</comment>
+  </data>
+  <data name="Podman_HostnameTip" xml:space="preserve">
+    <value>Specify a URL for connecting to a different Podman host. </value>
+  </data>
+  <data name="Podman_ConnectionToolTip" xml:space="preserve">
+    <value>Location from which to run the Podman CLI. To manage remote connections, in the menu go to Tools -&gt; Options and find Cross Platform -&gt; Connection Manager.</value>
+  </data>
+  <data name="Podman_HostnameAutomationName" xml:space="preserve">
+    <value>Optional Podman Host name</value>
+  </data>
   <data name="ContainerList" xml:space="preserve">
     <value>Container List</value>
   </data>

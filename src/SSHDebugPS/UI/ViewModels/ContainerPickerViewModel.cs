@@ -11,6 +11,7 @@ using System.Linq;
 using System.Windows.Threading;
 using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
+using Microsoft.SSHDebugPS.Podman;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
 using System.Globalization;
@@ -151,6 +152,8 @@ namespace Microsoft.SSHDebugPS.UI
             {
                 case ContainerRuntimeType.Docker:
                     return new DockerDiscoveryStrategy();
+                case ContainerRuntimeType.Podman:
+                    return new PodmanDiscoveryStrategy();
                 default:
                     Debug.Fail($"Unsupported container runtime type: {runtimeType}");
                     return null;
@@ -183,7 +186,7 @@ namespace Microsoft.SSHDebugPS.UI
                     return;
                 }
 
-                IEnumerable<DockerContainerInstance> containers;
+                IEnumerable<ContainerInstance> containers;
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {

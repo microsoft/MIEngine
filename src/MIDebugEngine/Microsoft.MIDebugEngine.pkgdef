@@ -54,6 +54,8 @@
 "1"="{A2BBC114-47E4-473F-A49C-69EE89711243}"
 ; WSL Port supplier
 "2"="{267B1341-AC92-44DC-94DF-2EE4205DD17E}"
+; Podman Port Supplier
+"3"="{D4F2F3A5-6B7C-4E8D-9F0A-1B2C3D4E5F6A}"
 
 ; Registration to use lldb with the port suppliers
 [$RootKey$\AD7Metrics\Engine\{5D630903-189D-4837-9785-699B05BEC2A9}]

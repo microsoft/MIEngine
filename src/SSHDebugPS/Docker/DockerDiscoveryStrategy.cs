@@ -20,17 +20,17 @@ namespace Microsoft.SSHDebugPS
         public string ConnectionToolTip => UIResources.ConnectionToolTip;
         public string HostnameAutomationName => UIResources.HostnameAutomationName;
 
-        public IEnumerable<DockerContainerInstance> GetLocalContainers(string hostname, out int totalContainers)
+        public IEnumerable<ContainerInstance> GetLocalContainers(string hostname, out int totalContainers)
         {
             return DockerHelper.GetLocalDockerContainers(hostname, out totalContainers);
         }
 
-        public IEnumerable<DockerContainerInstance> GetRemoteContainers(IConnection connection, string hostname, out int totalContainers)
+        public IEnumerable<ContainerInstance> GetRemoteContainers(IConnection connection, string hostname, out int totalContainers)
         {
             return DockerHelper.GetRemoteDockerContainers(connection, hostname, out totalContainers);
         }
 
-        public void AssignPlatforms(IEnumerable<DockerContainerInstance> containers, string hostname)
+        public void AssignPlatforms(IEnumerable<ContainerInstance> containers, string hostname)
         {
             if (!containers.Any())
                 return;
@@ -44,7 +44,7 @@ namespace Microsoft.SSHDebugPS
 
                 if (lcow && serverOS.IndexOf("windows", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    foreach (DockerContainerInstance container in containers)
+                    foreach (ContainerInstance container in containers)
                     {
                         string containerPlatform = string.Empty;
                         if (DockerHelper.TryGetContainerPlatform(hostname, container.Name, out containerPlatform))
@@ -60,7 +60,7 @@ namespace Microsoft.SSHDebugPS
                 else
                 {
                     string platform = textInfo.ToTitleCase(serverOS);
-                    foreach (DockerContainerInstance container in containers)
+                    foreach (ContainerInstance container in containers)
                     {
                         container.Platform = platform;
                     }
@@ -68,7 +68,7 @@ namespace Microsoft.SSHDebugPS
             }
             else
             {
-                foreach (DockerContainerInstance container in containers)
+                foreach (ContainerInstance container in containers)
                 {
                     container.Platform = unknownOS;
                 }
