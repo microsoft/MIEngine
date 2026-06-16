@@ -11,7 +11,7 @@ steps:
     Command: 'restore'
     solution: '$(Build.SourcesDirectory)\src\MIDebugEngine.sln'
     FeedsToUse: 'config'
-    NugetConfigPath: '$(Build.SourcesDirectory)\src\.nuget\NuGet.config'
+    NugetConfigPath: '$(Build.SourcesDirectory)\eng\pipelines\NuGet.release.config'
 
 - template: ../tasks/MSBuild.yml
   parameters:

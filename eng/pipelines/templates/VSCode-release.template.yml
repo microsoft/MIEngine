@@ -14,6 +14,7 @@ steps:
   parameters:
     Configuration: 'Lab.Release'
     OneESPT: true
+    NuGetConfigPath: '$(Build.SourcesDirectory)/eng/pipelines/NuGet.release.config'
 
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:
