@@ -519,6 +519,9 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForExpressionTests))]
         [RequiresTestSettings]
+        // cppvsdbg allows expanding null pointers to support managed delegate expansion.
+        // Disabling this test for VsDbg since the assertion does not apply.
+        [UnsupportedDebugger(SupportedDebugger.VsDbg, SupportedArchitecture.x64 | SupportedArchitecture.x86)]
         public void NullPointerNotExpandable(ITestSettings settings)
         {
             this.TestPurpose("Verify that a null pointer is not expandable in the variables view.");
