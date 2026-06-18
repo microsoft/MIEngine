@@ -53,4 +53,4 @@ This runs `dotnet build src/MIDebugEngine-Unix.sln` and then `PublishOpenDebugAD
 
 ## Targeting
 
-The .NET SDK target is `net8.0` (CI installs `dotnet-version: 8.0.x`). Some projects multi-target .NET Framework for the in-VS host. Don't change target frameworks without checking both solutions still build.
+The projects in this repo run on both .NET and .NET Framework, with most of the core projects targeting `netstandard2.0`. .NET is used for VS Code support while .NET Framework is used for VS. See `TargetFramework` in [OpenDebugAD7.csproj](../src/OpenDebugAD7/OpenDebugAD7.csproj) for the specific target framework moniker used for VS Code.
