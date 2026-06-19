@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Microsoft.SSHDebugPS.Podman
 {
     // Handles JSON values that may be a string, array of strings, or array of objects (port mappings).
-    internal class PodmanJsonConverter : JsonConverter
+    internal sealed class PodmanJsonConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType) => objectType == typeof(string);
 

@@ -5,7 +5,7 @@ using Microsoft.SSHDebugPS.Docker;
 
 namespace Microsoft.SSHDebugPS.Podman
 {
-    internal class PodmanExecutionManager : DockerExecutionManager
+    internal sealed class PodmanExecutionManager : DockerExecutionManager
     {
         public PodmanExecutionManager(PodmanContainerTransportSettings baseSettings, Connection outerConnection)
             : base(baseSettings, outerConnection)

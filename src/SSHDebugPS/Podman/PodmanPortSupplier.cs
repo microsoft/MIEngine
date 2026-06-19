@@ -9,7 +9,7 @@ namespace Microsoft.SSHDebugPS.Podman
 {
     [ComVisible(true)]
     [Guid("C9E1E1E4-3E5A-4F2B-8D1A-5C6F7A8B9D0E")]
-    internal class PodmanPortSupplier : AD7PortSupplier
+    internal sealed class PodmanPortSupplier : AD7PortSupplier
     {
         private readonly Guid _Id = new Guid("D4F2F3A5-6B7C-4E8D-9F0A-1B2C3D4E5F6A");
 

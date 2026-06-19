@@ -144,8 +144,8 @@ namespace Microsoft.SSHDebugPS.Podman
                     if (PodmanContainerInstance.TryCreate(item, out PodmanContainerInstance containerInstance))
                     {
                         containers.Add(containerInstance);
+                        totalContainers++;
                     }
-                    totalContainers++;
                 }
             }
 

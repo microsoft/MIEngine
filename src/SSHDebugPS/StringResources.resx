@@ -146,7 +146,8 @@
     <value>The Podman (Linux Container) connection type allows Visual Studio to connect to Podman containers running locally or remotely (using SSH).</value>
   </data>
   <data name="Error_PodmanPSParseFailed" xml:space="preserve">
-    <value>Failed to parse output of '{0}'</value>
+    <value>Failed to parse output of '{0}': {1}</value>
+    <comment>{0} is the JSON line that failed to parse. {1} is the exception details.</comment>
   </data>
   <data name="Error_CommandFailed" xml:space="preserve">
     <value>Command failed to execute</value>

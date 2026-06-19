@@ -133,7 +133,7 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to parse output of &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Failed to parse output of &apos;{0}&apos;: {1}.
         /// </summary>
         internal static string Error_PodmanPSParseFailed {
             get {

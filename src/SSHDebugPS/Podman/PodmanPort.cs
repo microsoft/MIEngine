@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS.Podman
 {
-    internal class PodmanPort : AD7Port
+    internal sealed class PodmanPort : AD7Port
     {
         public PodmanPort(AD7PortSupplier portSupplier, string name, bool isInAddPort)
              : base(portSupplier, name, isInAddPort)

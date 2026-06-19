@@ -3,7 +3,6 @@
 
 using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Diagnostics;
 using Microsoft.SSHDebugPS.Docker;
@@ -13,7 +12,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.SSHDebugPS.Podman
 {
-    internal class PodmanConnection : PipeConnection
+    internal sealed class PodmanConnection : PipeConnection
     {
         #region Statics
 
@@ -26,58 +25,14 @@ namespace Microsoft.SSHDebugPS.Podman
         internal static bool TryConvertConnectionStringToSettings(string connectionString, out PodmanContainerTransportSettings settings, out Connection remoteConnection)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            remoteConnection = null;
-            settings = null;
 
-            string containerName = string.Empty;
-            string hostName = string.Empty;
-            bool invalidString = false;
-
-            string[] connectionStrings = connectionString.Split(DockerConnection.Separator);
-
-            if (connectionStrings.Length <= 3 && connectionStrings.Length > 0)
+            if (DockerConnection.TryConvertConnectionStringToSettings(connectionString, out DockerContainerTransportSettings dockerSettings, out remoteConnection))
             {
-                Regex SshRegex = new Regex(DockerConnection.SshPrefixRegex);
-                Regex hostRegex = new Regex(DockerConnection.HostPrefixRegex);
-
-                foreach (var item in connectionStrings)
-                {
-                    string segment = item.Trim(' ');
-                    if (SshRegex.IsMatch(segment))
-                    {
-                        Match match = SshRegex.Match(segment);
-                        remoteConnection = ConnectionManager.GetSSHConnection(segment.Substring(match.Length));
-                    }
-                    else if (hostRegex.IsMatch(segment))
-                    {
-                        Match match = hostRegex.Match(segment);
-                        hostName = segment.Substring(match.Length);
-                    }
-                    else if (segment.Contains("="))
-                    {
-                        invalidString = true;
-                    }
-                    else
-                    {
-                        if (!string.IsNullOrWhiteSpace(containerName))
-                        {
-                            Debug.Fail("containerName should be empty");
-                            invalidString = true;
-                        }
-                        else
-                        {
-                            containerName = segment;
-                        }
-                    }
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(containerName) && !invalidString)
-            {
-                settings = new PodmanContainerTransportSettings(hostName, containerName, remoteConnection != null);
+                settings = new PodmanContainerTransportSettings(dockerSettings.HostName, dockerSettings.ContainerName, remoteConnection != null);
                 return true;
             }
 
+            settings = null;
             return false;
         }
 

@@ -86,7 +86,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
         public bool Equals(IContainerInstance instance)
         {
-            if (!ReferenceEquals(null, instance) && instance is ContainerInstance container)
+            if (instance is ContainerInstance container)
             {
                 return this.EqualsInternal(container);
             }
@@ -115,15 +115,15 @@ namespace Microsoft.SSHDebugPS.Docker
         // Container names: only [a-zA-Z0-9][a-zA-Z0-9_.-] are allowed. It is also case sensitive
         protected virtual bool EqualsInternal(ContainerInstance instance)
         {
-            if (instance is ContainerInstance other)
+            if (GetType() != instance.GetType())
             {
-                // the id can be a partial on a container
-                return String.Equals(Id, other.Id, StringComparison.Ordinal) ||
-                    Id.StartsWith(other.Id, StringComparison.Ordinal) ||
-                    other.Id.StartsWith(Id, StringComparison.Ordinal);
+                return false;
             }
 
-            return false;
+            // the id can be a partial on a container
+            return String.Equals(Id, instance.Id, StringComparison.Ordinal) ||
+                Id.StartsWith(instance.Id, StringComparison.Ordinal) ||
+                instance.Id.StartsWith(Id, StringComparison.Ordinal);
         }
 
         protected virtual int GetHashCodeInternal()

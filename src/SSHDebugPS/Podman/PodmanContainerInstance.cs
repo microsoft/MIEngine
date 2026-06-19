@@ -25,7 +25,7 @@ namespace Microsoft.SSHDebugPS.Podman
             }
             catch (Exception e)
             {
-                HostTelemetry.SendEvent(TelemetryHelper.Event_DockerPSParseFailure, new KeyValuePair<string, object>[] {
+                HostTelemetry.SendEvent(TelemetryHelper.Event_PodmanPSParseFailure, new KeyValuePair<string, object>[] {
                     new KeyValuePair<string, object>(TelemetryHelper.Property_ExceptionName, e.GetType().Name)
                 });
 
