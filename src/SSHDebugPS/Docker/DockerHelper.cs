@@ -174,11 +174,11 @@ namespace Microsoft.SSHDebugPS.Docker
             return true;
         }
 
-        internal static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
+        internal static IEnumerable<ContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
         {
             totalContainers = 0;
             int containerCount = 0;
-            List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
+            List<ContainerInstance> containers = new List<ContainerInstance>();
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
@@ -187,7 +187,7 @@ namespace Microsoft.SSHDebugPS.Docker
             {
                 if (args.Trim()[0] == '{')
                 {
-                    if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
+                    if (ContainerInstance.TryCreate(args, out ContainerInstance containerInstance))
                     {
                         containers.Add(containerInstance);
                     }
@@ -205,7 +205,7 @@ namespace Microsoft.SSHDebugPS.Docker
         // Another fallback option would be to: docker inspect <containerName> --format {{.State.Status}} which should return "running"
         internal static bool IsContainerRunning(string hostName, string containerName, Connection remoteConnection)
         {
-            IEnumerable<DockerContainerInstance> containers;
+            IEnumerable<ContainerInstance> containers;
             if (remoteConnection != null)
             {
                 containers = GetRemoteDockerContainers(remoteConnection, hostName, out _);
@@ -228,7 +228,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return false;
         }
 
-        internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname, out int totalContainers)
+        internal static IEnumerable<ContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname, out int totalContainers)
         {
             totalContainers = 0;
             SSHConnection sshConnection = connection as SSHConnection;
@@ -239,7 +239,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 return null;
             }
 
-            List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
+            List<ContainerInstance> containers = new List<ContainerInstance>();
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, true);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
@@ -300,7 +300,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
                 foreach (var item in outputLines)
                 {
-                    if (DockerContainerInstance.TryCreate(item, out DockerContainerInstance containerInstance))
+                    if (ContainerInstance.TryCreate(item, out ContainerInstance containerInstance))
                     {
                         containers.Add(containerInstance);
                     }

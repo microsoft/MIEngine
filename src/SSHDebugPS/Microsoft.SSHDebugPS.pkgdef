@@ -7,6 +7,11 @@
 "PortPickerCLSID"="{91BDF293-E6A0-49C4-B033-6F36CFC4FF98}"
 "Name"="Docker (Linux Container)"
 
+[$RootKey$\AD7Metrics\PortSupplier\{D4F2F3A5-6B7C-4E8D-9F0A-1B2C3D4E5F6A}]
+"CLSID"="{C9E1E1E4-3E5A-4F2B-8D1A-5C6F7A8B9D0E}"
+"PortPickerCLSID"="{E2A3B4C5-6D7E-4F8A-9B0C-1D2E3F4A5B6C}"
+"Name"="Podman (Linux Container)"
+
 [$RootKey$\AD7Metrics\PortSupplier\{267B1341-AC92-44DC-94DF-2EE4205DD17E}]
 "CLSID"="{B8587A49-00BD-4DEE-94B9-6EBF49003E04}"
 "Name"="Windows Subsystem for Linux (WSL)"
@@ -44,6 +49,18 @@
 [$RootKey$\CLSID\{B8587A49-00BD-4DEE-94B9-6EBF49003E04}]
 "Assembly"="Microsoft.SSHDebugPS"
 "Class"="Microsoft.SSHDebugPS.WSL.WSLPortSupplier"
+"InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
+"CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
+
+[$RootKey$\CLSID\{C9E1E1E4-3E5A-4F2B-8D1A-5C6F7A8B9D0E}]
+"Assembly"="Microsoft.SSHDebugPS"
+"Class"="Microsoft.SSHDebugPS.Podman.PodmanPortSupplier"
+"InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
+"CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
+
+[$RootKey$\CLSID\{E2A3B4C5-6D7E-4F8A-9B0C-1D2E3F4A5B6C}]
+"Assembly"="Microsoft.SSHDebugPS"
+"Class"="Microsoft.SSHDebugPS.Podman.PodmanLinuxPortPicker"
 "InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
 "CodeBase"="$PackageFolder$\Microsoft.SSHDebugPS.dll"
 

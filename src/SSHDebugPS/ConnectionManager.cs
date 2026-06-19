@@ -14,6 +14,7 @@ using EnvDTE;
 using liblinux;
 using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
+using Microsoft.SSHDebugPS.Podman;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.UI;
 using Microsoft.SSHDebugPS.Utilities;
@@ -55,6 +56,46 @@ namespace Microsoft.SSHDebugPS
             if (DockerHelper.IsContainerRunning(settings.HostName, settings.ContainerName, remoteConnection))
             {
                 return new DockerConnection(settings, remoteConnection, displayName);
+            }
+            else
+            {
+                VSMessageBoxHelper.PostErrorMessage(
+                   StringResources.Error_ContainerUnavailableTitle,
+                   StringResources.Error_ContainerUnavailableMessage.FormatCurrentCultureWithArgs(settings.ContainerName));
+                return null;
+            }
+        }
+
+        public static PodmanConnection GetPodmanConnection(string name, bool supportSSHConnections)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            PodmanContainerTransportSettings settings;
+            Connection remoteConnection;
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+            if (!PodmanConnection.TryConvertConnectionStringToSettings(name, out settings, out remoteConnection) || settings == null)
+            {
+                string connectionString;
+
+                bool success = ShowContainerPickerWindow(IntPtr.Zero, supportSSHConnections, ContainerRuntimeType.Podman, out connectionString);
+                if (success)
+                {
+                    success = PodmanConnection.TryConvertConnectionStringToSettings(connectionString, out settings, out remoteConnection);
+                }
+
+                if (!success || settings == null)
+                {
+                    VSMessageBoxHelper.PostErrorMessage(StringResources.Error_ContainerConnectionStringInvalidTitle, StringResources.Error_ContainerConnectionStringInvalidMessage);
+                    return null;
+                }
+            }
+
+            string displayName = PodmanConnection.CreateConnectionString(settings.ContainerName, remoteConnection?.Name, settings.HostName);
+            if (PodmanHelper.IsContainerRunning(settings.HostName, settings.ContainerName, remoteConnection))
+            {
+                return new PodmanConnection(settings, remoteConnection, displayName);
             }
             else
             {
