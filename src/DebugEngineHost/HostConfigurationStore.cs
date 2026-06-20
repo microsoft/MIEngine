@@ -1,10 +1,9 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -21,7 +20,7 @@ namespace Microsoft.DebugEngineHost
         private const string LaunchersSectionName = "MILaunchers";
         private const string NatvisDiagnosticsSectionName = "NatvisDiagnostics";
 
-        private string _engineId;
+        private string? _engineId;
         private string _registryRoot;
 
         // HKLM RegistryKey
@@ -29,15 +28,16 @@ namespace Microsoft.DebugEngineHost
 
         public HostConfigurationStore(string registryRoot)
         {
-            if (string.IsNullOrEmpty(registryRoot))
+            if (IsNullOrEmpty(registryRoot))
                 throw new ArgumentNullException(nameof(registryRoot));
 
             _registryRoot = registryRoot;
-            _configKey = Registry.LocalMachine.OpenSubKey(registryRoot);
-            if (_configKey == null)
+            RegistryKey? configKey = Registry.LocalMachine.OpenSubKey(registryRoot);
+            if (configKey is null)
             {
                 throw new HostConfigurationException(registryRoot);
             }
+            _configKey = configKey;
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Microsoft.DebugEngineHost
         /// <param name="value">The new engine GUID to set</param>
         public void SetEngineGuid(Guid value)
         {
-            if (_engineId != null)
+            if (_engineId is not null)
             {
                 throw new InvalidOperationException();
             }
@@ -63,9 +63,9 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
-        public object GetEngineMetric(string metric)
+        public object? GetEngineMetric(string metric)
         {
-            if (_engineId == null)
+            if (_engineId is null)
             {
                 throw new InvalidOperationException();
             }
@@ -76,8 +76,8 @@ namespace Microsoft.DebugEngineHost
         public void GetExceptionCategorySettings(Guid categoryId, out HostConfigurationSection categoryConfigSection, out string categoryName)
         {
             string subKeyName = @"AD7Metrics\Exception\" + categoryId.ToString("B", CultureInfo.InvariantCulture);
-            RegistryKey categoryKey = _configKey.OpenSubKey(subKeyName);
-            if (categoryKey == null)
+            RegistryKey? categoryKey = _configKey.OpenSubKey(subKeyName);
+            if (categoryKey is null)
             {
                 throw new HostConfigurationException("$RegRoot$\\" + subKeyName);
             }
@@ -91,7 +91,7 @@ namespace Microsoft.DebugEngineHost
             return GetDebuggerConfigurationSetting(DebuggerSectionName, settingName, defaultValue);
         }
 
-        public object GetCustomLauncher(string launcherTypeName)
+        public object? GetCustomLauncher(string launcherTypeName)
         {
             string guidstr = GetDebuggerConfigurationSetting(LaunchersSectionName, launcherTypeName, Guid.Empty.ToString());
             Guid clsidLauncher = new Guid(guidstr);
@@ -104,8 +104,8 @@ namespace Microsoft.DebugEngineHost
 
         private T GetDebuggerConfigurationSetting<T>(string sectionName, string settingName, T defaultValue)
         {
-            object valueObj = GetOptionalValue(sectionName, settingName);
-            if (valueObj == null)
+            object? valueObj = GetOptionalValue(sectionName, settingName);
+            if (valueObj is null)
             {
                 return defaultValue;
             }
@@ -124,11 +124,11 @@ namespace Microsoft.DebugEngineHost
             return result;
         }
 
-        private object GetOptionalValue(string section, string valueName)
+        private object? GetOptionalValue(string section, string valueName)
         {
-            using (RegistryKey key = _configKey.OpenSubKey(section))
+            using (RegistryKey? key = _configKey.OpenSubKey(section))
             {
-                if (key == null)
+                if (key is null)
                 {
                     return null;
                 }
@@ -141,12 +141,17 @@ namespace Microsoft.DebugEngineHost
         /// This method grabs the Debugger Subkey in HKCU
         /// </summary>
         /// <returns>The subkey of Debugger if it exists. Returns null otherwise.</returns>
-        public HostConfigurationSection GetCurrentUserDebuggerSection()
+        public HostConfigurationSection? GetCurrentUserDebuggerSection()
         {
-            using (RegistryKey hkcuRoot = Registry.CurrentUser.OpenSubKey(_registryRoot))
+            using (RegistryKey? hkcuRoot = Registry.CurrentUser.OpenSubKey(_registryRoot))
             {
-                RegistryKey debuggerSection = hkcuRoot.OpenSubKey(DebuggerSectionName);
-                if (debuggerSection != null)
+                if (hkcuRoot is null)
+                {
+                    return null;
+                }
+
+                RegistryKey? debuggerSection = hkcuRoot.OpenSubKey(DebuggerSectionName);
+                if (debuggerSection is not null)
                 {
                     return new HostConfigurationSection(debuggerSection);
                 }
@@ -158,16 +163,21 @@ namespace Microsoft.DebugEngineHost
         /// Grabs the Debugger/NatvisDiagnostic subkey in HKCU
         /// </summary>
         /// <returns>The NatvisDiagnostic subkey if it exists. Returns null otherwise.</returns>
-        public HostConfigurationSection GetNatvisDiagnosticSection()
+        public HostConfigurationSection? GetNatvisDiagnosticSection()
         {
-            using (RegistryKey hkcuRoot = Registry.CurrentUser.OpenSubKey(_registryRoot))
+            using (RegistryKey? hkcuRoot = Registry.CurrentUser.OpenSubKey(_registryRoot))
             {
-                using (RegistryKey debuggerSection = hkcuRoot.OpenSubKey(DebuggerSectionName))
+                if (hkcuRoot is null)
                 {
-                    if (debuggerSection != null)
+                    return null;
+                }
+
+                using (RegistryKey? debuggerSection = hkcuRoot.OpenSubKey(DebuggerSectionName))
+                {
+                    if (debuggerSection is not null)
                     {
-                        RegistryKey natvisDiagnosticKey = debuggerSection.OpenSubKey(NatvisDiagnosticsSectionName);
-                        if (natvisDiagnosticKey != null)
+                        RegistryKey? natvisDiagnosticKey = debuggerSection.OpenSubKey(NatvisDiagnosticsSectionName);
+                        if (natvisDiagnosticKey is not null)
                         {
                             return new HostConfigurationSection(natvisDiagnosticKey);
                         }

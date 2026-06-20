@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -34,7 +34,7 @@ namespace Microsoft.DebugEngineHost
         public void Dispose()
         {
             CurrentMonitor.Dispose();
-            CurrentMonitor = null;
+            CurrentMonitor = null!;
         }
     }
 
@@ -66,12 +66,12 @@ namespace Microsoft.DebugEngineHost
             paths.ForEach((s) => loader(s));
         }
 
-        public static IDisposable WatchNatvisOptionSetting(HostConfigurationStore configStore, ILogChannel natvisLogger)
+        public static IDisposable? WatchNatvisOptionSetting(HostConfigurationStore configStore, ILogChannel natvisLogger)
         {
-            RegisterMonitorWrapper rmw = null;
+            RegisterMonitorWrapper? rmw = null;
 
-            HostConfigurationSection natvisDiagnosticSection = configStore.GetNatvisDiagnosticSection();
-            if (natvisDiagnosticSection != null)
+            HostConfigurationSection? natvisDiagnosticSection = configStore.GetNatvisDiagnosticSection();
+            if (natvisDiagnosticSection is not null)
             {
                 // DiagnosticSection exists, set current log level and watch for changes.
                 SetNatvisLogLevel(natvisDiagnosticSection);
@@ -81,9 +81,9 @@ namespace Microsoft.DebugEngineHost
             else
             {
                 // NatvisDiagnostic section has not been created, we need to watch for the creation.
-                HostConfigurationSection debuggerSection = configStore.GetCurrentUserDebuggerSection();
+                HostConfigurationSection? debuggerSection = configStore.GetCurrentUserDebuggerSection();
 
-                if (debuggerSection != null)
+                if (debuggerSection is not null)
                 {
                     // We only care about the debugger subkey's keys since we are waiting for the NatvisDiagnostics
                     // section to be created.
@@ -93,9 +93,9 @@ namespace Microsoft.DebugEngineHost
 
                     rm.RegChanged += (sender, e) =>
                     {
-                        HostConfigurationSection checkForSection = configStore.GetNatvisDiagnosticSection();
+                        HostConfigurationSection? checkForSection = configStore.GetNatvisDiagnosticSection();
 
-                        if (checkForSection != null)
+                        if (checkForSection is not null)
                         {
                             // NatvisDiagnostic section found. Update the logger
                             SetNatvisLogLevel(checkForSection);
@@ -134,8 +134,8 @@ namespace Microsoft.DebugEngineHost
 
         private static void SetNatvisLogLevel(HostConfigurationSection natvisDiagnosticSection)
         {
-            string level = natvisDiagnosticSection.GetValue("Level") as string;
-            if (level != null)
+            string? level = natvisDiagnosticSection.GetValue("Level") as string;
+            if (level is not null)
             {
                 level = level.ToLower(CultureInfo.InvariantCulture);
             }
@@ -169,13 +169,13 @@ namespace Microsoft.DebugEngineHost
                     string formattedMessage = string.Format(CultureInfo.InvariantCulture, "Natvis: {0}", message);
                     HostOutputWindow.WriteLaunchError(formattedMessage);
                 }, logLevel);
-                HostLogger.GetNatvisLogChannel().SetLogLevel(logLevel);
+                HostLogger.GetNatvisLogChannel()!.SetLogLevel(logLevel);
             }
         }
 
-        public static string FindSolutionRoot()
+        public static string? FindSolutionRoot()
         {
-            string path = null;
+            string? path = null;
             try
             {
                 ThreadHelper.JoinableTaskFactory.Run(async () => 
@@ -217,14 +217,14 @@ namespace Microsoft.DebugEngineHost
             /// Gets the WorkspaceService from Microsoft.VisualStudio.Workspace
             /// </summary>
             /// <remarks>This package won't be automatically loaded by MEF, so we need to manually acquire exported MEF Parts.</remarks>
-            private static IVsFolderWorkspaceService GetWorkspaceService()
+            private static IVsFolderWorkspaceService? GetWorkspaceService()
             {
-                IComponentModel componentModel = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel).GUID) as IComponentModel;
-                if (componentModel != null)
+                IComponentModel? componentModel = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel).GUID) as IComponentModel;
+                if (componentModel is not null)
                 {
                     var workspaceServices = componentModel.DefaultExportProvider.GetExports<IVsFolderWorkspaceService>();
 
-                    if (workspaceServices != null && workspaceServices.Any())
+                    if (workspaceServices is not null && workspaceServices.Any())
                     {
                         return workspaceServices.First().Value;
                     }
@@ -237,11 +237,11 @@ namespace Microsoft.DebugEngineHost
                 var workspaceService = GetWorkspaceService();
                 IEnumerable<string> sourcesArray = new List<string>();
 
-                if (workspaceService != null)
+                if (workspaceService is not null)
                 {
-                    IWorkspace currentWorkspace = workspaceService.CurrentWorkspace;
-                    IIndexWorkspaceService indexWorkspaceService = currentWorkspace?.GetService<IIndexWorkspaceService>(throwIfNotFound: false);
-                    if (indexWorkspaceService != null)
+                    IWorkspace? currentWorkspace = workspaceService.CurrentWorkspace;
+                    IIndexWorkspaceService? indexWorkspaceService = currentWorkspace?.GetService<IIndexWorkspaceService>(throwIfNotFound: false);
+                    if (indexWorkspaceService is not null)
                     {
                         if (indexWorkspaceService.State != IndexWorkspaceState.Completed)
                         {
@@ -280,8 +280,8 @@ namespace Microsoft.DebugEngineHost
 
             public async static System.Threading.Tasks.Task FindNatvisInSolutionImplAsync(List<string> paths)
             {
-                var solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
-                if (solution == null)
+                var solution = Package.GetGlobalService(typeof(SVsSolution)) as IVsSolution;
+                if (solution is null)
                 {
                     return; // failed to find a solution
                 }
@@ -321,8 +321,8 @@ namespace Microsoft.DebugEngineHost
 
             public static void FindNatvisInVSIXImpl(List<string> paths)
             {
-                var extManager = (IVsExtensionManagerPrivate)Package.GetGlobalService(typeof(SVsExtensionManager));
-                if (extManager == null)
+                var extManager = Package.GetGlobalService(typeof(SVsExtensionManager)) as IVsExtensionManagerPrivate;
+                if (extManager is null)
                 {
                     return; // failed to find the extension manager
                 }
@@ -330,13 +330,13 @@ namespace Microsoft.DebugEngineHost
                 BuildEnvironmentPath("NativeCrossPlatformVisualizer", extManager, paths);
             }
 
-            public static string FindSolutionRootImpl()
+            public static string? FindSolutionRootImpl()
             {
-                string root = null;
-                string slnFile;
-                string slnUserFile;
-                var solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
-                if (solution == null)
+                string? root = null;
+                string? slnFile;
+                string? slnUserFile;
+                var solution = (IVsSolution?)Package.GetGlobalService(typeof(SVsSolution));
+                if (solution is null)
                 {
                     return null; // failed to find a solution
                 }
@@ -363,8 +363,8 @@ namespace Microsoft.DebugEngineHost
 
             private static void LoadNatvisFromProject(IVsHierarchy hier, List<string> paths, bool solutionLevel)
             {
-                IVsProject4 proj = hier as IVsProject4;
-                if (proj == null)
+                IVsProject4? proj = hier as IVsProject4;
+                if (proj is null)
                 {
                     return;
                 }

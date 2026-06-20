@@ -19,18 +19,18 @@ namespace Microsoft.DebugEngineHost.VSCode
             AssemblyLoadContext.Default.Resolving += OnAssemblyResolve;
         }
 
-        private static Assembly OnAssemblyResolve(AssemblyLoadContext loadContext, AssemblyName assemblyName)
+        private static Assembly? OnAssemblyResolve(AssemblyLoadContext loadContext, AssemblyName assemblyName)
         {
-            Assembly asm = InnerResolveHandler(assemblyName);
+            Assembly? asm = InnerResolveHandler(assemblyName);
 
             return asm;
         }
 
-        private static Assembly InnerResolveHandler(AssemblyName assemblyName)
+        private static Assembly? InnerResolveHandler(AssemblyName assemblyName)
         {
             string assemblyFileName = string.Concat(assemblyName.Name, ".dll");
 
-            if (assemblyName.CultureInfo != null && !assemblyName.CultureInfo.Equals(CultureInfo.InvariantCulture))
+            if (assemblyName.CultureInfo is not null && !assemblyName.CultureInfo.Equals(CultureInfo.InvariantCulture))
             {
                 //Prepend the culture directory (e.g. ja\Microsoft.VisualStudio.Test.resources.dll)
                 assemblyFileName = Path.Combine(assemblyName.CultureInfo.Name, assemblyFileName);
@@ -45,9 +45,9 @@ namespace Microsoft.DebugEngineHost.VSCode
                 }
             }
 
-            Assembly asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, assemblyFileName));
+            Assembly? asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, assemblyFileName));
 
-            if (asm == null)
+            if (asm is null)
             {
                 lock (s_unresolvedNames)
                 {

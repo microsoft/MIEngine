@@ -1,9 +1,8 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -13,9 +12,9 @@ namespace Microsoft.DebugEngineHost
 {
     internal static class VsOutputWindowWrapper
     {
-        private static Lazy<IVsOutputWindow> outputWindowLazy = new Lazy<IVsOutputWindow>(() =>
+        private static Lazy<IVsOutputWindow?> outputWindowLazy = new Lazy<IVsOutputWindow?>(() =>
         {
-            IVsOutputWindow outputWindow = null;
+            IVsOutputWindow? outputWindow = null;
             try
             {
                 ThreadHelper.ThrowIfNotOnUIThread();
@@ -28,9 +27,9 @@ namespace Microsoft.DebugEngineHost
             return outputWindow;
         }, LazyThreadSafetyMode.PublicationOnly);
 
-        private static Lazy<IVsUIShell> shellLazy = new Lazy<IVsUIShell>(() =>
+        private static Lazy<IVsUIShell?> shellLazy = new Lazy<IVsUIShell?>(() =>
         {
-            IVsUIShell shell = null;
+            IVsUIShell? shell = null;
             try
             {
                 ThreadHelper.ThrowIfNotOnUIThread();
@@ -75,8 +74,8 @@ namespace Microsoft.DebugEngineHost
                 try
                 {
                     // Get the Output window
-                    IVsOutputWindow outputWindow = outputWindowLazy.Value;
-                    if (outputWindow == null)
+                    IVsOutputWindow? outputWindow = outputWindowLazy.Value;
+                    if (outputWindow is null)
                     {
                         return;
                     }
@@ -108,10 +107,10 @@ namespace Microsoft.DebugEngineHost
                         outputPane.Activate();
 
                         // Show the output window
-                        IVsUIShell shell = shellLazy.Value;
-                        if (shell != null)
+                        IVsUIShell? shell = shellLazy.Value;
+                        if (shell is not null)
                         {
-                            object inputVariant = null;
+                            object? inputVariant = null;
                             shell.PostExecCommand(VSConstants.GUID_VSStandardCommandSet97, (uint)VSConstants.VSStd97CmdID.OutputWindow, 0, ref inputVariant);
                         }
                     }
