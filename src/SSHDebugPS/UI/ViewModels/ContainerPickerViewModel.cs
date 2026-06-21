@@ -11,6 +11,7 @@ using System.Linq;
 using System.Windows.Threading;
 using liblinux.Persistence;
 using Microsoft.SSHDebugPS.Docker;
+using Microsoft.SSHDebugPS.Podman;
 using Microsoft.SSHDebugPS.SSH;
 using Microsoft.SSHDebugPS.Utilities;
 using System.Globalization;
@@ -22,10 +23,11 @@ namespace Microsoft.SSHDebugPS.UI
     {
         private Lazy<bool> _sshAvailable;
 
-        public ContainerPickerViewModel(bool supportSSHConnections)
+        public ContainerPickerViewModel(bool supportSSHConnections, ContainerRuntimeType runtimeType)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             SupportSSHConnections = supportSSHConnections;
+            _discoveryStrategy = CreateDiscoveryStrategy(runtimeType);
             InitializeConnections();
             ContainerInstances = new ObservableCollection<IContainerViewModel>();
 
@@ -142,7 +144,31 @@ namespace Microsoft.SSHDebugPS.UI
         // The formatted string for the ConnectionType dialog
         public string SelectedContainerConnectionString { get; private set; }
 
-        private const string unknownOS = "Unknown";
+        private readonly IContainerDiscoveryStrategy _discoveryStrategy;
+
+        private static IContainerDiscoveryStrategy CreateDiscoveryStrategy(ContainerRuntimeType runtimeType)
+        {
+            switch (runtimeType)
+            {
+                case ContainerRuntimeType.Docker:
+                    return new DockerDiscoveryStrategy();
+                case ContainerRuntimeType.Podman:
+                    return new PodmanDiscoveryStrategy();
+                default:
+                    Debug.Fail($"Unsupported container runtime type: {runtimeType}");
+                    return null;
+            }
+        }
+
+        public string ConnectionLabelText => _discoveryStrategy?.ConnectionLabel ?? UIResources.ConnectionLabel;
+
+        public string HostnameLabelText => _discoveryStrategy?.HostnameLabel ?? UIResources.HostnameLabel;
+
+        public string HostnameTipText => _discoveryStrategy?.HostnameTip ?? UIResources.HostnameTip;
+
+        public string ConnectionToolTipText => _discoveryStrategy?.ConnectionToolTip ?? UIResources.ConnectionToolTip;
+
+        public string HostnameAutomationNameText => _discoveryStrategy?.HostnameAutomationName ?? UIResources.HostnameAutomationName;
 
         private void RefreshContainersListInternal()
         {
@@ -152,11 +178,19 @@ namespace Microsoft.SSHDebugPS.UI
                 IContainerViewModel selectedContainer = SelectedContainerInstance;
                 SelectedContainerInstance = null;
 
-                IEnumerable<DockerContainerInstance> containers;
+                var viewModels = new List<IContainerViewModel>();
+
+                if (_discoveryStrategy == null)
+                {
+                    UpdateStatusMessage(string.Format(CultureInfo.CurrentCulture, UIResources.ContainersFoundStatusText, 0), isError: true);
+                    return;
+                }
+
+                IEnumerable<ContainerInstance> containers;
 
                 if (SelectedConnection is LocalConnectionViewModel)
                 {
-                    containers = DockerHelper.GetLocalDockerContainers(Hostname, out totalContainers);
+                    containers = _discoveryStrategy.GetLocalContainers(Hostname, out totalContainers);
                 }
                 else
                 {
@@ -167,59 +201,16 @@ namespace Microsoft.SSHDebugPS.UI
                         UpdateStatusMessage(UIResources.SSHConnectionFailedStatusText, isError: true);
                         return;
                     }
-                    containers = DockerHelper.GetRemoteDockerContainers(connection, Hostname, out totalContainers);
+                    containers = _discoveryStrategy.GetRemoteContainers(connection, Hostname, out totalContainers);
                 }
 
-                if (containers.Any()) 
+                if (containers != null)
                 {
-                    string serverOS;
-
-                    if (DockerHelper.TryGetServerOS(Hostname, out serverOS))
-                    {
-                        bool lcow;
-                        bool getLCOW = DockerHelper.TryGetLCOW(Hostname, out lcow);
-                        TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-                        serverOS = textInfo.ToTitleCase(serverOS);
-
-                        /* Note: LCOW is the abbreviation for Linux Containers on Windows
-                         * 
-                         * In LCOW, both Linux and Windows containers can run simultaneously in a Docker (Windows) Engine.
-                         * Thus, the container platform must be queried directly.
-                         * Otherwise, the container platform must match that of the server engine.
-                         */
-                        if (lcow && serverOS.Contains("Windows"))
-                        {
-                            foreach (DockerContainerInstance container in containers)
-                            {
-                                string containerPlatform = string.Empty;
-                                if (DockerHelper.TryGetContainerPlatform(Hostname, container.Name, out containerPlatform))
-                                {
-                                    container.Platform = textInfo.ToTitleCase(containerPlatform);
-                                }
-                                else
-                                {
-                                    container.Platform = unknownOS;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            foreach (DockerContainerInstance container in containers)
-                            {
-                                container.Platform = serverOS;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        foreach (DockerContainerInstance container in containers)
-                        {
-                            container.Platform = unknownOS;
-                        }
-                    }
+                    _discoveryStrategy.AssignPlatforms(containers, Hostname);
+                    viewModels.AddRange(containers.Select(item => (IContainerViewModel)new DockerContainerViewModel(item)));
                 }
 
-                ContainerInstances = new ObservableCollection<IContainerViewModel>(containers.Select(item => new DockerContainerViewModel(item)).ToList());
+                ContainerInstances = new ObservableCollection<IContainerViewModel>(viewModels);
                 OnPropertyChanged(nameof(ContainerInstances));
 
                 if (ContainerInstances.Count > 0)

@@ -268,6 +268,51 @@ namespace Microsoft.SSHDebugPS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Podman _CLI host:.
+        /// </summary>
+        public static string Podman_ConnectionLabel {
+            get {
+                return ResourceManager.GetString("Podman_ConnectionLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Podman _host (Optional):.
+        /// </summary>
+        public static string Podman_HostnameLabel {
+            get {
+                return ResourceManager.GetString("Podman_HostnameLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify a URL for connecting to a different Podman host. .
+        /// </summary>
+        public static string Podman_HostnameTip {
+            get {
+                return ResourceManager.GetString("Podman_HostnameTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Location from which to run the Podman CLI....
+        /// </summary>
+        public static string Podman_ConnectionToolTip {
+            get {
+                return ResourceManager.GetString("Podman_ConnectionToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional Podman Host name.
+        /// </summary>
+        public static string Podman_HostnameAutomationName {
+            get {
+                return ResourceManager.GetString("Podman_HostnameAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Docker _host (Optional):.
         /// </summary>
         public static string HostnameLabel {
