@@ -24,17 +24,19 @@ namespace Microsoft.DebugEngineHost
 {
     internal class RegisterMonitorWrapper : IDisposable
     {
-        public RegistryMonitor CurrentMonitor { get; set; }
+        private RegistryMonitor? _currentMonitor;
+
+        public RegistryMonitor CurrentMonitor => _currentMonitor ?? throw new InvalidOperationException();
 
         internal RegisterMonitorWrapper(RegistryMonitor currentMonitor)
         {
-            CurrentMonitor = currentMonitor;
+            _currentMonitor = currentMonitor;
         }
 
         public void Dispose()
         {
-            CurrentMonitor.Dispose();
-            CurrentMonitor = null!;
+            _currentMonitor?.Dispose();
+            _currentMonitor = null;
         }
     }
 
