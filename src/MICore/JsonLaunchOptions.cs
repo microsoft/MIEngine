@@ -122,6 +122,12 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("unknownBreakpointHandling", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public UnknownBreakpointHandling? UnknownBreakpointHandling { get; set; }
+
+        /// <summary>
+        /// Controls GDB's debuginfod behavior.
+        /// </summary>
+        [JsonProperty("debuginfod", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public DebuginfodSettings Debuginfod { get; set; }
     }
 
     internal class VisualizerFileConverter : JsonConverter
@@ -313,6 +319,21 @@ namespace MICore.Json.LaunchOptions
 
         [EnumMember(Value = "stop")]
         Stop
+    }
+
+    public partial class DebuginfodSettings
+    {
+        /// <summary>
+        /// If true, GDB's debuginfod support is enabled. Default is false.
+        /// </summary>
+        [JsonProperty("enabled")]
+        public bool? Enabled { get; set; }
+
+        /// <summary>
+        /// The timeout in seconds for debuginfod server requests. Default is 30. Set to 0 for no override.
+        /// </summary>
+        [JsonProperty("timeout", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public int? Timeout { get; set; }
     }
 
     public partial class LaunchOptions : BaseOptions

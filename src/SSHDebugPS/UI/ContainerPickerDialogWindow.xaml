@@ -512,14 +512,14 @@
                VerticalAlignment="Center"
                Style="{StaticResource MainLabelStyle}"
                Target="{Binding ElementName=ConnectionTypeComboBox}"
-               Content="{x:Static local:UIResources.ConnectionLabel}" />
+               Content="{Binding ConnectionLabelText}" />
             <ComboBox Grid.Row="1"
                   Grid.Column="0"
                   x:Uid="uidConnectionTypeComboBox"
                   x:Name="ConnectionTypeComboBox"
                   Margin="0,4,0,0"
                   AutomationProperties.LabeledBy="{Binding ElementName=ConnectionTypeLabel}"
-                  ToolTip="{x:Static local:UIResources.ConnectionToolTip}"
+                  ToolTip="{Binding ConnectionToolTipText}"
                   ItemsSource="{Binding SupportedConnections}"
                   SelectedItem="{Binding SelectedConnection}"
                   DisplayMemberPath="DisplayName"
@@ -552,7 +552,7 @@
                VerticalAlignment="Center"
                Style="{StaticResource MainLabelStyle}"
                Target="{Binding ElementName=hostnameTextBox}"
-               Content="{x:Static local:UIResources.HostnameLabel}" />
+               Content="{Binding HostnameLabelText}" />
             <TextBox Grid.Row="3"
                  Grid.ColumnSpan="2"
                 Style="{StaticResource {x:Static vsui:VsResourceKeys.TextBoxStyleKey}}"
@@ -560,9 +560,9 @@
                  Padding="2"
                  x:Uid="uidHostnameTextBox"
                  x:Name="hostnameTextBox"
-                 AutomationProperties.Name="{x:Static local:UIResources.HostnameAutomationName}"
+                 AutomationProperties.Name="{Binding HostnameAutomationNameText}"
                  Text="{Binding Path=Hostname, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 ToolTip="{x:Static local:UIResources.HostnameTip}">
+                 ToolTip="{Binding HostnameTipText}">
                 <TextBox.InputBindings>
                     <KeyBinding Key="Enter" Command="{Binding RefreshCommand}" />
                 </TextBox.InputBindings>

@@ -1,6 +1,8 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
 
+trigger: none
+
 variables:
 - name: TeamName
   value: MDDDebugger
@@ -15,6 +17,8 @@ resources:
 extends:
   template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
   parameters:
+    settings:
+      networkIsolationPolicy: Permissive,CFSClean,CFSClean2,CFSClean3
     pool:
       name: VSEngSS-MicroBuild2022-1ES
       os: windows
@@ -34,6 +38,7 @@ extends:
             signing:
               enabled: true
               signType: real
+              signWithProd: true
               zipSources: false
             localization:
               enabled: true

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using liblinux;
@@ -20,6 +21,8 @@ namespace Microsoft.SSHDebugPS.SSH
     {
         private const string _Name = "SSH";
         private readonly Guid _Id = new Guid("3FDDF14E-E758-4695-BE0C-7509920432C9");
+        private readonly object _portCacheLock = new object();
+        private readonly Dictionary<string, SSHPort> _portCache = new Dictionary<string, SSHPort>(StringComparer.OrdinalIgnoreCase);
 
         protected override Guid Id { get { return _Id; } }
         protected override string Name { get { return _Name; } }
@@ -33,11 +36,26 @@ namespace Microsoft.SSHDebugPS.SSH
             string name;
             HR.Check(request.GetPortName(out name));
 
-            AD7Port newPort = new SSHPort(this, name, isInAddPort: true);
-
-            if (newPort.IsConnected)
+            SSHPort sshPort;
+            lock (_portCacheLock)
             {
-                port = newPort;
+                if (!_portCache.TryGetValue(name, out sshPort))
+                {
+                    sshPort = new SSHPort(this, name, isInAddPort: true);
+                    if (sshPort.IsConnected)
+                    {
+                        _portCache[name] = sshPort;
+                    }
+                }
+                else
+                {
+                    sshPort.EnsureConnected();
+                }
+            }
+
+            if (sshPort.IsConnected)
+            {
+                port = sshPort;
                 return HR.S_OK;
             }
 
@@ -53,7 +71,18 @@ namespace Microsoft.SSHDebugPS.SSH
             for (int i = 0; i < store.Connections.Count; i++)
             {
                 ConnectionInfo connectionInfo = (ConnectionInfo)store.Connections[i];
-                ports[i] = new SSHPort(this, GetFormattedSSHConnectionName(connectionInfo), isInAddPort: false);
+                string name = GetFormattedSSHConnectionName(connectionInfo);
+
+                lock (_portCacheLock)
+                {
+                    if (!_portCache.TryGetValue(name, out SSHPort port))
+                    {
+                        port = new SSHPort(this, name, isInAddPort: false);
+                        _portCache[name] = port;
+                    }
+
+                    ports[i] = port;
+                }
             }
 
             ppEnum = new AD7PortEnum(ports);

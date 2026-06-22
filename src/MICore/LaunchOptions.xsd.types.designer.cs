@@ -99,12 +99,24 @@ namespace MICore.Xml.LaunchOptions {
         [System.ComponentModel.DefaultValueAttribute(true)]
         public bool WaitDynamicLibLoad;
         
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool EnableDebuginfod;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(30)]
+        public int DebuginfodTimeout;
+        
         public AndroidLaunchOptions() {
             this.Attach = false;
             this.SourceRoots = "";
             this.JVMPort = 65534;
             this.JVMHost = "localhost";
             this.WaitDynamicLibLoad = true;
+            this.EnableDebuginfod = false;
+            this.DebuginfodTimeout = 30;
         }
     }
     
@@ -454,8 +466,20 @@ namespace MICore.Xml.LaunchOptions {
         [System.ComponentModel.DefaultValueAttribute(true)]
         public bool WaitDynamicLibLoad;
         
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool EnableDebuginfod;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(30)]
+        public int DebuginfodTimeout;
+        
         public BaseLaunchOptions() {
             this.WaitDynamicLibLoad = true;
+            this.EnableDebuginfod = false;
+            this.DebuginfodTimeout = 30;
         }
     }
     
@@ -536,8 +560,20 @@ namespace MICore.Xml.LaunchOptions {
         [System.ComponentModel.DefaultValueAttribute(true)]
         public bool WaitDynamicLibLoad;
         
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool EnableDebuginfod;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(30)]
+        public int DebuginfodTimeout;
+        
         public IOSLaunchOptions() {
             this.WaitDynamicLibLoad = true;
+            this.EnableDebuginfod = false;
+            this.DebuginfodTimeout = 30;
         }
     }
     

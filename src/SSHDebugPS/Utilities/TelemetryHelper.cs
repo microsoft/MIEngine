@@ -6,6 +6,7 @@ namespace Microsoft.SSHDebugPS.Utilities
     internal static class TelemetryHelper
     {
         public const string Event_DockerPSParseFailure = @"VS/Diagnostics/Debugger/SSHDebugPS/DockerPSParseFailure";
+        public const string Event_PodmanPSParseFailure = @"VS/Diagnostics/Debugger/SSHDebugPS/PodmanPSParseFailure";
         public const string Event_ProcFSError = @"VS/Diagnostics/Debugger/SSHDebugPS/ProcFSError";
         public static readonly string Property_ExceptionName = "vs.diagnostics.debugger.ExceptionName";
     }

@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
     }
 
     /// <summary>
-    /// Interface implemented by a port that supports explicit cleanup
+    /// Interface implemented by a port that supports explicit cleanup of shared connections.
     /// </summary>
     [ComImport()]
     [ComVisible(true)]
@@ -82,9 +82,14 @@ namespace Microsoft.VisualStudio.Debugger.Interop.UnixPortSupplier
     public interface IDebugPortCleanup
     {
         /// <summary>
-        /// Clean up debugging resources
+        /// Decrement the session reference count and close the connection when it reaches zero.
         /// </summary>
         void Clean();
+
+        /// <summary>
+        /// Increment the session reference count on this port.
+        /// </summary>
+        void AddSessionRef();
     }
 
     /// <summary>

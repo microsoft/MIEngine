@@ -45,12 +45,13 @@ namespace Microsoft.MIDebugEngine.Natvis
         public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
         public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         public virtual bool IsReadOnly() => Parent.IsReadOnly();
+        public bool IsNullPointer() => Parent.IsNullPointer();
 
         public VariableInformation FindChildByName(string name) => Parent.FindChildByName(name);
         public string EvalDependentExpression(string expr) => Parent.EvalDependentExpression(expr);
         public void AsyncEval(IDebugEventCallback2 pExprCallback) => Parent.AsyncEval(pExprCallback);
         public void SyncEval(enum_EVALFLAGS dwFlags, DAPEvalFlags dwDAPFlags) => Parent.SyncEval(dwFlags, dwDAPFlags);
-        public virtual string FullName() => Name;
+        public virtual string FullName() => Parent.FullName();
         public void EnsureChildren() => Parent.EnsureChildren();
         public void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error)
         {
@@ -201,6 +202,13 @@ namespace Microsoft.MIDebugEngine.Natvis
             public VisualizerType Visualizer { get; private set; }
             public Dictionary<string, string> ScopedNames { get; private set; }
 
+            /// <summary>
+            /// Intrinsics defined in this type block, keyed by name.
+            /// Stored as IntrinsicType so that Parameter[] is available at call time
+            /// for argument substitution in parametrized intrinsics.
+            /// </summary>
+            public Dictionary<string, IntrinsicType> Intrinsics { get; }
+
             public VisualizerId[] GetUIVisualizers()
             {
                 return this.Visualizer.Items.Where((i) => i is UIVisualizerItemType).Select(i =>
@@ -219,12 +227,28 @@ namespace Microsoft.MIDebugEngine.Natvis
                 {
                     ScopedNames["$T" + (i + 1).ToString(CultureInfo.InvariantCulture)] = name.Args[i].FullyQualifiedName;
                 }
+                // collect intrinsics defined in this type block
+                Intrinsics = new Dictionary<string, IntrinsicType>();
+                if (viz.Items != null)
+                {
+                    foreach (var item in viz.Items)
+                    {
+                        if (item is IntrinsicType intrinsic && !string.IsNullOrEmpty(intrinsic.Name))
+                        {
+                            Intrinsics[intrinsic.Name] = intrinsic;
+                        }
+                    }
+                }
             }
         }
 
         private static Regex s_variableName = new Regex("[a-zA-Z$_][a-zA-Z$_0-9]*");
         private static Regex s_subfieldNameHere = new Regex(@"\G((\.|->)[a-zA-Z$_][a-zA-Z$_0-9]*)+");
         private static Regex s_expression = new Regex(@"^\{[^\}]*\}");
+        private static readonly Regex s_moduleQualifiedPrefix = new Regex(@"\w+(?:\.\w+)*\.(?:dll|exe)!", RegexOptions.IgnoreCase);
+        private static readonly Regex s_intrinsicCallPattern = new Regex(@"\b(\w+)\s*\(");
+        // Matches the leading "0x<hex> " address that GDB/LLDB prepends when displaying a string pointer value.
+        private static readonly Regex s_addressPrefix = new Regex(@"^0x[0-9a-fA-F]+\s+");
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
         private HostConfigurationStore _configStore;
@@ -455,11 +479,11 @@ namespace Microsoft.MIDebugEngine.Natvis
                             {
                                 DisplayStringType display = item as DisplayStringType;
                                 // e.g. <DisplayString>{{ size={_Mypair._Myval2._Mylast - _Mypair._Myval2._Myfirst} }}</DisplayString>
-                                if (!EvalCondition(display.Condition, variable, visualizer.ScopedNames))
+                                if (!EvalCondition(display.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                                 {
                                     continue;
                                 }
-                                return (FormatValue(display.Value, variable, visualizer.ScopedNames), visualizer.GetUIVisualizers());
+                                return (FormatValue(display.Value, variable, visualizer.ScopedNames, visualizer.Intrinsics), visualizer.GetUIVisualizers());
                             }
                         }
                     }
@@ -581,17 +605,17 @@ namespace Microsoft.MIDebugEngine.Natvis
                 if (i is ItemType && !(variable is PaginatedVisualizerWrapper)) // we do not want to repeatedly display other ItemTypes when expanding the "[More...]" node
                 {
                     ItemType item = (ItemType)i;
-                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                     {
                         continue;
                     }
-                    IVariableInformation expr = GetExpression(item.Value, variable, visualizer.ScopedNames, item.Name);
+                    IVariableInformation expr = GetExpression(item.Value, variable, visualizer.ScopedNames, item.Name, visualizer.Intrinsics);
                     children.Add(expr);
                 }
                 else if (i is ArrayItemsType)
                 {
                     ArrayItemsType item = (ArrayItemsType)i;
-                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                     {
                         continue;
                     }
@@ -605,7 +629,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         totalSize = 1;
                         if (!int.TryParse(item.Rank, NumberStyles.None, CultureInfo.InvariantCulture, out rank))
                         {
-                            string expressionValue = GetExpressionValue(item.Rank, variable, visualizer.ScopedNames);
+                            string expressionValue = GetExpressionValue(item.Rank, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                             rank = Int32.Parse(expressionValue, CultureInfo.InvariantCulture);
                         }
                         if (rank <= 0)
@@ -617,7 +641,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             // replace $i with Item.Rank here before passing it into GetExpressionValue
                             string substitute = item.Size.Replace("$i", idx.ToString(CultureInfo.InvariantCulture));
-                            string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames);
+                            string val = GetExpressionValue(substitute, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                             uint tmp = MICore.Debugger.ParseUint(val, throwOnError: true);
                             dimensions[idx] = tmp;
                             totalSize *= tmp;
@@ -625,7 +649,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                     else
                     {
-                        string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                        string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                         totalSize = MICore.Debugger.ParseUint(val, throwOnError: true);
                     }
 
@@ -638,16 +662,17 @@ namespace Microsoft.MIDebugEngine.Natvis
                     ValuePointerType[] vptrs = item.ValuePointer;
                     foreach (var vp in vptrs)
                     {
-                        if (EvalCondition(vp.Condition, variable, visualizer.ScopedNames))
+                        if (EvalCondition(vp.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                         {
-                            IVariableInformation ptrExpr = GetExpression("*(" + vp.Value + ")", variable, visualizer.ScopedNames);
+                            IVariableInformation ptrExpr = GetExpression("*(" + vp.Value + ")", variable, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
                             string typename = ptrExpr.TypeName;
                             if (String.IsNullOrWhiteSpace(typename))
                             {
                                 continue;
                             }
-                            // Creates an expression: (T[50])*(<ValuePointer> + 50)
-                            // This evaluates for 50 elements of type T, starting at <ValuePointer> with an offet of 50 elements.
+
+                            // Creates a dereferenced pointer-to-array expression: (*(T(*)[50])(ValuePointer + 50))
+                            // This evaluates for 50 elements of type T, starting at <ValuePointer> with an offset of 50 elements.
                             // E.g. This will grab elements 50 - 99 from <ValuePointer>.
                             // Note:
                             //   If requestedSize > 1000, the evaluation will only grab the first 1000 elements.
@@ -656,18 +681,18 @@ namespace Microsoft.MIDebugEngine.Natvis
                             uint requestedSize = Math.Min(MAX_EXPAND, totalSize - startIndex);
 
                             StringBuilder arrayBuilder = new StringBuilder();
-                            arrayBuilder.Append('(');
+                            arrayBuilder.Append("(*(");
                             arrayBuilder.Append(typename);
-                            arrayBuilder.Append('[');
+                            arrayBuilder.Append("(*)[");
                             arrayBuilder.Append(requestedSize);
-                            arrayBuilder.Append("])*(");
+                            arrayBuilder.Append("])(");
                             arrayBuilder.Append(vp.Value);
                             arrayBuilder.Append('+');
                             arrayBuilder.Append(startIndex);
-                            arrayBuilder.Append(')');
+                            arrayBuilder.Append("))");
                             string arrayStr = arrayBuilder.ToString();
 
-                            IVariableInformation arrayExpr = GetExpression(arrayStr, variable, visualizer.ScopedNames);
+                            IVariableInformation arrayExpr = GetExpression(arrayStr, variable, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
                             arrayExpr.EnsureChildren();
                             if (arrayExpr.CountChildren != 0)
                             {
@@ -694,7 +719,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                 else if (i is TreeItemsType)
                 {
                     TreeItemsType item = (TreeItemsType)i;
-                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                     {
                         continue;
                     }
@@ -707,7 +732,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         continue;
                     }
-                    string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                    string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                     uint size = MICore.Debugger.ParseUint(val, throwOnError: true);
                     IVariableInformation headVal;
                     if (variable is TreeContinueWrapper tcw)
@@ -716,7 +741,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                     else
                     {
-                        headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
+                        headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
                     }
                     ulong head = MICore.Debugger.ParseAddr(headVal.Value);
                     var content = new List<IVariableInformation>();
@@ -734,9 +759,9 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             getValue = (v) => v.FindChildByName(item.ValueNode.Value);
                         }
-                        else if (GetExpression(item.ValueNode.Value, headVal, visualizer.ScopedNames) != null)
+                        else if (GetExpression(item.ValueNode.Value, headVal, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics) != null)
                         {
-                            getValue = (v) => GetExpression(item.ValueNode.Value, v, visualizer.ScopedNames);
+                            getValue = (v) => GetExpression(item.ValueNode.Value, v, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
                         }
                         if (goLeft == null || goRight == null || getValue == null)
                         {
@@ -766,9 +791,9 @@ namespace Microsoft.MIDebugEngine.Natvis
                     //      <ValueNode>m_element</ValueNode>
                     //    </LinkedListItems>
                     LinkedListItemsType item = (LinkedListItemsType)i;
-                    if (String.IsNullOrWhiteSpace(item.Condition))
+                    if (!String.IsNullOrWhiteSpace(item.Condition))
                     {
-                        if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                        if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                             continue;
                     }
                     if (String.IsNullOrWhiteSpace(item.HeadPointer) || String.IsNullOrWhiteSpace(item.NextPointer))
@@ -782,7 +807,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     uint size = MAX_EXPAND;
                     if (!String.IsNullOrWhiteSpace(item.Size))
                     {
-                        string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames);
+                        string val = GetExpressionValue(item.Size, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                         size = MICore.Debugger.ParseUint(val);
                     }
                     IVariableInformation headVal;
@@ -792,7 +817,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                     else
                     {
-                        headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames);
+                        headVal = GetExpression(item.HeadPointer, variable, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
                     }
                     ulong head = MICore.Debugger.ParseAddr(headVal.Value);
                     var content = new List<IVariableInformation>();
@@ -811,10 +836,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                         }
                         else
                         {
-                            var value = GetExpression(item.ValueNode, headVal, visualizer.ScopedNames);
+                            var value = GetExpression(item.ValueNode, headVal, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
                             if (value != null && !value.Error)
                             {
-                                getValue = (v) => GetExpression(item.ValueNode, v, visualizer.ScopedNames);
+                                getValue = (v) => GetExpression(item.ValueNode, v, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
                             }
                         }
                         if (goNext == null || getValue == null)
@@ -843,7 +868,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     //      <ValueNode>*(_M_vector._M_array[$i])</ValueNode>
                     //    </IndexListItems>
                     IndexListItemsType item = (IndexListItemsType)i;
-                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                    if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                     {
                         continue;
                     }
@@ -857,9 +882,9 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         if (string.IsNullOrWhiteSpace(s.Value))
                             continue;
-                        if (EvalCondition(s.Condition, variable, visualizer.ScopedNames))
+                        if (EvalCondition(s.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                         {
-                            string val = GetExpressionValue(s.Value, variable, visualizer.ScopedNames);
+                            string val = GetExpressionValue(s.Value, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                             size = MICore.Debugger.ParseUint(val);
                             break;
                         }
@@ -873,9 +898,9 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         if (string.IsNullOrWhiteSpace(v.Value))
                             continue;
-                        if (EvalCondition(v.Condition, variable, visualizer.ScopedNames))
+                        if (EvalCondition(v.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                         {
-                            string processedExpr = ReplaceNamesInExpression(v.Value, variable, visualizer.ScopedNames);
+                            string processedExpr = ReplaceNamesInExpression(v.Value, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                             Dictionary<string, string> indexDic = new Dictionary<string, string>();
                             uint currentIndex = 0;
                             if (variable is PaginatedVisualizerWrapper pvwVariable)
@@ -915,7 +940,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     // </Type>
                     if (item.Condition != null)
                     {
-                        if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames))
+                        if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                         {
                             continue;
                         }
@@ -924,7 +949,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         continue;
                     }
-                    var expand = GetExpression(item.Value, variable, visualizer.ScopedNames);
+                    var expand = GetExpression(item.Value, variable, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
                     var eChildren = Expand(expand);
                     if (eChildren != null)
                     {
@@ -932,7 +957,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                 }
             }
-            if (!(variable is VisualizerWrapper)) // don't stack wrappers
+            if (!(variable is VisualizerWrapper) && !expandType.HideRawView) // don't stack wrappers, and respect HideRawView
             {
                 // add the [Raw View] field
                 IVariableInformation rawView = new VisualizerWrapper(ResourceStrings.RawView, _process.Engine, variable, visualizer, isVisualizerView: false);
@@ -1092,12 +1117,12 @@ namespace Microsoft.MIDebugEngine.Natvis
             return type;
         }
 
-        private bool EvalCondition(string condition, IVariableInformation variable, IDictionary<string, string> scopedNames)
+        private bool EvalCondition(string condition, IVariableInformation variable, IDictionary<string, string> scopedNames, IDictionary<string, IntrinsicType> intrinsics = null)
         {
             bool res = true;
             if (!String.IsNullOrWhiteSpace(condition))
             {
-                string exprValue = GetExpressionValue(condition, variable, scopedNames);
+                string exprValue = GetExpressionValue(condition, variable, scopedNames, intrinsics);
 
                 bool exprBool = false;
                 int exprInt = 0;
@@ -1123,7 +1148,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         tryAgain:
             foreach (var autoVis in _typeVisualizers)
             {
-                var visualizer = autoVis.Visualizers.Find((v) => v.ParsedName.Match(name));   // TODO: match on View, version, etc
+                var visualizer = FindBestMatch(autoVis.Visualizers, name, v => v.ParsedName);
                 if (visualizer != null)
                 {
                     _vizCache[variable.TypeName] = new VisualizerInfo(visualizer.Visualizer, name);
@@ -1133,7 +1158,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             // failed to find a visualizer for the type, try looking for a typedef
             foreach (var autoVis in _typeVisualizers)
             {
-                var alias = autoVis.Aliases.Find((v) => v.ParsedName.Match(name));   // TODO: match on View, version, etc
+                var alias = FindBestMatch(autoVis.Aliases, name, a => a.ParsedName);
                 if (alias != null)
                 {
                     // add the template parameter macro values
@@ -1159,6 +1184,46 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Finds the best matching candidate from a list based on type name matching.
+        /// </summary>
+        /// <typeparam name="T">Either TypeInfo or AliasInfo</typeparam>
+        /// <param name="candidates">The list of candidate objects to consider for a match.</param>
+        /// <param name="name">The type name to match against the candidate patterns.</param>
+        /// <param name="getParsedName">A function that returns the parsed <see cref="TypeName"/> for a given candidate.</param>
+        /// <returns>The best matching candidate, or <c>null</c> if no candidate matches.</returns>
+        internal static T FindBestMatch<T>(List<T> candidates, TypeName name, Func<T, TypeName> getParsedName) where T : class
+        {
+            T best = null;
+            int bestArgCount = 0;
+            int bestConcreteCount = 0;
+            foreach (var candidate in candidates)
+            {
+                TypeName parsedName = getParsedName(candidate);
+                if (parsedName.Match(name)) // TODO: match on View, version, etc
+                {
+                    int concreteCount = 0;
+                    foreach (var arg in parsedName.Args)
+                    {
+                        if (!arg.IsWildcard)
+                        {
+                            concreteCount++;
+                        }
+                    }
+
+                    if (best == null
+                        || parsedName.Args.Count > bestArgCount
+                        || (parsedName.Args.Count == bestArgCount && concreteCount > bestConcreteCount))
+                    {
+                        best = candidate;
+                        bestArgCount = parsedName.Args.Count;
+                        bestConcreteCount = concreteCount;
+                    }
+                }
+            }
+            return best;
         }
 
         private VisualizerInfo FindType(IVariableInformation variable)
@@ -1195,12 +1260,13 @@ namespace Microsoft.MIDebugEngine.Natvis
             return null;
         }
 
-        private string FormatValue(string format, IVariableInformation variable, IDictionary<string, string> scopedNames)
+        private string FormatValue(string format, IVariableInformation variable, IDictionary<string, string> scopedNames, IDictionary<string, IntrinsicType> intrinsics = null)
         {
             if (String.IsNullOrWhiteSpace(format))
             {
                 return String.Empty;
             }
+            format = format.Trim();
             StringBuilder value = new StringBuilder();
             for (int i = 0; i < format.Length; ++i)
             {
@@ -1216,7 +1282,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                     Match m = s_expression.Match(format.Substring(i));
                     if (m.Success)
                     {
-                        string exprValue = GetExpressionValue(format.Substring(i + 1, m.Length - 2), variable, scopedNames);
+                        string rawExpr = format.Substring(i + 1, m.Length - 2);
+                        string spec = ExtractFormatSpecifier(rawExpr);
+                        string exprValue = GetExpressionValue(rawExpr, variable, scopedNames, intrinsics);
+                        if (spec == "sub" || spec == "su")
+                            exprValue = CleanUtf16StringValue(exprValue);
+                        else if (spec == "sb")
+                            exprValue = CleanAsciiStringValue(exprValue);
                         value.Append(exprValue);
                         i += m.Length - 1;
                     }
@@ -1255,15 +1327,24 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
                 result.Append(expression.Substring(pos, m.Index - pos));
                 pos = m.Index;
+
+                // Check if this identifier is preceded by '->', '.', or '::', indicating it is
+                // a member access or scope-qualified name rather than a root-level variable reference.
+                // In that case, skip substitution and emit the name as-is.
+                bool isMemberAccess = IsPrecededByMemberAccessOperator(expression, m.Index);
+
                 bool found = false;
-                foreach (var p in processors)
+                if (!isMemberAccess)
                 {
-                    string repl = p(m);
-                    if (repl != null)
+                    foreach (var p in processors)
                     {
-                        result.Append(repl);
-                        found = true;
-                        break;  // found a substitute
+                        string repl = p(m);
+                        if (repl != null)
+                        {
+                            result.Append(repl);
+                            found = true;
+                            break;  // found a substitute
+                        }
                     }
                 }
                 if (!found)
@@ -1285,8 +1366,312 @@ namespace Microsoft.MIDebugEngine.Natvis
             return result.ToString();
         }
 
-        private string ReplaceNamesInExpression(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames)
+        /// <summary>
+        /// Returns true if the character(s) immediately before <paramref name="index"/>
+        /// form a member-access or scope-resolution operator:
+        ///   '->'  (pointer member access)
+        ///   '.'   (direct member access)
+        ///   '::'  (C++ scope resolution)
+        /// Identifiers that follow these operators are part of a sub-expression
+        /// and must not be replaced with a root-level child lookup.
+        /// </summary>
+        /// <param name="expression">The full expression string in which the identifier is located.</param>
+        /// <param name="index">The zero-based index in <paramref name="expression"/> where the identifier starts.</param>
+        /// <returns>
+        /// <c>true</c> if the identifier at <paramref name="index"/> is immediately preceded (optionally via whitespace)
+        /// by a member-access or scope-resolution operator (<c>.</c>, <c>-&gt;</c>, or <c>::</c>); otherwise, <c>false</c>.
+        /// </returns>
+        internal static bool IsPrecededByMemberAccessOperator(string expression, int index)
         {
+            // Validate index bounds
+            if (string.IsNullOrEmpty(expression) || index < 0 || index > expression.Length)
+            {
+                return false;
+            }
+
+            // Skip any whitespace between the operator and the identifier
+            int i = index - 1;
+            while (i >= 0 && char.IsWhiteSpace(expression[i]))
+            {
+                i--;
+            }
+
+            if (i >= 0 && expression[i] == '.')
+            {
+                return true;    // preceded by '.'
+            }
+
+            if (i >= 1)
+            {
+                char prev1 = expression[i];
+                char prev2 = expression[i - 1];
+
+                if (prev2 == '-' && prev1 == '>')
+                {
+                    return true;    // preceded by '->'
+                }
+
+                if (prev2 == ':' && prev1 == ':')
+                {
+                    return true;    // preceded by '::'
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Find the index of the closing parenthesis that matches the opening paren at <paramref name="openPos"/>.
+        /// Returns -1 if not found.
+        /// </summary>
+        internal static int FindMatchingParen(string s, int openPos)
+        {
+            int depth = 0;
+            for (int i = openPos; i < s.Length; i++)
+            {
+                if (s[i] == '(') depth++;
+                else if (s[i] == ')')
+                {
+                    depth--;
+                    if (depth == 0) return i;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Split a comma-separated argument list (the text inside the parentheses)
+        /// at depth-zero commas only, so nested calls like f(a,b) are kept intact.
+        /// Only parentheses and square brackets are treated as nesting — angle brackets
+        /// are intentionally excluded because '&gt;' is also a comparison operator and
+        /// NatVis intrinsic arguments are never C++ template types.
+        /// </summary>
+        internal static List<string> SplitArguments(string argsText)
+        {
+            var result = new List<string>();
+            int depth = 0;
+            int start = 0;
+            for (int i = 0; i < argsText.Length; i++)
+            {
+                char c = argsText[i];
+                if (c == '(' || c == '[') depth++;
+                else if (c == ')' || c == ']') depth--;
+                else if (c == ',' && depth == 0)
+                {
+                    result.Add(argsText.Substring(start, i - start).Trim());
+                    start = i + 1;
+                }
+            }
+            string last = argsText.Substring(start).Trim();
+            if (last.Length > 0 || result.Count > 0)
+                result.Add(last);
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the index of the last top-level comma in <paramref name="expression"/>,
+        /// i.e. a comma not nested inside any parentheses or square brackets.
+        /// Returns -1 when no such comma exists.
+        /// </summary>
+        private static int FindLastTopLevelComma(string expression)
+        {
+            int depth = 0;
+            int lastTopLevelComma = -1;
+            for (int i = 0; i < expression.Length; i++)
+            {
+                char c = expression[i];
+                if (c == '(' || c == '[') depth++;
+                else if (c == ')' || c == ']') depth--;
+                else if (c == ',' && depth == 0)
+                    lastTopLevelComma = i;
+            }
+            return lastTopLevelComma;
+        }
+
+        /// <summary>
+        /// Returns the format specifier from a NatVis expression (the part after the last
+        /// top-level comma), normalized the same way as
+        /// <see cref="VariableInformation.ProcessFormatSpecifiers"/>: modifiers "nvo", "na",
+        /// "nr", "nd" are stripped before returning.  Returns null when no specifier is present.
+        /// </summary>
+        internal static string ExtractFormatSpecifier(string expression)
+        {
+            int commaPos = FindLastTopLevelComma(expression);
+            if (commaPos < 0) return null;
+            return expression.Substring(commaPos + 1).Trim()
+                .Replace("nvo", "").Replace("na", "").Replace("nr", "").Replace("nd", "");
+        }
+
+        /// <summary>
+        /// Cleans up the raw value that GDB/LLDB returns for a <c>const char16_t*</c>
+        /// expression (i.e. one evaluated with the <c>,sub</c> / <c>,su</c> format specifier).
+        /// GDB and LLDB both prefix the string with the pointer address, e.g.
+        ///   <c>0x00007fff5fbff6c0 u"Hello"</c>
+        /// This method strips the address and the surrounding <c>u"…"</c> quotes so that
+        /// the NatVis DisplayString shows just the string content.
+        /// </summary>
+        internal static string CleanUtf16StringValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            // Strip leading "0x<hex> " address prefix emitted by GDB/LLDB.
+            value = s_addressPrefix.Replace(value, "");
+            // Strip surrounding u"..." or U"..." quotes.
+            if (value.Length >= 3 &&
+                (value.StartsWith("u\"", StringComparison.Ordinal) || value.StartsWith("U\"", StringComparison.Ordinal)))
+            {
+                value = value.EndsWith("\"", StringComparison.Ordinal)
+                    ? value.Substring(2, value.Length - 3)
+                    : value.Substring(2);
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Cleans up the raw value that GDB/LLDB returns for a <c>char*</c> expression
+        /// (i.e. one evaluated with the <c>,sb</c> format specifier).
+        /// GDB and LLDB prefix the string with the pointer address, e.g.
+        ///   <c>0x00007fff5fbff6c0 "Hello"</c>
+        /// This method strips the address and the surrounding <c>"…"</c> quotes so that
+        /// the NatVis DisplayString shows just the string content (matching VS behaviour,
+        /// where <c>{ptr,sb}</c> evaluates to bare text without quotes).
+        /// </summary>
+        internal static string CleanAsciiStringValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            // Strip leading "0x<hex> " address prefix emitted by GDB/LLDB.
+            value = s_addressPrefix.Replace(value, "");
+            // Strip surrounding "..." quotes.
+            if (value.Length >= 2 && value.StartsWith("\"", StringComparison.Ordinal))
+            {
+                value = value.EndsWith("\"", StringComparison.Ordinal)
+                    ? value.Substring(1, value.Length - 2)
+                    : value.Substring(1);
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Substitute named parameters in an intrinsic expression with the supplied argument
+        /// values.  Each parameter name is replaced as a whole word so that e.g. "val" inside
+        /// "interval" is not touched.
+        /// </summary>
+        internal static string SubstituteIntrinsicParameters(string body, IntrinsicParameterType[] parameters, List<string> args)
+        {
+            if (parameters == null || parameters.Length == 0)
+                return body;
+
+            string result = body;
+            for (int i = 0; i < parameters.Length && i < args.Count; i++)
+            {
+                string paramName = parameters[i].Name;
+                if (string.IsNullOrEmpty(paramName)) continue;
+                // whole-word replacement
+                result = Regex.Replace(result, @"\b" + Regex.Escape(paramName) + @"\b", args[i]);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Expand intrinsic calls in <paramref name="expression"/> into their C++ equivalents.
+        /// For example, given an intrinsic  day() = "jd - 2440588"  the call  day() + 1
+        /// becomes  (jd - 2440588) + 1.
+        /// Recurses up to <paramref name="maxDepth"/> times to handle chained calls.
+        /// </summary>
+        internal static string ResolveIntrinsicCalls(string expression, IDictionary<string, IntrinsicType> intrinsics, int maxDepth = 20)
+        {
+            if (string.IsNullOrEmpty(expression) || intrinsics == null || intrinsics.Count == 0 || maxDepth <= 0)
+                return expression;
+
+            bool anyReplaced = false;
+            string result = expression;
+
+            // We scan left-to-right and build the output string incrementally.
+            // Using a loop rather than Regex.Replace because we need to consume the
+            // matched argument list (which the regex does not capture fully).
+            // s_intrinsicCallPattern matches a word immediately followed by '(';
+            // \b on the right side is intentionally absent — the '(' is the boundary.
+            int pos = 0;
+            var sb = new StringBuilder();
+
+            while (pos < result.Length)
+            {
+                Match m = s_intrinsicCallPattern.Match(result, pos);
+                if (!m.Success) break;
+
+                string name = m.Groups[1].Value;
+
+                // Skip if the identifier is a member or scope access (.name, ->name, ::name).
+                // \b matches after '.' / '>' / ':' because those are non-word characters, so
+                // we must guard here to avoid re-expanding e.g. _q_value.value() when "value"
+                // is also an intrinsic name.
+                if (IsPrecededByMemberAccessOperator(result, m.Index))
+                {
+                    sb.Append(result, pos, m.Index - pos + name.Length);
+                    pos = m.Index + name.Length;
+                    continue;
+                }
+
+                if (!intrinsics.TryGetValue(name, out IntrinsicType intrinsic))
+                {
+                    // Not one of our intrinsics — skip past the identifier and keep going
+                    sb.Append(result, pos, m.Index - pos + name.Length);
+                    pos = m.Index + name.Length;
+                    continue;
+                }
+
+                // Found an intrinsic call.  Locate the matching close paren.
+                int openParen = m.Index + m.Length - 1; // position of '('
+                int closeParen = FindMatchingParen(result, openParen);
+                if (closeParen < 0)
+                {
+                    // Malformed — leave as-is
+                    sb.Append(result, pos, m.Index - pos + name.Length);
+                    pos = m.Index + name.Length;
+                    continue;
+                }
+
+                // Append everything before the call
+                sb.Append(result, pos, m.Index - pos);
+
+                // Extract and split arguments
+                string argsText = result.Substring(openParen + 1, closeParen - openParen - 1);
+                List<string> args = string.IsNullOrWhiteSpace(argsText)
+                    ? new List<string>()
+                    : SplitArguments(argsText);
+
+                // Expand: substitute parameters into the intrinsic expression body
+                string body = intrinsic.Expression ?? string.Empty;
+                body = SubstituteIntrinsicParameters(body, intrinsic.Parameter, args);
+
+                // Wrap in parens to preserve operator precedence
+                sb.Append('(');
+                sb.Append(body);
+                sb.Append(')');
+
+                pos = closeParen + 1;
+                anyReplaced = true;
+            }
+
+            // Append any trailing text after the last match
+            sb.Append(result, pos, result.Length - pos);
+            result = sb.ToString();
+
+            // Recurse if we expanded anything (handles chained intrinsics)
+            if (anyReplaced)
+                result = ResolveIntrinsicCalls(result, intrinsics, maxDepth - 1);
+
+            return result;
+        }
+
+        private string ReplaceNamesInExpression(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames, IDictionary<string, IntrinsicType> intrinsics = null)
+        {
+            // Strip Windows dll!-qualified type prefixes (e.g. Qt6Cored.dll!)
+            // for GDB/LLDB compatibility — meaningless outside Windows
+            expression = s_moduleQualifiedPrefix.Replace(expression, "");
+
+            // Expand intrinsic calls (e.g. day(), memberOffset(3)) into plain C++ expressions
+            expression = ResolveIntrinsicCalls(expression, intrinsics);
+
             return ProcessNamesInString(expression, new Substitute[] {
                 (m)=>
                     {
@@ -1322,19 +1707,26 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// <param name="expression"></param>
         /// <param name="variable"></param>
         /// <returns></returns>
-        private IVariableInformation GetExpression(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames, string displayName = null)
+        private IVariableInformation GetExpression(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames, string displayName = null, IDictionary<string, IntrinsicType> intrinsics = null)
         {
-            string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames);
+            string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames, intrinsics);
             IVariableInformation expressionVariable = new VariableInformation(processedExpr, variable, _process.Engine, displayName);
             expressionVariable.SyncEval();
             return expressionVariable;
         }
 
-        private string GetExpressionValue(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames)
+        private string GetExpressionValue(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames, IDictionary<string, IntrinsicType> intrinsics = null)
         {
-            string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames);
+            string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames, intrinsics);
             IVariableInformation expressionVariable = new VariableInformation(processedExpr, variable, _process.Engine, null);
             expressionVariable.SyncEval();
+
+            // Avoid recursive natvis formatting when expression is 'this'
+            if (expression.Trim() == "this")
+            {
+                return expressionVariable.Value;
+            }
+
             return FormatDisplayString(expressionVariable).value;
         }
 

@@ -36,12 +36,9 @@
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.hardwareBreakpointsOptions.properties.require.ty" ItemType="0" PsrId="306" Leaf="false">
         <Disp Icon="Dir" LocTbl="false" />
-        <Item ItemId=";(...) pe" ItemType="0" PsrId="306" Leaf="true">
-          <Str Cat="Text">
+        <Item ItemId=";(...) pe" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+          <Str Cat="Text" UsrLk="true">
             <Val><![CDATA[boolean]]></Val>
-            <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[boolean]]></Val>
-            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -129,12 +126,9 @@
       </Item>
       <Item ItemId=";@debugExtensions.cppdbg.schema.definitions.cpp_schema.definitions.pipeTransportOptions.properties.pipeCmd.items.ty" ItemType="0" PsrId="306" Leaf="false">
         <Disp Icon="Dir" LocTbl="false" />
-        <Item ItemId=";(...) pe" ItemType="0" PsrId="306" Leaf="true">
-          <Str Cat="Text">
+        <Item ItemId=";(...) pe" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+          <Str Cat="Text" UsrLk="true">
             <Val><![CDATA[string]]></Val>
-            <Tgt Cat="Text" Stat="Loc" Orig="New">
-              <Val><![CDATA[ciąg]]></Val>
-            </Tgt>
           </Str>
           <Disp Icon="Str" />
         </Item>
@@ -505,6 +499,54 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Controls GDB's debuginfod behavior for automatic downloading of debug symbols.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Steruje zachowaniem żądania debuginfod bazy danych GDB na potrzeby automatycznego pobierania symboli debugowania.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[If true, GDB's debuginfod support is enabled. Set to true to enable debuginfod. Default is false.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Jeśli wartość to true, obsługa elementu debuginfod bazy danych GDB jest włączona. Ustaw na wartość true, aby włączyć element debuginfod. Wartością domyślną jest false.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[If true (default), GDB's debuginfod support is enabled. Set to false to disable debuginfod, which can prevent GDB from hanging when debuginfod servers are unavailable.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.enabled.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[boolean]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.timeout.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The timeout in seconds for debuginfod server requests. Default is 30. Set to 0 for no timeout override (GDB defaults apply). Applies to local, runInTerminal, and SSH attach transports. This setting is not applied for pipeTransport; set DEBUGINFOD_TIMEOUT and DEBUGINFOD_MAXTIME in the debugger's environment manually.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Limit czasu w sekundach dla żądań debuginfod serwera. Wartość domyślna to 30. Ustaw wartość 0 dla braku zastąpienia limitu czasu (stosowane są wartości domyślne GDB). Dotyczy transportu dołączania lokalnego, runInTerminal i SSH. To ustawienie nie jest stosowane dla elementu pipeTransport; ustaw wartości DEBUGINFOD_TIMEOUT i DEBUGINFOD_MAXTIME ręcznie w środowisku debugera.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.properties.timeout.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[integer]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.debuginfod.type" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[object]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.environment.description" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Environment variables to add to the environment for the program. ]A;Example: [ { "name": "squid", "value": "clam" } ]5D;.]]></Val>
@@ -850,21 +892,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.enum[0]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.enum[0]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[throw]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[rzucać]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.enum[1]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
+      <Item ItemId=";debugExtensions.cppdbg.schema.definitions.cpp_schema.properties.unknownBreakpointHandling.enum[1]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[stop]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[zatrzymaj]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -925,12 +961,9 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[2]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
+      <Item ItemId=";debugExtensions.cppdbg.templates[0].fileExtensions[2]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[makefile]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[plik reguł programu make]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -994,12 +1027,9 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[2]" ItemType="0" PsrId="306" Leaf="true">
-        <Str Cat="Text">
+      <Item ItemId=";debugExtensions.cppdbg.templates[1].fileExtensions[2]" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[makefile]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[plik reguł programu make]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

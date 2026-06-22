@@ -177,8 +177,8 @@ namespace CppTests.Tests
         [Theory]
         [DependsOnTest(nameof(CompileKitchenSinkForExecution))]
         [RequiresTestSettings]
-        // TODO: Re-enable for VsDbg and Gdb_Gnu
-        [UnsupportedDebugger(SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW | SupportedDebugger.Gdb_Gnu | SupportedDebugger.Lldb | SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
+        // TODO: Re-enable for VsDbg
+        [UnsupportedDebugger(SupportedDebugger.Gdb_Cygwin | SupportedDebugger.Gdb_MinGW | SupportedDebugger.Lldb | SupportedDebugger.VsDbg, SupportedArchitecture.x86 | SupportedArchitecture.x64)]
         public void ExecutionAsyncBreak(ITestSettings settings)
         {
             this.TestPurpose("Verify break all should work run function");
@@ -191,6 +191,22 @@ namespace CppTests.Tests
             {
                 this.Comment("Configure launch");
                 runner.Launch(settings.DebuggerSettings, debuggee, "-fNonTerminating", "-fCalling");
+
+                // Use a function breakpoint to deterministically confirm the debuggee is running
+                // before sending async break. Without this, the pause can arrive before GDB has
+                // fully started the inferior, resulting in no stopped event.
+                this.Comment("Set a function breakpoint to verify the debuggee enters the loop");
+                FunctionBreakpoints funcBp = new FunctionBreakpoints("NonTerminating::DoSleep");
+                runner.SetFunctionBreakpoints(funcBp);
+
+                this.Comment("Start running and hit the function breakpoint");
+                runner.ExpectBreakpointAndStepToTarget(SinkHelper.NonTerminating, startLine: 37, targetLine: 38)
+                              .AfterConfigurationDone();
+
+                this.Comment("Remove the function breakpoint and continue so the debuggee is in run mode");
+                funcBp.Remove("NonTerminating::DoSleep");
+                runner.SetFunctionBreakpoints(funcBp);
+                runner.Continue();
 
                 this.Comment("Try to break all");
                 StoppedEvent breakAllEvent = new StoppedEvent(StoppedReason.Pause);
@@ -210,7 +226,7 @@ namespace CppTests.Tests
                 {
                     IFrameInspector firstFrame = threadInspector.Stack.First();
                     this.WriteLine(firstFrame.ToString());
-                    firstFrame.GetVariable("shouldExit").Value = "true";
+                    firstFrame.GetVariable("this", "shouldExit").Value = "1";
                 }
 
                 this.Comment("Continue running at the end of application");

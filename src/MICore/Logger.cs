@@ -112,6 +112,11 @@ namespace MICore
             {
                 WriteLineImpl(level, line);
             }
+
+            if (HostLogger.IsFeedbackLogEnabled)
+            {
+                HostLogger.WriteFeedbackLog(line);
+            }
         }
 
         /// <summary>
@@ -122,9 +127,10 @@ namespace MICore
         /// <param name="args">arguments to use in the format string</param>
         public void WriteLine(LogLevel level, string format, params object[] args)
         {
-            if (s_isEnabled)
+            if (s_isEnabled || HostLogger.IsFeedbackLogEnabled)
             {
-                WriteLineImpl(level, format, args);
+                string message = string.Format(CultureInfo.CurrentCulture, format, args);
+                WriteLine(level, message);
             }
         }
 
@@ -139,6 +145,11 @@ namespace MICore
             if (s_isEnabled)
             {
                 WriteTextBlockImpl(level, prefix, textBlock);
+            }
+
+            if (HostLogger.IsFeedbackLogEnabled)
+            {
+                HostLogger.WriteFeedbackLog((!string.IsNullOrEmpty(prefix) ? prefix : string.Empty) + textBlock);
             }
         }
 

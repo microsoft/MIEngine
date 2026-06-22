@@ -207,6 +207,29 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="EnableDebuginfod" type="xs:boolean" use="optional" default="false">
+      <xs:annotation>
+        <xs:documentation>
+          If true, GDB's debuginfod support is enabled, allowing automatic downloading of debug symbols.
+          Set to true to enable debuginfod. Default is false.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DebuginfodTimeout" use="optional" default="30">
+      <xs:annotation>
+        <xs:documentation>
+          The timeout in seconds for debuginfod server requests. Default is 30. Only applies when EnableDebuginfod is true.
+          A value of 0 means no timeout override is applied (GDB/libdebuginfod defaults are used).
+          This sets the DEBUGINFOD_TIMEOUT and DEBUGINFOD_MAXTIME environment variables on the GDB process.
+          Applies to local, runInTerminal, and SSH attach transports. This setting is not applied for pipeTransport; set DEBUGINFOD_TIMEOUT and DEBUGINFOD_MAXTIME in the debugger's environment manually.
+        </xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:int">
+          <xs:minInclusive value="0"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
   </xs:attributeGroup>
   <xs:element name="LocalLaunchOptions">
     <xs:annotation>
