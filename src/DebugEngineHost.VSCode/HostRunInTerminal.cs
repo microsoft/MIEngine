@@ -3,14 +3,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Microsoft.DebugEngineHost
 {
     public static class HostRunInTerminal
     {
-        private static Action<string, string, bool, List<string>, Dictionary<string, object>, Action<int?>, Action<string>> s_runInTerminalCallback;
+        private static Action<string, string, bool, List<string>, Dictionary<string, object>, Action<int?>, Action<string>>? s_runInTerminalCallback;
 
         /// <summary>
         /// Checks to see if RunInTerminal is available
@@ -18,7 +17,7 @@ namespace Microsoft.DebugEngineHost
         /// <returns></returns>
         public static bool IsRunInTerminalAvailable()
         {
-            return s_runInTerminalCallback != null;
+            return s_runInTerminalCallback is not null;
         }
 
         /// <summary>
@@ -26,7 +25,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         public static void RunInTerminal(string title, string cwd, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string> environmentVars, Action<int?> success, Action<string> failure)
         {
-            if (s_runInTerminalCallback != null)
+            if (s_runInTerminalCallback is not null)
             {
                 Dictionary<string, object> env = new Dictionary<string, object>();
                 foreach (var item in environmentVars)

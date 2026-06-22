@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 /*
@@ -51,18 +51,18 @@ namespace Microsoft.DebugEngineHost
     public class HostLogChannel : ILogChannel
     {
         private readonly Action<string> _log;
-        private StreamWriter _logFile;
+        private StreamWriter? _logFile;
         private LogLevel _minLevelToBeLogged;
 
         private readonly object _lock = new object();
 
-        private HostLogChannel() { }
+        private HostLogChannel() { _log = null!; }
 
-        public HostLogChannel(Action<string> logAction, string file, LogLevel logLevel)
+        public HostLogChannel(Action<string> logAction, string? file, LogLevel logLevel)
         {
             _log = logAction;
 
-            if (!string.IsNullOrEmpty(file))
+            if (!IsNullOrEmpty(file))
             {
                 _logFile = File.CreateText(file);
             }

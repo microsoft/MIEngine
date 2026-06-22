@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -17,7 +17,7 @@ namespace Microsoft.DebugEngineHost
     /// </summary>
     public sealed class HostWaitDialog : IDisposable
     {
-        private VSImpl.VSWaitDialog _theDialog;
+        private VSImpl.VSWaitDialog? _theDialog;
         public HostWaitDialog(string format, string caption)
         {
             try
@@ -31,7 +31,7 @@ namespace Microsoft.DebugEngineHost
         }
         public void ShowWaitDialog(string item)
         {
-            if (_theDialog != null)
+            if (_theDialog is not null)
             {
                 _theDialog.ShowWaitDialog(item);
             }
@@ -39,7 +39,7 @@ namespace Microsoft.DebugEngineHost
 
         public void EndWaitDialog()
         {
-            if (_theDialog != null)
+            if (_theDialog is not null)
             {
                 _theDialog.EndWaitDialog();
             }

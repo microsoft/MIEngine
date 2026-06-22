@@ -7,14 +7,14 @@ namespace Microsoft.DebugEngineHost
 {
     public static class HostLogger
     {
-        private static ILogChannel s_natvisLogChannel;
-        private static ILogChannel s_engineLogChannel;
+        private static ILogChannel? s_natvisLogChannel;
+        private static ILogChannel? s_engineLogChannel;
 
-        private static string s_engineLogFile;
+        private static string? s_engineLogFile;
 
         public static void EnableNatvisDiagnostics(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
-            if (s_natvisLogChannel == null)
+            if (s_natvisLogChannel is null)
             {
                 // TODO: Support writing natvis logs to a file.
                 s_natvisLogChannel = new HostLogChannel(callback, null, level);
@@ -23,23 +23,23 @@ namespace Microsoft.DebugEngineHost
 
         public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
-            if (s_engineLogChannel == null)
+            if (s_engineLogChannel is null)
             {
                 s_engineLogChannel = new HostLogChannel(callback, s_engineLogFile, level);
             }
         }
 
-        public static void SetEngineLogFile(string logFile)
+        public static void SetEngineLogFile(string? logFile)
         {
             s_engineLogFile = logFile;
         }
 
-        public static ILogChannel GetEngineLogChannel()
+        public static ILogChannel? GetEngineLogChannel()
         {
             return s_engineLogChannel;
         }
 
-        public static ILogChannel GetNatvisLogChannel()
+        public static ILogChannel? GetNatvisLogChannel()
         {
             return s_natvisLogChannel;
         }
