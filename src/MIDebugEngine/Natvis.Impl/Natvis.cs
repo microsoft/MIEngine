@@ -1063,7 +1063,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 if (!EvalCondition(loopCond, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                                     break;
                             }
-                            bool progress = ExecuteCustomListBody(loop.Items, ctx, variable, visualizer, localVars, children);
+                            bool progress = ExecuteCustomListBody(loop.Items, loop.ItemsElementName, ctx, variable, visualizer, localVars, children);
                             if (!progress && !ctx.Done)
                                 break; // no items emitted and no break — avoid infinite loop
                         }
@@ -2025,6 +2025,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// </summary>
         private bool ExecuteCustomListBody(
             object[] body,
+            ItemsChoiceType[] choices,
             CustomListLoopContext ctx,
             IVariableInformation variable,
             VisualizerInfo visualizer,
@@ -2033,11 +2034,16 @@ namespace Microsoft.MIDebugEngine.Natvis
         {
             bool progress = false;
 
+            // <If> and <Elseif> both deserialize to IfType; the parallel choice array records the
+            // original element name so the two can be told apart (defaults to If if unavailable).
+            ItemsChoiceType ChoiceAt(int i) =>
+                (choices != null && i < choices.Length) ? choices[i] : ItemsChoiceType.If;
+
             for (int idx = 0; idx < body.Length && !ctx.Done; idx++)
             {
                 var elem = body[idx];
 
-                if (elem is CustomListBreakType br)
+                if (elem is BreakType br)
                 {
                     // <Break Condition="expr"/>: stop the loop when the condition holds.
                     if (string.IsNullOrEmpty(br.Condition))
@@ -2049,7 +2055,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                     if (EvalCondition(condExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                         ctx.Done = true;
                 }
-                else if (elem is CustomListLoopItemType li)
+                else if (elem is CustomListItemType li)
                 {
                     // <Item Name="..." Condition="...">expr</Item>: emit a child variable.
                     if (li.Condition != null)
@@ -2081,7 +2087,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                         ctx.Done = true;
                     }
                 }
-                else if (elem is CustomListExecType exec)
+                else if (elem is ExecType exec)
                 {
                     // <Exec Condition="...">varName = expr</Exec>: update a local variable.
                     if (exec.Condition != null)
@@ -2113,19 +2119,27 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                     progress = true; // Exec advances loop state (e.g. iSpan++) even when no Item is emitted
                 }
-                else if (elem is CustomListIfType ifElem)
+                else if (elem is IfType ifElem)
                 {
-                    // <If> optionally followed by any number of <ElseIf>s and a final <Else>.
+                    // <If> optionally followed by any number of <Elseif>s and a final <Else>.
                     // Execute the first branch whose condition holds; consume all siblings.
+                    // <Elseif> shares IfType with <If>, so they are distinguished via the choice
+                    // array. A standalone <Elseif> (no preceding <If>) is malformed: warn and skip.
+                    if (ChoiceAt(idx) == ItemsChoiceType.Elseif)
+                    {
+                        _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, "CustomListItems: <Elseif> without a preceding <If>.");
+                        continue;
+                    }
+
                     string condExpr = SubstituteLocalVars(ifElem.Condition ?? "", localVars);
                     bool taken = !string.IsNullOrEmpty(condExpr) &&
                                  EvalCondition(condExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics);
 
                     if (taken && ifElem.Items != null)
-                        progress |= ExecuteCustomListBody(ifElem.Items, ctx, variable, visualizer, localVars, children);
+                        progress |= ExecuteCustomListBody(ifElem.Items, ifElem.ItemsElementName, ctx, variable, visualizer, localVars, children);
 
-                    // Consume any immediately following <ElseIf> elements.
-                    while (idx + 1 < body.Length && body[idx + 1] is CustomListElseIfType elseIfElem)
+                    // Consume any immediately following <Elseif> elements (IfType with choice == Elseif).
+                    while (idx + 1 < body.Length && body[idx + 1] is IfType elseIfElem && ChoiceAt(idx + 1) == ItemsChoiceType.Elseif)
                     {
                         idx++;
                         if (!taken)
@@ -2135,21 +2149,21 @@ namespace Microsoft.MIDebugEngine.Natvis
                                            EvalCondition(eiCond, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                             if (eiTaken && elseIfElem.Items != null)
                             {
-                                progress |= ExecuteCustomListBody(elseIfElem.Items, ctx, variable, visualizer, localVars, children);
+                                progress |= ExecuteCustomListBody(elseIfElem.Items, elseIfElem.ItemsElementName, ctx, variable, visualizer, localVars, children);
                                 taken = true;
                             }
                         }
                     }
 
                     // Consume an immediately following <Else> element.
-                    if (idx + 1 < body.Length && body[idx + 1] is CustomListElseType elseElem)
+                    if (idx + 1 < body.Length && body[idx + 1] is ElseType elseElem)
                     {
                         idx++;
                         if (!taken && elseElem.Items != null)
-                            progress |= ExecuteCustomListBody(elseElem.Items, ctx, variable, visualizer, localVars, children);
+                            progress |= ExecuteCustomListBody(elseElem.Items, elseElem.ItemsElementName, ctx, variable, visualizer, localVars, children);
                     }
                 }
-                else if (elem is CustomListLoopType nestedLoop)
+                else if (elem is LoopType nestedLoop)
                 {
                     // Nested <Loop [Condition="..."]>: drive it like the top-level loop.
                     if (nestedLoop.Items != null)
@@ -2168,7 +2182,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 if (!EvalCondition(loopCond, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                                     break;
                             }
-                            bool innerProgress = ExecuteCustomListBody(nestedLoop.Items, ctx, variable, visualizer, localVars, children);
+                            bool innerProgress = ExecuteCustomListBody(nestedLoop.Items, nestedLoop.ItemsElementName, ctx, variable, visualizer, localVars, children);
                             if (!innerProgress && !ctx.Done) break;
                             progress = true;
                         }

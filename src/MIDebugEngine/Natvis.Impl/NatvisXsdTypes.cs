@@ -519,7 +519,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
 
         private SkipType itemField;
 
-        private CustomListLoopType[] loopField;
+        private LoopType[] loopField;
 
         private bool optionalField;
 
@@ -570,7 +570,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("Loop")]
-        public CustomListLoopType[] Loop {
+        public LoopType[] Loop {
             get {
                 return this.loopField;
             }
@@ -660,8 +660,14 @@ namespace Microsoft.MIDebugEngine.Natvis {
     // ---- CustomListItems loop-body types ------------------------------------
     //
     // These types represent the body of a <Loop> element inside <CustomListItems>.
-    // The loop body is an ordered sequence of Item, Break, Exec, If, and Else elements.
-    // Nested Loop elements are also supported inside If/Else bodies.
+    // The loop body is an ordered sequence of Item, Break, Exec, If, Elseif, Else and
+    // Loop elements. Nested Loop elements are also supported inside If/Elseif/Else bodies.
+    //
+    // Per the natvis schema, <Elseif> shares IfType with <If> (it has the same content
+    // model). The XmlSerializer cannot map two element names to one type on its own, so the
+    // Items arrays use an XmlChoiceIdentifier (the parallel ItemsElementName array of
+    // ItemsChoiceType) to record which element name produced each entry; the loop engine
+    // reads it to tell an <If> from an <Elseif>.
 
     /// <summary>
     /// Represents an &lt;Item&gt; element inside a &lt;CustomListItems&gt; loop body.
@@ -672,7 +678,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
-    public partial class CustomListLoopItemType {
+    public partial class CustomListItemType {
         private string nameField;
         private string conditionField;
         private string valueField;
@@ -708,7 +714,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
-    public partial class CustomListBreakType {
+    public partial class BreakType {
         private string conditionField;
 
         /// <remarks/>
@@ -729,7 +735,7 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
-    public partial class CustomListExecType {
+    public partial class ExecType {
         private string conditionField;
         private string valueField;
 
@@ -751,16 +757,18 @@ namespace Microsoft.MIDebugEngine.Natvis {
     /// <summary>
     /// Represents an &lt;If&gt; element inside a &lt;CustomListItems&gt; loop body.
     /// The body is executed only when Condition is true; immediately following
-    /// &lt;ElseIf&gt; and &lt;Else&gt; elements provide alternative branches.
+    /// &lt;Elseif&gt; and &lt;Else&gt; elements provide alternative branches.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
     [System.SerializableAttribute()]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
-    public partial class CustomListIfType {
+    public partial class IfType {
         private string conditionField;
         private object[] itemsField;
+
+        private ItemsChoiceType[] itemsElementNameField;
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -770,57 +778,32 @@ namespace Microsoft.MIDebugEngine.Natvis {
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("Item",   typeof(CustomListLoopItemType))]
-        [System.Xml.Serialization.XmlElementAttribute("Break",  typeof(CustomListBreakType))]
-        [System.Xml.Serialization.XmlElementAttribute("Exec",   typeof(CustomListExecType))]
-        [System.Xml.Serialization.XmlElementAttribute("If",     typeof(CustomListIfType))]
-        [System.Xml.Serialization.XmlElementAttribute("ElseIf", typeof(CustomListElseIfType))]
-        [System.Xml.Serialization.XmlElementAttribute("Else",   typeof(CustomListElseType))]
-        [System.Xml.Serialization.XmlElementAttribute("Loop",   typeof(CustomListLoopType))]
+        [System.Xml.Serialization.XmlElementAttribute("Item",   typeof(CustomListItemType))]
+        [System.Xml.Serialization.XmlElementAttribute("Break",  typeof(BreakType))]
+        [System.Xml.Serialization.XmlElementAttribute("Exec",   typeof(ExecType))]
+        [System.Xml.Serialization.XmlElementAttribute("If",     typeof(IfType))]
+        [System.Xml.Serialization.XmlElementAttribute("Elseif", typeof(IfType))]
+        [System.Xml.Serialization.XmlElementAttribute("Else",   typeof(ElseType))]
+        [System.Xml.Serialization.XmlElementAttribute("Loop",   typeof(LoopType))]
+        [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemsElementName")]
         public object[] Items {
             get { return this.itemsField; }
             set { this.itemsField = value; }
         }
-    }
-
-    /// <summary>
-    /// Represents an &lt;ElseIf&gt; element that immediately follows an &lt;If&gt; or
-    /// another &lt;ElseIf&gt;.  Its body is executed when all preceding branch conditions
-    /// were false and this Condition holds.
-    /// </summary>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
-    [System.SerializableAttribute()]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
-    public partial class CustomListElseIfType {
-        private string conditionField;
-        private object[] itemsField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string Condition {
-            get { return this.conditionField; }
-            set { this.conditionField = value; }
-        }
-
-        /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("Item",   typeof(CustomListLoopItemType))]
-        [System.Xml.Serialization.XmlElementAttribute("Break",  typeof(CustomListBreakType))]
-        [System.Xml.Serialization.XmlElementAttribute("Exec",   typeof(CustomListExecType))]
-        [System.Xml.Serialization.XmlElementAttribute("If",     typeof(CustomListIfType))]
-        [System.Xml.Serialization.XmlElementAttribute("ElseIf", typeof(CustomListElseIfType))]
-        [System.Xml.Serialization.XmlElementAttribute("Else",   typeof(CustomListElseType))]
-        [System.Xml.Serialization.XmlElementAttribute("Loop",   typeof(CustomListLoopType))]
-        public object[] Items {
-            get { return this.itemsField; }
-            set { this.itemsField = value; }
+        // Parallel to Items: records which element name (If vs Elseif, etc.) produced each
+        // entry, since the schema maps both <If> and <Elseif> to the same IfType.
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public ItemsChoiceType[] ItemsElementName {
+            get { return this.itemsElementNameField; }
+            set { this.itemsElementNameField = value; }
         }
     }
 
     /// <summary>
     /// Represents an &lt;Else&gt; element that immediately follows an &lt;If&gt; or
-    /// &lt;ElseIf&gt; element.  Its body is executed when all preceding branch conditions
+    /// &lt;Elseif&gt; element.  Its body is executed when all preceding branch conditions
     /// were false.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
@@ -828,25 +811,37 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
-    public partial class CustomListElseType {
+    public partial class ElseType {
         private object[] itemsField;
 
+        private ItemsChoiceType[] itemsElementNameField;
+
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("Item",   typeof(CustomListLoopItemType))]
-        [System.Xml.Serialization.XmlElementAttribute("Break",  typeof(CustomListBreakType))]
-        [System.Xml.Serialization.XmlElementAttribute("Exec",   typeof(CustomListExecType))]
-        [System.Xml.Serialization.XmlElementAttribute("If",     typeof(CustomListIfType))]
-        [System.Xml.Serialization.XmlElementAttribute("ElseIf", typeof(CustomListElseIfType))]
-        [System.Xml.Serialization.XmlElementAttribute("Else",   typeof(CustomListElseType))]
-        [System.Xml.Serialization.XmlElementAttribute("Loop",   typeof(CustomListLoopType))]
+        [System.Xml.Serialization.XmlElementAttribute("Item",   typeof(CustomListItemType))]
+        [System.Xml.Serialization.XmlElementAttribute("Break",  typeof(BreakType))]
+        [System.Xml.Serialization.XmlElementAttribute("Exec",   typeof(ExecType))]
+        [System.Xml.Serialization.XmlElementAttribute("If",     typeof(IfType))]
+        [System.Xml.Serialization.XmlElementAttribute("Elseif", typeof(IfType))]
+        [System.Xml.Serialization.XmlElementAttribute("Else",   typeof(ElseType))]
+        [System.Xml.Serialization.XmlElementAttribute("Loop",   typeof(LoopType))]
+        [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemsElementName")]
         public object[] Items {
             get { return this.itemsField; }
             set { this.itemsField = value; }
         }
+
+        /// <remarks/>
+        // Parallel to Items: records which element name (If vs Elseif, etc.) produced each
+        // entry, since the schema maps both <If> and <Elseif> to the same IfType.
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public ItemsChoiceType[] ItemsElementName {
+            get { return this.itemsElementNameField; }
+            set { this.itemsElementNameField = value; }
+        }
     }
 
     /// <summary>
-    /// Represents a &lt;Loop&gt; element inside &lt;CustomListItems&gt; (or nested in If/ElseIf/Else).
+    /// Represents a &lt;Loop&gt; element inside &lt;CustomListItems&gt; (or nested in If/Elseif/Else).
     /// The optional Condition attribute acts as a while-guard: the loop stops as soon as it
     /// evaluates to false.  The body is also stopped by a &lt;Break&gt; element or when the
     /// size limit is reached.
@@ -856,9 +851,11 @@ namespace Microsoft.MIDebugEngine.Natvis {
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
-    public partial class CustomListLoopType {
+    public partial class LoopType {
         private string conditionField;
         private object[] itemsField;
+
+        private ItemsChoiceType[] itemsElementNameField;
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -868,17 +865,54 @@ namespace Microsoft.MIDebugEngine.Natvis {
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("Item",   typeof(CustomListLoopItemType))]
-        [System.Xml.Serialization.XmlElementAttribute("Break",  typeof(CustomListBreakType))]
-        [System.Xml.Serialization.XmlElementAttribute("Exec",   typeof(CustomListExecType))]
-        [System.Xml.Serialization.XmlElementAttribute("If",     typeof(CustomListIfType))]
-        [System.Xml.Serialization.XmlElementAttribute("ElseIf", typeof(CustomListElseIfType))]
-        [System.Xml.Serialization.XmlElementAttribute("Else",   typeof(CustomListElseType))]
-        [System.Xml.Serialization.XmlElementAttribute("Loop",   typeof(CustomListLoopType))]
+        [System.Xml.Serialization.XmlElementAttribute("Item",   typeof(CustomListItemType))]
+        [System.Xml.Serialization.XmlElementAttribute("Break",  typeof(BreakType))]
+        [System.Xml.Serialization.XmlElementAttribute("Exec",   typeof(ExecType))]
+        [System.Xml.Serialization.XmlElementAttribute("If",     typeof(IfType))]
+        [System.Xml.Serialization.XmlElementAttribute("Elseif", typeof(IfType))]
+        [System.Xml.Serialization.XmlElementAttribute("Else",   typeof(ElseType))]
+        [System.Xml.Serialization.XmlElementAttribute("Loop",   typeof(LoopType))]
+        [System.Xml.Serialization.XmlChoiceIdentifierAttribute("ItemsElementName")]
         public object[] Items {
             get { return this.itemsField; }
             set { this.itemsField = value; }
         }
+
+        /// <remarks/>
+        // Parallel to Items: records which element name (If vs Elseif, etc.) produced each
+        // entry, since the schema maps both <If> and <Elseif> to the same IfType.
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public ItemsChoiceType[] ItemsElementName {
+            get { return this.itemsElementNameField; }
+            set { this.itemsElementNameField = value; }
+        }
+    }
+
+    /// <summary>
+    /// Element-name discriminator for the loop-body <c>Items</c> arrays.  Because the schema
+    /// maps both &lt;If&gt; and &lt;Elseif&gt; to <c>IfType</c>, the deserializer can no longer be
+    /// told apart by runtime type; this parallel enum (populated via XmlChoiceIdentifier)
+    /// records the original element name for each entry.  Member names must match the element
+    /// names exactly.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.8.3928.0")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute(IncludeInSchema=false, Namespace="http://schemas.microsoft.com/vstudio/debugger/natvis/2010")]
+    public enum ItemsChoiceType {
+        /// <remarks/>
+        Item,
+        /// <remarks/>
+        Break,
+        /// <remarks/>
+        Exec,
+        /// <remarks/>
+        If,
+        /// <remarks/>
+        Elseif,
+        /// <remarks/>
+        Else,
+        /// <remarks/>
+        Loop,
     }
 
     // ---- End CustomListItems loop-body types ---------------------------------
