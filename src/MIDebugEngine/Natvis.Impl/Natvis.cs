@@ -1047,26 +1047,8 @@ namespace Microsoft.MIDebugEngine.Natvis
 
                     foreach (var loop in customList.Loop)
                     {
-                        if (loop?.Items == null || ctx.Done) continue;
-
-                        // Drive the loop: each call to ExecuteCustomListBody runs one full pass
-                        // through the loop body (Break -> Item(s) -> Exec, in document order).
-                        // The limit must cover fast-forwarding through startIndex items plus one
-                        // page of MAX_EXPAND items, capped to avoid runaway loops.
-                        long maxIter = Math.Min((long)startIndex + MAX_EXPAND + 1, 10000);
-                        for (long iter = 0; !ctx.Done && ctx.GlobalIndex < ctx.TotalSize && iter < maxIter; iter++)
-                        {
-                            // While-guard: stop if the loop condition is false.
-                            if (!string.IsNullOrEmpty(loop.Condition))
-                            {
-                                string loopCond = SubstituteLocalVars(loop.Condition, localVars);
-                                if (!EvalCondition(loopCond, variable, visualizer.ScopedNames, visualizer.Intrinsics))
-                                    break;
-                            }
-                            bool progress = ExecuteCustomListBody(loop.Items, loop.ItemsElementName, ctx, variable, visualizer, localVars, children);
-                            if (!progress && !ctx.Done)
-                                break; // no items emitted and no break — avoid infinite loop
-                        }
+                        if (ctx.Done) break;
+                        DriveLoop(loop, ctx, variable, visualizer, localVars, children);
                     }
                 }
             }
@@ -2019,6 +2001,45 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
 
         /// <summary>
+        /// Drives a single &lt;Loop&gt; element: runs its body once per iteration until a &lt;Break&gt;
+        /// fires (ctx.Done), the optional while-Condition becomes false, the size limit is reached,
+        /// a pass makes no progress, or the iteration cap is hit. Shared by the top-level loop and
+        /// nested &lt;Loop&gt; elements. Returns true if any pass made progress.
+        /// </summary>
+        private bool DriveLoop(
+            LoopType loop,
+            CustomListLoopContext ctx,
+            IVariableInformation variable,
+            VisualizerInfo visualizer,
+            Dictionary<string, string> localVars,
+            List<IVariableInformation> children)
+        {
+            bool progress = false;
+            if (loop?.Items == null)
+                return progress;
+
+            // Cap iterations to cover fast-forwarding through StartIndex items plus one page of
+            // MAX_EXPAND, with a hard ceiling of 10 000 guarding against malformed natvis where no
+            // <Size>/<Break> bounds the loop.
+            long maxIter = Math.Min((long)ctx.StartIndex + MAX_EXPAND + 1, 10000);
+            for (long iter = 0; !ctx.Done && ctx.GlobalIndex < ctx.TotalSize && iter < maxIter; iter++)
+            {
+                // While-guard: stop if the loop's Condition evaluates to false.
+                if (!string.IsNullOrEmpty(loop.Condition))
+                {
+                    string loopCond = SubstituteLocalVars(loop.Condition, localVars);
+                    if (!EvalCondition(loopCond, variable, visualizer.ScopedNames, visualizer.Intrinsics))
+                        break;
+                }
+                bool passProgress = ExecuteCustomListBody(loop.Items, loop.ItemsElementName, ctx, variable, visualizer, localVars, children);
+                if (!passProgress && !ctx.Done)
+                    break; // no items emitted and no break — avoid an infinite loop
+                progress = true;
+            }
+            return progress;
+        }
+
+        /// <summary>
         /// Executes one pass through a loop-body element sequence (Break / Item / Exec / If / Else).
         /// Returns true if at least one Item or nested body was processed, false if the pass produced
         /// no observable effect (used to detect infinite-loop conditions).
@@ -2183,28 +2204,8 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
                 else if (elem is LoopType nestedLoop)
                 {
-                    // Nested <Loop [Condition="..."]>: drive it like the top-level loop.
-                    if (nestedLoop.Items != null)
-                    {
-                        // Cap iterations at ctx.StartIndex + MAX_EXPAND + 1: that is the highest
-                        // GlobalIndex at which we could still emit or detect the page-full sentinel,
-                        // so any further iteration would be dead work.  The hard cap of 10 000 guards
-                        // against infinite loops in malformed natvis where TotalSize is not set.
-                        long maxInner = Math.Min((long)ctx.StartIndex + MAX_EXPAND + 1, 10000);
-                        for (long iter = 0; !ctx.Done && ctx.GlobalIndex < ctx.TotalSize && iter < maxInner; iter++)
-                        {
-                            // While-guard: stop if the loop condition is false.
-                            if (!string.IsNullOrEmpty(nestedLoop.Condition))
-                            {
-                                string loopCond = SubstituteLocalVars(nestedLoop.Condition, localVars);
-                                if (!EvalCondition(loopCond, variable, visualizer.ScopedNames, visualizer.Intrinsics))
-                                    break;
-                            }
-                            bool innerProgress = ExecuteCustomListBody(nestedLoop.Items, nestedLoop.ItemsElementName, ctx, variable, visualizer, localVars, children);
-                            if (!innerProgress && !ctx.Done) break;
-                            progress = true;
-                        }
-                    }
+                    // Nested <Loop [Condition="..."]>: drive it exactly like the top-level loop.
+                    progress |= DriveLoop(nestedLoop, ctx, variable, visualizer, localVars, children);
                 }
                 else
                 {
