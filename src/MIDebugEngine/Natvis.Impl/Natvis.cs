@@ -2115,7 +2115,15 @@ namespace Microsoft.MIDebugEngine.Natvis
                                 localVars[updatedVar] = normalized;
                             }
                         }
-                        catch (Exception) { /* keep the expression as-is if evaluation fails */ }
+                        catch (Exception e)
+                        {
+                            // The normalization evaluates the variable we just updated. If that throws,
+                            // the variable can't be evaluated -- and since the loop body and its
+                            // conditions use the same variable, the iteration can't continue meaningfully.
+                            // Log and stop the loop rather than emit error items or run to the cap.
+                            _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, "CustomListItems <Exec> normalization failed; stopping loop: " + e.Message);
+                            ctx.Done = true;
+                        }
                     }
                     progress = true; // Exec advances loop state (e.g. iSpan++) even when no Item is emitted
                 }
@@ -2187,6 +2195,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                             progress = true;
                         }
                     }
+                }
+                else
+                {
+                    // Unrecognised loop-body element. This should not occur for natvis that
+                    // validates against the schema (a stray <Else> without a preceding <If>
+                    // also lands here); log so unsupported/malformed elements are visible.
+                    _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, "CustomListItems loop body contains an unsupported element: " + elem?.GetType().Name);
                 }
             }
 
