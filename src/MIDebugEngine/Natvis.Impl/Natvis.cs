@@ -259,6 +259,10 @@ namespace Microsoft.MIDebugEngine.Natvis
         // Matches increment/decrement shorthand in <Exec>: ++i, i++, --i, i--
         // Groups: (1) prefix-op  (2) prefix-varname | (3) postfix-varname  (4) postfix-op
         private static readonly Regex s_execIncrDecr = new Regex(@"^\s*(?:(\+\+|--)(\w+)|(\w+)(\+\+|--))\s*$", RegexOptions.Compiled);
+        // Matches a plain (optionally signed) integer literal — used to decide whether an <Exec>
+        // result is a scalar safe to substitute back in place of its expression. Deliberately does
+        // NOT match hex (pointers "0x...") or any non-numeric display string.
+        private static readonly Regex s_integerLiteral = new Regex(@"^\s*-?\d+\s*$", RegexOptions.Compiled);
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
         private HostConfigurationStore _configStore;
@@ -1016,8 +1020,12 @@ namespace Microsoft.MIDebugEngine.Natvis
                         {
                             if (string.IsNullOrEmpty(v.Name)) continue;
                             string initVal = v.InitialValue ?? "0";
-                            // Resolve field names, template parameters and intrinsics in the initial value.
-                            localVars[v.Name] = ReplaceNamesInExpression(initVal, variable, visualizer.ScopedNames, visualizer.Intrinsics);
+                            // An InitialValue may reference earlier-declared <Variable>s (per natvis.xsd),
+                            // e.g. <Variable Name="next" InitialValue="cur->next"/>. Substitute those first
+                            // (the table is built in document order, so earlier names are already present),
+                            // then resolve field names, template parameters and intrinsics.
+                            string withLocals = SubstituteLocalVars(initVal, localVars);
+                            localVars[v.Name] = ReplaceNamesInExpression(withLocals, variable, visualizer.ScopedNames, visualizer.Intrinsics);
                         }
                     }
 
@@ -2133,16 +2141,18 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         // Normalise each updated variable to prevent unbounded growth across
                         // iterations: after each i++ the expression would otherwise grow as
-                        // "(((0)+1)+1)+1...". Evaluate it and store the scalar result so each
-                        // iteration starts from a compact literal. Skip pointer values ("0x...")
-                        // — those must remain as expressions, not substituted as address literals.
+                        // "(((0)+1)+1)+1...". Evaluate it and, ONLY when the result is a plain
+                        // integer literal (the counter case), store that literal so the next
+                        // iteration starts compact. Anything else must keep its expression:
+                        // GetExpressionValue runs FormatDisplayString, so a pointer/struct local
+                        // is rendered as "0x..." or a visualizer display string — storing that
+                        // (a type-less address or non-C++ text) would corrupt later substitutions.
                         try
                         {
                             string normalized = GetExpressionValue(localVars[updatedVar], variable, visualizer.ScopedNames, visualizer.Intrinsics);
-                            if (!string.IsNullOrEmpty(normalized) &&
-                                !normalized.TrimStart().StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                            if (IsScalarLiteral(normalized))
                             {
-                                localVars[updatedVar] = normalized;
+                                localVars[updatedVar] = normalized.Trim();
                             }
                         }
                         catch (Exception e)
@@ -2309,6 +2319,17 @@ namespace Microsoft.MIDebugEngine.Natvis
                 return varName;
             }
             return null;
+        }
+
+        /// <summary>
+        /// True when <paramref name="value"/> is a plain integer literal (optionally signed). Used
+        /// to decide whether an &lt;Exec&gt; result may be substituted back in place of its
+        /// expression: pointers ("0x...") and visualizer display strings are not scalar literals and
+        /// must keep their expression, or later substitutions/evaluations would be corrupted.
+        /// </summary>
+        internal static bool IsScalarLiteral(string value)
+        {
+            return !string.IsNullOrEmpty(value) && s_integerLiteral.IsMatch(value);
         }
 
         /// <summary>

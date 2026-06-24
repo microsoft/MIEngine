@@ -534,5 +534,40 @@ namespace MIDebugEngineUnitTests
             Natvis.ApplyExecToLocalVars("++i,", vars, out var unhandled);
             Assert.Empty(unhandled);
         }
+
+        // -- IsScalarLiteral (Exec normalization guard) -----------------------
+
+        [Fact]
+        public void IsScalarLiteral_PlainInteger_True()
+        {
+            Assert.True(Natvis.IsScalarLiteral("0"));
+            Assert.True(Natvis.IsScalarLiteral("42"));
+            Assert.True(Natvis.IsScalarLiteral("-5"));
+            Assert.True(Natvis.IsScalarLiteral("  7  "));
+        }
+
+        [Fact]
+        public void IsScalarLiteral_Pointer_False()
+        {
+            // Pointers render as hex; must NOT be collapsed into the local-var table.
+            Assert.False(Natvis.IsScalarLiteral("0x7fff1234"));
+            Assert.False(Natvis.IsScalarLiteral("0x0"));
+        }
+
+        [Fact]
+        public void IsScalarLiteral_DisplayStringOrNonInteger_False()
+        {
+            // FormatDisplayString output for visualized values must NOT be collapsed.
+            Assert.False(Natvis.IsScalarLiteral("{ size=3 }"));
+            Assert.False(Natvis.IsScalarLiteral("head"));
+            Assert.False(Natvis.IsScalarLiteral("1.5"));
+        }
+
+        [Fact]
+        public void IsScalarLiteral_Empty_False()
+        {
+            Assert.False(Natvis.IsScalarLiteral(""));
+            Assert.False(Natvis.IsScalarLiteral(null));
+        }
     }
 }
