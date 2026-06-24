@@ -2089,23 +2089,32 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
                 else if (elem is ExecType exec)
                 {
-                    // <Exec Condition="...">varName = expr</Exec>: update a local variable.
+                    // <Exec Condition="...">var = expr</Exec> (or "++var", or several
+                    // comma-separated assignments): update one or more local variables.
                     if (exec.Condition != null)
                     {
                         string condExpr = SubstituteLocalVars(exec.Condition, localVars);
                         if (!EvalCondition(condExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                             continue;
                     }
-                    string execExpr = SubstituteLocalVars(exec.Value?.Trim() ?? "", localVars);
-                    string updatedVar = ApplyExecToLocalVars(execExpr, localVars);
-                    // Normalise the stored expression to prevent unbounded growth across iterations.
-                    // After each i++, the expression would otherwise grow as "(((0)+1)+1)+1...".
-                    // Evaluate the new expression and replace it with the scalar result so that
-                    // each iteration starts from a compact literal (same principle as intrinsic-eval
-                    // caching). Skip normalisation for pointer values (starts with "0x") — those
-                    // must remain as expressions, not substituted as address literals.
-                    if (updatedVar != null)
+                    // Pass the raw <Exec> text: ApplyExecToLocalVars detects the assigned variable
+                    // name(s) and substitutes local vars on the right-hand side itself. A single
+                    // <Exec> may update several variables, comma-separated (e.g. "++idx, ++statptr").
+                    var updatedVars = ApplyExecToLocalVars(exec.Value?.Trim() ?? "", localVars, out List<string> unhandledExec);
+                    foreach (string seg in unhandledExec)
                     {
+                        // A segment we could not apply (unsupported form, or an undeclared
+                        // left-hand side) would otherwise silently do nothing; log it so the
+                        // omission is visible rather than producing a wrong/stuck traversal.
+                        _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, "CustomListItems <Exec> segment not applied (unsupported expression or undeclared variable): " + seg);
+                    }
+                    foreach (string updatedVar in updatedVars)
+                    {
+                        // Normalise each updated variable to prevent unbounded growth across
+                        // iterations: after each i++ the expression would otherwise grow as
+                        // "(((0)+1)+1)+1...". Evaluate it and store the scalar result so each
+                        // iteration starts from a compact literal. Skip pointer values ("0x...")
+                        // — those must remain as expressions, not substituted as address literals.
                         try
                         {
                             string normalized = GetExpressionValue(localVars[updatedVar], variable, visualizer.ScopedNames, visualizer.Intrinsics);
@@ -2117,12 +2126,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                         }
                         catch (Exception e)
                         {
-                            // The normalization evaluates the variable we just updated. If that throws,
+                            // The normalization evaluates a variable we just updated. If that throws,
                             // the variable can't be evaluated -- and since the loop body and its
                             // conditions use the same variable, the iteration can't continue meaningfully.
                             // Log and stop the loop rather than emit error items or run to the cap.
                             _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, "CustomListItems <Exec> normalization failed; stopping loop: " + e.Message);
                             ctx.Done = true;
+                            break;
                         }
                     }
                     progress = true; // Exec advances loop state (e.g. iSpan++) even when no Item is emitted
@@ -2237,9 +2247,41 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// The caller can use this to normalise the stored expression (evaluate it and replace
         /// with the scalar result) so that repeated increments do not cause unbounded growth.
         /// </returns>
-        internal static string ApplyExecToLocalVars(string execExpr, Dictionary<string, string> localVars)
+        internal static List<string> ApplyExecToLocalVars(string execExpr, Dictionary<string, string> localVars)
+            => ApplyExecToLocalVars(execExpr, localVars, out _);
+
+        internal static List<string> ApplyExecToLocalVars(string execExpr, Dictionary<string, string> localVars, out List<string> unhandled)
         {
-            if (string.IsNullOrEmpty(execExpr)) return null;
+            var updated = new List<string>();
+            unhandled = new List<string>();
+            if (string.IsNullOrEmpty(execExpr)) return updated;
+
+            // A single <Exec> may update several variables, comma-separated, e.g.
+            // "++idx, ++statptr" (common in the .natvis files shipped with VS). Split on
+            // top-level commas (not those inside parentheses/brackets) and apply each in order.
+            // Non-empty segments we cannot apply (unsupported form, or an undeclared left-hand
+            // side) are collected so the caller can log a warning rather than drop them silently.
+            foreach (string part in SplitTopLevelCommas(execExpr))
+            {
+                if (string.IsNullOrWhiteSpace(part))
+                    continue;
+                string varName = ApplySingleExec(part, localVars);
+                if (varName != null)
+                    updated.Add(varName);
+                else
+                    unhandled.Add(part.Trim());
+            }
+            return updated;
+        }
+
+        /// <summary>
+        /// Applies one assignment from an &lt;Exec&gt; block to the local-variable table:
+        /// "varName = rhs", or the "++"/"--" shorthand. Returns the updated variable name,
+        /// or null when the segment is empty or its left-hand side is not a declared local.
+        /// </summary>
+        private static string ApplySingleExec(string execExpr, Dictionary<string, string> localVars)
+        {
+            if (string.IsNullOrWhiteSpace(execExpr)) return null;
 
             // Check for increment/decrement shorthand: ++i, i++, --i, i--
             var mIncr = s_execIncrDecr.Match(execExpr);
@@ -2266,6 +2308,36 @@ namespace Microsoft.MIDebugEngine.Natvis
                 return varName;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Splits an expression on top-level commas — commas not nested inside parentheses
+        /// or square brackets — so a multi-assignment &lt;Exec&gt; like "++idx, ++statptr" is
+        /// separated while a comma inside a call such as "f(a, b)" is left intact.
+        /// </summary>
+        internal static IEnumerable<string> SplitTopLevelCommas(string expression)
+        {
+            if (string.IsNullOrEmpty(expression))
+                yield break;
+
+            int depth = 0;
+            int start = 0;
+            for (int i = 0; i < expression.Length; i++)
+            {
+                char c = expression[i];
+                if (c == '(' || c == '[')
+                    depth++;
+                else if (c == ')' || c == ']')
+                {
+                    if (depth > 0) depth--;
+                }
+                else if (c == ',' && depth == 0)
+                {
+                    yield return expression.Substring(start, i - start);
+                    start = i + 1;
+                }
+            }
+            yield return expression.Substring(start);
         }
 
         /// <summary>

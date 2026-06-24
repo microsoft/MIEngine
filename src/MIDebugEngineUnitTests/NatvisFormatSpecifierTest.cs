@@ -427,5 +427,112 @@ namespace MIDebugEngineUnitTests
             // After substituting iSpan, "[{getKey((0), 0)}]" still contains '{' -- fall back.
             Assert.Equal("[2]", Natvis.FormatCustomListItemName("[{getKey(iSpan, 0)}]", 2, vars));
         }
+
+        // -- ApplyExecToLocalVars — multiple assignments ----------------------
+
+        [Fact]
+        public void ApplyExecToLocalVars_MultipleIncrements_UpdatesAll()
+        {
+            // A single <Exec> can update several variables, e.g. "++idx, ++statptr".
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["idx"] = "0", ["statptr"] = "5" };
+            Natvis.ApplyExecToLocalVars("++idx, ++statptr", vars);
+            Assert.Equal("(0) + 1", vars["idx"]);
+            Assert.Equal("(5) + 1", vars["statptr"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_MultipleAssignments_UpdatesAllInOrder()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0", ["j"] = "10" };
+            Natvis.ApplyExecToLocalVars("i = i + 1, j = j - 1", vars);
+            Assert.Equal("(0) + 1", vars["i"]);
+            Assert.Equal("(10) - 1", vars["j"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_MultipleAssignments_ReturnsAllUpdatedNames()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["idx"] = "0", ["statptr"] = "5" };
+            var updated = Natvis.ApplyExecToLocalVars("++idx, ++statptr", vars);
+            Assert.Equal(2, updated.Count);
+            Assert.Contains("idx", updated);
+            Assert.Contains("statptr", updated);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_CommaInsideParens_NotSplit()
+        {
+            // The comma inside max(...) must not split the assignment into two.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            var updated = Natvis.ApplyExecToLocalVars("i = max(i, 5)", vars);
+            Assert.Single(updated);
+            Assert.Equal("max((0), 5)", vars["i"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_TrailingComma_EmptySegmentIgnored()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            var updated = Natvis.ApplyExecToLocalVars("++i,", vars);
+            Assert.Single(updated);
+            Assert.Equal("(0) + 1", vars["i"]);
+        }
+
+        // -- SplitTopLevelCommas ----------------------------------------------
+
+        [Fact]
+        public void SplitTopLevelCommas_TopLevel_Splits()
+        {
+            Assert.Equal(new[] { "a", "b", "c" }, System.Linq.Enumerable.ToArray(Natvis.SplitTopLevelCommas("a,b,c")));
+        }
+
+        [Fact]
+        public void SplitTopLevelCommas_InsideParens_NotSplit()
+        {
+            Assert.Equal(new[] { "f(a,b)", "c" }, System.Linq.Enumerable.ToArray(Natvis.SplitTopLevelCommas("f(a,b),c")));
+        }
+
+        [Fact]
+        public void SplitTopLevelCommas_InsideBrackets_NotSplit()
+        {
+            Assert.Equal(new[] { "arr[i,j]", "k" }, System.Linq.Enumerable.ToArray(Natvis.SplitTopLevelCommas("arr[i,j],k")));
+        }
+
+        [Fact]
+        public void SplitTopLevelCommas_NoComma_SingleSegment()
+        {
+            Assert.Equal(new[] { "ptr->next" }, System.Linq.Enumerable.ToArray(Natvis.SplitTopLevelCommas("ptr->next")));
+        }
+
+        // -- ApplyExecToLocalVars — unhandled segments are reported ------------
+
+        [Fact]
+        public void ApplyExecToLocalVars_UnsupportedSegment_ReportedAsUnhandled()
+        {
+            // A segment we cannot apply (here a function call) is reported as unhandled,
+            // while the recognised increment in the same <Exec> is still applied.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["idx"] = "0" };
+            var updated = Natvis.ApplyExecToLocalVars("++idx, frobnicate()", vars, out var unhandled);
+            Assert.Equal(new[] { "idx" }, System.Linq.Enumerable.ToArray(updated));
+            Assert.Equal(new[] { "frobnicate()" }, System.Linq.Enumerable.ToArray(unhandled));
+            Assert.Equal("(0) + 1", vars["idx"]);
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_UndeclaredLhs_ReportedAsUnhandled()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            Natvis.ApplyExecToLocalVars("other = 5", vars, out var unhandled);
+            Assert.Equal(new[] { "other = 5" }, System.Linq.Enumerable.ToArray(unhandled));
+        }
+
+        [Fact]
+        public void ApplyExecToLocalVars_TrailingComma_NotReportedAsUnhandled()
+        {
+            // An empty segment from a trailing comma must not be flagged as unhandled.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            Natvis.ApplyExecToLocalVars("++i,", vars, out var unhandled);
+            Assert.Empty(unhandled);
+        }
     }
 }
