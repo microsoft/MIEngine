@@ -6,10 +6,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Collections;
 using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.DebugEngineHost;
+using DebuggerDisplayAttribute = global::System.Diagnostics.DebuggerDisplayAttribute;
+using DebuggerTypeProxyAttribute = global::System.Diagnostics.DebuggerTypeProxyAttribute;
+using DebuggerBrowsableAttribute = global::System.Diagnostics.DebuggerBrowsableAttribute;
+using DebuggerBrowsableState = global::System.Diagnostics.DebuggerBrowsableState;
 
 namespace MICore
 {
@@ -39,7 +43,7 @@ namespace MICore
             throw new MIResultFormatException(name, this);
         }
 
-        public virtual bool TryFind(string name, out ResultValue result)
+        public virtual bool TryFind(string name, [NotNullWhen(true)] out ResultValue? result)
         {
             if (Contains(name))
             {
@@ -49,7 +53,7 @@ namespace MICore
             {
                 result = null;
             }
-            return result != null;
+            return result is not null;
         }
 
         public virtual bool Contains(string name)
@@ -100,7 +104,7 @@ namespace MICore
         /// <returns>The value of the property or null if it cannot be found</returns>
         public uint? TryFindUint(string name)
         {
-            ConstValue c;
+            ConstValue? c;
             if (!TryFind(name, out c))
             {
                 return null;
@@ -147,7 +151,7 @@ namespace MICore
         /// <returns>The value of the address or null if it can't be found</returns>
         public ulong? TryFindAddr(string name)
         {
-            ConstValue c;
+            ConstValue? c;
             if (!TryFind(name, out c))
             {
                 return null;
@@ -175,7 +179,7 @@ namespace MICore
 
         public string TryFindString(string name)
         {
-            ConstValue c;
+            ConstValue? c;
             if (!TryFind(name, out c))
             {
                 return string.Empty;
@@ -186,14 +190,14 @@ namespace MICore
         public T Find<T>(string name) where T : ResultValue
         {
             var c = Find(name);
-            if (c is T)
+            if (c is T t)
             {
-                return c as T;
+                return t;
             }
             throw new MIResultFormatException(name, this);
         }
 
-        public bool TryFind<T>(string name, out T result) where T : ResultValue
+        public bool TryFind<T>(string name, [NotNullWhen(true)] out T? result) where T : ResultValue
         {
             if (Contains(name))
             {
@@ -203,12 +207,12 @@ namespace MICore
             {
                 result = null;
             }
-            return result != null;
+            return result is not null;
         }
 
-        public T TryFind<T>(string name) where T : ResultValue
+        public T? TryFind<T>(string name) where T : ResultValue
         {
-            T result;
+            T? result;
             if (!TryFind(name, out result))
             {
                 return null;
@@ -279,7 +283,7 @@ namespace MICore
             {
                 get
                 {
-                    List<NamedResultValue> values = null;
+                    List<NamedResultValue>? values = null;
 
                     if (_value is ValueListValue)
                     {
@@ -307,7 +311,7 @@ namespace MICore
                         });
                     }
 
-                    return values?.ToArray();
+                    return values?.ToArray() ?? Array.Empty<NamedResultValue>();
                 }
             }
         }
@@ -410,7 +414,7 @@ namespace MICore
         /// </summary>
         /// <param name="requiredNames">The list of names that must be added to the TupleValue.</param>
         /// <param name="optionalNames">The list of names that will be added to the TupleValue if they exist in this TupleValue.</param>
-        public TupleValue Subset(IEnumerable<string> requiredNames, IEnumerable<string> optionalNames = null)
+        public TupleValue Subset(IEnumerable<string> requiredNames, IEnumerable<string>? optionalNames = null)
         {
             List<NamedResultValue> values = new List<NamedResultValue>();
 
@@ -422,11 +426,11 @@ namespace MICore
             }
 
             // Iterate the optional list and add the values of the name exists.
-            if (null != optionalNames)
+            if (optionalNames is not null)
             {
                 foreach (string name in optionalNames)
                 {
-                    ResultValue value;
+                    ResultValue? value;
                     if (this.TryFind(name, out value))
                     {
                         values.Add(new NamedResultValue(name, value));
@@ -566,7 +570,7 @@ namespace MICore
 
         public readonly ResultClass ResultClass;
 
-        public Results(ResultClass resultsClass, List<NamedResultValue> list = null)
+        public Results(ResultClass resultsClass, List<NamedResultValue>? list = null)
             : base(list ?? new List<NamedResultValue>())
         {
             ResultClass = resultsClass;
@@ -678,7 +682,6 @@ namespace MICore
             }
         }
 
-        private string _resultString;
         private Logger Logger { get; set; }
 
         public MIResults(Logger logger)
@@ -692,8 +695,8 @@ namespace MICore
         /// <param name="output"></param>
         public Results ParseCommandOutput(string output)
         {
-            _resultString = output.Trim();
-            int comma = _resultString.IndexOf(',');
+            string resultString = output.Trim();
+            int comma = resultString.IndexOf(',');
             Results results;
             ResultClass resultClass = ResultClass.None;
             if (comma < 0)
@@ -704,22 +707,22 @@ namespace MICore
             else
             {
                 resultClass = ParseResultClass(output.Substring(0, comma));
-                Span wholeString = new Span(_resultString);
-                results = ParseResultList(wholeString.AdvanceTo(comma + 1), resultClass);
+                Span wholeString = new Span(resultString);
+                results = ParseResultList(resultString, wholeString.AdvanceTo(comma + 1), resultClass);
             }
             return results;
         }
 
         public Results ParseResultList(string listStr, ResultClass resultClass = ResultClass.None)
         {
-            _resultString = listStr.Trim();
-            return ParseResultList(new Span(_resultString), resultClass);
+            string resultString = listStr.Trim();
+            return ParseResultList(resultString, new Span(resultString), resultClass);
         }
 
-        private Results ParseResultList(Span listStr, ResultClass resultClass = ResultClass.None)
+        private Results ParseResultList(string resultString, Span listStr, ResultClass resultClass = ResultClass.None)
         {
             Span rest;
-            var list = ParseResultList((Span s, ref int i) =>
+            var list = ParseResultList(resultString, (Span s, ref int i) =>
                 {
                     return true;
                 }, (Span s, ref int i) =>
@@ -735,8 +738,8 @@ namespace MICore
             }
             else
             {
-                ParseError("trailing chars", rest);
-                throw new MIResultFormatException(CreateErrorMessageFromSpan(rest), results);
+                ParseError(resultString, "trailing chars", rest);
+                throw new MIResultFormatException(CreateErrorMessageFromSpan(resultString, rest), results);
             }
         }
 
@@ -746,7 +749,7 @@ namespace MICore
             {
                 throw new ArgumentNullException(nameof(input));
             }
-            else if (string.IsNullOrEmpty(input))
+            else if (IsNullOrEmpty(input))
             {
                 return string.Empty;
             }
@@ -756,25 +759,8 @@ namespace MICore
             {
                 return input;
             }
-            _resultString = cstr;
             Span rest;
-            var s = ParseCString(new Span(cstr), out rest);
-            return s == null ? string.Empty : s.AsString;
-        }
-
-        private string ParseCString(Span input)
-        {
-            if (input.IsEmpty)
-            {
-                return string.Empty;
-            }
-
-            if (_resultString[input.Start] != '\"')   // not a Cstring, just return the string
-            {
-                return input.Extract(_resultString);
-            }
-            Span rest;
-            var s = ParseCString(input, out rest);
+            var s = ParseCString(cstr, new Span(cstr), out rest);
             return s == null ? string.Empty : s.AsString;
         }
 
@@ -782,30 +768,26 @@ namespace MICore
         /// value ==>const | tuple | list
         /// </summary>
         /// <returns></returns>
-        private ResultValue ParseValue(Span resultStr, out Span rest)
+        private ResultValue? ParseValue(string resultString, Span resultStr, out Span rest)
         {
-            ResultValue value = null;
             rest = Span.Empty;
             if (resultStr.IsEmpty)
             {
                 return null;
             }
-            switch (_resultString[resultStr.Start])
+            switch (resultString[resultStr.Start])
             {
                 case '\"':
-                    value = ParseCString(resultStr, out rest);
-                    break;
+                    return ParseCString(resultString, resultStr, out rest);
                 case '{':
-                    value = ParseTuple(resultStr, out rest);
-                    break;
+                    return ParseTuple(resultString, resultStr, out rest);
                 case '[':
-                    value = ParseList(resultStr, out rest);
-                    break;
+                    return ParseList(resultString, resultStr, out rest);
                 default:
-                    ParseError("unexpected char", resultStr);
+                    ParseError(resultString, "unexpected char", resultStr);
                     break;
             }
-            return value;
+            return null;
         }
 
         /// <summary>
@@ -816,30 +798,26 @@ namespace MICore
         ///     value -- const | tuple | tuplelist | list
         /// </summary>
         /// <returns></returns>
-        private ResultValue ParseResultValue(Span resultStr, out Span rest)
+        private ResultValue? ParseResultValue(string resultString, Span resultStr, out Span rest)
         {
-            ResultValue value = null;
             rest = Span.Empty;
             if (resultStr.IsEmpty)
             {
                 return null;
             }
-            switch (_resultString[resultStr.Start])
+            switch (resultString[resultStr.Start])
             {
                 case '\"':
-                    value = ParseCString(resultStr, out rest);
-                    break;
+                    return ParseCString(resultString, resultStr, out rest);
                 case '{':
-                    value = ParseResultTuple(resultStr, out rest);
-                    break;
+                    return ParseResultTuple(resultString, resultStr, out rest);
                 case '[':
-                    value = ParseList(resultStr, out rest);
-                    break;
+                    return ParseList(resultString, resultStr, out rest);
                 default:
-                    ParseError("unexpected char", resultStr);
+                    ParseError(resultString, "unexpected char", resultStr);
                     break;
             }
-            return value;
+            return null;
         }
 
         /// <summary>
@@ -853,19 +831,20 @@ namespace MICore
         /// <summary>
         /// result ==> variable "=" value
         /// </summary>
+        /// <param name="resultString">the original result string</param>
         /// <param name="resultStr">trimmed input string</param>
         /// <param name="rest">trimmed remainder after result</param>
-        private NamedResultValue ParseResult(Span resultStr, out Span rest)
+        private NamedResultValue? ParseResult(string resultString, Span resultStr, out Span rest)
         {
             rest = Span.Empty;
-            int equals = resultStr.IndexOf(_resultString, '=');
+            int equals = resultStr.IndexOf(resultString, '=');
             if (equals < 1)
             {
-                ParseError("variable not found", resultStr);
+                ParseError(resultString, "variable not found", resultStr);
                 return null;
             }
-            string name = resultStr.Prefix(equals).Extract(_resultString);
-            ResultValue value = ParseResultValue(resultStr.Advance(equals + 1), out rest);
+            string name = resultStr.Prefix(equals).Extract(resultString);
+            ResultValue? value = ParseResultValue(resultString, resultStr.Advance(equals + 1), out rest);
             if (value == null)
             {
                 return null;
@@ -890,13 +869,13 @@ namespace MICore
             }
         }
 
-        private ConstValue ParseCString(Span input, out Span rest)
+        private ConstValue? ParseCString(string resultString, Span input, out Span rest)
         {
             rest = input;
             StringBuilder output = new StringBuilder();
-            if (input.IsEmpty || _resultString[input.Start] != '\"')
+            if (input.IsEmpty || resultString[input.Start] != '\"')
             {
-                ParseError("Cstring expected", input);
+                ParseError(resultString, "Cstring expected", input);
                 return null;
             }
             int i = input.Start + 1;
@@ -904,12 +883,12 @@ namespace MICore
 
             for (; i < input.Extent; i++)
             {
-                char c = _resultString[i];
+                char c = resultString[i];
                 if (c == '\"')
                 {
                     // closing quote, so we are (probably) done
                     i++;
-                    if ((i < input.Extent) && (_resultString[i] == c))
+                    if ((i < input.Extent) && (resultString[i] == c))
                     {
                         // double quotes mean we emit a single quote, and carry on
                         ;
@@ -923,7 +902,7 @@ namespace MICore
                 else if (c == '\\')
                 {
                     // escaped character
-                    c = _resultString[++i];
+                    c = resultString[++i];
                     switch (c)
                     {
                         case 'n': c = '\n'; break;
@@ -933,11 +912,11 @@ namespace MICore
                             if (c >= '0' && c <= '3')
                             {
                                 i = i - 1;
-                                if (SpanOctalChars(_resultString, ref i, output))
+                                if (SpanOctalChars(resultString, ref i, output))
                                 {
                                     continue;   // handled the output of the octal-encoded chars
                                 }
-                                c = _resultString[i]; // just emit the '\\'
+                                c = resultString[i]; // just emit the '\\'
                             }
                             break;
                     }
@@ -946,7 +925,7 @@ namespace MICore
             }
             if (!endFound)
             {
-                ParseError("CString not terminated", input);
+                ParseError(resultString, "CString not terminated", input);
                 return null;
             }
             rest = input.AdvanceTo(i);
@@ -1003,14 +982,14 @@ namespace MICore
 
         private delegate bool EdgeCondition(Span s, ref int i);
 
-        private List<NamedResultValue> ParseResultList(EdgeCondition begin, EdgeCondition end, Span input, out Span rest)
+        private List<NamedResultValue>? ParseResultList(string resultString, EdgeCondition begin, EdgeCondition end, Span input, out Span rest)
         {
             rest = Span.Empty;
             List<NamedResultValue> list = new List<NamedResultValue>();
             int i = input.Start;
             if (!begin(input, ref i))
             {
-                ParseError("Unexpected opening character", input);
+                ParseError(resultString, "Unexpected opening character", input);
                 return null;
             }
             if (end(input, ref i))    // tuple is empty
@@ -1019,20 +998,20 @@ namespace MICore
                 return list;
             }
             input = input.AdvanceTo(i);
-            var item = ParseResult(input, out rest);
+            var item = ParseResult(resultString, input, out rest);
             if (item == null)
             {
-                ParseError("Result expected", input);
+                ParseError(resultString, "Result expected", input);
                 return null;
             }
             list.Add(item);
             input = rest;
-            while (!input.IsEmpty && _resultString[input.Start] == ',')
+            while (!input.IsEmpty && resultString[input.Start] == ',')
             {
-                item = ParseResult(input.Advance(1), out rest);
+                item = ParseResult(resultString, input.Advance(1), out rest);
                 if (item == null)
                 {
-                    ParseError("Result expected", input);
+                    ParseError(resultString, "Result expected", input);
                     return null;
                 }
                 list.Add(item);
@@ -1042,7 +1021,7 @@ namespace MICore
             i = input.Start;
             if (!end(input, ref i))    // tuple is not closed
             {
-                ParseError("Unexpected list termination", input);
+                ParseError(resultString, "Unexpected list termination", input);
                 rest = Span.Empty;
                 return null;
             }
@@ -1050,11 +1029,11 @@ namespace MICore
             return list;
         }
 
-        private List<NamedResultValue> ParseResultList(char begin, char end, Span input, out Span rest)
+        private List<NamedResultValue>? ParseResultList(string resultString, char begin, char end, Span input, out Span rest)
         {
-            return ParseResultList((Span s, ref int i) =>
+            return ParseResultList(resultString, (Span s, ref int i) =>
             {
-                if (_resultString[i] == begin)
+                if (resultString[i] == begin)
                 {
                     i++;
                     return true;
@@ -1062,7 +1041,7 @@ namespace MICore
                 return false;
             }, (Span s, ref int i) =>
             {
-                if (i < s.Extent && _resultString[i] == end)
+                if (i < s.Extent && resultString[i] == end)
                 {
                     i++;
                     return true;
@@ -1075,21 +1054,25 @@ namespace MICore
         /// tuple ==> "{}" | "{" result ( "," result )* "}" 
         /// </summary>
         /// <returns>if one tuple found a TupleValue, otherwise a ValueListValue of TupleValues</returns>
-        private ResultValue ParseResultTuple(Span input, out Span rest)
+        private ResultValue? ParseResultTuple(string resultString, Span input, out Span rest)
         {
-            var list = ParseResultList('{', '}', input, out rest);
+            var list = ParseResultList(resultString, '{', '}', input, out rest);
             if (list == null)
             {
                 return null;
             }
             var tlist = new List<ResultValue>();
             TupleValue v;
-            while (rest.StartsWith(_resultString, ",{"))
+            while (rest.StartsWith(resultString, ",{"))
             {
                 // a tuple list
                 v = new TupleValue(list);
                 tlist.Add(v);
-                list = ParseResultList('{', '}', rest.Advance(1), out rest);
+                list = ParseResultList(resultString, '{', '}', rest.Advance(1), out rest);
+                if (list == null)
+                {
+                    return null;
+                }
             }
             v = new TupleValue(list);
             if (tlist.Count != 0)
@@ -1103,9 +1086,9 @@ namespace MICore
         /// <summary>
         /// tuple ==> "{}" | "{" result ( "," result )* "}" 
         /// </summary>
-        private TupleValue ParseTuple(Span input, out Span rest)
+        private TupleValue? ParseTuple(string resultString, Span input, out Span rest)
         {
-            var list = ParseResultList('{', '}', input, out rest);
+            var list = ParseResultList(resultString, '{', '}', input, out rest);
             if (list == null)
             {
                 return null;
@@ -1116,65 +1099,65 @@ namespace MICore
         /// <summary>
         /// list ==> "[]" | "[" value ( "," value )* "]" | "[" result ( "," result )* "]"  
         /// </summary>
-        private ResultValue ParseList(Span input, out Span rest)
+        private ResultValue? ParseList(string resultString, Span input, out Span rest)
         {
             rest = Span.Empty;
-            if (_resultString[input.Start] != '[')
+            if (resultString[input.Start] != '[')
             {
-                ParseError("List expected", input);
+                ParseError(resultString, "List expected", input);
                 return null;
             }
-            if (_resultString[input.Start + 1] == ']')    // list is empty
+            if (resultString[input.Start + 1] == ']')    // list is empty
             {
                 rest = input.Advance(2);  // eat through the closing brace
                 return new ValueListValue(new List<ResultValue>());
             }
-            if (IsValueChar(_resultString[input.Start + 1]))
+            if (IsValueChar(resultString[input.Start + 1]))
             {
-                return ParseValueList(input, out rest);
+                return ParseValueList(resultString, input, out rest);
             }
             else
             {
-                return ParseResultList(input, out rest);
+                return ParseResultList(resultString, input, out rest);
             }
         }
 
         /// <summary>
         /// list ==>  "[" value ( "," value )* "]"   
         /// </summary>
-        private ValueListValue ParseValueList(Span input, out Span rest)
+        private ValueListValue? ParseValueList(string resultString, Span input, out Span rest)
         {
             rest = Span.Empty;
             List<ResultValue> list = new List<ResultValue>();
-            if (_resultString[input.Start] != '[')
+            if (resultString[input.Start] != '[')
             {
-                ParseError("List expected", input);
+                ParseError(resultString, "List expected", input);
                 return null;
             }
             input = input.Advance(1);
-            var item = ParseValue(input, out rest);
+            var item = ParseValue(resultString, input, out rest);
             if (item == null)
             {
-                ParseError("Value expected", input);
+                ParseError(resultString, "Value expected", input);
                 return null;
             }
             list.Add(item);
             input = rest;
-            while (!input.IsEmpty && _resultString[input.Start] == ',')
+            while (!input.IsEmpty && resultString[input.Start] == ',')
             {
-                item = ParseValue(input.Advance(1), out rest);
+                item = ParseValue(resultString, input.Advance(1), out rest);
                 if (item == null)
                 {
-                    ParseError("Value expected", input);
+                    ParseError(resultString, "Value expected", input);
                     return null;
                 }
                 list.Add(item);
                 input = rest;
             }
 
-            if (input.IsEmpty || _resultString[input.Start] != ']')    // list is not closed
+            if (input.IsEmpty || resultString[input.Start] != ']')    // list is not closed
             {
-                ParseError("List not terminated", input);
+                ParseError(resultString, "List not terminated", input);
                 rest = Span.Empty;
                 return null;
             }
@@ -1185,9 +1168,9 @@ namespace MICore
         /// <summary>
         /// list ==>  "[" result ( "," result )* "]"  
         /// </summary>
-        private ResultListValue ParseResultList(Span input, out Span rest)
+        private ResultListValue? ParseResultList(string resultString, Span input, out Span rest)
         {
-            var list = ParseResultList('[', ']', input, out rest);
+            var list = ParseResultList(resultString, '[', ']', input, out rest);
             if (list == null)
             {
                 return null;
@@ -1195,26 +1178,25 @@ namespace MICore
             return new ResultListValue(list);
         }
 
-        private void ParseError(string message, Span input)
+        private void ParseError(string resultString, string message, Span input)
         {
-            string result = CreateErrorMessageFromSpan(input);
+            string result = CreateErrorMessageFromSpan(resultString, input);
             Debug.Fail(message + ": " + result);
 
             Logger?.WriteLine(LogLevel.Error, String.Format(CultureInfo.CurrentCulture, "MI parsing error: {0}: \"{1}\"", message, result));
-
         }
 
         // The amount of characters to send to the UI upon an error.
         private static int PARSE_ERROR_MSG_LIMIT = 1000;
 
-        private string CreateErrorMessageFromSpan(Span input)
+        private string CreateErrorMessageFromSpan(string resultString, Span input)
         {
             if (input.Length > PARSE_ERROR_MSG_LIMIT)
             {
                 input = new Span(input.Start, PARSE_ERROR_MSG_LIMIT);
             }
 
-            return input.Extract(_resultString);
+            return input.Extract(resultString);
         }
     }
 }

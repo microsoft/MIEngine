@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Text;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
@@ -29,22 +28,22 @@ namespace MICore
         private const string Event_UnsupportedWindowsGdb = "VS/Diagnostics/Debugger/MIEngine/UnsupportedWindowsGdb";
         private const string Property_GdbVersion = "VS.Diagnostics.Debugger.MIEngine.GdbVersion";
 
-        public event EventHandler BreakModeEvent;
-        public event EventHandler RunModeEvent;
-        public event EventHandler ProcessExitEvent;
-        public event EventHandler DebuggerExitEvent;
-        public event EventHandler<DebuggerAbortedEventArgs> DebuggerAbortedEvent;
-        public event EventHandler<string> OutputStringEvent;
-        public event EventHandler EvaluationEvent;
-        public event EventHandler ErrorEvent;
-        public event EventHandler ModuleLoadEvent;  // occurs when stopped after a libraryLoadEvent
-        public event EventHandler LibraryLoadEvent; // a shared library was loaded
-        public event EventHandler BreakChangeEvent; // a breakpoint was changed
-        public event EventHandler BreakCreatedEvent; // a breakpoint was created
-        public event EventHandler ThreadCreatedEvent;
-        public event EventHandler ThreadExitedEvent;
-        public event EventHandler ThreadGroupExitedEvent;
-        public event EventHandler<ResultEventArgs> TelemetryEvent;
+        public event EventHandler? BreakModeEvent;
+        public event EventHandler? RunModeEvent;
+        public event EventHandler? ProcessExitEvent;
+        public event EventHandler? DebuggerExitEvent;
+        public event EventHandler<DebuggerAbortedEventArgs>? DebuggerAbortedEvent;
+        public event EventHandler<string>? OutputStringEvent;
+        public event EventHandler? EvaluationEvent;
+        public event EventHandler? ErrorEvent;
+        public event EventHandler? ModuleLoadEvent;  // occurs when stopped after a libraryLoadEvent
+        public event EventHandler? LibraryLoadEvent; // a shared library was loaded
+        public event EventHandler? BreakChangeEvent; // a breakpoint was changed
+        public event EventHandler? BreakCreatedEvent; // a breakpoint was created
+        public event EventHandler? ThreadCreatedEvent;
+        public event EventHandler? ThreadExitedEvent;
+        public event EventHandler? ThreadGroupExitedEvent;
+        public event EventHandler<ResultEventArgs>? TelemetryEvent;
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
         private MIResults _miResults;
@@ -80,10 +79,10 @@ namespace MICore
         public LaunchOptions LaunchOptions { get { return this._launchOptions; } }
 
         private Queue<Func<Task>> _internalBreakActions = new Queue<Func<Task>>();
-        private TaskCompletionSource<object> _internalBreakActionCompletionSource;
-        private TaskCompletionSource<object> _consoleDebuggerInitializeCompletionSource = new TaskCompletionSource<object>();
-        private LinkedList<string> _initializationLog = new LinkedList<string>();
-        private LinkedList<string> _initialErrors = new LinkedList<string>();
+        private TaskCompletionSource<object?>? _internalBreakActionCompletionSource;
+        private TaskCompletionSource<object?>? _consoleDebuggerInitializeCompletionSource = new TaskCompletionSource<object?>();
+        private LinkedList<string>? _initializationLog = new LinkedList<string>();
+        private LinkedList<string>? _initialErrors = new LinkedList<string>();
         private int _localDebuggerPid = -1;
 
         protected bool _connected;
@@ -123,7 +122,7 @@ namespace MICore
             { }
         }
 
-        private ITransport _transport;
+        private ITransport? _transport;
         private readonly CommandLock _commandLock = new CommandLock();
 
         /// <summary>
@@ -136,12 +135,12 @@ namespace MICore
         /// Message used in any DebuggerDisposedExceptions once the debugger is closed. Setting
         /// this to non-null indicates that the debugger is now closed. It is only set once.
         /// </summary>
-        private string _closeMessage;
+        private string? _closeMessage;
 
         /// <summary>
-        /// [Optional] If a console command is being executed, list where we append the output
+        /// If a console command is being executed, list where we append the output
         /// </summary>
-        private StringBuilder _consoleCommandOutput;
+        private StringBuilder? _consoleCommandOutput;
 
         private bool _pendingInternalBreak;
         internal bool IsRequestingInternalAsyncBreak
@@ -153,7 +152,7 @@ namespace MICore
         }
 
         private bool _waitingToStop;
-        private Timer _breakTimer = null;
+        private Timer? _breakTimer = null;
         private int _retryCount;
         private const int BREAK_DELTA = 3000;   // millisec before trying to break again
         private const int BREAK_RETRY_MAX = 3;  // maximum times to retry
@@ -198,7 +197,7 @@ namespace MICore
             return false;
         }
 
-        private void RetryBreak(object o)
+        private void RetryBreak(object? o)
         {
             lock (_internalBreakActions)
             {
@@ -231,7 +230,7 @@ namespace MICore
                 {
                     if (_internalBreakActionCompletionSource == null)
                     {
-                        _internalBreakActionCompletionSource = new TaskCompletionSource<object>();
+                        _internalBreakActionCompletionSource = new TaskCompletionSource<object?>();
                     }
                     _internalBreakActions.Enqueue(func);
 
@@ -369,9 +368,9 @@ namespace MICore
         /// <returns>Returns true if the process is continued and we should not enter break state, returns false if the process is stopped and we should enter break state.</returns>
         private async Task<bool> DoInternalBreakActions(bool fIsAsyncBreak)
         {
-            TaskCompletionSource<object> source = null;
-            Func<Task> item = null;
-            Exception firstException = null;
+            TaskCompletionSource<object?>? source = null;
+            Func<Task>? item = null;
+            Exception? firstException = null;
             while (true)
             {
                 lock (_internalBreakActions)
@@ -431,7 +430,7 @@ namespace MICore
             return processContinued;
         }
 
-        public void Init(ITransport transport, LaunchOptions options, HostWaitLoop waitLoop = null)
+        public void Init(ITransport transport, LaunchOptions options, HostWaitLoop? waitLoop = null)
         {
             _lastCommandId = 1000;
             _transport = transport;
@@ -587,8 +586,8 @@ namespace MICore
         protected bool IsLocalLaunchUsingServer()
         {
             return (_launchOptions is LocalLaunchOptions localLaunchOptions &&
-                (!String.IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress) ||
-                 !String.IsNullOrWhiteSpace(localLaunchOptions.DebugServer)));
+                (!IsNullOrWhiteSpace(localLaunchOptions.MIDebuggerServerAddress) ||
+                 !IsNullOrWhiteSpace(localLaunchOptions.DebugServer)));
         }
 
         internal bool IsLocalGdbTarget()
@@ -941,7 +940,7 @@ namespace MICore
                     if (_initializationLog != null)
                     {
                         _initializationLog.AddLast(line);
-                        if (string.IsNullOrEmpty(_gdbVersion))
+                        if (IsNullOrEmpty(_gdbVersion))
                         {
                             TryInitializeGdbVersion(line);
                         }
@@ -973,7 +972,7 @@ namespace MICore
             }
         }
 
-        public void OnDebuggerProcessExit(/*OPTIONAL*/ string exitCode)
+        public void OnDebuggerProcessExit(string? exitCode)
         {
             // GDB has exited. Cleanup. Only let one thread perform the cleanup
             if (Interlocked.CompareExchange(ref _exiting, 1, 0) == 0)
@@ -1012,7 +1011,7 @@ namespace MICore
 
 
                 string message;
-                if (string.IsNullOrEmpty(exitCode))
+                if (IsNullOrEmpty(exitCode))
                     message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_UnknownCode, this.MICommandFactory.Name);
                 else
                     message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_MIDebuggerExited_WithCode, this.MICommandFactory.Name, exitCode);
@@ -1050,7 +1049,7 @@ namespace MICore
             }
 
             int majorVersion = 0;
-            if (!string.IsNullOrWhiteSpace(_gdbVersion))
+            if (!IsNullOrWhiteSpace(_gdbVersion))
             {
                 int.TryParse(_gdbVersion.Split('.').FirstOrDefault(), out majorVersion);
             }
@@ -1111,7 +1110,7 @@ namespace MICore
 
         // a Token is a sequence of decimal digits followed by something else
         // returns null if not a token, or not followed by something else
-        private string ParseToken(ref string cmd)
+        private string? ParseToken(ref string cmd)
         {
             if (char.IsDigit(cmd, 0))
             {
@@ -1157,7 +1156,7 @@ namespace MICore
             {
                 if (_expectedResultClass != ResultClass.None && _expectedResultClass != results.ResultClass)
                 {
-                    string miError = null;
+                    string miError;
                     if (results.ResultClass == ResultClass.error)
                     {
                         // Fixes: https://github.com/microsoft/vscode-cpptools/issues/2492
@@ -1241,7 +1240,7 @@ namespace MICore
             }
             else
             {
-                string token = ParseToken(ref line);
+                string? token = ParseToken(ref line);
                 char c = line[0];
                 string noprefix = line.Substring(1).Trim();
 
@@ -1251,7 +1250,7 @@ namespace MICore
                     if (c == '^')
                     {
                         uint id = uint.Parse(token, CultureInfo.InvariantCulture);
-                        WaitingOperationDescriptor waitingOperation = null;
+                        WaitingOperationDescriptor? waitingOperation = null;
                         lock (_waitingOperations)
                         {
                             if (_waitingOperations.TryGetValue(id, out waitingOperation))
@@ -1273,7 +1272,7 @@ namespace MICore
                         uint id = uint.Parse(token, CultureInfo.InvariantCulture);
                         lock (_waitingOperations)
                         {
-                            WaitingOperationDescriptor waitingOperation;
+                            WaitingOperationDescriptor? waitingOperation;
                             if (_waitingOperations.TryGetValue(id, out waitingOperation) &&
                                 line == waitingOperation.Command)
                             {
@@ -1317,7 +1316,7 @@ namespace MICore
             Debug.WriteLine("DBG:Unknown command: {0}", cmd);
         }
 
-        private void OnResult(string cmd, string token)
+        private void OnResult(string cmd, string? token)
         {
             uint id = token != null ? uint.Parse(token, CultureInfo.InvariantCulture) : 0;
             Results results = _miResults.ParseCommandOutput(cmd);
@@ -1494,7 +1493,7 @@ namespace MICore
         public string GetLastSentCommandName()
         {
             string lastCommandText = _lastCommandText;
-            if (string.IsNullOrEmpty(lastCommandText))
+            if (IsNullOrEmpty(lastCommandText))
             {
                 // We haven't sent any commands yet
                 return string.Empty;
@@ -1571,7 +1570,7 @@ namespace MICore
             string threadGroupId = results.TryFindString("id");
             bool isThreadGroupEmpty = false;
 
-            if (!String.IsNullOrEmpty(threadGroupId))
+            if (!IsNullOrEmpty(threadGroupId))
             {
                 lock (_debuggeePids)
                 {
@@ -1619,7 +1618,7 @@ namespace MICore
 
         private void SendToTransport(string cmd)
         {
-            ITransport transport = _transport;
+            ITransport? transport = _transport;
             if (transport is null)
             {
                 Debug.Fail("Invalid: `SendToTransport` called before `Init`");
@@ -1640,7 +1639,7 @@ namespace MICore
         public static ulong ParseAddr(string addr, bool throwOnError = false)
         {
             ulong res = 0;
-            if (string.IsNullOrEmpty(addr))
+            if (IsNullOrEmpty(addr))
             {
                 if (throwOnError)
                 {
@@ -1676,7 +1675,7 @@ namespace MICore
         public static uint ParseUint(string str, bool throwOnError = false)
         {
             uint value = 0;
-            if (string.IsNullOrEmpty(str))
+            if (IsNullOrEmpty(str))
             {
                 if (throwOnError)
                 {
@@ -1719,9 +1718,9 @@ namespace MICore
     public class DebuggerAbortedEventArgs
     {
         public readonly string Message;
-        public readonly string /*OPTIONAL*/ ExitCode;
+        public readonly string? ExitCode;
 
-        public DebuggerAbortedEventArgs(string message, string exitCode)
+        public DebuggerAbortedEventArgs(string message, string? exitCode)
         {
             Debug.Assert(message != null, "Invalid argument");
             this.Message = message;

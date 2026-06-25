@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text;
@@ -81,7 +80,7 @@ namespace MICore
             return commandFactory;
         }
 
-        public static string SpanNextAddr(string line, out ulong addr)
+        public static string? SpanNextAddr(string line, out ulong addr)
         {
             addr = 0;
             char[] endOfNum = { ' ', '\t', '\"' };
@@ -483,7 +482,7 @@ namespace MICore
             return requiresQuotes;
         }
 
-        public virtual async Task<Results> BreakInsert(string filename, bool useUnixFormat, uint line, string condition, bool enabled, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string filename, bool useUnixFormat, uint line, string condition, bool enabled, IEnumerable<Checksum>? checksums = null, ResultClass resultClass = ResultClass.done)
         {
             StringBuilder cmd = await BuildBreakInsert(condition, enabled);
 
@@ -533,7 +532,7 @@ namespace MICore
 
         public virtual bool SupportsDataBreakpoints { get { return false; } }
 
-        public virtual async Task<TupleValue> BreakInfo(string bkptno)
+        public virtual async Task<TupleValue?> BreakInfo(string bkptno)
         {
             Results bindResult = await _debugger.CmdAsync("-break-info " + bkptno, ResultClass.None);
             if (bindResult.ResultClass != ResultClass.done)
@@ -563,7 +562,7 @@ namespace MICore
 
         public virtual async Task BreakCondition(string bkptno, string expr)
         {
-            if (string.IsNullOrWhiteSpace(expr))
+            if (IsNullOrWhiteSpace(expr))
             {
                 expr = string.Empty;
             }
@@ -632,7 +631,7 @@ namespace MICore
 
         #region Miscellaneous
 
-        public virtual Task<string[]> AutoComplete(string command, int threadId, uint frameLevel)
+        public virtual Task<string[]?> AutoComplete(string command, int threadId, uint frameLevel)
         {
             throw new NotImplementedException();
         }
@@ -708,9 +707,9 @@ namespace MICore
             return MICore.AsyncBreakSignal.None;
         }
 
-        public Results IsModuleLoad(string cmd)
+        public Results? IsModuleLoad(string cmd)
         {
-            Results results = null;
+            Results? results = null;
             if (cmd.StartsWith("library-loaded,", StringComparison.Ordinal))
             {
                 MIResults res = new MIResults(_debugger.Logger);
