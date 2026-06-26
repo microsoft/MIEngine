@@ -319,28 +319,24 @@ namespace Microsoft.MIDebugEngine
             {
                 if (eventObject is AD7ProgramCreateEvent)
                 {
-                    Exception exception = null;
-
                     try
                     {
                         _engineCallback.OnLoadComplete();
-                        // At this point breakpoints and exception settings have been sent down, so we can resume the target
-                        _pollThread.RunOperation(() =>
-                        {
-                            return _debuggedProcess.ResumeFromLaunch();
-                        });
+
+                        // Resume the target on the worker thread without blocking the UI thread this runs on.
+                        // Resume faults are reported via onError, since the SDM drops errors returned from here.
+                        _pollThread.PostAsyncOperation(
+                            () => _debuggedProcess.ResumeFromLaunch(),
+                            (exception) =>
+                            {
+                                SendStartDebuggingError(exception);
+                                _debuggedProcess.Terminate();
+                            });
                     }
                     catch (Exception e)
                     {
-                        exception = e;
-                        // Return from the catch block so that we can let the exception unwind - the stack can get kind of big
-                    }
-
-                    if (exception != null)
-                    {
-                        // If something goes wrong, report the error and then stop debugging. The SDM will drop errors
-                        // from ContinueFromSynchronousEvent, so we want to deal with them ourself.
-                        SendStartDebuggingError(exception);
+                        // Report synchronous failures ourselves, since the SDM drops errors returned from here.
+                        SendStartDebuggingError(e);
                         _debuggedProcess.Terminate();
                     }
 
