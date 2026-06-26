@@ -37,6 +37,12 @@ namespace Microsoft.MIDebugEngine
             /// Delegate that was added via 'RunOperation'. Is of type 'Operation' or 'AsyncOperation'
             /// </summary>
             public readonly Delegate Target;
+
+            /// <summary>
+            /// Handler invoked on the worker thread if the operation faults. Only set for PostAsyncOperation.
+            /// </summary>
+            public Action<Exception> ErrorHandler;
+
             public ExceptionDispatchInfo ExceptionDispatchInfo;
             public Task Task;
             private bool _isStarted;
@@ -121,6 +127,20 @@ namespace Microsoft.MIDebugEngine
             SetOperationInternalWithProgress(op, text, canTokenSource);
         }
 
+        /// <summary>
+        /// Send an async operation to the worker thread, claiming the running-op slot but returning without
+        /// waiting for it to complete. Later operations still serialize behind it. Faults are reported to
+        /// <paramref name="onError"/>.
+        /// </summary>
+        public void PostAsyncOperation(AsyncOperation op, Action<Exception> onError)
+        {
+            if (op == null)
+                throw new ArgumentNullException(nameof(op));
+            if (onError == null)
+                throw new ArgumentNullException(nameof(onError));
+
+            PostAsyncOperationInternal(op, onError);
+        }
 
         public void Close()
         {
@@ -189,6 +209,27 @@ namespace Microsoft.MIDebugEngine
                 }
             }
         }
+
+        internal void PostAsyncOperationInternal(AsyncOperation op, Action<Exception> onError)
+        {
+            // If this is called on the Worker thread it will deadlock
+            Debug.Assert(!IsPollThread());
+
+            while (true)
+            {
+                if (_isClosed)
+                    throw new ObjectDisposedException("WorkerThread");
+
+                // Wait for the slot so this serializes behind any in-flight operation.
+                _runningOpCompleteEvent.WaitOne();
+
+                if (TryPostAsyncOperationInternal(op, onError))
+                {
+                    return;
+                }
+            }
+        }
+
         public void PostOperation(Operation op)
         {
             if (op == null)
@@ -276,7 +317,28 @@ namespace Microsoft.MIDebugEngine
             return false;
         }
 
+        private bool TryPostAsyncOperationInternal(AsyncOperation op, Action<Exception> onError)
+        {
+            lock (_eventLock)
+            {
+                if (_isClosed)
+                    throw new ObjectDisposedException("WorkerThread");
 
+                if (_runningOp == null)
+                {
+                    _runningOpCompleteEvent.Reset();
+
+                    _runningOp = new OperationDescriptor(op) { ErrorHandler = onError };
+
+                    _opSet.Set();
+
+                    // Unlike TrySetOperationInternal, do not wait for completion; faults are routed to onError.
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         // Thread routine for the poll loop. It handles calls coming in from the debug engine as well as polling for debug events.
         private void ThreadFunc()
@@ -333,11 +395,20 @@ namespace Microsoft.MIDebugEngine
 
                         if (!completeAsync)
                         {
+                            // Capture the fault before clearing the slot so a synchronous throw is still reported.
+                            Action<Exception> errorHandler = runningOp.ErrorHandler;
+                            ExceptionDispatchInfo exceptionDispatchInfo = runningOp.ExceptionDispatchInfo;
+
                             runningOp.MarkComplete();
 
                             Debug.Assert(_runningOp == runningOp, "How did m_runningOp change?");
                             _runningOp = null;
                             _runningOpCompleteEvent.Set();
+
+                            if (errorHandler != null && exceptionDispatchInfo != null)
+                            {
+                                InvokeErrorHandler(errorHandler, exceptionDispatchInfo.SourceException);
+                            }
                         }
                     }
 
@@ -389,8 +460,33 @@ namespace Microsoft.MIDebugEngine
                 }
             }
             _runningOp.MarkComplete();
+
+            // Capture the fault before clearing the slot so it is routed to the handler, not discarded.
+            Action<Exception> errorHandler = _runningOp.ErrorHandler;
+            ExceptionDispatchInfo exceptionDispatchInfo = _runningOp.ExceptionDispatchInfo;
+
             _runningOp = null;
             _runningOpCompleteEvent.Set();
+
+            if (errorHandler != null && exceptionDispatchInfo != null)
+            {
+                InvokeErrorHandler(errorHandler, exceptionDispatchInfo.SourceException);
+            }
+        }
+
+        private void InvokeErrorHandler(Action<Exception> errorHandler, Exception exception)
+        {
+            try
+            {
+                errorHandler(exception);
+            }
+            catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: false))
+            {
+                if (PostedOperationErrorEvent != null)
+                {
+                    PostedOperationErrorEvent(this, e);
+                }
+            }
         }
 
         internal bool IsPollThread()
