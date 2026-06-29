@@ -19,6 +19,11 @@ namespace MICore
         private int _currentThreadId = 0;
         private uint _currentFrameLevel = 0;
 
+        public GdbMICommandFactory(Debugger debugger)
+            : base(debugger)
+        {
+        }
+
         public override string Name
         {
             get { return "GDB"; }

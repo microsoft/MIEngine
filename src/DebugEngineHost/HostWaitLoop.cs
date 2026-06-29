@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -14,7 +14,7 @@ namespace Microsoft.DebugEngineHost
     public sealed class HostWaitLoop
     {
         private readonly object _progressLock = new object();
-        private VSImpl.VsWaitLoop _vsWaitLoop;
+        private VSImpl.VsWaitLoop? _vsWaitLoop;
 
         public HostWaitLoop(string message)
         {
@@ -34,7 +34,7 @@ namespace Microsoft.DebugEngineHost
         /// <param name="text">Text to set.</param>
         public void SetText(string text)
         {
-            _vsWaitLoop.SetText(text);
+            _vsWaitLoop?.SetText(text);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Microsoft.DebugEngineHost
         /// <exception cref="FileNotFoundException">Thrown by the JIT if Visual Studio is not installed</exception>
         public void Wait(WaitHandle launchCompleteHandle, CancellationTokenSource cancellationSource)
         {
-            if (_vsWaitLoop != null)
+            if (_vsWaitLoop is not null)
             {
                 _vsWaitLoop.Wait(launchCompleteHandle, cancellationSource);
 
@@ -65,7 +65,7 @@ namespace Microsoft.DebugEngineHost
         {
             lock (_progressLock)
             {
-                if (_vsWaitLoop != null)
+                if (_vsWaitLoop is not null)
                 {
                     _vsWaitLoop.SetProgress(totalSteps, currentStep, progressText);
                 }

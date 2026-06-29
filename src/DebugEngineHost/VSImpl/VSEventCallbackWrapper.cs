@@ -1,11 +1,10 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -31,7 +30,7 @@ namespace Microsoft.DebugEngineHost.VSImpl
 
         private readonly object _cacheLock = new object();
         private int _cachedEventCallbackThread;
-        private IDebugEventCallback2 _cacheEventCallback;
+        private IDebugEventCallback2? _cacheEventCallback;
 
         internal VSEventCallbackWrapper(IDebugEventCallback2 ad7Callback)
         {
@@ -90,11 +89,11 @@ namespace Microsoft.DebugEngineHost.VSImpl
 
             // We send esentially all events from the same thread, so lets optimize the common case
             int currentThreadId = Thread.CurrentThread.ManagedThreadId;
-            if (_cacheEventCallback != null && _cachedEventCallbackThread == currentThreadId)
+            if (_cacheEventCallback is not null && _cachedEventCallbackThread == currentThreadId)
             {
                 lock (_cacheLock)
                 {
-                    if (_cacheEventCallback != null && _cachedEventCallbackThread == currentThreadId)
+                    if (_cacheEventCallback is not null && _cachedEventCallbackThread == currentThreadId)
                     {
                         return _cacheEventCallback;
                     }

@@ -2,10 +2,11 @@ parameters:
   Configuration: 'Lab.Release'
   RuntimeID: 'win-x64'
   SignedBinariesFolder: ''
+  NuGetConfigPath: '$(Build.SourcesDirectory)/eng/pipelines/NuGet.release.config'
 
 steps:
 - script: |
-    dotnet publish $(Build.SourcesDirectory)\src\OpenDebugAD7\OpenDebugAD7.csproj -c ${{ parameters.Configuration }} -r ${{ parameters.RuntimeID }} --self-contained -o $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin
+    dotnet publish $(Build.SourcesDirectory)\src\OpenDebugAD7\OpenDebugAD7.csproj -c ${{ parameters.Configuration }} -r ${{ parameters.RuntimeID }} --self-contained -o $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin --configfile ${{ parameters.NuGetConfigPath }}
     copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\OpenDebugAD7.dll "$(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\Microsoft.DebugEngineHost.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.
     copy ${{ parameters.SignedBinariesFolder }}\Release\vscode\Newtonsoft.Json.dll $(Build.StagingDirectory)\${{ parameters.RuntimeID }}\debugAdapters\bin\.

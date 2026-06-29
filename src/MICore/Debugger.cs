@@ -72,7 +72,7 @@ namespace MICore
         public uint MaxInstructionSize { get; private set; }
         public bool Is64BitArch { get; private set; }
         public CommandLock CommandLock { get { return _commandLock; } }
-        public MICommandFactory MICommandFactory { get; protected set; }
+        public MICommandFactory MICommandFactory { get; }
         public Logger Logger { private set; get; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
@@ -124,12 +124,12 @@ namespace MICore
         }
 
         private ITransport _transport;
-        private CommandLock _commandLock = new CommandLock();
+        private readonly CommandLock _commandLock = new CommandLock();
 
         /// <summary>
         /// The last command we sent over the transport. This includes both the command name and arguments.
         /// </summary>
-        private string _lastCommandText;
+        private string _lastCommandText = string.Empty;
         private uint _lastCommandId;
 
         /// <summary>
@@ -169,6 +169,7 @@ namespace MICore
             _debuggeePids = new Dictionary<string, int>();
             Logger = logger;
             _miResults = new MIResults(logger);
+            MICommandFactory = MICommandFactory.GetInstance(launchOptions.DebuggerMIMode, this);
         }
 
         protected void SetDebuggerPid(int debuggerPid)
@@ -392,7 +393,7 @@ namespace MICore
                 }
                 catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
                 {
-                    if (firstException != null)
+                    if (firstException is null)
                     {
                         firstException = e;
                     }
@@ -404,7 +405,7 @@ namespace MICore
             {
                 if (this.IsClosed)
                 {
-                    source.TrySetException(new DebuggerDisposedException(_closeMessage));
+                    source.TrySetException(new DebuggerDisposedException(GetTargetProcessExitedReason()));
                 }
                 else
                 {
@@ -524,7 +525,7 @@ namespace MICore
             Debug.Assert(_closeMessage == null, "Why was Close called more than once? Should be impossible.");
 
             _closeMessage = closeMessage;
-            _transport.Close();
+            _transport?.Close();
             lock (_waitingOperations)
             {
                 foreach (var value in _waitingOperations.Values)
@@ -905,7 +906,7 @@ namespace MICore
             {
                 if (this.IsClosed)
                 {
-                    throw new DebuggerDisposedException(_closeMessage);
+                    throw new DebuggerDisposedException(GetTargetProcessExitedReason());
                 }
 
                 id = ++_lastCommandId;
@@ -992,13 +993,13 @@ namespace MICore
                             if (isMinGWOrCygwin && IsUnsupportedWindowsGdbVersion(_gdbVersion))
                             {
                                 exception = new MIDebuggerInitializeFailedUnsupportedGdbException(
-                                    this.MICommandFactory.Name, _initialErrors.ToList().AsReadOnly(), _initializationLog.ToList().AsReadOnly(), _gdbVersion);
+                                    this.MICommandFactory.Name, (_initialErrors?.ToList() ?? new List<string>()).AsReadOnly(), (_initializationLog?.ToList() ?? new List<string>()).AsReadOnly(), _gdbVersion);
                                 SendUnsupportedWindowsGdbEvent(_gdbVersion);
                             }
                             else
                             {
                                 exception = new MIDebuggerInitializeFailedException(
-                                    this.MICommandFactory.Name, _initialErrors.ToList().AsReadOnly(), _initializationLog.ToList().AsReadOnly());
+                                    this.MICommandFactory.Name, (_initialErrors?.ToList() ?? new List<string>()).AsReadOnly(), (_initializationLog?.ToList() ?? new List<string>()).AsReadOnly());
                             }
 
                             _initialErrors = null;
@@ -1029,7 +1030,7 @@ namespace MICore
                 {
                     if (DebuggerExitEvent != null)
                     {
-                        DebuggerExitEvent(this, null);
+                        DebuggerExitEvent(this, EventArgs.Empty);
                     }
                 }
             }
@@ -1419,8 +1420,7 @@ namespace MICore
 
         private void OnNotificationOutput(string cmd)
         {
-            Results results = null;
-            if ((results = MICommandFactory.IsModuleLoad(cmd)) != null)
+            if (MICommandFactory.IsModuleLoad(cmd) is Results results)
             {
                 if (LibraryLoadEvent != null)
                 {
@@ -1460,12 +1460,12 @@ namespace MICore
             else if (cmd.StartsWith("thread-created,", StringComparison.Ordinal))
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-created,".Length));
-                ThreadCreatedEvent(this, new ResultEventArgs(results, 0));
+                ThreadCreatedEvent?.Invoke(this, new ResultEventArgs(results, 0));
             }
             else if (cmd.StartsWith("thread-exited,", StringComparison.Ordinal))
             {
                 results = _miResults.ParseResultList(cmd.Substring("thread-exited,".Length));
-                ThreadExitedEvent(this, new ResultEventArgs(results, 0));
+                ThreadExitedEvent?.Invoke(this, new ResultEventArgs(results, 0));
             }
             else if (cmd.StartsWith("telemetry,", StringComparison.Ordinal))
             {
@@ -1619,14 +1619,21 @@ namespace MICore
 
         private void SendToTransport(string cmd)
         {
-            _transport.Send(cmd);
+            ITransport transport = _transport;
+            if (transport is null)
+            {
+                Debug.Fail("Invalid: `SendToTransport` called before `Init`");
+                throw new InvalidOperationException();
+            }
+
+            transport.Send(cmd);
 
             // https://github.com/Microsoft/MIEngine/issues/616 :
             // If it is local gdb (MinGW/Cygwin) on Windows, we need to send an extra line after commands 
             // so that if it errors, the error will come through. 
             if (this.SendNewLineAfterCmd)
             {
-                _transport.Send(String.Empty);
+                transport.Send(String.Empty);
             }
         }
 

@@ -5,6 +5,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.DebugEngineHost.VSCode
 {
@@ -34,7 +35,7 @@ namespace Microsoft.DebugEngineHost.VSCode
             return handle;
         }
 
-        public bool TryGet(int handle, out T value)
+        public bool TryGet(int handle, [MaybeNullWhen(false)] out T value)
         {
             if (_handleMap.TryGetValue(handle, out value))
             {
@@ -43,11 +44,11 @@ namespace Microsoft.DebugEngineHost.VSCode
             return false;
         }
 
-        public bool TryGetFirst(out T value)
+        public bool TryGetFirst([MaybeNullWhen(false)] out T value)
         {
             if (IsEmpty)
             {
-                value = default(T);
+                value = default;
                 return false;
             }
 
@@ -58,8 +59,7 @@ namespace Microsoft.DebugEngineHost.VSCode
         {
             get
             {
-                T value;
-                if (!TryGet(handle, out value))
+                if (!TryGet(handle, out T? value))
                 {
                     throw new ArgumentOutOfRangeException(nameof(handle));
                 }
