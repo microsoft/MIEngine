@@ -48,13 +48,18 @@ namespace MICore
 
     public abstract class MICommandFactory
     {
-        protected Debugger _debugger;
+        protected readonly Debugger _debugger;
 
         public MIMode Mode { get; private set; }
 
         public abstract string Name { get; }
 
         internal int MajorVersion { get; set; }
+
+        protected MICommandFactory(Debugger debugger)
+        {
+            _debugger = debugger;
+        }
 
         public static MICommandFactory GetInstance(MIMode mode, Debugger debugger)
         {
@@ -63,15 +68,14 @@ namespace MICore
             switch (mode)
             {
                 case MIMode.Gdb:
-                    commandFactory = new GdbMICommandFactory();
+                    commandFactory = new GdbMICommandFactory(debugger);
                     break;
                 case MIMode.Lldb:
-                    commandFactory = new LlldbMICommandFactory();
+                    commandFactory = new LlldbMICommandFactory(debugger);
                     break;
                 default:
                     throw new ArgumentException(null, nameof(mode));
             }
-            commandFactory._debugger = debugger;
             commandFactory.Mode = mode;
             commandFactory.Radix = 10;
             return commandFactory;

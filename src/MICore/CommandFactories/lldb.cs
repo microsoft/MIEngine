@@ -16,6 +16,11 @@ namespace MICore
 {
     internal class LlldbMICommandFactory : MICommandFactory
     {
+        public LlldbMICommandFactory(Debugger debugger)
+            : base(debugger)
+        {
+        }
+
         public override string Name
         {
             get { return "LLDB"; }
