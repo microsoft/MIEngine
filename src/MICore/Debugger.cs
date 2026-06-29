@@ -1619,7 +1619,13 @@ namespace MICore
 
         private void SendToTransport(string cmd)
         {
-            ITransport transport = _transport ?? throw new InvalidOperationException();
+            ITransport transport = _transport;
+            if (transport is null)
+            {
+                Debug.Fail("Invalid: `SendToTransport` called before `Init`");
+                throw new InvalidOperationException();
+            }
+
             transport.Send(cmd);
 
             // https://github.com/Microsoft/MIEngine/issues/616 :
