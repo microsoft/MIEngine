@@ -230,6 +230,18 @@ namespace Microsoft.MIDebugEngine
                 return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
             }
 
+            // Only a pointer's value is itself an address; an array re-evaluates to its
+            // address below. For any other type (e.g. a plain int) the value is not an
+            // address, so expose no memory reference - otherwise a scalar value like "1"
+            // is misinterpreted as the address 0x1.
+            bool isArrayValue = v[0] == '[' && v[v.Length - 1] == ']';
+            string typeName = _variableInformation.TypeName;
+            bool isPointer = !string.IsNullOrEmpty(typeName) && typeName.TrimEnd().EndsWith("*", StringComparison.Ordinal);
+            if (!isArrayValue && !isPointer)
+            {
+                return AD7_HRESULT.S_GETMEMORYCONTEXT_NO_MEMORY_CONTEXT;
+            }
+
             if ((v[0] == '[') && (v[v.Length-1] == ']'))
             {
                 // this is an array evaluation result from GDB, which does not contain an address
