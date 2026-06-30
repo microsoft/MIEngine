@@ -6,6 +6,7 @@ using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,14 +18,14 @@ namespace Microsoft.MIDebugEngine
         {
             Id = id;
             Name = "";
-            TargetId = (uint)id;
+            TargetId = id.ToString(CultureInfo.InvariantCulture);
             AD7Thread ad7Thread = new MIDebugEngine.AD7Thread(engine, this);
             Client = ad7Thread;
             ChildThread = false;
         }
 
         public int Id { get; private set; }
-        public uint TargetId { get; set; }
+        public string TargetId { get; set; }
         public Object Client { get; private set; }      // really AD7Thread
         public bool Alive { get; set; }
         public bool Default { get; set; }
@@ -331,58 +332,8 @@ namespace Microsoft.MIDebugEngine
             return new ThreadContext(pc, textPosition, func, level, from);
         }
 
-        private bool TryGetTidFromTargetId(string targetId, out uint tid)
-        {
-            tid = 0;
-            if (System.UInt32.TryParse(targetId, out tid) && tid != 0)
-            {
-                return true;
-            }
-            else if (targetId.StartsWith("Thread ", StringComparison.OrdinalIgnoreCase) &&
-                     System.UInt32.TryParse(targetId.Substring("Thread ".Length), out tid) &&
-                     tid != 0
-            )
-            {
-                return true;
-            }
-            else if (targetId.StartsWith("Process ", StringComparison.OrdinalIgnoreCase) &&
-                    System.UInt32.TryParse(targetId.Substring("Process ".Length), out tid) &&
-                    tid != 0
-            )
-            {   // First thread in a linux process has tid == pid
-                return true;
-            }
-            else if (targetId.StartsWith("Thread ", StringComparison.OrdinalIgnoreCase))
-            {
-                // In processes with pthreads the thread name is in form: "Thread <0x123456789abc> (LWP <thread-id>)"
-                int lwp_pos = targetId.IndexOf("(LWP ", StringComparison.Ordinal);
-                int paren_pos = targetId.LastIndexOf(')');
-                int len = paren_pos - (lwp_pos + 5);
-                if (len > 0 && System.UInt32.TryParse(targetId.Substring(lwp_pos + 5, len), out tid) && tid != 0)
-                {
-                    return true;
-                }
-            }
-            else if (targetId.StartsWith("LWP ", StringComparison.OrdinalIgnoreCase) &&
-                    System.UInt32.TryParse(targetId.Substring("LWP ".Length), out tid) &&
-                    tid != 0
-            )
-            {
-                // In gdb coredumps the thread name is in the form:" LWP <thread-id>"
-                return true;
-            }
-            else
-            {
-                tid = --s_targetId;
-                return true;
-            }
-
-            return false;
-        }
-
         private DebuggedThread SetThreadInfoFromResultValue(ResultValue resVal, out bool isNewThread)
         {
-            isNewThread = false;
             int threadId = resVal.FindInt("id");
             string targetId = resVal.TryFindString("target-id");
 
@@ -392,11 +343,7 @@ namespace Microsoft.MIDebugEngine
             // Only update targetId if it is a new thread.
             if (isNewThread && !String.IsNullOrEmpty(targetId))
             {
-                uint tid = 0;
-                if (TryGetTidFromTargetId(targetId, out tid))
-                {
-                    thread.TargetId = tid;
-                }
+                thread.TargetId = targetId;
             }
             if (resVal.Contains("name"))
             {
