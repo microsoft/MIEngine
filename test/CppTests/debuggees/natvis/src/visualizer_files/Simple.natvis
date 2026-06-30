@@ -135,4 +135,20 @@
     </Expand>
   </Type>
 
+  <Type Name="CustomListContainer">
+    <DisplayString>{{ size={count} }}</DisplayString>
+    <Expand>
+      <Item Name="Count">count</Item>
+      <CustomListItems>
+        <Variable Name="node" InitialValue="head" />
+        <Size>count</Size>
+        <Loop>
+          <Break Condition="node == 0" />
+          <Item>node->value</Item>
+          <Exec>node = node->next</Exec>
+        </Loop>
+      </CustomListItems>
+    </Expand>
+  </Type>
+
 </AutoVisualizer>

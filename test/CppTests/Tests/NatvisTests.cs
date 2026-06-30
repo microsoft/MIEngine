@@ -38,8 +38,8 @@ namespace CppTests.Tests
         private const string NatvisSourceName = "main.cpp";
 
         // These line numbers will need to change if src/natvis/main.cpp changes
-        private const int SimpleClassAssignmentLine = 66;
-        private const int ReturnSourceLine = 90;
+        private const int SimpleClassAssignmentLine = 67;
+        private const int ReturnSourceLine = 96;
 
         [Theory]
         [RequiresTestSettings]
@@ -713,6 +713,50 @@ namespace CppTests.Tests
                     Assert.Contains("active=false", inactiveList.Value);
                     Assert.Equal("2", inactiveList.GetVariable("Count").Value);
                     Assert.False(inactiveList.Variables.ContainsKey("[0]"), "inactiveList should not show indexed children when condition is false");
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestCustomListItems(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks that a <CustomListItems> visualizer expands via its <Loop>/<Item>/<Exec> body.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying <CustomListItems> walks the list via its <Exec> loop body");
+                    var customList = currentFrame.GetVariable("customList");
+                    Assert.Equal("3", customList.GetVariable("Count").Value);
+
+                    // The <Exec>node = node->next</Exec> step must advance every iteration, so all
+                    // three nodes appear as distinct, in-order children [0]..[2].
+                    Assert.Equal("10", customList.GetVariable("[0]").Value);
+                    Assert.Equal("20", customList.GetVariable("[1]").Value);
+                    Assert.Equal("30", customList.GetVariable("[2]").Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();

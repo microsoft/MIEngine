@@ -7,6 +7,7 @@
 #include "SimpleTemplated.h"
 #include "DataPoint.h"
 #include "ConditionalLinkedList.h"
+#include "CustomListContainer.h"
 
 class SimpleDisplayObject
 {
@@ -86,6 +87,11 @@ int main(int argc, char** argv)
     ConditionalLinkedList inactiveList(false);
     inactiveList.Add(100);
     inactiveList.Add(200);
+
+    CustomListContainer customList;
+    customList.Append(10);
+    customList.Append(20);
+    customList.Append(30);
 
     return 0;
 }
