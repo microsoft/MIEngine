@@ -249,6 +249,16 @@ namespace Microsoft.MIDebugEngine.Natvis
         private static readonly Regex s_intrinsicCallPattern = new Regex(@"\b(\w+)\s*\(");
         // Matches the leading "0x<hex> " address that GDB/LLDB prepends when displaying a string pointer value.
         private static readonly Regex s_addressPrefix = new Regex(@"^0x[0-9a-fA-F]+\s+");
+        // Matches "varName = rhs" in a CustomListItems <Exec> expression to detect local-variable assignments.
+        // The negative look-ahead (?!=) prevents matching "==" comparison operators.
+        private static readonly Regex s_execAssignment = new Regex(@"^\s*(\w+)\s*=(?!=)\s*(.+)$", RegexOptions.Singleline | RegexOptions.Compiled);
+        // Matches the bare "$i" token (word boundary) in a CustomListItems Name template.
+        // The {$i} form is matched first with a plain Replace; this regex handles bare "$i"
+        // with a word-boundary guard so that e.g. "$item" is not corrupted.
+        private static readonly Regex s_dollarI = new Regex(@"\$i\b", RegexOptions.Compiled);
+        // Matches increment/decrement shorthand in <Exec>: ++i, i++, --i, i--
+        // Groups: (1) prefix-op  (2) prefix-varname | (3) postfix-varname  (4) postfix-op
+        private static readonly Regex s_execIncrDecr = new Regex(@"^\s*(?:(\+\+|--)(\w+)|(\w+)(\+\+|--))\s*$", RegexOptions.Compiled);
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
         private HostConfigurationStore _configStore;
@@ -453,7 +463,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             }
         }
 
-        internal (string value, VisualizerId[] uiVisualizers) FormatDisplayString(IVariableInformation variable)
+        internal (string value, VisualizerId[] uiVisualizers) FormatDisplayString(IVariableInformation variable, string currentView = null)
         {
             VisualizerInfo visualizer = null;
             try
@@ -479,6 +489,15 @@ namespace Microsoft.MIDebugEngine.Natvis
                             {
                                 DisplayStringType display = item as DisplayStringType;
                                 // e.g. <DisplayString>{{ size={_Mypair._Myval2._Mylast - _Mypair._Myval2._Myfirst} }}</DisplayString>
+
+                                // IncludeView: only use this DisplayString when the named view is active.
+                                if (!IsIncludeViewMatch(display.IncludeView, currentView))
+                                    continue;
+
+                                // ExcludeView: skip this DisplayString when the current view is in the excluded list.
+                                if (IsExcludeViewMatch(display.ExcludeView, currentView))
+                                    continue;
+
                                 if (!EvalCondition(display.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                                 {
                                     continue;
@@ -522,7 +541,7 @@ namespace Microsoft.MIDebugEngine.Natvis
             return new VisualizerWrapper(ResourceStrings.VisualizedView, _process.Engine, variable, visualizer, isVisualizerView: true);
         }
 
-        internal IVariableInformation[] Expand(IVariableInformation variable)
+        internal IVariableInformation[] Expand(IVariableInformation variable, string currentView = null)
         {
             try
             {
@@ -530,7 +549,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                 if (variable.IsVisualized
                         || ((ShowDisplayStrings == DisplayStringsState.On) && !(variable is VisualizerWrapper)))    // visualize right away if DisplayStringsState.On, but only if not dummy var ([Raw View])
                 {
-                    return ExpandVisualized(variable);
+                    return ExpandVisualized(variable, currentView);
                 }
                 IVariableInformation visView = GetVisualizationWrapper(variable);
                 if (visView == null)
@@ -587,7 +606,7 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         private delegate IVariableInformation Traverse(IVariableInformation node);
 
-        private IVariableInformation[] ExpandVisualized(IVariableInformation variable)
+        private IVariableInformation[] ExpandVisualized(IVariableInformation variable, string currentView = null)
         {
             VisualizerInfo visualizer = FindType(variable);
             if (visualizer == null)
@@ -605,6 +624,10 @@ namespace Microsoft.MIDebugEngine.Natvis
                 if (i is ItemType && !(variable is PaginatedVisualizerWrapper)) // we do not want to repeatedly display other ItemTypes when expanding the "[More...]" node
                 {
                     ItemType item = (ItemType)i;
+                    if (!IsIncludeViewMatch(item.IncludeView, currentView))
+                        continue;
+                    if (IsExcludeViewMatch(item.ExcludeView, currentView))
+                        continue;
                     if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                     {
                         continue;
@@ -938,6 +961,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                     //     <ExpandedItem>_Myptr</ExpandedItem>
                     //   </Expand>
                     // </Type>
+
+                    // IncludeView/ExcludeView: skip this ExpandedItem if the current view doesn't match.
+                    if (!IsIncludeViewMatch(item.IncludeView, currentView))
+                        continue;
+                    if (IsExcludeViewMatch(item.ExcludeView, currentView))
+                        continue;
+
                     if (item.Condition != null)
                     {
                         if (!EvalCondition(item.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics))
@@ -949,11 +979,94 @@ namespace Microsoft.MIDebugEngine.Natvis
                     {
                         continue;
                     }
-                    var expand = GetExpression(item.Value, variable, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
-                    var eChildren = Expand(expand);
+
+                    // A view() specifier on the ExpandedItem expression (e.g. "inner(),view(myview)")
+                    // means: expand the result but show its children in the named view.
+                    // Strip the specifier before evaluating the expression, then pass the
+                    // view name into the recursive Expand call so that IncludeView guards
+                    // on the target's Expand elements (including CustomListItems) match.
+                    string rawExpr = item.Value.Trim();
+                    string spec = ExtractFormatSpecifier(rawExpr);
+                    string viewName = ExtractViewName(spec);
+                    string exprToEval = viewName != null ? StripFormatSpecifier(rawExpr) : rawExpr;
+                    string childView = viewName ?? currentView;
+
+                    var expand = GetExpression(exprToEval, variable, visualizer.ScopedNames, intrinsics: visualizer.Intrinsics);
+                    var eChildren = Expand(expand, childView);
                     if (eChildren != null)
                     {
                         children.AddRange(eChildren);
+                    }
+                }
+                else if (i is CustomListItemsType)
+                {
+                    CustomListItemsType customList = (CustomListItemsType)i;
+                    if (!IsIncludeViewMatch(customList.IncludeView, currentView)) continue;
+                    if (IsExcludeViewMatch(customList.ExcludeView, currentView)) continue;
+                    if (!EvalCondition(customList.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics)) continue;
+                    if (customList.Loop == null || customList.Loop.Length == 0) continue;
+
+                    // Build the natvis local-variable table from <Variable Name="x" InitialValue="expr"/> elements.
+                    // Each entry maps the declared name to its current expression string; expressions are
+                    // substituted in-place whenever the name appears in subsequent loop-body expressions.
+                    var localVars = new Dictionary<string, string>(StringComparer.Ordinal);
+                    if (customList.Items != null)
+                    {
+                        foreach (var v in customList.Items)
+                        {
+                            if (string.IsNullOrEmpty(v.Name)) continue;
+                            string initVal = v.InitialValue ?? "0";
+                            // Resolve field names, template parameters and intrinsics in the initial value.
+                            localVars[v.Name] = ReplaceNamesInExpression(initVal, variable, visualizer.ScopedNames, visualizer.Intrinsics);
+                        }
+                    }
+
+                    // Optional <Size> element provides an upper bound for children (and drives pagination).
+                    uint totalSize = uint.MaxValue;
+                    if (customList.Items1 != null)
+                    {
+                        foreach (var sz in customList.Items1)
+                        {
+                            if (!EvalCondition(sz.Condition, variable, visualizer.ScopedNames, visualizer.Intrinsics)) continue;
+                            try
+                            {
+                                string szExpr = SubstituteLocalVars(sz.Value?.Trim() ?? "0", localVars);
+                                string szVal = GetExpressionValue(szExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics);
+                                totalSize = MICore.Debugger.ParseUint(szVal, throwOnError: false);
+                            }
+                            catch (Exception) { /* leave totalSize as MaxValue so Break drives termination */ }
+                            break;
+                        }
+                    }
+
+                    uint startIndex = 0;
+                    if (variable is PaginatedVisualizerWrapper pvwCLI)
+                        startIndex = pvwCLI.StartIndex;
+
+                    var ctx = new CustomListLoopContext(startIndex, totalSize);
+
+                    foreach (var loop in customList.Loop)
+                    {
+                        if (loop?.Items == null || ctx.Done) continue;
+
+                        // Drive the loop: each call to ExecuteCustomListBody runs one full pass
+                        // through the loop body (Break -> Item(s) -> Exec, in document order).
+                        // The limit must cover fast-forwarding through startIndex items plus one
+                        // page of MAX_EXPAND items, capped to avoid runaway loops.
+                        long maxIter = Math.Min((long)startIndex + MAX_EXPAND + 1, 10000);
+                        for (long iter = 0; !ctx.Done && ctx.GlobalIndex < ctx.TotalSize && iter < maxIter; iter++)
+                        {
+                            // While-guard: stop if the loop condition is false.
+                            if (!string.IsNullOrEmpty(loop.Condition))
+                            {
+                                string loopCond = SubstituteLocalVars(loop.Condition, localVars);
+                                if (!EvalCondition(loopCond, variable, visualizer.ScopedNames, visualizer.Intrinsics))
+                                    break;
+                            }
+                            bool progress = ExecuteCustomListBody(loop.Items, ctx, variable, visualizer, localVars, children);
+                            if (!progress && !ctx.Done)
+                                break; // no items emitted and no break — avoid infinite loop
+                        }
                     }
                 }
             }
@@ -1122,12 +1235,31 @@ namespace Microsoft.MIDebugEngine.Natvis
             bool res = true;
             if (!String.IsNullOrWhiteSpace(condition))
             {
-                string exprValue = GetExpressionValue(condition, variable, scopedNames, intrinsics);
+                try
+                {
+                    string exprValue = GetExpressionValue(condition, variable, scopedNames, intrinsics);
 
-                bool exprBool = false;
-                int exprInt = 0;
-                res = !String.IsNullOrEmpty(exprValue) &&
-                    ((bool.TryParse(exprValue, out exprBool) && exprBool) || (int.TryParse(exprValue, out exprInt) && exprInt > 0));
+                    bool exprBool = false;
+                    int exprInt = 0;
+                    res = !String.IsNullOrEmpty(exprValue) &&
+                        ((bool.TryParse(exprValue, out exprBool) && exprBool) || (int.TryParse(exprValue, out exprInt) && exprInt > 0));
+                }
+                catch (MICore.MIException e)
+                {
+                    // Expected failure path: the debugger rejected the expression
+                    // (e.g. expression too long, unknown symbol).
+                    // Treat as false so the next DisplayString is tried as a fallback.
+                    _process.Logger.NatvisLogger?.WriteLine(LogLevel.Verbose, "EvalCondition failed: " + e.Message);
+                    res = false;
+                }
+                catch (Exception e)
+                {
+                    // Unexpected failure (e.g. NullReferenceException in the evaluation path).
+                    // Still return false to avoid surfacing natvis errors as debug session failures,
+                    // but log at Warning so unexpected exceptions are not silently swallowed.
+                    _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, "EvalCondition unexpected exception: " + e.Message);
+                    res = false;
+                }
             }
             return res;
         }
@@ -1282,13 +1414,31 @@ namespace Microsoft.MIDebugEngine.Natvis
                     Match m = s_expression.Match(format.Substring(i));
                     if (m.Success)
                     {
-                        string rawExpr = format.Substring(i + 1, m.Length - 2);
+                        // Trim whitespace (including newlines from multi-line XML blocks) so that
+                        // the expression never starts with \n, which would break LLDB MI's line-based protocol.
+                        string rawExpr = format.Substring(i + 1, m.Length - 2).Trim();
                         string spec = ExtractFormatSpecifier(rawExpr);
-                        string exprValue = GetExpressionValue(rawExpr, variable, scopedNames, intrinsics);
-                        if (spec == "sub" || spec == "su")
-                            exprValue = CleanUtf16StringValue(exprValue);
-                        else if (spec == "sb")
-                            exprValue = CleanAsciiStringValue(exprValue);
+                        string exprValue;
+                        string viewName = ExtractViewName(spec);
+                        if (viewName != null)
+                        {
+                            // {expr,view(name)} -- format expr using the named view's DisplayString.
+                            // Any other specifiers combined with view() (e.g. "na", "sub", "sb") are
+                            // intentionally ignored: specifiers like sub/sb exist to post-process raw
+                            // debugger output (stripping address prefixes and quotes), but view() already
+                            // produces fully-formatted text via FormatDisplayString — applying those
+                            // post-processors on top would corrupt the result.
+                            string strippedExpr = StripFormatSpecifier(rawExpr);
+                            exprValue = GetExpressionValue(strippedExpr, variable, scopedNames, intrinsics, viewName);
+                        }
+                        else
+                        {
+                            exprValue = GetExpressionValue(rawExpr, variable, scopedNames, intrinsics);
+                            if (spec == "sub" || spec == "su")
+                                exprValue = CleanUtf16StringValue(exprValue);
+                            else if (spec == "sb")
+                                exprValue = CleanAsciiStringValue(exprValue);
+                        }
                         value.Append(exprValue);
                         i += m.Length - 1;
                     }
@@ -1489,6 +1639,58 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
 
         /// <summary>
+        /// Strips a NatVis format specifier (e.g. ",sub", ",d", ",view(name)na") from the end of
+        /// an expression, returning the bare expression.  The specifier boundary is the last
+        /// top-level comma (not nested inside any parentheses or square brackets).
+        /// </summary>
+        internal static string StripFormatSpecifier(string expression)
+        {
+            int commaPos = FindLastTopLevelComma(expression);
+            return commaPos >= 0
+                ? expression.Substring(0, commaPos).TrimEnd()
+                : expression;
+        }
+
+        /// <summary>
+        /// Returns true when <paramref name="currentView"/> is listed in the semicolon-separated
+        /// IncludeView attribute, i.e. the DisplayString should only be shown in one of those views.
+        /// An empty or null includeView means "show in all views" (returns true for any currentView).
+        /// Both IncludeView and ExcludeView are defined as semicolon-delimited lists in the natvis XSD.
+        /// </summary>
+        internal static bool IsIncludeViewMatch(string includeView, string currentView)
+        {
+            if (string.IsNullOrEmpty(includeView)) return true;
+            if (currentView == null) return false;
+            return includeView.Split(';').Any(v => string.Equals(v.Trim(), currentView, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Returns true when <paramref name="currentView"/> is listed in the semicolon-separated
+        /// ExcludeView attribute, i.e. the DisplayString should be skipped in this view.
+        /// An empty/null excludeView or a null currentView never excludes.
+        /// </summary>
+        internal static bool IsExcludeViewMatch(string excludeView, string currentView)
+        {
+            if (string.IsNullOrEmpty(excludeView) || currentView == null) return false;
+            return excludeView.Split(';').Any(v => string.Equals(v.Trim(), currentView, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// If <paramref name="spec"/> is a view specifier of the form "view(name)" or
+        /// "view(name)na", returns the view name.  Otherwise returns null.
+        /// </summary>
+        internal static string ExtractViewName(string spec)
+        {
+            if (spec == null) return null;
+            if (!spec.StartsWith("view(", StringComparison.Ordinal)) return null;
+            int closeParen = spec.IndexOf(')');
+            if (closeParen < 0) return null;
+            string name = spec.Substring(5, closeParen - 5);
+            // view() with an empty name is not a valid specifier; treat as absent.
+            return name.Length > 0 ? name : null;
+        }
+
+        /// <summary>
         /// Returns the format specifier from a NatVis expression (the part after the last
         /// top-level comma), normalized the same way as
         /// <see cref="VariableInformation.ProcessFormatSpecifiers"/>: modifiers "nvo", "na",
@@ -1665,12 +1867,15 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         private string ReplaceNamesInExpression(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames, IDictionary<string, IntrinsicType> intrinsics = null)
         {
-            // Strip Windows dll!-qualified type prefixes (e.g. Qt6Cored.dll!)
-            // for GDB/LLDB compatibility — meaningless outside Windows
-            expression = s_moduleQualifiedPrefix.Replace(expression, "");
-
-            // Expand intrinsic calls (e.g. day(), memberOffset(3)) into plain C++ expressions
+            // Expand intrinsic calls FIRST so that dll!-qualified type names that appear
+            // inside intrinsic bodies (e.g. "(Foo.dll!MyType*)ptr") are also stripped
+            // in the next step.
             expression = ResolveIntrinsicCalls(expression, intrinsics);
+
+            // Strip Windows dll!-qualified type prefixes (e.g. Qt6Cored.dll!)
+            // for GDB/LLDB compatibility — meaningless outside Windows.
+            // Must run AFTER intrinsic expansion so intrinsic-body dll! references are caught.
+            expression = s_moduleQualifiedPrefix.Replace(expression, "");
 
             return ProcessNamesInString(expression, new Substitute[] {
                 (m)=>
@@ -1715,19 +1920,36 @@ namespace Microsoft.MIDebugEngine.Natvis
             return expressionVariable;
         }
 
-        private string GetExpressionValue(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames, IDictionary<string, IntrinsicType> intrinsics = null)
+        private string GetExpressionValue(string expression, IVariableInformation variable, IDictionary<string, string> scopedNames, IDictionary<string, IntrinsicType> intrinsics = null, string view = null)
         {
-            string processedExpr = ReplaceNamesInExpression(expression, variable, scopedNames, intrinsics);
+            // Strip any format specifier (e.g. ",d", ",x") BEFORE name/intrinsic substitution.
+            // If we don't do this, an identifier that happens to appear in the specifier — most
+            // commonly the "d" in ",d" — will be matched by ProcessNamesInString and replaced
+            // with the full expression for the child variable of that name (e.g. a member "d"),
+            // turning  "1234,d"  into  "1234,(obj.d)"  which the debugger evaluates as a C
+            // comma-operator expression returning the struct field instead of the integer.
+            string spec = ExtractFormatSpecifier(expression);
+            string exprNoSpec = spec != null ? StripFormatSpecifier(expression) : expression;
+
+            string processedExpr = ReplaceNamesInExpression(exprNoSpec, variable, scopedNames, intrinsics);
+
+            // Re-attach the format specifier so that VariableInformation.ProcessFormatSpecifiers
+            // can apply the correct display format (decimal, hex, etc.) via -var-set-format.
+            if (spec != null)
+                processedExpr = processedExpr + "," + spec;
+
             IVariableInformation expressionVariable = new VariableInformation(processedExpr, variable, _process.Engine, null);
             expressionVariable.SyncEval();
 
-            // Avoid recursive natvis formatting when expression is 'this'
-            if (expression.Trim() == "this")
+            // Avoid recursive natvis formatting when expression is 'this' and no view is requested.
+            // With a view, {this,view(name)} must go through FormatDisplayString to select the right
+            // IncludeView DisplayString for the named view.
+            if (expression.Trim() == "this" && view == null)
             {
                 return expressionVariable.Value;
             }
 
-            return FormatDisplayString(expressionVariable).value;
+            return FormatDisplayString(expressionVariable, view).value;
         }
 
         private string GetDisplayNameFromArrayIndex(uint arrayIndex, int rank, uint[] dimensions, bool isForward)
@@ -1770,6 +1992,287 @@ namespace Microsoft.MIDebugEngine.Natvis
 
             return displayName.ToString();
         }
+
+        // ---- CustomListItems execution helpers ----------------------------------
+
+        /// <summary>
+        /// Mutable state shared across one invocation of the CustomListItems loop engine.
+        /// </summary>
+        private sealed class CustomListLoopContext
+        {
+            /// <summary>Total children emitted across all iterations ($i counter).</summary>
+            public uint GlobalIndex;
+            /// <summary>Children added to the current page.</summary>
+            public uint Emitted;
+            /// <summary>Pagination start (0 for the first page).</summary>
+            public readonly uint StartIndex;
+            /// <summary>Maximum total children expected (from &lt;Size&gt;, or uint.MaxValue).</summary>
+            public readonly uint TotalSize;
+            /// <summary>Set to true when a &lt;Break&gt; fires or the page limit is reached.</summary>
+            public bool Done;
+
+            public CustomListLoopContext(uint startIndex, uint totalSize)
+            {
+                StartIndex = startIndex;
+                TotalSize = totalSize;
+            }
+        }
+
+        /// <summary>
+        /// Executes one pass through a loop-body element sequence (Break / Item / Exec / If / Else).
+        /// Returns true if at least one Item or nested body was processed, false if the pass produced
+        /// no observable effect (used to detect infinite-loop conditions).
+        /// </summary>
+        private bool ExecuteCustomListBody(
+            object[] body,
+            CustomListLoopContext ctx,
+            IVariableInformation variable,
+            VisualizerInfo visualizer,
+            Dictionary<string, string> localVars,
+            List<IVariableInformation> children)
+        {
+            bool progress = false;
+
+            for (int idx = 0; idx < body.Length && !ctx.Done; idx++)
+            {
+                var elem = body[idx];
+
+                if (elem is CustomListBreakType br)
+                {
+                    // <Break Condition="expr"/>: stop the loop when the condition holds.
+                    if (string.IsNullOrEmpty(br.Condition))
+                    {
+                        ctx.Done = true;
+                        break;
+                    }
+                    string condExpr = SubstituteLocalVars(br.Condition, localVars);
+                    if (EvalCondition(condExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics))
+                        ctx.Done = true;
+                }
+                else if (elem is CustomListLoopItemType li)
+                {
+                    // <Item Name="..." Condition="...">expr</Item>: emit a child variable.
+                    if (li.Condition != null)
+                    {
+                        string condExpr = SubstituteLocalVars(li.Condition, localVars);
+                        if (!EvalCondition(condExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics))
+                            continue;
+                    }
+
+                    if (ctx.GlobalIndex >= ctx.StartIndex && ctx.Emitted < MAX_EXPAND)
+                    {
+                        string rawExpr = SubstituteLocalVars(li.Value?.Trim() ?? "", localVars);
+                        string processedExpr = ReplaceNamesInExpression(rawExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics);
+                        string name = FormatCustomListItemName(li.Name, ctx.GlobalIndex, localVars);
+                        var childVar = new VariableInformation(processedExpr, variable, _process.Engine, name);
+                        childVar.SyncEval();
+                        children.Add(childVar);
+                        ctx.Emitted++;
+                    }
+                    ctx.GlobalIndex++;
+                    progress = true;
+
+                    // Check whether the page is now full.
+                    if (ctx.Emitted >= MAX_EXPAND && ctx.GlobalIndex < ctx.TotalSize)
+                    {
+                        children.Add(new PaginatedVisualizerWrapper(
+                            ResourceStrings.MoreView, _process.Engine, variable,
+                            visualizer, isVisualizerView: true, ctx.StartIndex + MAX_EXPAND));
+                        ctx.Done = true;
+                    }
+                }
+                else if (elem is CustomListExecType exec)
+                {
+                    // <Exec Condition="...">varName = expr</Exec>: update a local variable.
+                    if (exec.Condition != null)
+                    {
+                        string condExpr = SubstituteLocalVars(exec.Condition, localVars);
+                        if (!EvalCondition(condExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics))
+                            continue;
+                    }
+                    string execExpr = SubstituteLocalVars(exec.Value?.Trim() ?? "", localVars);
+                    string updatedVar = ApplyExecToLocalVars(execExpr, localVars);
+                    // Normalise the stored expression to prevent unbounded growth across iterations.
+                    // After each i++, the expression would otherwise grow as "(((0)+1)+1)+1...".
+                    // Evaluate the new expression and replace it with the scalar result so that
+                    // each iteration starts from a compact literal (same principle as intrinsic-eval
+                    // caching). Skip normalisation for pointer values (starts with "0x") — those
+                    // must remain as expressions, not substituted as address literals.
+                    if (updatedVar != null)
+                    {
+                        try
+                        {
+                            string normalized = GetExpressionValue(localVars[updatedVar], variable, visualizer.ScopedNames, visualizer.Intrinsics);
+                            if (!string.IsNullOrEmpty(normalized) &&
+                                !normalized.TrimStart().StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                            {
+                                localVars[updatedVar] = normalized;
+                            }
+                        }
+                        catch (Exception) { /* keep the expression as-is if evaluation fails */ }
+                    }
+                    progress = true; // Exec advances loop state (e.g. iSpan++) even when no Item is emitted
+                }
+                else if (elem is CustomListIfType ifElem)
+                {
+                    // <If> optionally followed by any number of <ElseIf>s and a final <Else>.
+                    // Execute the first branch whose condition holds; consume all siblings.
+                    string condExpr = SubstituteLocalVars(ifElem.Condition ?? "", localVars);
+                    bool taken = !string.IsNullOrEmpty(condExpr) &&
+                                 EvalCondition(condExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics);
+
+                    if (taken && ifElem.Items != null)
+                        progress |= ExecuteCustomListBody(ifElem.Items, ctx, variable, visualizer, localVars, children);
+
+                    // Consume any immediately following <ElseIf> elements.
+                    while (idx + 1 < body.Length && body[idx + 1] is CustomListElseIfType elseIfElem)
+                    {
+                        idx++;
+                        if (!taken)
+                        {
+                            string eiCond = SubstituteLocalVars(elseIfElem.Condition ?? "", localVars);
+                            bool eiTaken = !string.IsNullOrEmpty(eiCond) &&
+                                           EvalCondition(eiCond, variable, visualizer.ScopedNames, visualizer.Intrinsics);
+                            if (eiTaken && elseIfElem.Items != null)
+                            {
+                                progress |= ExecuteCustomListBody(elseIfElem.Items, ctx, variable, visualizer, localVars, children);
+                                taken = true;
+                            }
+                        }
+                    }
+
+                    // Consume an immediately following <Else> element.
+                    if (idx + 1 < body.Length && body[idx + 1] is CustomListElseType elseElem)
+                    {
+                        idx++;
+                        if (!taken && elseElem.Items != null)
+                            progress |= ExecuteCustomListBody(elseElem.Items, ctx, variable, visualizer, localVars, children);
+                    }
+                }
+                else if (elem is CustomListLoopType nestedLoop)
+                {
+                    // Nested <Loop [Condition="..."]>: drive it like the top-level loop.
+                    if (nestedLoop.Items != null)
+                    {
+                        // Cap iterations at ctx.StartIndex + MAX_EXPAND + 1: that is the highest
+                        // GlobalIndex at which we could still emit or detect the page-full sentinel,
+                        // so any further iteration would be dead work.  The hard cap of 10 000 guards
+                        // against infinite loops in malformed natvis where TotalSize is not set.
+                        long maxInner = Math.Min((long)ctx.StartIndex + MAX_EXPAND + 1, 10000);
+                        for (long iter = 0; !ctx.Done && ctx.GlobalIndex < ctx.TotalSize && iter < maxInner; iter++)
+                        {
+                            // While-guard: stop if the loop condition is false.
+                            if (!string.IsNullOrEmpty(nestedLoop.Condition))
+                            {
+                                string loopCond = SubstituteLocalVars(nestedLoop.Condition, localVars);
+                                if (!EvalCondition(loopCond, variable, visualizer.ScopedNames, visualizer.Intrinsics))
+                                    break;
+                            }
+                            bool innerProgress = ExecuteCustomListBody(nestedLoop.Items, ctx, variable, visualizer, localVars, children);
+                            if (!innerProgress && !ctx.Done) break;
+                            progress = true;
+                        }
+                    }
+                }
+            }
+
+            return progress;
+        }
+
+        /// <summary>
+        /// Substitutes natvis local variable names in <paramref name="expression"/> with their
+        /// current expression strings, using word-boundary matching to avoid partial replacements.
+        /// Each substituted value is wrapped in parentheses to preserve operator precedence.
+        /// </summary>
+        internal static string SubstituteLocalVars(string expression, Dictionary<string, string> localVars)
+        {
+            if (string.IsNullOrEmpty(expression) || localVars == null || localVars.Count == 0)
+                return expression;
+            foreach (var kv in localVars)
+            {
+                expression = Regex.Replace(
+                    expression,
+                    @"\b" + Regex.Escape(kv.Key) + @"\b",
+                    "(" + kv.Value + ")");
+            }
+            return expression;
+        }
+
+        /// <summary>
+        /// Attempts to parse <paramref name="execExpr"/> as "varName = rhs" and, when the left-hand
+        /// side is a declared natvis local variable, updates its entry to the substituted RHS.
+        /// Expressions that do not match this pattern are silently ignored.
+        /// </summary>
+        /// <returns>
+        /// The name of the local variable that was updated, or <c>null</c> if nothing changed.
+        /// The caller can use this to normalise the stored expression (evaluate it and replace
+        /// with the scalar result) so that repeated increments do not cause unbounded growth.
+        /// </returns>
+        internal static string ApplyExecToLocalVars(string execExpr, Dictionary<string, string> localVars)
+        {
+            if (string.IsNullOrEmpty(execExpr)) return null;
+
+            // Check for increment/decrement shorthand: ++i, i++, --i, i--
+            var mIncr = s_execIncrDecr.Match(execExpr);
+            if (mIncr.Success)
+            {
+                // prefix form: groups 1 (op) + 2 (varname); postfix form: groups 3 (varname) + 4 (op)
+                string varName = mIncr.Groups[2].Success ? mIncr.Groups[2].Value : mIncr.Groups[3].Value;
+                string op      = mIncr.Groups[1].Success ? mIncr.Groups[1].Value : mIncr.Groups[4].Value;
+                if (localVars.ContainsKey(varName))
+                {
+                    localVars[varName] = SubstituteLocalVars(varName, localVars) + (op == "++" ? " + 1" : " - 1");
+                    return varName;
+                }
+                return null;
+            }
+
+            // Check for simple assignment: varName = rhs
+            var m = s_execAssignment.Match(execExpr);
+            if (m.Success && localVars.ContainsKey(m.Groups[1].Value))
+            {
+                string varName = m.Groups[1].Value;
+                string rhs = m.Groups[2].Value.Trim();
+                localVars[varName] = SubstituteLocalVars(rhs, localVars);
+                return varName;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Formats the display name for a CustomListItems child.  Replaces <c>{$i}</c> and
+        /// bare <c>$i</c> with <paramref name="index"/>, then substitutes any local variable
+        /// names.  Falls back to <c>[index]</c> when <paramref name="nameTemplate"/> is null.
+        /// </summary>
+        /// <param name="index">
+        /// The condition-passing item counter (<c>ctx.GlobalIndex</c>), which starts at 0 and
+        /// increments for every Item whose Condition passes, across all pages.  This matches
+        /// the Visual Studio behaviour where <c>$i</c> is the absolute loop-item index, not a
+        /// page-relative offset.
+        /// </param>
+        internal static string FormatCustomListItemName(string nameTemplate, uint index, Dictionary<string, string> localVars)
+        {
+            if (string.IsNullOrEmpty(nameTemplate))
+                return "[" + index.ToString(CultureInfo.InvariantCulture) + "]";
+
+            string indexStr = index.ToString(CultureInfo.InvariantCulture);
+            // Replace the {$i} token first (complete braced form), then bare $i with a
+            // word-boundary guard so that e.g. "$item" in a Name template is not corrupted.
+            string name = s_dollarI.Replace(
+                nameTemplate.Replace("{$i}", indexStr),
+                indexStr);
+            name = SubstituteLocalVars(name, localVars);
+
+            // If {expr} tokens remain after substitution they would require evaluating against
+            // the debugger, which is not supported here.  Fall back to [index] to avoid surfacing
+            // a failed expression evaluation string as the child name.
+            if (name.Contains('{'))
+                return "[" + index.ToString(CultureInfo.InvariantCulture) + "]";
+
+            return name;
+        }
+
+        // ---- End CustomListItems execution helpers ------------------------------
 
         public void Dispose()
         {
