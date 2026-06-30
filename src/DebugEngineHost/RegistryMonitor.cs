@@ -72,6 +72,15 @@ namespace Microsoft.DebugEngineHost
 
         public void Start()
         {
+            lock (_stopLock)
+            {
+                if (_stoppedEvent != null)
+                {
+                    throw new InvalidOperationException("RegistryMonitor already started.");
+                }
+                _isStopped = false;
+                _stoppedEvent = new AutoResetEvent(false);
+            }
             Thread registryMonitor = new Thread(Monitor);
             registryMonitor.IsBackground = true;
             registryMonitor.Name = "Microsoft.DebugEngineHost.RegistryMonitor";
@@ -97,7 +106,8 @@ namespace Microsoft.DebugEngineHost
             bool stopped = false;
             try
             {
-                _stoppedEvent = new AutoResetEvent(false);
+                _nativsLogger?.WriteLine(LogLevel.Verbose, "RegistryMonitor: Monitor thread starting (tid={0})", Thread.CurrentThread.ManagedThreadId);
+                _nativsLogger?.WriteLine(LogLevel.Verbose, "RegistryMonitor: _stoppedEvent ready (tid={0})", Thread.CurrentThread.ManagedThreadId);
                 using (AutoResetEvent registryChangedEvent = new AutoResetEvent(false))
                 {
                     IntPtr handle = registryChangedEvent.SafeWaitHandle.DangerousGetHandle();
@@ -111,7 +121,12 @@ namespace Microsoft.DebugEngineHost
                     {
                         while (!stopped)
                         {
-                            int waitResult = WaitHandle.WaitAny(new WaitHandle[] { _stoppedEvent, registryChangedEvent });
+                            AutoResetEvent? stoppedEvent;
+                            lock (_stopLock)
+                            {
+                                stoppedEvent = _stoppedEvent;
+                            }
+                            int waitResult = WaitHandle.WaitAny(new WaitHandle[] { stoppedEvent!, registryChangedEvent });
 
                             if (waitResult == 0)
                             {
@@ -133,9 +148,12 @@ namespace Microsoft.DebugEngineHost
             }
             finally
             {
-                _stoppedEvent?.Dispose();
-                _stoppedEvent = null;
-
+                _nativsLogger?.WriteLine(LogLevel.Verbose, "RegistryMonitor: Monitor thread exiting (tid={0})", Thread.CurrentThread.ManagedThreadId);
+                lock (_stopLock)
+                {
+                    _stoppedEvent?.Dispose();
+                    _stoppedEvent = null;
+                }
                 _section.Dispose();
             }
         }
