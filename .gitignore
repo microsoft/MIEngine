@@ -28,3 +28,5 @@ project.lock.json
 src/*/*.nuget.props
 src/*/*.nuget.targets
 .DS_Store
+/src/DebugEngineHost/ReproRegistryMonitor.cs
+/src/RegistryMonitorRepro/RegistryMonitorRepro.csproj
