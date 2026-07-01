@@ -117,7 +117,7 @@ namespace Microsoft.DebugEngineHost
                     if (_stoppedEvent == null)
                     {
                         _stoppedEvent = new AutoResetEvent(false);
-                    }
+                }
                 }
 
                 using (AutoResetEvent registryChangedEvent = new AutoResetEvent(false))
