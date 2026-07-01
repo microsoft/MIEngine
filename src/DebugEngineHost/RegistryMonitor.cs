@@ -113,11 +113,6 @@ namespace Microsoft.DebugEngineHost
                     {
                         return;
                     }
-
-                    if (_stoppedEvent == null)
-                    {
-                        _stoppedEvent = new AutoResetEvent(false);
-                }
                 }
 
                 using (AutoResetEvent registryChangedEvent = new AutoResetEvent(false))
@@ -135,7 +130,7 @@ namespace Microsoft.DebugEngineHost
                         {
                             AutoResetEvent? stoppedEvent = _stoppedEvent;
                             Debug.Assert(stoppedEvent is not null, "Should be impossible - this code can only run after `Start` is called.");
-                            int waitResult = WaitHandle.WaitAny(new WaitHandle[] { stoppedEvent!, registryChangedEvent });
+                            int waitResult = WaitHandle.WaitAny(new WaitHandle[] { stoppedEvent, registryChangedEvent });
 
                             if (waitResult == 0)
                             {
