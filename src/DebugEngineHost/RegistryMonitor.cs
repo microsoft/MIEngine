@@ -106,8 +106,20 @@ namespace Microsoft.DebugEngineHost
             bool stopped = false;
             try
             {
-                _nativsLogger?.WriteLine(LogLevel.Verbose, "RegistryMonitor: Monitor thread starting (tid={0})", Thread.CurrentThread.ManagedThreadId);
-                _nativsLogger?.WriteLine(LogLevel.Verbose, "RegistryMonitor: _stoppedEvent ready (tid={0})", Thread.CurrentThread.ManagedThreadId);
+                // Ensure stop isn't requested before we create/wait on events.
+                lock (_stopLock)
+                {
+                    if (_isStopped)
+                    {
+                        return;
+                    }
+
+                    if (_stoppedEvent == null)
+                    {
+                        _stoppedEvent = new AutoResetEvent(false);
+                    }
+                }
+
                 using (AutoResetEvent registryChangedEvent = new AutoResetEvent(false))
                 {
                     IntPtr handle = registryChangedEvent.SafeWaitHandle.DangerousGetHandle();
@@ -121,11 +133,8 @@ namespace Microsoft.DebugEngineHost
                     {
                         while (!stopped)
                         {
-                            AutoResetEvent? stoppedEvent;
-                            lock (_stopLock)
-                            {
-                                stoppedEvent = _stoppedEvent;
-                            }
+                            AutoResetEvent? stoppedEvent = _stoppedEvent;
+                            Debug.Assert(stoppedEvent is not null, "Should be impossible - this code can only run after `Start` is called.");
                             int waitResult = WaitHandle.WaitAny(new WaitHandle[] { stoppedEvent!, registryChangedEvent });
 
                             if (waitResult == 0)
