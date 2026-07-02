@@ -9,7 +9,7 @@ namespace Microsoft.DebugEngineHost
 {
     public static class HostRunInTerminal
     {
-        private static Action<string, string, bool, List<string>, Dictionary<string, object>, Action<int?>, Action<string>>? s_runInTerminalCallback;
+        private static Action<string, string, bool, List<string>, Dictionary<string, object?>, Action<int?>, Action<string>>? s_runInTerminalCallback;
 
         /// <summary>
         /// Checks to see if RunInTerminal is available
@@ -23,11 +23,11 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Passes the call to the UI to attempt to RunInTerminal if possible.
         /// </summary>
-        public static void RunInTerminal(string title, string cwd, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string> environmentVars, Action<int?> success, Action<string> failure)
+        public static void RunInTerminal(string title, string cwd, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string?> environmentVars, Action<int?> success, Action<string> failure)
         {
             if (s_runInTerminalCallback is not null)
             {
-                Dictionary<string, object> env = new Dictionary<string, object>();
+                Dictionary<string, object?> env = new Dictionary<string, object?>();
                 foreach (var item in environmentVars)
                 {
                     env.Add(item.Key, item.Value);
@@ -41,7 +41,7 @@ namespace Microsoft.DebugEngineHost
         /// Registers callback to call when RunInTerminal is called
         /// </summary>
         /// <param name="runInTerminalCallback">Callback for RunInTerminal</param>
-        public static void RegisterRunInTerminalCallback(Action<string, string, bool, List<string>, Dictionary<string, object>, Action<int?>, Action<string>> runInTerminalCallback)
+        public static void RegisterRunInTerminalCallback(Action<string, string, bool, List<string>, Dictionary<string, object?>, Action<int?>, Action<string>> runInTerminalCallback)
         {
             Debug.Assert(runInTerminalCallback != null, "Callback should not be null.");
             s_runInTerminalCallback = runInTerminalCallback;

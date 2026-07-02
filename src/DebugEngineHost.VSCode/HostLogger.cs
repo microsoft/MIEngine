@@ -21,7 +21,7 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
-        public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
+        public static void EnableHostLogging(Action<string>? callback, LogLevel level = LogLevel.Verbose)
         {
             if (s_engineLogChannel is null)
             {
