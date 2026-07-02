@@ -152,7 +152,6 @@ namespace Microsoft.DebugEngineHost
             }
             finally
             {
-                _nativsLogger?.WriteLine(LogLevel.Verbose, "RegistryMonitor: Monitor thread exiting (tid={0})", Thread.CurrentThread.ManagedThreadId);
                 lock (_stopLock)
                 {
                     _stoppedEvent?.Dispose();
