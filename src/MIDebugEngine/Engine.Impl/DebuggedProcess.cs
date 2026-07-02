@@ -2050,7 +2050,15 @@ namespace Microsoft.MIDebugEngine
 
             foreach (var f in frames)
             {
-                int level = f.FindInt("level");
+                // Synthetic frames injected by a GDB Python frame filter have no "level" field.
+                // GDB doesn't support querying them by level either, so their argument lists
+                // can't be retrieved. Just skip them instead of failing the whole stack walk.
+                uint? levelOpt = f.TryFindUint("level");
+                if (levelOpt == null)
+                {
+                    continue;
+                }
+                int level = (int)levelOpt.Value;
                 ListValue argList = null;
                 f.TryFind<ListValue>("args", out argList);
                 List<SimpleVariableInformation> args = new List<SimpleVariableInformation>();
