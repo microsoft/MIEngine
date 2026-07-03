@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.65535.65535.65535
+# Visual Studio Version 18
+VisualStudioVersion = 18.65535.65535.65535
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platform Launchers", "Platform Launchers", "{B864C337-1AA8-42B3-BF01-90901F55DE70}"
 EndProject
@@ -102,6 +102,21 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MakePIAPortableTool", "tools\MakePIAPortableTool\MakePIAPortableTool.csproj", "{CC5BDD33-7EB1-4FB9-BC67-806773018989}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MIDebugEngineUnitTests", "MIDebugEngineUnitTests\MIDebugEngineUnitTests.csproj", "{7F98435A-526E-41DC-9F9A-BFD55CC991DE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{617F1819-7755-445A-8F8E-7C96137BA449}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\copilot-instructions.md = ..\.github\copilot-instructions.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{03A604B5-0964-4B2B-A7F1-CD89764B8BB1}"
+	ProjectSection(SolutionItems) = preProject
+		..\docs\Architecture-for-AI.md = ..\docs\Architecture-for-AI.md
+		..\docs\Building-outside-of-VS-for-AI.md = ..\docs\Building-outside-of-VS-for-AI.md
+		..\docs\CodingStandards-CSharp-for-AI.md = ..\docs\CodingStandards-CSharp-for-AI.md
+		..\docs\DebugEngineHost-for-AI.md = ..\docs\DebugEngineHost-for-AI.md
+		..\docs\RunningCppTests-outside-of-VS-for-AI.md = ..\docs\RunningCppTests-outside-of-VS-for-AI.md
+		..\docs\RunningUnitTests-outside-of-VS-for-AI.md = ..\docs\RunningUnitTests-outside-of-VS-for-AI.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -294,6 +309,8 @@ Global
 		{6B26CBAE-38A1-47E6-BFF1-F4A626C9A5B5} = {9D97EF1A-BCD5-4932-BBCC-98194CF8A841}
 		{4F96DA84-CCBA-4ADE-8D7D-BC15D566A329} = {CF02407C-BF37-4D51-83F4-845A7F36C101}
 		{CC5BDD33-7EB1-4FB9-BC67-806773018989} = {20B91EF1-0CE0-4E6D-A122-319BF9B68E94}
+		{617F1819-7755-445A-8F8E-7C96137BA449} = {CF02407C-BF37-4D51-83F4-845A7F36C101}
+		{03A604B5-0964-4B2B-A7F1-CD89764B8BB1} = {CF02407C-BF37-4D51-83F4-845A7F36C101}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6099AC71-DA1D-4578-A8A3-376EB3C602E6}

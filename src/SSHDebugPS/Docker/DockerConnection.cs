@@ -20,8 +20,8 @@ namespace Microsoft.SSHDebugPS.Docker
 
         internal const string SshPrefixRegex = @"^[Ss]{2}[Hh]\s*=\s*";
         internal const string SshPrefix = "ssh=";
-        internal const string DockerHostPrefixRegex = @"^host\s*=\s*";
-        internal const string DockerHostPrefix = "host=";
+        internal const string HostPrefixRegex = @"^host\s*=\s*";
+        internal const string HostPrefix = "host=";
         internal const char Separator = ';';
 
         internal static string CreateConnectionString(string containerName, string remoteConnectionName, string hostName)
@@ -34,7 +34,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             if (!string.IsNullOrWhiteSpace(hostName))
             {
-                connectionString += Separator + DockerHostPrefix + hostName;
+                connectionString += Separator + HostPrefix + hostName;
             }
 
             return connectionString;
@@ -56,7 +56,7 @@ namespace Microsoft.SSHDebugPS.Docker
             if (connectionStrings.Length <= 3 && connectionStrings.Length > 0)
             {
                 Regex SshRegex = new Regex(SshPrefixRegex);
-                Regex dockerHostRegex = new Regex(DockerHostPrefixRegex);
+                Regex hostRegex = new Regex(HostPrefixRegex);
 
                 foreach (var item in connectionStrings)
                 {
@@ -66,9 +66,9 @@ namespace Microsoft.SSHDebugPS.Docker
                         Match match = SshRegex.Match(segment);
                         remoteConnection = ConnectionManager.GetSSHConnection(segment.Substring(match.Length));
                     }
-                    else if (dockerHostRegex.IsMatch(segment))
+                    else if (hostRegex.IsMatch(segment))
                     {
-                        Match match = dockerHostRegex.Match(segment);
+                        Match match = hostRegex.Match(segment);
                         hostName = segment.Substring(match.Length);
                     }
                     else if (segment.Contains("="))
@@ -198,7 +198,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return GetCommandRunner(execSettings, handleRawOutput: handleRawOutput);
         }
 
-        private ICommandRunner GetCommandRunner(DockerContainerTransportSettings settings, bool handleRawOutput = false)
+        private ICommandRunner GetCommandRunner(IPipeTransportSettings settings, bool handleRawOutput = false)
         {
             if (OuterConnection == null)
             {

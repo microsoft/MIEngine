@@ -5,6 +5,7 @@ parameters:
   Configuration: 'Release'
   BuildArguments: ''
   OneESPT: false
+  NuGetConfigPath: '$(Build.SourcesDirectory)/eng/pipelines/NuGet.release.config'
 
 steps:
 - template: ../tasks/NuGetCommand.yml
@@ -12,7 +13,7 @@ steps:
     Command: 'restore'
     solution: ${{ parameters.Solution }}
     selectOrConfig: 'config'
-    NugetConfigPath: '$(Build.SourcesDirectory)/src/.nuget/NuGet.config'
+    NugetConfigPath: '${{ parameters.NuGetConfigPath }}'
 
 # If running under System.Debug (Enable system diagnostics), enable binlogs
 - script: |

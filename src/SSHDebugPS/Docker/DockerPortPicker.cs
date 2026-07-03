@@ -33,12 +33,13 @@ namespace Microsoft.SSHDebugPS.Docker
     public abstract class DockerPortPickerBase : IDebugPortPicker
     {
         internal abstract bool SupportSSHConnections { get; }
+        internal virtual ContainerRuntimeType RuntimeType => ContainerRuntimeType.Docker;
 
         int IDebugPortPicker.DisplayPortPicker(IntPtr hwndParentDialog, out string pbstrPortId)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             // If this is null, then the PortPicker handler shows an error. Set to empty by default
-            return ConnectionManager.ShowContainerPickerWindow(hwndParentDialog, SupportSSHConnections, out pbstrPortId) ?
+            return ConnectionManager.ShowContainerPickerWindow(hwndParentDialog, SupportSSHConnections, RuntimeType, out pbstrPortId) ?
                 VSConstants.S_OK : VSConstants.S_FALSE;
         }
 
