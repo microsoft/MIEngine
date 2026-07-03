@@ -43,6 +43,7 @@ namespace Microsoft.MIDebugEngine.Natvis
         public bool IsStringType { get { return Parent.IsStringType; } }
         public ThreadContext ThreadContext { get { return Parent.ThreadContext; } }
         public virtual bool IsVisualized { get { return Parent.IsVisualized; } }
+        public string NatvisView { get { return Parent.NatvisView; } }
         public virtual enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         public virtual bool IsReadOnly() => Parent.IsReadOnly();
         public bool IsNullPointer() => Parent.IsNullPointer();

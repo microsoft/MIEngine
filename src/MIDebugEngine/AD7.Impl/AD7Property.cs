@@ -72,7 +72,7 @@ namespace Microsoft.MIDebugEngine
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE) != 0)
             {
-                (propertyInfo.bstrValue, _uiVisualizers) = _engine.DebuggedProcess.Natvis.FormatDisplayString(variable);
+                (propertyInfo.bstrValue, _uiVisualizers) = _engine.DebuggedProcess.Natvis.FormatDisplayString(variable, variable.NatvisView);
                 propertyInfo.dwFields |= enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE;
             }
 
@@ -154,7 +154,7 @@ namespace Microsoft.MIDebugEngine
                 try
                 {
                     _engine.DebuggedProcess.Natvis.WaitDialog.ShowWaitDialog(_variableInformation.Name);
-                    var children = _engine.DebuggedProcess.Natvis.Expand(_variableInformation);
+                    var children = _engine.DebuggedProcess.Natvis.Expand(_variableInformation, _variableInformation.NatvisView);
 
                     // Count number of children that fit filter (results saved in "fitsFilter")
                     int propertyCount = children.Length;

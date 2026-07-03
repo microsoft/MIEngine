@@ -813,6 +813,17 @@ namespace CppTests.Tests
                     Assert.False(holder.Variables.ContainsKey("Y"), "Y (ExcludeView=simple) should be hidden in the simple view");
                     Assert.Equal("1", holder.GetVariable("X").Value);
                     Assert.Equal("3", holder.GetVariable("Z").Value);
+
+                    this.Comment("A ',view(simple)' specifier typed on a watch expression selects the IncludeView DisplayString.");
+                    Assert.Equal("compact 1", currentFrame.Evaluate("vo,view(simple)", EvaluateContext.Watch));
+
+                    this.Comment("Watch ',view(simple)' expansion: X and Z show, Y (ExcludeView=simple) is filtered out.");
+                    IDictionary<string, IVariableInspector> watchItems = currentFrame.EvaluateChildren("vo,view(simple)", EvaluateContext.Watch);
+                    Assert.True(watchItems.ContainsKey("X"), "X (untagged) should show in the simple view");
+                    Assert.True(watchItems.ContainsKey("Z"), "Z (IncludeView=simple) should show in the simple view");
+                    Assert.False(watchItems.ContainsKey("Y"), "Y (ExcludeView=simple) should be hidden in the simple view");
+                    Assert.Equal("1", watchItems["X"].Value);
+                    Assert.Equal("3", watchItems["Z"].Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
