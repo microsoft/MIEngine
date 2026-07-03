@@ -3,6 +3,7 @@
     <!--Fix the assembly version for DebugEngineHost as all the versions of this dll must have the same assembly identity
     NOTE: Ths must be set BEFORE improting miengine.settings.targets-->
     <AssemblyVersion>1.0.0</AssemblyVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
@@ -26,11 +27,16 @@
     <MicrosoftVisualStudioDebuggerEnginePath>$(VSSDKRoot)VisualStudioIntegration\Common\Assemblies\v4.0\Microsoft.VisualStudio.Debugger.Engine.dll</MicrosoftVisualStudioDebuggerEnginePath>
   </PropertyGroup>
 
-  <ItemGroup Label="Compile Shared Interfaces">
-    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.DAP.cs" />
-    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.MI.cs" />
-
-    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Common\HostLogChannel.cs" />
+  <ItemGroup>
+    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\*.cs">
+      <Link>Shared\%(Filename).cs</Link>
+    </Compile>
+    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Common\*.cs">
+      <Link>Shared\%(Filename).cs</Link>
+    </Compile>
+    <Compile Include="$(MIEngineRoot)\src\Shared\NullableAttributes.cs">
+      <Link>Shared\%(Filename).cs</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

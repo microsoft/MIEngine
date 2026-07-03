@@ -15,11 +15,12 @@ namespace Microsoft.DebugEngineHost
 
         public HostConfigurationStore(string adapterId)
         {
-            _config = EngineConfiguration.TryGet(adapterId);
-            if (_config == null)
+            EngineConfiguration? config = EngineConfiguration.TryGet(adapterId);
+            if (config is null)
             {
                 throw new ArgumentOutOfRangeException(nameof(adapterId));
             }
+            _config = config;
         }
 
         public void SetEngineGuid(Guid value)
@@ -35,12 +36,12 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
-        public object GetCustomLauncher(string launcherTypeName)
+        public object? GetCustomLauncher(string launcherTypeName)
         {
             throw new NotImplementedException();
         }
 
-        public object GetEngineMetric(string metric)
+        public object? GetEngineMetric(string metric)
         {
             if (string.CompareOrdinal("GlobalVisualizersDirectory", metric) == 0)
             {
@@ -55,7 +56,7 @@ namespace Microsoft.DebugEngineHost
         public void GetExceptionCategorySettings(Guid categoryId, out HostConfigurationSection categoryConfigSection, out string categoryName)
         {
             var category = _config.ExceptionSettings.Categories.FirstOrDefault((x) => x.Id == categoryId);
-            if (category == null)
+            if (category is null)
             {
                 throw new InvalidDataException(string.Format(CultureInfo.CurrentCulture, HostResources.Error_ExceptionCategoryMissing, categoryId));
             }

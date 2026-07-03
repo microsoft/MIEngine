@@ -21,6 +21,8 @@
     <ToolsHome>$(MIEngineRoot)\tools</ToolsHome>
     <IntermediateOutputPath>$(MIEngineRoot)obj\$(Configuration)\$(MSBuildProjectName)\</IntermediateOutputPath>
     <NuGetExePath>$(ToolsHome)\NuGet\NuGet.exe</NuGetExePath>
+    <!--NOTE: This is the same language version that is the default for .NET 8 projects -->
+    <LangVersion>12.0</LangVersion>
   </PropertyGroup>
   
   <!-- Source Link -->

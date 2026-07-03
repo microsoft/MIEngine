@@ -21,11 +21,11 @@ namespace MICore
         public readonly string Description;
         public readonly bool IgnoreFailures;
         public readonly bool IsMICommand;
-        public /*OPTIONAL*/ Action<string> FailureHandler { get; private set; }
-        public /*OPTIONAL*/ Func<string, Task> SuccessHandler { get; private set; }
-        public /*Optional*/ Func<Results, Task> SuccessResultsHandler { get; private set; }
+        public Action<string>? FailureHandler { get; private set; }
+        public Func<string, Task>? SuccessHandler { get; private set; }
+        public Func<Results, Task>? SuccessResultsHandler { get; private set; }
 
-        public LaunchCommand(string commandText, string description = null, bool ignoreFailures = false, Action<string> failureHandler = null, Func<string, Task> successHandler = null, Func<Results, Task> successResultsHandler = null)
+        public LaunchCommand(string commandText, string? description = null, bool ignoreFailures = false, Action<string>? failureHandler = null, Func<string, Task>? successHandler = null, Func<Results, Task>? successResultsHandler = null)
         {
             if (commandText == null)
                 throw new ArgumentNullException(nameof(commandText));
@@ -34,9 +34,7 @@ namespace MICore
                 throw new ArgumentOutOfRangeException(nameof(commandText));
             this.IsMICommand = commandText[0] == '-';
             this.CommandText = commandText;
-            this.Description = description;
-            if (string.IsNullOrWhiteSpace(description))
-                this.Description = this.CommandText;
+            this.Description = IsNullOrWhiteSpace(description) ? this.CommandText : description;
 
             this.IgnoreFailures = ignoreFailures;
             this.FailureHandler = failureHandler;
@@ -46,7 +44,10 @@ namespace MICore
 
         public static ReadOnlyCollection<LaunchCommand> CreateCollection(List<Json.LaunchOptions.SetupCommand> source)
         {
-            IList<LaunchCommand> commands = source?.Select(x => new LaunchCommand(x.Text, x.Description, x.IgnoreFailures.GetValueOrDefault(false))).ToList();
+            IList<LaunchCommand>? commands = source
+                ?.Where(x => !string.IsNullOrWhiteSpace(x.Text))
+                ?.Select(x => new LaunchCommand(x.Text!, x.Description, x.IgnoreFailures.GetValueOrDefault(false)))
+                ?.ToList();
             if(commands == null)
             {
                 commands = new List<LaunchCommand>(0);
@@ -57,7 +58,7 @@ namespace MICore
 
         public static ReadOnlyCollection<LaunchCommand> CreateCollection(Xml.LaunchOptions.Command[] source)
         {
-            LaunchCommand[] commandArray = source?.Select(x => new LaunchCommand(x.Value, x.Description, x.IgnoreFailures)).ToArray();
+            LaunchCommand[]? commandArray = source?.Select(x => new LaunchCommand(x.Value, x.Description, x.IgnoreFailures)).ToArray();
             if (commandArray == null)
             {
                 commandArray = new LaunchCommand[0];

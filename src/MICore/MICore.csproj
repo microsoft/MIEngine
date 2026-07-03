@@ -2,6 +2,7 @@
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <Nullable>enable</Nullable>
     <ProjectGuid>{54C33AFA-438D-4932-A2F0-D0F2BB2FADC9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -23,6 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="$(MIEngineRoot)\src\Shared\NullableAttributes.cs">
+      <Link>Shared\%(Filename).cs</Link>
+    </Compile>
     <Compile Update="MICoreResources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

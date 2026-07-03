@@ -1,5 +1,5 @@
-﻿// // Copyright (c) Microsoft. All rights reserved.
-// // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
@@ -9,7 +9,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,7 +50,7 @@ namespace Microsoft.DebugEngineHost
         private readonly bool _watchSubtree;
 
         // Set when monitoring is stopped
-        private AutoResetEvent _stoppedEvent;
+        private AutoResetEvent? _stoppedEvent;
 
         // Members to handle multiple stop calls.
         private bool _isStopped = false;
@@ -60,7 +59,7 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Occurs when the specified registry key has changed.
         /// </summary>
-        public event EventHandler RegChanged;
+        public event EventHandler? RegChanged;
 
         private readonly ILogChannel _nativsLogger;
 
@@ -73,6 +72,15 @@ namespace Microsoft.DebugEngineHost
 
         public void Start()
         {
+            lock (_stopLock)
+            {
+                if (_stoppedEvent != null)
+                {
+                    throw new InvalidOperationException("RegistryMonitor already started.");
+                }
+                _isStopped = false;
+                _stoppedEvent = new AutoResetEvent(false);
+            }
             Thread registryMonitor = new Thread(Monitor);
             registryMonitor.IsBackground = true;
             registryMonitor.Name = "Microsoft.DebugEngineHost.RegistryMonitor";
@@ -98,7 +106,15 @@ namespace Microsoft.DebugEngineHost
             bool stopped = false;
             try
             {
-                _stoppedEvent = new AutoResetEvent(false);
+                // Ensure stop isn't requested before we create/wait on events.
+                lock (_stopLock)
+                {
+                    if (_isStopped)
+                    {
+                        return;
+                    }
+                }
+
                 using (AutoResetEvent registryChangedEvent = new AutoResetEvent(false))
                 {
                     IntPtr handle = registryChangedEvent.SafeWaitHandle.DangerousGetHandle();
@@ -112,7 +128,9 @@ namespace Microsoft.DebugEngineHost
                     {
                         while (!stopped)
                         {
-                            int waitResult = WaitHandle.WaitAny(new WaitHandle[] { _stoppedEvent, registryChangedEvent });
+                            AutoResetEvent? stoppedEvent = _stoppedEvent;
+                            Debug.Assert(stoppedEvent is not null, "Should be impossible - this code can only run after `Start` is called.");
+                            int waitResult = WaitHandle.WaitAny(new WaitHandle[] { stoppedEvent, registryChangedEvent });
 
                             if (waitResult == 0)
                             {
@@ -126,7 +144,7 @@ namespace Microsoft.DebugEngineHost
                                     _nativsLogger?.WriteLine(LogLevel.Error, Resource.Error_WatchRegistry, errorCode);
                                     break;
                                 }
-                                RegChanged?.Invoke(this, null);
+                                RegChanged?.Invoke(this, EventArgs.Empty);
                             }
                         }
                     }
@@ -134,9 +152,11 @@ namespace Microsoft.DebugEngineHost
             }
             finally
             {
-                _stoppedEvent.Dispose();
-                _stoppedEvent = null;
-
+                lock (_stopLock)
+                {
+                    _stoppedEvent?.Dispose();
+                    _stoppedEvent = null;
+                }
                 _section.Dispose();
             }
         }

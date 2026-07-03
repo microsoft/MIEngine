@@ -4,7 +4,6 @@
 using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -104,7 +103,7 @@ namespace MICore
             }
         }
 
-        internal static string MakeFifo(string identifier = null, Logger logger = null)
+        internal static string MakeFifo(string? identifier = null, Logger? logger = null)
         {
             string path = Path.Combine(Path.GetTempPath(), Utilities.GetMIEngineTemporaryFilename(identifier));
 
@@ -200,9 +199,9 @@ namespace MICore
             return p.ExitCode == 0;
         }
 
-        internal static void OutputNonEmptyString(string str, string prefix, Logger logger)
+        internal static void OutputNonEmptyString(string? str, string prefix, Logger logger)
         {
-            if (!String.IsNullOrWhiteSpace(str) && logger != null)
+            if (!IsNullOrWhiteSpace(str) && logger != null)
             {
                 logger.WriteLine(LogLevel.Verbose, prefix + str);
             }
@@ -223,7 +222,7 @@ namespace MICore
                 ps.StartInfo.RedirectStandardOutput = true;
                 ps.StartInfo.UseShellExecute = false;
                 ps.Start();
-                string line;
+                string? line;
                 List<Tuple<int, int>> processAndParent = new List<Tuple<int, int>>();
                 char[] whitespace = new char[] { ' ', '\t' };
                 while ((line = ps.StandardOutput.ReadLine()) != null)
