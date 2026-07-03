@@ -40,3 +40,17 @@ These aren't in `.editorconfig` but show up everywhere — follow the existing c
 - **Host calls go through `DebugEngineHost`.** MIDebugEngine never references `Microsoft.VisualStudio.*` directly; use `HostLogger`, `HostMarshal`, `HostOutputWindow`, etc.
 - **AD7 surface lives on `AD7*` partial classes.** Keep VS-SDK COM concerns out of the core `Debugged*` classes.
 - **Worker thread discipline.** AD7 callbacks must not block. Use `Task.Run` for work and post results back via the engine's `WorkerThread` / `EngineCallback`. Mirror existing call sites; do not invent new threading patterns.
+
+## Nullable reference types and `Debug`
+
+Projects with nullable reference types enabled **must never** use `System.Diagnostics.Debug` directly. Do **not** add `using System.Diagnostics;` or `using Debug = System.Diagnostics.Debug;` in any file in a nullable-enabled project.
+
+Instead, use `Microsoft.DebugEngineHost.NullableHelpers.Debug`, which is a wrapper that adds `[DoesNotReturn]` / `[DoesNotReturnIf(false)]` attributes so the C# nullable flow analyser understands that `Debug.Assert`/`Debug.Fail` stop execution. This wrapper is brought into scope via the file `GlobalUsings.cs` in each nullable-enabled project:
+
+```csharp
+global using static global::Microsoft.DebugEngineHost.NullableHelpers;
+```
+
+With that global using in place every `Debug.Assert(...)` and `Debug.Fail(...)` call in the project automatically resolves to `NullableHelpers.Debug` — no per-file `using` is needed. **Never shadow this with a per-file alias or a `using System.Diagnostics;` import.**
+
+The same global using also brings `IsNullOrEmpty` and `IsNullOrWhiteSpace` into scope as drop-in replacements for `string.IsNullOrEmpty`/`string.IsNullOrWhiteSpace` with the proper `[NotNullWhen(false)]` annotation.

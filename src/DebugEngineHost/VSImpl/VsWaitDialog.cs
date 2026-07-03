@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -11,7 +11,7 @@ namespace Microsoft.DebugEngineHost.VSImpl
 {
     internal class VSWaitDialog
     {
-        private readonly IVsThreadedWaitDialog2 _waitDialog;
+        private readonly IVsThreadedWaitDialog2? _waitDialog;
         private const int m_delayShowDialogTimeInSeconds = 2;
         private bool _started;
         private string _format;
@@ -36,7 +36,7 @@ namespace Microsoft.DebugEngineHost.VSImpl
         }
         public void ShowWaitDialog(string item)
         {
-            if (_waitDialog == null)
+            if (_waitDialog is null)
             {
                 return;
             }
@@ -69,7 +69,7 @@ namespace Microsoft.DebugEngineHost.VSImpl
 
         public void EndWaitDialog()
         {
-            if (_waitDialog == null)
+            if (_waitDialog is null)
             {
                 return;
             }

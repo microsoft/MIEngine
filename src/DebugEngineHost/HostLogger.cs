@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -11,22 +11,22 @@ namespace Microsoft.DebugEngineHost
 {
     public static class HostLogger
     {
-        private static ILogChannel s_natvisLogChannel;
-        private static ILogChannel s_engineLogChannel;
+        private static ILogChannel? s_natvisLogChannel;
+        private static ILogChannel? s_engineLogChannel;
 
-        private static string s_engineLogFile;
+        private static string? s_engineLogFile;
 
-        private static FeedbackLogBuffer s_circularBuffer;
-        private static VSFeedbackLogger s_feedbackLogger;
+        private static FeedbackLogBuffer? s_circularBuffer;
+        private static VSFeedbackLogger? s_feedbackLogger;
 
-        public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
+        public static void EnableHostLogging(Action<string>? callback, LogLevel level = LogLevel.Verbose)
         {
-            if (s_engineLogChannel == null)
+            if (s_engineLogChannel is null)
             {
                 s_engineLogChannel = new HostLogChannel(callback, s_engineLogFile, level);
             }
 
-            if (s_feedbackLogger == null)
+            if (s_feedbackLogger is null)
             {
                 s_feedbackLogger = new VSFeedbackLogger(EnsureFeedbackBuffer());
             }
@@ -34,7 +34,7 @@ namespace Microsoft.DebugEngineHost
 
         public static void EnableNatvisDiagnostics(Action<string> callback, LogLevel level = LogLevel.Verbose)
         {
-            if (s_natvisLogChannel== null)
+            if (s_natvisLogChannel is null)
             {
                 s_natvisLogChannel = new HostLogChannel(callback, null, level);
             }
@@ -45,17 +45,17 @@ namespace Microsoft.DebugEngineHost
             s_natvisLogChannel = null;
         }
 
-        public static void SetEngineLogFile(string logFile)
+        public static void SetEngineLogFile(string? logFile)
         {
             s_engineLogFile = logFile;
         }
 
-        public static ILogChannel GetEngineLogChannel()
+        public static ILogChannel? GetEngineLogChannel()
         {
             return s_engineLogChannel;
         }
 
-        public static ILogChannel GetNatvisLogChannel()
+        public static ILogChannel? GetNatvisLogChannel()
         {
             return s_natvisLogChannel;
         }
@@ -65,7 +65,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         public static bool IsFeedbackLogEnabled
         {
-            get { return s_circularBuffer != null; }
+            get { return s_circularBuffer is not null; }
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         public static void WriteFeedbackLog(string message)
         {
-            if (string.IsNullOrEmpty(message))
+            if (IsNullOrEmpty(message))
             {
                 return;
             }
@@ -87,7 +87,7 @@ namespace Microsoft.DebugEngineHost
 
         private static FeedbackLogBuffer EnsureFeedbackBuffer()
         {
-            if (s_circularBuffer == null)
+            if (s_circularBuffer is null)
             {
                 Interlocked.CompareExchange(ref s_circularBuffer, new FeedbackLogBuffer(), null);
             }
@@ -102,8 +102,8 @@ namespace Microsoft.DebugEngineHost
         {
             get
             {
-                FeedbackLogBuffer buffer = s_circularBuffer;
-                return buffer != null && buffer.HasEntries;
+                FeedbackLogBuffer? buffer = s_circularBuffer;
+                return buffer is not null && buffer.HasEntries;
             }
         }
 

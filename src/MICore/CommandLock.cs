@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,7 +17,7 @@ namespace MICore
     // NOTE: I tried to make this a value object, but value objects don't work quite as expected in async methods and calling 'Close'
     // wasn't updating the backing value object which was stored in the state machine class
     {
-        private CommandLock _commandLock;
+        private CommandLock? _commandLock;
         private int _value;
 
         internal ExclusiveLockToken(CommandLock commandLock, int value)
@@ -39,7 +38,7 @@ namespace MICore
             return (token == null || token._value == 0);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             throw new NotImplementedException(); // this method should never be called
         }
@@ -66,6 +65,7 @@ namespace MICore
             _value = 0;
             _commandLock = null;
 
+            Debug.Assert(commandLock is not null, "Should be impossible. A non-zero _value implies _commandLock is set.");
             commandLock.ConvertExclusiveLockToShared(value);
         }
 
@@ -78,6 +78,7 @@ namespace MICore
                 _value = 0;
                 _commandLock = null;
 
+                Debug.Assert(commandLock is not null, "Should be impossible. A non-zero _value implies _commandLock is set.");
                 commandLock.ReleaseExclusive(value);
             }
         }
@@ -99,9 +100,9 @@ namespace MICore
 
         private int _prevExclusiveToken;
         private int _pendingSharedLockRequests;
-        private TaskCompletionSource<int> _waitingSharedLockSource;
+        private TaskCompletionSource<int>? _waitingSharedLockSource;
         private readonly Queue<TaskCompletionSource<ExclusiveLockToken>> _waitingExclusiveLockRequests = new Queue<TaskCompletionSource<ExclusiveLockToken>>();
-        private string _closeMessage;
+        private string _closeMessage = string.Empty;
 
         public CommandLock()
         {
@@ -184,7 +185,7 @@ namespace MICore
         // Internal method called from the ExclusiveLockToken class as part of closing an exclusive lock
         internal void ReleaseExclusive(int tokenValue)
         {
-            Action actionAfterReleaseLock = null;
+            Action? actionAfterReleaseLock = null;
 
             lock (this.LockObject)
             {
@@ -212,7 +213,7 @@ namespace MICore
         // Internal method called from the ExclusiveLockToken class to convert an exclusive lock into a shared lock
         internal void ConvertExclusiveLockToShared(int tokenValue)
         {
-            Action actionAfterReleaseLock = null;
+            Action? actionAfterReleaseLock = null;
 
             lock (this.LockObject)
             {
@@ -240,7 +241,7 @@ namespace MICore
 
         public void ReleaseShared()
         {
-            Action actionAfterReleaseLock = null;
+            Action? actionAfterReleaseLock = null;
 
             lock (this.LockObject)
             {
@@ -269,7 +270,7 @@ namespace MICore
         }
 
         // NOTE: This method MUST be called with this.LockObject held
-        private Action GetAfterReleaseLockAction()
+        private Action? GetAfterReleaseLockAction()
         {
             Debug.Assert(_lockStatus == StatusFree, "Why is GetAfterReleaseLockAction called when the lock is not free?");
 
@@ -298,7 +299,7 @@ namespace MICore
         }
 
         // NOTE: This method MUST be called with this.LockObject held
-        private Action MaybeSignalPendingSharedLockRequests()
+        private Action? MaybeSignalPendingSharedLockRequests()
         {
             Debug.Assert(_lockStatus >= 0, "Why is MaybeGetSharedLockAction called when the lock is not free/reading?");
 

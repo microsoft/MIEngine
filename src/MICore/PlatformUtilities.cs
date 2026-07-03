@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
+using ProcessStartInfo = global::System.Diagnostics.ProcessStartInfo;
 
 namespace MICore
 {
@@ -73,13 +73,13 @@ namespace MICore
         }
 
         // Abstract API call to add an environment variable to a new process
-        public static void SetEnvironmentVariable(this ProcessStartInfo processStartInfo, string key, string value)
+        public static void SetEnvironmentVariable(this ProcessStartInfo processStartInfo, string key, string? value)
         {
             processStartInfo.Environment[key] = value;
         }
 
         // Abstract API call to add an environment variable to a new process
-        public static string GetEnvironmentVariable(this ProcessStartInfo processStartInfo, string key)
+        public static string? GetEnvironmentVariable(this ProcessStartInfo processStartInfo, string key)
         {
             if (processStartInfo.Environment.ContainsKey(key))
                 return processStartInfo.Environment[key];
@@ -99,7 +99,7 @@ namespace MICore
 
         public static string PathToHostOSPath(string path)
         {
-            if (string.IsNullOrWhiteSpace(path))
+            if (IsNullOrWhiteSpace(path))
             {
                 return path;
             }

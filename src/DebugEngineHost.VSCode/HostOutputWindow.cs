@@ -2,13 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 
 namespace Microsoft.DebugEngineHost
 {
     public static class HostOutputWindow
     {
-        private static Action<string> s_launchErrorCallback;
+        private static Action<string>? s_launchErrorCallback;
 
         public static void InitializeLaunchErrorCallback(Action<string> launchErrorCallback)
         {
@@ -18,7 +17,7 @@ namespace Microsoft.DebugEngineHost
 
         public static void WriteLaunchError(string outputMessage)
         {
-            if (s_launchErrorCallback != null)
+            if (s_launchErrorCallback is not null)
             {
                 s_launchErrorCallback(outputMessage);
             }
