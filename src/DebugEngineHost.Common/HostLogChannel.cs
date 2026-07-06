@@ -50,15 +50,15 @@ namespace Microsoft.DebugEngineHost
 
     public class HostLogChannel : ILogChannel
     {
-        private readonly Action<string> _log;
+        private readonly Action<string>? _log;
         private StreamWriter? _logFile;
         private LogLevel _minLevelToBeLogged;
 
         private readonly object _lock = new object();
 
-        private HostLogChannel() { _log = null!; }
+        private HostLogChannel() { }
 
-        public HostLogChannel(Action<string> logAction, string? file, LogLevel logLevel)
+        public HostLogChannel(Action<string>? logAction, string? file, LogLevel logLevel)
         {
             _log = logAction;
 

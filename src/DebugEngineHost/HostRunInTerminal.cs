@@ -22,7 +22,7 @@ namespace Microsoft.DebugEngineHost
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "cwd")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
-        public static void RunInTerminal(string title, string workingDirectory, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string> environmentVariables, Action<int?> success, Action<string> failure)
+        public static void RunInTerminal(string title, string workingDirectory, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string?> environmentVariables, Action<int?> success, Action<string> failure)
         {
             throw new NotImplementedException();
         }

@@ -19,7 +19,7 @@ namespace Microsoft.DebugEngineHost
         private static FeedbackLogBuffer? s_circularBuffer;
         private static VSFeedbackLogger? s_feedbackLogger;
 
-        public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
+        public static void EnableHostLogging(Action<string>? callback, LogLevel level = LogLevel.Verbose)
         {
             if (s_engineLogChannel is null)
             {

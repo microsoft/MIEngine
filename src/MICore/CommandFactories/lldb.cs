@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text;
@@ -16,6 +15,11 @@ namespace MICore
 {
     internal class LlldbMICommandFactory : MICommandFactory
     {
+        public LlldbMICommandFactory(Debugger debugger)
+            : base(debugger)
+        {
+        }
+
         public override string Name
         {
             get { return "LLDB"; }
@@ -111,13 +115,13 @@ namespace MICore
 
         public override Task<List<ulong>> StartAddressesForLine(string file, uint line)
         {
-            return Task.FromResult<List<ulong>>(null);
+            return Task.FromResult(new List<ulong>());
         }
 
         public override Task EnableTargetAsyncOption()
         {
             // lldb-mi doesn't support target-async mode, and doesn't seem to need to
-            return Task.FromResult((object)null);
+            return Task.CompletedTask;
         }
 
         public override string GetTargetArchitectureCommand()
@@ -131,7 +135,7 @@ namespace MICore
             {
                 while (true)
                 {
-                    string resultLine = stringReader.ReadLine();
+                    string? resultLine = stringReader.ReadLine();
                     if (resultLine == null)
                         break;
 
@@ -211,7 +215,7 @@ namespace MICore
             {
                 // Query for the version.
                 string version = await Version();
-                if (!string.IsNullOrWhiteSpace(version) && version.Trim().Equals(OldLLDBMIVersionString, StringComparison.Ordinal))
+                if (!IsNullOrWhiteSpace(version) && version.Trim().Equals(OldLLDBMIVersionString, StringComparison.Ordinal))
                 {
                     _requiresOnKeywordForBreakInsert = true;
                 }
