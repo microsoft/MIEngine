@@ -74,6 +74,56 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     }
 
+    /// <summary>
+    /// A synthetic, non-evaluatable child row that displays a fixed diagnostic message as an
+    /// error value, e.g. when a CustomListItems loop cannot continue.
+    /// </summary>
+    internal class MessageVariableInformation : IVariableInformation
+    {
+        public MessageVariableInformation(string name, string message, AD7Engine engine, IVariableInformation parent)
+        {
+            Name = name;
+            Value = message;
+            _engine = engine;
+            _parent = parent;
+        }
+
+        private readonly AD7Engine _engine;
+        private readonly IVariableInformation _parent;
+
+        public string Name { get; }
+        public string Value { get; }
+        public string TypeName { get { return null; } }
+        public bool IsParameter { get { return false; } }
+        public VariableInformation[] Children { get { return null; } }
+        public AD7Thread Client { get { return _parent.Client; } }
+        public bool Error { get { return true; } }
+        public uint CountChildren { get { return 0; } }
+        public bool IsChild { get; set; }
+        public enum_DBG_ATTRIB_FLAGS Access { get { return enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_ACCESS_NONE; } }
+        public bool IsStringType { get { return false; } }
+        public ThreadContext ThreadContext { get { return _parent.ThreadContext; } }
+        public bool IsVisualized { get { return false; } }
+        public string NatvisView { get { return null; } }
+        public enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
+        public bool IsPreformatted { get { return true; } set { } }
+        public string FullName() { return null; }
+        public void EnsureChildren() { }
+        public void AsyncEval(IDebugEventCallback2 pExprCallback) { }
+        public void AsyncError(IDebugEventCallback2 pExprCallback, IDebugProperty2 error)
+        {
+            VariableInformation.AsyncErrorImpl(pExprCallback != null ? new EngineCallback(_engine, pExprCallback) : _engine.Callback, this, error);
+        }
+        public void SyncEval(enum_EVALFLAGS dwFlags, DAPEvalFlags dwDAPFlags) { }
+        public VariableInformation FindChildByName(string name) { return null; }
+        public string EvalDependentExpression(string expr) { return null; }
+        public bool IsReadOnly() { return true; }
+        public bool IsNullPointer() { return false; }
+        public string Address() { return null; }
+        public uint Size() { return 0; }
+        public void Dispose() { }
+    }
+
     internal class VisualizerWrapper : SimpleWrapper
     {
         public readonly Natvis.VisualizerInfo Visualizer;
@@ -264,6 +314,9 @@ namespace Microsoft.MIDebugEngine.Natvis
         // result is a scalar safe to substitute back in place of its expression. Deliberately does
         // NOT match hex (pointers "0x...") or any non-numeric display string.
         private static readonly Regex s_integerLiteral = new Regex(@"^\s*-?\d+\s*$", RegexOptions.Compiled);
+        // Matches the leading hex address of a raw pointer value. GDB may append a symbol or
+        // string ("0x5555 <sym>", "0x5555 \"text\""), so only the leading token is captured.
+        private static readonly Regex s_leadingHexAddress = new Regex(@"^\s*(0x[0-9a-fA-F]+)\b", RegexOptions.Compiled);
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
         private HostConfigurationStore _configStore;
@@ -2001,6 +2054,9 @@ namespace Microsoft.MIDebugEngine.Natvis
             public readonly uint TotalSize;
             /// <summary>Set to true when a &lt;Break&gt; fires or the page limit is reached.</summary>
             public bool Done;
+            /// <summary>&lt;Exec&gt; steps whose updated variable could not be stored compactly
+            /// (not an integer, bool or pointer), so its expression grew by one step.</summary>
+            public int NonCompactSteps;
 
             public CustomListLoopContext(uint startIndex, uint totalSize)
             {
@@ -2008,6 +2064,14 @@ namespace Microsoft.MIDebugEngine.Natvis
                 TotalSize = totalSize;
             }
         }
+
+        /// <summary>
+        /// How many expression-growing &lt;Exec&gt; steps are tolerated before the loop stops with
+        /// an error row. Kept small: each such step nests the variable's expression one level
+        /// deeper, so evaluation cost grows quadratically and eventually exceeds the debugger's
+        /// expression limits (observed as a hang around 250 nested levels with lldb).
+        /// </summary>
+        private const int MaxNonCompactExecSteps = 10;
 
         /// <summary>
         /// Drives a single &lt;Loop&gt; element: runs its body once per iteration until a &lt;Break&gt;
@@ -2146,20 +2210,31 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                     foreach (string updatedVar in updatedVars)
                     {
-                        // Normalise each updated variable to prevent unbounded growth across
-                        // iterations: after each i++ the expression would otherwise grow as
-                        // "(((0)+1)+1)+1...". Evaluate it and, ONLY when the result is a plain
-                        // integer literal (the counter case), store that literal so the next
-                        // iteration starts compact. Anything else must keep its expression:
-                        // GetExpressionValue runs FormatDisplayString, so a pointer/struct local
-                        // is rendered as "0x..." or a visualizer display string — storing that
-                        // (a type-less address or non-C++ text) would corrupt later substitutions.
+                        // Keep each updated variable's stored expression compact, or it grows by
+                        // one step every iteration ("(((0)+1)+1)+1...", "((node)->next)->next...")
+                        // making evaluation quadratic and, past a few hundred steps, exceeding the
+                        // debugger's expression limits. The variable is evaluated raw (no natvis
+                        // formatting) and stored back as a literal when possible: integers/bools
+                        // as-is, pointers as the address cast to their type ("(MyStruct *)0x1234",
+                        // stable while the process is stopped). Other types (e.g. a by-value
+                        // iterator) cannot be stored back as C++ text; a few such steps are
+                        // tolerated, then an error row is emitted and the loop stops rather than
+                        // degrade item by item.
                         try
                         {
-                            string normalized = GetExpressionValue(localVars[updatedVar], variable, visualizer.ScopedNames, visualizer.Intrinsics);
-                            if (IsScalarLiteral(normalized))
+                            IVariableInformation updated = GetExpression(localVars[updatedVar], variable, visualizer.ScopedNames, null, visualizer.Intrinsics);
+                            string compact = updated.Error ? null : MakeCompactLiteral(updated.Value, updated.TypeName);
+                            if (compact != null)
                             {
-                                localVars[updatedVar] = normalized.Trim();
+                                localVars[updatedVar] = compact;
+                            }
+                            else if (++ctx.NonCompactSteps > MaxNonCompactExecSteps)
+                            {
+                                string message = "CustomListItems: the value of loop variable '" + updatedVar + "' is not an integer, bool or pointer; the loop cannot continue efficiently and was stopped.";
+                                _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, message);
+                                children.Add(new MessageVariableInformation("[Error]", message, _process.Engine, variable));
+                                ctx.Done = true;
+                                break;
                             }
                         }
                         catch (Exception e)
@@ -2337,6 +2412,31 @@ namespace Microsoft.MIDebugEngine.Natvis
         internal static bool IsScalarLiteral(string value)
         {
             return !string.IsNullOrEmpty(value) && s_integerLiteral.IsMatch(value);
+        }
+
+        /// <summary>
+        /// Returns a compact C++ expression equivalent to a loop variable's current value, or null
+        /// when none exists. Integers and bools are returned as literals; pointers are returned as
+        /// the address cast to their type ("(MyStruct *)0x1234", the same simplification
+        /// <see cref="VariableInformation.FullName"/> applies to long parent expressions). Keeping
+        /// the stored expression constant-size is what stops it growing by one step per iteration
+        /// ("((node)->next)->next...") until evaluation becomes quadratic and finally exceeds the
+        /// debugger's expression limits.
+        /// </summary>
+        internal static string MakeCompactLiteral(string rawValue, string typeName)
+        {
+            if (string.IsNullOrEmpty(rawValue))
+                return null;
+            string value = rawValue.Trim();
+            if (s_integerLiteral.IsMatch(value) || value == "true" || value == "false")
+                return value;
+            if (!string.IsNullOrEmpty(typeName) && typeName.TrimEnd().EndsWith("*", StringComparison.Ordinal))
+            {
+                Match m = s_leadingHexAddress.Match(value);
+                if (m.Success)
+                    return "(" + typeName + ")" + m.Groups[1].Value;
+            }
+            return null;
         }
 
         /// <summary>

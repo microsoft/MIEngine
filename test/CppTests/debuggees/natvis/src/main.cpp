@@ -113,6 +113,12 @@ int main(int argc, char** argv)
     customList.Append(20);
     customList.Append(30);
 
+    CustomListContainer customList500;
+    for (int i = 0; i < 500; i++)
+    {
+        customList500.Append(i);
+    }
+
     ViewObject vo(1, 2, 3);
     ViewHolder holder;
 

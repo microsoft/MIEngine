@@ -569,5 +569,52 @@ namespace MIDebugEngineUnitTests
             Assert.False(Natvis.IsScalarLiteral(""));
             Assert.False(Natvis.IsScalarLiteral(null));
         }
+
+        // -- MakeCompactLiteral (Exec normalization) --------------------------
+
+        [Fact]
+        public void MakeCompactLiteral_Integer_ReturnsLiteral()
+        {
+            Assert.Equal("42", Natvis.MakeCompactLiteral("42", "int"));
+            Assert.Equal("-5", Natvis.MakeCompactLiteral(" -5 ", "long"));
+        }
+
+        [Fact]
+        public void MakeCompactLiteral_Bool_ReturnsLiteral()
+        {
+            Assert.Equal("true", Natvis.MakeCompactLiteral("true", "bool"));
+            Assert.Equal("false", Natvis.MakeCompactLiteral("false", "bool"));
+        }
+
+        [Fact]
+        public void MakeCompactLiteral_Pointer_ReturnsCastAddress()
+        {
+            Assert.Equal("(MyStruct *)0x1234", Natvis.MakeCompactLiteral("0x1234", "MyStruct *"));
+            Assert.Equal("(Container::Node *)0x0", Natvis.MakeCompactLiteral("0x0", "Container::Node *"));
+        }
+
+        [Fact]
+        public void MakeCompactLiteral_PointerWithGdbAnnotation_UsesLeadingAddressOnly()
+        {
+            // GDB appends symbol or string text after the address.
+            Assert.Equal("(char *)0x5555", Natvis.MakeCompactLiteral("0x5555 \"hello\"", "char *"));
+            Assert.Equal("(Node *)0x7fff12", Natvis.MakeCompactLiteral("0x7fff12 <node_0>", "Node *"));
+        }
+
+        [Fact]
+        public void MakeCompactLiteral_HexValueOfNonPointerType_Null()
+        {
+            // A hex-looking value may not be stored back unless the type really is a pointer.
+            Assert.Null(Natvis.MakeCompactLiteral("0x1234", "unsigned int"));
+        }
+
+        [Fact]
+        public void MakeCompactLiteral_NonCompactableValues_Null()
+        {
+            Assert.Null(Natvis.MakeCompactLiteral("{ size=3 }", "Container"));
+            Assert.Null(Natvis.MakeCompactLiteral("1.5", "double"));
+            Assert.Null(Natvis.MakeCompactLiteral("", "int"));
+            Assert.Null(Natvis.MakeCompactLiteral(null, "int"));
+        }
     }
 }

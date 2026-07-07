@@ -39,7 +39,7 @@ namespace CppTests.Tests
 
         // These line numbers will need to change if src/natvis/main.cpp changes
         private const int SimpleClassAssignmentLine = 87;
-        private const int ReturnSourceLine = 119;
+        private const int ReturnSourceLine = 125;
 
         [Theory]
         [RequiresTestSettings]
@@ -757,6 +757,15 @@ namespace CppTests.Tests
                     Assert.Equal("10", customList.GetVariable("[0]").Value);
                     Assert.Equal("20", customList.GetVariable("[1]").Value);
                     Assert.Equal("30", customList.GetVariable("[2]").Value);
+
+                    this.Comment("Verifying a 500-element list pages correctly (pointer loop variables are stored compactly, so the walk stays evaluable)");
+                    var customList500 = currentFrame.GetVariable("customList500");
+                    Assert.Equal("500", customList500.GetVariable("Count").Value);
+                    Assert.Equal("0", customList500.GetVariable("[0]").Value);
+                    Assert.Equal("49", customList500.GetVariable("[49]").Value);
+                    var more = customList500.GetVariable("[More...]");
+                    Assert.Equal("50", more.GetVariable("[50]").Value);
+                    Assert.Equal("99", more.GetVariable("[99]").Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
