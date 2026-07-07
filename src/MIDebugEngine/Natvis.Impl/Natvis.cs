@@ -168,6 +168,24 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
     }
 
+    /// <summary>
+    /// Represents the continuation of a CustomListItemsType: the saved natvis local-variable
+    /// table and loop position let the "[More...]" expansion resume where the previous page
+    /// stopped instead of re-walking the list from the start. StartIndex (from the base class)
+    /// is the global item index to continue numbering from.
+    /// </summary>
+    internal sealed class CustomListContinueWrapper : PaginatedVisualizerWrapper
+    {
+        public readonly Dictionary<string, string> SavedLocalVars;
+        public readonly int LoopIndex;
+        public CustomListContinueWrapper(string name, AD7Engine engine, IVariableInformation underlyingVariable, Natvis.VisualizerInfo viz, bool isVisualizerView, Dictionary<string, string> savedLocalVars, int loopIndex, uint startIndex)
+            : base(name, engine, underlyingVariable, viz, isVisualizerView, startIndex)
+        {
+            SavedLocalVars = savedLocalVars;
+            LoopIndex = loopIndex;
+        }
+    }
+
     internal class Node
     {
         public enum ScanState
@@ -1067,8 +1085,16 @@ namespace Microsoft.MIDebugEngine.Natvis
                     // Build the natvis local-variable table from <Variable Name="x" InitialValue="expr"/> elements.
                     // Each entry maps the declared name to its current expression string; expressions are
                     // substituted in-place whenever the name appears in subsequent loop-body expressions.
+                    // A "[More...]" continuation instead restores the table saved when the previous page
+                    // filled, so the walk resumes where it stopped rather than re-running from the start.
                     var localVars = new Dictionary<string, string>(StringComparer.Ordinal);
-                    if (customList.Items != null)
+                    var continueCLI = variable as CustomListContinueWrapper;
+                    if (continueCLI != null)
+                    {
+                        foreach (var savedVar in continueCLI.SavedLocalVars)
+                            localVars[savedVar.Key] = savedVar.Value;
+                    }
+                    else if (customList.Items != null)
                     {
                         foreach (var v in customList.Items)
                         {
@@ -1106,11 +1132,13 @@ namespace Microsoft.MIDebugEngine.Natvis
                         startIndex = pvwCLI.StartIndex;
 
                     var ctx = new CustomListLoopContext(startIndex, totalSize);
+                    if (continueCLI != null)
+                        ctx.GlobalIndex = startIndex; // resume numbering where the previous page stopped
 
-                    foreach (var loop in customList.Loop)
+                    for (int loopIndex = continueCLI?.LoopIndex ?? 0; loopIndex < customList.Loop.Length; loopIndex++)
                     {
                         if (ctx.Done) break;
-                        DriveLoop(loop, ctx, variable, visualizer, localVars, children);
+                        DriveLoop(customList.Loop[loopIndex], ctx, variable, visualizer, localVars, children, loopIndex);
                     }
                 }
             }
@@ -2085,16 +2113,18 @@ namespace Microsoft.MIDebugEngine.Natvis
             IVariableInformation variable,
             VisualizerInfo visualizer,
             Dictionary<string, string> localVars,
-            List<IVariableInformation> children)
+            List<IVariableInformation> children,
+            int topLevelLoopIndex = -1)
         {
             bool progress = false;
             if (loop?.Items == null)
                 return progress;
 
-            // Cap iterations to cover fast-forwarding through StartIndex items plus one page of
-            // MAX_EXPAND, with a hard ceiling of 10 000 guarding against malformed natvis where no
-            // <Size>/<Break> bounds the loop.
-            long maxIter = Math.Min((long)ctx.StartIndex + MAX_EXPAND + 1, 10000);
+            // Cap iterations to cover fast-forwarding through any remaining StartIndex items plus
+            // one page of MAX_EXPAND, with a hard ceiling of 10 000 guarding against malformed
+            // natvis where no <Size>/<Break> bounds the loop.
+            long remaining = ctx.StartIndex > ctx.GlobalIndex ? ctx.StartIndex - ctx.GlobalIndex : 0;
+            long maxIter = Math.Min(remaining + MAX_EXPAND + 1, 10000);
             for (long iter = 0; !ctx.Done && ctx.GlobalIndex < ctx.TotalSize && iter < maxIter; iter++)
             {
                 // While-guard: stop if the loop's Condition evaluates to false.
@@ -2103,6 +2133,22 @@ namespace Microsoft.MIDebugEngine.Natvis
                     string loopCond = SubstituteLocalVars(loop.Condition, localVars);
                     if (!EvalCondition(loopCond, variable, visualizer.ScopedNames, visualizer.Intrinsics))
                         break;
+                }
+                // A full page is cut here, between passes, so the loop state is consistent (the
+                // pass that filled the page has run to completion, including its trailing <Exec>
+                // steps). The continuation saves the local-variable table — compact literals
+                // after <Exec> normalization — and the position, letting the "[More...]" node
+                // resume the walk here instead of re-running it from the start. Only the
+                // top-level loop takes snapshots; a nested <Loop> runs within its pass.
+                if (topLevelLoopIndex >= 0 && ctx.Emitted >= MAX_EXPAND)
+                {
+                    children.Add(new CustomListContinueWrapper(
+                        ResourceStrings.MoreView, _process.Engine, variable, visualizer,
+                        isVisualizerView: true,
+                        new Dictionary<string, string>(localVars, StringComparer.Ordinal),
+                        topLevelLoopIndex, ctx.GlobalIndex));
+                    ctx.Done = true;
+                    break;
                 }
                 bool passProgress = ExecuteCustomListBody(loop.Items, loop.ItemsElementName, ctx, variable, visualizer, localVars, children);
                 if (!passProgress && !ctx.Done)
@@ -2159,7 +2205,11 @@ namespace Microsoft.MIDebugEngine.Natvis
                             continue;
                     }
 
-                    if (ctx.GlobalIndex >= ctx.StartIndex && ctx.Emitted < MAX_EXPAND)
+                    // A pass always runs to completion, even when it fills the page mid-body:
+                    // stopping between two <Item>s of the same pass would lose the later ones,
+                    // since the pagination continuation resumes at a pass boundary. A page can
+                    // therefore slightly exceed MAX_EXPAND when a pass emits several items.
+                    if (ctx.GlobalIndex >= ctx.StartIndex)
                     {
                         string rawExpr = SubstituteLocalVars(li.Value?.Trim() ?? "", localVars);
                         string processedExpr = ReplaceNamesInExpression(rawExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics);
@@ -2171,15 +2221,6 @@ namespace Microsoft.MIDebugEngine.Natvis
                     }
                     ctx.GlobalIndex++;
                     progress = true;
-
-                    // Check whether the page is now full.
-                    if (ctx.Emitted >= MAX_EXPAND && ctx.GlobalIndex < ctx.TotalSize)
-                    {
-                        children.Add(new PaginatedVisualizerWrapper(
-                            ResourceStrings.MoreView, _process.Engine, variable,
-                            visualizer, isVisualizerView: true, ctx.StartIndex + MAX_EXPAND));
-                        ctx.Done = true;
-                    }
                 }
                 else if (elem is ExecType exec)
                 {
