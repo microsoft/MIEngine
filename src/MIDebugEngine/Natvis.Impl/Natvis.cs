@@ -2131,12 +2131,18 @@ namespace Microsoft.MIDebugEngine.Natvis
                     // name(s) and substitutes local vars on the right-hand side itself. A single
                     // <Exec> may update several variables, comma-separated (e.g. "++idx, ++statptr").
                     var updatedVars = ApplyExecToLocalVars(exec.Value?.Trim() ?? "", localVars, out List<string> unhandledExec);
-                    foreach (string seg in unhandledExec)
+                    if (unhandledExec.Count > 0)
                     {
                         // A segment we could not apply (unsupported form, or an undeclared
-                        // left-hand side) would otherwise silently do nothing; log it so the
-                        // omission is visible rather than producing a wrong/stuck traversal.
-                        _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, "CustomListItems <Exec> segment not applied (unsupported expression or undeclared variable): " + seg);
+                        // left-hand side) means the loop state did not advance the way the
+                        // visualizer intended; continuing would emit wrong items or run to
+                        // the iteration cap. Log the segments and stop the loop.
+                        foreach (string seg in unhandledExec)
+                        {
+                            _process.Logger.NatvisLogger?.WriteLine(LogLevel.Warning, "CustomListItems <Exec> segment not applied (unsupported expression or undeclared variable); stopping loop: " + seg);
+                        }
+                        ctx.Done = true;
+                        break;
                     }
                     foreach (string updatedVar in updatedVars)
                     {
