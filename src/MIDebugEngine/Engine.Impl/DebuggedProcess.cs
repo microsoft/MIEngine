@@ -1989,7 +1989,13 @@ namespace Microsoft.MIDebugEngine
         {
             List<VariableInformation> variables = new List<VariableInformation>();
 
-            ValueListValue localsAndParameters = await MICommandFactory.StackListVariables(PrintValue.NoValues, thread.Id, ctx.Level);
+            if (ctx.Level == null)
+            {
+                return variables;
+            }
+            uint level = ctx.Level.Value;
+
+            ValueListValue localsAndParameters = await MICommandFactory.StackListVariables(PrintValue.NoValues, thread.Id, level);
 
             foreach (var localOrParamResult in localsAndParameters.Content)
             {
@@ -2000,7 +2006,7 @@ namespace Microsoft.MIDebugEngine
                 variables.Add(vi);
             }
 
-            if (ReturnValue != null && ctx.Level == 0 && ReturnValue.Client.Id == thread.Id)
+            if (ReturnValue != null && level == 0 && ReturnValue.Client.Id == thread.Id)
                 variables.Add(ReturnValue);
 
             return variables;
@@ -2012,7 +2018,12 @@ namespace Microsoft.MIDebugEngine
         {
             List<SimpleVariableInformation> parameters = new List<SimpleVariableInformation>();
 
-            ValueListValue localAndParameters = await MICommandFactory.StackListVariables(PrintValue.SimpleValues, thread.Id, ctx.Level);
+            if (ctx.Level == null)
+            {
+                return parameters;
+            }
+
+            ValueListValue localAndParameters = await MICommandFactory.StackListVariables(PrintValue.SimpleValues, thread.Id, ctx.Level.Value);
 
             foreach (var results in localAndParameters.Content.Where(r => r.TryFindString("arg") == "1"))
             {

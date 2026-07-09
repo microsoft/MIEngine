@@ -585,10 +585,16 @@ namespace Microsoft.MIDebugEngine
         {
             this.VerifyNotDisposed();
 
+            if (_ctx.Level == null)
+            {
+                return null;
+            }
+            uint frameLevel = _ctx.Level.Value;
+
             string val = null;
             Task eval = Task.Run(async () =>
             {
-                val = await _engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(expr, Client.GetDebuggedThread().Id, _ctx.Level);
+                val = await _engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(expr, Client.GetDebuggedThread().Id, frameLevel);
             });
             eval.Wait();
             return val;
@@ -633,7 +639,15 @@ namespace Microsoft.MIDebugEngine
                     }
 
                     int threadId = Client.GetDebuggedThread().Id;
-                    uint frameLevel = _ctx.Level;
+
+                    // Synthetic frames injected by a Python frame filter have no level and provide
+                    // no evaluation context. This is normally unreachable (annotated frames expose
+                    // no expression context), but guard defensively rather than crash on a null level.
+                    if (_ctx.Level == null)
+                    {
+                        return;
+                    }
+                    uint frameLevel = _ctx.Level.Value;
 
                     string expression = _strippedName;
 
@@ -957,10 +971,15 @@ namespace Microsoft.MIDebugEngine
         {
             this.VerifyNotDisposed();
 
+            if (_ctx.Level == null)
+            {
+                return;
+            }
+
             _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
                 int threadId = Client.GetDebuggedThread().Id;
-                uint frameLevel = _ctx.Level;
+                uint frameLevel = _ctx.Level.Value;
 
                 _engine.DebuggedProcess.FlushBreakStateData();
                 Value = await _engine.DebuggedProcess.MICommandFactory.VarAssign(_internalName, expression, threadId, frameLevel);

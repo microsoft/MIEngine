@@ -134,8 +134,16 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    uint low = stackFrames[0].Level;
-                    uint high = stackFrames[stackFrames.Count - 1].Level;
+                    // -stack-list-arguments takes a low/high *frame number* range. When a Python
+                    // frame filter is active, those numbers index the decorated stack (synthetic
+                    // frames are counted but carry no level), which is the same order as
+                    // stackFrames here. So request the whole [0, count-1] range rather than a
+                    // range of levels: a level-based range would stop at the first synthetic
+                    // frame and miss every real frame below it. Synthetic frames in the range
+                    // have no arguments and are skipped in GetParameterInfoOnly, and results are
+                    // matched back to frames by level below, so ordering within the range is moot.
+                    uint low = 0;
+                    uint high = (uint)(stackFrames.Count - 1);
                     FilterUnknownFrames(stackFrames);
                     numStackFrames = stackFrames.Count;
                     frameInfoArray = new FRAMEINFO[numStackFrames];

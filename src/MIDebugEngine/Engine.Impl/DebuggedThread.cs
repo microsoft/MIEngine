@@ -300,15 +300,15 @@ namespace Microsoft.MIDebugEngine
             else
             {
                 stack = new List<ThreadContext>();
-                for (uint i = 0; i < frameinfo.Length; i++)
+                foreach (var frame in frameinfo)
                 {
-                    stack.Add(CreateContext(frameinfo[i], i));
+                    stack.Add(CreateContext(frame));
                 }
             }
             return stack;
         }
 
-        private ThreadContext CreateContext(TupleValue frame, uint index)
+        private ThreadContext CreateContext(TupleValue frame)
         {
             ulong? pc = frame.TryFindAddr("addr");
 
@@ -325,13 +325,12 @@ namespace Microsoft.MIDebugEngine
             MITextPosition textPosition = !ignoreSource ? MITextPosition.TryParse(this._debugger, frame) : null;
 
             string func = frame.TryFindString("func");
-            // Synthetic frames injected by a GDB Python frame filter do not carry a "level" field.
-            // Fall back to the frame's position in the stack so the whole stack walk doesn't fail.
-            // Real frames keep their true level (GDB's own -stack-list-* numbering ignores the synthetic frames).
-            // This can produce duplicate levels (async collides with the real frame below it), but
-            // the level is only used to get locals of the frame, and synthetic frame locals can't be displayed
-            // anyway, so it behaves as a graceful fallback, displaying the locals of the real frame below.
-            uint level = frame.TryFindUint("level") ?? index;
+            // Synthetic frames injected by a GDB Python frame filter (e.g. an async-stack
+            // decorator) do not carry a "level" field, since they have no underlying debugger
+            // frame. Leave the level null in that case; frame-relative operations (locals,
+            // args, registers, evaluation) early-out on a null level rather than failing the
+            // whole stack walk. Real frames keep their true level.
+            uint? level = frame.TryFindUint("level");
             string from = frame.TryFindString("from");
 
             return new ThreadContext(pc, textPosition, func, level, from);
@@ -450,7 +449,7 @@ namespace Microsoft.MIDebugEngine
                         if (frames.Any())
                         {
                             List<ThreadContext> stack = new List<ThreadContext>();
-                            stack.AddRange(frames.Select((frame, i) => CreateContext(frame, (uint)i)));
+                            stack.AddRange(frames.Select(frame => CreateContext(frame)));
 
                             _topContext[threadId] = stack[0];
                             if (threadId == cxtThreadId)
