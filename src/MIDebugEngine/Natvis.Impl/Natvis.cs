@@ -1120,7 +1120,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             {
                                 string szExpr = SubstituteLocalVars(sz.Value?.Trim() ?? "0", localVars);
                                 string szVal = GetExpressionValue(szExpr, variable, visualizer.ScopedNames, visualizer.Intrinsics);
-                                totalSize = MICore.Debugger.ParseUint(szVal, throwOnError: false);
+                                totalSize = MICore.Debugger.ParseUint(szVal, throwOnError: true);
                             }
                             catch (Exception) { /* leave totalSize as MaxValue so Break drives termination */ }
                             break;
