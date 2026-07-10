@@ -587,7 +587,7 @@ namespace Microsoft.MIDebugEngine
 
             if (_ctx.Level == null)
             {
-                return null;
+                throw GetEvalUnsupportedInFrameException();
             }
             uint frameLevel = _ctx.Level.Value;
 
@@ -645,6 +645,7 @@ namespace Microsoft.MIDebugEngine
                     // no expression context), but guard defensively rather than crash on a null level.
                     if (_ctx.Level == null)
                     {
+                        SetAsError(ResourceStrings.ExpressionEvalUnsupportedInFrame);
                         return;
                     }
                     uint frameLevel = _ctx.Level.Value;
@@ -924,6 +925,8 @@ namespace Microsoft.MIDebugEngine
             Error = true;
         }
 
+        private Exception GetEvalUnsupportedInFrameException() => new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", ResourceStrings.ExpressionEvalUnsupportedInFrame);
+
         private bool IsArrayType()
         {
             if (DisplayHint == "array")
@@ -973,7 +976,7 @@ namespace Microsoft.MIDebugEngine
 
             if (_ctx.Level == null)
             {
-                return;
+                throw GetEvalUnsupportedInFrameException();
             }
 
             _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
