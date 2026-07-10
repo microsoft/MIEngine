@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
@@ -127,21 +128,23 @@ namespace Microsoft.MIDebugEngine
                 int numStackFrames = stackFrames != null ? stackFrames.Count : 0;
                 FRAMEINFO[] frameInfoArray;
 
-                if (numStackFrames == 0)
+                // -stack-list-arguments is a frame-relative command. If we walked no frames, or
+                // none of them carries a level (e.g. every frame is a GDB synthetic frame-filter
+                // frame), there is nothing addressable to query.
+                if (numStackFrames == 0 || !stackFrames.Any(f => f.Level != null))
                 {
-                    // failed to walk any frames. Return an empty stack.
+                    // failed to walk any real frames. Return an empty stack.
                     frameInfoArray = new FRAMEINFO[0];
                 }
                 else
                 {
-                    // -stack-list-arguments takes a low/high *frame number* range. When a Python
-                    // frame filter is active, those numbers index the decorated stack (synthetic
-                    // frames are counted but carry no level), which is the same order as
-                    // stackFrames here. So request the whole [0, count-1] range rather than a
-                    // range of levels: a level-based range would stop at the first synthetic
-                    // frame and miss every real frame below it. Synthetic frames in the range
-                    // have no arguments and are skipped in GetParameterInfoOnly, and results are
-                    // matched back to frames by level below, so ordering within the range is moot.
+                    // -stack-list-arguments takes a low/high *frame index* range. When a GDB Python
+                    // frame filter is active, those numbers index the decorated stack, not the GDB frame
+                    // level. Thus, synthetic frames are indexed even though they carry no level, and we
+                    // must request the whole [0, count-1] decorated range.
+                    // Synthetic frames in the range have no arguments and are skipped in
+                    // GetParameterInfoOnly, and results are matched back to frames by level below,
+                    // so ordering within the range is moot.
                     uint low = 0;
                     uint high = (uint)(stackFrames.Count - 1);
                     FilterUnknownFrames(stackFrames);
