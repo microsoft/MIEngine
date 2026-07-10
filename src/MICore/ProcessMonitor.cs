@@ -10,7 +10,7 @@ namespace MICore
     {
         private readonly TimeSpan _EXIT_POLL_DELTA = TimeSpan.FromMilliseconds(200);
         private int _processId;
-        private Timer _exitMonitorTimer;
+        private Timer? _exitMonitorTimer;
 
         public ProcessMonitor(int processId)
         {
@@ -27,19 +27,19 @@ namespace MICore
             _exitMonitorTimer = new Timer(MonitorForExit, null, TimeSpan.FromMilliseconds(0), _EXIT_POLL_DELTA);
         }
 
-        public event EventHandler ProcessExited;
+        public event EventHandler? ProcessExited;
 
         private bool HasExited()
         {
             return !UnixUtilities.IsProcessRunning(_processId);
         }
 
-        private void MonitorForExit(object o)
+        private void MonitorForExit(object? o)
         {
             if (HasExited())
             {
-                _exitMonitorTimer.Dispose();
-                ProcessExited?.Invoke(this, null);
+                _exitMonitorTimer?.Dispose();
+                ProcessExited?.Invoke(this, EventArgs.Empty);
             }
         }
 

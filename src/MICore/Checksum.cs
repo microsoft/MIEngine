@@ -22,8 +22,8 @@ namespace MICore
 
     public class Checksum
     {
-        private string _checksumString = null;
-        private byte[] _bytes = null;
+        private string? _checksumString = null;
+        private byte[] _bytes;
 
         public readonly MIHashAlgorithmName MIHashAlgorithmName;
 

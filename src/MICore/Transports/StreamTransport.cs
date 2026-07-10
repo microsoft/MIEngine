@@ -4,7 +4,6 @@
 using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,16 +14,16 @@ namespace MICore
 {
     public abstract class StreamTransport : ITransport
     {
-        private ITransportCallback _callback;
-        private Thread _thread;
+        private ITransportCallback? _callback;
+        private Thread? _thread;
         private bool _bQuit;
         private CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
-        protected StreamReader _reader;
-        protected StreamWriter _writer;
+        protected StreamReader? _reader;
+        protected StreamWriter? _writer;
         private bool _filterStdout;
         private Object _locker = new object();
 
-        protected Logger Logger
+        protected Logger? Logger
         {
             get; private set;
         }
@@ -40,7 +39,7 @@ namespace MICore
         public abstract void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer);
         protected virtual string GetThreadName() { return "MI.StreamTransport"; }
 
-        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
+        public virtual void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop? waitLoop = null)
         {
             Logger = logger;
             _callback = transportCallback;
@@ -55,7 +54,7 @@ namespace MICore
             _thread.Start();
         }
 
-        protected virtual string FilterLine(string line)
+        protected virtual string? FilterLine(string line)
         {
             return line;
         }
@@ -66,7 +65,7 @@ namespace MICore
             {
                 while (!_bQuit)
                 {
-                    string line = GetLine();
+                    string? line = GetLine();
                     if (line == null)
                         break;
 
@@ -80,9 +79,9 @@ namespace MICore
                         {
                             line = FilterLine(line);
                         }
-                        if (!String.IsNullOrWhiteSpace(line) && !line.StartsWith("-", StringComparison.Ordinal))
+                        if (!IsNullOrWhiteSpace(line) && !line.StartsWith("-", StringComparison.Ordinal))
                         {
-                            _callback.OnStdOutLine(line);
+                            Callback.OnStdOutLine(line);
                         }
                     }
                     catch (ObjectDisposedException)
@@ -106,11 +105,14 @@ namespace MICore
                     // If we are shutting down without notice from the debugger (e.g., the terminal
                     // where the debugger was hosted was closed), at this point it's possible that
                     // there is a thread blocked doing a read() syscall.
-                    ForceDisposeStreamReader(_reader);
+                    if (_reader != null)
+                    {
+                        ForceDisposeStreamReader(_reader);
+                    }
 
                     try
                     {
-                        _writer.Dispose();
+                        _writer?.Dispose();
                         _writer = null;
                     }
                     catch
@@ -133,7 +135,7 @@ namespace MICore
         {
             try
             {
-                _callback.OnDebuggerProcessExit(null);
+                Callback.OnDebuggerProcessExit(null);
             }
             catch
             {
@@ -142,7 +144,7 @@ namespace MICore
         }
         protected void Echo(string cmd)
         {
-            if (!String.IsNullOrWhiteSpace(cmd))
+            if (!IsNullOrWhiteSpace(cmd))
             {
                 Logger?.WriteLine(LogLevel.Verbose, "<-" + cmd);
                 Logger?.Flush();
@@ -155,16 +157,17 @@ namespace MICore
             }
         }
 
-        private string GetLine()
+        private string? GetLine()
         {
+            Debug.Assert(_reader is not null, "Should be impossible - GetLine is only called from the transport loop started after Init");
             return GetLineFromStream(_reader, _streamReadCancellationTokenSource.Token);
         }
 
-        protected string GetLineFromStream(StreamReader reader, CancellationToken token)
+        protected string? GetLineFromStream(StreamReader reader, CancellationToken token)
         {
             try
             {
-                Task<string> task = reader.ReadLineAsync();
+                Task<string?> task = reader.ReadLineAsync();
                 task.Wait(token);
                 return task.Result;
             }
@@ -217,7 +220,11 @@ namespace MICore
 
         protected ITransportCallback Callback
         {
-            get { return _callback; }
+            get
+            {
+                Debug.Assert(_callback is not null, "Should be impossible - Callback is only used after Init completes");
+                return _callback;
+            }
         }
 
         /// <summary>

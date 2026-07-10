@@ -12,8 +12,8 @@ namespace MICore.SymbolLocator
     public class IncludeExcludeList
     {
         static readonly char[] WildCardCharacters = new char[] { '*', '?' };
-        Lazy<List<Regex>> _wildcardEntries;
-        Lazy<HashSet<string>> _qualifiedEntries;
+        Lazy<List<Regex>> _wildcardEntries = new Lazy<List<Regex>>(() => new List<Regex>());
+        Lazy<HashSet<string>> _qualifiedEntries = new Lazy<HashSet<string>>(() => new HashSet<string>(StringComparer.Ordinal));
 
         public bool IsEmpty
         {
@@ -31,7 +31,7 @@ namespace MICore.SymbolLocator
 
         public void Add(string entry)
         {
-            if (string.IsNullOrEmpty(entry))
+            if (IsNullOrEmpty(entry))
                 return;
 
             if (entry.IndexOfAny(WildCardCharacters) >= 0)
@@ -92,12 +92,12 @@ namespace MICore.SymbolLocator
 
         public void Clear()
         {
-            if (_wildcardEntries == null || _wildcardEntries.IsValueCreated)
+            if (_wildcardEntries.IsValueCreated)
             {
                 _wildcardEntries = new Lazy<List<Regex>>(() => new List<Regex>());
             }
 
-            if (_qualifiedEntries == null || _qualifiedEntries.IsValueCreated)
+            if (_qualifiedEntries.IsValueCreated)
             {
                 _qualifiedEntries = new Lazy<HashSet<string>>(() => new HashSet<string>(StringComparer.Ordinal));
             }
