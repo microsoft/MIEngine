@@ -36,9 +36,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugEngineHost.VSCode", "D
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MakePIAPortable", "MakePIAPortable\MakePIAPortable.csproj", "{114039A0-87B5-425B-90C9-6AFC1960A247}"
-	ProjectSection(ProjectDependencies) = postProject
-		{CC5BDD33-7EB1-4FB9-BC67-806773018989} = {CC5BDD33-7EB1-4FB9-BC67-806773018989}
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DebugAdapterProtocolTests", "DebugAdapterProtocolTests", "{9D97EF1A-BCD5-4932-BBCC-98194CF8A841}"
 EndProject

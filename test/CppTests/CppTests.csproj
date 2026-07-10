@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\build\debuggertesting.settings.targets" />
 
   <PropertyGroup>
@@ -8,7 +9,16 @@
 
     <OutputPath>$(OutputPath)\CppTests</OutputPath>
   </PropertyGroup>
-  
+
+  <!-- Deploy debug adapter configuration -->
+  <PropertyGroup>
+    <DebugAdaptersDeployPath>$(MIEngineRoot)bin\DebugAdapterProtocolTests\$(Configuration)\extension\debugAdapters\</DebugAdaptersDeployPath>
+    <OpenDebugAD7OutputPath>$(MIDefaultOutputPath)vscode\</OpenDebugAD7OutputPath>
+    <!-- Only deploy the debug adapter for Debug configurations (Debug, Lab.Debug) -->
+    <_ShouldDeployDebugAdapter>false</_ShouldDeployDebugAdapter>
+    <_ShouldDeployDebugAdapter Condition="$(Configuration.Contains('Debug'))">true</_ShouldDeployDebugAdapter>
+  </PropertyGroup>
+
   <!-- 
     This ItemGroup is to override the packages that being depended on for the PackageReferences above. 
     The issue is that Microsoft.NET.Test.Sdk ->
@@ -34,6 +44,8 @@
   <ItemGroup Label="Additional Files">
     <None Include="debuggees\**" CopyToOutputDirectory="PreserveNewest" />
     <None Include="TestConfigurations\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Deploy config.xml to test output if it exists in the project directory -->
+    <None Include="config.xml" CopyToOutputDirectory="PreserveNewest" Condition="Exists('$(MSBuildProjectDirectory)\config.xml')" />
 
     <ContentFiles Include="debuggees\**" />
     <ContentFiles Include="TestConfigurations\**" />
@@ -42,7 +54,48 @@
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\DebugAdapterRunner\DebugAdapterRunner.csproj" />
     <ProjectReference Include="..\DebuggerTesting\DebuggerTesting.csproj" />
+    <!-- Build the debug adapter and engine (not compile-time references, but needed at runtime for tests) -->
+    <ProjectReference Include="..\..\src\OpenDebugAD7\OpenDebugAD7.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\..\src\MIDebugEngine\MIDebugEngine.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Condition="$([MSBuild]::IsOSPlatform('windows'))" Include="..\..\src\WindowsDebugLauncher\WindowsDebugLauncher.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
+
+  <!--
+    =============================================================================
+    Deploy Debug Adapter Target
+    =============================================================================
+    Copies the built debug adapter files to the test output structure expected by
+    the test framework (extension/debugAdapters/ relative to the test output root).
+    
+    Only runs for Debug configurations (Debug, Lab.Debug) since those are the
+    configurations used for running tests locally and in CI.
+  -->
+  <Target Name="ResolveDebugAdapterFiles"
+          Condition="'$(_ShouldDeployDebugAdapter)' == 'true'">
+    <ItemGroup>
+      <!-- All files from OpenDebugAD7's output (includes OpenDebugAD7.exe, deps, DebugEngineHost,
+           Newtonsoft.Json, MIDebugEngine.dll (via its copy target), WindowsDebugLauncher.exe, etc.) -->
+      <_DebugAdapterSourceFiles Include="$(OpenDebugAD7OutputPath)*.*" />
+      <!-- MICore.dll is not in the vscode output folder (no project reference from OpenDebugAD7) -->
+      <_DebugAdapterSourceFiles Include="$(MIDefaultOutputPath)Microsoft.MICore.dll" />
+    </ItemGroup>
+    <ItemGroup>
+      <_DebugAdapterDestFiles Include="@(_DebugAdapterSourceFiles->'$(DebugAdaptersDeployPath)%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="DeployDebugAdapter"
+          DependsOnTargets="ResolveDebugAdapterFiles"
+          AfterTargets="Build"
+          Inputs="@(_DebugAdapterSourceFiles)"
+          Outputs="@(_DebugAdapterDestFiles)"
+          Condition="'$(_ShouldDeployDebugAdapter)' == 'true' AND '$(DesignTimeBuild)' != 'true'">
+    <MakeDir Directories="$(DebugAdaptersDeployPath)" />
+    <Copy SourceFiles="@(_DebugAdapterSourceFiles)"
+          DestinationFolder="$(DebugAdaptersDeployPath)"
+          SkipUnchangedFiles="true" />
+    <Touch Files="@(_DebugAdapterDestFiles)" />
+  </Target>
 
   <Target Name="Copy Config and Debuggees" BeforeTargets="DropFiles">
     <Copy SourceFiles="@(ContentFiles)" DestinationFolder="$(DropDir)\contentFiles\%(RecursiveDir)" />
@@ -61,5 +114,44 @@
   </ItemGroup>
 
   <Import Project="..\..\build\DropFiles.targets" />
+
+  <!--IMPORTANT: The fast up-to-date check targets must be defined AFTER this -->
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <!--
+    =============================================================================
+    VS Fast Up-to-Date Check Support
+    =============================================================================
+    These targets tell Visual Studio's fast up-to-date check which files are inputs
+    and outputs of the DeployDebugAdapter target, enabling incremental builds in VS.
+    See: https://github.com/dotnet/project-system/blob/main/docs/up-to-date-check.md
+  -->
+  <Target Name="CollectUpToDateCheckInputDesignTime"
+          DependsOnTargets="ResolveDebugAdapterFiles"
+          Returns="@(UpToDateCheckInput)"
+          Condition="'$(_ShouldDeployDebugAdapter)' == 'true'">
+    <ItemGroup>
+      <UpToDateCheckInput Remove="@(UpToDateCheckInput)" />
+      <UpToDateCheckInput Include="@(_DebugAdapterSourceFiles)" Set="DebugAdapter" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CollectUpToDateCheckOutputDesignTime"
+          DependsOnTargets="ResolveDebugAdapterFiles"
+          Returns="@(UpToDateCheckOutput)"
+          Condition="'$(_ShouldDeployDebugAdapter)' == 'true'">
+    <ItemGroup>
+      <UpToDateCheckOutput Remove="@(UpToDateCheckOutput)" />
+      <UpToDateCheckOutput Include="@(_DebugAdapterDestFiles)" Set="DebugAdapter" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CollectUpToDateCheckBuiltDesignTime"
+          Returns="@(UpToDateCheckBuilt)"
+          Condition="'$(_ShouldDeployDebugAdapter)' == 'true'">
+    <ItemGroup>
+      <UpToDateCheckBuilt Remove="@(UpToDateCheckBuilt)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

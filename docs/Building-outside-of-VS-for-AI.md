@@ -21,16 +21,10 @@ From a VS Developer Command Prompt or after putting `MSBuild.exe` on `PATH`:
 
 ```powershell
 # Debug, VS extension flavor (default)
-eng\Scripts\CI-Build.ps1 -Configuration Debug -TargetPlatform vs
-
-# Debug, VS Code adapter flavor (also publishes OpenDebugAD7 + native deps to
-# bin\DebugAdapterProtocolTests\Debug\extension\debugAdapters)
-eng\Scripts\CI-Build.ps1 -Configuration Debug -TargetPlatform vscode
+eng\Scripts\CI-Build.ps1 -Configuration Debug
 ```
 
-The script restores NuGet, builds `MIDebugEngine.sln` with `msbuild`, and (for `-TargetPlatform vscode`) `dotnet publish`es OpenDebugAD7 and stages the adapter under `bin\DebugAdapterProtocolTests\<Configuration>\extension\debugAdapters`.
-
-If `msbuild.exe` isn't on `PATH`, locate it with vswhere:
+The script restores NuGet, builds `MIDebugEngine.sln` with `msbuild`. If `msbuild.exe` isn't on `PATH`, locate it with vswhere:
 
 ```powershell
 $msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -prerelease -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
@@ -43,7 +37,7 @@ $env:Path = (Split-Path $msbuild) + ';' + $env:Path
 eng/Scripts/CI-Build.sh
 ```
 
-This runs `dotnet build src/MIDebugEngine-Unix.sln` and then `PublishOpenDebugAD7.sh -c Debug -o bin/DebugAdapterProtocolTests/Debug/extension/debugAdapters`.
+This runs `dotnet build src/MIDebugEngine-Unix.sln`
 
 ## Outputs
 
