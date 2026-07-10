@@ -328,10 +328,10 @@ namespace Microsoft.MIDebugEngine.Natvis
         // Matches increment/decrement shorthand in <Exec>: ++i, i++, --i, i--
         // Groups: (1) prefix-op  (2) prefix-varname | (3) postfix-varname  (4) postfix-op
         private static readonly Regex s_execIncrDecr = new Regex(@"^\s*(?:(\+\+|--)(\w+)|(\w+)(\+\+|--))\s*$", RegexOptions.Compiled);
-        // Matches a plain (optionally signed) integer literal — used to decide whether an <Exec>
-        // result is a scalar safe to substitute back in place of its expression. Deliberately does
-        // NOT match hex (pointers "0x...") or any non-numeric display string.
+        // Matches a plain (optionally signed) decimal integer literal.
         private static readonly Regex s_integerLiteral = new Regex(@"^\s*-?\d+\s*$", RegexOptions.Compiled);
+        // Matches a hex integer literal — how integers render when the engine radix is 16.
+        private static readonly Regex s_hexIntegerLiteral = new Regex(@"^0x[0-9a-fA-F]+$", RegexOptions.Compiled);
         // Matches the leading hex address of a raw pointer value. GDB may append a symbol or
         // string ("0x5555 <sym>", "0x5555 \"text\""), so only the leading token is captured.
         private static readonly Regex s_leadingHexAddress = new Regex(@"^\s*(0x[0-9a-fA-F]+)\b", RegexOptions.Compiled);
@@ -2445,38 +2445,36 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
 
         /// <summary>
-        /// True when <paramref name="value"/> is a plain integer literal (optionally signed). Used
-        /// to decide whether an &lt;Exec&gt; result may be substituted back in place of its
-        /// expression: pointers ("0x...") and visualizer display strings are not scalar literals and
-        /// must keep their expression, or later substitutions/evaluations would be corrupted.
-        /// </summary>
-        internal static bool IsScalarLiteral(string value)
-        {
-            return !string.IsNullOrEmpty(value) && s_integerLiteral.IsMatch(value);
-        }
-
-        /// <summary>
         /// Returns a compact C++ expression equivalent to a loop variable's current value, or null
-        /// when none exists. Integers and bools are returned as literals; pointers are returned as
-        /// the address cast to their type ("(MyStruct *)0x1234", the same simplification
-        /// <see cref="VariableInformation.FullName"/> applies to long parent expressions). Keeping
-        /// the stored expression constant-size is what stops it growing by one step per iteration
-        /// ("((node)->next)->next...") until evaluation becomes quadratic and finally exceeds the
-        /// debugger's expression limits.
+        /// when none exists. Pointers are returned as the address cast to their type
+        /// ("(MyStruct *)0x1234", the same simplification
+        /// <see cref="VariableInformation.FullName"/> applies to long parent expressions);
+        /// integers (decimal or hex, depending on the engine radix) and bools are returned as
+        /// literals. Keeping the stored expression constant-size is what stops it growing by one
+        /// step per iteration ("((node)->next)->next...") until evaluation becomes quadratic and
+        /// finally exceeds the debugger's expression limits.
         /// </summary>
         internal static string MakeCompactLiteral(string rawValue, string typeName)
         {
             if (string.IsNullOrEmpty(rawValue))
                 return null;
             string value = rawValue.Trim();
-            if (s_integerLiteral.IsMatch(value) || value == "true" || value == "false")
-                return value;
+            // Pointers are recognized by type, not value shape: a pointer must be stored with its
+            // type cast (a bare number would break later "->" accesses), so a pointer whose value
+            // has no leading address is not compactable at all.
             if (!string.IsNullOrEmpty(typeName) && typeName.TrimEnd().EndsWith("*", StringComparison.Ordinal))
             {
                 Match m = s_leadingHexAddress.Match(value);
-                if (m.Success)
-                    return "(" + typeName + ")" + m.Groups[1].Value;
+                return m.Success ? "(" + typeName + ")" + m.Groups[1].Value : null;
             }
+            if (s_integerLiteral.IsMatch(value) || value == "true" || value == "false")
+                return value;
+            // A hex integer (how integers render when the engine radix is 16) is stored with its
+            // type cast: a bare hex literal is unsigned, so "(int)0xffffffd6" is needed to keep a
+            // negative value negative in later comparisons. Without a known type it cannot be
+            // stored back safely.
+            if (s_hexIntegerLiteral.IsMatch(value) && !string.IsNullOrEmpty(typeName))
+                return "(" + typeName + ")" + value;
             return null;
         }
 

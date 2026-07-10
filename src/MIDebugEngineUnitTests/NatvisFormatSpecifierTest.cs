@@ -535,41 +535,6 @@ namespace MIDebugEngineUnitTests
             Assert.Empty(unhandled);
         }
 
-        // -- IsScalarLiteral (Exec normalization guard) -----------------------
-
-        [Fact]
-        public void IsScalarLiteral_PlainInteger_True()
-        {
-            Assert.True(Natvis.IsScalarLiteral("0"));
-            Assert.True(Natvis.IsScalarLiteral("42"));
-            Assert.True(Natvis.IsScalarLiteral("-5"));
-            Assert.True(Natvis.IsScalarLiteral("  7  "));
-        }
-
-        [Fact]
-        public void IsScalarLiteral_Pointer_False()
-        {
-            // Pointers render as hex; must NOT be collapsed into the local-var table.
-            Assert.False(Natvis.IsScalarLiteral("0x7fff1234"));
-            Assert.False(Natvis.IsScalarLiteral("0x0"));
-        }
-
-        [Fact]
-        public void IsScalarLiteral_DisplayStringOrNonInteger_False()
-        {
-            // FormatDisplayString output for visualized values must NOT be collapsed.
-            Assert.False(Natvis.IsScalarLiteral("{ size=3 }"));
-            Assert.False(Natvis.IsScalarLiteral("head"));
-            Assert.False(Natvis.IsScalarLiteral("1.5"));
-        }
-
-        [Fact]
-        public void IsScalarLiteral_Empty_False()
-        {
-            Assert.False(Natvis.IsScalarLiteral(""));
-            Assert.False(Natvis.IsScalarLiteral(null));
-        }
-
         // -- MakeCompactLiteral (Exec normalization) --------------------------
 
         [Fact]
@@ -602,10 +567,31 @@ namespace MIDebugEngineUnitTests
         }
 
         [Fact]
-        public void MakeCompactLiteral_HexValueOfNonPointerType_Null()
+        public void MakeCompactLiteral_HexInteger_ReturnsCastLiteral()
         {
-            // A hex-looking value may not be stored back unless the type really is a pointer.
-            Assert.Null(Natvis.MakeCompactLiteral("0x1234", "unsigned int"));
+            // With the engine radix set to 16, integers render as hex. The type cast keeps the
+            // value's signedness: a bare hex literal is unsigned, so "(int)0xffffffd6" is needed
+            // for -42 to stay negative in later comparisons.
+            Assert.Equal("(int)0x2a", Natvis.MakeCompactLiteral("0x2a", "int"));
+            Assert.Equal("(unsigned int)0x1234", Natvis.MakeCompactLiteral("0x1234", "unsigned int"));
+            Assert.Equal("(int)0xffffffd6", Natvis.MakeCompactLiteral("0xffffffd6", "int"));
+        }
+
+        [Fact]
+        public void MakeCompactLiteral_HexIntegerWithoutType_Null()
+        {
+            // Without a type the cast cannot be emitted, and a bare hex literal could change
+            // signedness, so the value is not stored back.
+            Assert.Null(Natvis.MakeCompactLiteral("0x2a", null));
+            Assert.Null(Natvis.MakeCompactLiteral("0x2a", ""));
+        }
+
+        [Fact]
+        public void MakeCompactLiteral_PointerWithoutAddress_Null()
+        {
+            // A pointer needs its type cast, so a value without a leading address (e.g. GDB's
+            // "<optimized out>") cannot be stored back.
+            Assert.Null(Natvis.MakeCompactLiteral("<optimized out>", "Node *"));
         }
 
         [Fact]
