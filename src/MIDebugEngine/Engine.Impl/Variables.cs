@@ -587,7 +587,7 @@ namespace Microsoft.MIDebugEngine
 
             if (_ctx.Level == null)
             {
-                throw GetEvalUnsupportedInFrameException();
+                throw GetEvalUnsupportedInFrameException("-data-evaluate-expression");
             }
             uint frameLevel = _ctx.Level.Value;
 
@@ -925,7 +925,7 @@ namespace Microsoft.MIDebugEngine
             Error = true;
         }
 
-        private Exception GetEvalUnsupportedInFrameException() => new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", ResourceStrings.ExpressionEvalUnsupportedInFrame);
+        private Exception GetEvalUnsupportedInFrameException(string command) => new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, command, ResourceStrings.ExpressionEvalUnsupportedInFrame);
 
         private bool IsArrayType()
         {
@@ -976,7 +976,7 @@ namespace Microsoft.MIDebugEngine
 
             if (_ctx.Level == null)
             {
-                throw GetEvalUnsupportedInFrameException();
+                throw GetEvalUnsupportedInFrameException("-var-assign");
             }
 
             _engine.DebuggedProcess.WorkerThread.RunOperation(async () =>

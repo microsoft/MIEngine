@@ -128,12 +128,9 @@ namespace Microsoft.MIDebugEngine
                 int numStackFrames = stackFrames != null ? stackFrames.Count : 0;
                 FRAMEINFO[] frameInfoArray;
 
-                // -stack-list-arguments is a frame-relative command. If we walked no frames, or
-                // none of them carries a level (e.g. every frame is a GDB synthetic frame-filter
-                // frame), there is nothing addressable to query.
-                if (numStackFrames == 0 || !stackFrames.Any(f => f.Level != null))
+                if (numStackFrames == 0)
                 {
-                    // failed to walk any real frames. Return an empty stack.
+                    // failed to walk any frames. Return an empty stack.
                     frameInfoArray = new FRAMEINFO[0];
                 }
                 else
@@ -152,7 +149,8 @@ namespace Microsoft.MIDebugEngine
                     frameInfoArray = new FRAMEINFO[numStackFrames];
                     List<ArgumentList> parameters = null;
 
-                    if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0 && !_engine.DebuggedProcess.MICommandFactory.SupportsFrameFormatting)
+                    if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0 && !_engine.DebuggedProcess.MICommandFactory.SupportsFrameFormatting
+                        && stackFrames.Any(f => f.Level != null))
                     {
                         _engine.DebuggedProcess.WorkerThread.RunOperation(async () => parameters = await _engine.DebuggedProcess.GetParameterInfoOnly(this, (dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES) != 0,
                             (dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES) != 0, low, high));
