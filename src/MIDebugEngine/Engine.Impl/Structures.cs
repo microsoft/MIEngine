@@ -12,7 +12,7 @@ namespace Microsoft.MIDebugEngine
 {
     internal class ThreadContext
     {
-        public ThreadContext(ulong? addr, MITextPosition textPosition, string function, uint level, string from)
+        public ThreadContext(ulong? addr, MITextPosition textPosition, string function, uint? level, string from)
         {
             pc = addr;
             sp = 0;
@@ -32,7 +32,14 @@ namespace Microsoft.MIDebugEngine
 
         public string From { get; private set; }
 
-        public uint Level { get; private set; }
+        /// <summary>
+        /// [Optional] The GDB/LLDB frame level. This is null for synthetic frames
+        /// injected by a Python frame filter (e.g. an async-stack decorator): those
+        /// frames have no underlying debugger frame, so they carry no level and cannot
+        /// be targeted by frame-relative MI commands (locals, args, registers, eval).
+        /// Callers that pass the level to the debugger must early-out when it is null.
+        /// </summary>
+        public uint? Level { get; private set; }
 
         /// <summary>
         /// Finds the module for this context

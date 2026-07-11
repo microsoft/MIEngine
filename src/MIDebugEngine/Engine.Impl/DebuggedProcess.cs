@@ -1989,7 +1989,13 @@ namespace Microsoft.MIDebugEngine
         {
             List<VariableInformation> variables = new List<VariableInformation>();
 
-            ValueListValue localsAndParameters = await MICommandFactory.StackListVariables(PrintValue.NoValues, thread.Id, ctx.Level);
+            if (ctx.Level == null)
+            {
+                return variables;
+            }
+            uint level = ctx.Level.Value;
+
+            ValueListValue localsAndParameters = await MICommandFactory.StackListVariables(PrintValue.NoValues, thread.Id, level);
 
             foreach (var localOrParamResult in localsAndParameters.Content)
             {
@@ -2000,7 +2006,7 @@ namespace Microsoft.MIDebugEngine
                 variables.Add(vi);
             }
 
-            if (ReturnValue != null && ctx.Level == 0 && ReturnValue.Client.Id == thread.Id)
+            if (ReturnValue != null && level == 0 && ReturnValue.Client.Id == thread.Id)
                 variables.Add(ReturnValue);
 
             return variables;
@@ -2012,7 +2018,12 @@ namespace Microsoft.MIDebugEngine
         {
             List<SimpleVariableInformation> parameters = new List<SimpleVariableInformation>();
 
-            ValueListValue localAndParameters = await MICommandFactory.StackListVariables(PrintValue.SimpleValues, thread.Id, ctx.Level);
+            if (ctx.Level == null)
+            {
+                return parameters;
+            }
+
+            ValueListValue localAndParameters = await MICommandFactory.StackListVariables(PrintValue.SimpleValues, thread.Id, ctx.Level.Value);
 
             foreach (var results in localAndParameters.Content.Where(r => r.TryFindString("arg") == "1"))
             {
@@ -2050,7 +2061,15 @@ namespace Microsoft.MIDebugEngine
 
             foreach (var f in frames)
             {
-                int level = f.FindInt("level");
+                // Synthetic frames injected by a GDB Python frame filter have no "level" field.
+                // GDB doesn't support querying them by level either, so their argument lists
+                // can't be retrieved. Just skip them instead of failing the whole stack walk.
+                uint? levelOpt = f.TryFindUint("level");
+                if (levelOpt == null)
+                {
+                    continue;
+                }
+                int level = (int)levelOpt.Value;
                 ListValue argList = null;
                 f.TryFind<ListValue>("args", out argList);
                 List<SimpleVariableInformation> args = new List<SimpleVariableInformation>();
