@@ -75,9 +75,7 @@
     <ItemGroup>
       <!-- All files from OpenDebugAD7's output (includes OpenDebugAD7.exe, deps, DebugEngineHost,
            Newtonsoft.Json, MIDebugEngine.dll (via its copy target), WindowsDebugLauncher.exe, etc.) -->
-      <_DebugAdapterSourceFiles Include="$(OpenDebugAD7OutputPath)*.*" />
-      <!-- MICore.dll is not in the vscode output folder (no project reference from OpenDebugAD7) -->
-      <_DebugAdapterSourceFiles Include="$(MIDefaultOutputPath)Microsoft.MICore.dll" />
+      <_DebugAdapterSourceFiles Include="$(OpenDebugAD7OutputPath)*" />
     </ItemGroup>
     <ItemGroup>
       <_DebugAdapterDestFiles Include="@(_DebugAdapterSourceFiles->'$(DebugAdaptersDeployPath)%(Filename)%(Extension)')" />
