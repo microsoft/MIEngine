@@ -9,11 +9,11 @@
 1. A VSCode-flavor build (see [Building-outside-of-VS-for-AI.md](Building-outside-of-VS-for-AI.md)):
 
    ```powershell
-   eng\Scripts\CI-Build.ps1 -Configuration Debug -TargetPlatform vscode    # Windows
+   eng\Scripts\CI-Build.ps1   # Windows
    ```
 
    ```bash
-   eng/Scripts/CI-Build.sh                                                  # Linux / macOS
+   eng/Scripts/CI-Build.sh    # Linux / macOS
    ```
 
 2. A native toolchain for the test debuggees:
@@ -35,7 +35,7 @@
 
    - **macOS:** `lldb-mi` is downloaded by `tools/DownloadLldbMI.sh`; CI does this automatically inside `eng/Scripts/CI-Test.sh`.
 
-3. A `config.xml` next to `CppTests.dll`. Pick the right template from `bin/DebugAdapterProtocolTests/<Configuration>/CppTests/TestConfigurations/` and copy it as `config.xml`:
+3. A `config.xml` next to `CppTests.csproj`. Pick the right template from `test\CppTests\TestConfigurations` and copy it as `config.xml`:
 
    | Platform / debugger | Template |
    | --- | --- |

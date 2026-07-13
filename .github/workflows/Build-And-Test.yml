@@ -39,7 +39,7 @@ jobs:
 
     - name: Build MIDebugEngine
       run: |
-        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -c $env:Configuration -t vs
+        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -c $env:Configuration
       env:
         Configuration: ${{ matrix.configuration }}
 
@@ -71,7 +71,7 @@ jobs:
 
     - name: Build MIDebugEngine
       run: |
-        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -t vscode
+        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd
 
     - name: Copy Test Configuration
       run: |
