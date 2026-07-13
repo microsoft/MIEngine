@@ -35,7 +35,7 @@
 
    - **macOS:** `lldb-mi` is downloaded by `tools/DownloadLldbMI.sh`; CI does this automatically inside `eng/Scripts/CI-Test.sh`.
 
-3. A `config.xml` next to `CppTests.csproj`. Pick the right template from `bin/DebugAdapterProtocolTests/<Configuration>/CppTests/TestConfigurations/` and copy it as `config.xml`:
+3. A `config.xml` next to `CppTests.csproj`. Pick the right template from `test\CppTests\TestConfigurations` and copy it as `config.xml`:
 
    | Platform / debugger | Template |
    | --- | --- |
