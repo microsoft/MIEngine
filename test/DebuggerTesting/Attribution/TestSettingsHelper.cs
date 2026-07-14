@@ -227,11 +227,9 @@ namespace DebuggerTesting
             if (envElement == null)
                 return null;
 
-            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var child in envElement.Elements())
-            {
-                result[child.Name.LocalName] = SafeExpandEnvironmentVariables(child.Value);
-            }
+            Dictionary<string, string> result = envElement
+                .Elements()
+                .ToDictionary(e => e.Name.LocalName, e => SafeExpandEnvironmentVariables(e.Value), StringComparer.OrdinalIgnoreCase);
 
             return result.Count > 0 ? result : null;
         }
