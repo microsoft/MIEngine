@@ -158,7 +158,8 @@ namespace DebuggerTesting
                             Path = x.GetAttributeValue("Path"),
                             AdapterPath = x.GetAttributeValue("AdapterPath"),
                             MIMode = x.GetAttributeValue("MIMode"),
-                            Properties = x.GetPropertiesDictionary()
+                            Properties = x.GetPropertiesDictionary(),
+                            EnvironmentVariables = x.GetEnvironmentDictionary()
                         });
                 Assert.True(null != debuggers && debuggers.Count != 0, "Object loaded from '{0}' is not a TestMachineConfiguration. Missing Debuggers.".FormatInvariantWithArgs(configPath));
 
@@ -197,7 +198,8 @@ namespace DebuggerTesting
                         SafeExpandEnvironmentVariables(config.Debugger.Path),
                         SafeExpandEnvironmentVariables(config.Debugger.AdapterPath),
                         config.Debugger.MIMode,
-                        config.Debugger.Properties);
+                        config.Debugger.Properties,
+                        config.Debugger.EnvironmentVariables);
 
                 // Force evaluation
                 return testSettings.ToArray();
@@ -213,6 +215,25 @@ namespace DebuggerTesting
                 .Element("Properties")
                 ?.Elements("Property")
                 ?.ToDictionary(p => p.GetAttributeValue("Name"), p => SafeExpandEnvironmentVariables(p.Value), StringComparer.Ordinal);
+        }
+
+        /// <summary>
+        /// Reads the Environment element and returns its child element names and values as a dictionary.
+        /// For example: <Environment><Path>value</Path></Environment> yields {"Path": "value"}
+        /// </summary>
+        private static IDictionary<string, string> GetEnvironmentDictionary(this XElement element)
+        {
+            var envElement = element.Element("Environment");
+            if (envElement == null)
+                return null;
+
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var child in envElement.Elements())
+            {
+                result[child.Name.LocalName] = SafeExpandEnvironmentVariables(child.Value);
+            }
+
+            return result.Count > 0 ? result : null;
         }
 
         private static bool Matches(this IEnumerable<SupportedCompilerAttribute> compilers, ICompilerSettings settings)

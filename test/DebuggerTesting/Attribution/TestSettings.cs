@@ -24,10 +24,11 @@ namespace DebuggerTesting
             string debuggerPath,
             string debuggerAdapterPath,
             string miMode,
-            IDictionary<string, string> debuggerProperties)
+            IDictionary<string, string> debuggerProperties,
+            IDictionary<string, string> environmentVariables = null)
         {
             this.CompilerSettings = new CompilerSettings(compilerName, compilerType, compilerPath, debuggeeArchitecture, compilerProperties);
-            this.DebuggerSettings = new DebuggerSettings(debuggerName, debuggerType, debuggerPath, debuggerAdapterPath, miMode, debuggeeArchitecture, debuggerProperties);
+            this.DebuggerSettings = new DebuggerSettings(debuggerName, debuggerType, debuggerPath, debuggerAdapterPath, miMode, debuggeeArchitecture, debuggerProperties, environmentVariables);
         }
 
         private TestSettings(ITestSettings original, string name)
