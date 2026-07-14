@@ -39,7 +39,8 @@ namespace Microsoft.MIDebugEngine
             public readonly Delegate Target;
 
             /// <summary>
-            /// Handler invoked on the worker thread if the operation faults. Only set for PostAsyncOperation.
+            /// Handler invoked if the operation faults. For async operations, this may be invoked on a non-worker thread.
+            /// Only set for PostAsyncOperation.
             /// </summary>
             public Action<Exception> ErrorHandler;
 
@@ -465,13 +466,15 @@ namespace Microsoft.MIDebugEngine
             Action<Exception> errorHandler = _runningOp.ErrorHandler;
             ExceptionDispatchInfo exceptionDispatchInfo = _runningOp.ExceptionDispatchInfo;
 
-            _runningOp = null;
-            _runningOpCompleteEvent.Set();
-
+            // Invoke the handler while the running-op slot is still held so it does not run concurrently
+            // with the next queued operation. This may still run on the task's completion thread.
             if (errorHandler != null && exceptionDispatchInfo != null)
             {
                 InvokeErrorHandler(errorHandler, exceptionDispatchInfo.SourceException);
             }
+
+            _runningOp = null;
+            _runningOpCompleteEvent.Set();
         }
 
         private void InvokeErrorHandler(Action<Exception> errorHandler, Exception exception)
