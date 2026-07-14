@@ -17,7 +17,11 @@
       Name="GdbMingw64"
       Type="Gdb_MinGW"
       Path="D:\a\_temp\msys64\mingw64\bin\gdb.exe"
-      AdapterPath="OpenDebugAD7.exe"
-      />
+      AdapterPath="OpenDebugAD7.exe">
+      <Environment>
+        <!--If running tests outside of a cygwin shell, uncomment this and adjust paths-->
+        <!--<Path>C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%</Path>-->
+      </Environment>
+    </Debugger>
   </Debuggers>
 </TestMachineConfiguration>

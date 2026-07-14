@@ -26,6 +26,8 @@ namespace DebuggerTesting
 
         IDictionary<string, string> Properties { get; }
 
+        IDictionary<string, string> EnvironmentVariables { get; }
+
         #endregion
     }
 }

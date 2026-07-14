@@ -62,7 +62,8 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
                 pauseForDebugger: false,
                 isVsDbg: this.DebuggerSettings.DebuggerType == SupportedDebugger.VsDbg,
                 isNative: true,
-                responseTimeout: 5000);
+                responseTimeout: 5000,
+                additionalEnvironmentVariables: this.DebuggerSettings.EnvironmentVariables);
 
             if (callbackHandlers != null)
             {
