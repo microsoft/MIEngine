@@ -28,6 +28,7 @@ namespace Microsoft.MIDebugEngine
         private readonly ManualResetEvent _runningOpCompleteEvent; // fired when either m_syncOp finishes, or the kick off of m_async
         private readonly Object _eventLock = new object(); // Locking on an event directly can cause Mono to stop responding.
         private readonly Queue<Operation> _postedOperations; // queue of fire-and-forget operations
+        private readonly Queue<(AsyncOperation Operation, Action<Exception> OnError)> _postedAsyncOperations; // queue of fire-and-forget async operations
 
         public event EventHandler<Exception> PostedOperationErrorEvent;
 
@@ -88,6 +89,7 @@ namespace Microsoft.MIDebugEngine
             _opSet = new AutoResetEvent(false);
             _runningOpCompleteEvent = new ManualResetEvent(true);
             _postedOperations = new Queue<Operation>();
+            _postedAsyncOperations = new Queue<(AsyncOperation Operation, Action<Exception> OnError)>();
 
             _thread = new Thread(new ThreadStart(ThreadFunc));
             _thread.Name = "MIDebugger.PollThread";
@@ -129,9 +131,9 @@ namespace Microsoft.MIDebugEngine
         }
 
         /// <summary>
-        /// Send an async operation to the worker thread, claiming the running-op slot but returning without
-        /// waiting for it to complete. Later operations still serialize behind it. Faults are reported to
-        /// <paramref name="onError"/>.
+        /// Queue an async operation to run on the worker thread and return immediately, without waiting for the
+        /// operation to start or finish. Posted async operations run one at a time, in the order posted, and
+        /// serialize behind any in-flight operation. Faults are reported to <paramref name="onError"/>.
         /// </summary>
         public void PostAsyncOperation(AsyncOperation op, Action<Exception> onError)
         {
@@ -140,7 +142,17 @@ namespace Microsoft.MIDebugEngine
             if (onError == null)
                 throw new ArgumentNullException(nameof(onError));
 
-            PostAsyncOperationInternal(op, onError);
+            if (_isClosed)
+                throw new ObjectDisposedException("WorkerThread");
+
+            lock (_postedAsyncOperations)
+            {
+                if (_isClosed)
+                    throw new ObjectDisposedException("WorkerThread");
+
+                _postedAsyncOperations.Enqueue((op, onError));
+                _opSet.Set();
+            }
         }
 
         public void Close()
@@ -205,26 +217,6 @@ namespace Microsoft.MIDebugEngine
                 _runningOpCompleteEvent.WaitOne();
 
                 if (TrySetOperationInternalWithProgress(op, text, canTokenSource))
-                {
-                    return;
-                }
-            }
-        }
-
-        internal void PostAsyncOperationInternal(AsyncOperation op, Action<Exception> onError)
-        {
-            // If this is called on the Worker thread it will deadlock
-            Debug.Assert(!IsPollThread());
-
-            while (true)
-            {
-                if (_isClosed)
-                    throw new ObjectDisposedException("WorkerThread");
-
-                // Wait for the slot so this serializes behind any in-flight operation.
-                _runningOpCompleteEvent.WaitOne();
-
-                if (TryPostAsyncOperationInternal(op, onError))
                 {
                     return;
                 }
@@ -318,27 +310,33 @@ namespace Microsoft.MIDebugEngine
             return false;
         }
 
-        private bool TryPostAsyncOperationInternal(AsyncOperation op, Action<Exception> onError)
+        // Called on the poll thread to promote the next posted async operation into the running-op slot when it
+        // is free. Returns true if an operation was moved into the slot.
+        private bool TryStartPostedAsyncOperation()
         {
+            Debug.Assert(IsPollThread(), "TryStartPostedAsyncOperation must run on the poll thread.");
+
             lock (_eventLock)
             {
-                if (_isClosed)
-                    throw new ObjectDisposedException("WorkerThread");
+                if (_isClosed || _runningOp != null)
+                    return false;
 
-                if (_runningOp == null)
+                (AsyncOperation Operation, Action<Exception> OnError) posted;
+                lock (_postedAsyncOperations)
                 {
-                    _runningOpCompleteEvent.Reset();
+                    if (_postedAsyncOperations.Count == 0)
+                        return false;
 
-                    _runningOp = new OperationDescriptor(op) { ErrorHandler = onError };
-
-                    _opSet.Set();
-
-                    // Unlike TrySetOperationInternal, do not wait for completion; faults are routed to onError.
-                    return true;
+                    posted = _postedAsyncOperations.Dequeue();
                 }
-            }
 
-            return false;
+                _runningOpCompleteEvent.Reset();
+
+                // Unlike TrySetOperationInternal, no one waits for completion; faults are routed to the handler.
+                _runningOp = new OperationDescriptor(posted.Operation) { ErrorHandler = posted.OnError };
+
+                return true;
+            }
         }
 
         // Thread routine for the poll loop. It handles calls coming in from the debug engine as well as polling for debug events.
@@ -354,6 +352,11 @@ namespace Microsoft.MIDebugEngine
                 do
                 {
                     ranOperation = false;
+
+                    if (_runningOp == null)
+                    {
+                        TryStartPostedAsyncOperation();
+                    }
 
                     OperationDescriptor runningOp = _runningOp;
                     if (runningOp != null && !runningOp.IsStarted)
@@ -475,6 +478,14 @@ namespace Microsoft.MIDebugEngine
 
             _runningOp = null;
             _runningOpCompleteEvent.Set();
+
+            lock (_postedAsyncOperations)
+            {
+                if (_postedAsyncOperations.Count > 0)
+                {
+                    _opSet.Set();
+                }
+            }
         }
 
         private void InvokeErrorHandler(Action<Exception> errorHandler, Exception exception)
