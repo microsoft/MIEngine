@@ -5,6 +5,7 @@ using MICore;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.DAP;
 using System;
+using Microsoft.DebugEngineHost;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -272,6 +273,17 @@ namespace Microsoft.MIDebugEngine
         {
             TypeName = results.TryFindString("type");
             Value = results.TryFindString("value");
+            // Diagnostic: log raw tuple child value before any cleanup
+            _debuggedProcess.Logger?.WriteLine(LogLevel.Verbose, FormattableString.Invariant($"TupleCtor: name={Name}, exp={results.TryFindString("exp")}, type={TypeName}, format={_format}, formatHasNa={_formatHasNa}, rawValue={results.TryFindString("value")}"));
+            // Only strip the leading MI address prefix ("0x... \"\"") when the natvis
+            // format included the 'na' modifier. 
+            if (_formatHasNa && !string.IsNullOrEmpty(Value) && Regex.IsMatch(Value, "^0x[0-9a-fA-F]+\\s+"))
+            {
+                // Recognize typical GDB prefix: 0x<hex> <string>
+                string before = Value;
+                Value = Regex.Replace(Value, "^0x[0-9a-fA-F]+\\s+", "");
+                _debuggedProcess.Logger?.WriteLine(LogLevel.Verbose, FormattableString.Invariant($"TupleCtor: stripped address prefix: before={before}, after={Value}"));
+            }
             Name = name ?? results.FindString("exp");
             if (results.Contains("dynamic"))
             {
@@ -332,6 +344,8 @@ namespace Microsoft.MIDebugEngine
             _internalName = results.FindString("name");
             IsChild = true;
             _format = parent._format; // inherit formatting
+            // inherit whether the parent's format included the 'na' modifier
+            _formatHasNa = parent._formatHasNa;
             _parent = parent.VariableNodeType == NodeType.AccessQualifier ? parent._parent : parent;
             this.PropertyInfoFlags = parent.PropertyInfoFlags;
         }
@@ -375,6 +389,9 @@ namespace Microsoft.MIDebugEngine
         private DeferedFormatExpression _deferedFormatExpression;
         private IVariableInformation _parent;
         private string _format;
+        // Indicates the original format specifier included the natvis "na" modifier
+        // (used to decide whether to strip MI's leading address prefix from string values)
+        private bool _formatHasNa = false;
         private string _strippedName;  // "Name" stripped of format specifiers
         private string _fullname;
 
@@ -416,6 +433,9 @@ namespace Microsoft.MIDebugEngine
 
             // Find the format specifier expression
             string expFS = exp.Substring(lastComma + 1).Trim();
+            // Detect whether the natvis 'na' modifier is present in the original format specifier.
+            // We must detect this before we strip modifiers below.
+            _formatHasNa = expFS.IndexOf("na", StringComparison.Ordinal) >= 0;
 
             // Strip off modifiers that may be included together with another format specifier, e.g. 'nvoXb' is a valid format specifier, but we only care about the 'Xb' part
             // This is not quite the right fix -- really the below switch statement should be a series of if statements. But since none of the supported format specifiers
@@ -698,6 +718,11 @@ namespace Microsoft.MIDebugEngine
                             _attribsFetched = true;
                         }
                         Value = results.TryFindString("value");
+                        // If natvis requested 'na', strip MI's leading address prefix
+                        if (_formatHasNa && !string.IsNullOrEmpty(Value) && Regex.IsMatch(Value, "^0x[0-9a-fA-F]+\\s+"))
+                        {
+                            Value = Regex.Replace(Value, "^0x[0-9a-fA-F]+\\s+", "");
+                        }
                         if ((string.IsNullOrEmpty(Value) || _format != null) && !string.IsNullOrEmpty(_internalName))
                         {
                             if (_format != null)
@@ -711,6 +736,11 @@ namespace Microsoft.MIDebugEngine
                                 if (results.ResultClass == ResultClass.done)
                                 {
                                     Value = results.FindString("value");
+                                    // If natvis requested 'na', strip MI's leading address prefix
+                                    if (_formatHasNa && !string.IsNullOrEmpty(Value) && Regex.IsMatch(Value, "^0x[0-9a-fA-F]+\\s+"))
+                                    {
+                                        Value = Regex.Replace(Value, "^0x[0-9a-fA-F]+\\s+", "");
+                                    }
                                 }
                                 else if (results.ResultClass == ResultClass.error)
                                 {

@@ -1283,12 +1283,24 @@ namespace Microsoft.MIDebugEngine.Natvis
                     if (m.Success)
                     {
                         string rawExpr = format.Substring(i + 1, m.Length - 2);
+                        // Substitute template parameter macros ($T1, $T2, ...) inside the whole brace
+                        // expression (this covers both the expression and any trailing format specifier)
+                        if (scopedNames != null)
+                        {
+                            rawExpr = Regex.Replace(rawExpr, "\\$T\\d+", (Match mt) =>
+                            {
+                                if (scopedNames.TryGetValue(mt.Value, out string replacement))
+                                    return replacement;
+                                return mt.Value;
+                            });
+                        }
+                        bool hasNa = HasNaModifier(rawExpr);
                         string spec = ExtractFormatSpecifier(rawExpr);
                         string exprValue = GetExpressionValue(rawExpr, variable, scopedNames, intrinsics);
-                        if (spec == "sub" || spec == "su")
-                            exprValue = CleanUtf16StringValue(exprValue);
-                        else if (spec == "sb")
-                            exprValue = CleanAsciiStringValue(exprValue);
+                        if (hasNa && !string.IsNullOrEmpty(exprValue))
+                        {
+                            exprValue = s_addressPrefix.Replace(exprValue, "");
+                        }
                         value.Append(exprValue);
                         i += m.Length - 1;
                     }
@@ -1503,26 +1515,32 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
 
         /// <summary>
+        /// Returns true if the NatVis expression's trailing format specifier (the part after the
+        /// last top-level comma) contains the "na" modifier. This intentionally inspects the
+        /// raw specifier text and does not normalize/remove modifiers so callers can detect
+        /// whether the original expression asked for the "na" behavior.
+        /// </summary>
+        private static bool HasNaModifier(string expression)
+        {
+            int commaPos = FindLastTopLevelComma(expression);
+            if (commaPos < 0) return false;
+            string tail = expression.Substring(commaPos + 1);
+            return tail.IndexOf("na", StringComparison.Ordinal) >= 0;
+        }
+
+        /// <summary>
         /// Cleans up the raw value that GDB/LLDB returns for a <c>const char16_t*</c>
         /// expression (i.e. one evaluated with the <c>,sub</c> / <c>,su</c> format specifier).
         /// GDB and LLDB both prefix the string with the pointer address, e.g.
         ///   <c>0x00007fff5fbff6c0 u"Hello"</c>
-        /// This method strips the address and the surrounding <c>u"…"</c> quotes so that
-        /// the NatVis DisplayString shows just the string content.
+        /// This method strips the leading address prefix that GDB/LLDB emits ("0x... ").
+        /// It does NOT remove surrounding quotes or the leading character-width prefix (u/U).
         /// </summary>
         internal static string CleanUtf16StringValue(string value)
         {
             if (string.IsNullOrEmpty(value)) return value;
             // Strip leading "0x<hex> " address prefix emitted by GDB/LLDB.
             value = s_addressPrefix.Replace(value, "");
-            // Strip surrounding u"..." or U"..." quotes.
-            if (value.Length >= 3 &&
-                (value.StartsWith("u\"", StringComparison.Ordinal) || value.StartsWith("U\"", StringComparison.Ordinal)))
-            {
-                value = value.EndsWith("\"", StringComparison.Ordinal)
-                    ? value.Substring(2, value.Length - 3)
-                    : value.Substring(2);
-            }
             return value;
         }
 
@@ -1531,9 +1549,9 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// (i.e. one evaluated with the <c>,sb</c> format specifier).
         /// GDB and LLDB prefix the string with the pointer address, e.g.
         ///   <c>0x00007fff5fbff6c0 "Hello"</c>
-        /// This method strips the address and the surrounding <c>"…"</c> quotes so that
-        /// the NatVis DisplayString shows just the string content (matching VS behaviour,
-        /// where <c>{ptr,sb}</c> evaluates to bare text without quotes).
+        /// This method strips the leading address prefix that GDB/LLDB emits ("0x... ").
+        /// It does NOT remove surrounding quotes; callers should decide whether quotes
+        /// should be removed based on the caller's context.
         /// </summary>
         internal static string CleanAsciiStringValue(string value)
         {
