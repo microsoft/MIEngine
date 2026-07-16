@@ -183,6 +183,22 @@ namespace Microsoft.MIDebugEngine
                     }
                 }
             }
+
+            // Fail any queued async operations that will never run now that we are closed, instead of
+            // dropping them silently. The poll thread won't promote them once _isClosed is set.
+            while (true)
+            {
+                Action<Exception> onError;
+                lock (_postedAsyncOperations)
+                {
+                    if (_postedAsyncOperations.Count == 0)
+                        break;
+
+                    onError = _postedAsyncOperations.Dequeue().OnError;
+                }
+
+                InvokeErrorHandler(onError, new ObjectDisposedException("WorkerThread"));
+            }
         }
 
         internal void SetOperationInternal(Delegate op)
@@ -246,68 +262,98 @@ namespace Microsoft.MIDebugEngine
 
         private bool TrySetOperationInternal(Delegate op)
         {
-            lock (_eventLock)
+            bool claimed = false;
+            try
             {
-                if (_isClosed)
-                    throw new ObjectDisposedException("WorkerThread");
-
-                if (_runningOp == null)
+                lock (_eventLock)
                 {
-                    _runningOpCompleteEvent.Reset();
+                    if (_isClosed)
+                        throw new ObjectDisposedException("WorkerThread");
 
-                    OperationDescriptor runningOp = new OperationDescriptor(op);
-                    _runningOp = runningOp;
-
-                    _opSet.Set();
-
-                    _runningOpCompleteEvent.WaitOne();
-
-                    Debug.Assert(runningOp.IsComplete, "Why isn't the running op complete?");
-
-                    if (runningOp.ExceptionDispatchInfo != null)
+                    if (_runningOp == null)
                     {
-                        runningOp.ExceptionDispatchInfo.Throw();
-                    }
+                        _runningOpCompleteEvent.Reset();
 
-                    return true;
+                        OperationDescriptor runningOp = new OperationDescriptor(op);
+                        _runningOp = runningOp;
+
+                        _opSet.Set();
+
+                        _runningOpCompleteEvent.WaitOne();
+                        claimed = true;
+
+                        Debug.Assert(runningOp.IsComplete, "Why isn't the running op complete?");
+
+                        if (runningOp.ExceptionDispatchInfo != null)
+                        {
+                            runningOp.ExceptionDispatchInfo.Throw();
+                        }
+
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            finally
+            {
+                // The running-op slot was just freed and _eventLock is now released. If promotion on the poll
+                // thread lost the TryEnter race against this method, re-arm _opSet so a queued async operation
+                // is promoted immediately instead of stranded until the next unrelated wakeup.
+                if (claimed && HasPostedAsyncOperation())
+                {
+                    _opSet.Set();
                 }
             }
-
-            return false;
         }
 
         private bool TrySetOperationInternalWithProgress(AsyncProgressOperation op, string text, CancellationTokenSource canTokenSource)
         {
             var waitLoop = new HostWaitLoop(text);
 
-            lock (_eventLock)
+            bool claimed = false;
+            try
             {
-                if (_isClosed)
-                    throw new ObjectDisposedException("WorkerThread");
-
-                if (_runningOp == null)
+                lock (_eventLock)
                 {
-                    _runningOpCompleteEvent.Reset();
+                    if (_isClosed)
+                        throw new ObjectDisposedException("WorkerThread");
 
-                    OperationDescriptor runningOp = new OperationDescriptor(new AsyncOperation(() => { return op(waitLoop); }));
-                    _runningOp = runningOp;
-
-                    _opSet.Set();
-
-                    waitLoop.Wait(_runningOpCompleteEvent, canTokenSource);
-
-                    Debug.Assert(runningOp.IsComplete, "Why isn't the running op complete?");
-
-                    if (runningOp.ExceptionDispatchInfo != null)
+                    if (_runningOp == null)
                     {
-                        runningOp.ExceptionDispatchInfo.Throw();
-                    }
+                        _runningOpCompleteEvent.Reset();
 
-                    return true;
+                        OperationDescriptor runningOp = new OperationDescriptor(new AsyncOperation(() => { return op(waitLoop); }));
+                        _runningOp = runningOp;
+
+                        _opSet.Set();
+
+                        waitLoop.Wait(_runningOpCompleteEvent, canTokenSource);
+                        claimed = true;
+
+                        Debug.Assert(runningOp.IsComplete, "Why isn't the running op complete?");
+
+                        if (runningOp.ExceptionDispatchInfo != null)
+                        {
+                            runningOp.ExceptionDispatchInfo.Throw();
+                        }
+
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            finally
+            {
+                // The running-op slot was just freed and _eventLock is now released. If promotion on the poll
+                // thread lost the TryEnter race against this method, re-arm _opSet so a queued async operation
+                // is promoted immediately instead of stranded until the next unrelated wakeup.
+                if (claimed && HasPostedAsyncOperation())
+                {
+                    _opSet.Set();
                 }
             }
-
-            return false;
         }
 
         // Called on the poll thread to promote the next posted async operation into the running-op slot when it
@@ -316,7 +362,21 @@ namespace Microsoft.MIDebugEngine
         {
             Debug.Assert(IsPollThread(), "TryStartPostedAsyncOperation must run on the poll thread.");
 
-            lock (_eventLock)
+            // Cheap early-out so the poll loop does not contend on _eventLock when there is nothing to promote.
+            lock (_postedAsyncOperations)
+            {
+                if (_isClosed || _postedAsyncOperations.Count == 0)
+                    return false;
+            }
+
+            // Never block on _eventLock here: a client in TrySetOperationInternal holds it across
+            // _runningOpCompleteEvent.WaitOne() until its operation completes, and only the poll thread can
+            // complete that operation, so blocking here would deadlock. If a client is mid-set, skip promotion;
+            // it will be retried on a later poll-loop iteration or wakeup.
+            if (!Monitor.TryEnter(_eventLock))
+                return false;
+
+            try
             {
                 if (_isClosed || _runningOp != null)
                     return false;
@@ -336,6 +396,18 @@ namespace Microsoft.MIDebugEngine
                 _runningOp = new OperationDescriptor(posted.Operation) { ErrorHandler = posted.OnError };
 
                 return true;
+            }
+            finally
+            {
+                Monitor.Exit(_eventLock);
+            }
+        }
+
+        private bool HasPostedAsyncOperation()
+        {
+            lock (_postedAsyncOperations)
+            {
+                return _postedAsyncOperations.Count > 0;
             }
         }
 
