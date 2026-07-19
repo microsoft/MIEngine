@@ -33,3 +33,15 @@ public:
     Value _value;
     int _size;
 };
+
+// A typedef alias and a subclass of SimpleContainer<int>: the debugger reports
+// variables of these types under the alias/subclass name, which matches no
+// visualizer directly — resolving them to SimpleContainer<*> exercises the
+// typedef and base-class type-name resolution.
+typedef SimpleContainer<int> ContainerAlias;
+
+class DerivedContainer : public SimpleContainer<int>
+{
+public:
+    DerivedContainer(int val, int count) : SimpleContainer<int>(val, count) {}
+};

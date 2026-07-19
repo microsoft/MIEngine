@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -249,10 +250,27 @@ namespace Microsoft.MIDebugEngine.Natvis
         private static readonly Regex s_intrinsicCallPattern = new Regex(@"\b(\w+)\s*\(");
         // Matches the leading "0x<hex> " address that GDB/LLDB prepends when displaying a string pointer value.
         private static readonly Regex s_addressPrefix = new Regex(@"^0x[0-9a-fA-F]+\s+");
+        // Restricts debugger type-name queries to plain C++ type names (identifiers,
+        // scope operators, template arguments, cv/ref/pointer decorations) so that no
+        // other console syntax can be smuggled into the query command. Literal spaces,
+        // not \s: a newline inside a name could terminate the MI console line early.
+        private static readonly Regex s_safeTypeNameForQuery = new Regex(@"^[A-Za-z_$][\w$]*(::[\w$]+)*( *<[\w :<>,\*&$]*>)?( *[\*&])*$", RegexOptions.Compiled);
         private List<FileInfo> _typeVisualizers;
         private DebuggedProcess _process;
         private HostConfigurationStore _configStore;
         private Dictionary<string, VisualizerInfo> _vizCache;
+        // Debugger type-name resolution results (typedef target / first base class),
+        // keyed by the reported type name. Null values cache negative results so each
+        // unmatched name costs at most one round of debugger queries per session.
+        private Dictionary<string, string> _typeNameQueryCache = new Dictionary<string, string>();
+        // Single-token built-in type names, never worth a debugger query (natvis rules
+        // cannot target primitives). Multi-word forms ("unsigned long") are already
+        // rejected by s_safeTypeNameForQuery.
+        private static readonly HashSet<string> s_primitiveTypeNames = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "void", "bool", "char", "short", "int", "long", "float", "double",
+            "signed", "unsigned", "wchar_t", "char8_t", "char16_t", "char32_t"
+        };
         private uint _depth;
         public HostWaitDialog WaitDialog { get; private set; }
 
@@ -1257,7 +1275,359 @@ namespace Microsoft.MIDebugEngine.Natvis
                 }
                 parsedName = TypeName.Parse(var.TypeName, _process.Logger.NatvisLogger);
             }
+
+            // Name-based fallback: the debugger reports a variable's type under its
+            // declared name. A typedef alias or a subclass of a visualized type
+            // therefore misses the wildcard rule of its underlying type, and the
+            // debugger may expose no BaseClass child for FindBaseClass to walk.
+            // Ask the debugger to resolve the name (typedef target or first base class)
+            // and retry the rule lookup with the resolved name.
+            if (_typeVisualizers.Count == 0)
+            {
+                return null;    // no natvis loaded — a resolved name could not match anything
+            }
+            string currentName = StripTypeDecorations(variable.TypeName);
+            for (int chain = 0; chain < MAX_ALIAS_CHAIN && !String.IsNullOrEmpty(currentName); chain++)
+            {
+                string resolvedName = ResolveTypeNameViaDebugger(currentName);
+                if (String.IsNullOrEmpty(resolvedName) || resolvedName == currentName)
+                {
+                    break;
+                }
+                _process.Logger.NatvisLogger?.WriteLine(LogLevel.Verbose, "FindType: '{0}' resolved to '{1}'", currentName, resolvedName);
+                TypeName resolvedParsed = TypeName.Parse(resolvedName, _process.Logger.NatvisLogger);
+                if (resolvedParsed == null)
+                {
+                    break;
+                }
+                // On success Scan caches the visualizer under variable.TypeName, so the
+                // next variable reported under this alias hits _vizCache directly.
+                var visualizer = Scan(resolvedParsed, variable);
+                if (visualizer != null)
+                {
+                    return visualizer;
+                }
+                currentName = resolvedName; // alias of an alias / base of a base
+            }
             return null;
+        }
+
+        /// <summary>
+        /// Strips cv-qualifiers and pointer/reference decorations from a reported type
+        /// name so it can be used in a debugger type query, e.g.
+        /// "const TextItemList &amp;" -> "TextItemList".
+        /// </summary>
+        internal static string StripTypeDecorations(string typeName)
+        {
+            if (String.IsNullOrEmpty(typeName))
+            {
+                return typeName;
+            }
+            string result = typeName.Trim();
+            while (result.EndsWith("*", StringComparison.Ordinal) || result.EndsWith("&", StringComparison.Ordinal))
+            {
+                result = result.Substring(0, result.Length - 1).TrimEnd();
+            }
+            foreach (string qualifier in new[] { "const ", "volatile " })
+            {
+                if (result.StartsWith(qualifier, StringComparison.Ordinal))
+                {
+                    result = result.Substring(qualifier.Length).TrimStart();
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Extracts the underlying type from a debugger type-description output:
+        /// the typedef target, the head type name (when the debugger already expanded
+        /// a typedef), or the first base class. Returns null when the output describes
+        /// only <paramref name="queriedName"/> itself.
+        /// Handles GDB "whatis"/"ptype" ("type = ..." prefix) and LLDB "type lookup".
+        /// </summary>
+        internal static string ExtractResolvedTypeName(string output, string queriedName)
+        {
+            if (String.IsNullOrWhiteSpace(output))
+            {
+                return null;
+            }
+            string line = null;
+            foreach (string candidate in output.Split('\n'))
+            {
+                string trimmed = candidate.Trim();
+                if (trimmed.Length > 0)
+                {
+                    line = trimmed;
+                    break;
+                }
+            }
+            if (line == null)
+            {
+                return null;
+            }
+
+            // Debugger error prose ("error: use of undeclared identifier ...") has a
+            // top-level colon, which would make "error" parse as a head name.
+            if (line.StartsWith("error:", StringComparison.OrdinalIgnoreCase) ||
+                line.StartsWith("warning:", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            if (line.StartsWith("type = ", StringComparison.Ordinal))
+            {
+                line = line.Substring("type = ".Length).Trim();
+            }
+
+            if (line.StartsWith("typedef ", StringComparison.Ordinal))
+            {
+                // "typedef <target>" (lldb) or "typedef <target> <alias>" (C style).
+                // Strip the trailing alias only when it is a whole whitespace-separated
+                // token, so a target that merely ends with the alias name (ns::Alias)
+                // is kept intact.
+                string target = line.Substring("typedef ".Length).Trim().TrimEnd(';').Trim();
+                if (target.Length > queriedName.Length &&
+                    target.EndsWith(queriedName, StringComparison.Ordinal) &&
+                    Char.IsWhiteSpace(target[target.Length - queriedName.Length - 1]))
+                {
+                    target = target.Substring(0, target.Length - queriedName.Length).TrimEnd();
+                }
+                return (target != queriedName) ? ValidatedTypeName(target) : null;
+            }
+
+            foreach (string keyword in new[] { "class ", "struct " })
+            {
+                if (line.StartsWith(keyword, StringComparison.Ordinal))
+                {
+                    line = line.Substring(keyword.Length).Trim();
+                    break;
+                }
+            }
+
+            // Strip a "template<...> " prefix (lldb prints template specializations
+            // as "template<> class Foo<Bar> : ..."). Only when '<' follows the keyword —
+            // a type genuinely named "template_something" must not be eaten.
+            if (line.StartsWith("template", StringComparison.Ordinal) &&
+                line.Substring("template".Length).TrimStart().StartsWith("<", StringComparison.Ordinal))
+            {
+                int d = 0;
+                int i = "template".Length;
+                for (; i < line.Length; i++)
+                {
+                    if (line[i] == '<') { d++; }
+                    else if (line[i] == '>') { d--; if (d == 0) { i++; break; } }
+                }
+                line = line.Substring(i).TrimStart();
+                foreach (string keyword in new[] { "class ", "struct " })
+                {
+                    if (line.StartsWith(keyword, StringComparison.Ordinal))
+                    {
+                        line = line.Substring(keyword.Length).Trim();
+                        break;
+                    }
+                }
+            }
+
+            // GDB prints template types with a substitution clause after the head name:
+            //   "ItemStack<int> [with T = int] : public ItemList<T> {"
+            // Capture the parameter values and strip the clause; the base clause is
+            // printed with UNsubstituted parameters and needs them re-applied.
+            Dictionary<string, string> templateParams = null;
+            int withPos = line.IndexOf("[with ", StringComparison.Ordinal);
+            if (withPos >= 0)
+            {
+                int closePos = line.IndexOf(']', withPos);
+                if (closePos > withPos)
+                {
+                    string clause = line.Substring(withPos + "[with ".Length, closePos - withPos - "[with ".Length);
+                    templateParams = new Dictionary<string, string>(StringComparer.Ordinal);
+                    int partStart = 0;
+                    int d2 = 0;
+                    for (int i = 0; i <= clause.Length; i++)
+                    {
+                        char c = i < clause.Length ? clause[i] : ',';
+                        if (c == '<' || c == '(') { d2++; }
+                        else if (c == '>' || c == ')') { d2--; }
+                        else if (c == ',' && d2 == 0)
+                        {
+                            string part = clause.Substring(partStart, i - partStart);
+                            int eq = part.IndexOf('=');
+                            if (eq > 0)
+                            {
+                                string key = part.Substring(0, eq).Trim();
+                                string value = part.Substring(eq + 1).Trim();
+                                if (key.Length > 0 && value.Length > 0)
+                                {
+                                    templateParams[key] = value;
+                                }
+                            }
+                            partStart = i + 1;
+                        }
+                    }
+                    line = (line.Substring(0, withPos) + line.Substring(closePos + 1)).Trim();
+                }
+            }
+
+            // line is now e.g. "TextItemList : public ItemList<TextItem> {" or
+            // "ItemList<ItemValue> {" (typedef already expanded by the debugger).
+            // Find the head-name end: the base-clause ':' (template depth 0,
+            // skipping "::") or the opening '{'.
+            int colonPos = -1;
+            int headEnd = line.Length;
+            int depth = 0;
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                if (c == '<') { depth++; }
+                else if (c == '>') { depth--; }
+                else if (c == '{') { headEnd = i; break; }
+                else if (c == ':' && depth == 0)
+                {
+                    if (i + 1 < line.Length && line[i + 1] == ':')
+                    {
+                        i++; // scope operator
+                        continue;
+                    }
+                    colonPos = i;
+                    headEnd = i;
+                    break;
+                }
+            }
+
+            // If the debugger already resolved the queried name to another type
+            // (alias expansion), the head name is the answer. Even when a base
+            // clause follows, that is the base of the RESOLVED type, not of the
+            // queried one — returning the base would skip past the type whose
+            // rule we are looking for.
+            string headName = line.Substring(0, headEnd).Trim();
+            if (headName.Length > 0 && headName != queriedName)
+            {
+                return ValidatedTypeName(headName);
+            }
+
+            if (colonPos >= 0)
+            {
+                // First base class: cut at '{' and at the first top-level ','.
+                string bases = line.Substring(colonPos + 1);
+                int end = bases.Length;
+                depth = 0;
+                for (int i = 0; i < bases.Length; i++)
+                {
+                    char c = bases[i];
+                    if (c == '<') { depth++; }
+                    else if (c == '>') { depth--; }
+                    else if ((c == ',' || c == '{') && depth == 0)
+                    {
+                        end = i;
+                        break;
+                    }
+                }
+                string firstBase = bases.Substring(0, end).Trim();
+                // Strip access/virtual keywords to fixpoint: gdb prints
+                // "public virtual Base", lldb prints "virtual public Base".
+                bool strippedKeyword = true;
+                while (strippedKeyword)
+                {
+                    strippedKeyword = false;
+                    foreach (string keyword in new[] { "virtual", "public", "protected", "private" })
+                    {
+                        if (firstBase.StartsWith(keyword + " ", StringComparison.Ordinal))
+                        {
+                            firstBase = firstBase.Substring(keyword.Length + 1).TrimStart();
+                            strippedKeyword = true;
+                        }
+                    }
+                }
+                // Re-apply gdb's "[with ...]" template-parameter values: the base
+                // clause is printed with the bare parameter names (ItemList<T>).
+                if (templateParams != null)
+                {
+                    foreach (KeyValuePair<string, string> param in templateParams)
+                    {
+                        firstBase = Regex.Replace(firstBase, @"\b" + Regex.Escape(param.Key) + @"\b", param.Value);
+                    }
+                }
+                return ValidatedTypeName(firstBase);
+            }
+
+            // The output names only the queried type itself, with no base clause.
+            return null;
+        }
+
+        /// <summary>
+        /// Returns <paramref name="name"/> when it has the shape of a plain type name,
+        /// null otherwise. Keeps debugger error prose (e.g. "no type was found ...")
+        /// from being handed back as a resolution or entering the cache and the log.
+        /// </summary>
+        private static string ValidatedTypeName(string name)
+        {
+            return (!String.IsNullOrEmpty(name) && s_safeTypeNameForQuery.IsMatch(name)) ? name : null;
+        }
+
+        /// <summary>
+        /// Asks the debugger what a reported type name is (typedef target or first base
+        /// class) and returns the resolved name, or null. Results, including negative
+        /// resolutions, are cached for the session; transient query errors are not.
+        /// </summary>
+        private string ResolveTypeNameViaDebugger(string typeName)
+        {
+            if (String.IsNullOrEmpty(typeName) ||
+                s_primitiveTypeNames.Contains(typeName) ||
+                !s_safeTypeNameForQuery.IsMatch(typeName))
+            {
+                return null;
+            }
+            if (_typeNameQueryCache.TryGetValue(typeName, out string cached))
+            {
+                return cached;
+            }
+
+            string resolved = null;
+            try
+            {
+                switch (_process.MICommandFactory.Mode)
+                {
+                    case MIMode.Gdb:
+                        // "whatis" is one line and resolves one typedef level. For a
+                        // class it echoes the name back, so fall through to "ptype",
+                        // whose first line carries the base-class clause.
+                        resolved = ExtractResolvedTypeName(ConsoleCommandSync("whatis " + typeName), typeName);
+                        if (resolved == null)
+                        {
+                            resolved = ExtractResolvedTypeName(ConsoleCommandSync("ptype " + typeName), typeName);
+                        }
+                        break;
+                    case MIMode.Lldb:
+                        resolved = ExtractResolvedTypeName(ConsoleCommandSync("type lookup " + typeName), typeName);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                // Do not cache: the failure may be transient (e.g. the process was not
+                // stopped) rather than a genuine "no resolution" for this name.
+                // Task.Wait() wraps the real failure in an AggregateException — unwrap
+                // it so the log carries the actual message.
+                string message = (e as AggregateException)?.Flatten().InnerException?.Message ?? e.Message;
+                _process.Logger.NatvisLogger?.WriteLine(LogLevel.Verbose, "FindType: type name query for '{0}' failed: {1}", typeName, message);
+                return null;
+            }
+
+            _typeNameQueryCache[typeName] = resolved;
+            return resolved;
+        }
+
+        private string ConsoleCommandSync(string cmd)
+        {
+            string output = null;
+            Task task = Task.Run(async () =>
+            {
+                output = await _process.ConsoleCmdAsync(cmd, allowWhileRunning: false, ignoreFailures: true);
+            });
+            task.Wait();
+            return output;
         }
 
         private string FormatValue(string format, IVariableInformation variable, IDictionary<string, string> scopedNames, IDictionary<string, IntrinsicType> intrinsics = null)
