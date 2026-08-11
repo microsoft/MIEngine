@@ -193,6 +193,24 @@
                   "stop"
                 ],
                 "description": "Controls how breakpoints set externally (usually via raw GDB commands) are handled when hit.\nAllowed values are \"throw\", which acts as if an exception was thrown by the application, and \"stop\", which only pauses the debug session. The default value is \"throw\"."
+              },
+              "debuginfod": {
+                "type": "object",
+                "description": "Controls GDB's debuginfod behavior for automatic downloading of debug symbols.",
+                "default": { "enabled": false, "timeout": 30 },
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "If true, GDB's debuginfod support is enabled. Set to true to enable debuginfod. Default is false.",
+                    "default": false
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "The timeout in seconds for debuginfod server requests. Default is 30. Set to 0 for no timeout override (GDB defaults apply). Applies to local, runInTerminal, and SSH attach transports. This setting is not applied for pipeTransport; set DEBUGINFOD_TIMEOUT and DEBUGINFOD_MAXTIME in the debugger's environment manually.",
+                    "default": 30,
+                    "minimum": 0
+                  }
+                }
               }
             },
             "definitions": {

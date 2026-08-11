@@ -624,7 +624,14 @@ namespace Microsoft.MIDebugEngine
             if (_launchOptions.DebuggerMIMode == MIMode.Gdb)
             {
                 commands.Add(new LaunchCommand("-interpreter-exec console \"set pagination off\""));
-                commands.Add(new LaunchCommand("set debuginfod enabled on", ignoreFailures:true));
+                if (_launchOptions.EnableDebuginfod)
+                {
+                    commands.Add(new LaunchCommand("set debuginfod enabled on", ignoreFailures: true));
+                }
+                else
+                {
+                    commands.Add(new LaunchCommand("set debuginfod enabled off", ignoreFailures: true));
+                }
             }
 
             // When user specifies loading directives then the debugger cannot auto load symbols, the MIEngine must intervene at each solib-load event and make a determination

@@ -40,6 +40,33 @@ namespace DebuggerTesting.OpenDebug.CrossPlatCpp
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool ShowDisplayString;
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public DebuginfodArgs debuginfod;
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public SetupCommandArg[] setupCommands;
+    }
+
+    public sealed class DebuginfodArgs
+    {
+        [JsonProperty("enabled", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? Enabled { get; set; }
+
+        [JsonProperty("timeout", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public int? Timeout { get; set; }
+    }
+
+    public sealed class SetupCommandArg
+    {
+        [JsonProperty("text")]
+        public string Text { get; set; }
+
+        [JsonProperty("description", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Description { get; set; }
+
+        [JsonProperty("ignoreFailures", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? IgnoreFailures { get; set; }
     }
 
     #endregion

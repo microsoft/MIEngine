@@ -13,6 +13,7 @@ steps:
     Configuration: 'Lab.Release'
     BuildArguments: /p:NuGetPath=$(NuGetExeToolPath) /p:NuGetPrerelease=false
     OneESPT: true
+    NuGetConfigPath: '$(Build.SourcesDirectory)/eng/pipelines/NuGet.release.config'
 
 - template: ../steps/CollectAndPublishBinaries.yml
   parameters:

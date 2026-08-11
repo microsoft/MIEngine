@@ -5,6 +5,7 @@ parameters:
   artifactName: 'drop'
   condition: 'succeeded()'
   OneESPT: false # Indicates that this is running under the 1ES Pipeline Template
+  sbomEnabled: true
 
 steps:
 - ${{ if eq(parameters['OneESPT'], true) }}:
@@ -13,6 +14,7 @@ steps:
     inputs:
       targetPath: ${{ parameters.targetPath }}
       artifactName: '${{ parameters.artifactName }}'
+      sbomEnabled: ${{ parameters.sbomEnabled }}
     condition: ${{ parameters.condition }}
 - ${{ else }}:
   - template: ../PublishPipelineArtifact.yml
