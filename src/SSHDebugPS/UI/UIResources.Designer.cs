@@ -302,6 +302,15 @@ namespace Microsoft.SSHDebugPS {
                 return ResourceManager.GetString("Podman_ConnectionToolTip", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Podman was not found. Install Podman, ensure podman.exe is available on PATH, and restart Visual Studio..
+        /// </summary>
+        public static string PodmanExecutableNotFound {
+            get {
+                return ResourceManager.GetString("PodmanExecutableNotFound", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Optional Podman Host name.

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,7 @@ namespace Microsoft.SSHDebugPS.Podman
     {
         private const string podmanPSCommand = "ps";
         private const string podmanPSArgs = "-f status=running --no-trunc --format \"{{json .}}\"";
-
+        private const int win32ErrorFileNotFound = 2;
 
         internal static IEnumerable<PodmanContainerInstance> GetLocalPodmanContainers(string hostname, out int totalContainers)
         {
@@ -28,17 +29,25 @@ namespace Microsoft.SSHDebugPS.Podman
             PodmanCommandSettings settings = new PodmanCommandSettings(hostname, false);
             settings.SetCommand(podmanPSCommand, podmanPSArgs);
 
-            DockerHelper.RunContainerCommand(settings, delegate (string args)
+            try
             {
-                if (args.Trim()[0] == '{')
+                DockerHelper.RunContainerCommand(settings, delegate (string args)
                 {
-                    if (PodmanContainerInstance.TryCreate(args, out PodmanContainerInstance containerInstance))
+                    if (args.Trim()[0] == '{')
                     {
-                        containers.Add(containerInstance);
+                        if (PodmanContainerInstance.TryCreate(args, out PodmanContainerInstance containerInstance))
+                        {
+                            containers.Add(containerInstance);
+                        }
+                        containerCount++;
                     }
-                    containerCount++;
-                }
-            });
+                });
+            }
+            catch (CommandFailedException ex) when (ex.InnerException is Win32Exception win32Exception &&
+                win32Exception.NativeErrorCode == win32ErrorFileNotFound)
+            {
+                throw new CommandFailedException(UIResources.PodmanExecutableNotFound, ex);
+            }
 
             totalContainers = containerCount;
             return containers;

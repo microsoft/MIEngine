@@ -252,6 +252,10 @@
   <data name="Podman_ConnectionToolTip" xml:space="preserve">
     <value>Location from which to run the Podman CLI. To manage remote connections, in the menu go to Tools -&gt; Options and find Cross Platform -&gt; Connection Manager.</value>
   </data>
+  <data name="PodmanExecutableNotFound" xml:space="preserve">
+    <value>Podman was not found. Install Podman, ensure podman.exe is available on PATH, and restart Visual Studio.</value>
+    <comment>{Locked="Podman"} {Locked="podman.exe"} {Locked="PATH"} {Locked="Visual Studio"}</comment>
+  </data>
   <data name="Podman_HostnameAutomationName" xml:space="preserve">
     <value>Optional Podman Host name</value>
   </data>
