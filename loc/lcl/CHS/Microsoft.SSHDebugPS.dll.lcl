@@ -817,6 +817,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";PodmanExecutableNotFound" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Podman was not found. Install Podman, ensure podman.exe is available on PATH, and restart Visual Studio.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[未找到 Podman。请安装 Podman，确保 podman.exe 可在 PATH 中使用，然后重启 Visual Studio。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";Podman_ConnectionLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Podman _CLI host:]]></Val>
