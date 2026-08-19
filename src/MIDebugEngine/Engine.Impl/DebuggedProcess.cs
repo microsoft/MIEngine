@@ -433,6 +433,35 @@ namespace Microsoft.MIDebugEngine
                 ThreadCache.ThreadGroupExitedEvent(result.Results.FindString("id"));
             };
 
+            // One of several inferiors exited, so the debug session continues with the remaining ones. gdb has
+            // stopped everything, so report a break on a thread which is still alive, the same way the pause
+            // button does. Without this the UI would show the debuggee as running while gdb is stopped.
+            InferiorExitedEvent += async delegate (object o, EventArgs args)
+            {
+                // NOTE: This is an async void method, so make sure exceptions are caught and somehow reported
+                MICore.Debugger.InferiorExitedEventArgs inferiorExited = (MICore.Debugger.InferiorExitedEventArgs)args;
+
+                try
+                {
+                    ThreadCache.MarkDirty();
+                    MICommandFactory.DefineCurrentThread(inferiorExited.SurvivingThreadId);
+
+                    DebuggedThread thread = await ThreadCache.GetThread(inferiorExited.SurvivingThreadId);
+                    if (thread == null)
+                    {
+                        return;
+                    }
+
+                    await ThreadCache.StackFrames(thread);      // prepopulate the break thread in the thread cache
+                    ThreadCache.SendThreadEvents(this, null);   // push the exited inferior's thread removals to the UI
+
+                    _callback.OnAsyncBreakComplete(thread);
+                }
+                catch (Exception e) when (ExceptionHelper.BeforeCatch(e, Logger, reportOnlyCorrupting: true))
+                {
+                }
+            };
+
             TelemetryEvent += (object o, ResultEventArgs args) =>
             {
                 string eventName;

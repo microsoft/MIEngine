@@ -111,6 +111,23 @@ namespace MICore
 
         public virtual int CurrentThread { get; }
 
+        /// <summary>
+        /// True if the debugger can debug more than one process ('inferior' in gdb terms) in a single
+        /// session, and can be asked to switch between them.
+        /// </summary>
+        public virtual bool SupportsMultipleInferiors => false;
+
+        /// <summary>
+        /// Makes 'threadId' the debugger's current thread. Commands issued by the engine normally name the
+        /// thread they apply to, so this is only needed to repair the debugger's notion of the current
+        /// thread after it has been left pointing at a thread which no longer exists.
+        /// </summary>
+        /// <returns>True if the current thread was changed, false if this debugger does not support it.</returns>
+        public virtual Task<bool> SelectThread(int threadId)
+        {
+            return Task.FromResult(false);
+        }
+
         public virtual async Task<Results> ThreadInfo(uint? threadid = null)
         {
             string command = "-thread-info";

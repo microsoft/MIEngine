@@ -43,6 +43,8 @@ namespace MICore
         public event EventHandler? ThreadCreatedEvent;
         public event EventHandler? ThreadExitedEvent;
         public event EventHandler? ThreadGroupExitedEvent;
+        // An inferior (a debuggee process) exited, but other inferiors are still being debugged
+        public event EventHandler? InferiorExitedEvent;
         public event EventHandler<ResultEventArgs>? TelemetryEvent;
         private int _exiting;
         public ProcessState ProcessState { get; private set; }
@@ -109,6 +111,21 @@ namespace MICore
             public ResultClass ResultClass { get { return Results.ResultClass; } }
             public uint Id { get; private set; }
         };
+
+        public class InferiorExitedEventArgs : ResultEventArgs
+        {
+            /// <summary>
+            /// Id of a thread which is still alive after the inferior exited. The debugger's current
+            /// thread has already been set to this thread.
+            /// </summary>
+            public readonly int SurvivingThreadId;
+
+            public InferiorExitedEventArgs(Results results, int survivingThreadId)
+                : base(results)
+            {
+                SurvivingThreadId = survivingThreadId;
+            }
+        }
 
         public class StoppingEventArgs : ResultEventArgs
         {
@@ -254,12 +271,124 @@ namespace MICore
             }
         }
 
+        /// <summary>
+        /// Handles the '*stopped,reason="exited*"' record which gdb sends when an inferior exits. gdb sends this
+        /// record for *any* inferior, and it contains nothing which identifies the inferior that exited, so on
+        /// its own it cannot be distinguished from the end of the debug session. When more than one inferior is
+        /// being debugged (e.g. 'set detach-on-fork off' plus 'set schedule-multiple on') the session has to
+        /// survive the exit of an inferior which isn't the last one.
+        ///
+        /// gdb sends '=thread-group-exited' for the inferior which is going away before this record, and
+        /// HandleThreadGroupExited removes that thread group from '_debuggeePids'. So a non-empty '_debuggeePids'
+        /// here means other inferiors are still being debugged. Once the last thread group goes away,
+        /// HandleThreadGroupExited schedules its own '*stopped,reason="exited"' record, and that is what ends the
+        /// debug session.
+        /// </summary>
+        /// <returns>True if the debug session should continue, false if this record ends the session.</returns>
+        private async Task<bool> TryHandleInferiorExit(Results results)
+        {
+            if (this.ProcessState == ProcessState.Exited || _terminating || _exiting != 0)
+            {
+                return false;
+            }
+
+            lock (_debuggeePids)
+            {
+                if (_debuggeePids.Count == 0)
+                {
+                    // The single-inferior case: the only thread group is already gone, so the debuggee has exited.
+                    return false;
+                }
+            }
+
+            // Only gdb can debug more than one inferior in a single session.
+            if (!MICommandFactory.SupportsMultipleInferiors)
+            {
+                return false;
+            }
+
+            // gdb stops every inferior when one of them exits (all-stop mode), so record that we are stopped
+            // before sending any commands.
+            this.ProcessState = ProcessState.Stopped;
+            FlushBreakStateData();
+
+            // gdb leaves the inferior which exited as the current one, so commands which don't name a thread --
+            // notably the plain '-exec-continue' sent by CmdContinueAsync -- would fail with
+            // "The program is not being run.". Point the debugger at a thread which is still alive.
+            int survivingThreadId;
+            try
+            {
+                Results threadsInfo = await MICommandFactory.ThreadInfo();
+                if (threadsInfo.ResultClass != ResultClass.done ||
+                    !TryFindFirstThreadId(threadsInfo, out survivingThreadId) ||
+                    !await MICommandFactory.SelectThread(survivingThreadId))
+                {
+                    return false;
+                }
+            }
+            catch (MIException)
+            {
+                return false;
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+
+            MICommandFactory.DefineCurrentThread(survivingThreadId);
+
+            // Run anything which was queued up while the debuggee was running -- those actions need a stopped
+            // target. Passing false for fIsAsyncBreak keeps DoInternalBreakActions from resuming the debuggee,
+            // since this stop wasn't caused by an internal async break.
+            if (await DoInternalBreakActions(false))
+            {
+                return true;
+            }
+
+            InferiorExitedEvent?.Invoke(this, new InferiorExitedEventArgs(results, survivingThreadId));
+
+            return true;
+        }
+
+        /// <summary>
+        /// Finds the id of the first thread in the result of '-thread-info'. Note that '-thread-info' does not
+        /// report a 'current-thread-id' when the current thread has gone away, which is the case after an
+        /// inferior exits.
+        /// </summary>
+        private static bool TryFindFirstThreadId(Results threadsInfo, out int threadId)
+        {
+            threadId = 0;
+
+            ValueListValue? threads = threadsInfo.TryFind<ValueListValue>("threads");
+            if (threads == null)
+            {
+                return false;
+            }
+
+            foreach (ResultValue thread in threads.Content)
+            {
+                if (thread.Contains("id"))
+                {
+                    threadId = thread.FindInt("id");
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private async void OnStopped(Results results)
         {
             string reason = results.TryFindString("reason");
 
             if (reason.StartsWith("exited", StringComparison.Ordinal) || reason.StartsWith("disconnected", StringComparison.Ordinal))
             {
+                if (await TryHandleInferiorExit(results))
+                {
+                    // One of several inferiors exited. The debug session continues with the others.
+                    return;
+                }
+
                 if (this.ProcessState != ProcessState.Exited)
                 {
                     this.ProcessState = ProcessState.Exited;
