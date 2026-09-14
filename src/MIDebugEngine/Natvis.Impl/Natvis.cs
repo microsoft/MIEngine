@@ -1283,12 +1283,16 @@ namespace Microsoft.MIDebugEngine.Natvis
                     if (m.Success)
                     {
                         string rawExpr = format.Substring(i + 1, m.Length - 2);
-                        string spec = ExtractFormatSpecifier(rawExpr);
+                        string spec = ExtractFormatSpecifier(rawExpr, out bool hasNa);
                         string exprValue = GetExpressionValue(rawExpr, variable, scopedNames, intrinsics);
-                        if (spec == "sub" || spec == "su")
+                        if (spec == "sub")
                             exprValue = CleanUtf16StringValue(exprValue);
                         else if (spec == "sb")
                             exprValue = CleanAsciiStringValue(exprValue);
+                        if (hasNa)
+                        {
+                            exprValue = VariableInformation.StripLeadingAddress(exprValue);
+                        }
                         value.Append(exprValue);
                         i += m.Length - 1;
                     }
