@@ -84,7 +84,7 @@ namespace MICore
             get
             {
                 string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_UnexpectedMIOutput, _debuggerName, _command);
-                if (!string.IsNullOrWhiteSpace(_miError))
+                if (!IsNullOrWhiteSpace(_miError))
                 {
                     message = string.Concat(message, " ", _miError);
                 }
@@ -105,7 +105,7 @@ namespace MICore
         public readonly IReadOnlyList<string> OutputLines;
         private readonly string _debuggerName;
         private readonly IReadOnlyList<string> _errorLines;
-        private string _message;
+        private string? _message;
 
         public MIDebuggerInitializeFailedException(string debuggerName, IReadOnlyList<string> errorLines, IReadOnlyList<string> outputLines)
         {
@@ -120,7 +120,7 @@ namespace MICore
             {
                 if (_message == null)
                 {
-                    if (_errorLines.Any(x => !string.IsNullOrWhiteSpace(x)))
+                    if (_errorLines.Any(x => !IsNullOrWhiteSpace(x)))
                     {
                         _message = string.Format(CultureInfo.InvariantCulture, MICoreResources.Error_DebuggerInitializeFailed_StdErr, _debuggerName, string.Join("\r\n", _errorLines));
                     }

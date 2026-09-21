@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Diagnostics;
 using System.IO;
 using Microsoft.DebugEngineHost;
 
@@ -20,12 +19,12 @@ namespace MICore
 
     public class MockTransport : ITransport
     {
-        private ITransportCallback _callback;
-        private Thread _thread;
-        private string _nextCommand;
+        private ITransportCallback? _callback;
+        private Thread? _thread;
+        private string? _nextCommand;
         private bool _bQuit;
-        private TextReader _reader;
-        private AutoResetEvent _commandEvent;
+        private TextReader? _reader;
+        private AutoResetEvent? _commandEvent;
         private string _filename;
         private int _lineNumber;
 
@@ -34,7 +33,7 @@ namespace MICore
             _filename = logfilename;
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop? waitLoop = null)
         {
             _bQuit = false;
             _callback = transportCallback;
@@ -47,6 +46,8 @@ namespace MICore
 
         public void Send(string cmd)
         {
+            if (_commandEvent is null)
+                throw new InvalidOperationException("MockTransport has not been initialized");
             Debug.Assert(_nextCommand == null);
             _nextCommand = cmd;
             _commandEvent.Set();
@@ -55,7 +56,7 @@ namespace MICore
         public void Close()
         {
             _bQuit = true;
-            if (_thread != Thread.CurrentThread)
+            if (_thread != null && _thread != Thread.CurrentThread)
             {
                 _thread.Join();
             }
@@ -70,6 +71,10 @@ namespace MICore
 
         private void TransportLoop()
         {
+            Debug.Assert(_reader is not null, "Should be impossible -- TransportLoop cannot run until Init is called");
+            Debug.Assert(_commandEvent is not null, "Should be impossible -- TransportLoop cannot run until Init is called");
+            Debug.Assert(_callback is not null, "Should be impossible -- TransportLoop cannot run until Init is called");
+
             _lineNumber = 0;
 
             // discard first line
@@ -78,14 +83,14 @@ namespace MICore
 
             while (!_bQuit)
             {
-                string line = _reader.ReadLine();
+                string? line = _reader.ReadLine();
                 if (line == null)
                 {
                     break;
                 }
                 line = line.TrimEnd();
                 _lineNumber++;
-                Debug.WriteLine("#{0}:{1}", _lineNumber, line);
+                Debug.WriteLine($"#{_lineNumber}:{line}");
 
                 if (line[0] == '-')
                 {

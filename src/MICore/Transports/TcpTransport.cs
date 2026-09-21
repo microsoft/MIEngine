@@ -15,7 +15,7 @@ namespace MICore
 {
     public class TcpTransport : StreamTransport
     {
-        private TcpClient _client;
+        private TcpClient? _client;
 
         public TcpTransport()
         {
@@ -40,7 +40,7 @@ namespace MICore
                 if (tcpOptions.ServerCertificateValidationCallback == null)
                 {
                     //if no callback specified, accept any certificate
-                    callback = delegate (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                    callback = delegate (object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
                     {
                         return sslPolicyErrors == SslPolicyErrors.None;
                     };
@@ -48,7 +48,7 @@ namespace MICore
                 else
                 {
                     //else use the callback specified
-                    callback = (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => tcpOptions.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);
+                    callback = (object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors) => tcpOptions.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);
                 }
 
                 var certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
@@ -83,7 +83,7 @@ namespace MICore
         public override void Close()
         {
             base.Close();
-            ((IDisposable)_client).Dispose();
+            ((IDisposable?)_client)?.Dispose();
         }
 
         public override int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)

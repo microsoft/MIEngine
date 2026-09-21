@@ -210,7 +210,16 @@ namespace Microsoft.MIDebugEngine {
                 return ResourceManager.GetString("ExceptionSettingsError", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Expression evaluation is unavailable in the current frame.
+        /// </summary>
+        internal static string ExpressionEvalUnsupportedInFrame {
+            get {
+                return ResourceManager.GetString("ExpressionEvalUnsupportedInFrame", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Error: {0}.
         /// </summary>

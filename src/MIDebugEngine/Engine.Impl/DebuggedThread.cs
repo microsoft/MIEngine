@@ -325,7 +325,12 @@ namespace Microsoft.MIDebugEngine
             MITextPosition textPosition = !ignoreSource ? MITextPosition.TryParse(this._debugger, frame) : null;
 
             string func = frame.TryFindString("func");
-            uint level = frame.FindUint("level");
+            // Synthetic frames injected by a GDB Python frame filter (e.g. an async-stack
+            // decorator) do not carry a "level" field, since they have no underlying debugger
+            // frame. Leave the level null in that case; frame-relative operations (locals,
+            // args, registers, evaluation) early-out on a null level rather than failing the
+            // whole stack walk. Real frames keep their true level.
+            uint? level = frame.TryFindUint("level");
             string from = frame.TryFindString("from");
 
             return new ThreadContext(pc, textPosition, func, level, from);

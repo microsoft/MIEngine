@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,7 +22,11 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 _name = variable.FullName();
                 _threadId = variable.Client.Id;
-                _level = (int)variable.ThreadContext.Level;
+                // Variables only ever come from real (level-bearing) frames; synthetic frames
+                // from a Python frame filter expose no locals to visualize. Fall back to 0 to
+                // keep the key total in the null case rather than throwing.
+                Debug.Assert(variable.ThreadContext.Level.HasValue, "How are we getting a variable from a synthetic thread context?");
+                _level = (int)(variable.ThreadContext.Level ?? 0);
             }
 
             public VisualizerKey(string name, int threadId, int level)

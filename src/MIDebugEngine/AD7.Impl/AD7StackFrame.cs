@@ -345,6 +345,13 @@ namespace Microsoft.MIDebugEngine
 
         private void CreateRegisterContent(enum_DEBUGPROP_INFO_FLAGS dwFields, out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject)
         {
+            if (ThreadContext.Level == null)
+            {
+                elementsReturned = 0;
+                enumObject = new AD7PropertyInfoEnum(Array.Empty<DEBUG_PROPERTY_INFO>());
+                return;
+            }
+
             IReadOnlyCollection<RegisterGroup> registerGroups = Engine.DebuggedProcess.GetRegisterGroups();
 
             elementsReturned = (uint)registerGroups.Count;
@@ -352,7 +359,7 @@ namespace Microsoft.MIDebugEngine
             Tuple<int, string>[] values = null;
             Engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
-                values = await Engine.DebuggedProcess.GetRegisters(Thread.GetDebuggedThread().Id, ThreadContext.Level);
+                values = await Engine.DebuggedProcess.GetRegisters(Thread.GetDebuggedThread().Id, ThreadContext.Level.Value);
             });
             int i = 0;
             foreach (var grp in registerGroups)
@@ -366,10 +373,16 @@ namespace Microsoft.MIDebugEngine
 
         public string EvaluateExpression(string expr)
         {
+            if (ThreadContext.Level == null)
+            {
+                return null;
+            }
+            uint level = ThreadContext.Level.Value;
+
             string val = null;
             Engine.DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
-                val = await Engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(expr, Thread.Id, ThreadContext.Level);
+                val = await Engine.DebuggedProcess.MICommandFactory.DataEvaluateExpression(expr, Thread.Id, level);
             });
             return val;
         }

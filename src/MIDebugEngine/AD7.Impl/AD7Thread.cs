@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Diagnostics;
@@ -134,14 +135,22 @@ namespace Microsoft.MIDebugEngine
                 }
                 else
                 {
-                    uint low = stackFrames[0].Level;
-                    uint high = stackFrames[stackFrames.Count - 1].Level;
+                    // -stack-list-arguments takes a low/high *frame index* range. When a GDB Python
+                    // frame filter is active, those numbers index the decorated stack, not the GDB frame
+                    // level. Thus, synthetic frames are indexed even though they carry no level, and we
+                    // must request the whole [0, count-1] decorated range.
+                    // Synthetic frames in the range have no arguments and are skipped in
+                    // GetParameterInfoOnly, and results are matched back to frames by level below,
+                    // so ordering within the range is moot.
+                    uint low = 0;
+                    uint high = (uint)(stackFrames.Count - 1);
                     FilterUnknownFrames(stackFrames);
                     numStackFrames = stackFrames.Count;
                     frameInfoArray = new FRAMEINFO[numStackFrames];
                     List<ArgumentList> parameters = null;
 
-                    if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0 && !_engine.DebuggedProcess.MICommandFactory.SupportsFrameFormatting)
+                    if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS) != 0 && !_engine.DebuggedProcess.MICommandFactory.SupportsFrameFormatting
+                        && stackFrames.Any(f => f.Level != null))
                     {
                         _engine.DebuggedProcess.WorkerThread.RunOperation(async () => parameters = await _engine.DebuggedProcess.GetParameterInfoOnly(this, (dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_VALUES) != 0,
                             (dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_ARGS_TYPES) != 0, low, high));

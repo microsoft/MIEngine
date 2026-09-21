@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Diagnostics;
 using System.IO;
 using System.Collections;
 using System.Threading.Tasks;
@@ -23,15 +22,15 @@ namespace MICore
         
         private static readonly object _lock = new object();
 
-        private Process _process;
-        private StreamReader _stdErrReader;
+        private Process? _process;
+        private StreamReader? _stdErrReader;
         private int _remainingReaders;
         private ManualResetEvent _allReadersDone = new ManualResetEvent(false);
         private bool _killOnClose;
         private bool _filterStderr;
         private int _debuggerPid = -1;
-        private string _pipePath;
-        private string _cmdArgs;
+        private string? _pipePath;
+        private string? _cmdArgs;
 
         public PipeTransport(bool killOnClose = false, bool filterStderr = false, bool filterStdout = false) : base(filterStdout)
         {
@@ -108,8 +107,8 @@ namespace MICore
         {
             PipeLaunchOptions pipeOptions = (PipeLaunchOptions)options;
 
-            string workingDirectory = pipeOptions.PipeCwd;
-            if (!string.IsNullOrWhiteSpace(workingDirectory))
+            string? workingDirectory = pipeOptions.PipeCwd;
+            if (!IsNullOrWhiteSpace(workingDirectory))
             {
                 if (!LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
                 {
@@ -119,14 +118,14 @@ namespace MICore
             else
             {
                 workingDirectory = Path.GetDirectoryName(pipeOptions.PipePath);
-                if (!LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
+                if (workingDirectory is null || !LocalLaunchOptions.CheckDirectoryPath(workingDirectory))
                 {
                     // If provided PipeCwd is not an absolute path, the working directory will be set to null.
                     workingDirectory = null;
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(pipeOptions.PipePath))
+            if (IsNullOrWhiteSpace(pipeOptions.PipePath))
             {
                 throw new ArgumentException(MICoreResources.Error_EmptyPipePath);
             }
@@ -229,7 +228,7 @@ namespace MICore
 
             try
             {
-                if (_process.WaitForExit(1000))
+                if (_process is not null && _process.WaitForExit(1000))
                 {
                     // If the pipe process has already exited, or is just about to exit, we want to send the abort event from OnProcessExit
                     // instead of from here since that will have access to stderr
@@ -251,7 +250,7 @@ namespace MICore
             {
                 while (true)
                 {
-                    string line = await stream.ReadLineAsync();
+                    string? line = await stream.ReadLineAsync();
                     if (line == null)
                         break;
 
@@ -266,11 +265,13 @@ namespace MICore
 
         private async void AsyncReadFromStdError()
         {
+            Debug.Assert(_stdErrReader is not null, "Should be impossible. AsyncReadFromStdError started before _stdErrReader was assigned.");
+            StreamReader stdErrReader = _stdErrReader;
             try
             {
                 while (true)
                 {
-                    string line = await _stdErrReader.ReadLineAsync();
+                    string? line = await stdErrReader.ReadLineAsync();
                     if (line == null)
                         break;
 
@@ -279,7 +280,7 @@ namespace MICore
                         line = FilterLine(line);
                     }
 
-                    if (!string.IsNullOrWhiteSpace(line))
+                    if (!IsNullOrWhiteSpace(line))
                     {
                         this.Callback.OnStdErrorLine(line);
                     }
@@ -304,7 +305,7 @@ namespace MICore
             }
         }
 
-        private void OnProcessExit(object sender, EventArgs e)
+        private void OnProcessExit(object? sender, EventArgs e)
         {
             // Wait until 'Init' gets a chance to set m_Reader/m_Writer before sending up the debugger exit event
             if (_reader == null || _writer == null)
@@ -325,7 +326,8 @@ namespace MICore
 
             // We are sometimes seeing m_process throw InvalidOperationExceptions by the time we get here. 
             // Attempt to get the real exit code, if we can't, still log the message with unknown exit code.
-            string exitCode = null;
+            Debug.Assert(_process is not null, "Should be impossible - OnProcessExit is an event handler registered on the process");
+            string? exitCode = null;
             try
             {
                 exitCode = string.Format(CultureInfo.InvariantCulture, "{0} (0x{0:X})", _process.ExitCode);
@@ -349,9 +351,11 @@ namespace MICore
 
         private int WrappedExecuteSyncCommand(string commandDescription, string commandText, int timeout)
         {
+            Debug.Assert(_cmdArgs is not null && _pipePath is not null, "Should be impossible -- cannot send commands until Init");
+
             int exitCode = -1;
-            string output = null;
-            string error = null;
+            string output;
+            string error;
 
             string pipeArgs = PipeLaunchOptions.ReplaceDebuggerCommandToken(_cmdArgs, commandText, true);
             string fullCommand = string.Format(CultureInfo.InvariantCulture, "{0} {1}", _pipePath, pipeArgs);
@@ -375,14 +379,14 @@ namespace MICore
 
         public override int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
         {
-            output = null;
-            error = null;
+            Debug.Assert(_cmdArgs is not null && _pipePath is not null, "Should be impossible -- cannot send commands until Init");
+
             int exitCode = -1;
 
-            Process proc = new Process();
+            using Process proc = new Process();
             proc.StartInfo.FileName = _pipePath;
             proc.StartInfo.Arguments = PipeLaunchOptions.ReplaceDebuggerCommandToken(_cmdArgs, commandText, true);
-            Logger.WriteLine(LogLevel.Verbose, "Running process {0} {1}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
+            Logger?.WriteLine(LogLevel.Verbose, "Running process {0} {1}", proc.StartInfo.FileName, proc.StartInfo.Arguments);
             proc.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(_pipePath);
             proc.EnableRaisingEvents = false;
             proc.StartInfo.RedirectStandardInput = false;
@@ -391,13 +395,28 @@ namespace MICore
             proc.StartInfo.UseShellExecute = false;
             proc.StartInfo.CreateNoWindow = true;
             proc.Start();
-            proc.WaitForExit(timeout);
-            exitCode = proc.ExitCode;
+            Task<string> stdOutTask = proc.StandardOutput.ReadToEndAsync();
+            Task<string> stdErrTask = proc.StandardError.ReadToEndAsync();
+            if (proc.WaitForExit(timeout))
+            {
+                exitCode = proc.ExitCode;
+                output = stdOutTask.Result;
+                error = stdErrTask.Result;
 
-            output = proc.StandardOutput.ReadToEnd();
-            error = proc.StandardError.ReadToEnd();
+                return exitCode;
+            }
+            else
+            {
+                try
+                {
+                    proc.Kill();
+                }
+                catch
+                {
+                }
 
-            return exitCode;
+                throw new TimeoutException();
+            }
         }
 
         public override bool CanExecuteCommand()

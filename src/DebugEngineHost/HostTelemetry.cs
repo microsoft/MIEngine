@@ -1,14 +1,14 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System.Globalization;
 using Microsoft.Internal.VisualStudio.Shell;
+using Conditional = global::System.Diagnostics.ConditionalAttribute;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -56,7 +56,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="currentException">Exception object to report.</param>
         /// <param name="engineName">Name of the engine reporting the exception. Ex:Microsoft.MIEngine</param>
-        public static void ReportCurrentException(Exception currentException, string engineName)
+        public static void ReportCurrentException(Exception currentException, string? engineName)
         {
             Debug.Fail(string.Format(CultureInfo.InvariantCulture, "{0} was raised and would normally be reported to telemetry.\n\nStack trace: {1}", currentException.GetType(), currentException.StackTrace));
 

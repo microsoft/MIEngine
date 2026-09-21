@@ -17,20 +17,20 @@ namespace MICore
     public class UnixShellPortTransport : ITransport, IDebugUnixShellCommandCallback
     {
         private readonly object _closeLock = new object();
-        private ITransportCallback _callback;
-        private Logger _logger;
-        private string _startRemoteDebuggerCommand;
-        private IDebugUnixShellAsyncCommand _asyncCommand;
+        private ITransportCallback? _callback;
+        private Logger? _logger;
+        private string? _startRemoteDebuggerCommand;
+        private IDebugUnixShellAsyncCommand? _asyncCommand;
         private bool _bQuit;
         private bool _debuggerLaunched = false;
-        private UnixShellPortLaunchOptions _launchOptions;
+        private UnixShellPortLaunchOptions? _launchOptions;
 
         private const string ErrorPrefix = "Error:";
 
         private class KillCommandCallback: IDebugUnixShellCommandCallback
         {
-            private readonly Logger _logger;
-            public KillCommandCallback(Logger logger)
+            private readonly Logger? _logger;
+            public KillCommandCallback(Logger? logger)
             {
                 this._logger = logger;
             }
@@ -49,7 +49,7 @@ namespace MICore
         {
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop? waitLoop = null)
         {
             _launchOptions = (UnixShellPortLaunchOptions)options;
             _callback = transportCallback;
@@ -68,12 +68,13 @@ namespace MICore
                     return;
                 _bQuit = true;
 
-                _asyncCommand.Abort();
+                _asyncCommand?.Abort();
             }
         }
 
         public void Send(string cmd)
         {
+            Debug.Assert(_asyncCommand is not null, "Should be impossible - Send is only called by the engine after Init");
             _logger?.WriteLine(LogLevel.Verbose, "<-" + cmd);
             _logger?.Flush();
             _asyncCommand.WriteLine(cmd);
@@ -94,12 +95,14 @@ namespace MICore
 
         void IDebugUnixShellCommandCallback.OnOutputLine(string line)
         {
+            Debug.Assert(_callback is not null, "Should be impossible - OnOutputLine is a callback from the command started in Init which sets _callback");
+
             if (!_debuggerLaunched)
             {
                 _debuggerLaunched = true;
             }
 
-            if (!string.IsNullOrEmpty(line))
+            if (!IsNullOrEmpty(line))
             {
                 _callback.OnStdOutLine(line);
             }
@@ -110,6 +113,8 @@ namespace MICore
 
         void IDebugUnixShellCommandCallback.OnExit(string exitCode)
         {
+            Debug.Assert(_callback is not null, "Should be impossible - OnExit is a callback from the command started in Init which sets _callback");
+
             if (!_bQuit)
             {
                 _callback.AppendToInitializationLog(string.Format(CultureInfo.InvariantCulture, "{0} exited with code {1}.", _startRemoteDebuggerCommand, exitCode ?? "???"));
@@ -128,8 +133,9 @@ namespace MICore
 
         public int ExecuteSyncCommand(string commandDescription, string commandText, int timeout, out string output, out string error)
         {
+            Debug.Assert(_launchOptions is not null, "Should be impossible - ExecuteSyncCommand is only called during active debugging after Init");
             int errorCode = -1;
-            error = null; // In SSH transport, stderr is printed on stdout.
+            error = string.Empty; // In SSH transport, stderr is printed on stdout.
             _launchOptions.UnixPort.ExecuteSyncCommand(commandDescription, commandText, out output, timeout, out errorCode);
             return errorCode;
         }
@@ -141,6 +147,9 @@ namespace MICore
 
         public bool Interrupt(int pid)
         {
+            Debug.Assert(_launchOptions is not null, "Should be impossible - Interrupt is only called during active debugging after Init");
+            Debug.Assert(_callback is not null, "Should be impossible - Interrupt is only called during active debugging after Init");
+
             string killCmd = string.Format(CultureInfo.InvariantCulture, "/bin/sh -c \"kill -5 {0}\"", pid);
 
             try

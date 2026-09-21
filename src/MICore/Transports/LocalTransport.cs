@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Diagnostics;
 using System.IO;
 using System.Collections;
 using System.Runtime.InteropServices;
@@ -21,7 +20,7 @@ namespace MICore
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
             LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
-            string miDebuggerDir = System.IO.Path.GetDirectoryName(localOptions.MIDebuggerPath);
+            string miDebuggerDir = System.IO.Path.GetDirectoryName(localOptions.MIDebuggerPath) ?? string.Empty;
 
             Process proc = new Process();
             proc.StartInfo.FileName = localOptions.MIDebuggerPath;
@@ -35,8 +34,8 @@ namespace MICore
             if (PlatformUtilities.IsWindows() &&
                 options.DebuggerMIMode == MIMode.Gdb)
             {
-                string path = proc.StartInfo.GetEnvironmentVariable("PATH");
-                path = (string.IsNullOrEmpty(path) ? miDebuggerDir : path + ";" + miDebuggerDir);
+                string? path = proc.StartInfo.GetEnvironmentVariable("PATH");
+                path = (IsNullOrEmpty(path) ? miDebuggerDir : path + ";" + miDebuggerDir);
                 proc.StartInfo.SetEnvironmentVariable("PATH", path);
             }
 
@@ -47,7 +46,7 @@ namespace MICore
 
             // Allow to execute custom commands before launching debugger.
             // For ex., instructing GDB not to break for certain signals
-            if (options.DebuggerMIMode == MIMode.Gdb && !string.IsNullOrWhiteSpace(options.WorkingDirectory))
+            if (options.DebuggerMIMode == MIMode.Gdb && !IsNullOrWhiteSpace(options.WorkingDirectory))
             {
                 var gdbInitFile = Path.Combine(options.WorkingDirectory, ".gdbinit");
                 if (File.Exists(gdbInitFile))

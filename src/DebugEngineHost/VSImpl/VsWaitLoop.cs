@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -11,7 +11,6 @@ using Microsoft.VisualStudio.Shell;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.VisualStudio;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.DebugEngineHost.VSImpl
@@ -24,7 +23,7 @@ namespace Microsoft.DebugEngineHost.VSImpl
     // ************************************************************
     internal class VsWaitLoop
     {
-        private readonly IVsCommonMessagePump _messagePump;
+        private readonly IVsCommonMessagePump? _messagePump;
 
         private VsWaitLoop(string text)
         {
@@ -52,10 +51,10 @@ namespace Microsoft.DebugEngineHost.VSImpl
             _messagePump = messagePump;
         }
 
-        static public VsWaitLoop TryCreate(string text)
+        static public VsWaitLoop? TryCreate(string text)
         {
             VsWaitLoop waitLoop = new VsWaitLoop(text);
-            if (waitLoop._messagePump == null)
+            if (waitLoop._messagePump is null)
                 return null;
 
             return waitLoop;
@@ -71,6 +70,7 @@ namespace Microsoft.DebugEngineHost.VSImpl
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Runtime.InteropServices.SafeHandle.DangerousGetHandle")]
         public void Wait(WaitHandle launchCompleteHandle, CancellationTokenSource cancellationSource)
         {
+            Debug.Assert(_messagePump is not null, "Wait should only be called on instances created via TryCreate that returned non-null");
             int hr;
 
             SafeWaitHandle safeWaitHandle = launchCompleteHandle.SafeWaitHandle;
@@ -118,11 +118,13 @@ namespace Microsoft.DebugEngineHost.VSImpl
 
         public void SetProgress(int totalSteps, int currentStep, string progressText)
         {
+            Debug.Assert(_messagePump is not null, "SetProgress should only be called on a valid VsWaitLoop instance");
             _messagePump.SetProgressInfo(totalSteps, currentStep, progressText);
         }
 
         public void SetText(string text)
         {
+            Debug.Assert(_messagePump is not null, "SetText should only be called on a valid VsWaitLoop instance");
             _messagePump.SetWaitText(text);
         }
     }

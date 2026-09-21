@@ -3,6 +3,7 @@
     <!--Fix the assembly version for DebugEngineHost as all the versions of this dll must have the same assembly identity
     NOTE: Ths must be set BEFORE improting miengine.settings.targets-->
     <AssemblyVersion>1.0.0</AssemblyVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <Import Project="..\..\build\miengine.settings.targets" />
   <PropertyGroup>
@@ -23,6 +24,12 @@
 
   <Import Project="..\..\build\Debugger.PIAs.Portable.Packages.settings.targets" />
 
+  <ItemGroup>
+    <Compile Include="$(MIEngineRoot)\src\Shared\NullableAttributes.cs">
+      <Link>Shared\%(Filename).cs</Link>
+    </Compile>
+  </ItemGroup>
+  
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true"/>
   </ItemGroup>

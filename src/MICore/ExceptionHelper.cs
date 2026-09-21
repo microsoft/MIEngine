@@ -4,7 +4,6 @@
 using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -21,7 +20,7 @@ namespace MICore
         /// <param name="logger">For logging messages</param>
         /// <param name="reportOnlyCorrupting">If true, only corrupting exceptions are reported</param>
         /// <returns>true</returns>
-        public static bool BeforeCatch(Exception currentException, Logger logger, bool reportOnlyCorrupting)
+        public static bool BeforeCatch(Exception currentException, Logger? logger, bool reportOnlyCorrupting)
         {
             if (reportOnlyCorrupting && !IsCorruptingException(currentException))
             {
@@ -33,7 +32,7 @@ namespace MICore
                 HostTelemetry.ReportCurrentException(currentException, "Microsoft.MIDebugEngine");
 
                 logger?.WriteLine(LogLevel.Error, "EXCEPTION: ", currentException.GetType());
-                logger?.WriteTextBlock(LogLevel.Error, "EXCEPTION: ", currentException.StackTrace);
+                logger?.WriteTextBlock(LogLevel.Error, "EXCEPTION: ", currentException.StackTrace ?? string.Empty);
             }
             catch
             {

@@ -1,10 +1,10 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using ConditionalAttribute = global::System.Diagnostics.ConditionalAttribute;
 using System.Threading;
 
 
@@ -88,7 +88,7 @@ namespace Microsoft.DebugEngineHost
         /// <param name="valueName">Name of the value to obtain</param>
         /// <returns>[Optional] null if the value doesn't exist, otherwise the value
         /// </returns>
-        public object GetValue(string valueName)
+        public object? GetValue(string valueName)
         {
             throw new NotImplementedException();
         }
@@ -146,7 +146,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="metric">The metric to read.</param>
         /// <returns>[Optional] value of the metric. Null if the metric is not defined.</returns>
-        public object GetEngineMetric(string metric)
+        public object? GetEngineMetric(string metric)
         {
             throw new NotImplementedException();
         }
@@ -178,7 +178,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="launcherTypeName">launch options type name</param>
         /// <returns></returns>
-        public object GetCustomLauncher(string launcherTypeName)
+        public object? GetCustomLauncher(string launcherTypeName)
         {
             throw new NotImplementedException();
         }
@@ -259,7 +259,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="callback">The callback to use to send the engine log.</param>
         /// <param name="level">The level of the log to filter the channel on.</param>
-        public static void EnableHostLogging(Action<string> callback, LogLevel level = LogLevel.Verbose)
+        public static void EnableHostLogging(Action<string>? callback, LogLevel level = LogLevel.Verbose)
         {
             throw new NotImplementedException();
         }
@@ -277,8 +277,8 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Sets the log file to write to.
         /// </summary>
-        /// <param name="logFile">The file to write engine logs to.</param>
-        public static void SetEngineLogFile(string logFile)
+        /// <param name="logFile">The file to write engine logs to, or null if none</param>
+        public static void SetEngineLogFile(string? logFile)
         {
             throw new NotImplementedException();
         }
@@ -287,7 +287,7 @@ namespace Microsoft.DebugEngineHost
         /// Gets the engine log channel created by 'EnableHostLogging'
         /// </summary>
         /// <returns>A logger object if logging is enabled, or null if it is not</returns>
-        public static ILogChannel GetEngineLogChannel()
+        public static ILogChannel? GetEngineLogChannel()
         {
             throw new NotImplementedException();
         }
@@ -296,7 +296,7 @@ namespace Microsoft.DebugEngineHost
         /// Gets the Natvis log channel if its been created.
         /// </summary>
         /// <returns>A logger object if logging is enabled, or null if it is not</returns>
-        public static ILogChannel GetNatvisLogChannel()
+        public static ILogChannel? GetNatvisLogChannel()
         {
             throw new NotImplementedException();
         }
@@ -339,7 +339,7 @@ namespace Microsoft.DebugEngineHost
         /// <param name="clsid">CLSID to CoCreate</param>
         /// <returns>[Optional] loaded object. Null if the type is not registered, or points to a type that doesn't exist</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Co")]
-        public static object VsCoCreateManagedObject(HostConfigurationStore configStore, Guid clsid)
+        public static object? VsCoCreateManagedObject(HostConfigurationStore configStore, Guid clsid)
         {
             throw new NotImplementedException();
         }
@@ -472,7 +472,7 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Enable's tracking the VS 'Natvis Diagnostic Messages (C++ only)' setting.
         /// </summary>
-        public static IDisposable WatchNatvisOptionSetting(HostConfigurationStore configStore, ILogChannel natvisLogger)
+        public static IDisposable? WatchNatvisOptionSetting(HostConfigurationStore configStore, ILogChannel natvisLogger)
         {
             throw new NotImplementedException();
         }
@@ -480,7 +480,7 @@ namespace Microsoft.DebugEngineHost
         /// <summary>
         /// Return the solution's root directory, null if no solution
         /// </summary>
-        public static string FindSolutionRoot()
+        public static string? FindSolutionRoot()
         {
             throw new NotImplementedException();
         }
@@ -527,7 +527,7 @@ namespace Microsoft.DebugEngineHost
         /// <returns>true if the message is sent, false if not.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "cwd")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
-        public static void RunInTerminal(string title, string workingDirectory, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string> environmentVariables, Action<int?> success, Action<string> failure)
+        public static void RunInTerminal(string title, string workingDirectory, bool useExternalConsole, IReadOnlyList<string> commandArgs, IReadOnlyDictionary<string, string?> environmentVariables, Action<int?> success, Action<string> failure)
         {
             throw new NotImplementedException();
         }
@@ -663,7 +663,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="currentException">Exception object to report.</param>
         /// <param name="engineName">Name of the engine reporting the exception. Ex:Microsoft.MIEngine</param>
-        public static void ReportCurrentException(Exception currentException, string engineName)
+        public static void ReportCurrentException(Exception currentException, string? engineName)
         {
             throw new NotImplementedException();
         }

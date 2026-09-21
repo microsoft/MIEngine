@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text;
@@ -48,13 +47,18 @@ namespace MICore
 
     public abstract class MICommandFactory
     {
-        protected Debugger _debugger;
+        protected readonly Debugger _debugger;
 
         public MIMode Mode { get; private set; }
 
         public abstract string Name { get; }
 
         internal int MajorVersion { get; set; }
+
+        protected MICommandFactory(Debugger debugger)
+        {
+            _debugger = debugger;
+        }
 
         public static MICommandFactory GetInstance(MIMode mode, Debugger debugger)
         {
@@ -63,21 +67,20 @@ namespace MICore
             switch (mode)
             {
                 case MIMode.Gdb:
-                    commandFactory = new GdbMICommandFactory();
+                    commandFactory = new GdbMICommandFactory(debugger);
                     break;
                 case MIMode.Lldb:
-                    commandFactory = new LlldbMICommandFactory();
+                    commandFactory = new LlldbMICommandFactory(debugger);
                     break;
                 default:
                     throw new ArgumentException(null, nameof(mode));
             }
-            commandFactory._debugger = debugger;
             commandFactory.Mode = mode;
             commandFactory.Radix = 10;
             return commandFactory;
         }
 
-        public static string SpanNextAddr(string line, out ulong addr)
+        public static string? SpanNextAddr(string line, out ulong addr)
         {
             addr = 0;
             char[] endOfNum = { ' ', '\t', '\"' };
@@ -479,7 +482,7 @@ namespace MICore
             return requiresQuotes;
         }
 
-        public virtual async Task<Results> BreakInsert(string filename, bool useUnixFormat, uint line, string condition, bool enabled, IEnumerable<Checksum> checksums = null, ResultClass resultClass = ResultClass.done)
+        public virtual async Task<Results> BreakInsert(string filename, bool useUnixFormat, uint line, string condition, bool enabled, IEnumerable<Checksum>? checksums = null, ResultClass resultClass = ResultClass.done)
         {
             StringBuilder cmd = await BuildBreakInsert(condition, enabled);
 
@@ -529,7 +532,7 @@ namespace MICore
 
         public virtual bool SupportsDataBreakpoints { get { return false; } }
 
-        public virtual async Task<TupleValue> BreakInfo(string bkptno)
+        public virtual async Task<TupleValue?> BreakInfo(string bkptno)
         {
             Results bindResult = await _debugger.CmdAsync("-break-info " + bkptno, ResultClass.None);
             if (bindResult.ResultClass != ResultClass.done)
@@ -559,7 +562,7 @@ namespace MICore
 
         public virtual async Task BreakCondition(string bkptno, string expr)
         {
-            if (string.IsNullOrWhiteSpace(expr))
+            if (IsNullOrWhiteSpace(expr))
             {
                 expr = string.Empty;
             }
@@ -628,7 +631,7 @@ namespace MICore
 
         #region Miscellaneous
 
-        public virtual Task<string[]> AutoComplete(string command, int threadId, uint frameLevel)
+        public virtual Task<string[]?> AutoComplete(string command, int threadId, uint frameLevel)
         {
             throw new NotImplementedException();
         }
@@ -704,9 +707,9 @@ namespace MICore
             return MICore.AsyncBreakSignal.None;
         }
 
-        public Results IsModuleLoad(string cmd)
+        public Results? IsModuleLoad(string cmd)
         {
-            Results results = null;
+            Results? results = null;
             if (cmd.StartsWith("library-loaded,", StringComparison.Ordinal))
             {
                 MIResults res = new MIResults(_debugger.Logger);

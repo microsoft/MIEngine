@@ -1,11 +1,11 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using Process = global::System.Diagnostics.Process;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -21,10 +21,10 @@ namespace Microsoft.DebugEngineHost
         private readonly System.DateTime _vsStartTime;
         private bool _enabled;
 
-        private readonly FileSystemWatcher _vsFeedbackFileWatcher;
+        private readonly FileSystemWatcher? _vsFeedbackFileWatcher;
         private readonly FeedbackLogBuffer _circularBuffer;
 
-        private StreamWriter _logWriter;
+        private StreamWriter? _logWriter;
         private readonly object _syncObj = new object();
 
         internal VSFeedbackLogger(FeedbackLogBuffer circularBuffer)
@@ -103,7 +103,7 @@ namespace Microsoft.DebugEngineHost
                     _enabled = false;
                     _circularBuffer.FlushNewEntries();
 
-                    if (_logWriter != null)
+                    if (_logWriter is not null)
                     {
                         _logWriter.Dispose();
                         _logWriter = null;
@@ -128,8 +128,8 @@ namespace Microsoft.DebugEngineHost
 
                 string content = File.ReadAllText(semaphoreFilePath);
                 JObject root = JObject.Parse(content);
-                JContainer pidCollection = root["processIds"] as JContainer;
-                if (pidCollection != null)
+                JContainer? pidCollection = root["processIds"] as JContainer;
+                if (pidCollection is not null)
                 {
                     return pidCollection.Values<int>().Contains(_vsPid);
                 }

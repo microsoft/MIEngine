@@ -1,4 +1,6 @@
-<!-- If you add this file to a project, make sure you add a dependency to MakePIAPortable -->
+<!-- Adding a build dependency to MakePIAPortable so that the PIA assemblies are generated
+     before any project that references them is compiled. This enables building individual 
+     projects (e.g. via 'dotnet build') without relying on solution-level build ordering. -->
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <!--  'package_versions.settings.targets' must have been imported before importing this file. -->
@@ -14,5 +16,9 @@
         <Reference Include="$(MIDefaultOutputPath)PIA\drop\Microsoft.VisualStudio.Debugger.Interop.12.0.dll" />
         <Reference Include="$(MIDefaultOutputPath)PIA\drop\Microsoft.VisualStudio.Debugger.InteropA.dll" />
         <Reference Include="$(MIDefaultOutputPath)PIA\drop\Microsoft.VisualStudio.Interop.dll" />
+    </ItemGroup>
+
+    <ItemGroup Label="PIA Build Dependency">
+        <ProjectReference Include="$(MIEngineRoot)src\MakePIAPortable\MakePIAPortable.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" />
     </ItemGroup>
 </Project>

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
@@ -18,16 +17,16 @@ namespace MICore
     public class RunInTerminalTransport : StreamTransport
     {
         private int _debuggerPid;
-        private StreamReader _pidReader;
+        private StreamReader? _pidReader;
 
-        private ProcessMonitor _shellProcessMonitor;
+        private ProcessMonitor? _shellProcessMonitor;
         private CancellationTokenSource _streamReadPidCancellationTokenSource = new CancellationTokenSource();
-        private Task _waitForConnection = null;
+        private Task? _waitForConnection = null;
 
-        private StreamWriter _commandStream = null;
-        private StreamReader _outputStream = null;
+        private StreamWriter? _commandStream;
+        private StreamReader? _outputStream;
 
-        private StreamReader _errorStream = null;
+        private StreamReader? _errorStream = null;
 
         public override int DebuggerPid
         {
@@ -37,9 +36,9 @@ namespace MICore
             }
         }
 
-        public override async void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
+        public override async void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop? waitLoop = null)
         {
-            LocalLaunchOptions localOptions = options as LocalLaunchOptions;
+            LocalLaunchOptions localOptions = (LocalLaunchOptions)options;
 
             Encoding encNoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
@@ -66,7 +65,7 @@ namespace MICore
                 _pidReader = new StreamReader(pidPipe, encNoBom, false, UnixUtilities.StreamBufferSize);
 
                 string thisModulePath = typeof(RunInTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
-                string launchCommand = Path.Combine(Path.GetDirectoryName(thisModulePath), "WindowsDebugLauncher.exe");
+                string launchCommand = Path.Combine(Path.GetDirectoryName(thisModulePath) ?? string.Empty, "WindowsDebugLauncher.exe");
 
                 if (!File.Exists(launchCommand))
                 {
@@ -112,13 +111,13 @@ namespace MICore
                 string debuggeeDir;
                 if (Path.IsPathRooted(options.ExePath) && File.Exists(options.ExePath))
                 {
-                    debuggeeDir = Path.GetDirectoryName(options.ExePath);
+                    debuggeeDir = Path.GetDirectoryName(options.ExePath) ?? string.Empty;
                 }
                 else
                 {
                     // If we don't know where the app is, default to HOME, and if we somehow can't get that, go with the root directory.
-                    debuggeeDir = Environment.GetEnvironmentVariable("HOME");
-                    if (string.IsNullOrEmpty(debuggeeDir))
+                    debuggeeDir = Environment.GetEnvironmentVariable("HOME") ?? string.Empty;
+                    if (IsNullOrEmpty(debuggeeDir))
                         debuggeeDir = "/";
                 }
 
@@ -132,7 +131,7 @@ namespace MICore
                     debuggerCmd,
                     localOptions.GetMiDebuggerArgs());
 
-                logger?.WriteTextBlock(LogLevel.Verbose, "DbgCmd:", launchDebuggerCommand);
+                logger.WriteTextBlock(LogLevel.Verbose, "DbgCmd:", launchDebuggerCommand);
 
                 using (FileStream dbgCmdStream = new FileStream(dbgCmdScript, FileMode.CreateNew))
                 using (StreamWriter dbgCmdWriter = new StreamWriter(dbgCmdStream, encNoBom) { AutoFlush = true })
@@ -176,7 +175,7 @@ namespace MICore
                          throw new InvalidOperationException(error);
                      },
                      logger);
-            logger?.WriteLine(LogLevel.Verbose, "Wait for connection completion.");
+            logger.WriteLine(LogLevel.Verbose, "Wait for connection completion.");
 
             if (_waitForConnection != null)
             {
@@ -198,7 +197,7 @@ namespace MICore
         private static string GetOSXLaunchScript()
         {
             string thisModulePath = typeof(RunInTerminalTransport).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
-            string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath), "osxlaunchhelper.scpt");
+            string launchScript = Path.Combine(Path.GetDirectoryName(thisModulePath) ?? string.Empty, "osxlaunchhelper.scpt");
             if (!File.Exists(launchScript))
             {
                 string message = string.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InternalFileMissing, launchScript);
@@ -214,7 +213,7 @@ namespace MICore
             {
                 while (!_streamReadPidCancellationTokenSource.IsCancellationRequested)
                 {
-                    string line = this.GetLineFromStream(_errorStream, _streamReadPidCancellationTokenSource.Token);
+                    string? line = this.GetLineFromStream(_errorStream, _streamReadPidCancellationTokenSource.Token);
                     if (line == null)
                         break;
                     Logger?.WriteTextBlock(LogLevel.Error, "dbgerr:", line);
@@ -224,12 +223,13 @@ namespace MICore
 
         public override void InitStreams(LaunchOptions options, out StreamReader reader, out StreamWriter writer)
         {
+            Debug.Assert(_commandStream is not null && _outputStream is not null, "Should be impossible -- `Init` should be called before `InitStreams`");
             // Mono seems to stop responding when the debugger sends a large response unless we specify a larger buffer here
             writer = _commandStream;
             reader = _outputStream;
         }
 
-        private Action<int> debuggerPidCallback;
+        private Action<int>? debuggerPidCallback;
         public void RegisterDebuggerPidCallback(Action<int> pidCallback)
         {
             debuggerPidCallback = pidCallback;
@@ -240,10 +240,12 @@ namespace MICore
             if (_pidReader != null)
             {
                 int shellPid;
-                Task<string> readShellPidTask = _pidReader.ReadLineAsync();
+                Task<string?> readShellPidTask = _pidReader.ReadLineAsync();
                 if (readShellPidTask.Wait(TimeSpan.FromSeconds(10)))
                 {
-                    shellPid = int.Parse(readShellPidTask.Result, CultureInfo.InvariantCulture);
+                    string? shellPidLine = readShellPidTask.Result;
+                    Debug.Assert(shellPidLine is not null, "Should be impossible. Shell pid line was null.");
+                    shellPid = int.Parse(shellPidLine, CultureInfo.InvariantCulture);
                     // Used for testing
                     Logger?.WriteLine(LogLevel.Verbose, string.Concat("ShellPid=", shellPid));
                 }
@@ -268,11 +270,13 @@ namespace MICore
                     shellProcess.Exited += ShellExited;
                 }
 
-                Task<string> readDebuggerPidTask = _pidReader.ReadLineAsync();
+                Task<string?> readDebuggerPidTask = _pidReader.ReadLineAsync();
                 try
                 {
                     readDebuggerPidTask.Wait(_streamReadPidCancellationTokenSource.Token);
-                    _debuggerPid = int.Parse(readDebuggerPidTask.Result, CultureInfo.InvariantCulture);
+                    string? debuggerPidLine = readDebuggerPidTask.Result;
+                    Debug.Assert(debuggerPidLine is not null, "Should be impossible. Debugger pid line was null.");
+                    _debuggerPid = int.Parse(debuggerPidLine, CultureInfo.InvariantCulture);
                 }
                 catch (OperationCanceledException)
                 {
@@ -289,7 +293,7 @@ namespace MICore
             }
         }
 
-        private void ShellExited(object sender, EventArgs e)
+        private void ShellExited(object? sender, EventArgs e)
         {
             if (sender is ProcessMonitor)
             {

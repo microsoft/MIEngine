@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.Debugger.Interop;
 using Newtonsoft.Json;
 using System;
-using System.Diagnostics;
 
 namespace Microsoft.DebugEngineHost.VSCode
 {
@@ -14,13 +13,13 @@ namespace Microsoft.DebugEngineHost.VSCode
     /// </summary>
     sealed public class ExceptionBreakpointFilter
     {
-        private string _filter;
+        private string _filter = null!;
 
         /// <summary>
         /// The label for the button that will appear in the UI
         /// </summary>
         [JsonRequired]
-        public string label { get; set; }
+        public string label { get; set; } = null!;
 
         /// <summary>
         /// The identifier for this filter.
@@ -43,7 +42,7 @@ namespace Microsoft.DebugEngineHost.VSCode
         public bool supportsCondition { get; set; }
 
         [JsonRequired]
-        public string conditionDescription { get; set; }
+        public string conditionDescription { get; set; } = null!;
 
         [JsonRequired]
         public Guid categoryId { get; set; }

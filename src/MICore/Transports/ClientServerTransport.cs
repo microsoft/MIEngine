@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Diagnostics;
 using System.IO;
 using System.Collections;
 using System.Text.RegularExpressions;
@@ -26,7 +25,7 @@ namespace MICore
             _serverTransport = serverTransport;
         }
 
-        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop waitLoop = null)
+        public void Init(ITransportCallback transportCallback, LaunchOptions options, Logger logger, HostWaitLoop? waitLoop = null)
         {
             _launchTimeout = ((LocalLaunchOptions)options).ServerLaunchTimeout;
             _serverTransport.Init(transportCallback, options, logger, waitLoop);

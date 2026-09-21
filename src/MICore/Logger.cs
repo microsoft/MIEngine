@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -26,11 +25,11 @@ namespace MICore
         /// <summary>
         /// Optional logger to get engine diagnostics logs
         /// </summary>
-        private ILogChannel EngineLogger => HostLogger.GetEngineLogChannel();
+        private ILogChannel? EngineLogger => HostLogger.GetEngineLogChannel();
         /// <summary>
         /// Optional logger to get natvis diagnostics logs
         /// </summary>
-        public ILogChannel NatvisLogger => HostLogger.GetNatvisLogChannel();
+        public ILogChannel? NatvisLogger => HostLogger.GetNatvisLogChannel();
         private static int s_count;
         private readonly int _id;
 
@@ -38,8 +37,8 @@ namespace MICore
 
         public class LogInfo
         {
-            public string logFile;
-            public Action<string> logToOutput;
+            public string? logFile;
+            public Action<string>? logToOutput;
             public bool enabled;
         };
 
@@ -149,7 +148,7 @@ namespace MICore
 
             if (HostLogger.IsFeedbackLogEnabled)
             {
-                HostLogger.WriteFeedbackLog((!string.IsNullOrEmpty(prefix) ? prefix : string.Empty) + textBlock);
+                HostLogger.WriteFeedbackLog((!IsNullOrEmpty(prefix) ? prefix : string.Empty) + textBlock);
             }
         }
 
@@ -202,7 +201,7 @@ namespace MICore
                     if (line == null)
                         break;
 
-                    if (!string.IsNullOrEmpty(prefix))
+                    if (!IsNullOrEmpty(prefix))
                         WriteLineImpl(level, prefix + line);
                     else
                         WriteLineImpl(level, line);

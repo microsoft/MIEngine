@@ -26,7 +26,7 @@ namespace Microsoft.SSHDebugPS.Docker
         private const string dockerInspectArgs = "-f \"{{json .Platform}}\" ";
         private static char[] charsToTrim = { ' ', '\"' };
 
-        private static void RunDockerCommand(DockerCommandSettings settings, Action<string> callback)
+        internal static void RunContainerCommand(IPipeTransportSettings settings, Action<string> callback)
         {
             LocalCommandRunner commandRunner = new LocalCommandRunner(settings);
 
@@ -106,7 +106,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunContainerCommand(settings, delegate (string args)
                 {
                     if (args.Contains("lcow"))
                     {
@@ -134,7 +134,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunContainerCommand(settings, delegate (string args)
                 {
                     delegateServerOS = args;
                 });
@@ -159,7 +159,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
             try
             {
-                RunDockerCommand(settings, delegate (string args)
+                RunContainerCommand(settings, delegate (string args)
                 {
                     delegateContainerPlatform = args;
                 });
@@ -174,20 +174,20 @@ namespace Microsoft.SSHDebugPS.Docker
             return true;
         }
 
-        internal static IEnumerable<DockerContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
+        internal static IEnumerable<ContainerInstance> GetLocalDockerContainers(string hostname, out int totalContainers)
         {
             totalContainers = 0;
             int containerCount = 0;
-            List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
+            List<ContainerInstance> containers = new List<ContainerInstance>();
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, false);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
 
-            RunDockerCommand(settings, delegate (string args)
+            RunContainerCommand(settings, delegate (string args)
             {
                 if (args.Trim()[0] == '{')
                 {
-                    if (DockerContainerInstance.TryCreate(args, out DockerContainerInstance containerInstance))
+                    if (ContainerInstance.TryCreate(args, out ContainerInstance containerInstance))
                     {
                         containers.Add(containerInstance);
                     }
@@ -205,7 +205,7 @@ namespace Microsoft.SSHDebugPS.Docker
         // Another fallback option would be to: docker inspect <containerName> --format {{.State.Status}} which should return "running"
         internal static bool IsContainerRunning(string hostName, string containerName, Connection remoteConnection)
         {
-            IEnumerable<DockerContainerInstance> containers;
+            IEnumerable<ContainerInstance> containers;
             if (remoteConnection != null)
             {
                 containers = GetRemoteDockerContainers(remoteConnection, hostName, out _);
@@ -228,7 +228,7 @@ namespace Microsoft.SSHDebugPS.Docker
             return false;
         }
 
-        internal static IEnumerable<DockerContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname, out int totalContainers)
+        internal static IEnumerable<ContainerInstance> GetRemoteDockerContainers(IConnection connection, string hostname, out int totalContainers)
         {
             totalContainers = 0;
             SSHConnection sshConnection = connection as SSHConnection;
@@ -239,7 +239,7 @@ namespace Microsoft.SSHDebugPS.Docker
                 return null;
             }
 
-            List<DockerContainerInstance> containers = new List<DockerContainerInstance>();
+            List<ContainerInstance> containers = new List<ContainerInstance>();
 
             DockerCommandSettings settings = new DockerCommandSettings(hostname, true);
             settings.SetCommand(dockerPSCommand, dockerPSArgs);
@@ -300,7 +300,7 @@ namespace Microsoft.SSHDebugPS.Docker
 
                 foreach (var item in outputLines)
                 {
-                    if (DockerContainerInstance.TryCreate(item, out DockerContainerInstance containerInstance))
+                    if (ContainerInstance.TryCreate(item, out ContainerInstance containerInstance))
                     {
                         containers.Add(containerInstance);
                     }

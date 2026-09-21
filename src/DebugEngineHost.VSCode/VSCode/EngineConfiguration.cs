@@ -21,14 +21,14 @@ namespace Microsoft.DebugEngineHost.VSCode
 {
     public sealed class EngineConfiguration
     {
-        private static string s_adapterDirectory;
+        private static string? s_adapterDirectory;
         private static readonly Dictionary<string, EngineConfiguration> s_dict = new Dictionary<string, EngineConfiguration>();
 
-        public string AdapterId { get; private set; }
+        public string AdapterId { get; private set; } = null!;
 
         private bool _isReadOnly;
-        private string _assemblyName;
-        private string _engineClass;
+        private string _assemblyName = null!;
+        private string _engineClass = null!;
         private readonly ExceptionSettings _exceptionSettings = new ExceptionSettings();
         private bool _conditionalBP;
         private bool _functionBP;
@@ -89,14 +89,14 @@ namespace Microsoft.DebugEngineHost.VSCode
         /// <returns>Path to the directory</returns>
         public static string GetAdapterDirectory()
         {
-            if (s_adapterDirectory == null)
+            if (s_adapterDirectory is null)
             {
                 // Configuration goes in the directory of this assembly
                 string thisModulePath = typeof(EngineConfiguration).GetTypeInfo().Assembly.ManifestModule.FullyQualifiedName;
                 Interlocked.CompareExchange(ref s_adapterDirectory, Path.GetDirectoryName(thisModulePath), null);
             }
 
-            return s_adapterDirectory;
+            return s_adapterDirectory!;
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace Microsoft.DebugEngineHost.VSCode
         /// <param name="adapterDirectory">The directory to use.</param>
         public static void SetAdapterDirectory(string adapterDirectory)
         {
-            if (adapterDirectory == null)
+            if (adapterDirectory is null)
             {
                 throw new ArgumentNullException(nameof(adapterDirectory));
             }
@@ -118,11 +118,11 @@ namespace Microsoft.DebugEngineHost.VSCode
             }
         }
 
-        public static EngineConfiguration TryGet(string adapterId)
+        public static EngineConfiguration? TryGet(string adapterId)
         {
             lock (s_dict)
             {
-                EngineConfiguration result;
+                EngineConfiguration? result;
                 if (s_dict.TryGetValue(adapterId, out result))
                 {
                     return result;
@@ -131,6 +131,10 @@ namespace Microsoft.DebugEngineHost.VSCode
                 string engineConfigPath = Path.Combine(GetAdapterDirectory(), adapterId + ".ad7Engine.json");
                 string engineConfigText = File.ReadAllText(engineConfigPath);
                 result = JsonConvert.DeserializeObject<EngineConfiguration>(engineConfigText);
+                if (result is null)
+                {
+                    return null;
+                }
                 result.AdapterId = adapterId;
                 result.ExceptionSettings.MakeReadOnly();
                 result._isReadOnly = true;
@@ -149,15 +153,15 @@ namespace Microsoft.DebugEngineHost.VSCode
 
             AssemblyName assemblyName = new System.Reflection.AssemblyName(this.EngineAssemblyName);
             Assembly engineAssembly = Assembly.Load(assemblyName);
-            Type engineClass = engineAssembly.GetType(this.EngineClassName);
-            if (engineClass == null)
+            Type? engineClass = engineAssembly.GetType(this.EngineClassName);
+            if (engineClass is null)
             {
                 throw new InvalidDataException(string.Format(CultureInfo.CurrentCulture, HostResources.Error_ClassNotFound, this.EngineClassName, this.EngineAssemblyName));
             }
 
-            object instance = Activator.CreateInstance(engineClass);
+            object? instance = Activator.CreateInstance(engineClass);
 
-            if (instance == null)
+            if (instance is null)
             {
                 throw new InvalidDataException(string.Format(CultureInfo.CurrentCulture, HostResources.Error_ConstructorNotFound, this.EngineClassName, this.EngineAssemblyName));
             }

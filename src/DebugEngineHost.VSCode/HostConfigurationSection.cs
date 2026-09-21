@@ -21,7 +21,7 @@ namespace Microsoft.DebugEngineHost
             GC.SuppressFinalize(this);
         }
 
-        public object GetValue(string valueName)
+        public object? GetValue(string valueName)
         {
             ExceptionSettings.TriggerState state;
             if (_defaultTriggers.TryGetValue(valueName, out state))

@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using ConditionalAttribute = global::System.Diagnostics.ConditionalAttribute;
 using System.Linq;
 using System.Reflection;
 
@@ -29,11 +29,11 @@ namespace Microsoft.DebugEngineHost
         private const string TelemetryHostVersion = @"VS.Diagnostics.Debugger.HostVersion";
         private const string TelemetryAdapterId = @"VS.Diagnostics.Debugger.AdapterId";
 
-        private static Action<string, KeyValuePair<string, object>[]> s_telemetryCallback;
-        private static string s_engineName;
-        private static string s_engineVersion;
-        private static string s_hostVersion;
-        private static string s_adapterId;
+        private static Action<string, KeyValuePair<string, object>[]>? s_telemetryCallback;
+        private static string? s_engineName;
+        private static string? s_engineVersion;
+        private static string? s_hostVersion;
+        private static string? s_adapterId;
 
         public static void InitializeTelemetry(Action<string, KeyValuePair<string, object>[]> telemetryCallback, TypeInfo engineType, string adapterId)
         {
@@ -56,7 +56,7 @@ namespace Microsoft.DebugEngineHost
         public static void SendEvent(string eventName, params KeyValuePair<string, object>[] eventProperties)
         {
 #if LAB
-            if (s_telemetryCallback != null)
+            if (s_telemetryCallback is not null)
             {
                 s_telemetryCallback(eventName, eventProperties);
             }
@@ -70,34 +70,35 @@ namespace Microsoft.DebugEngineHost
         /// <param name="currentException">Exception object to report.</param>
         /// <param name="engineName">[Optional] Name of the engine reporting the exception. Ex:Microsoft.MIEngine.
         /// In OpenDebugAD7, this is optional.</param>
-        public static void ReportCurrentException(Exception currentException, string engineName)
+        public static void ReportCurrentException(Exception currentException, string? engineName)
         {
             try
             {
                 // Report the inner-most exception
-                while (currentException.InnerException != null)
+                while (currentException.InnerException is not null)
                 {
                     currentException = currentException.InnerException;
                 }
 
-                if (s_hostVersion == null)
+                if (s_hostVersion is null)
                 {
                     // InitializeTelemetry not called yet
                     return;
                 }
 
-                if (engineName == null)
+                if (engineName is null)
                 {
+                    Debug.Assert(s_engineName is not null, "Should be impossible -- if we got past the previous check, InitializeTelemetry was already called");
                     engineName = s_engineName;
                 }
 
                 SendEvent(TelemetryNonFatalWatsonEventName,
                     new KeyValuePair<string, object>(TelemetryNonFatalErrorImplementationName, engineName),
-                    new KeyValuePair<string, object>(TelemetryNonFatalErrorExceptionTypeName, currentException.GetType().FullName),
-                    new KeyValuePair<string, object>(TelemetryNonFatalErrorExceptionStackName, currentException.StackTrace),
+                    new KeyValuePair<string, object>(TelemetryNonFatalErrorExceptionTypeName, currentException.GetType().FullName ?? string.Empty),
+                    new KeyValuePair<string, object>(TelemetryNonFatalErrorExceptionStackName, currentException.StackTrace ?? string.Empty),
                     new KeyValuePair<string, object>(TelemetryNonFatalErrorExceptionHResult, currentException.HResult),
-                    new KeyValuePair<string, object>(TelemetryEngineVersion, s_engineVersion),
-                    new KeyValuePair<string, object>(TelemetryAdapterId, s_adapterId),
+                    new KeyValuePair<string, object>(TelemetryEngineVersion, s_engineVersion ?? string.Empty),
+                    new KeyValuePair<string, object>(TelemetryAdapterId, s_adapterId ?? string.Empty),
                     new KeyValuePair<string, object>(TelemetryHostVersion, s_hostVersion)
                     );
             }
@@ -110,7 +111,7 @@ namespace Microsoft.DebugEngineHost
         private static string GetVersionAttributeValue(TypeInfo engineType)
         {
             var attribute = engineType.Assembly.GetCustomAttribute(typeof(System.Reflection.AssemblyFileVersionAttribute)) as AssemblyFileVersionAttribute;
-            if (attribute == null)
+            if (attribute is null)
                 return string.Empty;
 
             return attribute.Version;

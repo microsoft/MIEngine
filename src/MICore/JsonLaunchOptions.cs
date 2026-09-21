@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
@@ -18,32 +17,32 @@ namespace MICore.Json.LaunchOptions
         /// Semicolon separated list of directories to use to search for .so files. Example: "c:\dir1;c:\dir2".
         /// </summary>
         [JsonProperty("additionalSOLibSearchPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string AdditionalSOLibSearchPath { get; set; }
+        public string? AdditionalSOLibSearchPath { get; set; }
 
         /// <summary>
         /// Full path to program executable.
         /// </summary>
         [JsonProperty("program")]
-        public string Program { get; set; }
+        public string? Program { get; set; }
 
         /// <summary>
         /// The type of the engine. Must be "cppdbg".
         /// </summary>
         [JsonProperty("type", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
         /// <summary>
         /// The architecture of the debuggee. This will automatically be detected unless this parameter is set. Allowed values are x86, arm, arm64, mips, x64, amd64, x86_64.
         /// </summary>
         [JsonProperty("targetArchitecture", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string TargetArchitecture { get; set; }
+        public string? TargetArchitecture { get; set; }
 
         /// <summary>
         /// .natvis files to be used when debugging this process. This option is not compatible with GDB pretty printing. Please also see "showDisplayString" if using this setting.
         /// </summary>
         [JsonProperty("visualizerFile", DefaultValueHandling = DefaultValueHandling.Ignore)]
         [JsonConverter(typeof(VisualizerFileConverter))]
-        public List<string> VisualizerFile { get; set; }
+        public List<string>? VisualizerFile { get; set; }
 
         /// <summary>
         /// When a visualizerFile is specified, showDisplayString will enable the display string. Turning this option on can cause slower performance during debugging.
@@ -55,25 +54,25 @@ namespace MICore.Json.LaunchOptions
         /// Indicates the console debugger that the MIDebugEngine will connect to. Allowed values are "gdb" "lldb".
         /// </summary>
         [JsonProperty(nameof(MIMode), DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string MIMode { get; set; }
+        public string? MIMode { get; set; }
 
         /// <summary>
         /// The path to the mi debugger (such as gdb). When unspecified, it will search path first for the debugger.
         /// </summary>
         [JsonProperty("miDebuggerPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string MiDebuggerPath { get; set; }
+        public string? MiDebuggerPath { get; set; }
 
         /// <summary>
         /// Arguments for the mi debugger.
         /// </summary>
         [JsonProperty("miDebuggerArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string MiDebuggerArgs { get; set; }
+        public string? MiDebuggerArgs { get; set; }
 
         /// <summary>
         /// Network address of the MI Debugger Server to connect to (example: localhost:1234).
         /// </summary>
         [JsonProperty("miDebuggerServerAddress", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string MiDebuggerServerAddress { get; set; }
+        public string? MiDebuggerServerAddress { get; set; }
 
         /// <summary>
         /// If true, use gdb extended-remote mode to connect to gdbserver.
@@ -85,37 +84,37 @@ namespace MICore.Json.LaunchOptions
         /// Optional source file mappings passed to the debug engine. Example: '{ "/original/source/path":"/current/source/path" }'
         /// </summary>
         [JsonProperty("sourceFileMap", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, object> SourceFileMap { get; protected set; }
+        public Dictionary<string, object>? SourceFileMap { get; protected set; }
 
         /// <summary>
         /// When present, this tells the debugger to connect to a remote computer using another executable as a pipe that will relay standard input/output between VS Code and the MI-enabled debugger backend executable (such as gdb).
         /// </summary>
         [JsonProperty("pipeTransport", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public PipeTransport PipeTransport { get; set; }
+        public PipeTransport? PipeTransport { get; set; }
 
         /// <summary>
         /// Supports explcit control of symbol loading. The processing of Exceptions lists and symserver entries.
         /// </summary>
         [JsonProperty("symbolLoadInfo", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public SymbolLoadInfo SymbolLoadInfo { get; set; }
+        public SymbolLoadInfo? SymbolLoadInfo { get; set; }
 
         /// <summary>
         /// One or more GDB/LLDB commands to execute in order to setup the underlying debugger. Example: "setupCommands": [ { "text": "-enable-pretty-printing", "description": "Enable GDB pretty printing", "ignoreFailures": true }].
         /// </summary>
         [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<SetupCommand> SetupCommands { get; protected set; }
+        public List<SetupCommand>? SetupCommands { get; protected set; }
 
         /// <summary>
         /// One or more commands to execute in order to setup underlying debugger after debugger has been attached. i.e. flashing and resetting the board
         /// </summary>
         [JsonProperty("postRemoteConnectCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<SetupCommand> PostRemoteConnectCommands { get; protected set; }
+        public List<SetupCommand>? PostRemoteConnectCommands { get; protected set; }
 
         /// <summary>
         /// Explicitly control whether hardware breakpoints are used. If an optional limit is provided, additionally restrict the number of hardware breakpoints for remote targets. Example: "hardwareBreakpoints": { "require": true, "limit": 5 }.
         /// </summary>
         [JsonProperty("hardwareBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public HardwareBreakpointInfo HardwareBreakpointInfo { get; set; }
+        public HardwareBreakpointInfo? HardwareBreakpointInfo { get; set; }
 
         /// <summary>
         /// Controls how breakpoints set externally (usually via raw GDB commands) are handled when hit. "throw" acts as if an exception was thrown by the application and "stop" only pauses the debug session.
@@ -127,21 +126,23 @@ namespace MICore.Json.LaunchOptions
         /// Controls GDB's debuginfod behavior.
         /// </summary>
         [JsonProperty("debuginfod", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public DebuginfodSettings Debuginfod { get; set; }
+        public DebuginfodSettings? Debuginfod { get; set; }
     }
 
     internal class VisualizerFileConverter : JsonConverter
     {
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            List<string> visualizerFile = new List<string>();
+            List<string>? visualizerFile = null;
             if (reader.TokenType == JsonToken.StartArray)
             {
                 visualizerFile = serializer.Deserialize<List<string>>(reader);
             }
             else if (reader.TokenType == JsonToken.String)
             {
-                visualizerFile.Add(reader.Value.ToString());
+                object? value = reader.Value;
+                Debug.Assert(value is not null, "Should be impossible -- `TokenType == JsonToken.String` means `Value` cannot be null");
+                visualizerFile = new List<string> { value.ToString() };
             }
             else
             {
@@ -155,7 +156,7 @@ namespace MICore.Json.LaunchOptions
             throw new NotImplementedException();
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
@@ -180,20 +181,20 @@ namespace MICore.Json.LaunchOptions
         public AttachOptions(
             string program,
             int processId,
-            string type = null,
-            string targetArchitecture = null,
-            List<string> visualizerFile = null,
+            string? type = null,
+            string? targetArchitecture = null,
+            List<string>? visualizerFile = null,
             bool? showDisplayString = null,
-            string additionalSOLibSearchPath = null,
-            string MIMode = null,
-            string miDebuggerPath = null,
-            string miDebuggerArgs = null,
-            string miDebuggerServerAddress = null,
+            string? additionalSOLibSearchPath = null,
+            string? MIMode = null,
+            string? miDebuggerPath = null,
+            string? miDebuggerArgs = null,
+            string? miDebuggerServerAddress = null,
             bool? useExtendedRemote = null,
-            HardwareBreakpointInfo hardwareBreakpointInfo = null,
-            Dictionary<string, object> sourceFileMap = null,
-            PipeTransport pipeTransport = null,
-            SymbolLoadInfo symbolLoadInfo = null)
+            HardwareBreakpointInfo? hardwareBreakpointInfo = null,
+            Dictionary<string, object>? sourceFileMap = null,
+            PipeTransport? pipeTransport = null,
+            SymbolLoadInfo? symbolLoadInfo = null)
         {
             this.Program = program;
             this.Type = type;
@@ -221,10 +222,10 @@ namespace MICore.Json.LaunchOptions
         #region Public Properties for Serialization
 
         [JsonProperty("name", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonProperty("value", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Value { get; set; }
+        public string? Value { get; set; }
 
         #endregion
 
@@ -234,7 +235,7 @@ namespace MICore.Json.LaunchOptions
         {
         }
 
-        public Environment(string name = null, string value = null)
+        public Environment(string? name = null, string? value = null)
         {
             this.Name = name;
             this.Value = value;
@@ -259,7 +260,7 @@ namespace MICore.Json.LaunchOptions
         /// Otherwise only load symbols for libs that match.
         /// </summary>
         [JsonProperty("exceptionList", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string ExceptionList { get; set; }
+        public string? ExceptionList { get; set; }
 
         #endregion
 
@@ -269,7 +270,7 @@ namespace MICore.Json.LaunchOptions
         {
         }
 
-        public SymbolLoadInfo(bool? loadAll = null, string exceptionList = null)
+        public SymbolLoadInfo(bool? loadAll = null, string? exceptionList = null)
         {
             this.LoadAll = loadAll;
             this.ExceptionList = exceptionList;
@@ -344,19 +345,19 @@ namespace MICore.Json.LaunchOptions
         /// Command line arguments passed to the program.
         /// </summary>
         [JsonProperty("args", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<string> Args { get; private set; }
+        public List<string>? Args { get; private set; }
 
         /// <summary>
         /// The working directory of the target
         /// </summary>
         [JsonProperty("cwd", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Cwd { get; set; }
+        public string? Cwd { get; set; }
 
         /// <summary>
         /// If provided, this replaces the default commands used to launch a target with some other commands. For example, this can be "-target-attach" in order to attach to a target process. An empty command list replaces the launch commands with nothing, which can be useful if the debugger is being provided launch options as command line options. Example: "customLaunchSetupCommands": [ { "text": "target-run", "description": "run target", "ignoreFailures": false }].
         /// </summary>
         [JsonProperty("customLaunchSetupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<SetupCommand> CustomLaunchSetupCommands { get; private set; }
+        public List<SetupCommand>? CustomLaunchSetupCommands { get; private set; }
 
         /// <summary>
         /// The command to execute after the debugger is fully setup in order to cause the target process to run. Allowed values are "exec-run", "exec-continue", "None". The default value is "exec-run".
@@ -369,7 +370,7 @@ namespace MICore.Json.LaunchOptions
         /// Environment variables to add to the environment for the program. Example: [ { "name": "squid", "value": "clam" } ].
         /// </summary>
         [JsonProperty("environment", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<Environment> Environment { get; private set; }
+        public List<Environment>? Environment { get; private set; }
 
         /// <summary>
         /// Optional parameter. If true, the debugger should stop at the entrypoint of the target. If processId is passed, has no effect.
@@ -381,19 +382,19 @@ namespace MICore.Json.LaunchOptions
         /// Optional full path to debug server to launch. Defaults to null.
         /// </summary>
         [JsonProperty("debugServerPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string DebugServerPath { get; set; }
+        public string? DebugServerPath { get; set; }
 
         /// <summary>
         /// Optional debug server args. Defaults to null.
         /// </summary>
         [JsonProperty("debugServerArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string DebugServerArgs { get; set; }
+        public string? DebugServerArgs { get; set; }
 
         /// <summary>
         /// Optional server-started pattern to look for in the debug server output. Defaults to null.
         /// </summary>
         [JsonProperty("serverStarted", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string ServerStarted { get; set; }
+        public string? ServerStarted { get; set; }
 
         /// <summary>
         /// Optional time, in milliseconds, for the debugger to wait for the debugServer to start up. Default is 10000.
@@ -417,7 +418,7 @@ namespace MICore.Json.LaunchOptions
         /// Optional full path to a core dump file for the specified program. Defaults to null.
         /// </summary>
         [JsonProperty("coreDumpPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string CoreDumpPath { get; set; }
+        public string? CoreDumpPath { get; set; }
 
         /// <summary>
         /// If true, a console is launched for the debuggee. If false, no console is launched. Note this option is ignored in some cases for technical reasons.
@@ -453,35 +454,35 @@ namespace MICore.Json.LaunchOptions
 
         public LaunchOptions(
             string program,
-            List<string> args = null,
-            string type = null,
-            string targetArchitecture = null,
-            string cwd = null,
-            List<SetupCommand> setupCommands = null,
-            List<SetupCommand> postRemoteConnectCommands = null,
-            List<SetupCommand> customLaunchSetupCommands = null,
+            List<string>? args = null,
+            string? type = null,
+            string? targetArchitecture = null,
+            string? cwd = null,
+            List<SetupCommand>? setupCommands = null,
+            List<SetupCommand>? postRemoteConnectCommands = null,
+            List<SetupCommand>? customLaunchSetupCommands = null,
             LaunchCompleteCommand? launchCompleteCommand = null,
-            List<string> visualizerFile = null,
+            List<string>? visualizerFile = null,
             bool? showDisplayString = null,
-            List<Environment> environment = null,
-            string additionalSOLibSearchPath = null,
-            string MIMode = null,
-            string miDebuggerPath = null,
-            string miDebuggerArgs = null,
-            string miDebuggerServerAddress = null,
+            List<Environment>? environment = null,
+            string? additionalSOLibSearchPath = null,
+            string? MIMode = null,
+            string? miDebuggerPath = null,
+            string? miDebuggerArgs = null,
+            string? miDebuggerServerAddress = null,
             bool? useExtendedRemote = null,
             bool? stopAtEntry = null,
-            string debugServerPath = null,
-            string debugServerArgs = null,
-            string serverStarted = null,
+            string? debugServerPath = null,
+            string? debugServerArgs = null,
+            string? serverStarted = null,
             bool? filterStdout = null,
             bool? filterStderr = null,
             int? serverLaunchTimeout = null,
-            string coreDumpPath = null,
+            string? coreDumpPath = null,
             bool? externalConsole = null,
-            HardwareBreakpointInfo hardwareBreakpointInfo = null,
-            Dictionary<string, object> sourceFileMap = null,
-            PipeTransport pipeTransport = null,
+            HardwareBreakpointInfo? hardwareBreakpointInfo = null,
+            Dictionary<string, object>? sourceFileMap = null,
+            PipeTransport? pipeTransport = null,
             bool? stopAtConnect = null)
         {
             this.Program = program;
@@ -525,11 +526,11 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         private class LaunchCompleteCommandConverter : JsonConverter
         {
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
             {
                 if (objectType == typeof(LaunchCompleteCommand?) && reader.TokenType == JsonToken.String)
                 {
-                    String value = reader.Value.ToString();
+                    string value = reader.Value!.ToString();
                     if (value.Equals("exec-continue", StringComparison.Ordinal))
                     {
                         return MICore.LaunchCompleteCommand.ExecContinue;
@@ -546,8 +547,7 @@ namespace MICore.Json.LaunchOptions
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_InvalidLaunchCompleteCommandValue, reader.Value));
                 }
 
-                Debug.Fail(String.Format(CultureInfo.CurrentCulture, "Unexpected objectType '{0}' passed for launchCompleteCommand serialization.", objectType.ToString()));
-                return null;
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, "Unexpected objectType '{0}' passed for launchCompleteCommand serialization.", objectType.ToString()));
             }
 
             public override bool CanConvert(Type objectType)
@@ -555,7 +555,7 @@ namespace MICore.Json.LaunchOptions
                 return objectType == typeof(LaunchCompleteCommand?);
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -571,19 +571,19 @@ namespace MICore.Json.LaunchOptions
         /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is Windows and the field is defined in this configuration.
         /// </summary>
         [JsonProperty("windows", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public PipeTransportOptions Windows { get; private set; }
+        public PipeTransportOptions? Windows { get; private set; }
 
         /// <summary>
         /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is OSX and the field is defined in this configuration.
         /// </summary>
         [JsonProperty("osx", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public PipeTransportOptions OSX { get; private set; }
+        public PipeTransportOptions? OSX { get; private set; }
 
         /// <summary>
         /// When present, this tells the debugger override the PipeTransport's fields if the client's current platform is Linux and the field is defined in this configuration.
         /// </summary>
         [JsonProperty("linux", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public PipeTransportOptions Linux { get; private set; }
+        public PipeTransportOptions? Linux { get; private set; }
 
         #endregion
 
@@ -594,7 +594,7 @@ namespace MICore.Json.LaunchOptions
 
         }
 
-        public PipeTransport(PipeTransportOptions windows = null, PipeTransportOptions osx = null, PipeTransportOptions linux = null)
+        public PipeTransport(PipeTransportOptions? windows = null, PipeTransportOptions? osx = null, PipeTransportOptions? linux = null)
         {
             this.Windows = windows;
             this.OSX = osx;
@@ -613,37 +613,37 @@ namespace MICore.Json.LaunchOptions
         /// The fully qualified path to the working directory for the pipe program.
         /// </summary>
         [JsonProperty("pipeCwd", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string PipeCwd { get; set; }
+        public string? PipeCwd { get; set; }
 
         /// <summary>
         /// The fully qualified pipe command to execute.
         /// </summary>
         [JsonProperty("pipeProgram", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string PipeProgram { get; set; }
+        public string? PipeProgram { get; set; }
 
         /// <summary>
         /// Command line arguments passed to the pipe program to configure the connection.
         /// </summary>
         [JsonProperty("pipeArgs", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<string> PipeArgs { get; private set; }
+        public List<string>? PipeArgs { get; private set; }
 
         /// <summary>
         /// Command line arguments passed to the pipe program to execute a remote command.
         /// </summary>
         [JsonProperty("pipeCmd", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<string> PipeCmd { get; private set; }
+        public List<string>? PipeCmd { get; private set; }
 
         /// <summary>
         /// The full path to the debugger on the target machine, for example /usr/bin/gdb.
         /// </summary>
         [JsonProperty("debuggerPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string DebuggerPath { get; set; }
+        public string? DebuggerPath { get; set; }
 
         /// <summary>
         /// Environment variables passed to the pipe program.
         /// </summary>
         [JsonProperty("pipeEnv", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, string> PipeEnv { get; private set; }
+        public Dictionary<string, string?>? PipeEnv { get; private set; }
 
         /// <summary>
         /// Should arguments that contain characters that need to be quoted (example: spaces) be quoted? Defaults to 'true'. If set to false, the debugger command will no longer be automatically quoted.
@@ -658,10 +658,10 @@ namespace MICore.Json.LaunchOptions
         public PipeTransportOptions()
         {
             this.PipeArgs = new List<string>();
-            this.PipeEnv = new Dictionary<string, string>();
+            this.PipeEnv = new Dictionary<string, string?>();
         }
 
-        public PipeTransportOptions(string pipeCwd = null, string pipeProgram = null, List<string> pipeArgs = null, string debuggerPath = null, Dictionary<string, string> pipeEnv = null, bool? quoteArgs = null)
+        public PipeTransportOptions(string? pipeCwd = null, string? pipeProgram = null, List<string>? pipeArgs = null, string? debuggerPath = null, Dictionary<string, string?>? pipeEnv = null, bool? quoteArgs = null)
         {
             this.PipeCwd = pipeCwd;
             this.PipeProgram = pipeProgram;
@@ -682,13 +682,13 @@ namespace MICore.Json.LaunchOptions
         /// The debugger command to execute.
         /// </summary>
         [JsonProperty("text", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Text { get; set; }
+        public string? Text { get; set; }
 
         /// <summary>
         /// Optional description for the command.
         /// </summary>
         [JsonProperty("description", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// If true, failures from the command should be ignored. Default value is false.
@@ -704,7 +704,7 @@ namespace MICore.Json.LaunchOptions
         {
         }
 
-        public SetupCommand(string text = null, string description = null, bool? ignoreFailures = null)
+        public SetupCommand(string? text = null, string? description = null, bool? ignoreFailures = null)
         {
             this.Text = text;
             this.Description = description;
@@ -722,7 +722,7 @@ namespace MICore.Json.LaunchOptions
         /// The editor's path.
         /// </summary>
         [JsonProperty("editorPath", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string EditorPath { get; set; }
+        public string? EditorPath { get; set; }
 
         /// <summary>
         /// Use this source mapping for breakpoint binding? Default is true.
@@ -738,7 +738,7 @@ namespace MICore.Json.LaunchOptions
         {
         }
 
-        public SourceFileMapOptions(string editorPath = null, bool? useForBreakpoints = null)
+        public SourceFileMapOptions(string? editorPath = null, bool? useForBreakpoints = null)
         {
             this.EditorPath = editorPath;
             this.UseForBreakpoints = useForBreakpoints;
@@ -751,16 +751,16 @@ namespace MICore.Json.LaunchOptions
     {
         public static BaseOptions GetLaunchOrAttachOptions(JObject parsedJObject)
         {
-            BaseOptions baseOptions = null;
-            string requestType = parsedJObject["request"]?.Value<string>();
-            if (String.IsNullOrWhiteSpace(requestType))
+            BaseOptions? baseOptions = null;
+            string? requestType = parsedJObject["request"]?.Value<string>();
+            if (IsNullOrWhiteSpace(requestType))
             {
                 // If request isn't specified, see if we can determine what it is
-                if (!String.IsNullOrWhiteSpace(parsedJObject["processId"]?.Value<string>()))
+                if (!IsNullOrWhiteSpace(parsedJObject["processId"]?.Value<string>()))
                 {
                     requestType = "attach";
                 }
-                else if (!String.IsNullOrWhiteSpace(parsedJObject["program"]?.Value<string>()))
+                else if (!IsNullOrWhiteSpace(parsedJObject["program"]?.Value<string>()))
                 {
                     requestType = "launch";
                 }
@@ -782,6 +782,11 @@ namespace MICore.Json.LaunchOptions
                     break;
                 default:
                     throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "request"));
+            }
+
+            if (baseOptions is null)
+            {
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.CurrentCulture, MICoreResources.Error_BadRequiredAttribute, "request"));
             }
 
             return baseOptions;

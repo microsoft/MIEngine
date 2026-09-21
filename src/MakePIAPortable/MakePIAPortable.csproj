@@ -40,6 +40,11 @@
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
   </ItemGroup>
 
+  <!-- Ensure MakePIAPortableTool builds before this project -->
+  <ItemGroup Label="Project References">
+    <ProjectReference Include="..\tools\MakePIAPortableTool\MakePIAPortableTool.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
+
   <ItemGroup> 
     <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_InteropA)\lib\net472\Microsoft.VisualStudio.Debugger.InteropA.dll" />
     <MakePIAPortableFiles Include="$(PkgMicrosoft_VisualStudio_Debugger_Interop_10_0)\lib\net472\Microsoft.VisualStudio.Debugger.Interop.10.0.dll" />

@@ -80,8 +80,7 @@ namespace Microsoft.DebugEngineHost
         {
             lock (s_documentPositions)
             {
-                IDebugDocumentPosition2 documentPosition;
-                if (!s_documentPositions.TryGet((int)documentPositionId, out documentPosition))
+                if (!s_documentPositions.TryGet((int)documentPositionId, out IDebugDocumentPosition2? documentPosition))
                 {
                     throw new ArgumentOutOfRangeException(nameof(documentPositionId));
                 }
@@ -94,8 +93,7 @@ namespace Microsoft.DebugEngineHost
         {
             lock (s_functionPositions)
             {
-                IDebugFunctionPosition2 functionPosition;
-                if (!s_functionPositions.TryGet((int)functionPositionId, out functionPosition))
+                if (!s_functionPositions.TryGet((int)functionPositionId, out IDebugFunctionPosition2? functionPosition))
                 {
                     throw new ArgumentOutOfRangeException(nameof(functionPositionId));
                 }
@@ -134,8 +132,7 @@ namespace Microsoft.DebugEngineHost
         {
             lock (s_codeContexts)
             {
-                IDebugCodeContext2 codeContext;
-                if (!s_codeContexts.TryGet(contextId.ToInt32(), out codeContext))
+                if (!s_codeContexts.TryGet(contextId.ToInt32(), out IDebugCodeContext2? codeContext))
                 {
                     throw new ArgumentOutOfRangeException(nameof(contextId));
                 }

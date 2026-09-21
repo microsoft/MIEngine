@@ -20,7 +20,8 @@ namespace DebuggerTesting
             string debuggerAdapterPath,
             string miMode,
             SupportedArchitecture debuggeeArchitecture,
-            IDictionary<string, string> debuggerProperties)
+            IDictionary<string, string> debuggerProperties,
+            IDictionary<string, string> environmentVariables = null)
         {
             this.DebuggeeArchitecture = debuggeeArchitecture;
             this.DebuggerName = debuggerName;
@@ -30,6 +31,7 @@ namespace DebuggerTesting
             if (!string.IsNullOrWhiteSpace(miMode))
                 this.MIMode = miMode;
             this.Properties = debuggerProperties ?? new Dictionary<string, string>(StringComparer.Ordinal);
+            this.EnvironmentVariables = environmentVariables ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -118,6 +120,8 @@ namespace DebuggerTesting
         public string MIMode { get; private set; }
 
         public IDictionary<string, string> Properties { get; private set; }
+
+        public IDictionary<string, string> EnvironmentVariables { get; private set; }
 
         #endregion
     }

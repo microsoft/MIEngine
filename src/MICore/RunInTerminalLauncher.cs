@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 
 using Microsoft.DebugEngineHost;
@@ -13,9 +12,9 @@ namespace MICore
 {
     internal class RunInTerminalLauncher
     {
-        private string _title;
+        private readonly string _title;
 
-        private Dictionary<string, string> _environment;
+        private readonly Dictionary<string, string?> _environment;
 
         /// <summary>
         /// 
@@ -25,7 +24,7 @@ namespace MICore
         public RunInTerminalLauncher(string title, ReadOnlyCollection<EnvironmentEntry> envEntries)
         {
             _title = title;
-            _environment = new Dictionary<string, string>();
+            _environment = new Dictionary<string, string?>();
 
             if (envEntries != null && envEntries.Any())
             {
@@ -41,7 +40,7 @@ namespace MICore
         {
             if (HostRunInTerminal.IsRunInTerminalAvailable())
             {
-                HostRunInTerminal.RunInTerminal(_title, string.Empty, useExternalConsole, cmdArgs, new ReadOnlyDictionary<string, string>(_environment), launchCompleteAction, launchFailureAction);
+                HostRunInTerminal.RunInTerminal(_title, string.Empty, useExternalConsole, cmdArgs, new ReadOnlyDictionary<string, string?>(_environment), launchCompleteAction, launchFailureAction);
             }
         }
     }

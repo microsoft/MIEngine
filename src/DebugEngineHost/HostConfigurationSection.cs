@@ -30,7 +30,7 @@ namespace Microsoft.DebugEngineHost
         /// </summary>
         /// <param name="valueName">Name of the value to obtain</param>
         /// <returns>[Optional] null if the value doesn't exist, otherwise the value</returns>
-        public object GetValue(string valueName)
+        public object? GetValue(string valueName)
         {
             return _key.GetValue(valueName);
         }

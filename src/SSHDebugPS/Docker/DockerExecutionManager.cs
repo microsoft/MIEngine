@@ -52,18 +52,27 @@ namespace Microsoft.SSHDebugPS.Docker
         private PipeAsyncCommand _currentCommand;
 
         private Connection _outerConnection = null;
-        private DockerContainerTransportSettings _baseSettings;
+        private ContainerTargetTransportSettings _baseSettings;
         private readonly ManualResetEvent _commandCompleteEvent = new ManualResetEvent(false);
 
-        public DockerExecutionManager(DockerContainerTransportSettings baseSettings, Connection outerConnection)
+        public DockerExecutionManager(ContainerTargetTransportSettings baseSettings, Connection outerConnection)
         {
             _baseSettings = baseSettings;
             _outerConnection = outerConnection;
         }
 
+        protected virtual ContainerExecSettings CreateExecSettings(ContainerTargetTransportSettings baseSettings, string command, bool runInShell, bool makeInteractive)
+        {
+            if (!(baseSettings is DockerContainerTransportSettings dockerSettings))
+            {
+                throw new ArgumentException($"Expected {nameof(DockerContainerTransportSettings)} but got {baseSettings.GetType().Name}", nameof(baseSettings));
+            }
+            return new DockerExecSettings(dockerSettings, command, runInShell, makeInteractive);
+        }
+
         private ICommandRunner GetExecCommandRunner(string command, bool runInShell, bool makeInteractive)
         {
-            var execSettings = new DockerExecSettings(_baseSettings, command, runInShell, makeInteractive);
+            var execSettings = CreateExecSettings(_baseSettings, command, runInShell, makeInteractive);
 
             if (_outerConnection == null)
             {

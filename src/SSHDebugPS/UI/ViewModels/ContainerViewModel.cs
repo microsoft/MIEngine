@@ -131,9 +131,9 @@ namespace Microsoft.SSHDebugPS.UI
     }
 
     public class DockerContainerViewModel
-        : ContainerViewModel<DockerContainerInstance>
+        : ContainerViewModel<ContainerInstance>
     {
-        public DockerContainerViewModel(DockerContainerInstance instance)
+        public DockerContainerViewModel(ContainerInstance instance)
             : base(instance)
         { }
 

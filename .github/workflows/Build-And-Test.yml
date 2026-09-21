@@ -22,29 +22,29 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
 
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: 8.0.x
 
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
 
     - name: Setup NuGet.exe for use with actions
-      uses: NuGet/setup-nuget@v2
+      uses: NuGet/setup-nuget@fd55a6f3b34392fa83fde1454582407d8c714123 # v4.0
 
     - name: Build MIDebugEngine
       run: |
-        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -c $env:Configuration -t vs
+        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -c $env:Configuration
       env:
         Configuration: ${{ matrix.configuration }}
 
     - name: Setup VSTest.console.exe
-      uses: darenm/Setup-VSTest@v1.3
+      uses: darenm/Setup-VSTest@3a16d909a1f3bbc65b52f8270d475d905e7d3e44 # v1.3
 
     - name: Run VS Extension tests
       run: vstest.console.exe ${{ github.workspace }}\bin\${{ matrix.configuration }}\MICoreUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\JDbgUnitTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\SSHDebugTests.dll ${{ github.workspace }}\bin\${{ matrix.configuration }}\MIDebugEngineUnitTests.dll
@@ -54,31 +54,31 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
 
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: 8.0.x
 
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3.0.0
 
     - name: Setup NuGet.exe for use with actions
-      uses: NuGet/setup-nuget@v2
+      uses: NuGet/setup-nuget@fd55a6f3b34392fa83fde1454582407d8c714123 # v4.0
 
     - name: Build MIDebugEngine
       run: |
-        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd -t vscode
+        ${{ github.workspace }}/eng/Scripts/CI-Build.cmd
 
     - name: Copy Test Configuration
       run: |
         copy ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\TestConfigurations\config_msys_gdb.xml ${{ github.workspace }}\bin\DebugAdapterProtocolTests\Debug\CppTests\config.xml
 
     - name: Setup MSYS2
-      uses: msys2/setup-msys2@v2
+      uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
       with:
         msystem: MINGW64
         path-type: inherit
@@ -102,7 +102,7 @@ jobs:
         dotnet test $CppTestsPath --logger "trx;LogFileName=$ResultsPath"
 
     - name: 'Upload Test Results'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: ${{ always() }}
       with:
         name: win_msys2_x64_results
@@ -112,12 +112,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
 
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: 8.0.x
 
@@ -142,7 +142,7 @@ jobs:
         ${{ github.workspace }}/eng/Scripts/CI-Test.sh
 
     - name: 'Upload Test Results'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: ${{ always() }}
       with:
         name: linux_x64_results
@@ -152,12 +152,12 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
 
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: 8.0.x
 
@@ -173,7 +173,7 @@ jobs:
     #    ${{ github.workspace }}/eng/Scripts/CI-Test.sh
 
     - name: 'Upload Test Results'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: ${{ always() }}
       with:
         name: osx_x64_results
