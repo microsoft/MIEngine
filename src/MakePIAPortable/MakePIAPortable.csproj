@@ -12,6 +12,7 @@
     <OutputType>Exe</OutputType>
     <PIAOutput>$(MIDefaultOutputPath)PIA\drop\</PIAOutput>
     <OutputPath>$(MIDefaultOutputPath)PIA\</OutputPath> <!-- Required by FilesToSign -->
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
 
   <ItemGroup Label="ILDasm NuGet Package">
