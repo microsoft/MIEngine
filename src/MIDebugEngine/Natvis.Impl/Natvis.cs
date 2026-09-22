@@ -1289,7 +1289,7 @@ namespace Microsoft.MIDebugEngine.Natvis
                             exprValue = CleanUtf16StringValue(exprValue);
                         else if (spec == "sb")
                             exprValue = CleanAsciiStringValue(exprValue);
-                        if (hasNa)
+                        else if (hasNa)
                         {
                             exprValue = VariableInformation.StripLeadingAddress(exprValue);
                         }

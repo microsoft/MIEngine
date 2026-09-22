@@ -45,6 +45,39 @@ namespace MIDebugEngineUnitTests
             Assert.True(hasNa);
         }
 
+        [Fact]
+        public void ExtractFormatSpecifier_HasTemplateParameter()
+        {
+            // Template parameters should be detected but not substituted by ExtractFormatSpecifier
+            // (they're substituted by ReplaceNamesInExpression)
+            string spec = Natvis.ExtractFormatSpecifier("myVector,sub");
+            Assert.Equal("sub", spec);
+        }
+
+        [Fact]
+        public void ExtractFormatSpecifier_WithNaModifier_HasNaIsTrue()
+        {
+            string spec = Natvis.ExtractFormatSpecifier("someExpr,na", out bool hasNa);
+            Assert.Equal("", spec);
+            Assert.True(hasNa);
+        }
+
+        [Fact]
+        public void ExtractFormatSpecifier_WithNaAndFormat_HasNaIsTrueAndSpecReturned()
+        {
+            string spec = Natvis.ExtractFormatSpecifier("myString,subna", out bool hasNa);
+            Assert.Equal("sub", spec);
+            Assert.True(hasNa);
+        }
+
+        [Fact]
+        public void ExtractFormatSpecifier_WithoutNaModifier_HasNaIsFalse()
+        {
+            string spec = Natvis.ExtractFormatSpecifier("myString,sub", out bool hasNa);
+            Assert.Equal("sub", spec);
+            Assert.False(hasNa);
+        }
+
         // -- CleanUtf16StringValue --------------------------------------------
 
         [Fact]
