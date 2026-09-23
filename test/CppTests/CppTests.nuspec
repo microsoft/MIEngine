@@ -14,10 +14,10 @@
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
   </metadata>
   <files>
-    <file src="$binRoot$CppTests.dll" target="lib\net8.0" />
-    <file src="$binRoot$CppTests.pdb" target="lib\net8.0" />
-    <file src="$binRoot$DebuggerTesting.dll" target="lib\net8.0" />
-    <file src="$binRoot$DebuggerTesting.pdb" target="lib\net8.0" />
+    <file src="$binRoot$CppTests.dll" target="lib\net10.0" />
+    <file src="$binRoot$CppTests.pdb" target="lib\net10.0" />
+    <file src="$binRoot$DebuggerTesting.dll" target="lib\net10.0" />
+    <file src="$binRoot$DebuggerTesting.pdb" target="lib\net10.0" />
     <file src="$binRoot$contentFiles\**\*" target="contentFiles" />
   </files>
 </package>

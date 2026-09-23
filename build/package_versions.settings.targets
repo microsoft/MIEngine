@@ -6,11 +6,11 @@
         <Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version>17.14.10225.1</Microsoft_VisualStudio_Shared_VSCodeDebugProtocol_Version>
 
         <!-- Test Packages -->
-        <Microsoft_NET_Test_Sdk_Version>16.7.1</Microsoft_NET_Test_Sdk_Version>
+        <Microsoft_NET_Test_Sdk_Version>17.11.1</Microsoft_NET_Test_Sdk_Version>
         <xunit_Version>2.9.2</xunit_Version>
         <xunit_runner_visualstudio_Version>3.0.0</xunit_runner_visualstudio_Version>
-        <coverlet_collector_Version>1.3.0</coverlet_collector_Version>
-        <MSTest_TestFramework_Version>2.1.2</MSTest_TestFramework_Version>
+        <coverlet_collector_Version>6.0.2</coverlet_collector_Version>
+        <MSTest_TestFramework_Version>3.6.3</MSTest_TestFramework_Version>
 
         <!-- Build Dependencies -->
         <Microsoft_VisualStudioEng_MicroBuild_Core_Version>0.4.1</Microsoft_VisualStudioEng_MicroBuild_Core_Version>
@@ -38,6 +38,6 @@
 
         <!-- For Component Governance -->
         <Microsoft_IO_Redist_Version>6.0.1</Microsoft_IO_Redist_Version>
-        <System_Text_Json_Version>8.0.5</System_Text_Json_Version>
+        <System_Text_Json_Version>10.0.0</System_Text_Json_Version>
     </PropertyGroup>
 </Project>
