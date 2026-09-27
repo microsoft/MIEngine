@@ -87,5 +87,8 @@ int main(int argc, char** argv)
     inactiveList.Add(100);
     inactiveList.Add(200);
 
+    ContainerAlias aliasedContainer(9, 4);
+    DerivedContainer derivedContainer(7, 6);
+
     return 0;
 }
