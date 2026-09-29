@@ -35,6 +35,7 @@ namespace Microsoft.MIDebugEngine
         VariableInformation FindChildByName(string name);
         string EvalDependentExpression(string expr);
         bool IsVisualized { get; }
+        string NatvisView { get; }
         bool IsReadOnly();
         bool IsNullPointer();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
@@ -375,6 +376,7 @@ namespace Microsoft.MIDebugEngine
         private DeferedFormatExpression _deferedFormatExpression;
         private IVariableInformation _parent;
         private string _format;
+        private string _natvisView;  // view name from a "view(name)" format specifier
         private string _strippedName;  // "Name" stripped of format specifiers
         private string _fullname;
 
@@ -391,6 +393,8 @@ namespace Microsoft.MIDebugEngine
         };
 
         public NodeType VariableNodeType { get; private set; }
+
+        public string NatvisView { get { return _natvisView; } }
 
         private static readonly string[] s_stringTypes = new string[] {
                                  @"^char *\*$",
@@ -416,6 +420,17 @@ namespace Microsoft.MIDebugEngine
 
             // Find the format specifier expression
             string expFS = exp.Substring(lastComma + 1).Trim();
+
+            // A view() specifier (e.g. "obj,view(simple)") selects a named natvis view; it is
+            // consumed by natvis formatting/expansion rather than the debugger. Handle it before
+            // the modifier stripping below, which could corrupt a view name that contains one of
+            // the modifier letter pairs (e.g. "view(second)").
+            string viewName = Natvis.Natvis.ExtractViewName(expFS);
+            if (viewName != null)
+            {
+                _natvisView = viewName;
+                return exp.Substring(0, lastComma);
+            }
 
             // Strip off modifiers that may be included together with another format specifier, e.g. 'nvoXb' is a valid format specifier, but we only care about the 'Xb' part
             // This is not quite the right fix -- really the below switch statement should be a series of if statements. But since none of the supported format specifiers

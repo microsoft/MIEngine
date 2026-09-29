@@ -78,6 +78,14 @@ namespace DebuggerTesting.OpenDebug.Extensions
         string Evaluate(string expression, EvaluateContext context = EvaluateContext.None);
 
         /// <summary>
+        /// Evaluates an expression on this frame and returns the child variables of the result
+        /// (the rows shown when the result is expanded), keyed by name; empty when the result has
+        /// no children. Unlike <see cref="Evaluate"/>, this follows the result's variablesReference,
+        /// so it can inspect a view-filtered expansion such as "expr,view(name)".
+        /// </summary>
+        IDictionary<string, IVariableInspector> EvaluateChildren(string expression, EvaluateContext context = EvaluateContext.None);
+
+        /// <summary>
         /// Gets the source associated with this frame
         /// </summary>
         string GetSourceContent();
