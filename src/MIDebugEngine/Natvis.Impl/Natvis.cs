@@ -1839,8 +1839,8 @@ namespace Microsoft.MIDebugEngine.Natvis
             {
                 string paramName = parameters[i].Name;
                 if (string.IsNullOrEmpty(paramName)) continue;
-                // whole-word replacement
-                result = Regex.Replace(result, @"\b" + Regex.Escape(paramName) + @"\b", args[i]);
+                // whole-word replacement, skipping member and scope-qualified uses
+                result = ReplaceFreeIdentifier(result, paramName, args[i]);
             }
             return result;
         }
@@ -2354,7 +2354,8 @@ namespace Microsoft.MIDebugEngine.Natvis
 
         /// <summary>
         /// Substitutes natvis local variable names in <paramref name="expression"/> with their
-        /// current expression strings, using word-boundary matching to avoid partial replacements.
+        /// current expression strings. Only free identifiers are replaced (see
+        /// <see cref="ReplaceFreeIdentifier"/>), so partial names and member accesses are left alone.
         /// Each substituted value is wrapped in parentheses to preserve operator precedence.
         /// </summary>
         internal static string SubstituteLocalVars(string expression, Dictionary<string, string> localVars)
@@ -2363,12 +2364,22 @@ namespace Microsoft.MIDebugEngine.Natvis
                 return expression;
             foreach (var kv in localVars)
             {
-                expression = Regex.Replace(
-                    expression,
-                    @"\b" + Regex.Escape(kv.Key) + @"\b",
-                    "(" + kv.Value + ")");
+                expression = ReplaceFreeIdentifier(expression, kv.Key, "(" + kv.Value + ")");
             }
             return expression;
+        }
+
+        /// <summary>
+        /// Replaces every occurrence of <paramref name="name"/> in <paramref name="expression"/>
+        /// that is a free identifier: a whole word that is not a member access ("x.name",
+        /// "x->name"), not a scope-qualified name ("T::name"), and not part of a longer
+        /// identifier or a "$name" pseudo-variable. A plain "\b" word boundary would also match
+        /// "e[i].i" where the member "i" happens to share the loop variable's name.
+        /// </summary>
+        internal static string ReplaceFreeIdentifier(string expression, string name, string replacement)
+        {
+            string pattern = @"(?<![\w$]|(?:\.|->|::)\s*)" + Regex.Escape(name) + @"(?![\w$])";
+            return Regex.Replace(expression, pattern, replacement.Replace("$", "$$"));
         }
 
         /// <summary>

@@ -285,6 +285,53 @@ namespace MIDebugEngineUnitTests
             Assert.Equal("(m_head)->val", Natvis.SubstituteLocalVars("ptr->val", vars));
         }
 
+        [Fact]
+        public void SubstituteLocalVars_MemberAccessWithSameName_NotReplaced()
+        {
+            // Reproducer from PR #1580 review: loop variable "i" collides with member Entry::i.
+            // Only the free "i" (the array index) must be substituted, not the ".i" member.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            Assert.Equal("e[(0)].i", Natvis.SubstituteLocalVars("e[i].i", vars));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_ArrowMemberWithSameName_NotReplaced()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            Assert.Equal("p[(0)]->i + (0)", Natvis.SubstituteLocalVars("p[i]->i + i", vars));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_ScopeQualifiedWithSameName_NotReplaced()
+        {
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "3" };
+            Assert.Equal("Foo::i + (3)", Natvis.SubstituteLocalVars("Foo::i + i", vars));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_MemberWithWhitespace_NotReplaced()
+        {
+            // Whitespace between the operator and the member name must not defeat the check.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "0" };
+            Assert.Equal("a. i + b -> i + T:: i + (0)", Natvis.SubstituteLocalVars("a. i + b -> i + T:: i + i", vars));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_DollarPseudoVariable_NotReplaced()
+        {
+            // "$i" is the natvis element-index pseudo-variable, not the local "i".
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "3" };
+            Assert.Equal("$i + (3)", Natvis.SubstituteLocalVars("$i + i", vars));
+        }
+
+        [Fact]
+        public void SubstituteLocalVars_ValueContainingDollar_InsertedLiterally()
+        {
+            // A "$" in the substituted value must not be interpreted as a regex group reference.
+            var vars = new System.Collections.Generic.Dictionary<string, string> { ["i"] = "$1" };
+            Assert.Equal("($1) + 1", Natvis.SubstituteLocalVars("i + 1", vars));
+        }
+
         // -- ApplyExecToLocalVars --------------------------------------------
 
         [Fact]
