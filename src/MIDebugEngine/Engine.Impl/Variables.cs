@@ -5,6 +5,7 @@ using MICore;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Debugger.Interop.DAP;
 using System;
+using Microsoft.DebugEngineHost;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -91,6 +92,18 @@ namespace Microsoft.MIDebugEngine
         public bool IsPreformatted { get; set; }
 
         static readonly Lazy<Regex> s_addressPattern = new Lazy<Regex>(() => new Regex(@"^(0x[0-9a-fA-F]+)\b"));
+
+        static readonly Regex s_naPattern = new Regex(@"^0x[0-9a-fA-F]+\s+(.)");
+
+        internal static string StripLeadingAddress(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+
+            return s_naPattern.Replace(value, "$1");
+        }
 
         public string Address()
         {
@@ -238,7 +251,7 @@ namespace Microsoft.MIDebugEngine
             : this(ctx, engine, thread)
         {
             // strip off formatting string
-            _strippedName = ProcessFormatSpecifiers(expr, out _format);
+            _strippedName = ProcessFormatSpecifiers(expr, out _format, out _formatHasNa);
             Name = displayName;
             IsParameter = isParameter;
             _parent = null;
@@ -250,7 +263,7 @@ namespace Microsoft.MIDebugEngine
             : this(parent.ThreadContext, engine, parent.Client)
         {
             // strip off formatting string
-            _strippedName = ProcessFormatSpecifiers(expr, out _format);
+            _strippedName = ProcessFormatSpecifiers(expr, out _format, out _formatHasNa);
             Name = displayName ?? expr;
             _parent = parent;
             VariableNodeType = NodeType.Synthetic;
@@ -261,7 +274,7 @@ namespace Microsoft.MIDebugEngine
             : this(parent._ctx, parent._engine, parent.Client)
         {
             // strip off formatting string
-            _strippedName = ProcessFormatSpecifiers(expr, out _format);
+            _strippedName = ProcessFormatSpecifiers(expr, out _format, out _formatHasNa);
             Name = expr;
             VariableNodeType = NodeType.Root;
         }
@@ -272,6 +285,12 @@ namespace Microsoft.MIDebugEngine
         {
             TypeName = results.TryFindString("type");
             Value = results.TryFindString("value");
+            _formatHasNa = parent._formatHasNa;
+            if (_formatHasNa)
+            {
+                Value = StripLeadingAddress(Value);
+            }
+
             Name = name ?? results.FindString("exp");
             if (results.Contains("dynamic"))
             {
@@ -375,6 +394,9 @@ namespace Microsoft.MIDebugEngine
         private DeferedFormatExpression _deferedFormatExpression;
         private IVariableInformation _parent;
         private string _format;
+        // Indicates the original format specifier included the natvis "na" modifier
+        // (used to decide whether to strip MI's leading address prefix from string values)
+        private bool _formatHasNa = false;
         private string _strippedName;  // "Name" stripped of format specifiers
         private string _fullname;
 
@@ -401,8 +423,9 @@ namespace Microsoft.MIDebugEngine
 
         private static Regex s_isFunction = new Regex(@".+\(.*\).*");
 
-        private string ProcessFormatSpecifiers(string exp, out string formatSpecifier)
+        private string ProcessFormatSpecifiers(string exp, out string formatSpecifier, out bool formatNa)
         {
+            formatNa = false;
             formatSpecifier = null; // will be used with -var-set-format
 
             if (EngineUtils.IsConsoleExecCmd(exp, out string _, out string _))
@@ -416,6 +439,9 @@ namespace Microsoft.MIDebugEngine
 
             // Find the format specifier expression
             string expFS = exp.Substring(lastComma + 1).Trim();
+            // Detect whether the natvis 'na' modifier is present in the original format specifier.
+            // We must detect this before we strip modifiers below.
+            formatNa = expFS.IndexOf("na", StringComparison.Ordinal) >= 0;
 
             // Strip off modifiers that may be included together with another format specifier, e.g. 'nvoXb' is a valid format specifier, but we only care about the 'Xb' part
             // This is not quite the right fix -- really the below switch statement should be a series of if statements. But since none of the supported format specifiers
@@ -698,6 +724,10 @@ namespace Microsoft.MIDebugEngine
                             _attribsFetched = true;
                         }
                         Value = results.TryFindString("value");
+                        if (_formatHasNa)
+                        {
+                            Value = StripLeadingAddress(Value);
+                        }
                         if ((string.IsNullOrEmpty(Value) || _format != null) && !string.IsNullOrEmpty(_internalName))
                         {
                             if (_format != null)
@@ -711,6 +741,10 @@ namespace Microsoft.MIDebugEngine
                                 if (results.ResultClass == ResultClass.done)
                                 {
                                     Value = results.FindString("value");
+                                    if (_formatHasNa)
+                                    {
+                                        Value = StripLeadingAddress(Value);
+                                    }
                                 }
                                 else if (results.ResultClass == ResultClass.error)
                                 {
