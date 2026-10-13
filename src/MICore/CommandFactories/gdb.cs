@@ -47,6 +47,26 @@ namespace MICore
             return true;
         }
 
+        public override bool SupportsMultipleInferiors => true;
+
+        public override async Task<bool> SelectThread(int threadId)
+        {
+            ExclusiveLockToken lockToken = await _debugger.CommandLock.AquireExclusive();
+            try
+            {
+                // Force '-thread-select' to be sent even if 'threadId' is the thread we believe is already
+                // current: this is called precisely when gdb's current thread has changed underneath us.
+                _currentThreadId = 0;
+                await ThreadSelect(threadId, lockToken);
+            }
+            finally
+            {
+                lockToken.Close();
+            }
+
+            return true;
+        }
+
         public override bool AllowCommandsWhileRunning()
         {
             return false;
