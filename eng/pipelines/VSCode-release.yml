@@ -20,11 +20,11 @@ extends:
     settings:
       networkIsolationPolicy: Permissive,CFSClean,CFSClean2,CFSClean3
     pool:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: VSEng-MicroBuildVSStable
       os: windows
     sdl:
       sourceAnalysisPool:
-        name: VSEngSS-MicroBuild2022-1ES
+        name: VSEng-MicroBuildVSStable
         os: windows 
     stages:
     - stage: Windows
@@ -57,7 +57,7 @@ extends:
     - stage: OSX_ESRPSign
       dependsOn: [OSX_CodeSign]
       jobs:
-      - template: /eng/pipelines/jobs/VSEngSS-MicroBuild2022-1ES.job.yml@self
+      - template: /eng/pipelines/jobs/VSEng-MicroBuildVSStable.job.yml@self
         parameters:
           DisplayName: 'OSX Sign/Harden'
           JobTemplate:
