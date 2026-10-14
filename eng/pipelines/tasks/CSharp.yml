@@ -6,6 +6,6 @@ steps:
     msBuildVersion: 17.0
     msBuildArchitecture: amd64
     setupCommandLine: |
-      "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsMSBuildCmd.bat"
+      "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\Common7\Tools\VsMSBuildCmd.bat"
     msBuildCommandline: |
       msbuild $(Build.SourcesDirectory)\src\MIDebugEngine.sln /p:Platform="Any CPU" /p:Configuration="Release"
