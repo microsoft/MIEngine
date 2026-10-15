@@ -169,6 +169,16 @@ namespace DebuggerTesting.OpenDebug.Extensions
             return response.body.result;
         }
 
+        public IDictionary<string, IVariableInspector> EvaluateChildren(string expression, EvaluateContext context = EvaluateContext.None)
+        {
+            this.VerifyNotDisposed();
+            EvaluateResponseValue response = this.DebuggerRunner.RunCommand(new EvaluateCommand(expression, this.Id, context));
+            int? childReference = response.body.variablesReference;
+            if (childReference == null || childReference == 0)
+                return new Dictionary<string, IVariableInspector>();
+            return VariableInspector.GetChildVariables(this.DebuggerRunner, childReference.Value);
+        }
+
         public string GetSourceContent()
         {
             this.VerifyNotDisposed();
