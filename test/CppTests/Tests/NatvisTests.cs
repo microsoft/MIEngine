@@ -38,8 +38,8 @@ namespace CppTests.Tests
         private const string NatvisSourceName = "main.cpp";
 
         // These line numbers will need to change if src/natvis/main.cpp changes
-        private const int SimpleClassAssignmentLine = 66;
-        private const int ReturnSourceLine = 90;
+        private const int SimpleClassAssignmentLine = 87;
+        private const int ReturnSourceLine = 125;
 
         [Theory]
         [RequiresTestSettings]
@@ -713,6 +713,126 @@ namespace CppTests.Tests
                     Assert.Contains("active=false", inactiveList.Value);
                     Assert.Equal("2", inactiveList.GetVariable("Count").Value);
                     Assert.False(inactiveList.Variables.ContainsKey("[0]"), "inactiveList should not show indexed children when condition is false");
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestCustomListItems(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks that a <CustomListItems> visualizer expands via its <Loop>/<Item>/<Exec> body.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying <CustomListItems> walks the list via its <Exec> loop body");
+                    var customList = currentFrame.GetVariable("customList");
+                    Assert.Equal("3", customList.GetVariable("Count").Value);
+
+                    // The <Exec>node = node->next</Exec> step must advance every iteration, so all
+                    // three nodes appear as distinct, in-order children [0]..[2].
+                    Assert.Equal("10", customList.GetVariable("[0]").Value);
+                    Assert.Equal("20", customList.GetVariable("[1]").Value);
+                    Assert.Equal("30", customList.GetVariable("[2]").Value);
+
+                    this.Comment("Verifying a 500-element list pages correctly (pointer loop variables are stored compactly, so the walk stays evaluable)");
+                    var customList500 = currentFrame.GetVariable("customList500");
+                    Assert.Equal("500", customList500.GetVariable("Count").Value);
+                    Assert.Equal("0", customList500.GetVariable("[0]").Value);
+                    Assert.Equal("49", customList500.GetVariable("[49]").Value);
+                    var more = customList500.GetVariable("[More...]");
+                    Assert.Equal("50", more.GetVariable("[50]").Value);
+                    Assert.Equal("99", more.GetVariable("[99]").Value);
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestViewFiltering(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks that IncludeView/ExcludeView filter the DisplayString and Expand items, and that a ',view(name)' specifier in a natvis expression propagates into the expansion.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Default view: IncludeView=\"simple\" is skipped everywhere.");
+                    // DisplayString: the IncludeView="simple" line is skipped, so the plain one is used.
+                    var vo = currentFrame.GetVariable("vo");
+                    Assert.Equal("full 1 2 3", vo.Value);
+                    // Expand: X (untagged) and Y (ExcludeView="simple", inactive here) show; Z (IncludeView="simple") is hidden.
+                    Assert.True(vo.Variables.ContainsKey("X"), "X (untagged) should show in the default view");
+                    Assert.True(vo.Variables.ContainsKey("Y"), "Y (ExcludeView=simple) should show outside the simple view");
+                    Assert.False(vo.Variables.ContainsKey("Z"), "Z (IncludeView=simple) should be hidden outside the simple view");
+                    Assert.Equal("1", vo.GetVariable("X").Value);
+                    Assert.Equal("2", vo.GetVariable("Y").Value);
+
+                    this.Comment("A DisplayString embedding {inner,view(simple)} renders the inner object's IncludeView=\"simple\" DisplayString.");
+                    var holder = currentFrame.GetVariable("holder");
+                    Assert.Equal("holder compact 1", holder.Value);
+
+                    this.Comment("<ExpandedItem>inner,view(simple)</ExpandedItem> propagates the view: X and Z show, Y (ExcludeView=simple) is filtered out.");
+                    Assert.True(holder.Variables.ContainsKey("X"), "X (untagged) should show in the simple view");
+                    Assert.True(holder.Variables.ContainsKey("Z"), "Z (IncludeView=simple) should show in the simple view");
+                    Assert.False(holder.Variables.ContainsKey("Y"), "Y (ExcludeView=simple) should be hidden in the simple view");
+                    Assert.Equal("1", holder.GetVariable("X").Value);
+                    Assert.Equal("3", holder.GetVariable("Z").Value);
+
+                    this.Comment("A ',view(simple)' specifier typed on a watch expression selects the IncludeView DisplayString.");
+                    Assert.Equal("compact 1", currentFrame.Evaluate("vo,view(simple)", EvaluateContext.Watch));
+
+                    this.Comment("Watch ',view(simple)' expansion: X and Z show, Y (ExcludeView=simple) is filtered out.");
+                    IDictionary<string, IVariableInspector> watchItems = currentFrame.EvaluateChildren("vo,view(simple)", EvaluateContext.Watch);
+                    Assert.True(watchItems.ContainsKey("X"), "X (untagged) should show in the simple view");
+                    Assert.True(watchItems.ContainsKey("Z"), "Z (IncludeView=simple) should show in the simple view");
+                    Assert.False(watchItems.ContainsKey("Y"), "Y (ExcludeView=simple) should be hidden in the simple view");
+                    Assert.Equal("1", watchItems["X"].Value);
+                    Assert.Equal("3", watchItems["Z"].Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();

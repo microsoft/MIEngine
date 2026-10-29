@@ -11,6 +11,9 @@ namespace DebuggerTesting.OpenDebug.Commands.Responses
         {
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string result;
+
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public int? variablesReference;
         }
 
         public Body body = new Body();

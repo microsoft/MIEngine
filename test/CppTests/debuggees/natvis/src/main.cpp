@@ -7,6 +7,7 @@
 #include "SimpleTemplated.h"
 #include "DataPoint.h"
 #include "ConditionalLinkedList.h"
+#include "CustomListContainer.h"
 
 class SimpleDisplayObject
 {
@@ -28,6 +29,26 @@ public:
     int a;
     int b;
     ShowRawViewObject() : a(30), b(40) {}
+};
+
+// Visualized with IncludeView/ExcludeView on both the DisplayString and the Expand items,
+// so a ",view(simple)" specifier changes the summary and which rows are shown.
+class ViewObject
+{
+public:
+    int x;
+    int y;
+    int z;
+    ViewObject(int xVal, int yVal, int zVal) : x(xVal), y(yVal), z(zVal) {}
+};
+
+// Invokes the "simple" view from inside the natvis: {inner,view(simple)} in the
+// DisplayString and <ExpandedItem>inner,view(simple)</ExpandedItem> in the Expand.
+class ViewHolder
+{
+public:
+    ViewObject inner;
+    ViewHolder() : inner(1, 2, 3) {}
 };
 
 int main(int argc, char** argv)
@@ -86,6 +107,20 @@ int main(int argc, char** argv)
     ConditionalLinkedList inactiveList(false);
     inactiveList.Add(100);
     inactiveList.Add(200);
+
+    CustomListContainer customList;
+    customList.Append(10);
+    customList.Append(20);
+    customList.Append(30);
+
+    CustomListContainer customList500;
+    for (int i = 0; i < 500; i++)
+    {
+        customList500.Append(i);
+    }
+
+    ViewObject vo(1, 2, 3);
+    ViewHolder holder;
 
     return 0;
 }

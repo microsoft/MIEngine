@@ -135,4 +135,37 @@
     </Expand>
   </Type>
 
+  <Type Name="ViewObject">
+    <DisplayString IncludeView="simple">compact {x}</DisplayString>
+    <DisplayString>full {x} {y} {z}</DisplayString>
+    <Expand>
+      <Item Name="X">x</Item>
+      <Item Name="Y" ExcludeView="simple">y</Item>
+      <Item Name="Z" IncludeView="simple">z</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="ViewHolder">
+    <DisplayString>holder {inner,view(simple)}</DisplayString>
+    <Expand>
+      <ExpandedItem>inner,view(simple)</ExpandedItem>
+    </Expand>
+  </Type>
+
+  <Type Name="CustomListContainer">
+    <DisplayString>{{ size={count} }}</DisplayString>
+    <Expand>
+      <Item Name="Count">count</Item>
+      <CustomListItems>
+        <Variable Name="node" InitialValue="head" />
+        <Size>count</Size>
+        <Loop>
+          <Break Condition="node == 0" />
+          <Item>node->value</Item>
+          <Exec>node = node->next</Exec>
+        </Loop>
+      </CustomListItems>
+    </Expand>
+  </Type>
+
 </AutoVisualizer>
