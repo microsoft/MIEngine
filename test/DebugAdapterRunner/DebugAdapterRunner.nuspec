@@ -18,7 +18,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="$binRoot$dar.dll" target="lib\net8.0" />
-    <file src="$binRoot$dar.pdb" target="lib\net8.0" />
+    <file src="$binRoot$dar.dll" target="lib\net10.0" />
+    <file src="$binRoot$dar.pdb" target="lib\net10.0" />
   </files>
 </package>
