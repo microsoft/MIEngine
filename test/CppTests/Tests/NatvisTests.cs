@@ -39,7 +39,7 @@ namespace CppTests.Tests
 
         // These line numbers will need to change if src/natvis/main.cpp changes
         private const int SimpleClassAssignmentLine = 66;
-        private const int ReturnSourceLine = 90;
+        private const int ReturnSourceLine = 93;
 
         [Theory]
         [RequiresTestSettings]
@@ -667,6 +667,48 @@ namespace CppTests.Tests
                     Assert.Equal("30", showRawObj.GetVariable("A").Value);
                     Assert.Equal("40", showRawObj.GetVariable("B").Value);
                     Assert.True(showRawObj.Variables.ContainsKey("[Raw View]"), "[Raw View] should be visible by default");
+                }
+
+                runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
+                runner.DisconnectAndVerify();
+            }
+        }
+
+        [Theory]
+        [DependsOnTest(nameof(CompileNatvisDebuggee))]
+        [RequiresTestSettings]
+        public void TestTypedefAndBaseClassResolution(ITestSettings settings)
+        {
+            this.TestPurpose("This test checks that a typedef alias and a subclass of a visualized type resolve to the underlying type's visualizer.");
+            this.WriteSettings(settings);
+
+            IDebuggee debuggee = Debuggee.Open(this, settings.CompilerSettings, NatvisName, DebuggeeMonikers.Natvis.Default);
+
+            using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
+            {
+                this.Comment("Configure launch");
+                string visFile = Path.Join(debuggee.SourceRoot, "visualizer_files", "Simple.natvis");
+
+                LaunchCommand launch = new LaunchCommand(settings.DebuggerSettings, debuggee.OutputPath, visFile, false);
+                runner.RunCommand(launch);
+
+                this.Comment("Set Breakpoint");
+                SourceBreakpoints writerBreakpoints = debuggee.Breakpoints(NatvisSourceName, ReturnSourceLine);
+                runner.SetBreakpoints(writerBreakpoints);
+
+                runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
+
+                using (IThreadInspector threadInspector = runner.GetThreadInspector())
+                {
+                    IFrameInspector currentFrame = threadInspector.Stack.First();
+
+                    this.Comment("Verifying a variable declared via a typedef alias uses the underlying type's visualizer");
+                    var aliased = currentFrame.GetVariable("aliasedContainer");
+                    Assert.Equal("{ size=4 }", aliased.Value);
+
+                    this.Comment("Verifying a variable of a subclass type uses the base class's visualizer");
+                    var derived = currentFrame.GetVariable("derivedContainer");
+                    Assert.Equal("{ size=6 }", derived.Value);
                 }
 
                 runner.Expects.ExitedEvent(exitCode: 0).TerminatedEvent().AfterContinue();
