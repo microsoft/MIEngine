@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using DebuggerTesting;
 using DebuggerTesting.Compilation;
 using DebuggerTesting.OpenDebug;
@@ -75,8 +76,6 @@ namespace CppTests.Tests
                 Environment.SetEnvironmentVariable("DEBUGINFOD_URLS", UnreachableDebuginfodUrl);
                 Environment.SetEnvironmentVariable("DEBUGINFOD_VERBOSE", "1");
 
-                Stopwatch sw = Stopwatch.StartNew();
-
                 using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
                 {
                     this.Comment("Launch with debuginfod disabled");
@@ -89,6 +88,7 @@ namespace CppTests.Tests
                     runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
 
                     this.Comment("Step into std::regex_search to trigger debuginfod lookup");
+                    Stopwatch sw = Stopwatch.StartNew();
                     runner.Expects.StoppedEvent(StoppedReason.Step).AfterStepIn();
 
                     sw.Stop();
@@ -141,8 +141,6 @@ namespace CppTests.Tests
                 Environment.SetEnvironmentVariable("DEBUGINFOD_URLS", UnreachableDebuginfodUrl);
                 Environment.SetEnvironmentVariable("DEBUGINFOD_VERBOSE", "1");
 
-                Stopwatch sw = Stopwatch.StartNew();
-
                 using (IDebuggerRunner runner = CreateDebugAdapterRunner(settings))
                 {
                     this.Comment("Launch with debuginfod enabled but short timeout (5s)");
@@ -158,7 +156,15 @@ namespace CppTests.Tests
                     runner.SetBreakpoints(debuggee.Breakpoints(SourceFileName, 13));
                     runner.Expects.StoppedEvent(StoppedReason.Breakpoint).AfterConfigurationDone();
 
+                    this.Comment("Verify GDB received the debuginfod timeout");
+                    using (IThreadInspector inspector = runner.GetThreadInspector())
+                    {
+                        string timeout = inspector.Stack.First().Evaluate("-exec show environment DEBUGINFOD_TIMEOUT");
+                        Assert.Contains("DEBUGINFOD_TIMEOUT = 5", timeout);
+                    }
+
                     this.Comment("Step into std::regex_search to trigger debuginfod lookup");
+                    Stopwatch sw = Stopwatch.StartNew();
                     runner.Expects.StoppedEvent(StoppedReason.Step).AfterStepIn();
 
                     sw.Stop();
