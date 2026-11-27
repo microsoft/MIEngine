@@ -1283,12 +1283,16 @@ namespace Microsoft.MIDebugEngine.Natvis
                     if (m.Success)
                     {
                         string rawExpr = format.Substring(i + 1, m.Length - 2);
-                        string spec = ExtractFormatSpecifier(rawExpr);
+                        string spec = ExtractFormatSpecifier(rawExpr, out bool hasNa);
                         string exprValue = GetExpressionValue(rawExpr, variable, scopedNames, intrinsics);
-                        if (spec == "sub" || spec == "su")
+                        if (spec == "sub")
                             exprValue = CleanUtf16StringValue(exprValue);
                         else if (spec == "sb")
                             exprValue = CleanAsciiStringValue(exprValue);
+                        else if (hasNa)
+                        {
+                            exprValue = VariableInformation.StripLeadingAddress(exprValue);
+                        }
                         value.Append(exprValue);
                         i += m.Length - 1;
                     }
@@ -1503,12 +1507,30 @@ namespace Microsoft.MIDebugEngine.Natvis
         }
 
         /// <summary>
+        /// Returns the format specifier from a NatVis expression (the part after the last
+        /// top-level comma), normalized the same way as
+        /// <see cref="VariableInformation.ProcessFormatSpecifiers"/>: modifiers "nvo", "na",
+        /// "nr", "nd" are stripped before returning.  Returns null when no specifier is present.
+        /// also returns whether modifier 'na' was there via the out parameter
+        /// </summary>
+        internal static string ExtractFormatSpecifier(string expression, out bool hasNa)
+        {
+            hasNa = false;
+            int commaPos = FindLastTopLevelComma(expression);
+            if (commaPos < 0) return null;
+
+            string tail = expression.Substring(commaPos + 1).Trim();
+            hasNa = tail.IndexOf("na", StringComparison.Ordinal) >= 0;
+
+            return tail
+                .Replace("nvo", "").Replace("na", "").Replace("nr", "").Replace("nd", "");
+        }
+
+        /// <summary>
         /// Cleans up the raw value that GDB/LLDB returns for a <c>const char16_t*</c>
         /// expression (i.e. one evaluated with the <c>,sub</c> / <c>,su</c> format specifier).
         /// GDB and LLDB both prefix the string with the pointer address, e.g.
         ///   <c>0x00007fff5fbff6c0 u"Hello"</c>
-        /// This method strips the address and the surrounding <c>u"…"</c> quotes so that
-        /// the NatVis DisplayString shows just the string content.
         /// </summary>
         internal static string CleanUtf16StringValue(string value)
         {
@@ -1531,9 +1553,6 @@ namespace Microsoft.MIDebugEngine.Natvis
         /// (i.e. one evaluated with the <c>,sb</c> format specifier).
         /// GDB and LLDB prefix the string with the pointer address, e.g.
         ///   <c>0x00007fff5fbff6c0 "Hello"</c>
-        /// This method strips the address and the surrounding <c>"…"</c> quotes so that
-        /// the NatVis DisplayString shows just the string content (matching VS behaviour,
-        /// where <c>{ptr,sb}</c> evaluates to bare text without quotes).
         /// </summary>
         internal static string CleanAsciiStringValue(string value)
         {
