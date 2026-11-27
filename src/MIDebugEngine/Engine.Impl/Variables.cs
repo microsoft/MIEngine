@@ -297,10 +297,17 @@ namespace Microsoft.MIDebugEngine
 
             int index;
 
-            if (!results.Contains("value") && (Name == TypeName || (Name.Contains("::") && name == null)))
+            if ((!results.Contains("value") && (Name == TypeName || (Name.Contains("::") && name == null)))
+                || (Name == TypeName && Name.IndexOfAny(s_typeNameOnlyChars) >= 0))
             {
-                // base classes show up with no value and exp==type 
+                // base classes show up with no value and exp==type
                 // (sometimes underlying debugger does not follow this convention, when using typedefs in templated types so look for "::" in the field name too)
+                // lldb reports base-class children WITH an aggregate value ("{...}"), so
+                // additionally treat exp==type as a base class whenever the name cannot
+                // be a field identifier (template arguments, scope operator, space).
+                // Known gap: a base whose name is a plain identifier, reported with a
+                // value, stays classified as a field — accepting it would risk
+                // misclassifying a member named after its type.
                 Name = TypeName + " (base)";
                 Value = TypeName;
                 VariableNodeType = NodeType.BaseClass;
@@ -391,6 +398,10 @@ namespace Microsoft.MIDebugEngine
         };
 
         public NodeType VariableNodeType { get; private set; }
+
+        // Characters that can appear in a type name but never in a field identifier —
+        // used to recognize base-class children whose expression equals their type name.
+        private static readonly char[] s_typeNameOnlyChars = new char[] { '<', ':', ' ' };
 
         private static readonly string[] s_stringTypes = new string[] {
                                  @"^char *\*$",
