@@ -140,6 +140,15 @@ namespace MIDebugEngineUnitTests
         }
 
         [Fact]
+        public void SubstituteIntrinsicParameters_MemberAccessWithSameName_NotReplaced()
+        {
+            // "node" as a member (x.node, x->node, T::node) must not be replaced
+            var ps = new[] { new IntrinsicParameterType { Name = "node", Type = "void*" } };
+            string result = Natvis.SubstituteIntrinsicParameters("node->node + T::node + x.node", ps, new List<string> { "m_head" });
+            Assert.Equal("m_head->node + T::node + x.node", result);
+        }
+
+        [Fact]
         public void SubstituteIntrinsicParameters_MultipleParams()
         {
             var ps = new[]
