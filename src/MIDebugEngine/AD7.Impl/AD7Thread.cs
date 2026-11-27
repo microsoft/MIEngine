@@ -218,7 +218,7 @@ namespace Microsoft.MIDebugEngine
         // Gets the system thread identifier.
         int IDebugThread2.GetThreadId(out uint threadId)
         {
-            threadId = _debuggedThread.TargetId;
+            threadId = (uint)_debuggedThread.Id;
             return Constants.S_OK;
         }
 
@@ -231,7 +231,7 @@ namespace Microsoft.MIDebugEngine
 
                 if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_ID) != 0)
                 {
-                    props.dwThreadId = _debuggedThread.TargetId;
+                    props.dwThreadId = (uint)_debuggedThread.Id;
                     props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_ID;
                 }
                 if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_SUSPENDCOUNT) != 0)
